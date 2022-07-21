@@ -59,7 +59,9 @@ Methods
                 * tls-name: :class:`str`
                 
                 The client will connect to the first available node in the list called the *seed node*. \ 
-                From there, it will learn about the cluster and its partition map. If ``tls-name`` is specified, it must match the tls-name specified in the node's \
+                From there, it will learn about the cluster and its partition map.
+                
+                If ``tls-name`` is specified, it must match the tls-name specified in the node's \
                 server configuration file, as well as the server's CA certificate.
 
                 .. note:: TLS usage requires Aerospike Enterprise Edition
