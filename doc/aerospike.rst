@@ -105,7 +105,9 @@ Methods
                     **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
 
                 * **auth_mode**
-                    The authentication mode with the server. See :ref:`auth_mode` for possible values.
+                    The authentication mode with the server.
+                    
+                    See :ref:`auth_mode` for possible values.
                     
                     Default: :data:`aerospike.AUTH_INTERNAL`
                 * **login_timeout_ms** (:class:`int`) 
@@ -113,23 +115,31 @@ Methods
                     
                     Default: ``5000``.
                 * **key**
-                    Default key policy
+                    Default key policy.
+                    
+                    See :ref:`POLICY_KEY` for possible values.
                     
                     **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
                 * **exists**
-                    Default exists policy
+                    Default exists policy.
+                    
+                    See :ref:`POLICY_EXISTS` for possible values.
                     
                     **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
-                * **max_retries**
+                * **max_retries** (:class:`int`)
                     Representing the number of times to retry a transaction 
                     
                     **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
                 * **replica**
-                    default replica policy
+                    Default replica policy.
+                    
+                    See :ref:`POLICY_REPLICA` for possible values.
                     
                     **Deprecated**: set this in one or all of the other policies' :ref:`aerospike_read_policies`, :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
-                * **commit_level**
-                    default commit level policy
+                * **commit_level** 
+                    Default commit level policy.
+                    
+                    See :ref:`POLICY_COMMIT_LEVEL` for possible values.
                     
                     **Deprecated**: set this as needed individually in the :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
             * **shm** (:class:`dict`)
@@ -139,61 +149,105 @@ Methods
                 If multiple clients are instantiated and talking to the same cluster the *shm* cluster-tending should be used.
 
                 * **max_nodes** (:class:`int`)
-                    | Maximum number of nodes allowed. Pad so new nodes can be added without configuration changes 
-                    | Default: ``16``
+                    Maximum number of nodes allowed.
+                    
+                    Pad this value so new nodes can be added without configuration changes. 
+                    
+                    Default: ``16``
                 * **max_namespaces** (:class:`int`)
-                    | Similarly pad 
-                    | Default: ``8``
+                    Maximum number of namespaces allowed.
+                    
+                    Pad this value so new namespaces can be added without configuration changes.
+                    
+                    Default: ``8``
                 * **takeover_threshold_sec**  (:class:`int`)
-                    | Take over tending if the cluster hasn't been checked for this many seconds 
-                    | Default: ``30``
+                    Take over tending if the cluster hasn't been checked for this many seconds 
+                    
+                    Default: ``30``
                 * **shm_key** 
-                    | Explicitly set the shm key for this client.
-                    | If **use_shared_connection** is not set, or set to ``False``, the user must provide a value for this field in order for shared memory to work correctly.
-                    | If , and only if, **use_shared_connection** is set to ``True``, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`Client.shm_key` .
-                    | It is still possible to specify a key when using **use_shared_connection** = `True`.
-                    | default: ``0xA8000000``
+                    Explicitly set the shm key for this client.
+                    
+                    If **use_shared_connection** is not set, or set to ``False``, the user must provide a value for this field in order for shared memory to work correctly.
+                    
+                    If, and only if, **use_shared_connection** is set to ``True``, the key will be implicitly evaluated per unique hostname, and can be inspected with :meth:`Client.shm_key` .
+                    
+                    It is still possible to specify a key when using **use_shared_connection** = `True`.
+                    
+                    Default: ``0xA8000000``
             * **use_shared_connection** (:class:`bool`)
-                | Indicating whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
-                | Default: ``False``
+                Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
+                
+                Default: ``False``
             * **tls** (:class:`dict`)
                 Contains optional TLS configuration parameters.
             
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
                 * **enable** (:class:`bool`)
-                    | Indicating whether tls should be enabled or not. 
-                    | Default: ``False``
+                    Indicating whether tls should be enabled or not. 
+                    
+                    Default: ``False``
                 * **cafile** (:class:`str`)
-                    | Path to a trusted CA certificate file. By default TLS will use system standard trusted CA certificates
+                    Path to a trusted CA certificate file.
+                    
+                    By default TLS will use system standard trusted CA certificates
                 * **capath** (:class:`str`)
-                    | Path to a directory of trusted certificates. See the OpenSSL SSL_CTX_load_verify_locations manual page for more information about the format of the directory.
+                    Path to a directory of trusted certificates.
+                    
+                    See the OpenSSL SSL_CTX_load_verify_locations manual page for more information about the format of the directory.
                 * **protocols** (:class:`str`)
-                    | Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . 
-                    | If not specified the client will use "-all +TLSv1.2".
+                    Specifies enabled protocols. This format is the same as Apache's SSLProtocol documented at https://httpd.apache.org/docs/current/mod/mod_ssl.html#sslprotocol . 
+                    
+                    If not specified the client will use "-all +TLSv1.2".
                 * **cipher_suite** (:class:`str`)
-                    | Specifies enabled cipher suites. The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .
-                    | If not specified the OpenSSL default cipher suite described in the ciphers documentation will be used. If you are not sure what cipher suite to select this option is best left unspecified 
+                    Specifies enabled cipher suites.
+                    
+                    The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .
+                    
+                    If not specified, the OpenSSL default cipher suite described in the ciphers documentation will be used. If you are not sure what cipher suite to select, this option is best left unspecified. 
                 * **keyfile** (:class:`str`)
-                    | Path to the client's key for mutual authentication. By default mutual authentication is disabled.
+                    Path to the client's key for mutual authentication.
+                    
+                    By default, mutual authentication is disabled.
                 * **keyfile_pw** (:class:`str`)
-                    | Decryption password for the client's key for mutual authentication. By default the key is assumed not to be encrypted.
+                    Decryption password for the client's key for mutual authentication.
+                    
+                    By default, the key is assumed not to be encrypted.
                 * **cert_blacklist** (:class:`str`)
-                    | Path to a certificate blacklist file. The file should contain one line for each blacklisted certificate. Each line starts with the certificate serial number expressed in hex. Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer). Example records: 867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461
+                    Path to a certificate blacklist file.
+                    
+                    The file should contain one line for each blacklisted certificate. \
+                    Each line starts with the certificate serial number expressed in hex. \
+                    Each entry may optionally specify the issuer name of the certificate (serial numbers are only required to be unique per issuer).
+                    
+                    Example records: ``867EC87482B2 /C=US/ST=CA/O=Acme/OU=Engineering/CN=Test Chain CA E2D4B0E570F9EF8E885C065899886461``
                 * **certfile** (:class:`str`)
-                    | Path to the client's certificate chain file for mutual authentication. By default mutual authentication is disabled.
+                    Path to the client's certificate chain file for mutual authentication.
+                    
+                    By default, mutual authentication is disabled.
                 * **crl_check** (:class:`bool`)
-                    | Enable CRL checking for the certificate chain leaf certificate. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
+                    Enable CRL checking for the certificate chain leaf certificate.
+                    
+                    An error occurs if a suitable CRL cannot be found.
+                    
+                    By default CRL checking is disabled.
                 * **crl_check_all** (:class:`bool`)
-                    | Enable CRL checking for the entire certificate chain. An error occurs if a suitable CRL cannot be found. By default CRL checking is disabled.
+                    Enable CRL checking for the entire certificate chain.
+                    
+                    An error occurs if a suitable CRL cannot be found.
+                    
+                    By default CRL checking is disabled.
                 * **log_session_info** (:class:`bool`)
-                    | Log session information for each connection.
+                    Log session information for each connection.
                 * **for_login_only** (:class:`bool`)
-                    | Log session information for each connection. Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
-                    | Default: ``False`` (Use TLS connections for all communication with server.)
+                    Log session information for each connection.
+                    
+                    Use TLS connections only for login authentication. All other communication with the server will be done with non-TLS connections.
+                    
+                    Default: ``False`` (Use TLS connections for all communication with server.)
             * **send_bool_as** (:class:`int`)
                 (Optional) Configures the client to write Python booleans as PY_BYTES_BLOB, integer, or the new server boolean type.
-
+                
                 One of the :ref:`send_bool_as_constants` constant values.
                 
                 Example: :code:`{"send_bool_as", aerospike.aerospike.PY_BYTES}`
@@ -202,47 +256,62 @@ Methods
                 
                 Default: aerospike.PY_BYTES
             * **serialization** (:class:`tuple`)
-                an optional instance-level `tuple` of (serializer, deserializer). 
-                | Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
+                An optional instance-level `tuple` of ``(serializer, deserializer)``. 
+                
+                Takes precedence over a class serializer registered with :func:`~aerospike.set_serializer`.
             * **thread_pool_size** (:class:`int`) 
-                | Number of threads in the pool that is used in batch/scan/query commands. 
-                | Default: ``16``
+                Number of threads in the pool that is used in batch/scan/query commands. 
+                
+                Default: ``16``
             * **max_socket_idle** (:class:`int`)
-                | Maximum socket idle time in seconds.  Connection pools will discard sockets that have been idle longer than the maximum. \
-                  The value is limited to 24 hours (86400). It's important to set this value to a few seconds less than the server's proto-fd-idle-ms \
-                 (default 60000 milliseconds, or 1 minute), so the client does not attempt to use a socket that has already been reaped by the server.
-                | Default: ``0`` seconds (disabled) for non-TLS connections, 55 seconds for TLS connections
+                Maximum socket idle time in seconds.
+                
+                Connection pools will discard sockets that have been idle longer than the maximum. \
+                The value is limited to 24 hours (86400). It's important to set this value to a few seconds less than the server's proto-fd-idle-ms \
+                (default 60000 milliseconds, or 1 minute), so the client does not attempt to use a socket that has already been reaped by the server.
+                
+                Default: ``0`` seconds (disabled) for non-TLS connections, 55 seconds for TLS connections
             * **max_conns_per_node** (:class:`int`)
-                | Maximum number of pipeline connections allowed for each node 
+                Maximum number of pipeline connections allowed for each node 
             * **tend_interval** (:class:`int`)
-                | Polling interval in milliseconds for tending the cluster 
-                | Default: ``1000``
+                Polling interval in milliseconds for tending the cluster 
+                
+                Default: ``1000``
             * **compression_threshold** (:class:`int`)
-                | Compress data for transmission if the object size is greater than a given number of bytes 
-                | Default: ``0``, meaning 'never compress' 
-                | **Deprecated**, set this in the 'write' policy dictionary.
+                Compress data for transmission if the object size is greater than a given number of bytes 
+                
+                Default: ``0``, meaning 'never compress' 
+                
+                **Deprecated**, set this in the 'write' policy dictionary.
             * **cluster_name** (:class:`str`)
-                | Only server nodes matching this name will be used when determining the cluster name.
+                Only server nodes matching this name will be used when determining the cluster name.
             * **rack_id** (:class:`int`)
-                | Rack id where this client instance resides.
-                | In order to enable this functionality, the `rack_aware` needs to be set to true, the :ref:`aerospike_read_policies` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
-                  The server rack configuration must also be configured.
-                |
-                | Default: ``0``
+                Rack id where this client instance resides.
+                
+                In order to enable this functionality, the `rack_aware` needs to be set to true, \
+                the :ref:`aerospike_read_policies` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
+                The server rack configuration must also be configured.
+                
+                Default: ``0``
             * **rack_aware** (:class:`bool`)
-                | Track server rack data. This is useful when directing read operations to run on the same rack as the client.
-                | This is useful to lower cloud provider costs when nodes are distributed across different availability zones (represented as racks).
-                | In order to enable this functionality, the `rack_id` needs to be set to local rack, the `read policy` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
-                  The server rack configuration must also be configured.
-                |
-                | Default: ``False``
+                Track server rack data.
+                
+                This is useful when directing read operations to run on the same rack as the client. \
+                Also, this is useful to lower cloud provider costs when nodes are distributed across different availability zones (represented as racks).
+
+                In order to enable this functionality, the `rack_id` needs to be set to local rack, \
+                the `read policy` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
+                The server rack configuration must also be configured.
+                
+                Default: ``False``
             * **use_services_alternate** (:class:`bool`)
-                | Flag to signify if "services-alternate" should be used instead of "services"
-                |
-                | Default: ``False``
+                Flag to signify if "services-alternate" should be used instead of "services".
+
+                Default: ``False``
             * **connect_timeout** (:class:`int`) 
-                | Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
-                | Default: ``1000``.
+                Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
+                
+                Default: ``1000``.
             * **fail_if_not_connected** (:class:`bool`)
                 | Flag to signify fail on cluster init if seed node and all peers are not reachable.
                 |
