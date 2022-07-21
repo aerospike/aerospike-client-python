@@ -123,32 +123,32 @@ Key Tuple
 
     .. object:: key
 
-    The key tuple, which is sent and returned by various operations, has the structure
+        The key tuple, which is sent and returned by various operations, has the structure
 
-    ``(namespace, set, primary key[, digest])``
+        ``(namespace, set, primary key[, digest])``
 
-    .. hlist::
-        :columns: 1
+        .. hlist::
+            :columns: 1
 
-        * ``namespace`` (:class:`str`)
-            Name of the namespace.
+            * namespace (:class:`str`)
+                Name of the namespace.
 
-            This must be preconfigured on the cluster.
+                This must be preconfigured on the cluster.
 
-        * ``set`` (:class:`str`)
-            Name of the set.
+            * set (:class:`str`)
+                Name of the set.
 
-            The set be created automatically if it does not exist.
+                The set be created automatically if it does not exist.
 
-        * ``primary key`` (:class:`str`, :class:`int` or :class:`bytearray`)
-            The value by which the client-side application identifies the record.
+            * primary key (:class:`str`, :class:`int` or :class:`bytearray`)
+                The value by which the client-side application identifies the record.
 
-        * ``digest``
-            The record's RIPEMD-160 digest.
+            * digest
+                The record's RIPEMD-160 digest.
 
-            The first three parts of the tuple get hashed through RIPEMD-160, \
-            and the digest used by the clients and cluster nodes to locate the record. \
-            A key tuple is also valid if it has the digest part filled and the primary key part set to :py:obj:`None`.
+                The first three parts of the tuple get hashed through RIPEMD-160, \
+                and the digest used by the clients and cluster nodes to locate the record. \
+                A key tuple is also valid if it has the digest part filled and the primary key part set to :py:obj:`None`.
 
     The following code example shows:
         
