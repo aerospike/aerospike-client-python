@@ -135,13 +135,24 @@ Methods
                     
                     See :ref:`POLICY_REPLICA` for possible values.
                     
-                    **Deprecated**: set this in one or all of the other policies' :ref:`aerospike_read_policies`, :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
+                    **Deprecated**: set this in one or all of the following policy dictionaries:
+                    
+                    * :ref:`aerospike_read_policies`
+                    * :ref:`aerospike_write_policies`
+                    * :ref:`aerospike_apply_policies`
+                    * :ref:`aerospike_operate_policies`
+                    * :ref:`aerospike_remove_policies`
                 * **commit_level** 
                     Default commit level policy.
                     
                     See :ref:`POLICY_COMMIT_LEVEL` for possible values.
                     
-                    **Deprecated**: set this as needed individually in the :ref:`aerospike_write_policies`, :ref:`aerospike_apply_policies`, :ref:`aerospike_operate_policies`, :ref:`aerospike_remove_policies` dictionaries.
+                    **Deprecated**: set this as needed individually in the following policy dictionaries:
+                    
+                    * :ref:`aerospike_write_policies`
+                    * :ref:`aerospike_apply_policies`
+                    * :ref:`aerospike_operate_policies`
+                    * :ref:`aerospike_remove_policies`
             * **shm** (:class:`dict`)
                 Contains optional shared-memory cluster tending parameters
 
