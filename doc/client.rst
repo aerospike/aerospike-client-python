@@ -125,33 +125,64 @@ Key Tuple
 
     The key tuple, which is sent and returned by various operations, has the structure
 
-    ``(namespace, set, primary key[, the record's RIPEMD-160 digest])``
+    ``(namespace, set, primary key[, digest])``
 
     .. hlist::
         :columns: 1
 
-        * *namespace* the :class:`str` name of the namespace, which must be \
-          preconfigured on the cluster.
-        * *set* the :class:`str` name of the set. Will be created automatically \
-          if it does not exist.
-        * *primary key* the value by which the client-side application \
-          identifies the record, which can be of type :class:`str`, :class:`int` \
-          or :class:`bytearray`.
-        * *digest* the first three parts of the tuple get hashed through \
-          RIPEMD-160, and the digest used by the clients and cluster nodes \
-          to locate the record. A key tuple is also valid if it has the \
-          digest part filled and the primary key part set to :py:obj:`None`.
+        * ``namespace`` (:class:`str`)
+            Name of the namespace.
+
+            This must be preconfigured on the cluster.
+
+        * ``set`` (:class:`str`)
+            Name of the set.
+
+            The set be created automatically if it does not exist.
+
+        * ``primary key`` (:class:`str`, :class:`int` or :class:`bytearray`)
+            The value by which the client-side application identifies the record.
+
+        * ``digest``
+            The record's RIPEMD-160 digest.
+
+            The first three parts of the tuple get hashed through RIPEMD-160, \
+            and the digest used by the clients and cluster nodes to locate the record. \
+            A key tuple is also valid if it has the digest part filled and the primary key part set to :py:obj:`None`.
+
+    The following code example shows:
+        
+    * How to use the key tuple in a `put` operation
+    * How to fetch the key tuple in a `get` operation
 
     .. code-block:: python
 
+        >>> import aerospike
+
+        # NOTE: change this to your Aerospike server's seed node address
+        >>> seedNode = ('127.0.0.1', 3000)
+        >>> config = config = {'hosts': [seedNode]}
         >>> client = aerospike.client(config).connect()
-        >>> client.put(('test','demo','oof'), {'id':0, 'a':1})
-        >>> (key, meta, bins) = client.get(('test','demo','oof'))
+
+        # The key tuple comprises the following:
+        >>> namespaceName = 'test'
+        >>> setName = 'setname'
+        >>> primaryKeyName = 'pkname'
+        >>> keyTuple = (namespaceName, setName, primaryKeyName)
+
+        # Insert a record
+        >>> recordBins = {'bin1':0, 'bin2':1}
+        >>> client.put(keyTuple, recordBins)
+        
+        # Now fetch that record
+        >>> (key, meta, bins) = client.get(keyTuple)
+        
+        # The key should be in the second format
+        # Notice how there is no primary key
+        # and there is the record's digest
         >>> key
-        ('test', 'demo', None, bytearray(b'\ti\xcb\xb9\xb6V#V\xecI#\xealu\x05\x00H\x98\xe4='))
-        >>> (key2, meta2, bins2) = client.get(key)
-        >>> bins2
-        {'a': 1, 'id': 0}
+        ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
+        
         >>> client.close()
 
     .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
