@@ -38,13 +38,12 @@ Methods
 
 .. py:function:: client(config)
 
-    Creates a new instance of the Client class. This client can
-    :meth:`Client.connect` to the cluster and perform operations
-    against it, such as :meth:`Client.put` and
-    :meth:`Client.get` records.
+    Creates a new instance of the :class:`Client` class. This client can \
+    connect to the cluster and perform operations on the database. \
+    See :ref:`client` for more details.
 
-    This is a wrapper function which calls the constructor for the :class:`Client` class.
-    The client may also be constructed by calling the constructor directly.
+    Internally, this is a wrapper function which calls the constructor for the :class:`Client` class.
+    However, the client may also be constructed by calling the constructor directly.
 
     :param dict config: Contains the client's configuration
 
