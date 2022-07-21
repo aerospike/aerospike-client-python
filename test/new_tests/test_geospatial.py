@@ -381,12 +381,19 @@ class TestGeospatial(object):
         for key in keys:
             self.as_connection.remove(key)
 
-        assert len(records) == 2
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            assert len(records) == 2
+        else:
+            assert len(records) == 5
+
         expected = [{'coordinates': [-121.8, 37.7], 'type': 'Point'},
                     {'coordinates': [-121.6, 37.9], 'type': 'Point'}]
 
         for r in records:
-            assert r['loc'].unwrap() in expected
+            if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+                assert r['loc'].unwrap() in expected
+            else:
+                assert r['loc'] in expected
 
     def test_geospatial_positive_query_for_circle(self):
         """
