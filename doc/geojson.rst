@@ -27,7 +27,7 @@ GeoJSON Class --- :class:`GeoJSON`
 
     .. seealso::
         `Geospatial Index and Query
-        <http://www.aerospike.com/docs/guide/geospatial.html>`_.
+        <https://docs.aerospike.com/server/guide/data-types/geospatial>`_.
 
     .. code-block:: python
 
