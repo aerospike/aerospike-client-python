@@ -6,21 +6,36 @@ Introduction
 Aerospike database clusters. The Python client is a CPython module, built on
 the Aerospike C client.
 
-* :mod:`aerospike` - the module containing the Client, Query, and Scan Classes.
+Layout
+======
 
-* :ref:`aerospike.scan` is a class built to handle scan operations of entire sets.
++----------------------------+------------------------------------------------------------------------+
+| Module                     | Description                                                            |
++============================+========================================================================+
+| :mod:`aerospike`           | Contains the Client, Query, and Scan Classes.                          |
++----------------------------+------------------------------------------------------------------------+
+| :mod:`aerospike.predicates`| Predicate helpers for the Query class.                                 |
++----------------------------+------------------------------------------------------------------------+
+| :mod:`aerospike.exception` | Contains the exception hierarchy for AerospikeError and its subclasses.|
++----------------------------+------------------------------------------------------------------------+
+| :mod:`aerospike_helpers`   | Bin operations (list, map, bitwise, etc.), \                           |
+|                            | Aerospike expressions, \                                               |
+|                            | batch operations, \                                                    |
+|                            | complex data type context                                              |
++----------------------------+------------------------------------------------------------------------+
 
-* :ref:`aerospike.query` is a class built to handle queries over secondary indexes.
+The ``aerospike`` module contains these classes:
 
-* :mod:`aerospike.predicates` is a submodule containing predicate helpers for use with the Query class.
+=========================== ===========
+Class                       Description
+=========================== ===========
+:ref:`aerospike.scan`       Contains scan operations of entire sets.
+:ref:`aerospike.query`      Handles queries over secondary indexes.
+:ref:`aerospike.geojson`    Handles GeoJSON type data.
+:ref:`client`               Aerospike client API
+=========================== ===========
 
-* :mod:`aerospike.exception` is a submodule containing the exception hierarchy for AerospikeError and its subclasses.
-
-* :mod:`aerospike_helpers` is a helper package for bin operations (list, map, bitwise, etc.), aerospike expressions, batch operations, and complex data type context.
-
-* :ref:`aerospike.geojson` is a class to handle GeoJSON type data.
-
-* :ref:`Data_Mapping` How Python types map to Aerospike Server types.
+In addition, the :ref:`Data_Mapping` page explains how **Python** types map to **Aerospike Server** types.
 
 .. seealso::
     The `Python Client Manual <http://www.aerospike.com/docs/client/python/>`_
