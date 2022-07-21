@@ -52,11 +52,15 @@ Methods
             :columns: 1
 
             * **hosts**
-                A required :class:`list` of (address, port, [tls-name]) tuples identifying a node (or multiple nodes) in the cluster. 
+                A required :class:`list` of ``(address, port, [tls-name])`` tuples identifying a node (or multiple nodes) in the cluster.
+
+                * address: :class:`str`
+                * port: :class:`int`
+                * tls-name: :class:`str`
                 
-                The client will connect to the first available node in the list, the *seed node*, \ 
-                and will learn about the cluster and partition map from it. If tls-name is specified, it must match the tls-name specified in the node's \
-                server configuration file and match the server's CA certificate.
+                The client will connect to the first available node in the list called the *seed node*. \ 
+                From there, it will learn about the cluster and its partition map. If ``tls-name`` is specified, it must match the tls-name specified in the node's \
+                server configuration file, as well as the server's CA certificate.
 
                 .. note:: TLS usage requires Aerospike Enterprise Edition
 
