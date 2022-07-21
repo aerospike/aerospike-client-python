@@ -6,8 +6,8 @@
 Client Class --- :class:`Client`
 ================================
 
-:class:`Client`
-===============
+Overview
+--------
 
 The client connects through a seed node (the address of a single node) to an
 Aerospike database cluster. From the seed node, the client learns of the other
@@ -23,48 +23,51 @@ a cluster-tending thread.
     <https://www.aerospike.com/docs/architecture/clients.html>`_ and
     `Data Distribution <https://www.aerospike.com/docs/architecture/data-distribution.html>`_.
 
-Example::
+Example
+-------
 
-        # import the module
-        import aerospike
-        from aerospike import exception as ex
-        import sys
+::
 
-        # Configure the client
-        config = {
-            'hosts': [ ('127.0.0.1', 3000) ]
-        }
+    # import the module
+    import aerospike
+    from aerospike import exception as ex
+    import sys
 
-        # Optionally set policies for various method types
-        write_policies = {'total_timeout': 2000, 'max_retries': 0}
-        read_policies = {'total_timeout': 1500, 'max_retries': 1}
-        policies = {'write': write_policies, 'read': read_policies}
-        config['policies'] = policies
+    # Configure the client
+    config = {
+        'hosts': [ ('127.0.0.1', 3000) ]
+    }
 
-        # Create a client and connect it to the cluster
-        try:
-            client = aerospike.client(config).connect()
-        except ex.ClientError as e:
-            print("Error: {0} [{1}]".format(e.msg, e.code))
-            sys.exit(1)
+    # Optionally set policies for various method types
+    write_policies = {'total_timeout': 2000, 'max_retries': 0}
+    read_policies = {'total_timeout': 1500, 'max_retries': 1}
+    policies = {'write': write_policies, 'read': read_policies}
+    config['policies'] = policies
 
-        # Records are addressable via a tuple of (namespace, set, primary key)
-        key = ('test', 'demo', 'foo')
+    # Create a client and connect it to the cluster
+    try:
+        client = aerospike.client(config).connect()
+    except ex.ClientError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
+        sys.exit(1)
 
-        try:
-            # Write a record
-            client.put(key, {
-                'name': 'John Doe',
-                'age': 32
-            })
-        except ex.RecordError as e:
-            print("Error: {0} [{1}]".format(e.msg, e.code))
+    # Records are addressable via a tuple of (namespace, set, primary key)
+    key = ('test', 'demo', 'foo')
 
-        # Read a record
-        (key, meta, record) = client.get(key)
+    try:
+        # Write a record
+        client.put(key, {
+            'name': 'John Doe',
+            'age': 32
+        })
+    except ex.RecordError as e:
+        print("Error: {0} [{1}]".format(e.msg, e.code))
 
-        # Close the connection to the Aerospike cluster
-        client.close()
+    # Read a record
+    (key, meta, record) = client.get(key)
+
+    # Close the connection to the Aerospike cluster
+    client.close()
 
 
 .. index::
