@@ -46,7 +46,7 @@ Methods
     This is a wrapper function which calls the constructor for the :class:`Client` class.
     The client may also be constructed by calling the constructor directly.
 
-    :param dict config: the client's configuration.
+    :param dict config: contains the configuration arguments passed into the client
 
         .. hlist::
             :columns: 1
