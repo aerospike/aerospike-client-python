@@ -2,9 +2,31 @@
 Introduction
 ############
 
-``aerospike`` is a package which provides a Python client for
-Aerospike database clusters. The Python client is a CPython module, built on
-the Aerospike C client.
+The Aerospike client enables you to build an application in Python with an
+Aerospike cluster as its database. The client manages the connections to the
+cluster and handles the transactions performed against it.
+
+The Python client is a CPython module, built on the Aerospike C client.
+
+.. rubric:: Data Model
+
+At the top is the ``namespace``, a container that has one set of policy rules
+for all its data, and is similar to the *database* concept in an RDBMS, only
+distributed across the cluster. A namespace is subdivided into ``sets``,
+similar to *tables*.
+
+Pairs of key-value data called ``bins`` make up ``records``, similar to
+*columns* of a *row* in a standard RDBMS. Aerospike is schema-less, meaning
+that you do not need to define your bins in advance.
+
+Records are uniquely identified by their key, and record metadata is contained
+in an in-memory primary index.
+
+.. seealso::
+    `Architecture Overview <http://www.aerospike.com/docs/architecture/index.html>`_
+    and `Aerospike Data Model
+    <http://www.aerospike.com/docs/architecture/data-model.html>`_ for more
+    information about Aerospike.
 
 Layout
 ======
