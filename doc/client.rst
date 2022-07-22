@@ -417,8 +417,6 @@ Record Operations
         .. code-block:: python
 
             import aerospike
-            from aerospike import exception as ex
-            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
@@ -573,10 +571,30 @@ Record Operations
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
-            key = ('test', 'demo', 1)
-            client.touch(key, 120, policy={'total_timeout': 100})
-            client.close()
+            # Insert record and get its metadata
+            keyTuple = ('test', 'demo', "key")
+            bins = {"bin1": "value"}
+            client.put(keyTuple, bins)
+            (key, meta) = client.exists(keyTuple)
+            print(meta)
 
+            # Expected output:
+            # {'ttl': 2592000, 'gen': 1}
+
+            # Explicitly set TTL to 120
+            # and increment generation
+            client.touch(keyTuple, 120)
+
+            # Get record's new metadata
+            (key, meta) = client.exists(keyTuple)
+            print(meta)
+
+            # Expected output:
+            # {'ttl': 120, 'gen': 2}
+
+            # Cleanup
+            client.remove(keyTuple)
+            client.close()
 
     .. method:: remove(key[meta: dict[, policy: dict]])
 
