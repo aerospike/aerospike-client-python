@@ -11,8 +11,7 @@ first_ref_count = 0
 last_ref_count = 0
 
 def run():
-    # write_root_cert()
-
+    
     # Connect once to establish a memory usage baseline.
     connect_to_cluster()
 
@@ -29,35 +28,6 @@ def run():
         print(f'current = {current_usage} / memory increase bytes = {current_usage - initial_memory_usage}', file=f)
         last_ref_count = sys.gettotalrefcount()
         print(f'outstandingref = {last_ref_count-first_ref_count}', file=f)
-
-def write_root_cert():
-    root_ca = """-----BEGIN CERTIFICATE-----
-MIID3zCCAsegAwIBAgIUBlLiIt5bLzmYTmqMmpFOlorC+4gwDQYJKoZIhvcNAQEL
-BQAwfzELMAkGA1UEBhMCVUsxDzANBgNVBAgMBkxvbmRvbjEPMA0GA1UEBwwGTG9u
-ZG9uMRYwFAYDVQQKDA1hZXJvc3Bpa2UuY29tMRAwDgYDVQQLDAdTdXBwb3J0MSQw
-IgYDVQQDDBtzdXBwb3J0cm9vdGNhLmFlcm9zcGlrZS5jb20wHhcNMjIwMzEwMTEw
-MjE4WhcNMzIwMzA3MTEwMjE4WjB/MQswCQYDVQQGEwJVSzEPMA0GA1UECAwGTG9u
-ZG9uMQ8wDQYDVQQHDAZMb25kb24xFjAUBgNVBAoMDWFlcm9zcGlrZS5jb20xEDAO
-BgNVBAsMB1N1cHBvcnQxJDAiBgNVBAMMG3N1cHBvcnRyb290Y2EuYWVyb3NwaWtl
-LmNvbTCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBANcVh1HauyBhOS45
-1Uo77MZzNrazhbj2MvAgXnYuH5q0NqYwHa+TNL9XmF1z0s5YEJf00Luz2hKdFkoz
-+onRDgUes0Guk7VBxMdiZjcN3OiyIRPhBx2r53jI9hKYKfDh4/Po8V6OQElhaiNT
-13lTY2Q3uWPNRiusCfWO8qmVsCnxGL7Ic0luyPLcALyg+eY1cFBuKGowF/1l4UjY
-St69FwBtqaW1bYkAyyjFnC6qjsDhwEidLU5fwcGDj29BG/ukn0Lur0FGqipR1+pP
-NTF62TxxRaZC9S//N6yf2Kh/oBWMN/o/NQXnccHejcxsQKLs2YtBpAdFwz+2mLDj
-d2/FGgMCAwEAAaNTMFEwHQYDVR0OBBYEFPy0HV/n771BfKTewVPH2K3wENg/MB8G
-A1UdIwQYMBaAFPy0HV/n771BfKTewVPH2K3wENg/MA8GA1UdEwEB/wQFMAMBAf8w
-DQYJKoZIhvcNAQELBQADggEBAA/+sOg6zJ0vCqEC6wcRMKd42pGBGCh/jxd1Vooz
-T6Q/uGPrd/yB6YtT+FzilETPTIponuO0i7WP/Mv/h/UuDEH5uciLpxEugkT2Ark/
-h2q2sZM4mvQYh15YIMcUOecnPcn3jsuU1s6AHvL9Pl427IgglpvjMHIwxfgCqn1k
-Ewvg7l85EATC9Tmf1LuiFzwjREA+4n5NG80IxjS8kGCZ+UxasVww7/W+jXJLemcN
-v/wbp0OTEdBWHJY9QKWnBhoBUCaTFHNU38wry5KmWCbQET5x78WFRfAZF2vJSa1W
-uoDfEBndiFsBx0kG0uOHERZpEP0XQYq/TBebs/hjj756XdE=
------END CERTIFICATE-----
-"""
-    with open("/tmp/root_ca.pem", "w+") as fp:
-        fp.write(root_ca)
-
 
 def get_memory_usage_bytes():
     process = psutil.Process(os.getpid())
