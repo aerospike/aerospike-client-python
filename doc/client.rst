@@ -653,17 +653,16 @@ Record Operations
         .. code-block:: python
 
             import aerospike
-            import pprint
 
-            pp = pprint.PrettyPrinter(indent=2)
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
-            digest = client.get_key_digest("test", "demo", 1 )
-            pp.pprint(digest)
-            key = ('test', 'demo', None, digest)
-            (key, meta, bins) = client.get(key)
-            pp.pprint(bins)
+            digest = client.get_key_digest("test", "demo", "key")
+            print(digest.hex())
+
+            # Expected output:
+            # 3bd475bd0c73f210b67ea83793300eeae576285d
+
             client.close()
 
         .. deprecated:: 2.0.1
