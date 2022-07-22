@@ -691,11 +691,22 @@ Record Operations
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
-            key = ('test', 'demo', 1)
-            meta = { 'ttl': 3600 }
-            client.remove_bin(key, ['name', 'age'], meta, {'retry': aerospike.POLICY_RETRY_ONCE})
-            client.close()
+            # Insert record
+            keyTuple = ('test', 'demo', "key")
+            bins = {"bin1": 0, "bin2": 1}
+            client.put(keyTuple, bins)
 
+            # Remove bin named "bin1"
+            client.remove_bin(keyTuple, ['bin1'])
+
+            (keyTuple, meta, bins) = client.get(keyTuple)
+            print(bins)
+
+            # Expected output:
+            # {'bin2': 1}
+
+            client.remove(keyTuple)
+            client.close()
 
     .. index::
         single: Batch Operations
