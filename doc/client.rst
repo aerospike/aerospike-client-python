@@ -260,7 +260,7 @@ Record Operations
 
     .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer]]])
 
-        Write a record with a given *key* to the cluster.
+        Write a record with a given *key* to the cluster, or remove / add bins on a record with that given key.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param dict bins: a :class:`dict` of bin-name / bin-value pairs.
@@ -274,41 +274,55 @@ Record Operations
             :func:`aerospike.set_serializer` use :const:`aerospike.SERIALIZER_USER`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        Example:
+
         .. code-block:: python
 
+            import sys
             import aerospike
-            from aerospike import exception as ex
+            from aerospike import exception
 
             config = {
-                'hosts': [ ('127.0.0.1', 3000) ],
-                'total_timeout': 1500
+                'hosts': [('127.0.0.1', 3000)],
             }
             client = aerospike.client(config).connect()
+
+            # Insert a new record
+            key = ('test', 'demo', "keyname")
+            bins = {
+                'l': ["string", 1, bytearray(10)],
+                'm': { "key": "value" },
+                'i': 1234,
+                'f': 3.14159265359,
+                's': 'Hello!'
+            }
             try:
-                key = ('test', 'demo', 1)
-                bins = {
-                    'l': [ "qwertyuiop", 1, bytearray("asd;as[d'as;d", "utf-8") ],
-                    'm': { "key": "asd';q;'1';" },
-                    'i': 1234,
-                    'f': 3.14159265359,
-                    's': '!@#@#$QSDAsd;as'
-                }
-                client.put(key, bins,
-                         policy={'key': aerospike.POLICY_KEY_SEND},
-                         meta={'ttl':180})
-                # adding a bin
-                client.put(key, {'smiley': u"\ud83d\ude04"})
-                # removing a bin
+                client.put(key, bins, 
+                    # See docs about write policy for details
+                    policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE},
+                    # Record properties
+                    # Time to live: 180 seconds
+                    # Manually set to 5th generation
+                    meta={'ttl':180, 'gen': 5})
+                
+                # Write a new bin to this record
+                client.put(key, {'smiley': "face"})
+                # Remove a bin from this record
                 client.put(key, {'i': aerospike.null()})
-            except ex.AerospikeError as e:
+
+                # Record should only have bins (with these names):
+                # l, m, f, s, smiley
+                (_, _, bins) = client.get(key)
+                print(bins)
+            except exception.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
                 client.close()
 
         .. note::
-            Version >= 5.0.0 Supports aerrospike expressions for record operations see :ref:`aerospike_operation_helpers.expressions`.
-            Requires server version >= 5.2.0.
+            Version >= 5.0.0 supports Aerospike expressions for record operations. See :ref:`aerospike_operation_helpers.expressions`.
+            Requires server version >= 5.2.0. 
 
             .. code-block:: python
 
