@@ -886,40 +886,38 @@ Batch Operations
         .. code-block:: python
 
             import aerospike
-            from aerospike import exception as ex
-            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
-            try:
-                # assume the fourth key has no matching record
-                keys = [
-                  ('test', 'demo', None, bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3'),
-                  ('test', 'demo', None, bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd'),
-                  ('test', 'demo', None, bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86'),
-                  ('test', 'demo', None, bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')
-                ]
-                records = client.select_many(keys, [u'name'])
-                print(records)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
+            # Insert 4 records
+            # Only 3 of them have a bin called bin2
+            keyTuples = [
+                ('test', 'demo', 1),
+                ('test', 'demo', 2),
+                ('test', 'demo', 3),
+                ('test', 'demo', 4)
+            ]
+            client.put(keyTuples[0], {'bin1': 20, 'bin2': 40})
+            client.put(keyTuples[1], {'bin1': 11, 'bin2': 50})
+            client.put(keyTuples[2], {'bin1': 50,             'bin3': 20})
+            client.put(keyTuples[3], {'bin1': 87, 'bin2': 76, 'bin3': 40})
 
-        .. note::
+            # Get all records and filter out all bins except bin2
+            records = client.select_many(keyTuples, ['bin2'])
+            for record in records:
+                print(record)
 
-            We expect to see something like:
+            # Expected output:
+            # (('test', 'demo', 1, bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin2': 40})
+            # (('test', 'demo', 2, bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin2': 50})
+            # (('test', 'demo', 3, bytearray(...)), {'ttl': 2592000, 'gen': 2}, {})
+            # (('test', 'demo', 4, bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin2': 76})
 
-            .. code-block:: python
-
-                [
-                  (('test', 'demo', None, bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name1'}),
-                  (('test', 'demo', None, bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name2'}),
-                  (('test', 'demo', None, bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86'), {'gen': 1, 'ttl': 2592000}, {'name': u'Name3'}),
-                  (('test', 'demo', None, bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b'), None, None)
-                ]
+            # Cleanup
+            for keyTuple in keyTuples:
+                client.remove(keyTuple)
+            client.close()
 
         .. warning::
 
