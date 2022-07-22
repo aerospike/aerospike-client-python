@@ -48,6 +48,10 @@ class TestConnectLeak(object):
         """
             Invoke connect() with positive parameters.
         """
+        # first_ref_count = sys.gettotalrefcount()
+        # last_ref_count = first_ref_count
+        # print("-----start gettotalrefcount: " + str(first_ref_count))
+
         config = self.connection_config.copy()
         i = 0
         while i < test_memleak_loop:
@@ -56,3 +60,5 @@ class TestConnectLeak(object):
                 assert client.is_connected()
                 time.sleep(.1)
             i = i + 1
+        # last_ref_count = sys.gettotalrefcount()
+        # print("-----outstanding gettotalrefcount: " + str(last_ref_count-first_ref_count))

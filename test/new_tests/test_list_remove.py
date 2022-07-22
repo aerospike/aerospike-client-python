@@ -211,4 +211,4 @@ class TestListRemove(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_remove(key, "contact_no", "Fifth")
-        assert "an integer is required" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)

@@ -7,6 +7,7 @@ from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
+from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -484,7 +485,10 @@ class TestQueryApply(object):
         for i in range(1, 10):
             key = ('test', 'demo', i)
             _, _, bins = self.as_connection.get(key)
-            assert bins['name'] != 'aerospike'
+            if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+                assert bins['name'] != 'aerospike'
+            else:
+                assert (bins['name'] == 'aerospike' or bins['name'] == str(i))
 
         _, _, bins = self.as_connection.get(self.no_set_key)
         assert bins['name'] == 'aerospike'
@@ -502,7 +506,13 @@ class TestQueryApply(object):
         for i in range(1, 10):
             key = ('test', 'demo', i)
             _, _, bins = self.as_connection.get(key)
-            assert bins['name'] != 'aerospike'
+            if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+                assert bins['name'] != 'aerospike'
+            else:
+                assert bins['name'] == str(i)
 
         _, _, bins = self.as_connection.get(self.no_set_key)
-        assert bins['name'] != 'aerospike'
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            assert bins['name'] != 'aerospike'
+        else:
+            assert bins['name'] == 'no_set_name'
