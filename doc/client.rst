@@ -423,20 +423,30 @@ Record Operations
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
-            try:
-                # assuming a record with such a key exists in the cluster
-                key = ('test', 'demo', 1)
-                (key, meta) = client.exists(key)
-                print(key)
-                print('--------------------------')
-                print(meta)
-            except ex.RecordNotFound:
-                print("Record not found:", key)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
+            # Insert record and check if it exists 
+            keyTuple = ('test', 'demo', "key")
+            bins = {"bin1": "value"}
+            client.put(keyTuple, bins)
+            (key, meta) = client.exists(keyTuple)
+            print(key)
+            print(meta)
+
+            # Expected output:
+            # ('test', 'demo', 'key', bytearray(b';\xd4u\xbd\x0cs\xf2\x10\xb6~\xa87\x930\x0e\xea\xe5v(]'))
+            # {'ttl': 2592000, 'gen': 1}
+
+            # Check for record that doesn't exist
+            keyTuple = ('test', 'demo', "nonexistent")
+            (key, meta) = client.exists(keyTuple)
+            print(key)
+            # "meta" should be none
+            print(meta)
+
+            # Expected output:
+            # ('test', 'demo', 'nonexistent', bytearray(b'J\xc8\xbcoy\xbcG\xc9\x86\n*\xce\xcaSA\x17\xe1\x8d\xe4\xc0'))
+            # None
+
+            client.close()
 
         .. versionchanged:: 2.0.3
 
