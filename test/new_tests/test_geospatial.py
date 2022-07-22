@@ -385,7 +385,7 @@ class TestGeospatial(object):
             assert len(records) == 2
         else:
             assert len(records) == 5
-
+        
         expected = [{'coordinates': [-121.8, 37.7], 'type': 'Point'},
                     {'coordinates': [-121.6, 37.9], 'type': 'Point'}]
 
@@ -393,7 +393,10 @@ class TestGeospatial(object):
             if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
                 assert r['loc'].unwrap() in expected
             else:
-                assert r['loc'] in expected
+                expected = [{'coordinates': [-122.0, 37.5], 'type': 'Point'},
+                            {'coordinates': [-121.8, 37.7], 'type': 'Point'},
+                            {'coordinates': [-121.6, 37.9], 'type': 'Point'}]
+                assert r['loc'].unwrap() in expected
 
     def test_geospatial_positive_query_for_circle(self):
         """
