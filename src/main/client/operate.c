@@ -1394,7 +1394,7 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
 
 	// Python Function Keyword Arguments
 	static char *kwlist[] = {"key", "val", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:touch", kwlist, &py_key,
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO:touch", kwlist, &py_key,
 									&py_touchvalue, &py_meta,
 									&py_policy) == false) {
 		return NULL;
