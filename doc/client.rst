@@ -750,6 +750,85 @@ Batch Operations
 
             The return type changed to :class:`list` starting with version 1.0.50.
 
+    .. method:: batch_get_ops(keys, ops, meta, policy: dict) -> [ (key, meta, bins)]
+
+        Batch-read multiple records, and return them as a :class:`list`. Any \
+        record that does not exist will have a exception type value as metadata \
+        and :py:obj:`None` value as bins in the record tuple.
+
+        :param list keys: a list of :ref:`aerospike_key_tuple`.
+        :param list ops: a list of operations to apply.
+        :param dict policy: optional :ref:`aerospike_batch_policies`.
+        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
+
+        .. seealso:: More information about the \
+            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
+            interface new to Aerospike server >= 3.6.0.
+
+        .. code-block:: python
+
+            import aerospike
+            from aerospike import exception as ex
+            from aerospike_helpers import expressions as exp
+            from aerospike import exception as ex
+            import sys
+
+            config = { 'hosts': [('127.0.0.1', 3000)] }
+            client = aerospike.client(config).connect()
+
+            try:
+                # assume the fourth key has no matching record
+                keys = [
+                  ('test', 'demo', '1'),
+                  ('test', 'demo', '2'),
+                  ("test", "demo", "batch-ops-non_existent_key")
+                ]
+                expr = Let(Def("bal", IntBin("balance")),
+                            Cond(
+                                LT(Var("bal"), 50),
+                                Add(Var("bal"), 50),
+                                Unknown()
+                            )
+                        ).compile()
+                ops = [
+                    expressions.expression_read("test_name", expr, aerospike.EXP_READ_DEFAULT)
+                ]
+                meta = {'gen': 1}
+                policy = {'timeout': 1001}
+                records = client.batch_get_ops(keys, ops, meta, policy)
+                print(records)
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+                sys.exit(1)
+            finally:
+                client.close()
+
+        .. note::
+
+            We expect to see something like:
+
+            .. code-block:: python
+
+                [ 
+                    ( ('test', 'demo', 'batch-ops-k1'),
+                    {'gen': 19, 'ttl': 2592000},
+                    {'scores': ['u7', 789, 'u8', 890, 'u9', 901]}),
+                    
+                    ( ('test', 'demo', 'batch-ops-k2'),
+                    {'gen': 19, 'ttl': 2592000},
+                    {'scores': ['z1', 321, 'z2', 432, 'z7', 987]}),
+                    
+                    ( ('test', 'demo', 'batch-ops-non_existent_key'),
+                    <class 'exception.RecordNotFound'>,
+                    None)
+                ]
+
+        .. note::
+            Version >= 5.0.0 Supports aerrospike expressions for batch operations see :ref:`aerospike_operation_helpers.expressions`.
+            Requires server version >= 5.2.0.
+
+
     .. method:: batch_write(batch_records: BatchRecords, [policy: dict]) -> BatchRecords
 
         .. note:: Requires server version >= 6.0.0.
