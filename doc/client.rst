@@ -822,27 +822,34 @@ Batch Operations
         .. code-block:: python
 
             import aerospike
-            from aerospike import exception as ex
-            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
-            try:
-                # assume the fourth key has no matching record
-                keys = [
-                  ('test', 'demo', '1'),
-                  ('test', 'demo', '2'),
-                  ('test', 'demo', '3'),
-                  ('test', 'demo', '4')
-                ]
-                records = client.exists_many(keys)
-                print(records)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
+            # Keys
+            # Only insert two records with the first and second key
+            keyTuples = [
+                ('test', 'demo', '1'),
+                ('test', 'demo', '2'),
+                ('test', 'demo', '3'),
+            ]
+            client.put(keyTuples[0], {'bin1': 'value'})
+            client.put(keyTuples[1], {'bin1': 'value'})
+
+            # Check for existence of records using all three keys
+            keyMetadata = client.exists_many(keyTuples)
+            print(keyMetadata[0])
+            print(keyMetadata[1])
+            print(keyMetadata[2])
+
+            # Expected output:
+            # (('test', 'demo', '1', bytearray(...)), {'ttl': 2592000, 'gen': 1})
+            # (('test', 'demo', '2', bytearray(...)), {'ttl': 2592000, 'gen': 1})
+            # (('test', 'demo', '3', bytearray(...)), None)
+
+            client.remove(keyTuples[0])
+            client.remove(keyTuples[1])
+            client.close()
 
         .. note::
 
