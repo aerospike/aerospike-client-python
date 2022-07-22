@@ -732,40 +732,36 @@ Batch Operations
         .. code-block:: python
 
             import aerospike
-            from aerospike import exception as ex
-            import sys
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
-            try:
-                # assume the fourth key has no matching record
-                keys = [
-                  ('test', 'demo', '1'),
-                  ('test', 'demo', '2'),
-                  ('test', 'demo', '3'),
-                  ('test', 'demo', '4')
-                ]
-                records = client.get_many(keys)
-                print(records)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
+            # Keys
+            # Only insert two records with the first and second key
+            keyTuples = [
+                ('test', 'demo', '1'),
+                ('test', 'demo', '2'),
+                ('test', 'demo', '3'),
+            ]
+            client.put(keyTuples[0], {'bin1': 'value'})
+            client.put(keyTuples[1], {'bin1': 'value'})
 
-        .. note::
+            # Try to get records with all three keys
+            records = client.get_many(keyTuples)
+            # The third record tuple should have 'meta' and 'bins' set to none
+            # Because there is no third record
+            print(records[0])
+            print(records[1])
+            print(records[2])
 
-            We expect to see something like:
+            # Expected output:
+            # (('test', 'demo', '1', bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin1': 'value'})
+            # (('test', 'demo', '2', bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin1': 'value'})
+            # (('test', 'demo', '3', bytearray(...)), None, None)
 
-            .. code-block:: python
-
-                [
-                  (('test', 'demo', '1', bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3')), {'gen': 1, 'ttl': 2592000}, {'age': 1, 'name': u'Name1'}),
-                  (('test', 'demo', '2', bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd')), {'gen': 1, 'ttl': 2592000}, {'age': 2, 'name': u'Name2'}),
-                  (('test', 'demo', '3', bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86')), {'gen': 1, 'ttl': 2592000}, {'age': 3, 'name': u'Name3'}),
-                  (('test', 'demo', '4', bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')), None, None)
-                ]
+            # Cleanup
+            client.truncate('test', 'demo', 0)
+            client.close()
 
         .. note::
             Version >= 5.0.0 Supports aerrospike expressions for batch operations see :ref:`aerospike_operation_helpers.expressions`.
