@@ -157,33 +157,37 @@ Key Tuple
 
     .. code-block:: python
 
-        >>> import aerospike
+        import aerospike
 
         # NOTE: change this to your Aerospike server's seed node address
-        >>> seedNode = ('127.0.0.1', 3000)
-        >>> config = config = {'hosts': [seedNode]}
-        >>> client = aerospike.client(config).connect()
+        seedNode = ('127.0.0.1', 3000)
+        config = config = {'hosts': [seedNode]}
+        client = aerospike.client(config).connect()
 
         # The key tuple comprises the following:
-        >>> namespaceName = 'test'
-        >>> setName = 'setname'
-        >>> primaryKeyName = 'pkname'
-        >>> keyTuple = (namespaceName, setName, primaryKeyName)
+        namespaceName = 'test'
+        setName = 'setname'
+        primaryKeyName = 'pkname'
+        keyTuple = (namespaceName, setName, primaryKeyName)
 
         # Insert a record
-        >>> recordBins = {'bin1':0, 'bin2':1}
-        >>> client.put(keyTuple, recordBins)
-        
+        recordBins = {'bin1':0, 'bin2':1}
+        client.put(keyTuple, recordBins)
+
         # Now fetch that record
-        >>> (key, meta, bins) = client.get(keyTuple)
-        
+        (key, meta, bins) = client.get(keyTuple)
+
         # The key should be in the second format
         # Notice how there is no primary key
         # and there is the record's digest
-        >>> key
-        ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
-        
-        >>> client.close()
+        print(key)
+
+        # Expected output: 
+        # ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
+
+        # Cleanup
+        client.remove(keyTuple)
+        client.close()
 
     .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
 
@@ -220,34 +224,37 @@ Record Tuple
 
         .. code-block:: python
 
-            >>> import aerospike
+            import aerospike
 
             # NOTE: change this to your Aerospike server's seed node address
-            >>> seedNode = ('127.0.0.1', 3000)
-            >>> config = config = {'hosts': [seedNode]}
-            >>> client = aerospike.client(config).connect()
+            seedNode = ('127.0.0.1', 3000)
+            config = {'hosts': [seedNode]}
+            client = aerospike.client(config).connect()
 
-            >>> namespaceName = 'test'
-            >>> setName = 'setname'
-            >>> primaryKeyName = 'pkname'
-            >>> keyTuple = (namespaceName, setName, primaryKeyName)
+            namespaceName = 'test'
+            setName = 'setname'
+            primaryKeyName = 'pkname'
+            keyTuple = (namespaceName, setName, primaryKeyName)
 
             # Insert a record
-            >>> recordBins = {'bin1':0, 'bin2':1}
-            >>> client.put(keyTuple, recordBins)
-            
+            recordBins = {'bin1':0, 'bin2':1}
+            client.put(keyTuple, recordBins)
+
             # Now fetch that record
-            >>> (key, meta, bins) = client.get(keyTuple)
-            
+            (key, meta, bins) = client.get(keyTuple)
+
             # Generation is 1 because this is the first time we wrote the record
-            >>> meta
-            {'ttl': 2592000, 'gen': 1}
-            
+            print(meta)
+
+            # Expected output:
+            # {'ttl': 2592000, 'gen': 1}
+
             # The bin-value pairs we inserted
-            >>> bins
+            print(bins)
             {'bin1': 0, 'bin2': 1}
 
-            >>> client.close()
+            client.remove(keyTuple)
+            client.close()
 
     .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
 
@@ -318,6 +325,8 @@ Record Operations
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
             finally:
+                # Cleanup
+                client.remove(key)
                 client.close()
 
         .. note::
