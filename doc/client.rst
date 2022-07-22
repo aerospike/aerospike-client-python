@@ -519,18 +519,28 @@ Record Operations
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
+            # Insert a new record
+            keyTuple = ('test', 'demo', "keyname")
+            bins = {
+                'f': 3.14159265359,
+                's': 'Hello!'
+            }
             try:
-                # assuming a record with such a key exists in the cluster
-                key = ('test', 'demo', 1)
-                (key, meta, bins) = client.select(key, ['name'])
-                print("name: ", bins.get('name'))
-            except ex.RecordNotFound:
-                print("Record not found:", key)
+                client.put(keyTuple, bins)
             except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
                 sys.exit(1)
-            finally:
-                client.close()
+
+            # Only get the float bin
+            (keyTuple, meta, bins) = client.select(keyTuple, ['f'])
+            print(bins)
+
+            # Expected output:
+            # {'f': 3.14159265359}
+
+            # Cleanup
+            client.remove(keyTuple)
+            client.close()
 
         .. warning::
 
