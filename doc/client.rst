@@ -608,14 +608,36 @@ Record Operations
         .. code-block:: python
 
             import aerospike
+            from aerospike import exception as ex
 
             config = { 'hosts': [('127.0.0.1', 3000)] }
             client = aerospike.client(config).connect()
 
-            key = ('test', 'demo', 1)
-            client.remove(key, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
-            client.close()
+            # Insert a record
+            keyTuple = ('test', 'demo', "key")
+            bins = {"bin1": "value"}
+            client.put(keyTuple, bins)
 
+            # Try to remove it with the wrong generation
+            try:
+                client.remove(keyTuple, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
+            except ex.AerospikeError as e:
+                print("Error: {0} [{1}]".format(e.msg, e.code))
+
+            # Expected output:
+            # Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
+
+            # Now remove it normally
+            client.remove(keyTuple)
+
+            # Record should no longer exist
+            (keyTuple, meta) = client.exists(keyTuple)
+            print(meta)
+
+            # Expected output:
+            # None
+
+            client.close()
 
     .. method:: get_key_digest(ns, set, key) -> bytearray
 
