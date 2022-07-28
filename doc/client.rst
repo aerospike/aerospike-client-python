@@ -69,14 +69,13 @@ Example
     # Close the connection to the Aerospike cluster
     client.close()
 
-
-.. index::
-    single: Connection
+Methods
+=======
 
 .. _aerospike_connection_operations:
 
 Connection
-==========
+----------
 
 .. class:: Client
 
@@ -111,158 +110,6 @@ Connection
 
         Close all connections to the cluster. It is recommended to explicitly \
         call this method when the program is done communicating with the cluster.
-
-
-    .. index::
-        single: Record Operations
-
-.. _aerospike_key_tuple:
-
-Tuples
-======
-
-Key Tuple
----------
-
-    .. object:: key
-
-        The key tuple, which is sent and returned by various operations, has the structure
-
-        ``(namespace, set, primary key[, digest])``
-
-        .. hlist::
-            :columns: 1
-
-            * namespace (:class:`str`)
-                Name of the namespace.
-
-                This must be preconfigured on the cluster.
-
-            * set (:class:`str`)
-                Name of the set.
-
-                The set be created automatically if it does not exist.
-
-            * primary key (:class:`str`, :class:`int` or :class:`bytearray`)
-                The value by which the client-side application identifies the record.
-
-            * digest
-                The record's RIPEMD-160 digest.
-
-                The first three parts of the tuple get hashed through RIPEMD-160, \
-                and the digest used by the clients and cluster nodes to locate the record. \
-                A key tuple is also valid if it has the digest part filled and the primary key part set to :py:obj:`None`.
-
-    The following code example shows:
-        
-    * How to use the key tuple in a `put` operation
-    * How to fetch the key tuple in a `get` operation
-
-    .. code-block:: python
-
-        import aerospike
-
-        # NOTE: change this to your Aerospike server's seed node address
-        seedNode = ('127.0.0.1', 3000)
-        config = config = {'hosts': [seedNode]}
-        client = aerospike.client(config).connect()
-
-        # The key tuple comprises the following:
-        namespaceName = 'test'
-        setName = 'setname'
-        primaryKeyName = 'pkname'
-        keyTuple = (namespaceName, setName, primaryKeyName)
-
-        # Insert a record
-        recordBins = {'bin1':0, 'bin2':1}
-        client.put(keyTuple, recordBins)
-
-        # Now fetch that record
-        (key, meta, bins) = client.get(keyTuple)
-
-        # The key should be in the second format
-        # Notice how there is no primary key
-        # and there is the record's digest
-        print(key)
-
-        # Expected output: 
-        # ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
-
-        # Cleanup
-        client.remove(keyTuple)
-        client.close()
-
-    .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
-
-
-.. _aerospike_record_tuple:
-
-Record Tuple
-------------
-
-.. object:: record
-
-    The record tuple which is returned by various read operations. It has the structure:
-
-    ``(key, meta, bins)``
-
-    .. hlist::
-        :columns: 1
-
-        * key (:class:`tuple`)
-            See :ref:`aerospike_key_tuple`.
-        * **meta** (:class:`dict`)
-            Contains record metadata with the following key-value pairs:
-
-            * **gen** (:class:`int`)
-                Generation value
-
-            * **ttl** (:class:`int`)
-                Time-to-live value
-
-        * bins (:class:`dict`)
-            Contains bin-name/bin-value pairs.
-
-    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from ``client.get()``:
-
-        .. code-block:: python
-
-            import aerospike
-
-            # NOTE: change this to your Aerospike server's seed node address
-            seedNode = ('127.0.0.1', 3000)
-            config = {'hosts': [seedNode]}
-            client = aerospike.client(config).connect()
-
-            namespaceName = 'test'
-            setName = 'setname'
-            primaryKeyName = 'pkname'
-            keyTuple = (namespaceName, setName, primaryKeyName)
-
-            # Insert a record
-            recordBins = {'bin1':0, 'bin2':1}
-            client.put(keyTuple, recordBins)
-
-            # Now fetch that record
-            (key, meta, bins) = client.get(keyTuple)
-
-            # Generation is 1 because this is the first time we wrote the record
-            print(meta)
-
-            # Expected output:
-            # {'ttl': 2592000, 'gen': 1}
-
-            # The bin-value pairs we inserted
-            print(bins)
-            {'bin1': 0, 'bin2': 1}
-
-            client.remove(keyTuple)
-            client.close()
-
-    .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
-
-Operations
-==========
 
 Record Operations
 -----------------
@@ -2604,6 +2451,149 @@ Admin Operations
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
+.. _aerospike_key_tuple:
+
+Tuples
+======
+
+Key Tuple
+---------
+
+    .. object:: key
+
+        The key tuple, which is sent and returned by various operations, has the structure
+
+        ``(namespace, set, primary key[, digest])``
+
+        .. hlist::
+            :columns: 1
+
+            * namespace (:class:`str`)
+                Name of the namespace.
+
+                This must be preconfigured on the cluster.
+
+            * set (:class:`str`)
+                Name of the set.
+
+                The set be created automatically if it does not exist.
+
+            * primary key (:class:`str`, :class:`int` or :class:`bytearray`)
+                The value by which the client-side application identifies the record.
+
+            * digest
+                The record's RIPEMD-160 digest.
+
+                The first three parts of the tuple get hashed through RIPEMD-160, \
+                and the digest used by the clients and cluster nodes to locate the record. \
+                A key tuple is also valid if it has the digest part filled and the primary key part set to :py:obj:`None`.
+
+    The following code example shows:
+        
+    * How to use the key tuple in a `put` operation
+    * How to fetch the key tuple in a `get` operation
+
+    .. code-block:: python
+
+        import aerospike
+
+        # NOTE: change this to your Aerospike server's seed node address
+        seedNode = ('127.0.0.1', 3000)
+        config = config = {'hosts': [seedNode]}
+        client = aerospike.client(config).connect()
+
+        # The key tuple comprises the following:
+        namespaceName = 'test'
+        setName = 'setname'
+        primaryKeyName = 'pkname'
+        keyTuple = (namespaceName, setName, primaryKeyName)
+
+        # Insert a record
+        recordBins = {'bin1':0, 'bin2':1}
+        client.put(keyTuple, recordBins)
+
+        # Now fetch that record
+        (key, meta, bins) = client.get(keyTuple)
+
+        # The key should be in the second format
+        # Notice how there is no primary key
+        # and there is the record's digest
+        print(key)
+
+        # Expected output: 
+        # ('test', 'setname', None, bytearray(b'b\xc7[\xbb\xa4K\xe2\x9al\xd12!&\xbf<\xd9\xf9\x1bPo'))
+
+        # Cleanup
+        client.remove(keyTuple)
+        client.close()
+
+    .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
+
+.. _aerospike_record_tuple:
+
+Record Tuple
+------------
+
+.. object:: record
+
+    The record tuple which is returned by various read operations. It has the structure:
+
+    ``(key, meta, bins)``
+
+    .. hlist::
+        :columns: 1
+
+        * key (:class:`tuple`)
+            See :ref:`aerospike_key_tuple`.
+        * **meta** (:class:`dict`)
+            Contains record metadata with the following key-value pairs:
+
+            * **gen** (:class:`int`)
+                Generation value
+
+            * **ttl** (:class:`int`)
+                Time-to-live value
+
+        * bins (:class:`dict`)
+            Contains bin-name/bin-value pairs.
+
+    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from ``client.get()``:
+
+        .. code-block:: python
+
+            import aerospike
+
+            # NOTE: change this to your Aerospike server's seed node address
+            seedNode = ('127.0.0.1', 3000)
+            config = {'hosts': [seedNode]}
+            client = aerospike.client(config).connect()
+
+            namespaceName = 'test'
+            setName = 'setname'
+            primaryKeyName = 'pkname'
+            keyTuple = (namespaceName, setName, primaryKeyName)
+
+            # Insert a record
+            recordBins = {'bin1':0, 'bin2':1}
+            client.put(keyTuple, recordBins)
+
+            # Now fetch that record
+            (key, meta, bins) = client.get(keyTuple)
+
+            # Generation is 1 because this is the first time we wrote the record
+            print(meta)
+
+            # Expected output:
+            # {'ttl': 2592000, 'gen': 1}
+
+            # The bin-value pairs we inserted
+            print(bins)
+            {'bin1': 0, 'bin2': 1}
+
+            client.remove(keyTuple)
+            client.close()
+
+    .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
 
 .. _aerospike_polices:
 
