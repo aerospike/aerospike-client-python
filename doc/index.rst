@@ -78,8 +78,8 @@ Content
     key_ordered_dict
     predicates
     exception
-    data_mapping
     aerospike_helpers
+    data_mapping
 
 Indices and tables
 ##################

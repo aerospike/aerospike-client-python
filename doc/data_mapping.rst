@@ -1,7 +1,7 @@
 .. _Data_Mapping:
 
 *************************************************
-:mod:`Data_Mapping` --- Python Data Mappings
+Python Data Mappings
 *************************************************
 
 .. rubric:: How Python types map to server types
