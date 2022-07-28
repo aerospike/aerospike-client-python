@@ -264,6 +264,8 @@ Operations
 Record Operations
 -----------------
 
+.. class:: Client
+    :noindex:
 
     .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer]]])
 
@@ -713,6 +715,9 @@ Record Operations
 
 Batch Operations
 ----------------
+
+.. class:: Client
+    :noindex:
 
     .. method:: get_many(keys[, policy: dict]) -> [ (key, meta, bins)]
 
@@ -1277,6 +1282,9 @@ Batch Operations
 String Operations
 -----------------
 
+.. class:: Client
+    :noindex:
+
     .. note:: Please see :mod:`aerospike_helpers.operations.operations` for the new way to use string operations.
 
     .. method:: append(key, bin, val[, meta: dict[, policy: dict]])
@@ -1348,7 +1356,9 @@ String Operations
 
 Numeric Operations
 ------------------
-
+.. class:: Client
+    :noindex:
+    
     .. note:: Please see :mod:`aerospike_helpers.operations.operations` for the new way to use numeric operations using the operate command.
 
     .. method:: increment(key, bin, offset[, meta: dict[, policy: dict]])
@@ -1417,6 +1427,9 @@ Map Operations
 
 Single-Record Transactions
 --------------------------
+
+.. class:: Client
+    :noindex:
 
     .. method:: operate(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
@@ -1697,6 +1710,9 @@ Scan and Query
 
 User Defined Functions
 ----------------------
+
+.. class:: Client
+    :noindex:
 
     .. method:: udf_put(filename[, udf_type=aerospike.UDF_TYPE_LUA[, policy: dict]])
 
@@ -1981,6 +1997,9 @@ User Defined Functions
 
 Info Operations
 ---------------
+
+.. class:: Client
+    :noindex:
 
     .. method:: get_node_names() -> []
 
@@ -2285,6 +2304,9 @@ Info Operations
 Index Operations
 ----------------
 
+.. class:: Client
+    :noindex:
+
     .. method:: index_string_create(ns, set, bin, index_name[, policy: dict])
 
         Create a string index with *index_name* on the *bin* in the specified \
@@ -2411,6 +2433,9 @@ Index Operations
 
 Admin Operations
 ----------------
+
+.. class:: Client
+    :noindex:
 
     .. note::
 
