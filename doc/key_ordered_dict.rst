@@ -6,6 +6,8 @@
 :class:`aerospike.KeyOrderedDict` --- KeyOrderedDict Class
 ==========================================================
 
+.. class:: KeyOrderedDict
+
 The KeyOrderedDict class is a dictionary that directly maps to a key ordered map on the Aerospike server.
 This assists in matching key ordered maps through various read operations. See the example snippet below.
 

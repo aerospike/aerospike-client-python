@@ -46,29 +46,29 @@ The following table shows which Python types map directly to Aerospike server ty
 
     :ref:`KeyOrderedDict <aerospike.KeyOrderedDict>` is a special case. Like dict, KeyOrderedDict maps to the aerospike map data type. However, the map will be sorted in key order before being sent to the server, see :ref:`aerospike_map_order`.
 
-+--------------------------+------------------------+
-| Python Type              | Server type            |
-+==========================+========================+
-|int                       |integer                 |
-+--------------------------+------------------------+
-|bool                      |depends on send_bool_as |
-+--------------------------+------------------------+
-|str                       |string                  |
-+--------------------------+------------------------+
-|unicode                   |string                  |
-+--------------------------+------------------------+
-|float                     |double                  |
-+--------------------------+------------------------+
-|dict                      |map                     |
-+--------------------------+------------------------+
-|aerospike.KeyOrderedDict  |key ordered map         |
-+--------------------------+------------------------+
-|list                      |list                    |
-+--------------------------+------------------------+
-|bytes                     |blob                    |
-+--------------------------+------------------------+
-|aerospike.GeoJSON         |GeoJSON                 |
-+--------------------------+------------------------+
++---------------------------------+------------------------+
+|   Python Type                   | Server type            |
++=================================+========================+
+|:class:`int`                     |`integer`_              |
++---------------------------------+------------------------+
+|:class:`bool`                    |depends on send_bool_as |
++---------------------------------+------------------------+
+|:class:`str`                     |`string`_               |
++---------------------------------+------------------------+
+|:class:`unicode`                 |`string`_               |
++---------------------------------+------------------------+
+|:class:`float`                   |`double`_               |
++---------------------------------+------------------------+
+|:class:`dict`                    |`map`_                  |
++---------------------------------+------------------------+
+|:class:`aerospike.KeyOrderedDict`|`key ordered map`_      |
++---------------------------------+------------------------+
+|:class:`list`                    |`list`_                 |
++---------------------------------+------------------------+
+|:class:`bytes`                   |`blob`_                 |
++---------------------------------+------------------------+
+|:class:`aerospike.GeoJSON`       |`GeoJSON`_              |
++---------------------------------+------------------------+
 
 It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list as a value.
 
@@ -76,3 +76,11 @@ It is possible to nest these datatypes. For example a list may contain a diction
 
 	Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. Python specific bytes may not be readable by Aerospike Clients for other languages.
 
+.. _integer: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#integer
+.. _string: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#string
+.. _double: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#double
+.. _map: https://docs.aerospike.com/server/guide/data-types/cdt-map
+.. _key ordered map: https://docs.aerospike.com/server/guide/data-types/cdt-map
+.. _list: https://docs.aerospike.com/server/guide/data-types/cdt-list
+.. _blob: https://docs.aerospike.com/server/guide/data-types/blob
+.. _GeoJSON: https://docs.aerospike.com/server/guide/data-types/geospatial
