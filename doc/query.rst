@@ -2,38 +2,34 @@
 
 .. currentmodule:: aerospike
 
-=================================
-Query Class --- :class:`Query`
-=================================
+========================================
+:class:`aerospike.Query` --- Query Class
+========================================
 
-:class:`Query`
-===============
+The query object created by calling :meth:`aerospike.query` is used \
+for executing queries over a secondary index of a specified set (which \
+can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
+records which are not part of any named set.
 
-    The query object created by calling :meth:`aerospike.query` is used \
-    for executing queries over a secondary index of a specified set (which \
-    can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
-    records which are not part of any named set.
+The query can (optionally) be assigned one of the following \
 
-    The query can (optionally) be assigned one of the following \
+* One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Query.where`. \
 
-    * One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Query.where`. \
-    
-    A query without a predicate will match all the records in the given set, similar \
-    to a :class:`~aerospike.Scan`.
+A query without a predicate will match all the records in the given set, similar \
+to a :class:`~aerospike.Scan`.
 
-    The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background` \
-    The bins returned can be filtered by using :meth:`select`.
+The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background` \
+The bins returned can be filtered by using :meth:`select`.
 
-    If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, they will be applied to each record processed by the query. See available write operations at See :mod:`aerospike_helpers` \
+If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, they will be applied to each record processed by the query. See available write operations at See :mod:`aerospike_helpers` \
 
-    Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
-    may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
-    records streaming back from the query.
+Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
+may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
+records streaming back from the query.
 
-    .. seealso::
-        `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
-        `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
-
+.. seealso::
+    `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
+    `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
 
 Query Fields and Methods
 ------------------------

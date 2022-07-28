@@ -48,14 +48,15 @@ Layout
 
 The ``aerospike`` module contains these classes:
 
-=========================== ===========
-Class                       Description
-=========================== ===========
-:ref:`aerospike.scan`       Contains scan operations of entire sets.
-:ref:`aerospike.query`      Handles queries over secondary indexes.
-:ref:`aerospike.geojson`    Handles GeoJSON type data.
-:ref:`client`               Aerospike client API
-=========================== ===========
+=================================    ===========
+Class                                Description
+=================================    ===========
+:ref:`client`                        Aerospike client API
+:ref:`aerospike.scan`                Contains scan operations of entire sets.
+:ref:`aerospike.query`               Handles queries over secondary indexes.
+:ref:`aerospike.geojson`             Handles GeoJSON type data.
+:ref:`aerospike.KeyOrderedDict`      Key ordered dictionary
+=================================    ===========
 
 In addition, the :ref:`Data_Mapping` page explains how **Python** types map to **Aerospike Server** types.
 
@@ -73,12 +74,12 @@ Content
     client
     scan
     query
+    geojson
+    key_ordered_dict
     predicates
     exception
-    aerospike_helpers
-    geojson
     data_mapping
-    key_ordered_dict
+    aerospike_helpers
 
 Indices and tables
 ##################

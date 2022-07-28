@@ -2,12 +2,9 @@
 
 .. currentmodule:: aerospike
 
-==================================
-GeoJSON Class --- :class:`GeoJSON`
-==================================
-
-:class:`GeoJSON`
-================
+============================================
+:class:`aerospike.GeoJSON` --- GeoJSON Class
+============================================
 
 .. class:: GeoJSON
 
