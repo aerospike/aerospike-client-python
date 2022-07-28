@@ -1,4 +1,4 @@
-.. _aerospike.scan:
+.. _aerospike.Scan:
 
 .. currentmodule:: aerospike
 

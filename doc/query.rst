@@ -1,4 +1,4 @@
-.. _aerospike.query:
+.. _aerospike.Query:
 
 .. currentmodule:: aerospike
 
@@ -11,7 +11,7 @@ for executing queries over a secondary index of a specified set (which \
 can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
 records which are not part of any named set.
 
-The query can (optionally) be assigned one of the following \
+The query can (optionally) be assigned one of the following:
 
 * One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Query.where`. \
 

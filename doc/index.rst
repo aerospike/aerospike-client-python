@@ -52,8 +52,8 @@ The ``aerospike`` module contains these classes:
 Class                                Description
 =================================    ===========
 :ref:`client`                        Aerospike client API
-:ref:`aerospike.scan`                Contains scan operations of entire sets.
-:ref:`aerospike.query`               Handles queries over secondary indexes.
+:ref:`aerospike.Scan`                Contains scan operations of entire sets.
+:ref:`aerospike.Query`               Handles queries over secondary indexes.
 :ref:`aerospike.geojson`             Handles GeoJSON type data.
 :ref:`aerospike.KeyOrderedDict`      Key ordered dictionary
 =================================    ===========
