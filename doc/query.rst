@@ -35,23 +35,19 @@ Query Fields and Methods
 ------------------------
 .. class:: Query
 
-    Fields
+    max_records (:class:`int`)
+        Approximate number of records to return to client.
+        This number is divided by the number of nodes involved in the scan.
+        The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
+        Requires server version >= 6.0.0
 
-    :fieldname max_records:
-            :class:`int`
-            Approximate number of records to return to client.
-            This number is divided by the number of nodes involved in the scan.
-            The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
-            Requires server version >= 6.0.0
+        Default: ``0`` (no limit)
 
-            Default: ``0`` (No Limit).
-
-    :fieldname records_per_second:
-            :class:`int`
-            Limit the scan to process records at records_per_second.
-            Requires server version >= 6.0.0
-            
-            Default: ``0`` (no limit).
+    records_per_second (:class:`int`)
+        Limit the scan to process records at records_per_second.
+        Requires server version >= 6.0.0
+        
+        Default: ``0`` (no limit)
 
     .. note::
         Version >= 5.0.0 Supports aerrospike expressions for results, foreach, and execute_background see :ref:`aerospike_operation_helpers.expressions`.
