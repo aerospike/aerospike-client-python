@@ -7,7 +7,7 @@
 ==========================================
 
 Overview
---------
+========
 
 The client connects through a seed node (the address of a single node) to an
 Aerospike database cluster. From the seed node, the client learns of the other
@@ -76,7 +76,7 @@ Example
 .. _aerospike_connection_operations:
 
 Connection
-----------
+==========
 
 .. class:: Client
 
@@ -117,6 +117,9 @@ Connection
         single: Record Operations
 
 .. _aerospike_key_tuple:
+
+Tuples
+======
 
 Key Tuple
 ---------
@@ -2492,7 +2495,7 @@ Admin Operations
 
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
+        :param dict policy: optional :`aerospike_admin_policies`.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_get_role(role[, policy: dict]) -> []
