@@ -1070,9 +1070,9 @@ Single-Record Transactions
 
     .. method:: operate(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
-        Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*. \
-        Starting with Aerospike server version 3.6.0, non-existent bins are not \
-        present in the returned :ref:`aerospike_record_tuple`. \
+        Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*.
+
+        Starting with Aerospike server version 3.6.0, non-existent bins are not present in the returned :ref:`aerospike_record_tuple`. \
         The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin. \
         (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
         :py:obj:`None` value. )
@@ -1088,6 +1088,30 @@ Single-Record Transactions
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            from aerospike_helpers.operations import operations
+
+            # Add name, update age, and return attributes
+            client.put(keyTuple, {'age': 25, 'career': 'delivery boy'})
+            ops = [
+                operations.increment("age", 1000),
+                operations.write("name", "J."),
+                operations.prepend("name", "Phillip "),
+                operations.append("name", " Fry"),
+                operations.read("name"),
+                operations.read("career"),
+                operations.read("age")
+            ]
+            (key, meta, bins) = client.operate(key, ops)
+
+            print(key) # ('test', 'demo', None, bytearray(b'...'))
+            # The generation should only increment once
+            # A transaction is *atomic*
+            print(meta) # {'ttl': 2592000, 'gen': 2}
+            print(bins) # Will display all bins selected by read operations
+            # {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
 
         .. note::
             Version >= 5.0.0 Supports aerrospike expressions for transactions see :ref:`aerospike_operation_helpers.expressions`.
@@ -1159,41 +1183,6 @@ Single-Record Transactions
 
             :meth:`operate` can now have multiple write operations on a single
             bin.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike_helpers.operations import operations as op_helpers
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                key = ('test', 'demo', 1)
-                client.put(key, {'age': 25, 'career': 'delivery boy'})
-                ops = [
-                op_helpers.increment("age", 1000),
-                op_helpers.write("name", "J."),
-                op_helpers.prepend("name", "Phillip "),
-                op_helpers.append("name", " Fry"),
-                op_helpers.read("name"),
-                op_helpers.read("career"),
-                op_helpers.read("age")
-                ]
-                (key, meta, bins) = client.operate(key, ops, {'ttl':360}, {'total_timeout':500})
-
-                print(key)
-                print('--------------------------')
-                print(meta)
-                print('--------------------------')
-                print(bins) # will display all bins selected by OPERATOR_READ operations
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
 
         .. note::
 
