@@ -1043,10 +1043,14 @@ Specifies how the Python client will write Python booleans.
     
     Write Python Booleans as as_bools.
 
+List
+----
+
 .. _aerospike_list_write_flag:
 
 List Write Flags
---------------------
+^^^^^^^^^^^^^^^^
+
 Flags used by list write flag.
 
 .. data:: LIST_WRITE_DEFAULT
@@ -1076,7 +1080,7 @@ Flags used by list write flag.
 .. _list_return_types:
 
 List Return Types
-------------------
+^^^^^^^^^^^^^^^^^
 
 Return types used by various list operations.
 
@@ -1111,7 +1115,8 @@ Return types used by various list operations.
 .. _aerospike_list_order:
 
 List Order
------------------
+^^^^^^^^^^
+
 Flags used by list order.
 
 .. data:: LIST_UNORDERED
@@ -1125,7 +1130,8 @@ Flags used by list order.
 .. _aerospike_list_sort_flag:
 
 List Sort Flags
------------------
+^^^^^^^^^^^^^^^
+
 Flags used by list sort.
 
 .. data:: aerospike.LIST_SORT_DEFAULT
@@ -1136,10 +1142,14 @@ Flags used by list sort.
 
     Drop duplicate values when sorting the list.
 
+Maps
+----
+
 .. _aerospike_map_write_flag:
 
 Map Write Flag
------------------
+^^^^^^^^^^^^^^
+
 Flags used by map write flag. 
 
 .. note:: Requires server version >= 4.3.0
@@ -1167,7 +1177,7 @@ Flags used by map write flag.
 .. _aerospike_map_write_mode:
 
 Map Write Mode
---------------
+^^^^^^^^^^^^^^
 
 Flags used by map *write mode*.
 
@@ -1188,7 +1198,8 @@ Flags used by map *write mode*.
 .. _aerospike_map_order:
 
 Map Order
------------------
+^^^^^^^^^
+
 Flags used by map order.
 
 .. data:: MAP_UNORDERED
@@ -1206,7 +1217,7 @@ Flags used by map order.
 .. _map_return_types:
 
 Map Return Types
-----------------
+^^^^^^^^^^^^^^^^
 
 Return types used by various map operations.
 
@@ -1246,11 +1257,13 @@ Return types used by various map operations.
 
     Return key/value items. Note that key/value pairs will be returned as a list of tuples (i.e. [(key1, value1), (key2, value2)])
 
+Bitwise
+-------
 
 .. _aerospike_bitwise_write_flag:
 
 Bitwise Write Flags
------------------------
+^^^^^^^^^^^^^^^^^^^
 
 .. data:: BIT_WRITE_DEFAULT
 
@@ -1280,7 +1293,7 @@ Bitwise Write Flags
 .. _aerospike_bitwise_resize_flag:
 
 Bitwise Resize Flags
-----------------------
+^^^^^^^^^^^^^^^^^^^^
 
 .. data:: BIT_RESIZE_DEFAULT
 
@@ -1303,7 +1316,7 @@ Bitwise Resize Flags
 .. versionadded:: 3.9.0
 
 Bitwise Overflow
-----------------------
+^^^^^^^^^^^^^^^^
 
 .. data:: BIT_OVERFLOW_FAIL
 
