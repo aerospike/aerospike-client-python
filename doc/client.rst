@@ -345,35 +345,18 @@ Record Operations
 
         .. code-block:: python
 
-            import aerospike
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
             # Insert record and get its metadata
-            keyTuple = ('test', 'demo', "key")
-            bins = {"bin1": "value"}
-            client.put(keyTuple, bins)
+            client.put(keyTuple, bins = {"bin1": 4})
             (key, meta) = client.exists(keyTuple)
-            print(meta)
-
-            # Expected output:
-            # {'ttl': 2592000, 'gen': 1}
+            print(meta) # {'ttl': 2592000, 'gen': 1}
 
             # Explicitly set TTL to 120
             # and increment generation
             client.touch(keyTuple, 120)
 
-            # Get record's new metadata
+            # Record metadata should be updated
             (key, meta) = client.exists(keyTuple)
-            print(meta)
-
-            # Expected output:
-            # {'ttl': 120, 'gen': 2}
-
-            # Cleanup
-            client.remove(keyTuple)
-            client.close()
+            print(meta) # {'ttl': 120, 'gen': 2}
 
     .. method:: remove(key[meta: dict[, policy: dict]])
 
@@ -386,37 +369,18 @@ Record Operations
 
         .. code-block:: python
 
-            import aerospike
-            from aerospike import exception as ex
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
             # Insert a record
-            keyTuple = ('test', 'demo', "key")
-            bins = {"bin1": "value"}
-            client.put(keyTuple, bins)
+            client.put(keyTuple, {"bin1": 4})
 
             # Try to remove it with the wrong generation
             try:
                 client.remove(keyTuple, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
             except ex.AerospikeError as e:
+                # Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
                 print("Error: {0} [{1}]".format(e.msg, e.code))
 
-            # Expected output:
-            # Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
-
-            # Now remove it normally
+            # Remove it ignoring generation
             client.remove(keyTuple)
-
-            # Record should no longer exist
-            (keyTuple, meta) = client.exists(keyTuple)
-            print(meta)
-
-            # Expected output:
-            # None
-
-            client.close()
 
     .. method:: get_key_digest(ns, set, key) -> bytearray
 
@@ -431,24 +395,12 @@ Record Operations
 
         .. code-block:: python
 
-            import aerospike
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
             digest = client.get_key_digest("test", "demo", "key")
             print(digest.hex())
-
-            # Expected output:
             # 3bd475bd0c73f210b67ea83793300eeae576285d
-
-            client.close()
 
         .. deprecated:: 2.0.1
             use the function :func:`aerospike.calc_digest` instead.
-
-
-    .. rubric:: Removing a Bin
 
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
@@ -465,27 +417,17 @@ Record Operations
 
         .. code-block:: python
 
-            import aerospike
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
             # Insert record
-            keyTuple = ('test', 'demo', "key")
             bins = {"bin1": 0, "bin2": 1}
             client.put(keyTuple, bins)
 
-            # Remove bin named "bin1"
+            # Remove bin1
             client.remove_bin(keyTuple, ['bin1'])
 
+            # Only bin2 shold remain
             (keyTuple, meta, bins) = client.get(keyTuple)
             print(bins)
-
-            # Expected output:
             # {'bin2': 1}
-
-            client.remove(keyTuple)
-            client.close()
 
     .. index::
         single: Batch Operations
