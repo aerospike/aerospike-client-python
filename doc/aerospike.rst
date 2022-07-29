@@ -4,6 +4,9 @@
 :mod:`aerospike` --- Aerospike Client for Python
 *************************************************
 
+Overview
+========
+
 .. module:: aerospike
     :platform: 64-bit Linux and OS X
     :synopsis: Aerospike client for Python.
@@ -17,8 +20,11 @@ cluster and handles the transactions performed against it.
 Methods
 =======
 
-Client Constructor
-------------------
+Constructors
+------------
+
+Client
+^^^^^^
 
 .. py:function:: client(config)
 
@@ -91,10 +97,8 @@ Client Constructor
         client.put(key, {'aerospike': 'aerospike'})
         print(client.get(key))
 
-.. _aerospike_scan_and_query:
-
-Scan and Query Constructors
----------------------------
+Scan
+^^^^
 
 .. method:: scan(namespace[, set]) -> Scan
 
@@ -110,6 +114,8 @@ Scan and Query Constructors
         *namespace* will be scanned.
     :return: an :py:class:`aerospike.Scan` class.
 
+Query
+^^^^^
 
 .. method:: query(namespace[, set]) -> Query
 
@@ -128,8 +134,48 @@ Scan and Query Constructors
 .. index::
     single: Other Methods
 
-Other Methods
--------------
+Geospatial
+^^^^^^^^^^
+
+.. py:function:: geodata([geo_data])
+
+    Helper for creating an instance of the :class:`~aerospike.GeoJSON` class. \
+    Used to wrap a geospatial object, such as a point, polygon or circle.
+
+    :param dict geo_data: a :class:`dict` representing the geospatial data.
+    :return: an instance of the :py:class:`aerospike.GeoJSON` class.
+
+    .. code-block:: python
+
+        import aerospike
+
+        # Create GeoJSON point using WGS84 coordinates.
+        latitude = 45.920278
+        longitude = 63.342222
+        loc = aerospike.geodata({'type': 'Point',
+                                 'coordinates': [longitude, latitude]})
+
+    .. versionadded:: 1.0.54
+
+.. py:function:: geojson([geojson_str])
+
+    Helper for creating an instance of the :class:`~aerospike.GeoJSON` class \
+    from a raw GeoJSON :class:`str`.
+
+    :param dict geojson_str: a :class:`str` of raw GeoJSON.
+    :return: an instance of the :py:class:`aerospike.GeoJSON` class.
+
+    .. code-block:: python
+
+        import aerospike
+
+        # Create GeoJSON point using WGS84 coordinates.
+        loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
+
+    .. versionadded:: 1.0.54
+
+Types
+-----
 
 .. py:function:: null()
 
@@ -165,7 +211,6 @@ Other Methods
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
 
-
 .. py:function:: CDTInfinite()
 
     A type representing an infinte value. This type may only be used as a comparison value in operations.
@@ -190,28 +235,8 @@ Other Methods
     .. versionadded:: 3.5.0
     .. note:: This requires Aerospike Server 4.3.1.3 or greater
 
-
-.. py:function:: calc_digest(ns, set, key) -> bytearray
-
-    Calculate the digest of a particular key. See: :ref:`aerospike_key_tuple`.
-
-    :param str ns: the namespace in the aerospike cluster.
-    :param str set: the set name.
-    :param key: the primary key identifier of the record within the set.
-    :type key: :class:`str`, :class:`int` or :class:`bytearray`
-    :return: a RIPEMD-160 digest of the input tuple.
-    :rtype: :class:`bytearray`
-
-    .. code-block:: python
-
-        import aerospike
-        import pprint
-
-        digest = aerospike.calc_digest("test", "demo", 1 )
-        pp.pprint(digest)
-
-
-.. rubric:: Serialization
+Serialization
+-------------
 
 .. note::
 
@@ -367,7 +392,8 @@ Other Methods
         1 row in set (0.000 secs)
 
 
-.. rubric:: Logging
+Logging
+-------
 
 .. py:function:: set_log_handler(callback)
 
@@ -394,45 +420,27 @@ Other Methods
 
     :param int log_level: one of the :ref:`aerospike_log_levels` constant values.
 
+Other
+-----
 
-.. rubric:: Geospatial
+.. py:function:: calc_digest(ns, set, key) -> bytearray
 
-.. py:function:: geodata([geo_data])
+    Calculate the digest of a particular key. See: :ref:`aerospike_key_tuple`.
 
-    Helper for creating an instance of the :class:`~aerospike.GeoJSON` class. \
-    Used to wrap a geospatial object, such as a point, polygon or circle.
-
-    :param dict geo_data: a :class:`dict` representing the geospatial data.
-    :return: an instance of the :py:class:`aerospike.GeoJSON` class.
-
-    .. code-block:: python
-
-        import aerospike
-
-        # Create GeoJSON point using WGS84 coordinates.
-        latitude = 45.920278
-        longitude = 63.342222
-        loc = aerospike.geodata({'type': 'Point',
-                                 'coordinates': [longitude, latitude]})
-
-    .. versionadded:: 1.0.54
-
-.. py:function:: geojson([geojson_str])
-
-    Helper for creating an instance of the :class:`~aerospike.GeoJSON` class \
-    from a raw GeoJSON :class:`str`.
-
-    :param dict geojson_str: a :class:`str` of raw GeoJSON.
-    :return: an instance of the :py:class:`aerospike.GeoJSON` class.
+    :param str ns: the namespace in the aerospike cluster.
+    :param str set: the set name.
+    :param key: the primary key identifier of the record within the set.
+    :type key: :class:`str`, :class:`int` or :class:`bytearray`
+    :return: a RIPEMD-160 digest of the input tuple.
+    :rtype: :class:`bytearray`
 
     .. code-block:: python
 
         import aerospike
+        import pprint
 
-        # Create GeoJSON point using WGS84 coordinates.
-        loc = aerospike.geojson('{"type": "Point", "coordinates": [-80.604333, 28.608389]}')
-
-    .. versionadded:: 1.0.54
+        digest = aerospike.calc_digest("test", "demo", 1 )
+        pp.pprint(digest)
 
 .. _client_config:
 
@@ -718,10 +726,13 @@ These are the keys and expected values for the ``config`` dictionary passed to :
         
         Default: ``1000``.
 
+Constants
+=========
+
 .. _aerospike_operators:
 
 Operators
-=========
+---------
 
 Operators for the single-record, multi-operation transaction method :py:meth:`Client.operate`.
 
@@ -734,12 +745,12 @@ Operators for the single-record, multi-operation transaction method :py:meth:`Cl
 .. _aerospike_policies:
 
 Policy Options
-==============
+--------------
 
 .. _POLICY_COMMIT_LEVEL:
 
 Commit Level Policy Options
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specifies the number of replicas required to be successfully committed before returning success in a write operation to provide the desired consistency guarantee.
 
@@ -755,7 +766,7 @@ Specifies the number of replicas required to be successfully committed before re
 .. _POLICY_READ_MODE_AP:
 
 AP Read Mode Policy Options
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Read policy for AP (availability) namespaces.
 
@@ -772,7 +783,7 @@ Read policy for AP (availability) namespaces.
 .. _POLICY_READ_MODE_SC:
 
 SC Read Mode Policy Options
----------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Read policy for SC (strong consistency) namespaces.
 
@@ -797,7 +808,7 @@ Read policy for SC (strong consistency) namespaces.
 .. _POLICY_EXISTS: 
 
 Existence Policy Options
-------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specifies the behavior for writing the record depending whether or not it exists.
 
@@ -824,7 +835,7 @@ Specifies the behavior for writing the record depending whether or not it exists
 .. _POLICY_GEN:
 
 Generation Policy Options
--------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Specifies the behavior of record modifications with regard to the generation value.
 
@@ -844,7 +855,7 @@ Specifies the behavior of record modifications with regard to the generation val
 .. _POLICY_KEY:
 
 Key Policy Options
-------------------
+^^^^^^^^^^^^^^^^^^
 
 Specifies the behavior for whether keys or digests should be sent to the cluster.
 
@@ -859,7 +870,7 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 .. _POLICY_REPLICA:
 
 Replica Options
----------------
+^^^^^^^^^^^^^^^
 
 Specifies which partition replica to read from.
 
@@ -883,7 +894,7 @@ Specifies which partition replica to read from.
 
 
 Retry Policy Options
---------------------
+^^^^^^^^^^^^^^^^^^^^
 
 Specifies the behavior of failed operations.
 
@@ -895,9 +906,6 @@ Specifies the behavior of failed operations.
 
     If an operation fails, attempt the operation one more time
 
-
-Constants
-=========
 
 .. _TTL_CONSTANTS:
 

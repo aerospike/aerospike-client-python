@@ -6,6 +6,9 @@
 :class:`aerospike.GeoJSON` --- GeoJSON Class
 ============================================
 
+Overview
+========
+
 Starting with version ``3.7.0``, the Aerospike server supports storing GeoJSON data.
 A Geo2DSphere index can be built on a bin which contains GeoJSON data,
 which allows queries for points inside any given shapes using:
@@ -32,7 +35,7 @@ deserialized into a :class:`~aerospike.GeoJSON` instance.
 .. _example:
 
 Example
-=======
+-------
 
 .. code-block:: python
 
@@ -72,6 +75,9 @@ Example
     # Cleanup
     client.remove(('test', 'pads', 'launchpad1'))
     client.close()
+
+Methods
+=======
 
 .. class:: GeoJSON
 

@@ -8,6 +8,9 @@
 
 .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
+Overview
+========
+
 The Scan object is used to return all the records in a specified set (which \
 can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
 records in the namespace.
@@ -84,8 +87,9 @@ bins returned can be filtered using :meth:`select`.
             aerospike:update(rec)
         end
 
-Scan Methods
--------------
+Methods
+=======
+
 .. class:: Scan
 
     .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
@@ -528,8 +532,8 @@ Scan Methods
 
 .. _aerospike_scan_policies:
 
-Scan Policies
--------------
+Policies
+========
 
 .. object:: policy
 
@@ -621,8 +625,8 @@ Scan Policies
 
 .. _aerospike_scan_options:
 
-Scan Options
-------------
+Options
+=======
 
 .. object:: options
 

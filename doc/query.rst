@@ -6,6 +6,9 @@
 :class:`aerospike.Query` --- Query Class
 ========================================
 
+Overview
+========
+
 The query object created by calling :meth:`aerospike.query` is used \
 for executing queries over a secondary index of a specified set (which \
 can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
@@ -31,8 +34,9 @@ records streaming back from the query.
     `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
     `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
 
-Query Fields and Methods
-------------------------
+Fields
+======
+
 .. class:: Query
 
     max_records (:class:`int`)
@@ -129,7 +133,11 @@ Query Fields and Methods
     .. note::
         For a similar example using .results() see :meth:`aerospike.Scan.results`.
 
-    Methods
+Methods
+=======
+
+.. class:: Query
+    :noindex:
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
@@ -677,8 +685,8 @@ Query Fields and Methods
 
 .. _aerospike_query_policies:
 
-Query Policies
---------------
+Policies
+========
 
 .. object:: policy
 
@@ -768,8 +776,8 @@ Query Policies
 
 .. _aerospike_query_options:
 
-Query Options
---------------
+Options
+=======
 
 .. object:: options
 
