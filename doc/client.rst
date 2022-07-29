@@ -455,18 +455,13 @@ Batch Operations
 
         .. code-block:: python
 
-            import aerospike
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
             # Keys
-            # Only insert two records with the first and second key
             keyTuples = [
                 ('test', 'demo', '1'),
                 ('test', 'demo', '2'),
                 ('test', 'demo', '3'),
             ]
+            # Only insert two records with the first and second key
             client.put(keyTuples[0], {'bin1': 'value'})
             client.put(keyTuples[1], {'bin1': 'value'})
 
@@ -479,13 +474,9 @@ Batch Operations
             print(records[2])
 
             # Expected output:
-            # (('test', 'demo', '1', bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin1': 'value'})
-            # (('test', 'demo', '2', bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin1': 'value'})
+            # (('test', 'demo', '1', bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin1': 'value'})
+            # (('test', 'demo', '2', bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin1': 'value'})
             # (('test', 'demo', '3', bytearray(...)), None, None)
-
-            # Cleanup
-            client.truncate('test', 'demo', 0)
-            client.close()
 
         .. note::
             Version >= 5.0.0 Supports aerrospike expressions for batch operations see :ref:`aerospike_operation_helpers.expressions`.
@@ -545,11 +536,6 @@ Batch Operations
 
         .. code-block:: python
 
-            import aerospike
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
             # Keys
             # Only insert two records with the first and second key
             keyTuples = [
@@ -566,14 +552,9 @@ Batch Operations
             print(keyMetadata[1])
             print(keyMetadata[2])
 
-            # Expected output:
             # (('test', 'demo', '1', bytearray(...)), {'ttl': 2592000, 'gen': 1})
             # (('test', 'demo', '2', bytearray(...)), {'ttl': 2592000, 'gen': 1})
             # (('test', 'demo', '3', bytearray(...)), None)
-
-            client.remove(keyTuples[0])
-            client.remove(keyTuples[1])
-            client.close()
 
         .. note::
 
@@ -609,39 +590,28 @@ Batch Operations
 
         .. code-block:: python
 
-            import aerospike
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            # Insert 4 records
-            # Only 3 of them have a bin called bin2
+            # Insert 4 records with these keys
             keyTuples = [
                 ('test', 'demo', 1),
                 ('test', 'demo', 2),
                 ('test', 'demo', 3),
                 ('test', 'demo', 4)
             ]
+            # Only records 1, 2, 4 have a bin called bin2
             client.put(keyTuples[0], {'bin1': 20, 'bin2': 40})
             client.put(keyTuples[1], {'bin1': 11, 'bin2': 50})
             client.put(keyTuples[2], {'bin1': 50,             'bin3': 20})
             client.put(keyTuples[3], {'bin1': 87, 'bin2': 76, 'bin3': 40})
 
-            # Get all records and filter out all bins except bin2
+            # Get all 4 records and filter out every bin except bin2
             records = client.select_many(keyTuples, ['bin2'])
             for record in records:
                 print(record)
 
-            # Expected output:
-            # (('test', 'demo', 1, bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin2': 40})
-            # (('test', 'demo', 2, bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin2': 50})
-            # (('test', 'demo', 3, bytearray(...)), {'ttl': 2592000, 'gen': 2}, {})
-            # (('test', 'demo', 4, bytearray(...)), {'ttl': 2592000, 'gen': 2}, {'bin2': 76})
-
-            # Cleanup
-            for keyTuple in keyTuples:
-                client.remove(keyTuple)
-            client.close()
+            # (('test', 'demo', 1, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin2': 40})
+            # (('test', 'demo', 2, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin2': 50})
+            # (('test', 'demo', 3, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {})
+            # (('test', 'demo', 4, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin2': 76})
 
         .. warning::
 
@@ -665,35 +635,19 @@ Batch Operations
 
         .. code-block:: python
 
-            import aerospike
-            from aerospike import exception as ex
-            from aerospike_helpers import expressions as exp
-            from aerospike import exception as ex
-            import sys
+            from aerospike_helpers.operations import operations as op
 
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
+            keyTuples = [
+                ('test', 'demo', '1'),
+                ('test', 'demo', '2'),
+                ("test", "demo", "batch-ops-non_existent_key")
+            ]
 
-            try:
-                # assume the fourth key has no matching record
-                keys = [
-                  ('test', 'demo', '1'),
-                  ('test', 'demo', '2'),
-                  ("test", "demo", "batch-ops-non_existent_key")
-                ]
-                expr = Let(Def("bal", IntBin("balance")),
-                            Cond(
-                                LT(Var("bal"), 50),
-                                Add(Var("bal"), 50),
-                                Unknown()
-                            )
-                        ).compile()
-                ops = [
-                    expressions.expression_read("test_name", expr, aerospike.EXP_READ_DEFAULT)
-                ]
-                meta = {'gen': 1}
-                policy = {'timeout': 1001}
-                records = client.batch_get_ops(keys, ops, meta, policy)
+            ops = [
+                op.
+            ]
+
+                records = client.batch_get_ops(keys, ops)
                 print(records)
             except ex.AerospikeError as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
@@ -730,13 +684,13 @@ Batch Operations
 
         .. note:: Requires server version >= 6.0.0.
 
-        Write/Read multiple records for specified batch keys in one batch call.
+        Write/read multiple records for specified batch keys in one batch call.
         This method allows different sub-commands for each key in the batch.
-        The resulting records and status are set in batch_records record and result fields.
+        The resulting records and status are set in ``batch_records`` record and result fields.
 
-        .. note:: batch_write modifies the batch_records parameter.
+        .. note:: This function modifies the ``batch_records`` parameter.
 
-        :param BatchRecords batch_records: A BatchRecords object used to specify the operations to carry out.
+        :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
         :param dict policy: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1021,22 +975,10 @@ String Operations
 
         .. code-block:: python
 
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                key = ('test', 'demo', 1)
-                client.append(key, 'name', ' jr.', policy={'total_timeout': 1200})
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
+            client.put(keyTuple, {'bin1': 'Martin Luther King'})
+            client.append(keyTuple, 'bin1', ' jr.')
+            (_, _, bins) = client.get(keyTuple)
+            print(bins) # Martin Luther King jr.
 
     .. method:: prepend(key, bin, val[, meta: dict[, policy: dict]])
 
@@ -1053,22 +995,10 @@ String Operations
 
         .. code-block:: python
 
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                key = ('test', 'demo', 1)
-                client.prepend(key, 'name', 'Dr. ', policy={'total_timeout': 1200})
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
+            client.put(keyTuple, {'bin1': 'Freeman'})
+            client.prepend(keyTuple, 'bin1', ' Gordon ')
+            (_, _, bins) = client.get(keyTuple)
+            print(bins) # Gordon Freeman
 
     .. index::
         single: Numeric Operations
@@ -1096,30 +1026,18 @@ Numeric Operations
 
         .. code-block:: python
 
-            import aerospike
-            from aerospike import exception as ex
-            import sys
+            # Start with 100 lives
+            client.put(keyTuple, {'lives': 100})
 
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
+            # Gain health
+            client.increment(keyTuple, 'lives', 10)
+            (key, meta, bins) = client.get(keyTuple)
+            print(bins) # 110
 
-            try:
-                client.put(('test', 'cats', 'mr. peppy'), {'breed':'persian'}, policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE})
-                (key, meta, bins) = client.get(('test', 'cats', 'mr. peppy'))
-                print("Before:", bins, "\n")
-                client.increment(key, 'lives', -1)
-                (key, meta, bins) = client.get(key)
-                print("After:", bins, "\n")
-                client.increment(key, 'lives', -1)
-                (key, meta, bins) = client.get(key)
-                print("Poor Kitty:", bins, "\n")
-                print(bins)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
+            # Take damage
+            client.increment(keyTuple, 'lives', -90)
+            (key, meta, bins) = client.get(keyTuple)
+            print(bins) # 20
 
     .. index::
         single: List Operations
