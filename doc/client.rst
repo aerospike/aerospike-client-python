@@ -23,26 +23,27 @@ a cluster-tending thread.
     <https://www.aerospike.com/docs/architecture/clients.html>`_ and
     `Data Distribution <https://www.aerospike.com/docs/architecture/data-distribution.html>`_.
 
-Example
--------
+Boilerplate Code For Examples
+-----------------------------
+
+Assume every in-line example runs this code beforehand:
 
 ::
 
-    # import the module
+    # Imports
     import aerospike
     from aerospike import exception as ex
     import sys
+
+    # Precleanup
+    if 'client' in local() and client.is_connected():
+        client.truncate('test', None, 0)
+        client.close()
 
     # Configure the client
     config = {
         'hosts': [ ('127.0.0.1', 3000) ]
     }
-
-    # Optionally set policies for various method types
-    write_policies = {'total_timeout': 2000, 'max_retries': 0}
-    read_policies = {'total_timeout': 1500, 'max_retries': 1}
-    policies = {'write': write_policies, 'read': read_policies}
-    config['policies'] = policies
 
     # Create a client and connect it to the cluster
     try:
@@ -51,23 +52,18 @@ Example
         print("Error: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
 
-    # Records are addressable via a tuple of (namespace, set, primary key)
-    key = ('test', 'demo', 'foo')
+    # Record key tuple: (namespace, set, key)
+    keyTuple = ('test', 'demo', 'key')
 
-    try:
-        # Write a record
-        client.put(key, {
-            'name': 'John Doe',
-            'age': 32
-        })
-    except ex.RecordError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
+Basic example:
+
+::
+
+    # Write a record
+    client.put(keyTuple, {'name': 'John Doe', 'age': 32})
 
     # Read a record
-    (key, meta, record) = client.get(key)
-
-    # Close the connection to the Aerospike cluster
-    client.close()
+    (key, meta, record) = client.get(keyTuple)
 
 Methods
 =======
@@ -137,49 +133,17 @@ Record Operations
 
         .. code-block:: python
 
-            import sys
-            import aerospike
-            from aerospike import exception
-
-            config = {
-                'hosts': [('127.0.0.1', 3000)],
-            }
-            client = aerospike.client(config).connect()
-
-            # Insert a new record
-            key = ('test', 'demo', "keyname")
-            bins = {
-                'l': ["string", 1, bytearray(10)],
-                'm': { "key": "value" },
-                'i': 1234,
-                'f': 3.14159265359,
-                's': 'Hello!'
-            }
-            try:
-                client.put(key, bins, 
-                    # See docs about write policy for details
-                    policy={'exists': aerospike.POLICY_EXISTS_CREATE_OR_REPLACE},
-                    # Record properties
-                    # Time to live: 180 seconds
-                    # Manually set to 5th generation
-                    meta={'ttl':180, 'gen': 5})
-                
-                # Write a new bin to this record
-                client.put(key, {'smiley': "face"})
-                # Remove a bin from this record
-                client.put(key, {'i': aerospike.null()})
-
-                # Record should only have bins (with these names):
-                # l, m, f, s, smiley
-                (_, _, bins) = client.get(key)
-                print(bins)
-            except exception.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                # Cleanup
-                client.remove(key)
-                client.close()
+            # Insert a record with bin1
+            client.put(keyTuple, {'bin1': 4})
+            
+            # Insert another bin named bin2
+            client.put(keyTuple, {'bin2': "value"})
+            
+            # Remove bin1 from this record
+            client.put(keyTuple, {'bin2': aerospike.null()})
+            
+            # Removing the last bin should delete this record
+            client.put(keyTuple, {'bin1': aerospike.null()})
 
         .. note::
             Version >= 5.0.0 supports Aerospike expressions for record operations. See :ref:`aerospike_operation_helpers.expressions`.
@@ -268,35 +232,18 @@ Record Operations
 
         .. code-block:: python
 
-            import aerospike
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            # Insert record and check if it exists 
-            keyTuple = ('test', 'demo', "key")
-            bins = {"bin1": "value"}
-            client.put(keyTuple, bins)
+            # Check non-existent record
             (key, meta) = client.exists(keyTuple)
-            print(key)
-            print(meta)
+            
+            print(key) # ('test', 'demo', 'key', bytearray(b'...'))
+            print(meta) # None
 
-            # Expected output:
-            # ('test', 'demo', 'key', bytearray(b';\xd4u\xbd\x0cs\xf2\x10\xb6~\xa87\x930\x0e\xea\xe5v(]'))
-            # {'ttl': 2592000, 'gen': 1}
-
-            # Check for record that doesn't exist
-            keyTuple = ('test', 'demo', "nonexistent")
+            # Check existing record
+            client.put(keyTuple, {'bin1': 4})
             (key, meta) = client.exists(keyTuple)
-            print(key)
-            # "meta" should be none
-            print(meta)
 
-            # Expected output:
-            # ('test', 'demo', 'nonexistent', bytearray(b'J\xc8\xbcoy\xbcG\xc9\x86\n*\xce\xcaSA\x17\xe1\x8d\xe4\xc0'))
-            # None
-
-            client.close()
+            print(key) # ('test', 'demo', 'key', bytearray(b'...'))
+            print(meta) # {'ttl': 2592000, 'gen': 1}
 
         .. versionchanged:: 2.0.3
 
@@ -312,29 +259,20 @@ Record Operations
 
         .. code-block:: python
 
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = {'hosts': [('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
-
+            # Get nonexistent record
             try:
-                # assuming a record with such a key exists in the cluster
-                key = ('test', 'demo', 1)
-                (key, meta, bins) = client.get(key)
-                print(key)
-                print('--------------------------')
-                print(meta)
-                print('--------------------------')
-                print(bins)
-            except ex.RecordNotFound:
-                print("Record not found:", key)
-            except ex.AerospikeError as e:
+                client.get(keyTuple)
+            except ex.RecordNotFound as e:
                 print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
+                # Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND [2]
+
+            # Get existing record
+            client.put(keyTuple, {'bin1': 4})
+            (key, meta, bins) = client.get(keyTuple)
+
+            print(key) # ('test', 'demo', None, bytearray(b'...'))
+            print(meta) # {'ttl': 2592000, 'gen': 1}
+            print(bins) # {'bin1': 4}
 
         .. warning::
 
@@ -362,36 +300,25 @@ Record Operations
 
         .. code-block:: python
 
-            import aerospike
-            from aerospike import exception as ex
-            import sys
+            # Record to select from
+            client.put(keyTuple, {'bin1': 4, 'bin2': 3})
 
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
+            # Only get bin1
+            (key, meta, bins) = client.select(keyTuple, ['bin1'])
 
-            # Insert a new record
-            keyTuple = ('test', 'demo', "keyname")
-            bins = {
-                'f': 3.14159265359,
-                's': 'Hello!'
-            }
-            try:
-                client.put(keyTuple, bins)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
+            # Similar output to get()
+            print(key) # ('test', 'demo', 'key', bytearray(b'...'))
+            print(meta) # {'ttl': 2592000, 'gen': 1}
+            print(bins) # {'bin1': 4}
 
-            # Only get the float bin
-            (keyTuple, meta, bins) = client.select(keyTuple, ['f'])
-            print(bins)
-
-            # Expected output:
-            # {'f': 3.14159265359}
-
-            # Cleanup
-            client.remove(keyTuple)
-            client.close()
-
+            # Get all bins
+            (key, meta, bins) = client.select(keyTuple, ['bin1', 'bin2'])
+            print(bins) # {'bin1': 4, 'bin2': 3}
+            
+            # Get nonexistent bin
+            (key, meta, bins) = client.select(keyTuple, ['bin3'])
+            print(bins) # {}
+            
         .. warning::
 
             The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
