@@ -1586,29 +1586,17 @@ Info Operations
 
     .. method:: get_node_names() -> []
 
-        Return the list of hosts present in a connected cluster including node names.
+        Return the list of hosts and node names present in a connected cluster.
 
         :return: a :class:`list` of node info dictionaries.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
 
-            import aerospike
-
-            config = {'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
+            # Assuming two nodes
             nodes = client.get_node_names()
             print(nodes)
-            client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-                [{'address': '1.1.1.1', 'port': 3000, 'node_name': 'BCER199932C'}, {'address': '1.1.1.1', 'port': 3010, 'node_name': 'ADFFE7782CD'}]
+            # [{'address': '1.1.1.1', 'port': 3000, 'node_name': 'BCER199932C'}, {'address': '1.1.1.1', 'port': 3010, 'node_name': 'ADFFE7782CD'}]
 
         .. versionchanged:: 6.0.0
 
@@ -1621,155 +1609,115 @@ Info Operations
 
         .. code-block:: python
 
-            import aerospike
-
-            config = {'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
+            # Assuming two nodes
             nodes = client.get_nodes()
             print(nodes)
-            client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-                [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
+            # [('127.0.0.1', 3000), ('127.0.0.1', 3010)]
 
         .. versionchanged:: 3.0.0
 
         .. warning:: In versions < 3.0.0 ``get_nodes`` will not work when using TLS
 
-    .. method:: info(command[, hosts[, policy: dict]]) -> {}
-
-        .. deprecated:: 3.0.0
-            Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster. Sending requests to specific nodes can be better handled with a simple Python function such as:
-
-            .. code-block:: python
-
-                def info_to_host_list(client, request, hosts, policy=None):
-                    output = {}
-                    for host in hosts:
-                        try:
-                            response = client.info_node(request, host, policy)
-                            output[host] = response
-                        except Exception as e:
-                            #  Handle the error gracefully here
-                            output[host] = e
-                    return output
-
-        Send an info *command* to all nodes in the cluster and filter responses to only include nodes specified in a *hosts* list.
-
-        :param str command: the info command.
-        :param list hosts: a :class:`list` containing an *address*, *port* `tuple`. Example: ``[('127.0.0.1', 3000)]``
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`dict`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
-
-        .. code-block:: python
-
-            import aerospike
-
-            config = {'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            response = client.info(command)
-            client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-                {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
-
-        .. versionchanged:: 3.0.0
-
-    .. method:: info_all(command[, policy: dict]]) -> {}
-
-        Send an info *command* to all nodes in the cluster to which the client is connected. If any of the individual requests fail, this will raise an exception.
-
-        :param str command: the info command.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`dict`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
-
-        .. code-block:: python
-
-            import aerospike
-
-            config = {'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            response = client.info_all(command)
-            client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-                {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
-
-        .. versionadded:: 3.0.0
-
-    .. method:: info_node(command, host[, policy: dict]) -> str
-
-        .. deprecated:: 6.0.0
-            Use :meth:`info_single_node` to send a request to a single node, or :meth:`info_all` to send a request to the entire cluster.
-
-        Send an info *command* to a single node specified by *host*.
-
-        :param str command: the info command.
-        :param tuple host: a `tuple` containing an *address*, *port* , optional *tls-name* . Example: ``('127.0.0.1', 3000)`` or when using TLS ``('127.0.0.1', 4333, 'server-tls-name')``. In order to send an info request when TLS is enabled, the *tls-name* must be present.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`str`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
-
-        .. versionchanged:: 3.0.0
-
-        .. warning:: for client versions < 3.0.0 ``info_node`` will not work when using TLS
-
     .. method:: info_single_node(command, host[, policy: dict]) -> str
 
         Send an info *command* to a single node specified by *host name*.
 
-        :param str command: the info command.
-        :param tuple host: a :class:`str` containing a node name. Example: 'BCER199932C'
+        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str host: a node name. Example: 'BCER199932C'
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Use :meth:`get_node_names` as an easy way to get host IP to node name mappings.
 
-        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+    .. method:: info_all(command[, policy: dict]]) -> {}
+
+        Send an info command to all nodes in the cluster to which the client is connected. 
+        
+        If any of the individual requests fail, this will raise an exception.
+
+        :param str command: see `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`dict`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            response = client.info_all("namespaces")
+            print(response)
+            # {'BB9020011AC4202': (None, 'test\n')}
+
+        .. versionadded:: 3.0.0
 
     .. method:: info_random_node(command, [policy: dict]) -> str
 
         Send an info *command* to a single random node.
 
-        :param str command: the info command.
+        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
-
         .. versionchanged:: 6.0.0
+
+    .. method:: info_node(command, host[, policy: dict]) -> str
+
+        .. deprecated:: 6.0.0
+            Use :meth:`info_single_node` to send a request to a single node.
+
+        Send an info command to a single node specified by host.
+
+        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param tuple host: a `tuple` containing an *address*, *port* , optional *tls-name* . Example: ``('127.0.0.1', 3000)`` or when using TLS ``('127.0.0.1', 4333, 'server-tls-name')``. In order to send an info request when TLS is enabled, the *tls-name* must be present.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`str`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. versionchanged:: 3.0.0
+
+        .. warning:: for client versions < 3.0.0 :meth:`~aerospike.client.info_node` will not work when using TLS
+
+    .. method:: info(command[, hosts[, policy: dict]]) -> {}
+
+        .. deprecated:: 3.0.0
+            Use :meth:`info_all` to send a request to the entire cluster.
+
+        Send an info command to all nodes in the cluster, and optionally filter responses to only include certain nodes.
+
+        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_
+        :param list hosts: a :class:`list` containing ``(address, port)`` tuples. If specified, only send the command to these hosts. Example: ``[('127.0.0.1', 3000)]``
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :rtype: :class:`dict`
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. code-block:: python
+
+            response = client.info(command)
+            client.close()
+            # {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
+
+        .. note::
+                Sending requests to specific nodes can be better handled with a simple Python function such as:
+
+                .. code-block:: python
+
+                    def info_to_host_list(client, request, hosts, policy=None):
+                        output = {}
+                        for host in hosts:
+                            try:
+                                response = client.info_node(request, host, policy)
+                                output[host] = response
+                            except Exception as e:
+                                #  Handle the error gracefully here
+                                output[host] = e
+                        return output
+
+        .. versionchanged:: 3.0.0
 
     .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy: dict]) -> str
 
         Set the cluster's xdr filter using an Aerospike expression.
+
         The cluster's current filter can be removed by setting expression_filter to None.
 
         :param str data_center: The data center to apply the filter to.
