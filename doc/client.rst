@@ -145,76 +145,6 @@ Record Operations
             Version >= 5.0.0 supports Aerospike expressions for record operations. See :ref:`aerospike_operation_helpers.expressions`.
             Requires server version >= 5.2.0. 
 
-            .. code-block:: python
-
-                import aerospike
-                from aerospike_helpers import expressions as exp
-                from aerospike import exception as ex
-                import sys
-
-                config = {"hosts": [("127.0.0.1", 3000)]}
-                client = aerospike.client(config).connect()
-
-                try:
-                    keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
-                    records = [{"number": 1}, {"number": 2}, {"number": 3}]
-                    for i in range(3):
-                        client.put(keys[i], records[i])
-
-                    # check that the record has a value < 2 bin 'name'
-                    expr = exp.LT(exp.IntBin("number"), 2).compile()
-                    records = []
-
-                    for i in range(3):
-                        try:
-                            records.append(client.get(keys[i], policy={"expressions": preds}))
-                        except ex.FilteredOut as e:
-                            print("Error: {0} [{1}]".format(e.msg, e.code))
-
-                    print(records)
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    sys.exit(1)
-                finally:
-                    client.close()
-                # the get only returns records that match the preds
-                # otherwise, an error is returned
-                # EXPECTED OUTPUT:
-                # Error: 127.0.0.1:3000 AEROSPIKE_FILTERED_OUT [27]
-                # Error: 127.0.0.1:3000 AEROSPIKE_FILTERED_OUT [27]
-                # [(('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 8, 'ttl': 2592000}, {'charges': [10, 20, 14], 'name': 'John', 'number': 1})]
-
-        .. note:: Using Generation Policy
-
-            The generation policy allows a record to be written only when the \
-            generation is a specific value. In the following example, we only \
-            want to write the record if no change has occurred since \
-            :meth:`exists` was called.
-
-            .. code-block:: python
-
-                import aerospike
-                from aerospike import exception as ex
-                import sys
-
-                config = { 'hosts': [ ('127.0.0.1',3000)]}
-                client = aerospike.client(config).connect()
-
-                try:
-                    (key, meta) = client.exists(('test','test','key1'))
-                    print(meta)
-                    print('============')
-                    client.put(('test','test','key1'), {'id':1,'a':2},
-                        meta={'gen': 33},
-                        policy={'gen':aerospike.POLICY_GEN_EQ})
-                    print('Record written.')
-                except ex.RecordGenerationError:
-                    print("put() failed due to generation policy mismatch")
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                client.close()
-
-
     .. method:: exists(key[, policy: dict]) -> (key, meta)
 
         Check if a record with a given *key* exists in the cluster and return \
@@ -270,13 +200,6 @@ Record Operations
             print(meta) # {'ttl': 2592000, 'gen': 1}
             print(bins) # {'bin1': 4}
 
-        .. warning::
-
-            The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
-            exception when :meth:`~aerospike.get` does not find the \
-            record. Code that used to check for ``meta != None`` should be \
-            modified.
-
         .. versionchanged:: 2.0.0
 
     .. method:: select(key, bins: list[, policy: dict]) -> (key, meta, bins)
@@ -315,13 +238,6 @@ Record Operations
             (key, meta, bins) = client.select(keyTuple, ['bin3'])
             print(bins) # {}
             
-        .. warning::
-
-            The client has been changed to raise a :py:exc:`~aerospike.exception.RecordNotFound` \
-            exception when :meth:`~aerospike.select` does not find the \
-            record. Code that used to check for ``meta != None`` should be \
-            modified.
-
         .. versionchanged:: 2.0.0
 
     .. method:: touch(key[, val=0[, meta: dict[, policy: dict]]])
@@ -478,44 +394,6 @@ Batch Operations
             Version >= 5.0.0 Supports aerrospike expressions for batch operations see :ref:`aerospike_operation_helpers.expressions`.
             Requires server version >= 5.2.0.
 
-            .. code-block:: python
-
-                import aerospike
-                from aerospike_helpers import expressions as exp
-                from aerospike import exception as ex
-                import sys
-
-                config = {"hosts": [("127.0.0.1", 3000)]}
-                client = aerospike.client(config).connect()
-
-                try:
-                    keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
-                    records = [{"number": 1}, {"number": 2}, {"number": 3}]
-                    for i in range(3):
-                        client.put(keys[i], records[i])
-
-                    # check that the record has a value less than 2 in bin 'name'
-                    expr = exp.LT(exp.IntBin("number"), 2).compile()
-
-                    records = client.get_many(keys, policy={"expressions": expr})
-                    print(records)
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    sys.exit(1)
-                finally:
-                    client.close()
-                # the get_many only returns the records that matched the preds
-                # EXPECTED OUTPUT:
-                # [
-                #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 8, 'ttl': 2592000}, {'charges': [10, 20, 14], 'name': 'John', 'number': 1}),
-                #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), None, None),
-                #   ('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), None, None)
-                # ]
-
-        .. warning::
-
-            The return type changed to :class:`list` starting with version 1.0.50.
-
     .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys, and return it as a :class:`list`. \
@@ -565,10 +443,6 @@ Batch Operations
                   (('test', 'demo', '4', bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')), None)
                ]
 
-        .. warning::
-
-            The return type changed to :class:`list` starting with version 1.0.50.
-
     .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read multiple records, and return them as a :class:`list`. Any \
@@ -608,10 +482,6 @@ Batch Operations
             # (('test', 'demo', 2, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin2': 50})
             # (('test', 'demo', 3, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {})
             # (('test', 'demo', 4, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin2': 76})
-
-        .. warning::
-
-            The return type changed to :class:`list` starting with version 1.0.50.
 
     .. method:: batch_get_ops(keys, ops, meta, policy: dict) -> [ (key, meta, bins)]
 
@@ -3279,10 +3149,6 @@ Read methods such as :meth:`~aerospike.get`,
 :meth:`~aerospike.query`, :meth:`~aerospike.scan` and
 :meth:`~aerospike.operate` will return that data as UTF-8 encoded
 :class:`str` values. To get a `unicode` you will need to manually decode.
-
-.. warning::
-
-    Prior to release 1.0.43 read operations always returned strings as `unicode`.
 
 .. code-block:: python
 
