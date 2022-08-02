@@ -1306,20 +1306,22 @@ User Defined Functions
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. note::
-            Register the UDF module and copy it to the Lua 'user_path', \
-            a directory that should contain a copy of the modules registered \
-            with the cluster.
+    .. note::
+        To run this example, do not run the boilerplate code.
 
-            .. code-block:: python
-                :emphasize-lines: 3,5
+    .. code-block:: python
+        :emphasize-lines: 5,9
 
-                config = {
-                    'hosts': [ ('127.0.0.1', 3000)],
-                    'lua': { 'user_path': '/path/to/lua/user_path'}}
-                client = aerospike.client(config).connect()
-                client.udf_put('/path/to/my_module.lua')
-                client.close()
+        import aerospike
+
+        config = {
+            'hosts': [ ('127.0.0.1', 3000)],
+            'lua': { 'user_path': '/path/to/lua/user_path'}
+        }
+        client = aerospike.client(config).connect()
+        # Register the UDF module and copy it to the Lua 'user_path'
+        client.udf_put('/path/to/my_module.lua')
+        client.close()
 
     .. method:: udf_remove(module[, policy: dict])
 
@@ -1343,35 +1345,17 @@ User Defined Functions
 
         .. code-block:: python
 
-            import aerospike
-
-            config = {'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
             print(client.udf_list())
-            client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-                [{'content': bytearray(b''),
-                  'hash': bytearray(b'195e39ceb51c110950bd'),
-                  'name': 'my_udf1.lua',
-                  'type': 0},
-                 {'content': bytearray(b''),
-                  'hash': bytearray(b'8a2528e8475271877b3b'),
-                  'name': 'stream_udf.lua',
-                  'type': 0},
-                 {'content': bytearray(b''),
-                  'hash': bytearray(b'362ea79c8b64857701c2'),
-                  'name': 'aggregate_udf.lua',
-                  'type': 0},
-                 {'content': bytearray(b''),
-                  'hash': bytearray(b'635f47081431379baa4b'),
-                  'name': 'module.lua',
-                  'type': 0}]
+            # [
+            #    {'content': bytearray(b''),
+            #    'hash': bytearray(b'195e39ceb51c110950bd'),
+            #    'name': 'my_udf1.lua',
+            #    'type': 0},
+            #    {'content': bytearray(b''),
+            #    'hash': bytearray(b'8a2528e8475271877b3b'),
+            #    'name': 'stream_udf.lua',
+            #    'type': 0}
+            # ]
 
     .. method:: udf_get(module[, language=aerospike.UDF_TYPE_LUA[, policy: dict]]) -> str
 
@@ -1539,15 +1523,15 @@ User Defined Functions
 
     .. method:: scan_info(scan_id) -> dict
 
+        .. deprecated:: 1.0.50
+            Use :meth:`job_info` instead.
+
         Return the status of a scan running in the background.
 
         :param int scan_id: the scan ID returned by :meth:`scan_apply`.
         :returns: a :class:`dict` with keys *status*, *records_scanned*, and \
           *progress_pct*. The value of *status* is one of :ref:`aerospike_job_constants_status`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. deprecated:: 1.0.50
-            Use :meth:`job_info` instead.
 
         .. code-block:: python
 
