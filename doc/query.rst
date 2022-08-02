@@ -9,22 +9,21 @@
 Overview
 ========
 
-The query object created by calling :meth:`aerospike.query` is used \
-for executing queries over a secondary index of a specified set (which \
-can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
-records which are not part of any named set.
+The query object created by calling :meth:`aerospike.query` is used for executing queries over a secondary index of a specified set. \
+This set can be ommitted or be set to :py:obj:`None`. \
+The :py:obj:`None` set contains those records which are not part of any named set.
 
-The query can (optionally) be assigned one of the following:
+The query can (optionally) be assigned either the \
+:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals` predicate using :meth:`~aerospike.Query.where`. \
+Otherwise, a query without a predicate will match all the records in the given set, \
+similar to a :class:`~aerospike.Scan`.
 
-* One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Query.where`. \
+The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background`. \
+The returned bins can be filtered by using :meth:`select`.
 
-A query without a predicate will match all the records in the given set, similar \
-to a :class:`~aerospike.Scan`.
-
-The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background` \
-The bins returned can be filtered by using :meth:`select`.
-
-If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, they will be applied to each record processed by the query. See available write operations at See :mod:`aerospike_helpers` \
+If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, \
+they will be applied to each record processed by the query. \
+See available write operations at :mod:`aerospike_helpers`.
 
 Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
@@ -41,11 +40,14 @@ Fields
 
     max_records (:class:`int`)
         Approximate number of records to return to client.
+
         This number is divided by the number of nodes involved in the scan.
-        The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
-        Requires server version >= 6.0.0
+        The actual number of records returned may be less than ``max_records`` if node record counts are small and unbalanced across nodes.
 
         Default: ``0`` (no limit)
+
+        .. note::
+            Requires server version >= 6.0.0
 
     records_per_second (:class:`int`)
         Limit the scan to process records at records_per_second.
@@ -142,21 +144,20 @@ Methods
     .. method:: select(bin1[, bin2[, bin3..]])
 
         Set a filter on the record bins resulting from :meth:`results` or \
-        :meth:`foreach`. If a selected bin does not exist in a record it will \
-        not appear in the *bins* portion of that record tuple.
+        :meth:`foreach`.
+        
+        If a selected bin does not exist in a record it will not appear in the *bins* portion of that record tuple.
 
 
     .. method:: where(predicate[, ctx])
 
-        Set a where *predicate* for the query, without which the query will \
-        behave similar to :class:`aerospike.Scan`. The predicate is produced by \
-        one of the :mod:`aerospike.predicates` methods :meth:`~aerospike.predicates.equals` \
-        and :meth:`~aerospike.predicates.between`.
+        Set a where *predicate* for the query.
+        
+        You can only assign at most one predicate to the query.
+        If this function isn't called, the query will behave similar to :class:`aerospike.Scan`.
 
-        :param tuple predicate: the :py:func:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
-        :param list ctx: the :py:func:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
-
-        .. note:: Currently, you can assign at most one predicate to the query.
+        :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
+        :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 
