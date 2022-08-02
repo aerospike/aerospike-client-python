@@ -35,11 +35,6 @@ Assume every in-line example runs this code beforehand:
     from aerospike import exception as ex
     import sys
 
-    # Precleanup
-    if 'client' in local() and client.is_connected():
-        client.truncate('test', None, 0)
-        client.close()
-
     # Configure the client
     config = {
         'hosts': [ ('127.0.0.1', 3000) ]
@@ -48,6 +43,7 @@ Assume every in-line example runs this code beforehand:
     # Create a client and connect it to the cluster
     try:
         client = aerospike.client(config).connect()
+        client.truncate('test', None, 0)
     except ex.ClientError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))
         sys.exit(1)
