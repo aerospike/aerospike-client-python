@@ -6,26 +6,24 @@ Python Data Mappings
 
 .. rubric:: How Python types map to server types
 
-.. note::
+By default, the :py:class:`~aerospike.Client` maps the supported Python types to Aerospike server \
+`types <https://docs.aerospike.com/server/guide/data-types/overview>`_. \
+When an unsupported type is encountered by the module, it uses \
+`cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
+to serialize and deserialize the data, storing it in the server as a blob with \
+`'Python encoding' <https://developer.aerospike.com/udf/api/bytes#encoding-type>`_ \
+(`AS_BYTES_PYTHON <https://docs.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
 
-    By default, the :py:class:`~aerospike.Client` maps the supported Python types to Aerospike server \
-    `types <https://docs.aerospike.com/server/guide/data-types/overview>`_. \
-    When an unsupported type is encountered by the module, it uses \
-    `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
-    to serialize and deserialize the data, storing it in the server as a blob with \
-    `'Python encoding' <https://developer.aerospike.com/udf/api/bytes#encoding-type>`_ \
-    (`AS_BYTES_PYTHON <https://docs.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
+The functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
+allow for user-defined functions to handle serialization, instead. The user provided function will be run instead of cPickle. \
+The serialized data is stored in the server with generic encoding \
+(`AS_BYTES_BLOB <https://docs.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_). \
+This type allows the storage of binary data readable by Aerospike Clients in other languages. \
+The *serialization* config parameter of :func:`aerospike.client` registers an \
+instance-level pair of functions that handle serialization.
 
-    The functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
-    allow for user-defined functions to handle serialization, instead. The user provided function will be run instead of cPickle. \
-    The serialized data is stored in the server with generic encoding \
-    (`AS_BYTES_BLOB <https://docs.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_). \
-    This type allows the storage of binary data readable by Aerospike Clients in other languages. \
-    The *serialization* config parameter of :func:`aerospike.client` registers an \
-    instance-level pair of functions that handle serialization.
-
-    Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. \
-    Python specific bytes may not be readable by Aerospike Clients for other languages.
+Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. \
+Python specific bytes may not be readable by Aerospike Clients for other languages.
 
 .. warning::
 
@@ -41,11 +39,6 @@ Python Data Mappings
     All versions before ``6.x`` wrote Python booleans as ``AS_BYTES_PYTHON``.
 
 The following table shows which Python types map directly to Aerospike server types.
-
-.. note::
-
-    :ref:`KeyOrderedDict <aerospike.KeyOrderedDict>` is a special case. Like :class:`dict`, :class:`~aerospike.KeyOrderedDict` maps to the Aerospike map data type. \
-    However, the map will be sorted in key order before being sent to the server (see :ref:`aerospike_map_order`).
 
 +---------------------------------+------------------------+
 |   Python Type                   | Server type            |
@@ -71,11 +64,15 @@ The following table shows which Python types map directly to Aerospike server ty
 |:class:`aerospike.GeoJSON`       |`GeoJSON`_              |
 +---------------------------------+------------------------+
 
-It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list as a value.
-
 .. note::
 
-	Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. Python specific bytes may not be readable by Aerospike Clients for other languages.
+    :ref:`KeyOrderedDict <aerospike.KeyOrderedDict>` is a special case. Like :class:`dict`, :class:`~aerospike.KeyOrderedDict` maps to the Aerospike map data type. \
+    However, the map will be sorted in key order before being sent to the server (see :ref:`aerospike_map_order`).
+
+It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list as a value.
+
+Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. \
+Python specific bytes may not be readable by Aerospike Clients for other languages.
 
 .. _integer: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#integer
 .. _string: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#string
