@@ -109,20 +109,20 @@ Record Operations
 .. class:: Client
     :noindex:
 
-    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer]]])
+    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer=aerospike.SERIALIZER_PYTHON]]])
 
-        Write a record with a given *key* to the cluster, or remove / add bins on a record with that given key.
+        Create a new record, or remove / add bins to a record.
 
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param dict bins: a :class:`dict` of bin-name / bin-value pairs.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
-        :param dict policy: optional :ref:`aerospike_write_policies`.
-        :param serializer: optionally override the serialization mode of the
-            client with one of the :ref:`aerospike_serialization_constants`. To
-            use a class-level user-defined serialization function registered with
-            :func:`aerospike.set_serializer` use :const:`aerospike.SERIALIZER_USER`.
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param dict bins: contains bin name-value pairs of the record.
+        :param dict meta: see :ref:`metadata_dict`.
+        :param dict policy: see :ref:`aerospike_write_policies`.
+
+        :param serializer: override the serialization mode of the client \
+            with one of the :ref:`aerospike_serialization_constants`.
+            To use a class-level, user-defined serialization function registered with :func:`aerospike.set_serializer`, \
+            use :const:`aerospike.SERIALIZER_USER`.
+
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         Example:
@@ -147,13 +147,17 @@ Record Operations
 
     .. method:: exists(key[, policy: dict]) -> (key, meta)
 
-        Check if a record with a given *key* exists in the cluster and return \
-        the record as a `tuple` consisting of *key* and *meta*.  If \
-        the record  does not exist the *meta* data will be :py:obj:`None`.
+        Check if a record with a given key exists in the cluster.
+        
+        Returns the record's key and metadata in a tuple.
+        
+        If the record does not exist, the tuple's metadata will be :py:obj:`None`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional :ref:`aerospike_read_policies`.
+        :param dict policy: see :ref:`aerospike_read_policies`.
+
         :rtype: `tuple` (key, meta)
+
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -175,12 +179,13 @@ Record Operations
 
     .. method:: get(key[, policy: dict]) -> (key, meta, bins)
 
-        Read a record with a given *key*, and return the record as a \
-        `tuple` consisting of *key*, *meta* and *bins*.
+        Returns a record with a given key.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict policy: optional :ref:`aerospike_read_policies`.
+        :param dict policy: see :ref:`aerospike_read_policies`.
+
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
         .. code-block:: python
@@ -204,17 +209,16 @@ Record Operations
 
     .. method:: select(key, bins: list[, policy: dict]) -> (key, meta, bins)
 
-        Read a record with a given *key*, and return the record as a \
-        `tuple` consisting of *key*, *meta* and *bins*, with the \
-        specified bins projected. Prior to Aerospike server 3.6.0, if a selected \
-        bin does not exist its value will be :py:obj:`None`. Starting with 3.6.0, if
-        a bin does not exist it will not be present in the returned \
-        :ref:`aerospike_record_tuple`.
+        Returns specific bins of a record.
+        
+        If a bin does not exist, it will not show up in the returned :ref:`aerospike_record_tuple`.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list bins: a list of bin names to select from the record.
         :param dict policy: optional :ref:`aerospike_read_policies`.
+
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
         .. code-block:: python
@@ -242,18 +246,14 @@ Record Operations
 
     .. method:: touch(key[, val=0[, meta: dict[, policy: dict]]])
 
-        Touch the given record, setting its \
-        `time-to-live <http://www.aerospike.com/docs/client/c/usage/kvs/write.html#change-record-time-to-live-ttl>`_ \
-        and incrementing its generation.
+        Touch the given record, setting its time-to-live and incrementing its generation.
 
-        :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
-        :param int val: the optional ttl in seconds, with ``0`` resolving to the default value in the server config.
-        :param dict meta: optional record metadata to be set.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.
+        :param dict meta: see :ref:`metadata_dict`
+        :param dict policy: see :ref:`aerospike_operate_policies`.
+
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: `Record TTL and Evictions <https://discuss.aerospike.com/t/records-ttl-and-evictions/737>`_ \
-                     and `FAQ <https://www.aerospike.com/docs/guide/FAQ.html>`_.
 
         .. code-block:: python
 
@@ -275,8 +275,9 @@ Record Operations
         Remove a record matching the *key* from the cluster.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict meta: Optional dictonary allowing a user to specify the expected generation of the record.
-        :param dict policy: optional :ref:`aerospike_remove_policies`. May be passed as a keyword argument.
+        :param dict meta: a dictonary with the expected generation of the record.
+        :param dict policy: see :ref:`aerospike_remove_policies`. May be passed as a keyword argument.
+
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -296,13 +297,15 @@ Record Operations
 
     .. method:: get_key_digest(ns, set, key) -> bytearray
 
-        Calculate the digest of a particular key. See: :ref:`aerospike_key_tuple`.
+        Calculate the digest of a particular key. See :ref:`aerospike_key_tuple`.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param key: the primary key identifier of the record within the set.
         :type key: :py:class:`str` or :py:class:`int`
+
         :return: a RIPEMD-160 digest of the input tuple.
+        
         :rtype: :class:`bytearray`
 
         .. code-block:: python
@@ -321,10 +324,9 @@ Record Operations
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
+        :param dict meta: see :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_write_policies`.
+
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -350,15 +352,18 @@ Batch Operations
 .. class:: Client
     :noindex:
 
-    .. method:: get_many(keys[, policy: dict]) -> [ (key, meta, bins)]
+    .. method:: get_many(keys[, policy: dict]) -> [(key, meta, bins)]
 
-        Batch-read multiple records, and return them as a :class:`list`. Any \
-        record that does not exist will have a :py:obj:`None` value for metadata \
+        Batch-read multiple records, and return them as a :class:`list`.
+        
+        Any record that does not exist will have a :py:obj:`None` value for metadata \
         and bins in the record tuple.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: optional :ref:`aerospike_batch_policies`.
+        :param dict policy: see :ref:`aerospike_batch_policies`.
+
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+        
         :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
 
         .. seealso:: More information about the \
@@ -391,7 +396,10 @@ Batch Operations
             # (('test', 'demo', '3', bytearray(...)), None, None)
 
         .. note::
-            Version >= 5.0.0 Supports aerrospike expressions for batch operations see :ref:`aerospike_operation_helpers.expressions`.
+            Client version >= 5.0.0 supports Aerospike expressions for batch operations.
+            
+            See :ref:`aerospike_operation_helpers.expressions`.
+            
             Requires server version >= 5.2.0.
 
     .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
@@ -2025,10 +2033,10 @@ Admin Operations
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-.. _aerospike_key_tuple:
-
 Tuples
 ======
+
+.. _aerospike_key_tuple:
 
 Key Tuple
 ---------
@@ -2168,6 +2176,16 @@ Record Tuple
             client.close()
 
     .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
+
+.. _metadata_dict:
+
+Metadata Dictionary
+===================
+
+The metadata dictionary has the following key-value pairs:
+
+    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS`.
+    * ``"gen"`` (:class:`int`): record generation
 
 .. _aerospike_polices:
 
