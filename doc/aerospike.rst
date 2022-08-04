@@ -39,9 +39,6 @@ Client
 
     :return: an instance of the :class:`Client` class.
 
-    .. seealso::
-        `Shared Memory <https://www.aerospike.com/docs/client/c/usage/shm.html>`_ and `Per-Transaction Consistency Guarantees <http://www.aerospike.com/docs/architecture/consistency.html>`_.
-
     .. code-block:: python
 
         import aerospike
@@ -469,8 +466,6 @@ These are the keys and expected values for the ``config`` dictionary passed to :
             If ``tls-name`` is specified, it must match the tls-name specified in the node's \
             server configuration file, as well as the server's CA certificate.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition
-
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
                             
@@ -504,59 +499,63 @@ These are the keys and expected values for the ``config`` dictionary passed to :
             * **batch** (:class:`dict`)
                 Contains :ref:`aerospike_batch_policies`.
             * **total_timeout** (:class:`int`)
+                **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                
                 The default connection timeout in milliseconds 
                 
-                **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
-
             * **auth_mode**
                 The authentication mode with the server.
                 
                 See :ref:`auth_mode` for possible values.
-                
+
                 Default: :data:`aerospike.AUTH_INTERNAL`
             * **login_timeout_ms** (:class:`int`) 
                 Representing the node login timeout in milliseconds. 
                 
                 Default: ``5000``.
             * **key**
+                **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+                
                 Default key policy.
                 
                 See :ref:`POLICY_KEY` for possible values.
-                
-                **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
             * **exists**
+                **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
+
                 Default exists policy.
                 
-                See :ref:`POLICY_EXISTS` for possible values.
-                
-                **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
+                See :ref:`POLICY_EXISTS` for possible values.                
             * **max_retries** (:class:`int`)
-                Representing the number of times to retry a transaction 
-                
                 **Deprecated**: set this individually in the :ref:`aerospike_polices` dictionaries.
+
+                Representing the number of times to retry a transaction                 
             * **replica**
+                **Deprecated**: set this in one or all of the following policy dictionaries:
+
+                    * :ref:`aerospike_read_policies`
+                    * :ref:`aerospike_write_policies`
+                    * :ref:`aerospike_apply_policies`
+                    * :ref:`aerospike_operate_policies`
+                    * :ref:`aerospike_remove_policies`
+
                 Default replica policy.
                 
                 See :ref:`POLICY_REPLICA` for possible values.
-                
-                **Deprecated**: set this in one or all of the following policy dictionaries:
-                
-                * :ref:`aerospike_read_policies`
-                * :ref:`aerospike_write_policies`
-                * :ref:`aerospike_apply_policies`
-                * :ref:`aerospike_operate_policies`
-                * :ref:`aerospike_remove_policies`
             * **commit_level** 
+                **Deprecated**: set this as needed individually in the following policy dictionaries:
+                
+                    * :ref:`aerospike_write_policies`
+                    * :ref:`aerospike_apply_policies`
+                    * :ref:`aerospike_operate_policies`
+                    * :ref:`aerospike_remove_policies`
+
                 Default commit level policy.
                 
                 See :ref:`POLICY_COMMIT_LEVEL` for possible values.
                 
-                **Deprecated**: set this as needed individually in the following policy dictionaries:
-                
-                * :ref:`aerospike_write_policies`
-                * :ref:`aerospike_apply_policies`
-                * :ref:`aerospike_operate_policies`
-                * :ref:`aerospike_remove_policies`
+                .. seealso::
+                    `Per-Transaction Consistency Guarantees <http://www.aerospike.com/docs/architecture/consistency.html>`_.
+
         * **shm** (:class:`dict`)
             Contains optional shared-memory cluster tending parameters
 
@@ -589,6 +588,10 @@ These are the keys and expected values for the ``config`` dictionary passed to :
                 It is still possible to specify a key when using **use_shared_connection** = `True`.
                 
                 Default: ``0xA8000000``
+
+                .. seealso::
+                    `Shared Memory <https://www.aerospike.com/docs/client/c/usage/shm.html>`_
+
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process. 
             
@@ -661,15 +664,13 @@ These are the keys and expected values for the ``config`` dictionary passed to :
                 
                 Default: ``False`` (Use TLS connections for all communication with server.)
         * **send_bool_as** (:class:`int`)
-            (Optional) Configures the client to write Python booleans as PY_BYTES_BLOB, integer, or the new server boolean type.
+            Configures the client to encode Python booleans as the native Python boolean type, an integer, or the server boolean type.
             
-            One of the :ref:`send_bool_as_constants` constant values.
-            
-            Example: :code:`{"send_bool_as", aerospike.aerospike.PY_BYTES}`
-            
+            Use one of the :ref:`send_bool_as_constants` constant values.
+                        
             See :ref:`Data_Mapping` for more information.
             
-            Default: aerospike.PY_BYTES
+            Default: :data:`aerospike.PY_BYTES`
         * **serialization** (:class:`tuple`)
             An optional instance-level `tuple` of ``(serializer, deserializer)``. 
             
@@ -681,11 +682,18 @@ These are the keys and expected values for the ``config`` dictionary passed to :
         * **max_socket_idle** (:class:`int`)
             Maximum socket idle time in seconds.
             
-            Connection pools will discard sockets that have been idle longer than the maximum. \
-            The value is limited to 24 hours (86400). It's important to set this value to a few seconds less than the server's proto-fd-idle-ms \
-            (default 60000 milliseconds, or 1 minute), so the client does not attempt to use a socket that has already been reaped by the server.
+            Connection pools will discard sockets that have been idle longer than the maximum.
+            It's important to set this value to a few seconds less than the server's \
+            `proto-fd-idle-ms <https://docs.aerospike.com/reference/configuration#proto-fd-idle-ms>`_, \
+            so the client does not attempt to use a socket that has already been reaped by the server.
+
+            The value is limited to 24 hours (86400 seconds).
             
-            Default: ``0`` seconds (disabled) for non-TLS connections, 55 seconds for TLS connections
+            Default:
+            
+                * ``0`` (disabled) for non-TLS connections
+                * ``55`` for TLS connections
+
         * **max_conns_per_node** (:class:`int`)
             Maximum number of pipeline connections allowed for each node 
         * **tend_interval** (:class:`int`)
@@ -693,30 +701,30 @@ These are the keys and expected values for the ``config`` dictionary passed to :
             
             Default: ``1000``
         * **compression_threshold** (:class:`int`)
+            **Deprecated**: set in the :ref:`aerospike_write_policies` dictionary
+
             Compress data for transmission if the object size is greater than a given number of bytes 
             
             Default: ``0``, meaning 'never compress' 
-            
-            **Deprecated**, set this in the 'write' policy dictionary.
         * **cluster_name** (:class:`str`)
             Only server nodes matching this name will be used when determining the cluster name.
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
-            
-            In order to enable this functionality, the `rack_aware` needs to be set to true, \
-            the :ref:`aerospike_read_policies` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
-            The server rack configuration must also be configured.
-            
+                        
             Default: ``0``
         * **rack_aware** (:class:`bool`)
             Track server rack data.
             
-            This is useful when directing read operations to run on the same rack as the client. \
-            Also, this is useful to lower cloud provider costs when nodes are distributed across different availability zones (represented as racks).
+            This is useful for:
 
-            In order to enable this functionality, the `rack_id` needs to be set to local rack, \
-            the `read policy` `replica` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`. \
-            The server rack configuration must also be configured.
+                - Directing read operations to run on the same rack as the client.
+                - Lowering cloud provider costs when nodes are distributed across different availability zones (represented as racks).
+
+            In order to enable this functionality:
+            
+            - ``rack_id`` needs to be set to the local rack's ID
+            - The client config's :ref:`aerospike_read_policies` needs to be set to :data:`POLICY_REPLICA_PREFER_RACK`
+            - The server rack configuration must be configured.
             
             Default: ``False``
         * **use_services_alternate** (:class:`bool`)
@@ -791,11 +799,13 @@ Read policy for SC (strong consistency) namespaces.
 
 .. data:: POLICY_READ_MODE_SC_SESSION
 
-    Ensures this client will only see an increasing sequence of record versions. Server only reads from master. This is the default.
+    Ensures this client will only see an increasing sequence of record versions. Server only reads from master.
 
 .. data:: POLICY_READ_MODE_SC_LINEARIZE
 
     Ensures ALL clients will only see an increasing sequence of record versions. Server only reads from master.
+
+.. versionadded:: 3.7.0
 
 .. data:: POLICY_READ_MODE_SC_ALLOW_REPLICA
 
@@ -804,8 +814,6 @@ Read policy for SC (strong consistency) namespaces.
 .. data:: POLICY_READ_MODE_SC_ALLOW_UNAVAILABLE
 
     Server may read from master or any full (non-migrating) replica or from unavailable partitions. Increasing sequence of record versions is not guaranteed.
-
-.. versionadded:: 3.7.0
 
 .. _POLICY_EXISTS: 
 
@@ -816,23 +824,23 @@ Specifies the behavior for writing the record depending whether or not it exists
 
 .. data:: POLICY_EXISTS_CREATE
 
-    Create a record, ONLY if it doesn't exist
+    Only create a record given it doesn't exist
 
 .. data:: POLICY_EXISTS_CREATE_OR_REPLACE
 
-    Completely replace a record if it exists, otherwise create it
+    Replace a record completely if it exists, otherwise create it
 
 .. data:: POLICY_EXISTS_IGNORE
 
-    Write the record, regardless of existence. (i.e. create or update)
+    Update a record if it exists, otherwise create it
 
 .. data:: POLICY_EXISTS_REPLACE
 
-    Completely replace a record, ONLY if it exists
+    Only replace a record completely if it exists
 
 .. data:: POLICY_EXISTS_UPDATE
 
-    Update a record, ONLY if it exists
+    Only update a record if it exists
 
 .. _POLICY_GEN:
 
@@ -843,16 +851,15 @@ Specifies the behavior of record modifications with regard to the generation val
 
 .. data:: POLICY_GEN_IGNORE
 
-    Write a record, regardless of generation
+    Write a record regardless of generation
 
 .. data:: POLICY_GEN_EQ
 
-    Write a record, ONLY if generations are equal
+    Write a record only if generations are equal
 
 .. data:: POLICY_GEN_GT
 
-    Write a record, ONLY if local generation is greater-than remote generation
-
+    Write a record only if local generation is greater than remote generation
 
 .. _POLICY_KEY:
 
@@ -878,7 +885,10 @@ Specifies which partition replica to read from.
 
 .. data:: POLICY_REPLICA_SEQUENCE
 
-    Always try node containing master partition first. If connection fails and `retry_on_timeout` is true, try node containing prole partition. Currently restricted to master and one prole.
+    Always try node containing master partition first.
+    
+    If connection fails and the client is configured to retry, it will try the node containing prole partition.
+    Currently restricted to master and one prole.
 
 .. data:: POLICY_REPLICA_MASTER
 
@@ -886,14 +896,15 @@ Specifies which partition replica to read from.
 
 .. data:: POLICY_REPLICA_ANY
 
-    Distribute reads across nodes containing key's master and replicated partition in round-robin fashion. Currently restricted to master and one prole.
+    Distribute reads across nodes containing key's master and replicated partition in round-robin fashion.
+    
+    Currently restricted to master and one prole.
 
 .. data:: POLICY_REPLICA_PREFER_RACK
 
-    Try node on the same rack as the client first.  If there are no nodes on the same rack, use POLICY_REPLICA_SEQUENCE instead.
-
-    **rack_aware** and **rack_id** must be set in the config argument of the client constructor in order to enable this functionality
-
+    Try node on the same rack as the client first.
+    
+    If there are no nodes on the same rack, use :data:`POLICY_REPLICA_SEQUENCE` instead.
 
 Retry Policy Options
 ^^^^^^^^^^^^^^^^^^^^
@@ -907,7 +918,6 @@ Specifies the behavior of failed operations.
 .. data:: POLICY_RETRY_ONCE
 
     If an operation fails, attempt the operation one more time
-
 
 .. _TTL_CONSTANTS:
 
@@ -937,15 +947,29 @@ Specifies the type of authentication to be used when communicating with the serv
 
 .. data:: AUTH_INTERNAL
 
-    Use internal authentication only.  Hashed password is stored on the server. Do not send clear password. This is the default.
+    Use internal authentication only.
+
+    Hashed password is stored on the server.
+    Do not send clear password.
 
 .. data:: AUTH_EXTERNAL
 
-    Use external authentication (like LDAP).  Specific external authentication is configured on server.  If TLS defined, send clear password on node login via TLS. Throw exception if TLS is not defined.
+    Use external authentication (like LDAP).
+
+    Specific external authentication is configured on server.
+    If TLS defined, send clear password on node login via TLS.
+    
+    Throw exception if TLS is not defined.
 
 .. data:: AUTH_EXTERNAL_INSECURE
 
-    Use external authentication (like LDAP).  Specific external authentication is configured on server.  Send clear password on node login whether or not TLS is defined. This mode should only be used for testing purposes because it is not secure authentication.
+    Use external authentication (like LDAP).
+    
+    Specific external authentication is configured on server.
+    Send clear password on node login whether or not TLS is defined.
+    
+    .. warning::
+        This mode should only be used for testing purposes because it is not secure authentication.
 
 .. _aerospike_scan_constants:
 
@@ -955,7 +979,7 @@ Scan Constants
 .. data:: SCAN_PRIORITY
 
     .. deprecated:: 3.10.0
-        Scan priority has been replaced by the records_per_second policy see :ref:`aerospike_scan_policies`.
+        Scan priority has been replaced by the ``records_per_second`` policy (see Scan :ref:`aerospike_scan_policies`).
         Scan priority will be removed in a coming release.
 
 .. data:: SCAN_STATUS_ABORTED
@@ -1036,6 +1060,8 @@ Specifies how the Python client will write Python booleans.
 .. data:: PY_BYTES
     
     Write Python Booleans as PY_BYTES_BLOBs.
+
+    This is Python's native boolean type.
     
 .. data:: INTEGER
     
@@ -1043,7 +1069,9 @@ Specifies how the Python client will write Python booleans.
     
 .. data:: AS_BOOL
     
-    Write Python Booleans as as_bools.
+    Write Python Booleans as ``as_bools``.
+
+    This is the Aerospike server's boolean type.
 
 List
 ----
