@@ -1597,6 +1597,45 @@ Admin Operations
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
+Scan and Query Constructors
+---------------------------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: scan(namespace[, set]) -> Scan
+
+        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
+
+        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
+        
+        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name, otherwise the entire \
+            *namespace* will be scanned.
+
+        :return: an :py:class:`aerospike.Scan` class.
+
+    .. method:: query(namespace[, set]) -> Query
+
+        Return a :class:`aerospike.Query` object to be used for executing queries
+        over a specified set in a namespace.
+        
+        (which can be omitted or :py:obj:`None`)
+        If the set is omitted or set to :py:obj:`None`, the object returns records **not in any \
+        named set**. This is different than the meaning of a :py:obj:`None` set in \
+        a scan.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name, otherwise the records \
+            which are not part of any *set* will be queried (**Note**: this is \
+            different from not providing the *set* in :meth:`scan`).
+        :return: an :py:class:`aerospike.Query` class.
+
+.. index::
+    single: Other Methods
+
 Tuples
 ======
 

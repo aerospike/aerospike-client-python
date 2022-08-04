@@ -94,43 +94,6 @@ Client
         client.put(key, {'aerospike': 'aerospike'})
         print(client.get(key))
 
-Scan
-^^^^
-
-.. method:: scan(namespace[, set]) -> Scan
-
-    .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
-
-    Return a :class:`aerospike.Scan` object to be used for executing scans \
-    over a specified *set* (which can be omitted or :py:obj:`None`) in a \
-    *namespace*. A scan with a :py:obj:`None` set returns all the records in the \
-    namespace.
-
-    :param str namespace: the namespace in the aerospike cluster.
-    :param str set: optional specified set name, otherwise the entire \
-        *namespace* will be scanned.
-    :return: an :py:class:`aerospike.Scan` class.
-
-Query
-^^^^^
-
-.. method:: query(namespace[, set]) -> Query
-
-    Return a :class:`aerospike.Query` object to be used for executing queries \
-    over a specified *set* (which can be omitted or :py:obj:`None`) in a *namespace*. \
-    A query with a :py:obj:`None` set returns records which are **not in any \
-    named set**. This is different than the meaning of a :py:obj:`None` set in \
-    a scan.
-
-    :param str namespace: the namespace in the aerospike cluster.
-    :param str set: optional specified set name, otherwise the records \
-        which are not part of any *set* will be queried (**Note**: this is \
-        different from not providing the *set* in :meth:`scan`).
-    :return: an :py:class:`aerospike.Query` class.
-
-.. index::
-    single: Other Methods
-
 Geospatial
 ^^^^^^^^^^
 
