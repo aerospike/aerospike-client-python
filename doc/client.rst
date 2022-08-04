@@ -253,10 +253,6 @@ Batch Operations
         
         :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
 
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            interface new to Aerospike server >= 3.6.0.
-
         .. code-block:: python
 
             # Keys
@@ -298,10 +294,6 @@ Batch Operations
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`list` of (key, metadata) `tuple`.
-
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            interface new to Aerospike server >= 3.6.0.
 
         .. code-block:: python
 
@@ -349,10 +341,6 @@ Batch Operations
         :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            interface new to Aerospike server >= 3.6.0.
-
         .. code-block:: python
 
             # Insert 4 records with these keys
@@ -389,10 +377,6 @@ Batch Operations
         :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
         :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
-
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
-            interface new to Aerospike server >= 3.6.0.
 
         .. code-block:: python
 
@@ -458,9 +442,6 @@ Batch Operations
 
         .. seealso:: More information about the \
             batch helpers :ref:`aerospike_operation_helpers.batch`
-
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
 
         .. code-block:: python
 
@@ -530,9 +511,6 @@ Batch Operations
         :param dict policy_batch_write: Optional aerospike batch write policy :ref:`aerospike_batch_write_policies`.
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
 
         .. code-block:: python
 
@@ -618,9 +596,6 @@ Batch Operations
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
-
         .. code-block:: python
 
             import aerospike
@@ -682,9 +657,6 @@ Batch Operations
         :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: More information about the \
-            `Batch Index <https://www.aerospike.com/docs/guide/batch.html>`_ \
 
         .. code-block:: python
 
