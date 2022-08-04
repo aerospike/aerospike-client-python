@@ -363,7 +363,7 @@ class HLLBin(_BaseExpr):
             Example::
 
                 # Does HLL bin "a" have a hll_count > 1000000.
-                expr = exp.GT(exp.HllGetCount(exp.HllBin("a"), 1000000)).compile()
+                expr = exp.GT(exp.HLLGetCount(exp.HLLBin("a")), 1000000).compile()
         """
         self._fixed = {_Keys.BIN_KEY: bin}
 
