@@ -28,28 +28,8 @@ Boilerplate Code For Examples
 
 Assume every in-line example runs this code beforehand:
 
-::
-
-    # Imports
-    import aerospike
-    from aerospike import exception as ex
-    import sys
-
-    # Configure the client
-    config = {
-        'hosts': [ ('127.0.0.1', 3000) ]
-    }
-
-    # Create a client and connect it to the cluster
-    try:
-        client = aerospike.client(config).connect()
-        client.truncate('test', None, 0)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    # Record key tuple: (namespace, set, key)
-    keyTuple = ('test', 'demo', 'key')
+.. include:: examples/boilerplate.py
+    :code: python
 
 Basic example:
 
@@ -127,19 +107,8 @@ Record Operations
 
         Example:
 
-        .. code-block:: python
-
-            # Insert a record with bin1
-            client.put(keyTuple, {'bin1': 4})
-            
-            # Insert another bin named bin2
-            client.put(keyTuple, {'bin2': "value"})
-            
-            # Remove bin1 from this record
-            client.put(keyTuple, {'bin2': aerospike.null()})
-            
-            # Removing the last bin should delete this record
-            client.put(keyTuple, {'bin1': aerospike.null()})
+        .. include:: examples/put.py
+            :code: python
 
         .. note::
             Version >= 5.0.0 supports Aerospike expressions for record operations. See :ref:`aerospike_operation_helpers.expressions`.
@@ -160,20 +129,8 @@ Record Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            # Check non-existent record
-            (key, meta) = client.exists(keyTuple)
-            
-            print(key) # ('test', 'demo', 'key', bytearray(b'...'))
-            print(meta) # None
-
-            # Check existing record
-            client.put(keyTuple, {'bin1': 4})
-            (key, meta) = client.exists(keyTuple)
-
-            print(key) # ('test', 'demo', 'key', bytearray(b'...'))
-            print(meta) # {'ttl': 2592000, 'gen': 1}
+        .. include:: examples/exists.py
+            :code: python
 
         .. versionchanged:: 2.0.3
 
@@ -188,22 +145,8 @@ Record Operations
         
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
-        .. code-block:: python
-
-            # Get nonexistent record
-            try:
-                client.get(keyTuple)
-            except ex.RecordNotFound as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                # Error: 127.0.0.1:3000 AEROSPIKE_ERR_RECORD_NOT_FOUND [2]
-
-            # Get existing record
-            client.put(keyTuple, {'bin1': 4})
-            (key, meta, bins) = client.get(keyTuple)
-
-            print(key) # ('test', 'demo', None, bytearray(b'...'))
-            print(meta) # {'ttl': 2592000, 'gen': 1}
-            print(bins) # {'bin1': 4}
+        .. include:: examples/get.py
+            :code: python
 
         .. versionchanged:: 2.0.0
 
@@ -221,26 +164,8 @@ Record Operations
         
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
-        .. code-block:: python
-
-            # Record to select from
-            client.put(keyTuple, {'bin1': 4, 'bin2': 3})
-
-            # Only get bin1
-            (key, meta, bins) = client.select(keyTuple, ['bin1'])
-
-            # Similar output to get()
-            print(key) # ('test', 'demo', 'key', bytearray(b'...'))
-            print(meta) # {'ttl': 2592000, 'gen': 1}
-            print(bins) # {'bin1': 4}
-
-            # Get all bins
-            (key, meta, bins) = client.select(keyTuple, ['bin1', 'bin2'])
-            print(bins) # {'bin1': 4, 'bin2': 3}
-            
-            # Get nonexistent bin
-            (key, meta, bins) = client.select(keyTuple, ['bin3'])
-            print(bins) # {}
+        .. include:: examples/select.py
+            :code: python
             
         .. versionchanged:: 2.0.0
 
@@ -255,20 +180,8 @@ Record Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            # Insert record and get its metadata
-            client.put(keyTuple, bins = {"bin1": 4})
-            (key, meta) = client.exists(keyTuple)
-            print(meta) # {'ttl': 2592000, 'gen': 1}
-
-            # Explicitly set TTL to 120
-            # and increment generation
-            client.touch(keyTuple, 120)
-
-            # Record metadata should be updated
-            (key, meta) = client.exists(keyTuple)
-            print(meta) # {'ttl': 120, 'gen': 2}
+        .. include:: examples/touch.py
+            :code: python
 
     .. method:: remove(key[meta: dict[, policy: dict]])
 
@@ -280,20 +193,8 @@ Record Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            # Insert a record
-            client.put(keyTuple, {"bin1": 4})
-
-            # Try to remove it with the wrong generation
-            try:
-                client.remove(keyTuple, meta={'gen': 5}, policy={'gen': aerospike.POLICY_GEN_EQ})
-            except ex.AerospikeError as e:
-                # Error: AEROSPIKE_ERR_RECORD_GENERATION [3]
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-
-            # Remove it ignoring generation
-            client.remove(keyTuple)
+        .. include:: examples/remove.py
+            :code: python
 
     .. method:: get_key_digest(ns, set, key) -> bytearray
 
@@ -308,11 +209,8 @@ Record Operations
         
         :rtype: :class:`bytearray`
 
-        .. code-block:: python
-
-            digest = client.get_key_digest("test", "demo", "key")
-            print(digest.hex())
-            # 3bd475bd0c73f210b67ea83793300eeae576285d
+        .. include:: examples/get_key_digest.py
+            :code: python
 
         .. deprecated:: 2.0.1
             use the function :func:`aerospike.calc_digest` instead.
@@ -329,19 +227,8 @@ Record Operations
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            # Insert record
-            bins = {"bin1": 0, "bin2": 1}
-            client.put(keyTuple, bins)
-
-            # Remove bin1
-            client.remove_bin(keyTuple, ['bin1'])
-
-            # Only bin2 shold remain
-            (keyTuple, meta, bins) = client.get(keyTuple)
-            print(bins)
-            # {'bin2': 1}
+        .. include:: examples/remove_bin.py
+            :code: python
 
     .. index::
         single: Batch Operations
