@@ -199,25 +199,11 @@ Serialization
 -------------
 
 .. note::
+    See :ref:`Data_Mapping`.
 
-    By default, the :class:`Client` maps the supported types \
-    :py:class:`int`, :py:class:`str`, :py:class:`float`, :py:class:`bytes`, \
-    :py:class:`list`, :py:class:`dict` to matching aerospike server \
-    `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
-    (int, string, double, blob, list, map). When an unsupported type is \
-    encountered, the module uses \
-    `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
-    to serialize and deserialize the data, storing it into *as_bytes* of type \
-    `'Python' <https://www.aerospike.com/docs/udf/api/bytes.html#encoding-type>`_ \
-    (`AS_BYTES_PYTHON <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
-
-    The functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
-    allow for user-defined functions to handle serialization, instead. \
-    The serialized data is stored as \
-    'Generic' *as_bytes* of type (\
-    `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_). \
-    The *serialization* config param of :func:`aerospike.client` registers an \
-    instance-level pair of functions that handle serialization.
+.. note::
+    If the client's config dictionary has a serializer and deserializer in the `serialization` tuple, \
+    then it will take precedence over the ones from :function:`set_serializer` and :function:`set_deserializer`.
 
 .. py:function:: set_serializer(callback)
 
@@ -226,13 +212,11 @@ Serialization
 
     :param callable callback: the function to invoke for serialization.
 
-    .. seealso:: To use this function with :meth:`Client.put` the \
-        argument to *serializer* should be :const:`aerospike.SERIALIZER_USER`.
+
+    .. seealso:: To use this function with :meth:`Client.put`, \
+        the argument to the serializer parameter should be :const:`aerospike.SERIALIZER_USER`.
 
     .. code-block:: python
-
-        import aerospike
-        import json
 
         def my_serializer(val):
             return json.dumps(val)
@@ -244,9 +228,10 @@ Serialization
 .. py:function:: set_deserializer(callback)
 
     Register a user-defined deserializer available to all :class:`Client`
-    instances. Once registered, all read methods (such as \
-    :meth:`Client.get`) will run bins containing 'Generic' *as_bytes* \
-    of type (`AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_)
+    instances.
+    
+    Once registered, all read methods (such as :meth:`Client.get`) will run bins containing 'Generic' *as_bytes* \
+    of type `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_
     through this deserializer.
 
     :param callable callback: the function to invoke for deserialization.
