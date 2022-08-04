@@ -5,7 +5,7 @@ import sys
 
 # Configure the client
 config = {
-    'hosts': [ ('127.0.0.1', 3000) ]
+    'hosts': [ ('127.0.0.1', 3000)]
 }
 
 # Create a client and connect it to the cluster

@@ -253,30 +253,8 @@ Batch Operations
         
         :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
 
-        .. code-block:: python
-
-            # Keys
-            keyTuples = [
-                ('test', 'demo', '1'),
-                ('test', 'demo', '2'),
-                ('test', 'demo', '3'),
-            ]
-            # Only insert two records with the first and second key
-            client.put(keyTuples[0], {'bin1': 'value'})
-            client.put(keyTuples[1], {'bin1': 'value'})
-
-            # Try to get records with all three keys
-            records = client.get_many(keyTuples)
-            # The third record tuple should have 'meta' and 'bins' set to none
-            # Because there is no third record
-            print(records[0])
-            print(records[1])
-            print(records[2])
-
-            # Expected output:
-            # (('test', 'demo', '1', bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin1': 'value'})
-            # (('test', 'demo', '2', bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin1': 'value'})
-            # (('test', 'demo', '3', bytearray(...)), None, None)
+        .. include:: examples/get_many.py
+            :code: python
 
         .. note::
             Client version >= 5.0.0 supports Aerospike expressions for batch operations.
@@ -287,138 +265,51 @@ Batch Operations
 
     .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
-        Batch-read metadata for multiple keys, and return it as a :class:`list`. \
+        Batch-read metadata for multiple keys.
+
         Any record that does not exist will have a :py:obj:`None` value for metadata in \
-        the result tuple.
+        their tuple.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: optional :ref:`aerospike_batch_policies`.
-        :return: a :class:`list` of (key, metadata) `tuple`.
+        :param dict policy: see :ref:`aerospike_batch_policies`.
 
-        .. code-block:: python
+        :return: a :class:`list` of (key, metadata) :class:`tuple` for each record.
 
-            # Keys
-            # Only insert two records with the first and second key
-            keyTuples = [
-                ('test', 'demo', '1'),
-                ('test', 'demo', '2'),
-                ('test', 'demo', '3'),
-            ]
-            client.put(keyTuples[0], {'bin1': 'value'})
-            client.put(keyTuples[1], {'bin1': 'value'})
-
-            # Check for existence of records using all three keys
-            keyMetadata = client.exists_many(keyTuples)
-            print(keyMetadata[0])
-            print(keyMetadata[1])
-            print(keyMetadata[2])
-
-            # (('test', 'demo', '1', bytearray(...)), {'ttl': 2592000, 'gen': 1})
-            # (('test', 'demo', '2', bytearray(...)), {'ttl': 2592000, 'gen': 1})
-            # (('test', 'demo', '3', bytearray(...)), None)
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-               [
-                  (('test', 'demo', '1', bytearray(b'ev\xb4\x88\x8c\xcf\x92\x9c \x0bo\xbd\x90\xd0\x9d\xf3\xf6\xd1\x0c\xf3')), {'gen': 2, 'ttl': 2592000}),
-                  (('test', 'demo', '2', bytearray(b'n\xcd7p\x88\xdcF\xe1\xd6\x0e\x05\xfb\xcbs\xa68I\xf0T\xfd')), {'gen': 7, 'ttl': 1337}),
-                  (('test', 'demo', '3', bytearray(b'\x9f\xf2\xe3\xf3\xc0\xc1\xc3q\xb5$n\xf8\xccV\xa9\xed\xd91a\x86')), {'gen': 9, 'ttl': 543}),
-                  (('test', 'demo', '4', bytearray(b'\x8eu\x19\xbe\xe0(\xda ^\xfa\x8ca\x93s\xe8\xb3%\xa8]\x8b')), None)
-               ]
+        .. include:: examples/exists_many.py
+            :code: python
 
     .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
-        Batch-read multiple records, and return them as a :class:`list`. Any \
-        record that does not exist will have a :py:obj:`None` value for metadata \
-        and bins in the record tuple. The *bins* will be filtered as specified.
+        Batch-read specific bins from multiple records.
+        
+        Any record that does not exist will have a :py:obj:`None` value for metadata and bins in its tuple.
+        
+        :param list keys: a list of :ref:`aerospike_key_tuple` to read from.
+        :param list bins: a list of bin names to read from the records.
+        :param dict policy: see :ref:`aerospike_batch_policies`.
 
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param list bins: the bin names to select from the matching records.
-        :param dict policy: optional :ref:`aerospike_batch_policies`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
-        .. code-block:: python
-
-            # Insert 4 records with these keys
-            keyTuples = [
-                ('test', 'demo', 1),
-                ('test', 'demo', 2),
-                ('test', 'demo', 3),
-                ('test', 'demo', 4)
-            ]
-            # Only records 1, 2, 4 have a bin called bin2
-            client.put(keyTuples[0], {'bin1': 20, 'bin2': 40})
-            client.put(keyTuples[1], {'bin1': 11, 'bin2': 50})
-            client.put(keyTuples[2], {'bin1': 50,             'bin3': 20})
-            client.put(keyTuples[3], {'bin1': 87, 'bin2': 76, 'bin3': 40})
-
-            # Get all 4 records and filter out every bin except bin2
-            records = client.select_many(keyTuples, ['bin2'])
-            for record in records:
-                print(record)
-
-            # (('test', 'demo', 1, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin2': 40})
-            # (('test', 'demo', 2, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin2': 50})
-            # (('test', 'demo', 3, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {})
-            # (('test', 'demo', 4, bytearray(...)), {'ttl': 2592000, 'gen': 1}, {'bin2': 76})
+        .. include:: examples/select_many.py
+            :code: python
 
     .. method:: batch_get_ops(keys, ops, meta, policy: dict) -> [ (key, meta, bins)]
 
-        Batch-read multiple records, and return them as a :class:`list`. Any \
-        record that does not exist will have a exception type value as metadata \
+        Batch-read multiple records, and return them as a :class:`list`.
+        
+        Any record that does not exist will have a exception type value as metadata \
         and :py:obj:`None` value as bins in the record tuple.
 
         :param list keys: a list of :ref:`aerospike_key_tuple`.
         :param list ops: a list of operations to apply.
-        :param dict policy: optional :ref:`aerospike_batch_policies`.
+        :param dict policy: see :ref:`aerospike_batch_policies`.
+
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+        
         :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
 
-        .. code-block:: python
-
-            from aerospike_helpers.operations import operations as op
-
-            keyTuples = [
-                ('test', 'demo', '1'),
-                ('test', 'demo', '2'),
-                ("test", "demo", "batch-ops-non_existent_key")
-            ]
-
-            ops = [
-                op.
-            ]
-
-                records = client.batch_get_ops(keys, ops)
-                print(records)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-
-        .. note::
-
-            We expect to see something like:
-
-            .. code-block:: python
-
-                [ 
-                    ( ('test', 'demo', 'batch-ops-k1'),
-                    {'gen': 19, 'ttl': 2592000},
-                    {'scores': ['u7', 789, 'u8', 890, 'u9', 901]}),
-                    
-                    ( ('test', 'demo', 'batch-ops-k2'),
-                    {'gen': 19, 'ttl': 2592000},
-                    {'scores': ['z1', 321, 'z2', 432, 'z7', 987]}),
-                    
-                    ( ('test', 'demo', 'batch-ops-non_existent_key'),
-                    <class 'exception.RecordNotFound'>,
-                    None)
-                ]
+        .. include:: examples/batch_get_ops.py
+            :code: python
 
         .. note::
             Version >= 5.0.0 Supports aerrospike expressions for batch operations see :ref:`aerospike_operation_helpers.expressions`.
@@ -443,61 +334,8 @@ Batch Operations
         .. seealso:: More information about the \
             batch helpers :ref:`aerospike_operation_helpers.batch`
 
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import exception as ex
-            from aerospike_helpers.batch import records as br
-            import aerospike_helpers.expressions as exp
-            from aerospike_helpers.operations import operations as op
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            # Apply different operations to different keys
-            # using batch_write.
-            w_batch_record = br.BatchRecords(
-                [
-                    br.Remove(
-                        key=(namespace, set, 1),
-                        policy={}
-                    ),
-                    br.Write(
-                        key=(namespace, set, 100),
-                        ops=[
-                            op.write("id", 100),
-                            op.write("balance", 100),
-                            op.read("id"),
-                            op.read("id"),
-                        ],
-                        policy={"expressions": exp.GT(exp.IntBin("balance"), 2000).compile()}
-                    ),
-                    br.Read(
-                        key=(namespace, set, 333),
-                        ops=[
-                            op.read("id")
-                        ],
-                        policy=None
-                    ),
-                ]
-            )
-
-            try:
-                # batch_write modifies its BatchRecords argument.
-                # Results for each BatchRecord will be set in their result,
-                # record, and in_doubt fields.
-
-                client.batch_write(w_batch_record)
-
-                for batch_record in w_batch_record.batch_records:
-                    print(batch_record.result)
-                    print(batch_record.record)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
+        .. include:: examples/batch_write.py
+            :code: python
 
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
 
@@ -512,74 +350,8 @@ Batch Operations
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import exception as ex
-            from aerospike_helpers.batch import records as br
-            import aerospike_helpers.expressions as exp
-            from aerospike_helpers.operations import operations as op
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            namespace = "test"
-            set = "demo"
-
-            keys = [(namespace, set, i) for i in range(150)]
-            records = [{"id": i, "balance": i * 10} for i in range(150)]
-            for key, rec in zip(keys, records):
-                client.put(key, rec)
-
-            # Batch add 10 to the bin "balance" and read it if it's over
-            # 1000 NOTE: batch_operate ops must include a write op
-            # get_batch_ops or get_many can be used for all read ops use cases.
-            expr = exp.GT(exp.IntBin("balance"), 1000).compile()
-            ops = [
-                op.increment("balance", 10),
-                op.read("balance")
-            ]
-            policy_batch = {"expressions": expr}
-
-            try:
-                res = client.batch_operate(keys, ops, policy_batch)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                client.close()
-                sys.exit(1)
-
-            # res is an instance of BatchRecords
-            # the field, batch_records, contains a BatchRecord instance
-            # for each key used by the batch_operate call.
-            # the field, results, is 0 if all batch subtransactions completed succesfully
-            # or the only failures are FILTERED_OUT or RECORD_NOT_FOUND.
-            # Otherwise its value corresponds to an as_status error code and signifies that
-            # one or more of the batch subtransactions failed. Each BatchRecord instance
-            # also has a results field that signifies the status of that batch subtransaction.
-
-            if res.result == 0:
-
-                # BatchRecord 100 should have a result code of 27 meaning it was filtered out by an expression.
-                print("BatchRecord 100 result: {result}".format(result=res.batch_records[100].result))
-
-                # BatchRecord 100 should, record be None.
-                print("BatchRecord 100 record: {record}".format(record=res.batch_records[100].record))
-
-                # BatchRecord 101 should have a result code of 0 meaning it succeeded.
-                print("BatchRecord 101 result: {result}".format(result=res.batch_records[101].result))
-
-                # BatchRecord 101, record should be populated.
-                print("BatchRecord 101 record: {record}".format(record=res.batch_records[101].record))
-
-            else:
-                # Some batch sub transaction failed.
-                print("res result: {result}".format(result=res.result))
-
-            for key in keys:
-                client.remove(key)
-
-            client.close()
+        .. include:: examples/batch_operate.py
+            :code: python
 
     .. method:: batch_apply(keys: list, module: str, function: str, args: list, [policy_batch: dict], [policy_batch_apply: dict]) -> BatchRecords
 
@@ -596,55 +368,9 @@ Batch Operations
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
+        .. include:: examples/batch_apply.py
+            :code: python
 
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            keys = [(namespace, set, i) for i in range(10)]
-
-            # Apply a user defined function (UDF) to a batch
-            # of records using batch_apply.
-            module = "test_record_udf"
-            path_to_module = "/path/to/test_record_udf.lua"
-            function = "bin_udf_operation_integer"
-            args = ["balance", 10, 5]
-
-            client.udf_put(path_to_module)
-
-            try:
-                # This should add 15 to each balance bin.
-                res = client.batch_apply(keys, module, function, args)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                client.close()
-                sys.exit(1)
-
-            print("res result: {result}".format(result=res.result))
-            for batch_record in res.batch_records:
-                print(batch_record.result)
-                print(batch_record.record)
-
-
-            client.close()
-
-            # bin_udf_operation_integer lua
-            # --[[UDF which performs arithmetic operation on bin containing
-            #     integer value.
-            # --]]
-            # function bin_udf_operation_integer(record, bin_name, x, y)
-            #     record[bin_name] = (record[bin_name] + x) + y
-            #     if aerospike:exists(record) then
-            #         aerospike:update(record)
-            #     else
-            #         aerospike:create(record)
-            #     end
-            #     return record[bin_name]
-            # end
 
     .. method:: batch_remove(keys: list, [policy_batch: dict], [policy_batch_remove: dict]) -> BatchRecords
 
@@ -658,29 +384,8 @@ Batch Operations
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            keys = [(namespace, set, i) for i in range(10)]
-
-            # Delete the records using batch_remove
-            try:
-                res = client.batch_remove(keys)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                client.close()
-                sys.exit(1)
-            
-            # Should be 0 signifying success.
-            print("BatchRecords result: {result}".format(result=res.result))
-
-            client.close()
+        .. include:: examples/batch_remove.py
+            :code: python
 
     .. index::
         single: String Operations
