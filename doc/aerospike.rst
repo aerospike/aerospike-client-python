@@ -11,7 +11,7 @@ Overview
     :platform: 64-bit Linux and OS X
     :synopsis: Aerospike client for Python.
 
-``aerospike`` is a package which provides a Python client for Aerospike database clusters. \
+``aerospike`` is a package which provides a Python client for Aerospike database clusters.
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
@@ -28,47 +28,51 @@ Client
 
 .. py:function:: client(config)
 
-    Creates a new instance of the :class:`Client` class. This client can \
-    connect to the cluster and perform operations on the database. \
+    Creates a new instance of the :class:`Client` class.
+    
+    This client can connect to the cluster and perform operations on the database.
     See :ref:`client` for more details.
 
     Internally, this is a wrapper function which calls the constructor for the :class:`Client` class.
     However, the client may also be constructed by calling the constructor directly.
 
+    The client takes on many configuration parameters passed in through a dictionary.
+
     :param dict config: See :ref:`client_config`.
 
     :return: an instance of the :class:`Client` class.
+
+    .. versionchanged:: 2.0.0
+
+    Simple example:
 
     .. code-block:: python
 
         import aerospike
 
-        # configure the client to first connect to a cluster node at 127.0.0.1
-        # the client will learn about the other nodes in the cluster from the
-        # seed node.
-        # in this configuration shared-memory cluster tending is turned on,
-        # which is appropriate for a multi-process context, such as a webserver
+        # Configure the client to first connect to a cluster node at 127.0.0.1
+        # The client will learn about the other nodes in the cluster from the seed node.
+        # Also sets a top level policy for read operations
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
             'policies': {'read': {total_timeout': 1000}},
-            'shm':      { }}
         client = aerospike.client(config)
 
-    .. versionchanged:: 2.0.0
-
+    Connecting using TLS exapmle:
 
     .. code-block:: python
 
         import aerospike
         import sys
 
-        # NOTE: Use of TLS Requires Aerospike Enterprise Server Version >= 3.11 and Python Client version 2.1.0 or greater
-        # To view Instructions for server configuration for TLS see https://www.aerospike.com/docs/guide/security/tls.html
+        # NOTE: Use of TLS requires Aerospike Enterprise version >= 3.11
+        # and client version 2.1.0 or greater
         tls_name = "some-server-tls-name"
         tls_ip = "127.0.0.1"
         tls_port = 4333
 
-        # If tls-name is specified, it must match the tls-name specified in the node’s server configuration file
+        # If tls-name is specified,
+        # it must match the tls-name in the node’s server configuration file
         # and match the server’s CA certificate.
         tls_host_tuple = (tls_ip, tls_port, tls_name)
         hosts = [tls_host_tuple]
@@ -89,10 +93,6 @@ Client
             print(e)
             print("Failed to connect")
             sys.exit()
-
-        key = ('test', 'demo', 1)
-        client.put(key, {'aerospike': 'aerospike'})
-        print(client.get(key))
 
 Geospatial
 ^^^^^^^^^^
@@ -392,7 +392,9 @@ Other
 Client Configuration
 ====================
 
-These are the keys and expected values for the ``config`` dictionary passed to :meth:`aerospike.client`:
+These are the keys and expected values for the ``config`` dictionary passed to :meth:`aerospike.client`.
+
+Only the `hosts` key is required; the rest of the keys are optional.
 
 .. object:: config
 
@@ -408,7 +410,7 @@ These are the keys and expected values for the ``config`` dictionary passed to :
             * port: :class:`int`
             * tls-name: :class:`str`
             
-            The client will connect to the first available node in the list called the *seed node*. \ 
+            The client will connect to the first available node in the list called the *seed node*.
             From there, it will learn about the cluster and its partition map.
             
             If ``tls-name`` is specified, it must match the tls-name specified in the node's \
@@ -547,7 +549,7 @@ These are the keys and expected values for the ``config`` dictionary passed to :
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
         
-            .. note:: TLS usage requires Aerospike Enterprise Edition
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://www.aerospike.com/docs/guide/security/tls.html>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not. 
