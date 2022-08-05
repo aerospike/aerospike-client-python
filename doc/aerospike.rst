@@ -243,70 +243,20 @@ Serialization
 
     .. versionadded:: 1.0.53
 
-.. note:: Serialization Examples
+Example
+^^^^^^^
+The following example shows the three modes of serialization:
 
-    The following example shows the three modes of serialization - built-in, \
-    class-level user functions, instance-level user functions:
+1. Built-in
+2. Class-level user functions
+3. Instance-level user functions
 
-    .. code-block:: python
+.. include:: examples/serializer.py
+    :code: python
 
-        import aerospike
-        import marshal
-        import json
 
-        def go_marshal(val):
-            return marshal.dumps(val)
 
-        def demarshal(val):
-            return marshal.loads(val)
 
-        def jsonize(val):
-            return json.dumps(val)
-
-        def dejsonize(val):
-            return json.loads(val)
-
-        aerospike.set_serializer(go_marshal)
-        aerospike.set_deserializer(demarshal)
-        config = {'hosts':[('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
-        config['serialization'] = (jsonize,dejsonize)
-        client2 = aerospike.client(config).connect()
-
-        for i in xrange(1, 4):
-            try:
-                client.remove(('test', 'demo', 'foo' + i))
-            except:
-                pass
-
-        bin_ = {'t': (1, 2, 3)} # tuple is an unsupported type
-        print("Use the built-in serialization (cPickle)")
-        client.put(('test','demo','foo1'), bin_)
-        (key, meta, bins) = client.get(('test','demo','foo1'))
-        print(bins)
-
-        print("Use the class-level user-defined serialization (marshal)")
-        client.put(('test','demo','foo2'), bin_, serializer=aerospike.SERIALIZER_USER)
-        (key, meta, bins) = client.get(('test','demo','foo2'))
-        print(bins)
-
-        print("Use the instance-level user-defined serialization (json)")
-        client2.put(('test','demo','foo3'), bin_, serializer=aerospike.SERIALIZER_USER)
-        # notice that json-encoding a tuple produces a list
-        (key, meta, bins) = client2.get(('test','demo','foo3'))
-        print(bins)
-        client.close()
-
-    The expected output is:
-
-    .. code-block:: python
-
-        Use the built-in serialization (cPickle)
-        {'i': 321, 't': (1, 2, 3)}
-        Use the class-level user-defined serialization (marshal)
-        {'i': 321, 't': (1, 2, 3)}
-        Use the instance-level user-defined serialization (json)
-        {'i': 321, 't': [1, 2, 3]}
 
     While AQL shows the records as having the following structure:
 
