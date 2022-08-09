@@ -95,7 +95,7 @@ Record Operations
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
-        :param dict meta: see :ref:`metadata_dict`.
+        :param dict meta: record metadata to be set. see :ref:`metadata_dict`.
         :param dict policy: see :ref:`aerospike_write_policies`.
 
         :param serializer: override the serialization mode of the client \
@@ -175,7 +175,7 @@ Record Operations
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param int val: ttl in seconds, with ``0`` resolving to the default value in the server config.
-        :param dict meta: see :ref:`metadata_dict`
+        :param dict meta: record metadata to be set. see :ref:`metadata_dict`
         :param dict policy: see :ref:`aerospike_operate_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -188,7 +188,7 @@ Record Operations
         Remove a record matching the *key* from the cluster.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param dict meta: a dictonary with the expected generation of the record.
+        :param dict meta: contains the expected generation of the record in a key called ``"gen"``.
         :param dict policy: see :ref:`aerospike_remove_policies`. May be passed as a keyword argument.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -222,7 +222,7 @@ Record Operations
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: the bins names to be removed from the record.
-        :param dict meta: see :ref:`metadata_dict`.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -400,15 +400,14 @@ String Operations
 
     .. method:: append(key, bin, val[, meta: dict[, policy: dict]])
 
-        Append the string *val* to the string value in *bin*.
+        Append a string to the string value in bin.
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param str val: the string to append to the value of *bin*.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
+        :param str val: the string to append to the bin value.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
+
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -424,11 +423,10 @@ String Operations
 
         :param tuple key: a :ref:`aerospike_key_tuple` tuple associated with the record.
         :param str bin: the name of the bin.
-        :param str val: the string to prepend to the value of *bin*.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
+        :param str val: the string to prepend to the bin value.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
+
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. code-block:: python
@@ -456,9 +454,7 @@ Numeric Operations
         :param str bin: the name of the bin.
         :param int offset: the value by which to increment the value in *bin*.
         :type offset: :py:class:`int` or :py:class:`float`
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`. Note: the ``exists`` policy option may not be: ``aerospike.POLICY_EXISTS_CREATE_OR_REPLACE`` nor ``aerospike.POLICY_EXISTS_REPLACE``
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -520,9 +516,7 @@ Single-Record Transactions
             structured as the :class:`dict` \
             ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
             See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`. 
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -675,9 +669,7 @@ Single-Record Transactions
             structured as the :class:`dict` \
             ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
             See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: optional record metadata to be set, with field
-            ``'ttl'`` set to :class:`int` number of seconds or one of the :ref:`TTL_CONSTANTS`, \
-            and ``'gen'`` set to :class:`int` generation number to compare.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
