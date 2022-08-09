@@ -1872,9 +1872,7 @@ Write Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
-            
         * **compression_threshold** (:class:`int`)
-
             Compress data for transmission if the object size is greater than a given number of bytes.
 
             Default: ``0``, meaning 'never compress'
