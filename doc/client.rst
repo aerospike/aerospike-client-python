@@ -1247,47 +1247,44 @@ Index Operations
 Admin Operations
 ----------------
 
+The admin methods implement the security features of the Enterprise \
+Edition of Aerospike. These methods will raise a \
+:exc:`~aerospike.exception.SecurityNotSupported` when the client is \
+connected to a Community Edition cluster (see
+:mod:`aerospike.exception`). \
+
+A user is validated by the client against the server whenever a \
+connection is established through the use of a username and password \
+(passwords hashed using bcrypt). \
+When security is enabled, each operation is validated against the \
+user\'s roles. Users are assigned roles, which are collections of \
+:ref:`aerospike_privilege_dict`.
+
+.. code-block:: python
+
+    import aerospike
+    from aerospike import exception as ex
+    import time
+
+    config = {'hosts': [('127.0.0.1', 3000)] }
+    client = aerospike.client(config).connect('ipji', 'life is good')
+
+    try:
+        dev_privileges = [{'code': aerospike.PRIV_READ}, {'code': aerospike.PRIV_READ_WRITE}]
+        client.admin_create_role('dev_role', dev_privileges)
+        client.admin_grant_privileges('dev_role', [{'code': aerospike.PRIV_READ_WRITE_UDF}])
+        client.admin_create_user('dev', 'you young whatchacallit... idiot', ['dev_role'])
+        time.sleep(1)
+        print(client.admin_query_user('dev'))
+        print(admin_query_users())
+    except ex.AdminError as e:
+        print("Error [{0}]: {1}".format(e.code, e.msg))
+    client.close()
+
+.. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
+
 .. class:: Client
     :noindex:
-
-    .. note::
-
-        The admin methods implement the security features of the Enterprise \
-        Edition of Aerospike. These methods will raise a \
-        :exc:`~aerospike.exception.SecurityNotSupported` when the client is \
-        connected to a Community Edition cluster (see
-        :mod:`aerospike.exception`). \
-
-        A user is validated by the client against the server whenever a \
-        connection is established through the use of a username and password \
-        (passwords hashed using bcrypt). \
-        When security is enabled, each operation is validated against the \
-        user\'s roles. Users are assigned roles, which are collections of \
-        :ref:`aerospike_privilege_dict`.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import exception as ex
-            import time
-
-            config = {'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect('ipji', 'life is good')
-
-            try:
-                dev_privileges = [{'code': aerospike.PRIV_READ}, {'code': aerospike.PRIV_READ_WRITE}]
-                client.admin_create_role('dev_role', dev_privileges)
-                client.admin_grant_privileges('dev_role', [{'code': aerospike.PRIV_READ_WRITE_UDF}])
-                client.admin_create_user('dev', 'you young whatchacallit... idiot', ['dev_role'])
-                time.sleep(1)
-                print(client.admin_query_user('dev'))
-                print(admin_query_users())
-            except ex.AdminError as e:
-                print("Error [{0}]: {1}".format(e.code, e.msg))
-            client.close()
-
-        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
-
 
     .. method:: admin_create_role(role, privileges[, policy: dict[, whitelist[, read_quota[, write_quota]]]])
 
@@ -2512,18 +2509,18 @@ Privilege Objects
 
 .. object:: privilege
 
-    A :class:`dict` describing a privilege associated with a specific role.
+    A :class:`dict` describing a privilege and where it applies to:
 
     .. hlist::
         :columns: 1
 
-        * **code** one of the :ref:`aerospike_privileges` values such as :data:`aerospike.PRIV_READ`
-        * **ns** optional namespace, to which the privilege applies, otherwise the privilege applies globally.
-        * **set** optional set within the *ns*, to which the privilege applies, otherwise to the entire namespace.
+        * ``"code"``: one of the :ref:`aerospike_privileges` values
+        * ``"ns"``: **optional** namespace where the privilege applies. Otherwise, the privilege applies globally.
+        * ``"set"``: **optional** set within the namespace where the privilege applies. Otherwise, the privilege applies to the entire namespace.
 
-    Example:
-
-    ``{'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}``
+    Example::
+    
+        {'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}
 
 
 .. _aerospike_partition_objects:
