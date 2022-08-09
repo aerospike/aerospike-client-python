@@ -800,19 +800,6 @@ Specifies which partition replica to read from.
     
     If there are no nodes on the same rack, use :data:`POLICY_REPLICA_SEQUENCE` instead.
 
-Retry Policy Options
-^^^^^^^^^^^^^^^^^^^^
-
-Specifies the behavior of failed operations.
-
-.. data:: POLICY_RETRY_NONE
-
-    Only attempt an operation once
-
-.. data:: POLICY_RETRY_ONCE
-
-    If an operation fails, attempt the operation one more time
-
 .. _TTL_CONSTANTS:
 
 TTL Constants
