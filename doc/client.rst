@@ -1288,86 +1288,98 @@ user\'s roles. Users are assigned roles, which are collections of \
 
     .. method:: admin_create_role(role, privileges[, policy: dict[, whitelist[, read_quota[, write_quota]]]])
 
-        Create a custom, named *role* containing a :class:`list` of *privileges*, optional whitelist, and quotas.
+        Create a custom role containing a :class:`list` of privileges, as well as an optional whitelist and quotas.
 
         :param str role: The name of the role.
         :param list privileges: A list of :ref:`aerospike_privilege_dict`.
-        :param dict policy: Optional :ref:`aerospike_admin_policies`.
-        :param list whitelist: A list of whitelist IP addresses that can contain wildcards, for example 10.1.2.0/24.
-        :param int read_quota: Maximum reads per second limit, pass in zero for no limit.
-        :param int write_quota: Maximum write per second limit, pass in zero for no limit.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+        :param list whitelist: A list of whitelist IP addresses that can contain wildcards, for example ``10.1.2.0/24``.
+        :param int read_quota: Maximum reads per second limit. Pass in ``0`` for no limit.
+        :param int write_quota: Maximum write per second limit, Pass in ``0`` for no limit.
+
         :raises: One of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_set_whitelist(role, whitelist[, policy: dict])
 
-        Add *whitelist* to a *role*.
+        Add a whitelist to a role.
 
         :param str role: The name of the role.
         :param list whitelist: List of IP strings the role is allowed to connect to.
-            Setting whitlist to None will clear the whitelist for that role.
-        :param dict policy: Optional :ref:`aerospike_admin_policies`.
+            Setting this to :py:obj:`None` will clear the whitelist for that role.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+
         :raises: One of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_set_quotas(role[, read_quota[, write_quota[, policy: dict]]])
 
-        Add *quotas* to a *role*.
+        Add quotas to a role.
 
         :param str role: the name of the role.
-        :param int read_quota: Maximum reads per second limit, pass in zero for no limit.
-        :param int write_quota: Maximum write per second limit, pass in zero for no limit.
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
+        :param int read_quota: Maximum reads per second limit. Pass in ``0`` for no limit.
+        :param int write_quota: Maximum write per second limit. Pass in ``0`` for no limit.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_drop_role(role[, policy: dict])
 
-        Drop a custom *role*.
+        Drop a custom role.
 
         :param str role: the name of the role.
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_grant_privileges(role, privileges[, policy: dict])
 
-        Add *privileges* to a *role*.
+        Add privileges to a role.
 
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_revoke_privileges(role, privileges[, policy: dict])
 
-        Remove *privileges* from a *role*.
+        Remove privileges from a role.
 
         :param str role: the name of the role.
         :param list privileges: a list of :ref:`aerospike_privilege_dict`.
-        :param dict policy: optional :`aerospike_admin_policies`.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_get_role(role[, policy: dict]) -> []
+    .. method:: admin_get_role(role[, policy: dict]) -> {}
 
-        Get the :class:`dict` of privileges, whitelist, and quotas associated with a *role*.
+        Get a :class:`dict` of privileges, whitelist, and quotas associated with a role.
 
         :param str role: the name of the role.
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
-        :return: a :ref:`aerospike_privilege_dict`.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+
+        :return: a :ref:`aerospike_role_dict`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_get_roles([policy: dict]) -> {}
 
-        Get all named roles and their attributes.
+        Get the names of all roles and their attributes.
 
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
-        :return: a :class:`dict` of :ref:`aerospike_privilege_dict` keyed by role name.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+        
+        :return: a :class:`dict` of :ref:`aerospike_role_dict` keyed by role names.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_query_role(role[, policy: dict]) -> []
 
-        Get the :class:`list` of privileges associated with a *role*.
+        Get the :class:`list` of privileges associated with a role.
 
         :param str role: the name of the role.
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
+        :param dict policy: See :ref:`aerospike_admin_policies`.
+
         :return: a :class:`list` of :ref:`aerospike_privilege_dict`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_query_roles([policy: dict]) -> {}
@@ -1375,76 +1387,88 @@ user\'s roles. Users are assigned roles, which are collections of \
         Get all named roles and their privileges.
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+
         :return: a :class:`dict` of :ref:`aerospike_privilege_dict` keyed by role name.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_create_user(username, password, roles[, policy: dict])
 
-        Create a user with a specified *username* and grant it *roles*.
+        Create a user and grant it roles.
 
-        :param str username: the username to be added to the aerospike cluster.
+        :param str username: the username to be added to the Aerospike cluster.
         :param str password: the password associated with the given username.
         :param list roles: the list of role names assigned to the user.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+        
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_drop_user(username[, policy: dict])
 
-        Drop the user with a specified *username* from the cluster.
+        Drop the user with a specified username from the cluster.
 
         :param str username: the username to be dropped from the aerospike cluster.
+
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+        
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_change_password(username, password[, policy: dict])
 
-        Change the *password* of the user *username*. This operation can only \
-        be performed by that same user.
+        Change the password of a user.
+        
+        This operation can only be performed by that same user.
 
-        :param str username: the username.
+        :param str username: the username of the user.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_set_password(username, password[, policy: dict])
 
-        Set the *password* of the user *username* by a user administrator.
+        Set the password of a user by a user administrator.
 
         :param str username: the username to be added to the aerospike cluster.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_grant_roles(username, roles[, policy: dict])
 
-        Add *roles* to the user *username*.
+        Add roles to a user.
 
-        :param str username: the username to be granted the roles.
+        :param str username: the username of the user.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_revoke_roles(username, roles[, policy: dict])
 
-        Remove *roles* from the user *username*.
+        Remove roles from a user.
 
         :param str username: the username to have the roles revoked.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_query_user (username[, policy: dict]) -> []
 
-        Return the list of roles granted to the specified user *username*.
+        Return the list of roles granted to the specified user.
 
-        :param str username: the username to query for.
+        :param str username: the username of the user.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
+
         :return: a :class:`list` of role names.
+
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
     .. method:: admin_query_users ([policy: dict]) -> {}
 
-        Return the :class:`dict` of users, with their roles keyed by username.
+        Get the roles of all users. 
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of roles keyed by username.
@@ -2486,21 +2510,17 @@ Misc
 Role Objects
 ------------
 
-.. object:: Role Dictionary
+.. object:: Role
 
-    A :class:`dict` describing attributes associated with a specific role.
+    A :class:`dict` describing attributes associated with a specific role:
 
     .. hlist::
         :columns: 1
 
-        * **privileges** A list of :ref:`aerospike_privilege_dict`.
-        * **whitelist** A :class:`list` of IP address strings.
-        * **read_quota** A :class:`int` representing the allowed read transactions per second.
-        * **write_quota** A :class:`int` representing the allowed write transactions per second.
-
-    Example:
-
-    ``{'code': aerospike.PRIV_READ, 'ns': 'test', 'set': 'demo'}``
+        * ``"privileges"``: a list of :ref:`aerospike_privilege_dict`.
+        * ``"whitelist"``: a :class:`list` of IP address strings.
+        * ``"read_quota"``: a :class:`int` representing the allowed read transactions per second.
+        * ``"write_quota"``: a :class:`int` representing the allowed write transactions per second.
 
 .. _aerospike_privilege_dict:
 
