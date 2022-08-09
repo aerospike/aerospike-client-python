@@ -809,6 +809,12 @@ User Defined Functions
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+    .. note::
+        Version >= 5.0.0 supports Aerospike expressions for :meth:`apply`, :meth:`scan_apply`, and :meth:`query_apply`.
+        See :ref:`aerospike_operation_helpers.expressions`.
+
+        Requires server version >= 5.2.0.
+
     .. method:: apply(key, module, function, args[, policy: dict])
 
         Apply a registered (see :meth:`udf_put`) record UDF to a particular record.
@@ -825,75 +831,13 @@ User Defined Functions
         .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
           and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
 
-    .. note::
-        Version >= 5.0.0 Supports aerrospike expressions for apply, scan_apply, and query_apply see :ref:`aerospike_operation_helpers.expressions`.
-        Requires server version >= 5.2.0.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike_helpers import expressions as exp
-            from aerospike import exception as ex
-            import sys
-
-            config = {"hosts": [("127.0.0.1", 3000)]}
-            client = aerospike.client(config).connect()
-
-            # register udf
-            try:
-                client.udf_put("/path/to/my_udf.lua")
-            except ex.FilteredOut as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                client.close()
-                sys.exit(1)
-
-
-            # put records and apply udf
-            try:
-                keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
-                records = [{"number": 1}, {"number": 2}, {"number": 3}]
-                for i in range(3):
-                    client.put(keys[i], records[i])
-
-                # check that the record has value < 2 or == 3 in bin 'number'
-                expr = exp.Or(
-                    exp.LT(exp.IntBin("number"), 2),
-                    exp.Eq(exp.IntBin("number"), 3)
-                ).compile()
-
-                policy = {"expressions": expr}
-
-                client.scan_apply("test", None, "my_udf", "my_udf", ["number", 10], policy)
-                records = client.get_many(keys)
-
-                print(records)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-            # the udf has only modified the records that matched the preds
-            # EXPECTED OUTPUT:
-            # [
-            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 11}),
-            #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 2}),
-            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
-            # ]
-        
-        .. code-block:: python
-
-            # contents of my_udf.lua
-            function my_udf(rec, bin, offset)
-                info("my transform: %s", tostring(record.digest(rec)))
-                rec[bin] = rec[bin] + offset
-                aerospike:update(rec)
-            end
-
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
         .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
-        Initiate a scan and apply a record UDF to each record matched by the scan. This method blocks until the scan is complete.
+        Initiate a scan and apply a record UDF to each record matched by the scan.
+        
+        This method blocks until the scan is complete.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name. Should be :py:obj:`None` if the entire namespace is to be scanned.
@@ -912,7 +856,9 @@ User Defined Functions
 
     .. method:: query_apply(ns, set, predicate, module, function[, args[, policy: dict]]) -> int
 
-        Initiate a query and apply a record UDF to each record matched by the query. This method blocks until the query is completed.
+        Initiate a query and apply a record UDF to each record matched by the query.
+        
+        This method blocks until the query is complete.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name. Should be :py:obj:`None` if you want to query records in the *ns* which are in no set.
@@ -933,35 +879,16 @@ User Defined Functions
 
         Return the status of a job running in the background.
 
-        :param int job_id: the job ID returned by :meth:`scan_apply` and :meth:`query_apply`.
+        The returned :class:`dict` contains these keys:
+
+            * ``"status"``: see :ref:`aerospike_job_constants_status` for possible values.
+            * ``"records_read"``: number of scanned records.
+            * ``"progress_pct"``: progress percentage of the job
+
+        :param int job_id: the job ID returned by :meth:`scan_apply` or :meth:`query_apply`.
         :param module: one of :ref:`aerospike_job_constants`.
-        :returns: a :class:`dict` with keys *status*, *records_read*, and \
-          *progress_pct*. The value of *status* is one of :ref:`aerospike_job_constants_status`.
+        :returns: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import exception as ex
-            import time
-
-            config = {'hosts': [ ('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
-            try:
-                # run the UDF 'add_val' in Lua module 'simple' on the records of test.demo
-                job_id = client.scan_apply('test', 'demo', 'simple', 'add_val', ['age', 1])
-                while True:
-                    time.sleep(0.25)
-                    response = client.job_info(job_id, aerospike.JOB_SCAN)
-                    if response['status'] == aerospike.JOB_STATUS_COMPLETED:
-                        break
-                print("Job ", str(job_id), " completed")
-                print("Progress percentage : ", response['progress_pct'])
-                print("Number of scanned records : ", response['records_read'])
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-            client.close()
-
 
     .. method:: scan_info(scan_id) -> dict
 
@@ -970,36 +897,16 @@ User Defined Functions
 
         Return the status of a scan running in the background.
 
+
+        The returned :class:`dict` contains these keys:
+
+            * ``"status"``: see :ref:`aerospike_scan_constants` for possible values.
+            * ``"records_scanned"``: number of scanned records.
+            * ``"progress_pct"``: progress percentage of the job
+
         :param int scan_id: the scan ID returned by :meth:`scan_apply`.
-        :returns: a :class:`dict` with keys *status*, *records_scanned*, and \
-          *progress_pct*. The value of *status* is one of :ref:`aerospike_job_constants_status`.
+        :returns: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import exception as ex
-
-            config = {'hosts': [ ('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
-            try:
-                scan_id = client.scan_apply('test', 'demo', 'simple', 'add_val', ['age', 1])
-                while True:
-                    response = client.scan_info(scan_id)
-                    if response['status'] == aerospike.SCAN_STATUS_COMPLETED or \
-                       response['status'] == aerospike.SCAN_STATUS_ABORTED:
-                        break
-                if response['status'] == aerospike.SCAN_STATUS_COMPLETED:
-                    print("Background scan successful")
-                    print("Progress percentage : ", response['progress_pct'])
-                    print("Number of scanned records : ", response['records_scanned'])
-                    print("Background scan status : ", "SCAN_STATUS_COMPLETED")
-                else:
-                    print("Scan_apply failed")
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-            client.close()
-
 
     .. index::
         single: Info Operations
