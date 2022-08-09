@@ -1161,26 +1161,14 @@ Info Operations
     .. method:: get_expression_base64(expression) -> str
 
         Get the base64 representation of a compiled aerospike expression.
+
         See :ref:`aerospike_operation_helpers.expressions` for more details on expressions.
 
-        :param AerospikeExpression expression: The compiled expression whose base64 representation will be returned. See expressions at :ref:`aerospike_operation_helpers.expressions`.
+        :param AerospikeExpression expression: the compiled expression.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            # This is an example of getting the base64 representation of an aerospike expression.
-            import aerospike
-            from aerospike_helpers import expressions as exp
-
-
-            # Compile expression
-            expr = exp.Eq(exp.IntBin("bin1"), 6).compile()
-
-            # Get base64
-            b64 = client.get_expression_base64(expr)
-
-            # Expected output: "kwGTUQKkYmluMQY="
-            print(b64)
+        .. include:: examples/get_expression_base64.py
+            :code: python
 
         .. versionchanged:: 7.0.0
 
