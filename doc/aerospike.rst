@@ -254,37 +254,31 @@ The following example shows the three modes of serialization:
 .. include:: examples/serializer.py
     :code: python
 
+Records ``foo1`` and ``foo2`` should have different encodings from each other since they use different serializers.
+(record ``foo3`` uses the same encoding as ``foo2``)
+If we read the data for each record using ``aql``, it outputs the following data:
 
+.. code-block:: sql
 
+    aql> select bin from test.demo where PK='foo1'
+    +-------------------------------------------------------------+--------+
+    | bin                                                         | PK     |
+    +-------------------------------------------------------------+--------+
+    | 80 04 95 09 00 00 00 00 00 00 00 4B 01 4B 02 4B 03 87 94 2E | "foo1" |
+    +-------------------------------------------------------------+--------+
+    1 row in set (0.000 secs)
 
+    OK
 
-    While AQL shows the records as having the following structure:
+    aql> select bin from test.demo where PK='foo2'
+    +----------------------------+--------+
+    | bin                        | PK     |
+    +----------------------------+--------+
+    | 5B 31 2C 20 32 2C 20 33 5D | "foo2" |
+    +----------------------------+--------+
+    1 row in set (0.001 secs)
 
-    .. code-block:: sql
-
-        aql> select i,t from test.demo where PK='foo1'
-        +-----+----------------------------------------------+
-        | i   | t                                            |
-        +-----+----------------------------------------------+
-        | 321 | 28 49 31 0A 49 32 0A 49 33 0A 74 70 31 0A 2E |
-        +-----+----------------------------------------------+
-        1 row in set (0.000 secs)
-
-        aql> select i,t from test.demo where PK='foo2'
-        +-----+-------------------------------------------------------------+
-        | i   | t                                                           |
-        +-----+-------------------------------------------------------------+
-        | 321 | 28 03 00 00 00 69 01 00 00 00 69 02 00 00 00 69 03 00 00 00 |
-        +-----+-------------------------------------------------------------+
-        1 row in set (0.000 secs)
-
-        aql> select i,t from test.demo where PK='foo3'
-        +-----+----------------------------+
-        | i   | t                          |
-        +-----+----------------------------+
-        | 321 | 5B 31 2C 20 32 2C 20 33 5D |
-        +-----+----------------------------+
-        1 row in set (0.000 secs)
+    OK
 
 
 Logging
