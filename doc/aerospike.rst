@@ -202,6 +202,10 @@ Methods
             * **connect_timeout** (:class:`int`) 
                 | Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
                 | Default: ``1000``.
+            * **fail_if_not_connected** (:class:`bool`)
+                | Flag to signify fail on cluster init if seed node and all peers are not reachable.
+                |
+                | Default: ``True``
 
 
     :return: an instance of the :class:`Client` class.

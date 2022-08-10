@@ -1385,6 +1385,12 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 			config.max_socket_idle = (uint32_t)max_socket_idle;
 		}
 	}
+
+	PyObject *py_fail_if_not_connected = PyDict_GetItemString(py_config, "fail_if_not_connected");
+	if (py_fail_if_not_connected && PyBool_Check(py_fail_if_not_connected)) {
+		config.fail_if_not_connected = PyObject_IsTrue(py_fail_if_not_connected);
+	}
+
 	self->as = aerospike_new(&config);
 
 	return 0;
@@ -1577,11 +1583,11 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeClient_Type = {
-	PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Client", // tp_name
-	sizeof(AerospikeClient),						   // tp_basicsize
-	0,												   // tp_itemsize
-	(destructor)AerospikeClient_Type_Dealloc,
-	// tp_dealloc
+	PyVarObject_HEAD_INIT(NULL, 0) 
+	"aerospike.Client", // tp_name
+	sizeof(AerospikeClient), // tp_basicsize
+	0, // tp_itemsize
+	(destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
 	0, // tp_print
 	0, // tp_getattr
 	0, // tp_setattr
