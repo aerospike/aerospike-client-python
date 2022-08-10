@@ -31,20 +31,23 @@ in an in-memory primary index.
 Layout
 ======
 
-+----------------------------+------------------------------------------------------------------------+
-| Module                     | Description                                                            |
-+============================+========================================================================+
-| :mod:`aerospike`           | Contains the Client, Query, and Scan Classes.                          |
-+----------------------------+------------------------------------------------------------------------+
-| :mod:`aerospike.predicates`| Predicate helpers for the Query class.                                 |
-+----------------------------+------------------------------------------------------------------------+
-| :mod:`aerospike.exception` | Contains the exception hierarchy for AerospikeError and its subclasses.|
-+----------------------------+------------------------------------------------------------------------+
-| :mod:`aerospike_helpers`   | Bin operations (list, map, bitwise, etc.), \                           |
-|                            | Aerospike expressions, \                                               |
-|                            | batch operations, \                                                    |
-|                            | complex data type context                                              |
-+----------------------------+------------------------------------------------------------------------+
+    * :mod:`aerospike`
+        * Constructors for the Client and GeoJSON classes
+        * Server-side types
+        * Serialization
+        * Logging
+        * Helper function for calculating key digest
+        * Constants
+    * :mod:`aerospike.predicates`
+        * Query predicates
+    * :mod:`aerospike.exception`
+        * All exception classes
+        * Exception hierarchy
+    * :mod:`aerospike_helpers`
+        * Bin operations (list, map, bitwise, etc.)
+        * Aerospike expressions
+        * Batch operations
+        * Complex data type context
 
 The :class:`aerospike` module contains these classes:
 
