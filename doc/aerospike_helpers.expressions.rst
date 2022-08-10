@@ -61,15 +61,14 @@ this means that the data type returned may vary (usually depending on the ``retu
 Expression Type Aliases
 -----------------------
 
-The expressions module documentation uses type aliases.
-The following is a table of how the type aliases map to standard types.
+The following documentation uses type aliases that map to standard Python types.
 
-.. list-table::
+.. list-table:: Aliases to Standard Python Types
     :widths: 25 75
     :header-rows: 1
 
-    * - Type Name
-      - Type Description
+    * - Alias
+      - Type
     * - AerospikeExpression
       - _BaseExpr
     * - TypeResultType
