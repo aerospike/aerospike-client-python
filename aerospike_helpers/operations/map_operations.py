@@ -24,6 +24,7 @@ Map operations support nested CDTs through an optional ctx context argument.
 
 '''
 import aerospike
+import sys
 
 OP_KEY = "op"
 BIN_KEY = "bin"
@@ -109,15 +110,22 @@ def map_put_items(bin_name: str, item_dict, map_policy: dict=None, ctx: list=Non
         A dictionary usable in operate or operate_ordered. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
+    def sortKeys(d):
+        if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
+            return dict(sorted(d.items()))
+        return d
+
     op_dict = {
         OP_KEY: aerospike.OP_MAP_PUT_ITEMS,
         BIN_KEY: bin_name,
-        VALUE_KEY: item_dict
     }
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
-    
+
+    item_dict = sortKeys(item_dict)
+    op_dict[VALUE_KEY] = item_dict
+            
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
     
