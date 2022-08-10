@@ -111,8 +111,11 @@ def map_put_items(bin_name: str, item_dict, map_policy: dict=None, ctx: list=Non
         should be considered an internal detail, and subject to change.
     """
     def sortKeys(d):
-        if int(sys.version_info[0]) == 3 and int(sys.version_info[1]) >= 6:
-            return dict(sorted(d.items()))
+        try:
+            if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
+                return dict(sorted(d.items()))
+        except Exception as e:
+            pass
         return d
 
     op_dict = {
