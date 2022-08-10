@@ -5,10 +5,6 @@ from aerospike_helpers import expressions as exp
 config = {"hosts": [("127.0.0.1", 3000)]}
 client = aerospike.client(config).connect()
 
-FIRST_RECORD_INDEX = 0
-SECOND_RECORD_INDEX = 1
-BIN_INDEX = 2
-
 # Write player records to database
 keys = [("test", "demo", i) for i in range(1, 5)]
 records = [
