@@ -110,10 +110,6 @@ Record Operations
         .. include:: examples/put.py
             :code: python
 
-        .. note::
-            Version >= 5.0.0 supports Aerospike expressions for record operations. See :ref:`aerospike_operation_helpers.expressions`.
-            Requires server version >= 5.2.0. 
-
     .. method:: exists(key[, policy: dict]) -> (key, meta)
 
         Check if a record with a given key exists in the cluster.
@@ -256,13 +252,6 @@ Batch Operations
         .. include:: examples/get_many.py
             :code: python
 
-        .. note::
-            Client version >= 5.0.0 supports Aerospike expressions for batch operations.
-            
-            See :ref:`aerospike_operation_helpers.expressions`.
-            
-            Requires server version >= 5.2.0.
-
     .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys.
@@ -310,11 +299,6 @@ Batch Operations
 
         .. include:: examples/batch_get_ops.py
             :code: python
-
-        .. note::
-            Version >= 5.0.0 Supports aerrospike expressions for batch operations see :ref:`aerospike_operation_helpers.expressions`.
-            Requires server version >= 5.2.0.
-
 
     .. method:: batch_write(batch_records: BatchRecords, [policy: dict]) -> BatchRecords
 
@@ -545,59 +529,6 @@ Single-Record Transactions
             print(bins) # Will display all bins selected by read operations
             # {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
 
-        .. note::
-            Version >= 5.0.0 Supports aerrospike expressions for transactions see :ref:`aerospike_operation_helpers.expressions`.
-            Requires server version >= 5.2.0.
-
-            .. code-block:: python
-
-                import aerospike
-                from aerospike_helpers import expressions as exp
-                from aerospike_helpers.operations import list_operations, operations
-                from aerospike import exception as ex
-                import sys
-
-                config = {"hosts": [("127.0.0.1", 3000)]}
-                client = aerospike.client(config).connect()
-
-                try:
-                    unique_id = 1
-                    key = ("test", "demo", unique_id)
-                    client.put(key, {"name": "John", "charges": [10, 20, 14]})
-
-                    ops = [list_operations.list_append("charges", 25)]
-
-                    # check that the record has value 'Kim' in bin 'name'
-                    expr = exp.Eq(exp.StrBin("name"), "Kim").compile()
-
-                    # Because the record's name bin is 'John' and not 'Kim',
-                    # client.operate() will fail with AEROSPIKE_FILTERED_OUT and the
-                    # operations will not be applied.
-                    try:
-                        client.operate(key, ops, policy={"expressions": expr})
-                    except ex.FilteredOut as e:
-                        print("Error: {0} [{1}]".format(e.msg, e.code))
-
-                    record = client.get(key)
-                    print(record)
-
-                    # This client.operate() will succeed because the name bin is 'John'.
-                    # check that the record has value 'John' in bin 'name'
-                    expr = exp.Eq(exp.StrBin("name"), "John").compile()
-
-                    client.operate(key, ops, policy={"expressions": expr})
-
-                    record = client.get(key)
-                    print(record)
-
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    sys.exit(1)
-                finally:
-                    client.close()
-                # Error: 127.0.0.1:3000 AEROSPIKE_FILTERED_OUT [27]
-                # (('test', 'demo', None, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'ttl': 2592000, 'gen': 23}, {'number': 1, 'name': 'John', 'charges': [10, 20, 14]})
-                # (('test', 'demo', None, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'ttl': 2592000, 'gen': 24}, {'number': 1, 'name': 'John', 'charges': [10, 20, 14, 25]})
 
         .. note::
             In version `2.1.3` the return format of certain bin entries for this method, **only in cases when a map operation specifying a** `return_type` **is used**, has changed. Bin entries for map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
@@ -800,12 +731,6 @@ User Defined Functions
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-    .. note::
-        Version >= 5.0.0 supports Aerospike expressions for :meth:`apply`, :meth:`scan_apply`, and :meth:`query_apply`.
-        See :ref:`aerospike_operation_helpers.expressions`.
-
-        Requires server version >= 5.2.0.
 
     .. method:: apply(key, module, function, args[, policy: dict])
 

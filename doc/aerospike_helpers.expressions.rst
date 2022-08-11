@@ -5,6 +5,9 @@ aerospike\_helpers\.expressions package
 
 Classes for the creation and use of Aerospike expressions.
 
+Overview
+--------
+
 Aerospike expressions are a small domain specific language that allow for filtering
 records in transactions by manipulating and comparing bins and record metadata.
 Expressions can be used everywhere that predicate expressions have been used and
@@ -33,8 +36,16 @@ Example:
 .. include:: examples/expressions/top.py
   :code: python
 
+Currently, Aerospike expressions are supported for:
+- Record operations
+- Batch operations
+- Transactions
+- UDF apply methods (apply, scan apply, and query apply)
+- Query invoke methods (foreach, results, execute background)
+- Scan invoke methods (same as query invoke methods)
+
 Terminology
-===========
+-----------
 
 Aerospike expressions are evaluated server side, and expressions used for filtering are called **filter expressions**.
 They do not return any values to the client or write any values to the server.
