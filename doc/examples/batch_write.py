@@ -1,33 +1,36 @@
-import aerospike
-from aerospike import exception as ex
 from aerospike_helpers.batch import records as br
-import aerospike_helpers.expressions as exp
 from aerospike_helpers.operations import operations as op
-import sys
 
-config = { 'hosts': [('127.0.0.1', 3000)] }
-client = aerospike.client(config).connect()
+# Keys
+# Only insert two records with the first and second key
+keyTuples = [
+    ('test', 'demo', 'Robert'),
+    ('test', 'demo', 'Daniel'),
+    ('test', 'demo', 'Patrick'),
+]
+client.put(keyTuples[0], {'id': 100, 'balance': 400})
+client.put(keyTuples[1], {'id': 101, 'balance': 200})
+client.put(keyTuples[2], {'id': 102, 'balance': 300})
 
 # Apply different operations to different keys
-# using batch_write.
-w_batch_record = br.BatchRecords(
+batchRecords = br.BatchRecords(
     [
+        # Remove Robert from system
         br.Remove(
-            key=(namespace, set, 1),
-            policy={}
+            key = keyTuples[0],
         ),
+        # Modify Daniel's ID and balance 
         br.Write(
-            key=(namespace, set, 100),
-            ops=[
-                op.write("id", 100),
+            key = keyTuples[1],
+            ops = [
+                op.write("id", 200),
                 op.write("balance", 100),
                 op.read("id"),
-                op.read("id"),
             ],
-            policy={"expressions": exp.GT(exp.IntBin("balance"), 2000).compile()}
         ),
+        # Read Patrick's ID
         br.Read(
-            key=(namespace, set, 333),
+            key = keyTuples[2],
             ops=[
                 op.read("id")
             ],
@@ -36,18 +39,17 @@ w_batch_record = br.BatchRecords(
     ]
 )
 
-try:
-    # batch_write modifies its BatchRecords argument.
-    # Results for each BatchRecord will be set in their result,
-    # record, and in_doubt fields.
+client.batch_write(batchRecords)
 
-    client.batch_write(w_batch_record)
-
-    for batch_record in w_batch_record.batch_records:
-        print(batch_record.result)
-        print(batch_record.record)
-except ex.AerospikeError as e:
-    print("Error: {0} [{1}]".format(e.msg, e.code))
-    sys.exit(1)
-finally:
-    client.close()
+# batch_write modifies its BatchRecords argument.
+# Results for each BatchRecord will be set in the result, record, and in_doubt fields.
+for batchRecord in batchRecords.batch_records:
+    print(batchRecord.result)
+    print(batchRecord.record)
+# Note how written bins return None if their values aren't read
+# 0
+# (('test', 'demo', 'Robert', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+# 0
+# (('test', 'demo', 'Daniel', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'id': 200, 'balance': None})
+# 0
+# (('test', 'demo', 'Patrick', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'id': 102})
