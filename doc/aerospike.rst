@@ -203,7 +203,7 @@ Serialization
 
 .. note::
     If the client's config dictionary has a serializer and deserializer in the `serialization` tuple, \
-    then it will take precedence over the ones from :function:`set_serializer` and :function:`set_deserializer`.
+    then it will take precedence over the ones from :meth:`set_serializer` and :meth:`set_deserializer`.
 
 .. py:function:: set_serializer(callback)
 
