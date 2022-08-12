@@ -302,24 +302,25 @@ Batch Operations
 
     .. method:: batch_write(batch_records: BatchRecords, [policy: dict]) -> BatchRecords
 
-        .. note:: Requires server version >= 6.0.0.
-
         Write/read multiple records for specified batch keys in one batch call.
-        This method allows different sub-commands for each key in the batch.
-        The resulting records and status are set in ``batch_records`` record and result fields.
 
-        .. note:: This function modifies the ``batch_records`` parameter.
+        This method allows different sub-commands for each key in the batch.
+        The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
         :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
-        :param dict policy: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
-        :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :param dict policy: aerospike batch policy :ref:`aerospike_batch_policies`.
 
-        .. seealso:: More information about the \
-            batch helpers :ref:`aerospike_operation_helpers.batch`
+        :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
+
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. include:: examples/batch_write.py
             :code: python
+
+        .. note:: Requires server version >= 6.0.0.
+
+        .. seealso:: More information about the \
+            batch helpers :ref:`aerospike_operation_helpers.batch`
 
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
 
