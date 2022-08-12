@@ -352,9 +352,9 @@ Batch Operations
         .. include:: examples/batch_operate.py
             :code: python
 
-    .. method:: batch_apply(keys: list, module: str, function: str, args: list, [policy_batch: dict], [policy_batch_apply: dict]) -> BatchRecords
-
         .. note:: Requires server version >= 6.0.0.
+
+    .. method:: batch_apply(keys: list, module: str, function: str, args: list, [policy_batch: dict], [policy_batch_apply: dict]) -> BatchRecords
 
         Apply UDF (user defined function) on multiple keys.
 
@@ -362,14 +362,19 @@ Batch Operations
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the record identified by *key*.
         :param list args: the arguments to the UDF.
-        :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
-        :param dict policy_batch_apply: Optional aerospike batch apply policy :ref:`aerospike_batch_apply_policies`.
+        :param dict policy_batch: See :ref:`aerospike_batch_policies`.
+        :param dict policy_batch_apply: See :ref:`aerospike_batch_apply_policies`.
+
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
         :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. include:: examples/batch_apply.py
             :code: python
 
+        .. include:: examples/batch_apply.lua
+            :code: lua
+
+        .. note:: Requires server version >= 6.0.0.
 
     .. method:: batch_remove(keys: list, [policy_batch: dict], [policy_batch_remove: dict]) -> BatchRecords
 
