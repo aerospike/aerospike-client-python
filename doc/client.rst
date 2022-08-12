@@ -668,10 +668,6 @@ User Defined Functions
         :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_SCAN``.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
-          and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
-
-
     .. method:: query_apply(ns, set, predicate, module, function[, args[, policy: dict]]) -> int
 
         Initiate a query and apply a record UDF to each record matched by the query.
@@ -688,10 +684,6 @@ User Defined Functions
         :rtype: :class:`int`
         :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_QUERY``.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
-          and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
-
 
     .. method:: job_info(job_id, module[, policy: dict]) -> dict
 
