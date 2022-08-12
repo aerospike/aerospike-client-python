@@ -58,6 +58,11 @@ Fields
 Methods
 =======
 
+Assume this boilerplate code is run before all examples below:
+
+.. include:: examples/query/boilerplate.py
+    :code: python
+
 .. class:: Query
     :noindex:
 
@@ -135,27 +140,18 @@ Methods
 
     .. method:: foreach(callback[, policy [, options]])
 
-        Invoke the *callback* function for each of the records streaming back \
-        from the query.
+        Invoke the *callback* function for each of the records streaming back from the query.
+
+        A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+        If the query is using the "partition_filter" query policy the callback will recieve two arguments
+        The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
+        as a normal callback.
 
         :param callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
-        .. note::
-            A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
-            If the query is using the "partition_filter" query policy the callback will recieve two arguments
-            The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
-            as a normal callback.
-
         .. code-block:: python
-
-            import aerospike
-            from aerospike import predicates as p
-            import pprint
-
-            config = { 'hosts': [ ('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
 
             pp = pprint.PrettyPrinter(indent=2)
             query = client.query('test', 'demo')
