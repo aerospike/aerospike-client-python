@@ -44,6 +44,21 @@ Currently, Aerospike expressions are supported for:
 - Query invoke methods (foreach, results, execute background)
 - Scan invoke methods (same as query invoke methods)
 
+Filter Behavior
+---------------
+
+For record operations, numeric operations, and :meth:`~aerospike.Client.operate`,
+an exception :exc:`~aerospike.exception.FilteredOut` is thrown.
+
+For :meth:`~aerospike.Client.get_many`, :meth:`~aerospike.Client.exists_many`, :meth:`~aerospike.Client.select_many`,
+records filtered out have their ``meta`` and ``bins`` both set to :py:obj:`None` .
+
+For :meth:`~aerospike.Client.batch_write`, records filtered out either by a batch or batch record policy
+cause:
+
+  * ``BatchRecord.record`` set to :py:obj:`None`
+  * ``BatchRecord.result`` set to ``27``
+
 Terminology
 -----------
 
