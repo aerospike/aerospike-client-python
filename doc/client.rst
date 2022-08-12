@@ -549,19 +549,6 @@ Single-Record Transactions
             print(bins) # Will display all bins selected by read operations
             # {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
 
-
-        .. note::
-            In version `2.1.3` the return format of certain bin entries for this method, **only in cases when a map operation specifying a** `return_type` **is used**, has changed. Bin entries for map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
-            a bin value of a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details.
-
-        .. code-block:: python
-
-            # pre 2.1.3 formatting of key/value bin value
-            [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
-
-            # >= 2.1.3 formatting
-            ['key1', 'val1', 'key2', 'val2', 'key3', 'val3']
-
         .. note::
 
             :meth:`operate` can now have multiple write operations on a single
@@ -577,34 +564,6 @@ Single-Record Transactions
 
             Having *val* associated with :const:`~aerospike.OPERATOR_TOUCH` is deprecated.
             Use the meta *ttl* field instead.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import exception as ex
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                key = ('test', 'demo', 1)
-                ops = [
-                    {
-                      "op" : aerospike.OPERATOR_TOUCH,
-                    },
-                    {
-                      "op" : aerospike.OPERATOR_READ,
-                      "bin": "name"
-                    }
-                ]
-                (key, meta, bins) = client.operate(key, ops, {'ttl':1800})
-                print("Touched the record for {0}, extending its ttl by 30m".format(bins))
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
 
         .. versionchanged:: 2.1.3
 
@@ -622,20 +581,9 @@ Single-Record Transactions
             See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
+
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. note::
-            In version `2.1.3` the return format of bin entries for this method, **only in cases when a map operation specifying a** `return_type` **is used**, has changed. Map operations using "return_type" of aerospike.MAP_RETURN_KEY_VALUE will now return \
-            a bin value of a list of keys and corresponding values, rather than a list of key/value tuples. See the following code block for details. In addition, some operations which did not return a value in versions <= 2.1.2 will now return a response.
-
-        .. code-block:: python
-
-            # pre 2.1.3 formatting of key/value bin value
-            [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
-
-            # >= 2.1.3 formatting
-            ['key1', 'val1', 'key2', 'val2', 'key3', 'val3']
 
         .. code-block:: python
 

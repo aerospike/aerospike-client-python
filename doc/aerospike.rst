@@ -1166,7 +1166,11 @@ Return types used by various map operations.
 
 .. data:: MAP_RETURN_KEY_VALUE
 
-    Return key/value items. Note that key/value pairs will be returned as a list of tuples (i.e. [(key1, value1), (key2, value2)])
+    Return key/value items.
+    
+    Note that key/value pairs will be returned as a list of keys and values next to each other:
+    
+        ``[key1, value1, key2, value2, ...]``
 
 Bitwise
 -------
