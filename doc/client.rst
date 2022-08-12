@@ -516,54 +516,19 @@ Single-Record Transactions
         :py:obj:`None` value. )
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list operations: a :class:`list` of one or more bin operations, each \
-            structured as the :class:`dict` \
-            ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
-            See :ref:`aerospike_operation_helpers.operations`.
+        :param list operations: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`. 
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            from aerospike_helpers.operations import operations
-
-            # Add name, update age, and return attributes
-            client.put(keyTuple, {'age': 25, 'career': 'delivery boy'})
-            ops = [
-                operations.increment("age", 1000),
-                operations.write("name", "J."),
-                operations.prepend("name", "Phillip "),
-                operations.append("name", " Fry"),
-                operations.read("name"),
-                operations.read("career"),
-                operations.read("age")
-            ]
-            (key, meta, bins) = client.operate(key, ops)
-
-            print(key) # ('test', 'demo', None, bytearray(b'...'))
-            # The generation should only increment once
-            # A transaction is *atomic*
-            print(meta) # {'ttl': 2592000, 'gen': 2}
-            print(bins) # Will display all bins selected by read operations
-            # {'name': 'Phillip J. Fry', 'career': 'delivery boy', 'age': 1025}
+        .. include:: examples/operate.py
+            :code: python
 
         .. note::
 
             :meth:`operate` can now have multiple write operations on a single
             bin.
-
-        .. note::
-
-            :const:`~aerospike.OPERATOR_TOUCH` should only ever combine with
-            :const:`~aerospike.OPERATOR_READ`, for example to implement LRU
-            expiry on the records of a set.
-
-        .. warning::
-
-            Having *val* associated with :const:`~aerospike.OPERATOR_TOUCH` is deprecated.
-            Use the meta *ttl* field instead.
 
         .. versionchanged:: 2.1.3
 
@@ -575,47 +540,15 @@ Single-Record Transactions
         from the input parameters.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list operations: a :class:`list` of one or more bin operations, each \
-            structured as the :class:`dict` \
-            ``{'bin': bin name, 'op': aerospike.OPERATOR_* [, 'val': value]}``. \
-            See :ref:`aerospike_operation_helpers.operations`.
+        :param list operations: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
         :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import exception as ex
-            from aerospike_helpers.operations import operations as op_helpers
-            import sys
-
-            config = { 'hosts': [('127.0.0.1', 3000)] }
-            client = aerospike.client(config).connect()
-
-            try:
-                key = ('test', 'demo', 1)
-                policy = {
-                    'total_timeout': 1000,
-                    'key': aerospike.POLICY_KEY_SEND,
-                    'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
-                }
-
-                llist = [
-                    op_helpers.append("name", "aa"),
-                    op_helpers.read("name"),
-                    op_helpers.increment("age", 3),
-                    op_helpers.read("age")
-                ]
-
-                client.operate_ordered(key, llist, {}, policy)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
+        .. include:: examples/operate_ordered.py
+            :code: python
 
         .. versionchanged:: 2.1.3
 
