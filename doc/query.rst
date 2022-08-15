@@ -132,50 +132,13 @@ Assume this boilerplate code is run before all examples below:
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
-        .. code-block:: python
-
-            pp = pprint.PrettyPrinter(indent=2)
-            query = client.query('test', 'demo')
-            query.select('name', 'age') # matched records return with the values of these bins
-            # assuming there is a secondary index on the 'age' bin of test.demo
-            query.where(p.between('age', 20, 30))
-            names = []
-            def matched_names(record):
-                key, metadata, bins = record
-                pp.pprint(bins)
-                names.append(bins['name'])
-
-            query.foreach(matched_names, {'total_timeout':2000})
-            pp.pprint(names)
-            client.close()
+        .. include:: examples/query/foreach.py
+            :code: python
 
         .. note:: To stop the stream return ``False`` from the callback function.
 
-            .. code-block:: python
-
-                import aerospike
-                from aerospike import predicates as p
-
-                config = { 'hosts': [ ('127.0.0.1',3000)]}
-                client = aerospike.client(config).connect()
-
-                def limit(lim, result):
-                    c = [0] # integers are immutable so a list (mutable) is used for the counter
-                    def key_add(record):
-                        key, metadata, bins = record
-                        if c[0] < lim:
-                            result.append(key)
-                            c[0] = c[0] + 1
-                        else:
-                            return False
-                    return key_add
-
-                query = client.query('test','user')
-                query.where(p.between('age', 20, 30))
-                keys = []
-                query.foreach(limit(100, keys))
-                print(len(keys)) # this will be 100 if the number of matching records > 100
-                client.close()
+            .. include:: examples/query/foreachfalse.py
+                :code: python
         
         .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the query policy
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
