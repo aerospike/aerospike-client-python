@@ -27,69 +27,59 @@ Example::
 
     # Configure the client.
     config = {"hosts": [("127.0.0.1", 3000)]}
-
-    # Create a client and connect it to the cluster.
-    try:
-        client = aerospike.client(config).connect()
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
+    client = aerospike.client(config).connect()
 
     key = ("test", "demo", "foo")
-    nested_list = [{"name": "John", "id": 100}, {"name": "Bill", "id": 200}]
-    nested_list_bin_name = "nested_list"
+    listWithMaps = [
+        {"name": "John", "id": 100},
+        {"name": "Bill", "id": 200}
+    ]
+    binName = "users"
 
-    # Write the record.
-    try:
-        client.put(key, {nested_list_bin_name: nested_list})
-    except ex.RecordError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
+    # Write the record
+    client.put(key, {binName: listWithMaps})
 
-    # EXAMPLE 1: read a value from the map nested at list index 1.
-    try:
-        ctx = [cdt_ctx.cdt_ctx_list_index(1)]
+    # Example 1: read the id of the second person on the list
+    # Get context of the second person
+    ctx = [cdt_ctx.cdt_ctx_list_index(1)]
+    ops = [
+        map_operations.map_get_by_key(
+            binName, "id", aerospike.MAP_RETURN_VALUE, ctx
+        )
+    ]
 
-        ops = [
-            map_operations.map_get_by_key(
-                nested_list_bin_name, "id", aerospike.MAP_RETURN_VALUE, ctx
-            )
-        ]
+    _, _, result = client.operate(key, ops)
+    print(result)
+    # {'users': 200}
 
-        _, _, result = client.operate(key, ops)
-        print("EXAMPLE 1, id is: ", result)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
+    # Example 2: add a new person and get their rating of Facebook
+    cindy = {
+        "name": "Cindy",
+        "id": 300,
+        "ratings": {
+            "Facebook": 4,
+            "Snapchat": 5
+        }
+    }
 
-    # EXAMPLE 2: write a new nested map at list index 2 and get the value at its 'name' key.
-    # NOTE: The map is appened to the list, then the value is read using the ctx.
-    try:
-        new_map = {"name": "Cindy", "id": 300}
+    # Context list used for read operation after adding Cindy
+    # Cindy will be the third person (index 2)
+    # Then go to their ratings
+    ctx = [cdt_ctx.cdt_ctx_list_index(2), cdt_ctx.cdt_ctx_map_key("ratings")]
+    ops = [
+        list_operations.list_append(binName, cindy),
+        map_operations.map_get_by_key(
+            binName, "Facebook", aerospike.MAP_RETURN_VALUE, ctx
+        )
+    ]
 
-        ctx = [cdt_ctx.cdt_ctx_list_index(2)]
+    _, _, result = client.operate(key, ops)
+    print(result)
+    # {'users': 4}
 
-        ops = [
-            list_operations.list_append(nested_list_bin_name, new_map),
-            map_operations.map_get_by_key(
-                nested_list_bin_name, "name", aerospike.MAP_RETURN_VALUE, ctx
-            ),
-        ]
-
-        _, _, result = client.operate(key, ops)
-        print("EXAMPLE 2, name is: ", result)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    # Cleanup and close the connection to the Aerospike cluster.
+    # Cleanup
     client.remove(key)
     client.close()
-
-    """
-    EXPECTED OUTPUT:
-    EXAMPLE 1, id is:  {'nested_list': 200}
-    EXAMPLE 2, name is:  {'nested_list': 'Cindy'}
-    """
 '''
 import aerospike
 
