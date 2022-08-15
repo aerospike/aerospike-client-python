@@ -73,7 +73,6 @@ Assume this boilerplate code is run before all examples below:
         
         If a selected bin does not exist in a record it will not appear in the *bins* portion of that record tuple.
 
-
     .. method:: where(predicate[, ctx])
 
         Set a where *predicate* for the query.
@@ -93,26 +92,8 @@ Assume this boilerplate code is run before all examples below:
         :param dict options: optional :ref:`aerospike_query_options`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import predicates as p
-            import pprint
-
-            config = { 'hosts': [ ('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
-
-            pp = pprint.PrettyPrinter(indent=2)
-            query = client.query('test', 'demo')
-            query.select('name', 'age') # matched records return with the values of these bins
-
-            # assuming there is a secondary index on the 'age' bin of test.demo
-            query.where(p.equals('age', 40))
-
-            records = query.results( {'total_timeout':2000})
-
-            pp.pprint(records)
-            client.close()
+        .. include:: examples/query/results.py
+            :code: python
 
         .. note:: As of client 7.0.0 and with server >= 6.0 results and the query policy
             "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
