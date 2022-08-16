@@ -47,17 +47,38 @@ Currently, Aerospike expressions are supported for:
 Filter Behavior
 ---------------
 
-For record operations, numeric operations, and :meth:`~aerospike.Client.operate`,
-an exception :exc:`~aerospike.exception.FilteredOut` is thrown.
+This section describes the behavior of methods when a record is filtered out by an expression.
 
-For :meth:`~aerospike.Client.get_many`, :meth:`~aerospike.Client.exists_many`, :meth:`~aerospike.Client.select_many`,
-records filtered out have their ``meta`` and ``bins`` both set to :py:obj:`None` .
+For:
+  * Record operations
+  * Numeric operations
+  * String operations
+  * Single record transactions
 
-For :meth:`~aerospike.Client.batch_write`, records filtered out either by a batch or batch record policy
-cause:
+An exception :exc:`~aerospike.exception.FilteredOut` is thrown.
 
-  * ``BatchRecord.record`` set to :py:obj:`None`
-  * ``BatchRecord.result`` set to ``27``
+For:
+  * :meth:`~aerospike.Client.get_many`
+  * :meth:`~aerospike.Client.exists_many`
+  * :meth:`~aerospike.Client.select_many`
+
+The filtered out record's ``meta`` and ``bins`` are both set to :py:obj:`None` .
+
+For:
+  
+  * :meth:`~aerospike.Client.batch_write` (records filtered out by a batch or batch record policy)
+  * :meth:`~aerospike.Client.batch_operate` (records filtered out by a batch or batch write policy)
+  * :meth:`~aerospike.Client.batch_apply` (records filtered out by a batch or batch apply policy)
+
+The filtered out record's:
+
+    * ``BatchRecord.record`` is set to :py:obj:`None`
+    * ``BatchRecord.result`` is set to ``27``
+
+For :meth:`~aerospike.Client.batch_get_ops`, the filtered out record's:
+
+  * ``meta`` is set to :py:exc:`~aerospike.exception.FilteredOut`.
+  * ``bins`` is set to :py:obj:`None`.
 
 Terminology
 -----------

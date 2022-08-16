@@ -300,6 +300,21 @@ Batch Operations
         .. include:: examples/batch_get_ops.py
             :code: python
 
+    The following batch methods will return a :class:`BatchRecords` object with
+    a ``result`` value of ``0`` if one of the following is true:
+
+        * All transactions are successful.
+        * One or more transactions failed because:
+
+            - A record was filtered out by an expression
+            - The record was not found
+        
+    Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
+    an `as_status <https://docs.aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
+
+    In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
+    and each batch record contains the result of that transaction.
+
     .. method:: batch_write(batch_records: BatchRecords, [policy: dict]) -> BatchRecords
 
         Write/read multiple records for specified batch keys in one batch call.
@@ -325,20 +340,6 @@ Batch Operations
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
 
         Perform the same read/write transactions on multiple keys.
-
-        This will return a :class:`BatchRecords` object with a ``result`` value of ``0`` if one of the following is true:
-
-            * All transactions are successful.
-            * One or more transactions failed because:
-
-                - A record was filtered out by an expression
-                - The record was not found
-        
-        Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
-        an `as_status <https://docs.aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
-
-        In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
-        and each batch record contains the result of that transaction.
 
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.

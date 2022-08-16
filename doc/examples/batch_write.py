@@ -47,6 +47,7 @@ for batchRecord in batchRecords.batch_records:
     print(batchRecord.result)
     print(batchRecord.record)
 # Note how written bins return None if their values aren't read
+# And removed records have an empty bins dictionary
 # 0
 # (('test', 'demo', 'Robert', bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
 # 0
