@@ -137,7 +137,7 @@ Record Operations
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict policy: see :ref:`aerospike_read_policies`.
 
-        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        :return: a :ref:`aerospike_record_tuple`.
         
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
@@ -156,7 +156,7 @@ Record Operations
         :param list bins: a list of bin names to select from the record.
         :param dict policy: optional :ref:`aerospike_read_policies`.
 
-        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        :return: a :ref:`aerospike_record_tuple`.
         
         :raises: :exc:`~aerospike.exception.RecordNotFound`.
 
@@ -519,7 +519,7 @@ Single-Record Transactions
         :param list operations: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`. 
         :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        :return: a :ref:`aerospike_record_tuple`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. include:: examples/operate.py
@@ -544,7 +544,7 @@ Single-Record Transactions
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
-        :return: a :ref:`aerospike_record_tuple`. See :ref:`unicode_handling`.
+        :return: a :ref:`aerospike_record_tuple`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. include:: examples/operate_ordered.py
@@ -2445,38 +2445,3 @@ Partition Objects
 
     Default: ``{}`` (All partitions will be queried).
 
-.. _unicode_handling:
-
-Unicode Handling
-----------------
-
-Both :class:`str` and `unicode` values are converted by the
-client into UTF-8 encoded strings for storage on the aerospike server.
-Read methods such as :meth:`~aerospike.get`,
-:meth:`~aerospike.query`, :meth:`~aerospike.scan` and
-:meth:`~aerospike.operate` will return that data as UTF-8 encoded
-:class:`str` values. To get a `unicode` you will need to manually decode.
-
-.. code-block:: python
-
-    >>> client.put(key, { 'name': 'Dr. Zeta Alphabeta', 'age': 47})
-    >>> (key, meta, record) = client.get(key)
-    >>> type(record['name'])
-    <type 'str'>
-    >>> record['name']
-    'Dr. Zeta Alphabeta'
-    >>> client.put(key, { 'name': unichr(0x2603), 'age': 21})
-    >>> (key, meta, record) = client.get(key)
-    >>> type(record['name'])
-    <type 'str'>
-    >>> record['name']
-    '\xe2\x98\x83'
-    >>> print(record['name'])
-    ☃
-    >>> name = record['name'].decode('utf-8')
-    >>> type(name)
-    <type 'unicode'>
-    >>> name
-    u'\u2603'
-    >>> print(name)
-    ☃
