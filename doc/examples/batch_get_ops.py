@@ -1,33 +1,23 @@
-import aerospike
-from aerospike import exception as ex
-from aerospike_helpers import expressions as exp
-from aerospike import exception as ex
-import sys
-config = { 'hosts': [('127.0.0.1', 3000)] }
-client = aerospike.client(config).connect()
-try:
-    # assume the fourth key has no matching record
-    keys = [
-        ('test', 'demo', '1'),
-        ('test', 'demo', '2'),
-        ("test", "demo", "batch-ops-non_existent_key")
-    ]
-    expr = Let(Def("bal", IntBin("balance")),
-                Cond(
-                    LT(Var("bal"), 50),
-                    Add(Var("bal"), 50),
-                    Unknown()
-                )
-            ).compile()
-    ops = [
-        expressions.expression_read("test_name", expr, aerospike.EXP_READ_DEFAULT)
-    ]
-    meta = {'gen': 1}
-    policy = {'timeout': 1001}
-    records = client.batch_get_ops(keys, ops, meta, policy)
-    print(records)
-except ex.AerospikeError as e:
-    print("Error: {0} [{1}]".format(e.msg, e.code))
-    sys.exit(1)
-finally:
-    client.close()
+# Insert records for 3 players and their scores
+keyTuples = [("test", "demo", i) for i in range(1, 4)]
+bins = [
+    {"scores": [1, 4, 3, 10]},
+    {"scores": [20, 1, 4, 28]},
+    {"scores": [50, 20, 10, 20]},
+]
+for keyTuple, bin in zip(keyTuples, bins):
+    client.put(keyTuple, bin)
+
+# Get highest scores for each player
+from aerospike_helpers.operations import list_operations
+ops = [
+    list_operations.list_get_by_rank("scores", -1, aerospike.LIST_RETURN_VALUE)
+]
+records = client.batch_get_ops(keyTuples, ops)
+
+# Print results
+for _, _, bins in records:
+    print(bins)
+# {'scores': 10}
+# {'scores': 28}
+# {'scores': 50}
