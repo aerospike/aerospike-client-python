@@ -2328,7 +2328,7 @@ Role Objects
     .. hlist::
         :columns: 1
 
-        * ``"privileges"``: a list of :ref:`aerospike_privilege_dict`.
+        * ``"privileges"``: a :class:`list` of :ref:`aerospike_privilege_dict`.
         * ``"whitelist"``: a :class:`list` of IP address strings.
         * ``"read_quota"``: a :class:`int` representing the allowed read transactions per second.
         * ``"write_quota"``: a :class:`int` representing the allowed write transactions per second.
@@ -2346,8 +2346,12 @@ Privilege Objects
         :columns: 1
 
         * ``"code"``: one of the :ref:`aerospike_privileges` values
-        * ``"ns"``: **optional** namespace where the privilege applies. Otherwise, the privilege applies globally.
-        * ``"set"``: **optional** set within the namespace where the privilege applies. Otherwise, the privilege applies to the entire namespace.
+        * ``"ns"``: **optional** :class:`str` specifying the namespace where the privilege applies.
+        
+            If not specified, the privilege applies globally.
+        * ``"set"``: **optional** :class:`str` specifying the set within the namespace where the privilege applies.
+        
+            If not specified, the privilege applies to the entire namespace.
 
     Example::
     
@@ -2361,23 +2365,27 @@ Partition Objects
 
 .. object:: partition_filter
 
-    A :class:`dict` of partition information used by the client
-    to perform partiton queries/scans. Useful for resuming terminated queries and
-    querying particular partitons/records.
+    A :class:`dict` of partition information used by the client to perform partition queries or scans.
+    Useful for resuming terminated queries and querying particular partitions or records.
 
     .. hlist::
         :columns: 1
 
-        * **begin** Optional :class:`int` signifying which partition to start at. Default: 0 (the first partition)
-        * **count** Optional :class:`int` signifying how many partitions to process. Default: 4096 (all partitions)
-        * **digest** Optional :class:`dict` containing the keys "init" and "value" signifying whether the digest has been calculated, and the digest value.
-            |   **init**: :class:`bool` Whether the digest has been calculated.
-            |   **value**: :class:`bytearray` The bytearray value of the digest, should be 20 characters long.
-            |       ``# Example digest dict.``
-            |       ``digest = {"init": True, "value": bytearray([0]*20)}``
+        * ``"begin"``: **Optional** :class:`int` signifying which partition to start at.
+        
+            Default: ``0`` (the first partition)
+        * ``"count"``: **Optional** :class:`int` signifying how many partitions to process.
+        
+            Default: ``4096`` (all partitions)
+        * ``"digest"``: **Optional** :class:`dict` containing the keys "init" and "value" signifying whether the digest has been calculated, and the digest value.
 
-            Default: {} (will start from first record in partition)
-        * **partition_status** Optional :class:`dict` containing partition_status tuples. These can be used to resume a query/scan. Default: {} (all partitions)
+            * ``"init"``: :class:`bool` Whether the digest has been calculated.
+            * ``"value"``: :class:`bytearray` The bytearray value of the digest, should be 20 characters long.
+
+            Default: ``{}`` (will start from first record in partition)
+        * ``"partition_status"``: **Optional** :class:`dict` containing partition_status tuples. These can be used to resume a query/scan.
+        
+            Default: ``{}`` (all partitions)
 
     Default: ``{}`` (All partitions will be queried/scanned).
 
@@ -2405,31 +2413,41 @@ Partition Objects
     .. note:: Requires Aerospike server version >= 6.0.
 
     A :class:`dict` of partition status information used by the client
-    to set the partition status of a query/scan during a partition query/scan.
-    Useful for resuming partition query/scans.
+    to set the partition status of a partition query or scan.
+    
+    This is useful for resuming either of those.
 
-    partition_status is a dictionary with keys "retry" `str`, "done" `str`, and a variable amount of id `int` keys.
-    "retry" corresponds to the overall partition query retry status and maps to a bool. i.e. Does this query/scan need to be retried?
-    "done" represents whether all partitions were finished and maps to a bool.
-    the id keys, called "id" in this documentation correspond to a partition id. "id"'s value is
-    another dictionary containing status details about that partition. See those values below.
+    The dictionary contains these key-value pairs:
+    
+    * ``"retry"``: :class:`str` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
+
+        This maps to a boolean value.
+    * ``"done"``: :class:`str` represents whether all partitions were finished.
+        
+        This maps to a boolean value.
+    
+    In addition, the dictionary contains keys of the partition IDs (:class:`int`),
+    and each partition ID is mapped to a dictionary containing the status details of a partition.
+
+    Each partition ID has a dictionary with the following keys:
 
     .. hlist::
         :columns: 1
 
-        * **id** :class:`int` Represents the partition id number.
-        * **init** :class:`bool` Represents whether the digest being queried was calculated.
-        * **retry** :class:`bool` Represents whether this partition should be retried.
-        * **digest** :class:`bytearray` Represents the digest of the record being queried. Should be 20 characters long.
-        * **bval** :class:`int` Used in conjunction with digest in order to determine the last record recieved by a partition query.
+        * ``"id"``: :class:`int` represents a partition ID number
+        * ``"init"``: :class:`bool` represents whether the digest being queried was calculated.
+        * ``"retry"``: :class:`bool` represents whether this partition should be retried.
+        * ``"digest"``: :class:`bytearray` represents the digest of the record being queried.
+        
+            Should be 20 characters long.
+        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record recieved by a partition query.
+
+    Default: ``{}`` (All partitions will be queried).
 
     .. code-block:: python
 
        # Example of a query policy using partition_status.
-       # Assume "query" is a valid aerospike Query instance.
        
-       # partition_status is most easily used to resume a query
-       # and can be obtained by calling Query.get_partitions_status()
        # Here is the form of partition_status.
        # partition_status = {
        #     0: (0, False, Flase, bytearray([0]*20), 0)...
@@ -2443,6 +2461,3 @@ Partition Objects
                "count": 4096
            },
        }
-
-    Default: ``{}`` (All partitions will be queried).
-
