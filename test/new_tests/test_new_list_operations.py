@@ -10,14 +10,14 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-Server61 = False
+Server61 = True
 
 from .test_base_class import TestBaseClass
 if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
     if pytest.__version__ < "3.0.0":
-        Server61 = True
+        Server61 = False
     else:
-        Server61 = True
+        Server61 = False
 
 def get_list_result_from_operation(client, key, operation, bin):
     _, _, result_bins = client.operate(key, [operation])
@@ -339,7 +339,7 @@ class TestNewListOperations(object):
         assert len(result) == 4 and set(result) == set([5, 8, 9, 10])
 
     def test_get_exists_by_index_range_no_count(self):
-        if Server61 == False:
+        if not Server61:
             pytest.skip('It only applies to >= 6.1 enterprise edition')
         operation = {
             'op': aerospike.OP_LIST_GET_BY_INDEX_RANGE,
@@ -352,7 +352,7 @@ class TestNewListOperations(object):
         assert result == True
 
     def test_get_exists_by_index_range_inverted(self):
-        if Server61 == False:
+        if not Server61:
             pytest.skip('It only applies to >= 6.1 enterprise edition')
         start = 0
         count = 3
@@ -370,7 +370,7 @@ class TestNewListOperations(object):
         assert result == expected
 
     def test_get_exists_by_rank_range_no_count(self):
-        if Server61 == False:
+        if not Server61:
             pytest.skip('It only applies to >= 6.1 enterprise edition')
         operation = {
             'op': aerospike.OP_LIST_GET_BY_RANK_RANGE,
@@ -383,7 +383,7 @@ class TestNewListOperations(object):
         assert result == True
 
     def test_get_exists_by_value_no_duplicates(self):
-        if Server61 == False:
+        if not Server61:
             pytest.skip('It only applies to >= 6.1 enterprise edition')
         '''
         7 is in the 0th position, so we expect it exists
@@ -399,7 +399,7 @@ class TestNewListOperations(object):
         assert result == True
 
     def test_get_exists_by_value_with_duplicates(self):
-        if Server61 == False:
+        if not Server61:
             pytest.skip('It only applies to >= 6.1 enterprise edition')
         '''
         Add a list [0, 1, 0, 2, 0] with 3 0's
@@ -422,7 +422,7 @@ class TestNewListOperations(object):
         assert result == True
 
     def test_get_exists_by_value_list(self):
-        if Server61 == False:
+        if not Server61:
             pytest.skip('It only applies to >= 6.1 enterprise edition')
         values = [7, 5, 9]
         operation = {
@@ -436,7 +436,7 @@ class TestNewListOperations(object):
         assert result == True
 
     def test_get_exists_by_value_list_inverted(self):
-        if Server61 == False:
+        if not Server61:
             pytest.skip('It only applies to >= 6.1 enterprise edition')
         values = [7, 5, 9]
         operation = {
@@ -451,7 +451,7 @@ class TestNewListOperations(object):
         assert result == True
 
     def test_get_exists_by_value_range(self):
-        if Server61 == False:
+        if not Server61:
             pytest.skip('It only applies to >= 6.1 enterprise edition')
         operation = {
             'op': aerospike.OP_LIST_GET_BY_VALUE_RANGE,
