@@ -246,7 +246,7 @@ class TestMapBasics(object):
         assert size == 0
         assert value1 == 'value2'
         assert value2 == 'value1'
- 
+
     def test_pos_map_remove_by_index_range(self):
         key = ('test', 'map_test', 1)
         binname = 'my_map'
