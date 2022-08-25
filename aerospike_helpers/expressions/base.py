@@ -14,18 +14,19 @@
 # limitations under the License.
 ##########################################################################
 '''
-The expressions base module provide expressions for::
+The expressions base module provide expressions for
+ * declaring variables, using variables, and control-flow
+ * comparison operators
+ * applying logical operators to one or more 'boolean expressions'
+ * returning the value of (in-memory) record metadata
+ * returning the value from storage, such as bin data or the record's key
 
-    * declaring variables, using variables, and control-flow
-    * comparison operators
-    * applying logical operators to one or more 'boolean expressions'
-    * returning the value of (in-memory) record metadata
-    * returning the value from storage, such as bin data or the record's key
 
-Assume all in-line examples run this code beforehand::
+Example::
 
-.. code-block:: python
     import aerospike_helpers.expressions.base as exp
+    # See if integer bin "bin_name" contains a value equal to 10.
+    expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 '''
 
 #from __future__ import annotations
@@ -698,7 +699,6 @@ class CmpRegex(_BaseExpr):
 
                 # Select string bin "a" that starts with "prefix" and ends with "suffix".
                 # Ignore case and do not match newline.
-                import aerospike
                 expr = exp.CmpRegex(aerospike.REGEX_ICASE | aerospike.REGEX_NEWLINE, "prefix.*suffix", exp.StrBin("a")).compile()
         """
         self._children = (cmp_str,)
@@ -719,7 +719,7 @@ class CmpGeo(_BaseExpr):
             Example::
 
                 # Geo bin "point" is within geo bin "region".
-                expr = exp.CmpGeo(exp.GeoBin("point"), exp.GeoBin("region")).compile()
+                expr = exp.CmpGeo(GeoBin("point"), exp.GeoBin("region")).compile()
         """
         self._children = (expr0, expr1)
 
@@ -842,51 +842,29 @@ class Cond(_BaseExpr):
 
         Example::
 
-            from aerospike_helpers.expressions.arithmetic import Add, Sub, Mul
+            # Apply operator based on type and test if greater than 100.
+            expr = exp.GT(
+                    exp.Cond(
+                        exp.Eq(exp.IntBin("type"), 0),
+                            exp.Add(exp.IntBin("val1"), exp.IntBin("val2")),
+                        exp.Eq(exp.IntBin("type"), 1),
+                            exp.Sub(exp.IntBin("val1"), exp.IntBin("val2")),
+                        exp.Eq(exp.IntBin("type"), 2),
+                            exp.Mul(exp.IntBin("val1"), exp.IntBin("val2")))
+                    100).compile()
 
-            import aerospike
-            # Configure the client
-            config = {
-                'hosts': [('127.0.0.1', 3000)]
-            }
+        Example::
 
-            # Create a client and connect it to the cluster
-            client = aerospike.client(config).connect()
-            client.truncate('test', None, 0)
-
-            # Store 2 bin integers and use expressions to perform arithmetic
-            # Results will only be calculated and returned, not stored
-
-            keyTuple = ('test', 'demo', 'key')
-            client.put(keyTuple, {"operation": "add", "val1": 40, "val2": 30})
-
-            # Determine operation to perform
-            # If operation is unknown, return -1
-            expr = exp.Cond(
-                        exp.Eq(exp.StrBin("operation"), "add"),
-                            Add(exp.IntBin("val1"), exp.IntBin("val2")),
-                        exp.Eq(exp.StrBin("operation"), "subtract"),
-                            Sub(exp.IntBin("val1"), exp.IntBin("val2")),
-                        exp.Eq(exp.StrBin("operation"), "multiply"),
-                            Mul(exp.IntBin("val1"), exp.IntBin("val2")),
-            -1).compile()
-
-            from aerospike_helpers.operations import expression_operations as expr_ops
+            # Delete the 'grade' bin if its value is less than 70
+            killif = exp.Cond(
+                exp.LT(exp.IntBin("grade"), 70), aerospike.null(),
+                exp.Unknown()).compile()
+            # Write a NIL on grade < 70 to delete the bin
+            # or short-circuit out of the operation without raising an exception
             ops = [
-                # Bin "results" doesn't actually exist in the server
-                # The name is only used to return the results
-                expr_ops.expression_read("results", expr)
+                opexp.expression_write("grade", killif,
+                aerospike.EXP_WRITE_ALLOW_DELETE | aerospike.EXP_WRITE_EVAL_NO_FAIL),
             ]
-            record = client.operate(keyTuple, ops)
-            print(record)
-            # (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 1}, {'results': 70})
-
-            client.put(keyTuple, {"operation": "divide"})
-
-            record = client.operate(keyTuple, ops)
-            print(record)
-            # Divide isn't supported, so we get -1
-            # (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'results': -1})
             """
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
@@ -910,9 +888,9 @@ class Let(_BaseExpr):
 
             # for int bin "a", 5 < a < 10
             expr = exp.Let(exp.Def("x", exp.IntBin("a")),
-                exp.And(
-                    exp.GT(5, exp.Var("x")),
-                    exp.LT(exp.Var("x"), 10))).compile()
+                    exp.And(
+                        exp.LT(5, exp.Var("x")),
+                        exp.LT(exp.Var("x"), 10))).compile()
         """
         self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
 
