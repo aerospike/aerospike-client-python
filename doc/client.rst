@@ -2482,7 +2482,7 @@ Write Policies
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. \
               If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
-            | Default: ``0``
+            | Default: ``30000``
         * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
@@ -2556,7 +2556,7 @@ Read Policies
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
-            | Default: ``0``
+            | Default: ``30000``
         * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
@@ -2639,7 +2639,7 @@ Operate Policies
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
-            | Default: ``0``
+            | Default: ``30000``
         * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
@@ -2734,7 +2734,7 @@ Apply Policies
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
-            | Default: ``0``
+            | Default: ``30000``
         * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
@@ -2811,7 +2811,7 @@ Remove Policies
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
-            | Default: ``0``
+            | Default: ``30000``
         * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
@@ -2891,7 +2891,7 @@ Batch Policies
             |
             | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
             |
-            | Default: ``0``
+            | Default: ``30000``
         * **total_timeout** (:class:`int`)
             | Total transaction timeout in milliseconds.
             |
