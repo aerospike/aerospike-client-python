@@ -25,6 +25,7 @@ The expressions base module provide expressions for::
 Assume all in-line examples run this code beforehand::
 
 .. code-block:: python
+
     import aerospike_helpers.expressions.base as exp
 '''
 
