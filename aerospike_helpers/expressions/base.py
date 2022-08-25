@@ -78,17 +78,15 @@ class Unknown(_BaseExpr):
 
             Example::
 
-                from aerospike_helpers.expressions.arithmetic import Add
-
-                # Declare variable for balance bin
+                # If IntBin("balance") >= 50, get "balance" + 50.
+                # Otherwise, fail the expression via Unknown().
+                # This sort of expression is useful with expression operations
+                # expression_read() and expression_write().
                 exp.Let(exp.Def("bal", exp.IntBin("balance")),
-                    # If IntBin("balance") >= 50, get "balance" + 50.
                     exp.Cond(
                         exp.GE(exp.Var("bal"), 50),
-                            Add(exp.Var("bal"), 50),
-                        # Otherwise, fail the expression via Unknown().
-                        exp.Unknown()
-                    )
+                            exp.Add(exp.Var("bal"), 50),
+                        exp.Unknown())
                 )
         """
         super().__init__()
@@ -115,7 +113,7 @@ class KeyInt(_Key):
             Example::
 
                 # Integer record key >= 10000.
-                expr = exp.GE(exp.KeyInt(), 10000).compile()
+                expr = exp.GE(KeyInt(), 10000).compile()
         """
         super().__init__()
 
@@ -319,16 +317,10 @@ class ListBin(_BaseExpr):
 
             Example::
 
-                from aerospike_helpers.expressions import list as list_exprs
-
-                # Check that list bin "listBin" contains at least one item with value 42.
-                list42Count = list_exprs.ListGetByValue(
-                    ctx=None,
-                    return_type=aerospike.LIST_RETURN_COUNT,
-                    value=42,
-                    bin=exp.ListBin("listBin")
-                )
-                expr = exp.GT(list42Count, 0).compile()
+                # List bin "a" contains at least one item with value "abc".
+                expr = exp.GT(exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 
+                            ResultType.INTEGER, "abc", ListBin("a")), 
+                        0).compile()
         """
         self._fixed = {_Keys.BIN_KEY: bin}
 
@@ -348,10 +340,8 @@ class MapBin(_BaseExpr):
 
             Example::
 
-                from aerospike_helpers.expressions import map as map_exprs
-
                 # Map bin "a" size > 7.
-                expr = exp.GT(map_exprs.MapSize(None, exp.MapBin("a")), 7).compile()
+                expr = exp.GT(exp.MapSize(None, exp.MapBin("a")), 7).compile()
         """
         self._fixed = {_Keys.BIN_KEY: bin}
 
@@ -372,9 +362,7 @@ class HLLBin(_BaseExpr):
             Example::
 
                 # Does HLL bin "a" have a hll_count > 1000000.
-                from aerospike_helpers.expressions import hll
-                count = hll.HLLGetCount(hll.HLLBin("a"))
-                expr = exp.GT(count, 1000000).compile()
+                expr = exp.GT(exp.HllGetCount(exp.HllBin("a"), 1000000)).compile()
         """
         self._fixed = {_Keys.BIN_KEY: bin}
 
@@ -493,7 +481,7 @@ class SinceUpdateTime(_BaseExpr):
             Example::
 
                 # Record last updated more than 2 hours ago.
-                expr = exp.GT(exp.SinceUpdateTime(), 2 * 60 * 60 * 1000).compile()
+                expr = exp.GT(exp.SinceUpdateTime(), 2 * 60 * 1000).compile()
         """
         super().__init__()    
 
