@@ -14,19 +14,14 @@
 # limitations under the License.
 ##########################################################################
 '''
-The expressions base module provide expressions for::
+The expressions base module provide expressions for:
 
-    * declaring variables, using variables, and control-flow
-    * comparison operators
-    * applying logical operators to one or more 'boolean expressions'
-    * returning the value of (in-memory) record metadata
-    * returning the value from storage, such as bin data or the record's key
+* declaring variables, using variables, and control-flow
+* comparison operators
+* applying logical operators to one or more 'boolean expressions'
+* returning the value of (in-memory) record metadata
+* returning the value from storage, such as bin data or the record's key
 
-Assume all in-line examples run this code beforehand::
-
-.. code-block:: python
-
-    import aerospike_helpers.expressions.base as exp
 '''
 
 #from __future__ import annotations
