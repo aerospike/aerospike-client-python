@@ -15,10 +15,10 @@
 ##########################################################################
 """
 This module provides helper functions to produce dictionaries to be used with the
-:meth:`aerospike.operate` and :meth:`aerospike.operate_ordered` methods of the aerospike module.
+:meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered` methods of the aerospike module.
 
 List operations support nested CDTs through an optional ctx context argument.
-    The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.
+The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.
 
 .. note:: Nested CDT (ctx) requires server version >= 4.6.0
 
@@ -44,7 +44,8 @@ CTX_KEY = "ctx"
 
 
 def list_append(bin_name: str, value, policy: dict=None, ctx: list=None):
-    """Creates a list append operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`
+    """
+    Creates a list append operation.
 
     The list append operation instructs the aerospike server to append an item to the
     end of a list bin.
@@ -55,7 +56,7 @@ def list_append(bin_name: str, value, policy: dict=None, ctx: list=None):
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -74,7 +75,8 @@ def list_append(bin_name: str, value, policy: dict=None, ctx: list=None):
 
 
 def list_append_items(bin_name: str, values, policy: dict=None, ctx: list=None):
-    """Creates a list append items operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`
+    """
+    Creates a list append items operation.
 
     The list append items operation instructs the aerospike server to append multiple items to the
     end of a list bin.
@@ -85,7 +87,7 @@ def list_append_items(bin_name: str, values, policy: dict=None, ctx: list=None):
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -103,7 +105,8 @@ def list_append_items(bin_name: str, values, policy: dict=None, ctx: list=None):
     return op_dict
 
 def list_insert(bin_name: str, index, value, policy: dict=None, ctx: list=None):
-    """Creates a list insert operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`
+    """
+    Creates a list insert operation.
 
     The list insert operation inserts an item at index: `index` into the list contained
     in the specified bin.
@@ -116,7 +119,7 @@ def list_insert(bin_name: str, index, value, policy: dict=None, ctx: list=None):
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -135,7 +138,8 @@ def list_insert(bin_name: str, index, value, policy: dict=None, ctx: list=None):
     return op_dict
 
 def list_insert_items(bin_name: str, index, values, policy: dict=None, ctx: list=None):
-    """Creates a list insert items operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`
+    """
+    Creates a list insert items operation.
 
     The list insert items operation inserts items at index: `index` into the list contained
     in the specified bin.
@@ -148,7 +152,7 @@ def list_insert_items(bin_name: str, index, values, policy: dict=None, ctx: list
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -167,9 +171,10 @@ def list_insert_items(bin_name: str, index, values, policy: dict=None, ctx: list
     return op_dict
 
 def list_increment(bin_name: str, index, value, policy: dict=None, ctx: list=None):
-    """Creates a list increment operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`
+    """
+    Creates a list increment operation.
 
-    The list insert operation inserts an item at index: `index` into the list contained
+    The list increment operation increments an item at index: `index` in the list contained
     in the specified bin.
 
     Args:
@@ -179,7 +184,7 @@ def list_increment(bin_name: str, index, value, policy: dict=None, ctx: list=Non
         policy (dict): An optional dictionary of :ref:`list write options <aerospike_list_policies>`.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -199,7 +204,8 @@ def list_increment(bin_name: str, index, value, policy: dict=None, ctx: list=Non
 
 
 def list_pop(bin_name: str, index, ctx: list=None):
-    """Creates a list pop operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`
+    """
+    Creates a list pop operation.
 
     The list pop operation removes and returns an item index: `index` from list contained
     in the specified bin.
@@ -209,7 +215,7 @@ def list_pop(bin_name: str, index, ctx: list=None):
         index (int): The index of the item to be removed.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -225,9 +231,10 @@ def list_pop(bin_name: str, index, ctx: list=None):
 
 
 def list_pop_range(bin_name: str, index, count, ctx: list=None):
-    """Creates a list pop range operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`
+    """
+    Creates a list pop range operation.
 
-    The list insert range operation removes and returns `count` items
+    The list pop range operation removes and returns `count` items
     starting from index: `index` from the list contained in the specified bin.
 
     Args:
@@ -236,7 +243,7 @@ def list_pop_range(bin_name: str, index, count, ctx: list=None):
         count (int): A positive number indicating how many items, including the first, to be removed and returned
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -253,7 +260,8 @@ def list_pop_range(bin_name: str, index, count, ctx: list=None):
 
 
 def list_remove(bin_name: str, index, ctx: list=None):
-    """Create list remove operation.
+    """
+    Creates a list remove operation.
 
     The list remove operation removes an item located at `index` in the list specified by `bin_name`
 
@@ -262,7 +270,7 @@ def list_remove(bin_name: str, index, ctx: list=None):
         index (int): The index at which to remove the item.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict =  {
@@ -278,7 +286,8 @@ def list_remove(bin_name: str, index, ctx: list=None):
 
 
 def list_remove_range(bin_name: str, index, count, ctx: list=None):
-    """Create list remove range operation.
+    """
+    Creates a list remove range operation.
 
     The list remove range operation removes `count` items starting at `index`
     in the list specified by `bin_name`
@@ -289,7 +298,7 @@ def list_remove_range(bin_name: str, index, count, ctx: list=None):
         count (int): A positive number representing the number of items to be removed.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -315,7 +324,7 @@ def list_clear(bin_name: str, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -342,7 +351,7 @@ def list_set(bin_name: str, index, value, policy: dict=None, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -371,7 +380,7 @@ def list_get(bin_name: str, index, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -398,7 +407,7 @@ def list_get_range(bin_name: str, index, count, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -426,7 +435,7 @@ def list_trim(bin_name: str, index, count, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -452,7 +461,7 @@ def list_size(bin_name: str, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -482,7 +491,7 @@ def list_get_by_index(bin_name: str, index, return_type, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -516,7 +525,7 @@ def list_get_by_index_range(bin_name: str, index, return_type, count=None, inver
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -550,7 +559,7 @@ def list_get_by_rank(bin_name: str, rank, return_type, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -583,7 +592,7 @@ def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverte
             Default: `False`
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -617,7 +626,7 @@ def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: li
             If set to `True`, all items not equal to `value` will be selected. Default: `False`
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -650,7 +659,7 @@ def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=Fals
             Default: `False`
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -686,7 +695,7 @@ def list_get_by_value_range(bin_name: str, return_type, value_begin, value_end, 
             Default: `False`
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -722,7 +731,7 @@ def list_remove_by_index(bin_name: str, index, return_type, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -756,7 +765,7 @@ def list_remove_by_index_range(bin_name: str, index, return_type, count=None, in
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -790,7 +799,7 @@ def list_remove_by_rank(bin_name: str, rank, return_type, ctx: list=None):
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -824,7 +833,7 @@ def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inve
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered. The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -860,7 +869,7 @@ def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx:
             Default: `False`
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -894,7 +903,7 @@ def list_remove_by_value_list(bin_name: str, value_list, return_type,
             Default: `False`
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -931,7 +940,7 @@ def list_remove_by_value_range(bin_name: str, return_type, value_begin=None, val
             Default: `False`
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -964,7 +973,7 @@ def list_set_order(bin_name: str, list_order, ctx: list=None):
             aerospike.LIST_UNORDERED .
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -989,7 +998,7 @@ def list_sort(bin_name: str, sort_flags: int=0, ctx: list=None):
         sort_flags (int): :ref:`aerospike_list_sort_flag` modifiying the sorting behavior (default ``aerospike.DEFAULT_LIST_SORT``).
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The format of the dictionary
         should be considered an internal detail, and subject to change.
     """
     op_dict = {
@@ -1012,25 +1021,6 @@ def list_get_by_value_rank_range_relative(bin_name: str, value, offset, return_t
     Server selects list items nearest to value and greater by relative rank.
     Server returns selected data specified by return_type.
 
-    Note:
-        This operation requires server version 4.3.0 or greater.
-
-    Examples:
-        These examples show what would be returned for specific arguments
-        when dealing with an ordered list: ``[0,4,5,9,11,15]``
-
-        ::
-
-            (value, offset, count) = [selected items]
-            (5, 0, None) = [5,9,11,15]
-            (5, 0, 2) = [5, 9]
-            (5, -1, None) = [4, 5, 9, 11, 15]
-            (5, -1, 3) = [4, 5, 9]
-            (3,3, None) = [11, 15]
-            (3,-3, None) = [0, 4,5,9,11,15]
-            (3, 0, None) = [4,5,9,11,15]
-
-
     Args:
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
@@ -1044,8 +1034,42 @@ def list_get_by_value_rank_range_relative(bin_name: str, value, offset, return_t
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The format of the dictionary
         should be considered an internal detail, and subject to change.
+
+    Note:
+        This operation requires server version 4.3.0 or greater.
+
+    Examples:
+        These examples show what would be returned for specific arguments
+        when dealing with an ordered list: ``[0,4,5,9,11,15]``
+
+        ::
+
+            (value, offset, count) = [selected items]
+            # Found 5
+            # Rank 0 = 5
+            # No upper limit, so get all elements >= 5
+            (5, 0, None) = [5,9,11,15]
+            # Only get 2 elements
+            (5, 0, 2) = [5, 9]
+
+            # Relative rank -1 = 4
+            # since 4 is just below 5 in the list
+            # Then get all elements >= 4
+            (5, -1, None) = [4, 5, 9, 11, 15]
+            # Only get 3 elements
+            (5, -1, 3) = [4, 5, 9]
+
+            # 3 not in list
+            # But next greater value is 4, so set 4's rank to 0
+            # Then rank 0 = 4, rank 1 = 5, rank 2 = 9, rank 3 = 11
+            (3,3, None) = [11, 15]
+            # Rank 0 = 4, Rank -1 = 0
+            # We will only get down to the lowest rank item
+            (3,-3, None) = [0, 4,5,9,11,15]
+            (3, 0, None) = [4,5,9,11,15]
+
     """
     op_dict = {
         OP_KEY: aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL,
@@ -1073,23 +1097,6 @@ def list_remove_by_value_rank_range_relative(bin_name: str, value, offset, retur
     Server removes and returns list items nearest to value and greater by relative rank.
     Server returns selected data specified by return_type.
 
-    Note:
-        This operation requires server version 4.3.0 or greater.
-
-        These examples show what would be removed and returned for specific arguments
-        when dealing with an ordered list: ``[0,4,5,9,11,15]``
-
-        ::
-
-        (value, offset, count) = [selected items]
-        (5,0,None) = [5,9,11,15]
-        (5,0,2) = [5, 9]
-        (5,-1, None) = [4,5,9,11,15]
-        (5, -1, 3) = [4,5,9]
-        (3,3, None) = [11,15]
-        (3,-3, None) = [0,4,5,9,11,15]
-        (3, 0, None) = [4,5,9,11,15]
-
     Args:
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
@@ -1101,8 +1108,27 @@ def list_remove_by_value_rank_range_relative(bin_name: str, value, offset, retur
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
 
     Returns:
-        A dictionary usable in operate or operate_ordered.The format of the dictionary
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The format of the dictionary
         should be considered an internal detail, and subject to change.
+
+    Note:
+        This operation requires server version 4.3.0 or greater.
+
+    These examples show what would be removed and returned for specific arguments
+    when dealing with an ordered list: ``[0,4,5,9,11,15]``
+
+    ::
+
+        (value, offset, count) = [selected items]
+        (5,0,None) = [5,9,11,15]
+        (5,0,2) = [5, 9]
+        (5,-1, None) = [4,5,9,11,15]
+        (5, -1, 3) = [4,5,9]
+        (3,3, None) = [11,15]
+        # We can only go down to lowest rank item
+        (3,-3, None) = [0,4,5,9,11,15]
+        (3, 0, None) = [4,5,9,11,15]
+
     """
     op_dict = {
         OP_KEY: aerospike.OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL,
