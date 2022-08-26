@@ -15,4 +15,4 @@ threshold_ns = int(current_time * 10**9)
 client.truncate('test', 'demo', threshold_ns)
 
 # Remove all items in namespace
-client.truncate('test', None, 0)
+# client.truncate('test', None, 0)

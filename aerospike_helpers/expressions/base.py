@@ -860,7 +860,7 @@ class Cond(_BaseExpr):
 
             # Create a client and connect it to the cluster
             client = aerospike.client(config).connect()
-            client.truncate('test', None, 0)
+            client.truncate('test', "demo", 0)
 
             # Store 2 bin integers and use expressions to perform arithmetic
             # Results will only be calculated and returned, not stored

@@ -29,7 +29,7 @@ Boilerplate Code For Examples
 Assume every in-line example runs this code beforehand:
 
 .. warning::
-    Only run example code on a brand new Aerospike server. This code deletes all records in the ``test`` namespace!
+    Only run example code on a brand new Aerospike server. This code deletes all records in the ``demo`` set!
 
 .. include:: examples/boilerplate.py
     :code: python

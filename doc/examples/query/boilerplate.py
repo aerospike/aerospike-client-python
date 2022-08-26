@@ -8,7 +8,7 @@ client = aerospike.client(config).connect()
 # Create a client and connect it to the cluster
 try:
     client = aerospike.client(config).connect()
-    client.truncate('test', None, 0)
+    client.truncate('test', "demo", 0)
 except ex.ClientError as e:
     print("Error: {0} [{1}]".format(e.msg, e.code))
     sys.exit(1)
