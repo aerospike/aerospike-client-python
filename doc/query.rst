@@ -192,83 +192,26 @@ Assume this boilerplate code is run before all examples below:
 
         .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
 
-        .. note::
+        Example: find the first name distribution of users who are 21 or older using \
+        a query aggregation:
 
-            Assume we registered the following Lua module with the cluster as \
-            **stream_udf.lua** using :meth:`aerospike.udf_put`.
+        .. include:: examples/lua/example.lua
+            :code: Lua
 
-            .. code-block:: lua
+        Assume the example code above is in a file called "example.py", and is the same folder as the following script.
 
-                 local function having_ge_threshold(bin_having, ge_threshold)
-                     return function(rec)
-                         debug("group_count::thresh_filter: %s >  %s ?", tostring(rec[bin_having]), tostring(ge_threshold))
-                         if rec[bin_having] < ge_threshold then
-                             return false
-                         end
-                         return true
-                     end
-                 end
+        .. include:: examples/lua/lua.py
+            :code: python
 
-                 local function count(group_by_bin)
-                   return function(group, rec)
-                     if rec[group_by_bin] then
-                       local bin_name = rec[group_by_bin]
-                       group[bin_name] = (group[bin_name] or 0) + 1
-                       debug("group_count::count: bin %s has value %s which has the count of %s", tostring(bin_name), tostring(group[bin_name]))
-                     end
-                     return group
-                   end
-                 end
-
-                 local function add_values(val1, val2)
-                   return val1 + val2
-                 end
-
-                 local function reduce_groups(a, b)
-                   return map.merge(a, b, add_values)
-                 end
-
-                 function group_count(stream, group_by_bin, bin_having, ge_threshold)
-                   if bin_having and ge_threshold then
-                     local myfilter = having_ge_threshold(bin_having, ge_threshold)
-                     return stream : filter(myfilter) : aggregate(map{}, count(group_by_bin)) : reduce(reduce_groups)
-                   else
-                     return stream : aggregate(map{}, count(group_by_bin)) : reduce(reduce_groups)
-                   end
-                 end
-
-            Find the first name distribution of users in their twenties using \
-            a query aggregation:
-
-            .. code-block:: python
-
-                import aerospike
-                from aerospike import predicates as p
-                import pprint
-
-                config = {'hosts': [('127.0.0.1', 3000)],
-                          'lua': {'system_path':'/usr/local/aerospike/lua/',
-                                  'user_path':'/usr/local/aerospike/usr-lua/'}}
-                client = aerospike.client(config).connect()
-
-                pp = pprint.PrettyPrinter(indent=2)
-                query = client.query('test', 'users')
-                query.where(p.between('age', 20, 29))
-                query.apply('stream_udf', 'group_count', [ 'first_name' ])
-                names = query.results()
-                # we expect a dict (map) whose keys are names, each with a count value
-                pp.pprint(names)
-                client.close()
-
-            With stream UDFs, the final reduce steps (which ties
-            the results from the reducers of the cluster nodes) executes on the
-            client-side. Explicitly setting the Lua ``user_path`` in the
-            config helps the client find the local copy of the module
-            containing the stream UDF. The ``system_path`` is constructed when
-            the Python package is installed, and contains system modules such
-            as ``aerospike.lua``, ``as.lua``, and ``stream_ops.lua``.
-            The default value for the Lua ``system_path`` is
-            ``/usr/local/aerospike/lua``.
+        With stream UDFs, the final reduce steps (which ties
+        the results from the reducers of the cluster nodes) executes on the
+        client-side. Explicitly setting the Lua ``user_path`` in the
+        config helps the client find the local copy of the module
+        containing the stream UDF. The ``system_path`` is constructed when
+        the Python package is installed, and contains system modules such
+        as ``aerospike.lua``, ``as.lua``, and ``stream_ops.lua``.
+        The default value for the Lua ``system_path`` is
+        ``/usr/local/aerospike/lua``.
 
     .. method:: add_ops(ops)
 
@@ -280,24 +223,6 @@ Assume this boilerplate code is run before all examples below:
 
         .. note:: 
             Requires server version >= 4.7.0.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike_helpers.operations import list_operations
-            from aerospike_helpers.operations import operations
-            query = client.query('test', 'demo')
-
-            ops =  [
-                operations.append(test_bin, 'val_to_append'),
-                list_operations.list_remove_by_index(test_bin, list_index_to_remove, aerospike.LIST_RETURN_NONE)
-            ]
-            query.add_ops(ops)
-
-            id = query.execute_background()
-            client.close()
-
-        For a more comprehensive example, see using a list of write ops with :meth:`Query.execute_background` .
 
     .. method:: execute_background([, policy])
 
