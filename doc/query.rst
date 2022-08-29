@@ -175,8 +175,6 @@ Assume this boilerplate code is run before all examples below:
             # should be [1000, 1001, 1002, 1003]
             print(partitions)
 
-
-
     .. method:: apply(module, function[, arguments])
 
         Aggregate the :meth:`results` using a stream \
@@ -235,112 +233,50 @@ Assume this boilerplate code is run before all examples below:
 
         .. code-block:: python
 
-            # Using a record UDF
-            import aerospike
-            query = client.query('test', 'demo')
-            query.apply('myudfs', 'myfunction', ['a', 1])
-            query_id = query.execute_background()
-            # This id can be used to monitor the progress of the background query
+            # EXAMPLE 1: Increase everyone's score by 100
 
-        .. code-block:: python
+            from aerospike_helpers.operations import operations
+            ops = [
+                operations.increment("score", 100)
+            ]
+            query.add_ops(ops)
+            id = query.execute_background()
 
-            # Using a list of write ops.
-            import aerospike
-            from aerospike import predicates
-            from aerospike import exception as ex
-            from aerospike_helpers.operations import list_operations
-            import sys
+            # Allow time for query to complete
             import time
+            time.sleep(3)
 
-            # Configure the client.
-            config = {"hosts": [("127.0.0.1", 3000)]}
+            for key in keyTuples:
+                _, _, bins = client.get(key)
+                print(bins)
+            # {"score": 200, "elo": 1400}
+            # {"score": 120, "elo": 1500}
+            # {"score": 110, "elo": 1100}
+            # {"score": 300, "elo": 900}
 
-            # Create a client and connect it to the cluster.
-            try:
-                client = aerospike.client(config).connect()
-            except ex.ClientError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
+            # EXAMPLE 2: Increase score by 100 again for those with elos > 1000
+            # Use write policy to select players by elo
+            import aerospike_helpers.expressions as expr
+            eloGreaterOrEqualTo1000 = expr.GE(expr.IntBin("elo"), 1000).compile()
+            writePolicy = {
+                "expressions": eloGreaterOrEqualTo1000
+            }
+            id = query.execute_background(policy=writePolicy)
 
-            TEST_NS = "test"
-            TEST_SET = "demo"
-            nested_list = [{"name": "John", "id": 100}, {"name": "Bill", "id": 200}]
-            # Write the records.
-            try:
-                keys = [(TEST_NS, TEST_SET, i) for i in range(5)]
-                for i, key in enumerate(keys):
-                    client.put(key, {"account_number": i, "members": nested_list})
-            except ex.RecordError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
+            time.sleep(3)
 
-            # EXAMPLE 1: Append a new account member to all accounts.
-            try:
-                new_member = {"name": "Cindy", "id": 300}
-
-                ops = [list_operations.list_append("members", new_member)]
-
-                query = client.query(TEST_NS, TEST_SET)
-                query.add_ops(ops)
-                id = query.execute_background()
-                # allow for query to complete
-                time.sleep(3)
-                print("EXAMPLE 1")
-
-                for i, key in enumerate(keys):
-                    _, _, bins = client.get(key)
-                    print(bins)
-            except ex.ClientError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-
-            # EXAMPLE 2: Remove a member from a specific account using predicates.
-            try:
-                # Add index to the records for use with predex.
-                client.index_integer_create(
-                    TEST_NS, TEST_SET, "account_number", "test_demo_account_number_idx"
-                )
-
-                ops = [
-                    list_operations.list_remove_by_index("members", 0, aerospike.LIST_RETURN_NONE)
-                ]
-
-                query = client.query(TEST_NS, TEST_SET)
-                number_predicate = predicates.equals("account_number", 3)
-                query.where(number_predicate)
-                query.add_ops(ops)
-                id = query.execute_background()
-                # allow for query to complete
-                time.sleep(3)
-                print("EXAMPLE 2")
-
-                for i, key in enumerate(keys):
-                    _, _, bins = client.get(key)
-                    print(bins)
-            except ex.ClientError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
+            for i, key in enumerate(keyTuples):
+                _, _, bins = client.get(key)
+                print(bins)
+            # {"score": 300, "elo": 1400} <--
+            # {"score": 220, "elo": 1500} <--
+            # {"score": 210, "elo": 1100} <--
+            # {"score": 300, "elo": 900}
 
             # Cleanup and close the connection to the Aerospike cluster.
-            for i, key in enumerate(keys):
+            for key in keyTuples:
                 client.remove(key)
-            client.index_remove(TEST_NS, "test_demo_account_number_idx")
             client.close()
-
-            """
-            EXPECTED OUTPUT:
-            EXAMPLE 1
-            {'account_number': 0, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 1, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 2, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 3, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 4, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            EXAMPLE 2
-            {'account_number': 0, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 1, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 2, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 3, 'members': [{'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 4, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            """
 
     .. method:: paginate()
 
