@@ -118,7 +118,7 @@ try:
             records.append(record)
             print(record)
         
-        client.truncate('test', None, 0)
+        client.truncate('test', "demo", 0)
 
         # invoke the operations, and for each record invoke the callback
         s.foreach(callback, partition_policy)

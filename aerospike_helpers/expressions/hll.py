@@ -17,11 +17,6 @@
 HyperLogLog expressions contain expressions for performing HLL operations.
 Most of these operations are equivalent to the :mod:`HyperLogLog API <aerospike_helpers.operations.hll_operations>`.
 
-Example::
-
-    import aerospike_helpers.expressions as exp
-    # Get count from HLL bin "d".
-    expr = exp.HLLGetCount(exp.HLLBin("d")).compile()
 '''
 
 #from __future__ import annotations

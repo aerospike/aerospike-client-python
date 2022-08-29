@@ -1,162 +1,87 @@
-.. _aerospike.query:
+.. _aerospike.Query:
 
 .. currentmodule:: aerospike
 
-=================================
-Query Class --- :class:`Query`
-=================================
+========================================
+:class:`aerospike.Query` --- Query Class
+========================================
 
-:class:`Query`
-===============
+Overview
+========
 
-    The query object created by calling :meth:`aerospike.query` is used \
-    for executing queries over a secondary index of a specified set (which \
-    can be omitted or :py:obj:`None`). For queries, the :py:obj:`None` set contains those \
-    records which are not part of any named set.
+The query object created by calling :meth:`aerospike.query` is used for executing queries over a secondary index of a specified set. \
+This set can be ommitted or be set to :py:obj:`None`. \
+The :py:obj:`None` set contains those records which are not part of any named set.
 
-    The query can (optionally) be assigned one of the following \
+The query can (optionally) be assigned either the \
+:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals` predicate using :meth:`~aerospike.Query.where`. \
+Otherwise, a query without a predicate will match all the records in the given set, \
+similar to a :class:`~aerospike.Scan`.
 
-    * One of the :mod:`~aerospike.predicates` (:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals`) using :meth:`~aerospike.Query.where`. \
-    
-    A query without a predicate will match all the records in the given set, similar \
-    to a :class:`~aerospike.Scan`.
+The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background`. \
+The returned bins can be filtered by using :meth:`select`.
 
-    The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background` \
-    The bins returned can be filtered by using :meth:`select`.
+If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, \
+they will be applied to each record processed by the query. \
+See available write operations at :mod:`aerospike_helpers`.
 
-    If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, they will be applied to each record processed by the query. See available write operations at See :mod:`aerospike_helpers` \
+Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
+may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
+records streaming back from the query.
 
-    Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
-    may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
-    records streaming back from the query.
+.. seealso::
+    `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
+    `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
 
-    .. seealso::
-        `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
-        `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
+Fields
+======
 
-
-Query Fields and Methods
-------------------------
 .. class:: Query
 
-    Fields
+    max_records (:class:`int`)
+        Approximate number of records to return to client.
 
-    :fieldname max_records:
-            :class:`int`
-            Approximate number of records to return to client.
-            This number is divided by the number of nodes involved in the scan.
-            The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
+        This number is divided by the number of nodes involved in the scan.
+        The actual number of records returned may be less than ``max_records`` if node record counts are small and unbalanced across nodes.
+
+        Default: ``0`` (no limit)
+
+        .. note::
             Requires server version >= 6.0.0
 
-            Default: ``0`` (No Limit).
-
-    :fieldname records_per_second:
-            :class:`int`
-            Limit the scan to process records at records_per_second.
-            Requires server version >= 6.0.0
-            
-            Default: ``0`` (no limit).
-
-    .. note::
-        Version >= 5.0.0 Supports aerrospike expressions for results, foreach, and execute_background see :ref:`aerospike_operation_helpers.expressions`.
-        Requires server version >= 5.2.0.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike_helpers import expressions as exp
-            from aerospike import exception as ex
-            import sys
-            import time
-
-            config = {"hosts": [("127.0.0.1", 3000)]}
-            client = aerospike.client(config).connect()
-
-            # register udf
-            try:
-                client.udf_put(
-                    "/path/to/my_udf.lua"
-                )
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                client.close()
-                sys.exit(1)
-
-            # put records and apply udf
-            try:
-                keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
-                records = [{"number": 1}, {"number": 2}, {"number": 3}]
-                for i in range(3):
-                    client.put(keys[i], records[i])
-
-                try:
-                    client.index_integer_create("test", "demo", "number", "test_demo_number_idx")
-                except ex.IndexFoundError:
-                    pass
-
-                query = client.query("test", "demo")
-                query.apply("my_udf", "my_udf", ["number", 10])
-
-                # only affect records with "number" bin greater than 1
-                expr = exp.GT(exp.IntBin("number"), 1).compile()
-                policy = {"expressions": expr}
-
-                job_id = query.execute_background(policy)
-
-                # wait for job to finish
-                while True:
-                    response = client.job_info(job_id, aerospike.JOB_SCAN)
-                    print(response)
-                    if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-                        break
-                    time.sleep(0.25)
-
-                records = client.get_many(keys)
-                print(records)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-            # EXPECTED OUTPUT:
-            # [
-            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 1}),
-            #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 12}),
-            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
-            # ]
+    records_per_second (:class:`int`)
+        Limit the scan to process records at records_per_second.
+        Requires server version >= 6.0.0
         
-        .. code-block:: python
+        Default: ``0`` (no limit)
 
-            # contents of my_udf.lua
-            function my_udf(rec, bin, offset)
-                info("my transform: %s", tostring(record.digest(rec)))
-                rec[bin] = rec[bin] + offset
-                aerospike:update(rec)
-            end
-        
-    .. note::
-        For a similar example using .results() see :meth:`aerospike.Scan.results`.
+Methods
+=======
 
-    Methods
+Assume this boilerplate code is run before all examples below:
+
+.. include:: examples/query/boilerplate.py
+    :code: python
+
+.. class:: Query
+    :noindex:
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
         Set a filter on the record bins resulting from :meth:`results` or \
-        :meth:`foreach`. If a selected bin does not exist in a record it will \
-        not appear in the *bins* portion of that record tuple.
-
+        :meth:`foreach`.
+        
+        If a selected bin does not exist in a record it will not appear in the *bins* portion of that record tuple.
 
     .. method:: where(predicate[, ctx])
 
-        Set a where *predicate* for the query, without which the query will \
-        behave similar to :class:`aerospike.Scan`. The predicate is produced by \
-        one of the :mod:`aerospike.predicates` methods :meth:`~aerospike.predicates.equals` \
-        and :meth:`~aerospike.predicates.between`.
+        Set a where *predicate* for the query.
+        
+        You can only assign at most one predicate to the query.
+        If this function isn't called, the query will behave similar to :class:`aerospike.Scan`.
 
-        :param tuple predicate: the :py:func:`tuple` produced by one of the :mod:`aerospike.predicates` methods.
-        :param list ctx: the :py:func:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
-
-        .. note:: Currently, you can assign at most one predicate to the query.
+        :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
+        :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 
@@ -167,26 +92,8 @@ Query Fields and Methods
         :param dict options: optional :ref:`aerospike_query_options`.
         :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import predicates as p
-            import pprint
-
-            config = { 'hosts': [ ('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
-
-            pp = pprint.PrettyPrinter(indent=2)
-            query = client.query('test', 'demo')
-            query.select('name', 'age') # matched records return with the values of these bins
-
-            # assuming there is a secondary index on the 'age' bin of test.demo
-            query.where(p.equals('age', 40))
-
-            records = query.results( {'total_timeout':2000})
-
-            pp.pprint(records)
-            client.close()
+        .. include:: examples/query/results.py
+            :code: python
 
         .. note:: As of client 7.0.0 and with server >= 6.0 results and the query policy
             "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
@@ -214,70 +121,24 @@ Query Fields and Methods
 
     .. method:: foreach(callback[, policy [, options]])
 
-        Invoke the *callback* function for each of the records streaming back \
-        from the query.
+        Invoke the *callback* function for each of the records streaming back from the query.
+
+        A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+        If the query is using the "partition_filter" query policy the callback will recieve two arguments
+        The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
+        as a normal callback.
 
         :param callable callback: the function to invoke for each record.
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
 
-        .. note::
-            A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
-            If the query is using the "partition_filter" query policy the callback will recieve two arguments
-            The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
-            as a normal callback.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike import predicates as p
-            import pprint
-
-            config = { 'hosts': [ ('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
-
-            pp = pprint.PrettyPrinter(indent=2)
-            query = client.query('test', 'demo')
-            query.select('name', 'age') # matched records return with the values of these bins
-            # assuming there is a secondary index on the 'age' bin of test.demo
-            query.where(p.between('age', 20, 30))
-            names = []
-            def matched_names(record):
-                key, metadata, bins = record
-                pp.pprint(bins)
-                names.append(bins['name'])
-
-            query.foreach(matched_names, {'total_timeout':2000})
-            pp.pprint(names)
-            client.close()
+        .. include:: examples/query/foreach.py
+            :code: python
 
         .. note:: To stop the stream return ``False`` from the callback function.
 
-            .. code-block:: python
-
-                import aerospike
-                from aerospike import predicates as p
-
-                config = { 'hosts': [ ('127.0.0.1',3000)]}
-                client = aerospike.client(config).connect()
-
-                def limit(lim, result):
-                    c = [0] # integers are immutable so a list (mutable) is used for the counter
-                    def key_add(record):
-                        key, metadata, bins = record
-                        if c[0] < lim:
-                            result.append(key)
-                            c[0] = c[0] + 1
-                        else:
-                            return False
-                    return key_add
-
-                query = client.query('test','user')
-                query.where(p.between('age', 20, 30))
-                keys = []
-                query.foreach(limit(100, keys))
-                print(len(keys)) # this will be 100 if the number of matching records > 100
-                client.close()
+            .. include:: examples/query/foreachfalse.py
+                :code: python
         
         .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the query policy
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
@@ -331,83 +192,26 @@ Query Fields and Methods
 
         .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
 
-        .. note::
+        Example: find the first name distribution of users who are 21 or older using \
+        a query aggregation:
 
-            Assume we registered the following Lua module with the cluster as \
-            **stream_udf.lua** using :meth:`aerospike.udf_put`.
+        .. include:: examples/lua/example.lua
+            :code: Lua
 
-            .. code-block:: lua
+        Assume the example code above is in a file called "example.py", and is the same folder as the following script.
 
-                 local function having_ge_threshold(bin_having, ge_threshold)
-                     return function(rec)
-                         debug("group_count::thresh_filter: %s >  %s ?", tostring(rec[bin_having]), tostring(ge_threshold))
-                         if rec[bin_having] < ge_threshold then
-                             return false
-                         end
-                         return true
-                     end
-                 end
+        .. include:: examples/lua/lua.py
+            :code: python
 
-                 local function count(group_by_bin)
-                   return function(group, rec)
-                     if rec[group_by_bin] then
-                       local bin_name = rec[group_by_bin]
-                       group[bin_name] = (group[bin_name] or 0) + 1
-                       debug("group_count::count: bin %s has value %s which has the count of %s", tostring(bin_name), tostring(group[bin_name]))
-                     end
-                     return group
-                   end
-                 end
-
-                 local function add_values(val1, val2)
-                   return val1 + val2
-                 end
-
-                 local function reduce_groups(a, b)
-                   return map.merge(a, b, add_values)
-                 end
-
-                 function group_count(stream, group_by_bin, bin_having, ge_threshold)
-                   if bin_having and ge_threshold then
-                     local myfilter = having_ge_threshold(bin_having, ge_threshold)
-                     return stream : filter(myfilter) : aggregate(map{}, count(group_by_bin)) : reduce(reduce_groups)
-                   else
-                     return stream : aggregate(map{}, count(group_by_bin)) : reduce(reduce_groups)
-                   end
-                 end
-
-            Find the first name distribution of users in their twenties using \
-            a query aggregation:
-
-            .. code-block:: python
-
-                import aerospike
-                from aerospike import predicates as p
-                import pprint
-
-                config = {'hosts': [('127.0.0.1', 3000)],
-                          'lua': {'system_path':'/usr/local/aerospike/lua/',
-                                  'user_path':'/usr/local/aerospike/usr-lua/'}}
-                client = aerospike.client(config).connect()
-
-                pp = pprint.PrettyPrinter(indent=2)
-                query = client.query('test', 'users')
-                query.where(p.between('age', 20, 29))
-                query.apply('stream_udf', 'group_count', [ 'first_name' ])
-                names = query.results()
-                # we expect a dict (map) whose keys are names, each with a count value
-                pp.pprint(names)
-                client.close()
-
-            With stream UDFs, the final reduce steps (which ties
-            the results from the reducers of the cluster nodes) executes on the
-            client-side. Explicitly setting the Lua ``user_path`` in the
-            config helps the client find the local copy of the module
-            containing the stream UDF. The ``system_path`` is constructed when
-            the Python package is installed, and contains system modules such
-            as ``aerospike.lua``, ``as.lua``, and ``stream_ops.lua``.
-            The default value for the Lua ``system_path`` is
-            ``/usr/local/aerospike/lua``.
+        With stream UDFs, the final reduce steps (which ties
+        the results from the reducers of the cluster nodes) executes on the
+        client-side. Explicitly setting the Lua ``user_path`` in the
+        config helps the client find the local copy of the module
+        containing the stream UDF. The ``system_path`` is constructed when
+        the Python package is installed, and contains system modules such
+        as ``aerospike.lua``, ``as.lua``, and ``stream_ops.lua``.
+        The default value for the Lua ``system_path`` is
+        ``/usr/local/aerospike/lua``.
 
     .. method:: add_ops(ops)
 
@@ -419,24 +223,6 @@ Query Fields and Methods
 
         .. note:: 
             Requires server version >= 4.7.0.
-
-        .. code-block:: python
-
-            import aerospike
-            from aerospike_helpers.operations import list_operations
-            from aerospike_helpers.operations import operations
-            query = client.query('test', 'demo')
-
-            ops =  [
-                operations.append(test_bin, 'val_to_append'),
-                list_operations.list_remove_by_index(test_bin, list_index_to_remove, aerospike.LIST_RETURN_NONE)
-            ]
-            query.add_ops(ops)
-
-            id = query.execute_background()
-            client.close()
-
-        For a more comprehensive example, see using a list of write ops with :meth:`Query.execute_background` .
 
     .. method:: execute_background([, policy])
 
@@ -685,8 +471,8 @@ Query Fields and Methods
 
 .. _aerospike_query_policies:
 
-Query Policies
---------------
+Policies
+========
 
 .. object:: policy
 
@@ -776,8 +562,8 @@ Query Policies
 
 .. _aerospike_query_options:
 
-Query Options
---------------
+Options
+=======
 
 .. object:: options
 
