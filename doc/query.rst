@@ -196,7 +196,7 @@ Assume this boilerplate code is run before all examples below:
         .. include:: examples/lua/example.lua
             :code: Lua
 
-        Assume the example code above is in a file called "example.py", and is the same folder as the following script.
+        Assume the example code above is in a file called "example.lua", and is the same folder as the following script.
 
         .. include:: examples/lua/lua.py
             :code: python
