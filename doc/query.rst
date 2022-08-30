@@ -290,52 +290,42 @@ Assume this boilerplate code is run before all examples below:
 
         .. code-block:: python
 
-            # Query 3 pages of 1000 records each.
-
-            import aerospike
+            # After inserting 4 records...
+            # Query 3 pages of 2 records each.
 
             pages = 3
-            page_size = 1000
+            page_size = 2
 
-            query = client.query('test', 'demo')
-            query.max_records = 1000
-
+            query.max_records = 2
             query.paginate()
 
             # NOTE: The number of pages queried and records returned per page can differ
             # if record counts are small or unbalanced across nodes.
             for page in range(pages):
                 records = query.results()
-
                 print("got page: " + str(page))
+
+                # Print records in each page
+                for record in records:
+                    print(record)
 
                 if query.is_done():
                     print("all done")
                     break
-
-            # This id can be used to paginate queries.
+            # got page: 0
+            # (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
+            # (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
+            # got page: 1
+            # (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
+            # (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
+            # got page: 2
+            # all done
 
     .. method:: is_done()
 
         If using query pagination, did the previous paginated or partition_filter query using this query instance return all records?
 
         :return: A :class:`bool` signifying whether this paginated query instance has returned all records.
-
-        .. code-block:: python
-
-            import aerospike
-
-            query = client.query('test', 'demo')
-            query.max_records = 1000
-
-            query.paginate()
-
-            records = query.results(policy=policy)
-
-            if query.is_done():
-                print("all done")
-
-            # This id can be used to monitor the progress of a paginated query.
 
     .. method:: get_partitions_status()
 
@@ -352,41 +342,32 @@ Assume this boilerplate code is run before all examples below:
 
         .. code-block:: python
 
-            # This is an example of resuming a query using partition status.
-            import aerospike
+            # Only read 2 records
 
-
-            for i in range(15):
-                key = ("test", "demo", i)
-                bins = {"id": i}
-                client.put(key, bins)
-
-            records = []
-            resumed_records = []
-
-            def callback(input_tuple):
-                record, _, _ = input_tuple
-
-                if len(records) == 5:
+            recordCount = 0
+            def callback(record):
+                global recordCount
+                if recordCount == 2:
                     return False
+                recordCount += 1
 
-                records.append(record)
+                print(record)
 
+            # Query is set to read ALL records
             query = client.query("test", "demo")
             query.paginate()
-
             query.foreach(callback)
+            # (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
+            # (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
 
-            # The first query should stop after 5 records.
-            assert len(records) == 5
 
+            # Use this to resume query where we left off
             partition_status = query.get_partitions_status()
 
-            def resume_callback(part_id, input_tuple):
-                record, _, _ = input_tuple
-                resumed_records.append(record)
-
-            query_resume = client.query("test", "demo")
+            # Callback must include partition_id parameter
+            # if partition_filter is included in policy
+            def resume_callback(partition_id, record):
+                print(partition_id, "->", record)
 
             policy = {
                 "partition_filter": {
@@ -394,16 +375,9 @@ Assume this boilerplate code is run before all examples below:
                 },
             }
 
-            query_resume.foreach(resume_callback, policy)
-
-            # should be 15
-            total_records = len(records) + len(resumed_records)
-            print(total_records)
-
-            # cleanup
-            for i in range(15):
-                key = ("test", "demo", i)
-                client.remove(key)
+            query.foreach(resume_callback, policy)
+            # 1096 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
+            # 3690 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
 
 .. _aerospike_query_policies:
 
