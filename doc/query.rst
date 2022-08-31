@@ -9,25 +9,49 @@
 Overview
 ========
 
-The query object created by calling :meth:`aerospike.query` is used for executing queries over a secondary index of a specified set. \
-This set can be ommitted or be set to :py:obj:`None`. \
-The :py:obj:`None` set contains those records which are not part of any named set.
+Constructing A Query
+--------------------
 
-The query can (optionally) be assigned either the \
-:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals` predicate using :meth:`~aerospike.Query.where`. \
-Otherwise, a query without a predicate will match all the records in the given set, \
+The query object is used for executing queries over a secondary index of a specified set.
+It can be created by calling :meth:`aerospike.Client.query`.
+
+A query without a secondary index filter will apply to all records in the namespace,
 similar to a :class:`~aerospike.Scan`.
 
-The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background`. \
-The returned bins can be filtered by using :meth:`select`.
+Otherwise, the query can optionally be assigned one of the secondary index filters in :mod:`aerospike.predicates`
+to filter out records using their bin values.
+These secondary index filters are applied to the query using :meth:`~aerospike.Query.where`.
+In this case, if the set is initialized to :py:obj:`None`, then the query will only apply to records without a set.
+
+.. note::
+    The secondary index filters in :mod:`aerospike.predicates` are **not** the same as
+    the deprecated `predicate expressions <https://docs.aerospike.com/server/guide/predicate>`_.
+    For more details, read this `guide <https://docs.aerospike.com/server/guide/query>`_.
+
+Writing Using Query
+-------------------
 
 If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, \
 they will be applied to each record processed by the query. \
-See available write operations at :mod:`aerospike_helpers`.
+See available write operations at :mod:`aerospike_helpers.operations`.
 
-Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
+Query Aggregations
+------------------
+
+A `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
+
+Getting Results From Query
+--------------------------
+
+The returned bins can be filtered by using :meth:`select`.
+
+Finally, the query is invoked using one of these methods:
+
+- :meth:`~aerospike.Query.foreach`
+- :meth:`~aerospike.Query.results`
+- :meth:`~aerospike.Query.execute_background`
 
 .. seealso::
     `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
@@ -175,8 +199,6 @@ Assume this boilerplate code is run before all examples below:
             # should be [1000, 1001, 1002, 1003]
             print(partitions)
 
-
-
     .. method:: apply(module, function[, arguments])
 
         Aggregate the :meth:`results` using a stream \
@@ -198,7 +220,7 @@ Assume this boilerplate code is run before all examples below:
         .. include:: examples/lua/example.lua
             :code: Lua
 
-        Assume the example code above is in a file called "example.py", and is the same folder as the following script.
+        Assume the example code above is in a file called "example.lua", and is the same folder as the following script.
 
         .. include:: examples/lua/lua.py
             :code: python
@@ -235,112 +257,50 @@ Assume this boilerplate code is run before all examples below:
 
         .. code-block:: python
 
-            # Using a record UDF
-            import aerospike
-            query = client.query('test', 'demo')
-            query.apply('myudfs', 'myfunction', ['a', 1])
-            query_id = query.execute_background()
-            # This id can be used to monitor the progress of the background query
+            # EXAMPLE 1: Increase everyone's score by 100
 
-        .. code-block:: python
+            from aerospike_helpers.operations import operations
+            ops = [
+                operations.increment("score", 100)
+            ]
+            query.add_ops(ops)
+            id = query.execute_background()
 
-            # Using a list of write ops.
-            import aerospike
-            from aerospike import predicates
-            from aerospike import exception as ex
-            from aerospike_helpers.operations import list_operations
-            import sys
+            # Allow time for query to complete
             import time
+            time.sleep(3)
 
-            # Configure the client.
-            config = {"hosts": [("127.0.0.1", 3000)]}
+            for key in keyTuples:
+                _, _, bins = client.get(key)
+                print(bins)
+            # {"score": 200, "elo": 1400}
+            # {"score": 120, "elo": 1500}
+            # {"score": 110, "elo": 1100}
+            # {"score": 300, "elo": 900}
 
-            # Create a client and connect it to the cluster.
-            try:
-                client = aerospike.client(config).connect()
-            except ex.ClientError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
+            # EXAMPLE 2: Increase score by 100 again for those with elos > 1000
+            # Use write policy to select players by elo
+            import aerospike_helpers.expressions as expr
+            eloGreaterOrEqualTo1000 = expr.GE(expr.IntBin("elo"), 1000).compile()
+            writePolicy = {
+                "expressions": eloGreaterOrEqualTo1000
+            }
+            id = query.execute_background(policy=writePolicy)
 
-            TEST_NS = "test"
-            TEST_SET = "demo"
-            nested_list = [{"name": "John", "id": 100}, {"name": "Bill", "id": 200}]
-            # Write the records.
-            try:
-                keys = [(TEST_NS, TEST_SET, i) for i in range(5)]
-                for i, key in enumerate(keys):
-                    client.put(key, {"account_number": i, "members": nested_list})
-            except ex.RecordError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
+            time.sleep(3)
 
-            # EXAMPLE 1: Append a new account member to all accounts.
-            try:
-                new_member = {"name": "Cindy", "id": 300}
-
-                ops = [list_operations.list_append("members", new_member)]
-
-                query = client.query(TEST_NS, TEST_SET)
-                query.add_ops(ops)
-                id = query.execute_background()
-                # allow for query to complete
-                time.sleep(3)
-                print("EXAMPLE 1")
-
-                for i, key in enumerate(keys):
-                    _, _, bins = client.get(key)
-                    print(bins)
-            except ex.ClientError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-
-            # EXAMPLE 2: Remove a member from a specific account using predicates.
-            try:
-                # Add index to the records for use with predex.
-                client.index_integer_create(
-                    TEST_NS, TEST_SET, "account_number", "test_demo_account_number_idx"
-                )
-
-                ops = [
-                    list_operations.list_remove_by_index("members", 0, aerospike.LIST_RETURN_NONE)
-                ]
-
-                query = client.query(TEST_NS, TEST_SET)
-                number_predicate = predicates.equals("account_number", 3)
-                query.where(number_predicate)
-                query.add_ops(ops)
-                id = query.execute_background()
-                # allow for query to complete
-                time.sleep(3)
-                print("EXAMPLE 2")
-
-                for i, key in enumerate(keys):
-                    _, _, bins = client.get(key)
-                    print(bins)
-            except ex.ClientError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
+            for i, key in enumerate(keyTuples):
+                _, _, bins = client.get(key)
+                print(bins)
+            # {"score": 300, "elo": 1400} <--
+            # {"score": 220, "elo": 1500} <--
+            # {"score": 210, "elo": 1100} <--
+            # {"score": 300, "elo": 900}
 
             # Cleanup and close the connection to the Aerospike cluster.
-            for i, key in enumerate(keys):
+            for key in keyTuples:
                 client.remove(key)
-            client.index_remove(TEST_NS, "test_demo_account_number_idx")
             client.close()
-
-            """
-            EXPECTED OUTPUT:
-            EXAMPLE 1
-            {'account_number': 0, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 1, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 2, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 3, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 4, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            EXAMPLE 2
-            {'account_number': 0, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 1, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 2, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 3, 'members': [{'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            {'account_number': 4, 'members': [{'name': 'John', 'id': 100}, {'name': 'Bill', 'id': 200}, {'name': 'Cindy', 'id': 300}]}
-            """
 
     .. method:: paginate()
 
@@ -354,52 +314,42 @@ Assume this boilerplate code is run before all examples below:
 
         .. code-block:: python
 
-            # Query 3 pages of 1000 records each.
-
-            import aerospike
+            # After inserting 4 records...
+            # Query 3 pages of 2 records each.
 
             pages = 3
-            page_size = 1000
+            page_size = 2
 
-            query = client.query('test', 'demo')
-            query.max_records = 1000
-
+            query.max_records = 2
             query.paginate()
 
             # NOTE: The number of pages queried and records returned per page can differ
             # if record counts are small or unbalanced across nodes.
             for page in range(pages):
                 records = query.results()
-
                 print("got page: " + str(page))
+
+                # Print records in each page
+                for record in records:
+                    print(record)
 
                 if query.is_done():
                     print("all done")
                     break
-
-            # This id can be used to paginate queries.
+            # got page: 0
+            # (('test', 'demo', None, bytearray(b'HD\xd1\xfa$L\xa0\xf5\xa2~\xd6\x1dv\x91\x9f\xd6\xfa\xad\x18\x00')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
+            # (('test', 'demo', None, bytearray(b'f\xa4\t"\xa9uc\xf5\xce\x97\xf0\x16\x9eI\xab\x89Q\xb8\xef\x0b')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
+            # got page: 1
+            # (('test', 'demo', None, bytearray(b'\xb6\x9f\xf5\x7f\xfarb.IeaVc\x17n\xf4\x9b\xad\xa7T')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
+            # (('test', 'demo', None, bytearray(b'j>@\xfe\xe0\x94\xd5?\n\xd7\xc3\xf2\xd7\x045\xbc*\x07 \x1a')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
+            # got page: 2
+            # all done
 
     .. method:: is_done()
 
         If using query pagination, did the previous paginated or partition_filter query using this query instance return all records?
 
         :return: A :class:`bool` signifying whether this paginated query instance has returned all records.
-
-        .. code-block:: python
-
-            import aerospike
-
-            query = client.query('test', 'demo')
-            query.max_records = 1000
-
-            query.paginate()
-
-            records = query.results(policy=policy)
-
-            if query.is_done():
-                print("all done")
-
-            # This id can be used to monitor the progress of a paginated query.
 
     .. method:: get_partitions_status()
 
@@ -416,41 +366,32 @@ Assume this boilerplate code is run before all examples below:
 
         .. code-block:: python
 
-            # This is an example of resuming a query using partition status.
-            import aerospike
+            # Only read 2 records
 
-
-            for i in range(15):
-                key = ("test", "demo", i)
-                bins = {"id": i}
-                client.put(key, bins)
-
-            records = []
-            resumed_records = []
-
-            def callback(input_tuple):
-                record, _, _ = input_tuple
-
-                if len(records) == 5:
+            recordCount = 0
+            def callback(record):
+                global recordCount
+                if recordCount == 2:
                     return False
+                recordCount += 1
 
-                records.append(record)
+                print(record)
 
+            # Query is set to read ALL records
             query = client.query("test", "demo")
             query.paginate()
-
             query.foreach(callback)
+            # (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 10, 'elo': 1100})
+            # (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 20, 'elo': 1500})
 
-            # The first query should stop after 5 records.
-            assert len(records) == 5
 
+            # Use this to resume query where we left off
             partition_status = query.get_partitions_status()
 
-            def resume_callback(part_id, input_tuple):
-                record, _, _ = input_tuple
-                resumed_records.append(record)
-
-            query_resume = client.query("test", "demo")
+            # Callback must include partition_id parameter
+            # if partition_filter is included in policy
+            def resume_callback(partition_id, record):
+                print(partition_id, "->", record)
 
             policy = {
                 "partition_filter": {
@@ -458,16 +399,9 @@ Assume this boilerplate code is run before all examples below:
                 },
             }
 
-            query_resume.foreach(resume_callback, policy)
-
-            # should be 15
-            total_records = len(records) + len(resumed_records)
-            print(total_records)
-
-            # cleanup
-            for i in range(15):
-                key = ("test", "demo", i)
-                client.remove(key)
+            query.foreach(resume_callback, policy)
+            # 1096 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 100, 'elo': 1400})
+            # 3690 -> (('test', 'demo', None, bytearray(b'...')), {'ttl': 2591996, 'gen': 1}, {'score': 200, 'elo': 900})
 
 .. _aerospike_query_policies:
 
@@ -512,7 +446,7 @@ Policies
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. \
              The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
-            | If ``total_timeout`` is not ``0`` ``total_timeout`` is reached before the transaction completes, the transaction will return error \
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error \
              ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``0``

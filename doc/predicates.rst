@@ -8,6 +8,8 @@
     :platform: 64-bit Linux and OS X
     :synopsis: Query predicate helper functions.
 
+These methods are secondary index filters that can be applied to the :class:`aerospike.Query` class.
+
 Bin Predicates
 ==============
 
