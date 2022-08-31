@@ -4,8 +4,6 @@
 :mod:`aerospike.predicates` --- Query Predicates
 *************************************************
 
-.. deprecated:: Using query predicates are now deprecated. Please use expressions instead. See :class:`aerospike.Query` for usage.
-
 .. module:: aerospike.predicates
     :platform: 64-bit Linux and OS X
     :synopsis: Query predicate helper functions.
