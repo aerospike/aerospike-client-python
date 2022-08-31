@@ -1313,10 +1313,7 @@ Scan and Query Constructors
         Return a :class:`aerospike.Query` object to be used for executing queries
         over a specified set in a namespace.
         
-        (which can be omitted or :py:obj:`None`)
-        If the set is omitted or set to :py:obj:`None`, the object returns records **not in any \
-        named set**. This is different than the meaning of a :py:obj:`None` set in \
-        a scan.
+        See :ref:`aerospike.Query` for more details.
 
         :param str namespace: the namespace in the aerospike cluster.
         :param str set: optional specified set name, otherwise the records \

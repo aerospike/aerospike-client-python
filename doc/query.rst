@@ -9,25 +9,49 @@
 Overview
 ========
 
-The query object created by calling :meth:`aerospike.query` is used for executing queries over a secondary index of a specified set. \
-This set can be ommitted or be set to :py:obj:`None`. \
-The :py:obj:`None` set contains those records which are not part of any named set.
+Constructing A Query
+--------------------
 
-The query can (optionally) be assigned either the \
-:meth:`~aerospike.predicates.between` or :meth:`~aerospike.predicates.equals` predicate using :meth:`~aerospike.Query.where`. \
-Otherwise, a query without a predicate will match all the records in the given set, \
+The query object is used for executing queries over a secondary index of a specified set.
+It can be created by calling :meth:`aerospike.Client.query`.
+
+A query without a secondary index filter will apply to all records in the namespace,
 similar to a :class:`~aerospike.Scan`.
 
-The query is invoked using :meth:`~aerospike.Query.foreach`, :meth:`~aerospike.Query.results`, or :meth:`~aerospike.Query.execute_background`. \
-The returned bins can be filtered by using :meth:`select`.
+Otherwise, the query can optionally be assigned one of the secondary index filters in :mod:`aerospike.predicates`
+to filter out records using their bin values.
+These secondary index filters are applied to the query using :meth:`~aerospike.Query.where`.
+In this case, if the set is initialized to :py:obj:`None`, then the query will only apply to records without a set.
+
+.. note::
+    The secondary index filters in :mod:`aerospike.predicates` are **not** the same as
+    the deprecated `predicate expressions <https://docs.aerospike.com/server/guide/predicate>`_.
+    For more details, read this `guide <https://docs.aerospike.com/server/guide/query>`_.
+
+Writing Using Query
+-------------------
 
 If a list of write operations is added to the query with :meth:`~aerospike.Query.add_ops`, \
 they will be applied to each record processed by the query. \
-See available write operations at :mod:`aerospike_helpers`.
+See available write operations at :mod:`aerospike_helpers.operations`.
 
-Finally, a `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
+Query Aggregations
+------------------
+
+A `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
+
+Getting Results From Query
+--------------------------
+
+The returned bins can be filtered by using :meth:`select`.
+
+Finally, the query is invoked using one of these methods:
+
+- :meth:`~aerospike.Query.foreach`
+- :meth:`~aerospike.Query.results`
+- :meth:`~aerospike.Query.execute_background`
 
 .. seealso::
     `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
@@ -422,7 +446,7 @@ Policies
             | The total_timeout is tracked on the client and sent to the server along with the transaction in the wire protocol. \
              The client will most likely timeout first, but the server also has the capability to timeout the transaction.
             |
-            | If ``total_timeout`` is not ``0`` ``total_timeout`` is reached before the transaction completes, the transaction will return error \
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the transaction completes, the transaction will return error \
              ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
             | Default: ``0``
