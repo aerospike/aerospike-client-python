@@ -226,11 +226,11 @@ class TestExpressions(TestBaseClass):
         expr = BoolBin("t")
         ops = [
             operations.write("t", True),
-            expressions.expression_read("", expr.compile())
+            expressions.expression_read("test", expr.compile())
         ]
         _, _, res = test_client.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
         test_client.close()
-        assert res[""]
+        assert res["test"]
 
     def test_bool_bin_false(self):
         if self.server_version < [5, 6]:
@@ -244,11 +244,11 @@ class TestExpressions(TestBaseClass):
         expr = Not(BoolBin("t"))
         ops = [
             operations.write("t", True),
-            expressions.expression_read("", expr.compile())
+            expressions.expression_read("test", expr.compile())
         ]
         _, _, res = test_client.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
         test_client.close()
-        assert not res[""]
+        assert not res["test"]
 
     def test_exclusive_pos(self):
         if self.server_version < [5, 6]:

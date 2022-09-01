@@ -1,94 +1,30 @@
-.. _aerospike.scan:
+.. _aerospike.Scan:
 
 .. currentmodule:: aerospike
 
-=================================
-Scan Class --- :class:`Scan`
-=================================
+======================================
+:class:`aerospike.Scan` --- Scan Class
+======================================
 
-:class:`Scan`
-===============
+.. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
-    .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
+Overview
+========
 
-    The Scan object is used to return all the records in a specified set (which \
-    can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
-    records in the namespace.
+The Scan object is used to return all the records in a specified set (which \
+can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
+records in the namespace.
 
-    The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
-    bins returned can be filtered using :meth:`select`.
+The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
+bins returned can be filtered using :meth:`select`.
 
-    .. seealso::
-        `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
-        `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
+.. seealso::
+    `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
+    `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
 
-    .. note::
-        Python client versions >= 5.0.0 Supports Aerospike expressions for results, foreach, and execute_background see :ref:`aerospike_operation_helpers.expressions`.
-        Requires server version >= 5.2.0.
+Methods
+=======
 
-        .. code-block:: python
-
-            import aerospike
-            from aerospike_helpers import expressions as exp
-            from aerospike import exception as ex
-            import sys
-            import time
-
-            config = { 'hosts': [('127.0.0.1', 3000)]}
-            client = aerospike.client(config).connect()
-
-            # register udf
-            try:
-                client.udf_put('/path/to/my_udf.lua')
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                client.close()
-                sys.exit(1)
-
-            # put records and run scan
-            try:
-                keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
-                records = [{'number': 1}, {'number': 2}, {'number': 3}]
-                for i in range(3):
-                    client.put(keys[i], records[i])
-
-                scan = client.scan('test', 'demo')
-
-                # check that the record has value < 2 or value == 3 in bin 'name'
-                expr = exp.Or(
-                    exp.LT(exp.IntBin("number"), 2),
-                    exp.Eq(exp.IntBin("number"), 3)
-                ).compile()
-
-                policy = {
-                    'expressions': expr
-                }
-
-                records = scan.results(policy)
-                print(records)
-            except ex.AerospikeError as e:
-                print("Error: {0} [{1}]".format(e.msg, e.code))
-                sys.exit(1)
-            finally:
-                client.close()
-            # the scan only returns records that match the expressions
-            # EXPECTED OUTPUT:
-            # [
-            #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 1}),
-            #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 3})
-            # ]
-        
-        .. code-block:: python
-
-            # contents of my_udf.lua
-            function my_udf(rec, bin, offset)
-                info("my transform: %s", tostring(record.digest(rec)))
-                rec[bin] = rec[bin] + offset
-                aerospike:update(rec)
-            end
-
-Scan Methods
--------------
 .. class:: Scan
 
     .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
@@ -531,8 +467,8 @@ Scan Methods
 
 .. _aerospike_scan_policies:
 
-Scan Policies
--------------
+Policies
+========
 
 .. object:: policy
 
@@ -624,8 +560,8 @@ Scan Policies
 
 .. _aerospike_scan_options:
 
-Scan Options
-------------
+Options
+=======
 
 .. object:: options
 

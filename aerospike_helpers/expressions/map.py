@@ -17,11 +17,6 @@
 Map expressions contain expressions for reading and modifying Maps. Most of
 these operations are from the stadard :mod:`Map API <aerospike_helpers.operations.map_operations>`.
 
-Example::
-
-    import aerospike_helpers.expressions as exp
-    #Take the size of map bin "b".
-    expr = exp.MapSize(None, exp.MapBin("b")).compile()
 '''
 
 #from __future__ import annotations
@@ -68,8 +63,8 @@ class MapPut(_BaseExpr):
 
             Example::
 
-                # Put {27: 'key27'} into map bin "b".
-                expr = exp.MapPut(None, None, 27, 'key27', exp.MapBin("b")).compile()
+                # Put {"key": 27} into map bin "b".
+                expr = exp.MapPut(None, None, "key", 27, exp.MapBin("b")).compile()
         """
         self._children = (
             key,
@@ -102,7 +97,7 @@ class MapPutItems(_BaseExpr):
             Example::
 
                 # Put {27: 'key27', 28: 'key28'} into map bin "b".
-                expr = exp.MapPut(None, None, {27: 'key27', 28: 'key28'}, exp.MapBin("b")).compile()
+                expr = exp.MapPutItems(None, None, {27: 'key27', 28: 'key28'}, exp.MapBin("b")).compile()
         """
         self._children = (
             map,
@@ -252,7 +247,7 @@ class MapRemoveByKeyRange(_BaseExpr):
             Example::
 
                 # Remove elements at keys between 1 and 10 in map bin "b".
-                expr = exp.MapRemoveByKeyRange(None, 1, 10 exp.MapBin("b")).compile()
+                expr = exp.MapRemoveByKeyRange(None, 1, 10, exp.MapBin("b")).compile()
         """
         self._children = (
             begin,
@@ -280,9 +275,9 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
 
             Example::
 
-                # Map bin "b" has {"key1": 1, "key2": 2, "key3": 3, "key4": 4}.
-                # Remove each element where the key has greater index than "key1".
-                expr = exp.MapRemoveByKeyRelIndexRangeToEnd(None, "key1", 1, exp.MapBin("b")).compile()
+                # {"key1": 1, "key2": 2, "key3": 3, "key4": 10}
+                expr = exp.MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, "key2", 1, exp.MapBin("b")).compile()
+                # [3, 10]
         """
         self._children = (
             key,
@@ -311,8 +306,10 @@ class MapRemoveByKeyRelIndexRange(_BaseExpr):
 
             Example::
 
-                # Remove 3 elements with keys greater than "key1" from map bin "b".
-                expr = exp.MapRemoveByKeyRelIndexRange(None, "key1", 1, 3, exp.MapBin("b")).compile()
+                # Remove the next two items after key1
+                # {"key1": 1, "key2": 2, "key3": 3, "key4": 10}
+                expr = exp.MapRemoveByKeyRelIndexRange(None, "key1", 1, 2, exp.MapBin("b")).compile()
+                # {"key1": 1, "key4": 10}
         """
         self._children = (
             key,
@@ -459,8 +456,8 @@ class MapRemoveByValueRelRankRange(_BaseExpr):
 
             Example::
 
-                # Remove the next 4 elements larger than 3 from map bin "b".
-                expr = exp.MapRemoveByValueRelRankRangeToEnd(None, 3, 1, 4, exp.MapBin("b")).compile()
+                # Remove the key with a value just lower than 17
+                expr = exp.MapRemoveByValueRelRankRange(None, 17, -1, 1, exp.MapBin("b")).compile()
         """
         self._children = (
             value,
@@ -558,7 +555,7 @@ class MapRemoveByIndexRange(_BaseExpr):
 
 
 class MapRemoveByRank(_BaseExpr):
-    """Create an expression that removes map item identified by rank."""
+    """Create an expression that removes map item identified by its value's rank."""
     _op = aerospike.OP_MAP_REMOVE_BY_RANK
 
     def __init__(self, ctx: 'TypeCTX', rank: 'TypeRank', bin: 'TypeBinName'):
@@ -571,7 +568,7 @@ class MapRemoveByRank(_BaseExpr):
 
             Example::
 
-                # Remove smallest value in map bin "b".
+                # Remove key with smallest value in map bin "b".
                 expr = exp.MapRemoveByRank(None, 0, exp.MapBin("b")).compile()
         """
         self._children = (
@@ -598,7 +595,7 @@ class MapRemoveByRankRangeToEnd(_BaseExpr):
 
             Example::
 
-                # Remove the 2 largest elements from map bin "b".
+                # Remove keys with 2 largest values from map bin "b".
                 expr = exp.MapRemoveByRankRangeToEnd(None, -2, exp.MapBin("b")).compile()
         """
         self._children = (
@@ -626,7 +623,7 @@ class MapRemoveByRankRange(_BaseExpr):
 
             Example::
 
-                # Remove the 3 smallest items from map bin "b".
+                # Remove 3 keys with the smallest values from map bin "b".
                 expr = exp.MapRemoveByRankRange(None, 0, 3, exp.MapBin("b")).compile()
         """
         self._children = (
@@ -821,8 +818,11 @@ class MapGetByKeyRelIndexRange(_BaseExpr):
 
             Example::
 
-                # Get the next 2 elements with keys larger than "key3" from map bin "b".
-                expr = exp.MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, "key3", 1, 2, exp.MapBin("b")).compile()
+                expr = exp.MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, "key2", 0, 2, exp.MapBin("b")).compile()
+                # [2, 3]
+                expr = exp.MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, "key2", 1, 2, exp.MapBin("b")).compile()
+                # [3, 10]
+
         """
         self._children = (
             key,
@@ -993,8 +993,10 @@ class MapGetByValueRelRankRange(_BaseExpr):
 
             Example::
 
-                # Get the next 2 values in map bin "b" larger than 3.
-                expr = exp.MapGetByValueRelRankRange(None, aerospike.MAP_RETURN_VALUE, 3, 1, 2, exp.MapBin("b")).compile()
+                # {"key1": 1, "key2": 2, "key3": 3, "key4": 10}
+                # Get next two largest values greater than a value of 1
+                expr = exp.MapGetByValueRelRankRange(None, aerospike.MAP_RETURN_VALUE, 1, 1, 2, exp.MapBin("b")).compile()
+                # [2, 3]
         """
         self._children = (
             value,

@@ -529,10 +529,21 @@ PyObject *AerospikeException_New(void)
 	Py_INCREF(exceptions_array.QueryTimeout);
 	PyModule_AddObject(module, "QueryTimeout", exceptions_array.QueryTimeout);
 	py_code = PyInt_FromLong(AEROSPIKE_ERR_QUERY_TIMEOUT);
-	PyObject_SetAttrString(exceptions_array.QueryQueueFull, "code", py_code);
+	PyObject_SetAttrString(exceptions_array.QueryTimeout, "code", py_code);
 	Py_DECREF(py_code);
 
 	return module;
+}
+
+void remove_exception(as_error *err)
+{
+	PyObject *py_key = NULL, *py_value = NULL;
+	Py_ssize_t pos = 0;
+	PyObject *py_module_dict = PyModule_GetDict(module);
+
+	while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
+		Py_DECREF(py_value);
+	}
 }
 
 PyObject *raise_exception(as_error *err)

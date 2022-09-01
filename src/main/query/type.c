@@ -57,10 +57,11 @@ PyDoc_STRVAR(select_doc, "select(bin1[, bin2[, bin3..]])\n\
 Set a filter on the record bins resulting from results() or foreach(). \
 If a selected bin does not exist in a record it will not appear in the bins portion of that record tuple.");
 
-PyDoc_STRVAR(where_doc, "where(predicate)\n\
+PyDoc_STRVAR(where_doc, "where(predicate[, cdt_ctx])\n\
 \n\
 Set a where predicate for the query, without which the query will behave similar to aerospike.Scan. \
-The predicate is produced by one of the aerospike.predicates methods equals() and between().");
+The predicate is produced by one of the aerospike.predicates methods equals() and between(). \
+The list cdt_ctx is produced by one of the aerospike_helpers.cdt_ctx methods");
 
 PyDoc_STRVAR(execute_background_doc,
 			 "execute_background([policy]) -> list of (key, meta, bins)\n\
@@ -234,6 +235,12 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
 			if (p->dtype == AS_INDEX_STRING ||
 				p->dtype == AS_INDEX_GEO2DSPHERE) {
 				free(p->value.string);
+			}
+		}
+		if(i == 0){
+			if(p->ctx){
+				as_cdt_ctx_destroy(p->ctx);
+				cf_free(p->ctx);
 			}
 		}
 	}

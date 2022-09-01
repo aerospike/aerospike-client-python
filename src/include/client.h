@@ -595,6 +595,15 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
 											  PyObject *args, PyObject *kwds);
 
 /**
+ * Create secondary cdt index
+ *
+ *		client.index_cdt_create(namespace, set, bin, index_name, ctx, policy)
+ *
+ */
+PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
+											  PyObject *args, PyObject *kwds);
+
+/**
  * Create secondary geospatial index
  *
  *		client.index_2dsphere_create(namespace, set, bin, index_name, policy)
