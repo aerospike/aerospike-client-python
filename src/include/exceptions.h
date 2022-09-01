@@ -20,3 +20,4 @@
 
 PyObject *AerospikeException_New(void);
 PyObject *raise_exception(as_error *err);
+void remove_exception(as_error *err);

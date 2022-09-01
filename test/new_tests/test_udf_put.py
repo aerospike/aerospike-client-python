@@ -206,7 +206,7 @@ class TestUdfPut(TestBaseClass):
         with pytest.raises(TypeError) as exception:
             self.as_connection.udf_put(None, None, None)
 
-        assert "an integer is required" in str(exception.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(exception.value)
 
     @pytest.mark.parametrize(
         "filename, ftype, policy",

@@ -16,11 +16,6 @@
 '''
 Arithmetic expressions provide arithmetic operator support for Aerospike expressions.
 
-Example::
-
-    import aerospike_helpers.expressions as exp
-    # Add integer bin "a" to integer bin "b" and see if the result is > 20.
-    expr = exp.GT(exp.Add(exp.IntBin("a"), exp.IntBin("b")), 20).compile()
 '''
 
 #from __future__ import annotations
@@ -304,6 +299,7 @@ class Floor(_BaseExpr):
             expr = exp.Eq(exp.Floor(2.25), 2.0).compile()
 
             # Using operator overloading
+            import math
             expr = exp.Eq(math.floor(2.25), 2.0).compile()
         """
         self._children = (value,)
@@ -333,6 +329,7 @@ class Ceil(_BaseExpr):
             expr = exp.Eq(exp.Ceil(2.25), 3.0).compile()
 
             # Using operator overloading
+            import math
             expr = exp.Eq(math.ceil(2.25), 3.0).compile()
         """
         self._children = (value,)

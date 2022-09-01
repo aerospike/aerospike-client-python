@@ -3,17 +3,24 @@
 aerospike\_helpers\.expressions package
 =======================================
 
-Classes for the creation and use of Aerospike Expressions. See:: `Aerospike Expressions <https://www.aerospike.com/docs/guide/expressions/>`_.
+Classes for the creation and use of Aerospike expressions.
 
-Aerospike Expressions are a small domain specific language that allow for filtering
+Overview
+--------
+
+Aerospike expressions are a small domain specific language that allow for filtering
 records in transactions by manipulating and comparing bins and record metadata.
 Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
+.. note::
+  See `Aerospike Expressions <https://www.aerospike.com/docs/guide/expressions/>`_.
+
 In the Python client, Aerospike expressions are built using a series of classes that represent
 comparison and logical operators, bins, metadata operations, and bin operations.
-Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean, such as Eq() or And(), 
-while passing them other expressions and constants as arguments, and finally calling the compile() method. See the example below.
+Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean,
+such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`, 
+while passing them other expressions and constants as arguments, and finally calling the :meth:`compile` method.
 
 Example::
 
@@ -22,138 +29,93 @@ Example::
     expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 
 By passing these compiled expressions to transactions via the "expressions" policy field,
-the expressions will filter the results. See the example below.
+these transactions will filter the results.
 
-Example::
+Example:
 
-    import aerospike
-    from aerospike_helpers import expressions as exp
-    from aerospike import exception as ex
-    import sys
+.. include:: examples/expressions/top.py
+  :code: python
 
-    TEST_NS = "test"
-    TEST_SET = "demo"
-    FIRST_RECORD_INDEX = 0
-    SECOND_RECORD_INDEX = 1
-    BIN_INDEX = 2
+Currently, Aerospike expressions are supported for:
+- Record operations
+- Batch operations
+- Transactions
+- UDF apply methods (apply, scan apply, and query apply)
+- Query invoke methods (foreach, results, execute background)
+- Scan invoke methods (same as query invoke methods)
 
-    # Configure the client.
-    config = {"hosts": [("127.0.0.1", 3000)]}
+Filter Behavior
+---------------
 
-    # Create a client and connect it to the cluster.
-    try:
-        client = aerospike.client(config).connect()
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
+This section describes the behavior of methods when a record is filtered out by an expression.
 
-    # Write records
-    keys = [(TEST_NS, TEST_SET, i) for i in range(1, 5)]
-    records = [
-                {'user': "Chief"     , 'team': "blue", 'scores': [6, 12, 4, 21], 'kd': 1.0,  'status': "MasterPlatinum" },
-                {'user': "Arbiter"   , 'team': "blue", 'scores': [5, 10, 5, 8] , 'kd': 1.0,  'status': "MasterGold"     },
-                {'user': "Johnson"   , 'team': "blue", 'scores': [8, 17, 20, 5], 'kd': 0.99, 'status': "SergeantGold"   },
-                {'user': "Regret"    , 'team': "red" , 'scores': [4, 2, 3, 5]  , 'kd': 0.33, 'status': "ProphetSilver"  }
-            ]
+For:
+  * Record operations
+  * Numeric operations
+  * String operations
+  * Single record transactions
 
-    try:
-        for key, record in zip(keys, records):
-            client.put(key, record)
-    except ex.RecordError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
+An exception :exc:`~aerospike.exception.FilteredOut` is thrown.
 
+For:
+  * :meth:`~aerospike.Client.get_many`
+  * :meth:`~aerospike.Client.exists_many`
+  * :meth:`~aerospike.Client.select_many`
 
-    # EXAMPLE 1: Get records for users who's top scores are above 20 using a scan.
-    try:
-        expr = exp.GT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, exp.ListBin("scores")), # rank -1 == largest value
-                        20).compile()
+The filtered out record's ``meta`` and ``bins`` are both set to :py:obj:`None` .
 
-        scan = client.scan(TEST_NS, TEST_SET)
-        policy = {
-            'expressions': expr
-        }
+For:
+  
+  * :meth:`~aerospike.Client.batch_write` (records filtered out by a batch or batch record policy)
+  * :meth:`~aerospike.Client.batch_operate` (records filtered out by a batch or batch write policy)
+  * :meth:`~aerospike.Client.batch_apply` (records filtered out by a batch or batch apply policy)
 
-        records = scan.results(policy)
-        # This scan will only return the record for "Chief" since it is the only account with a score over 20 using batch get.
-        print(records[FIRST_RECORD_INDEX][BIN_INDEX])
-    except ex.AerospikeError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
+The filtered out record's:
 
-    # EXPECTED OUTPUT:
-    # {'user': 'Chief', 'team': 'blue', 'scores': [6, 12, 4, 21], 'kd': 1.0, 'status': 'MasterPlatinum'}
+    * ``BatchRecord.record`` is set to :py:obj:`None`
+    * ``BatchRecord.result`` is set to ``27``
 
+For :meth:`~aerospike.Client.batch_get_ops`, the filtered out record's:
 
-    # EXAMPLE 2: Get player's records with a kd >= 1.0 with a status including "Gold".
-    try:
-        expr = exp.And(
-            exp.CmpRegex(aerospike.REGEX_ICASE, '.*Gold', exp.StrBin('status')),
-            exp.GE(exp.FloatBin("kd"), 1.0)).compile()
+  * ``meta`` is set to :py:exc:`~aerospike.exception.FilteredOut`.
+  * ``bins`` is set to :py:obj:`None`.
 
-        policy = {
-            'expressions': expr
-        }
+Terminology
+-----------
 
-        records = client.get_many(keys, policy)
-        # This get_many will only return the record for "Arbiter" since it is the only account with a kd >= 1.0 and Gold status.
-        print(records[SECOND_RECORD_INDEX][BIN_INDEX])
-    except ex.AerospikeError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-    finally:
-        client.close()
+Aerospike expressions are evaluated server side, and expressions used for filtering are called **filter expressions**.
+They do not return any values to the client or write any values to the server.
 
-    # EXPECTED OUTPUT:
-    # {'user': 'Arbiter', 'team': 'blue', 'scores': [5, 10, 5, 8], 'kd': 1.0, 'status': 'MasterGold'}
+When the following documentation says an expression returns a **list expression**,
+it means that the expression returns a list during evalution on the server side.
 
-By nesting expressions, complicated filters can be created. See the example below.
+Expressions used with :meth:`~aerospike_helpers.operations.expression_operations.expression_read`
+or :meth:`~aerospike_helpers.operations.expression_operations.expression_write` do send their return values to the client or write them to the server.
+These expressions are called **operation expressions**.
 
-Example::
+When these docs say that an expression parameter requires an integer or **integer expression**,
+it means it will accept a literal integer or an expression that will return an integer during evaluation.
 
-    from aerospike_helpers import expressions as exp
-    expr = Eq(
-        exp.ListGetByIndexRangeToEnd(ctx, aerospike.LIST_RETURN_VALUE, 0,
-            exp.ListSort(ctx, aerospike.LIST_SORT_DEFAULT,
-                exp.ListAppend(ctx, policy, value_x,
-                    exp.ListAppendItems(ctx, policy, value_y,
-                        exp.ListInsert(ctx, policy, 1, value_z, bin_name))))),
-        expected_answer
-    ),
-
-
+When the docs say that an expression returns an **expression**,
+this means that the data type returned may vary (usually depending on the ``return_type`` parameter).
 
 .. note::
 
-    Aerospike expressions are evaluated server side, expressions used for filtering are called filter-expressions
-    and do not return any values to the client or write any values to the server.
+    Currently, Aerospike expressions for the python client do not support comparing ``as_python_bytes`` blobs.
 
-    When the following documentation says an expression returns a "list expression", it means that the expression returns a
-    list during evalution on the server side.
-
-    Expressions used with expression_read() or expression_write() do send their return values to the client or write them to the server.
-    These expressions are called operation-expressions.
-
-    When these docs say that an expression parameter requires an "integer or integer expression".
-    It means it will accept a literal integer, or an expression that will return an integer during evaluation.
-
-    When the docs say an expression returns an "expression" this means that the data type returned may vary, usually depending on the `return_type` parameter.
-
-.. note::
-
-    Currently, Aerospike expressions for the python client do not support comparing as_python_bytes blobs.
-    Comparisons between constant map values and map expressions are  also unsupported.
+    Comparisons between constant map values and map expressions are also unsupported.
 
 Expression Type Aliases
 -----------------------
-The expressions module documentaiton uses type aliases.
-The following is a table of how the type aliases map to standard types.
 
-.. list-table:: Title
+The following documentation uses type aliases that map to standard Python types.
+
+.. list-table:: Aliases to Standard Python Types
     :widths: 25 75
     :header-rows: 1
 
-    * - Type Name
-      - Type Description
+    * - Alias
+      - Type
     * - AerospikeExpression
       - _BaseExpr
     * - TypeResultType
@@ -206,6 +168,11 @@ The following is a table of how the type aliases map to standard types.
       - Union[_BaseExpr, bool]
 
 .. note:: Requires server version >= 5.2.0
+
+Assume all in-line examples run this code beforehand::
+
+    import aerospike
+    import aerospike_helpers.expressions as exp
 
 aerospike\_helpers\.expressions\.base\ module
 ---------------------------------------------
