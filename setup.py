@@ -31,9 +31,9 @@ import io
 ################################################################################
 # ENVIRONMENT VARIABLES
 ################################################################################
-
-os.putenv('ARCHFLAGS', '-arch x86_64')
-os.environ['ARCHFLAGS'] = '-arch x86_64'
+machine = platform.machine()
+os.putenv('ARCHFLAGS', '-arch ' + machine)
+os.environ['ARCHFLAGS'] = '-arch ' + machine
 AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 AEROSPIKE_C_HOME = os.path.join(BASEPATH, 'aerospike-client-c')
@@ -58,11 +58,12 @@ include_dirs = ['src/include'] + \
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
-    '-march=nocona',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
-    '-DMARCH_x86_64',
+    '-DMARCH_' + machine,
     '-Wno-implicit-function-declaration'
 ]
+if machine == 'x86_64':
+    extra_compile_args.append('-march=nocona')
 extra_objects = []
 extra_link_args = []
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
@@ -96,7 +97,7 @@ if DARWIN:
         '-D_DARWIN_UNLIMITED_SELECT'
     ]
 
-    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Darwin-x86_64'
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Darwin-' + machine
 
 elif LINUX:
     # ---------------------------------------------------------------------------
@@ -106,7 +107,7 @@ elif LINUX:
         '-rdynamic', '-finline-functions'
     ]
     libraries = libraries + ['rt']
-    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-x86_64'
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
