@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+from contextlib import contextmanager
 try:
     import cPickle as pickle
 except:
@@ -18,12 +19,27 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+@contextmanager
+def open_as_connection(config):
+    """
+    Context manager to let us open aerospike connections with
+    specified config
+    """
+    as_connection = TestBaseClass.get_new_connection(config)
+
+    # Connection is setup, so yield it
+    yield as_connection
+
+    # close the connection
+    as_connection.close()
 
 class SomeClass(object):
     pass
 
 
 @pytest.mark.usefixtures("as_connection")
+# adds cls.connection_config to this class
+@pytest.mark.usefixtures("connection_config")
 class TestGetPut():
 
     @pytest.mark.parametrize("_input, _expected", test_data.pos_data)
@@ -114,6 +130,42 @@ class TestGetPut():
         assert key == ('test', 'demo', 1, bytearray(
             b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
         )
+
+    def test_pos_get_initkey_with_client_policy_send(self, put_data):
+        """
+            Invoke get() for a record having string data.
+        """
+
+        key = ('test', 'demo', 1)
+
+        rec = {'name': 'john', 'age': 1}
+
+        put_data(self.as_connection, key, rec)
+
+        key, _, bins = self.as_connection.get(key)
+
+        assert bins == {'name': 'john', 'age': 1}
+        assert key == ('test', 'demo', None, bytearray(
+            b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')
+        )
+
+        config = self.connection_config.copy()
+        config['policies'] = {'read': {'total_timeout': 10000},
+                                'key': aerospike.POLICY_KEY_SEND}
+
+        with open_as_connection(config) as client:
+            assert client is not None
+            assert client.is_connected()
+
+            key = ('test', 'demo', 2)
+            rec = {'name': 'john', 'age': 2}
+
+            put_data(client, key, rec)
+            key, _, bins = client.get(key)
+            assert bins == {'name': 'john', 'age': 2}
+            assert key == ('test', 'demo', 2, bytearray(
+                b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')
+            )
 
     # Negative get tests
     def test_neg_get_with_no_parameter(self):

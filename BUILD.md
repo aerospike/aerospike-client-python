@@ -62,8 +62,6 @@ The dependencies can be installed through the macOS package manager [Homebrew](h
 
 ## Build
 
-    export DOWNLOAD_C_CLIENT=0
-    export AEROSPIKE_C_HOME=$(pwd)/aerospike-client-c
     export STATIC_SSL=1
     # substitute the paths to your OpenSSL 1.1 library
     export SSL_LIB_PATH=/usr/local/Cellar/openssl@1.1/1.1.1l/lib/
