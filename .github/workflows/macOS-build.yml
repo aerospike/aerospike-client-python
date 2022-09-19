@@ -28,6 +28,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build
       run: |
+        brew info openssl
         megaWheel="macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.macosx_10_11_intel.macosx_10_11_x86_64.macosx_10_12_intel.macosx_10_12_x86_64.whl"
         baseWheelName="macosx_10_11_x86_64"
         sslLibPath="/opt/homebrew/Cellar/openssl@1.1/1.1.1q/lib"
