@@ -226,6 +226,35 @@ PyObject *AerospikeException_New(void)
 	PyObject_SetAttrString(exceptions_array.TLSError, "code", py_code);
 	Py_DECREF(py_code);
 
+	// BatchFailed, AEROSPIKE_BATCH_FAILED, -16
+	exceptions_array.BatchFailed = PyErr_NewException(
+		"exception.BatchFailed", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.BatchFailed);
+	PyModule_AddObject(module, "BatchFailed", exceptions_array.BatchFailed);
+	py_code = PyInt_FromLong(AEROSPIKE_BATCH_FAILED);
+	PyObject_SetAttrString(exceptions_array.BatchFailed, "code", py_code);
+	Py_DECREF(py_code);
+
+	// NoResponse, AEROSPIKE_NO_RESPONSE, -15
+	exceptions_array.NoResponse = PyErr_NewException(
+		"exception.NoResponse", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.NoResponse);
+	PyModule_AddObject(module, "NoResponse", exceptions_array.NoResponse);
+	py_code = PyInt_FromLong(AEROSPIKE_NO_RESPONSE);
+	PyObject_SetAttrString(exceptions_array.NoResponse, "code", py_code);
+	Py_DECREF(py_code);
+
+	// max retries exceeded, AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED, -12
+	exceptions_array.MaxRetriesExceeded = PyErr_NewException(
+		"exception.MaxRetriesExceeded", exceptions_array.ClientError, NULL);
+	Py_INCREF(exceptions_array.MaxRetriesExceeded);
+	PyModule_AddObject(module, "MaxRetriesExceeded",
+					   exceptions_array.MaxRetriesExceeded);
+	py_code = PyInt_FromLong(AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED);
+	PyObject_SetAttrString(exceptions_array.MaxRetriesExceeded, "code",
+						   py_code);
+	Py_DECREF(py_code);
+
 	// InvalidNodeError, AEROSPIKE_ERR_INVALID_NODE, -8
 	exceptions_array.InvalidNodeError = PyErr_NewException(
 		"exception.InvalidNodeError", exceptions_array.ClientError, NULL);
@@ -500,10 +529,21 @@ PyObject *AerospikeException_New(void)
 	Py_INCREF(exceptions_array.QueryTimeout);
 	PyModule_AddObject(module, "QueryTimeout", exceptions_array.QueryTimeout);
 	py_code = PyInt_FromLong(AEROSPIKE_ERR_QUERY_TIMEOUT);
-	PyObject_SetAttrString(exceptions_array.QueryQueueFull, "code", py_code);
+	PyObject_SetAttrString(exceptions_array.QueryTimeout, "code", py_code);
 	Py_DECREF(py_code);
 
 	return module;
+}
+
+void remove_exception(as_error *err)
+{
+	PyObject *py_key = NULL, *py_value = NULL;
+	Py_ssize_t pos = 0;
+	PyObject *py_module_dict = PyModule_GetDict(module);
+
+	while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
+		Py_DECREF(py_value);
+	}
 }
 
 PyObject *raise_exception(as_error *err)

@@ -849,10 +849,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
 	as_operations ops;
@@ -862,8 +858,8 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
 	if (py_policy) {
 		if (pyobject_to_policy_operate(
 				self, err, py_policy, &operate_policy, &operate_policy_p,
-				&self->as->config.policies.operate, &predexp_list,
-				&predexp_list_p, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+				&self->as->config.policies.operate, &exp_list,
+				&exp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
@@ -915,10 +911,6 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	as_vector_destroy(unicodeStrVector);
@@ -1038,10 +1030,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
 
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
-
 	/* These are the values which will be returned in a 3 element list */
 	PyObject *py_return_key = NULL;
 	PyObject *py_return_meta = NULL;
@@ -1052,8 +1040,8 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
 	if (py_policy) {
 		if (pyobject_to_policy_operate(
 				self, err, py_policy, &operate_policy, &operate_policy_p,
-				&self->as->config.policies.operate, &predexp_list,
-				&predexp_list_p, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+				&self->as->config.policies.operate, &exp_list,
+				&exp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
@@ -1143,10 +1131,6 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (rec && operation_succeeded) {
@@ -1410,7 +1394,7 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
 
 	// Python Function Keyword Arguments
 	static char *kwlist[] = {"key", "val", "meta", "policy", NULL};
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:touch", kwlist, &py_key,
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OOO:touch", kwlist, &py_key,
 									&py_touchvalue, &py_meta,
 									&py_policy) == false) {
 		return NULL;

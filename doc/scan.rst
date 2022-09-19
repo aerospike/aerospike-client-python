@@ -1,29 +1,33 @@
-.. _aerospike.scan:
+.. _aerospike.Scan:
 
 .. currentmodule:: aerospike
 
-=================================
-Scan Class --- :class:`Scan`
-=================================
+======================================
+:class:`aerospike.Scan` --- Scan Class
+======================================
 
-:class:`Scan`
-===============
+.. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
-    The Scan object is used to return all the records in a specified set (which \
-    can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
-    records in the namespace.
+Overview
+========
 
-    The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
-    bins returned can be filtered using :meth:`select`.
+The Scan object is used to return all the records in a specified set (which \
+can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
+records in the namespace.
 
-    .. seealso::
-        `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
-        `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
+The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
+bins returned can be filtered using :meth:`select`.
 
+.. seealso::
+    `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
+    `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
 
-Scan Methods
--------------
+Methods
+=======
+
 .. class:: Scan
+
+    .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
     .. method:: select(bin1[, bin2[, bin3..]])
 
@@ -125,75 +129,29 @@ Scan Methods
                       bytearray(b'\x1cJ\xce\xa7\xd4Vj\xef+\xdf@W\xa5\xd8o\x8d:\xc9\xf4\xde')),
                     { 'gen': 52, 'ttl': 2592000},
                     { 'a': 1, 'id': 1})]
-        
-        .. note::
-            Python client versions >= 3.10.0 Supports predicate expressions for results, foreach, and execute_background see :mod:`~aerospike.predexp`.
-            Requires server version >= 4.7.0.
 
-            .. code-block:: python
+        .. note:: As of client 7.0.0 and with server >= 6.0 results and the scan policy
+         "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
+         results will scan. See the example below.
 
-                import aerospike
-                from aerospike import predexp
-                from aerospike import exception as ex
-                import sys
-                import time
+         .. code-block:: python
+         
+            # This is an example of scaning partitions 1000 - 1003.
+            import aerospike
 
-                config = { 'hosts': [('127.0.0.1', 3000)]}
-                client = aerospike.client(config).connect()
 
-                # register udf
-                try:
-                    client.udf_put('/path/to/my_udf.lua')
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    client.close()
-                    sys.exit(1)
+            scan = client.scan("test", "demo")
 
-                # put records and run scan
-                try:
-                    keys = [('test', 'demo', 1), ('test', 'demo', 2), ('test', 'demo', 3)]
-                    records = [{'number': 1}, {'number': 2}, {'number': 3}]
-                    for i in range(3):
-                        client.put(keys[i], records[i])
+            policy = {
+                "partition_filter": {
+                    "begin": 1000,
+                    "count": 4
+                },
+            }
 
-                    scan = client.scan('test', 'demo')
-
-                    preds = [ # check that the record has value < 2 or value == 3 in bin 'name'
-                        predexp.integer_bin('number'),
-                        predexp.integer_value(2),
-                        predexp.integer_less(),
-                        predexp.integer_bin('number'),
-                        predexp.integer_value(3),
-                        predexp.integer_equal(),
-                        predexp.predexp_or(2)
-                    ]
-
-                    policy = {
-                        'predexp': preds
-                    }
-
-                    records = scan.results(policy)
-                    print(records)
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    sys.exit(1)
-                finally:
-                    client.close()
-                # the scan only returns records that match the predexp
-                # EXPECTED OUTPUT:
-                # [
-                #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 1}),
-                #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 3})
-                # ]
-            
-            .. code-block:: python
-
-                # contents of my_udf.lua
-                function my_udf(rec, bin, offset)
-                    info("my transform: %s", tostring(record.digest(rec)))
-                    rec[bin] = rec[bin] + offset
-                    aerospike:update(rec)
-                end
+            # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
+            # results will be the records in partitions 1000 - 1003
+            results = scan.results(policy=policy)
 
 
 
@@ -207,7 +165,11 @@ Scan Methods
         :param dict options: the :ref:`aerospike_scan_options` that will apply to the scan.
         :param str nodename: optional Node ID of node used to limit the scan to a single node.
 
-        .. note:: A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+        .. note::
+            A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
+            If the scan is using the "partition_filter" scan policy the callback will recieve two arguments
+            The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
+            as a normal callback.
 
         .. code-block:: python
 
@@ -269,6 +231,41 @@ Scan Methods
                 scan.foreach(limit(100, keys))
                 print(len(keys)) # this will be 100 if the number of matching records > 100
                 client.close()
+
+        .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the scan policy
+         "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
+         foreach will scan. See the example below.
+
+         .. code-block:: python
+
+            # This is an example of scaning partitions 1000 - 1003.
+            import aerospike
+
+
+            partitions = []
+
+            def callback(part_id, input_tuple):
+                print(part_id)
+                partitions.append(part_id)
+
+            scan = client.scan("test", "demo")
+
+            policy = {
+                "partition_filter": {
+                    "begin": 1000,
+                    "count": 4
+                },
+            }
+
+            scan.foreach(callback, policy)
+
+
+            # NOTE that these will only be non 0 if there are records in partitions 1000 - 1003
+            # should be 4
+            print(len(partitions))
+
+            # should be [1000, 1001, 1002, 1003]
+            print(partitions)
 
     .. method:: execute_background([, policy])
 
@@ -340,11 +337,138 @@ Scan Methods
                     aerospike:update(rec)
                 end
 
+    .. method:: paginate()
+
+        Makes a scan instance a paginated scan.
+        Call this if you are using the "max_records" scan policy and you need to scan data in pages.
+
+        .. note::
+            Calling .paginate() on a scan instance causes it to save its partition state.
+            This can be retrieved later using .get_partitions_status(). This can also be done using the
+            partition_filter policy.
+
+        .. code-block:: python
+
+            # scan 3 pages of 1000 records each.
+
+            import aerospike
+
+            pages = 3
+            page_size = 1000
+            policy = {"max_records": 1000}
+
+            scan = client.scan('test', 'demo')
+
+            scan.paginate()
+
+            # NOTE: The number of pages queried and records returned per page can differ
+            # if record counts are small or unbalanced across nodes.
+            for page in range(pages):
+                records = scan.results(policy=policy)
+
+                print("got page: " + str(page))
+
+                if scan.is_done():
+                    print("all done")
+                    break
+
+            # This id can be used to paginate queries.
+
+    .. method:: is_done()
+
+        If using scan pagination, did the previous paginated or partition_filter scan using this scan instance return all records?
+
+        :return: A :class:`bool` signifying whether this paginated scan instance has returned all records.
+
+        .. code-block:: python
+
+            import aerospike
+
+            policy = {"max_records": 1000}
+
+            scan = client.scan('test', 'demo')
+
+            scan.paginate()
+
+            records = scan.results(policy=policy)
+
+            if scan.is_done():
+                print("all done")
+
+            # This id can be used to monitor the progress of a paginated scan.
+
+    .. method:: get_partitions_status()
+
+        Get this scan instance's partition status. That is which partitions have been queried and which have not.
+        The returned value is a :class:`dict` with partition id, :class:`int`, as keys and :class:`tuple` as values.
+        If the scan instance is not tracking its partitions, the returned :class:`dict` will be empty.
+
+        .. note::
+            A scan instance must have had .paginate() called on it in order retrieve its
+            partition status. If .paginate() was not called, the scan instance will not save partition status.
+
+        :return: a :class:`tuple` of form (id: :class:`int`, init: class`bool`, done: class`bool`, digest: :class:`bytearray`).
+            See :ref:`aerospike_partition_objects` for more information.
+
+        .. code-block:: python
+
+            # This is an example of resuming a scan using partition status.
+            import aerospike
+
+
+            for i in range(15):
+                key = ("test", "demo", i)
+                bins = {"id": i}
+                client.put(key, bins)
+
+            records = []
+            resumed_records = []
+
+            def callback(input_tuple):
+                record, _, _ = input_tuple
+
+                if len(records) == 5:
+                    return False
+
+                records.append(record)
+
+            scan = client.scan("test", "demo")
+            scan.paginate()
+
+            scan.foreach(callback)
+
+            # The first scan should stop after 5 records.
+            assert len(records) == 5
+
+            partition_status = scan.get_partitions_status()
+
+            def resume_callback(part_id, input_tuple):
+                record, _, _ = input_tuple
+                resumed_records.append(record)
+
+            scan_resume = client.scan("test", "demo")
+
+            policy = {
+                "partition_filter": {
+                    "partition_status": partition_status
+                },
+            }
+
+            scan_resume.foreach(resume_callback, policy)
+
+            # should be 15
+            total_records = len(records) + len(resumed_records)
+            print(total_records)
+
+            # cleanup
+            for i in range(15):
+                key = ("test", "demo", i)
+                client.remove(key)
 
 .. _aerospike_scan_policies:
 
-Scan Policies
--------------
+Policies
+========
 
 .. object:: policy
 
@@ -422,12 +546,22 @@ Scan Policies
             | The actual number of records returned may be less than max_records if node record counts are small and unbalanced across nodes.
             |
             | Default: ``0`` (No Limit).
+
+            .. note:: Requires Aerospike server version >= 6.0
+        * **partition_filter** :class:`dict`
+            | A dictionary of partition information used by the client
+            | to perform partiton scans. Useful for resuming terminated scans and
+            | scaning particular partitons/records.
+            |
+            |   See :ref:`aerospike_partition_objects` for more information.
+            |
+            | Default: ``{}`` (All partitions will be scanned).
             
 
 .. _aerospike_scan_options:
 
-Scan Options
-------------
+Options
+=======
 
 .. object:: options
 

@@ -8,6 +8,10 @@
     :platform: 64-bit Linux and OS X
     :synopsis: Query predicate helper functions.
 
+These methods are secondary index filters that can be applied to the :class:`aerospike.Query` class.
+
+Bin Predicates
+==============
 
 .. py:function:: between(bin, min, max)
 
@@ -53,6 +57,9 @@
         res = query.results()
         print(res)
         client.close()
+
+GeoJSON Predicates
+==================
 
 .. py:function:: geo_within_geojson_region(bin, shape[, index_type])
 
@@ -231,6 +238,9 @@
         client.close()
 
     .. versionadded:: 1.0.58
+
+Map and List Predicates
+=======================
 
 .. py:function:: contains(bin, index_type, val)
 

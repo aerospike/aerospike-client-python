@@ -51,7 +51,8 @@ config = {\n\
 }\n\
 client = aerospike.client(config)");
 
-PyDoc_STRVAR(init_async_doc, "init_async() -> initialize aerospike async eventloop library\n\
+PyDoc_STRVAR(init_async_doc,
+			 "init_async() -> initialize aerospike async eventloop library\n\
 aerospike.init_async()");
 
 static PyMethodDef Aerospike_Methods[] = {
@@ -64,8 +65,8 @@ static PyMethodDef Aerospike_Methods[] = {
 	{"unset_serializers", (PyCFunction)AerospikeClient_Unset_Serializers,
 	 METH_VARARGS | METH_KEYWORDS, "Unsets the serializer and deserializer"},
 
-	{"init_async", (PyCFunction)AerospikeInitAsync, METH_VARARGS | METH_KEYWORDS,
-	 init_async_doc},
+	{"init_async", (PyCFunction)AerospikeInitAsync,
+	 METH_VARARGS | METH_KEYWORDS, init_async_doc},
 	{"client", (PyCFunction)AerospikeClient_New, METH_VARARGS | METH_KEYWORDS,
 	 client_doc},
 	{"set_log_level", (PyCFunction)Aerospike_Set_Log_Level,
@@ -82,10 +83,10 @@ static PyMethodDef Aerospike_Methods[] = {
 	//Calculate the digest of a key
 	{"calc_digest", (PyCFunction)Aerospike_Calc_Digest,
 	 METH_VARARGS | METH_KEYWORDS, "Calculate the digest of a key"},
-	
+
 	//Get partition ID for given digest
-	{"get_partition_id", (PyCFunction)Aerospike_Get_Partition_Id,
-	 METH_VARARGS, "Get partition ID for given digest"},
+	{"get_partition_id", (PyCFunction)Aerospike_Get_Partition_Id, METH_VARARGS,
+	 "Get partition ID for given digest"},
 
 	//Is async supported
 	{"is_async_supoorted", (PyCFunction)Aerospike_Is_AsyncSupported,
@@ -111,24 +112,23 @@ static AerospikeConstants auth_mode_constants[] = {
 	{AS_AUTH_EXTERNAL_INSECURE, "AUTH_EXTERNAL_INSECURE"},
 	{AS_AUTH_PKI, "AUTH_PKI"}};
 
-#define AUTH_MODE_CONSTANTS_ARR_SIZE                                            \
+#define AUTH_MODE_CONSTANTS_ARR_SIZE                                           \
 	(sizeof(auth_mode_constants) / sizeof(AerospikeConstants))
 
-struct Aerospike_State{
-	PyObject			*exception;
-	PyTypeObject 		*client;
-	PyTypeObject		*query;
-	PyTypeObject		*scan;
-	PyTypeObject		*kdict;
-	PyObject			*predicates;
-	PyObject			*predexps;
-	PyTypeObject		*geospatial;
-	PyTypeObject		*null_object;
-	PyTypeObject		*wildcard_object;
-	PyTypeObject		*infinite_object;
+struct Aerospike_State {
+	PyObject *exception;
+	PyTypeObject *client;
+	PyTypeObject *query;
+	PyTypeObject *scan;
+	PyTypeObject *kdict;
+	PyObject *predicates;
+	PyTypeObject *geospatial;
+	PyTypeObject *null_object;
+	PyTypeObject *wildcard_object;
+	PyTypeObject *infinite_object;
 };
 
-#define Aerospike_State(o) ((struct Aerospike_State*)PyModule_GetState(o))
+#define Aerospike_State(o) ((struct Aerospike_State *)PyModule_GetState(o))
 
 static int Aerospike_Clear(PyObject *aerospike)
 {
@@ -136,14 +136,13 @@ static int Aerospike_Clear(PyObject *aerospike)
 #if AS_EVENT_LIB_DEFINED
 	as_event_close_loops();
 #endif
-
+	remove_exception(NULL);
 	Py_CLEAR(Aerospike_State(aerospike)->exception);
 	Py_CLEAR(Aerospike_State(aerospike)->client);
 	Py_CLEAR(Aerospike_State(aerospike)->query);
 	Py_CLEAR(Aerospike_State(aerospike)->scan);
 	Py_CLEAR(Aerospike_State(aerospike)->kdict);
 	Py_CLEAR(Aerospike_State(aerospike)->predicates);
-	Py_CLEAR(Aerospike_State(aerospike)->predexps);
 	Py_CLEAR(Aerospike_State(aerospike)->geospatial);
 	Py_CLEAR(Aerospike_State(aerospike)->null_object);
 	Py_CLEAR(Aerospike_State(aerospike)->wildcard_object);
@@ -155,7 +154,7 @@ static int Aerospike_Clear(PyObject *aerospike)
 MOD_INIT(aerospike)
 {
 
-	const char version[8] = "6.1.2";
+	const char version[8] = "7.1.0";
 	// Makes things "thread-safe"
 	PyEval_InitThreads();
 	int i = 0;
@@ -211,18 +210,12 @@ MOD_INIT(aerospike)
 	}
 
 	declare_policy_constants(aerospike);
-	RegisterPredExpConstants(aerospike);
 	declare_log_constants(aerospike);
 
 	PyObject *predicates = AerospikePredicates_New();
 	Py_INCREF(predicates);
 	PyModule_AddObject(aerospike, "predicates", predicates);
 	Aerospike_State(aerospike)->predicates = predicates;
-
-	PyObject *predexps = AerospikePredExp_New();
-	Py_INCREF(predexps);
-	PyModule_AddObject(aerospike, "predexp", predexps);
-	Aerospike_State(aerospike)->predexps = predexps;
 
 	PyTypeObject *geospatial = AerospikeGeospatial_Ready();
 	Py_INCREF(geospatial);
@@ -257,7 +250,9 @@ PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds)
 #else
 	as_error err;
 	as_error_init(&err);
-	as_error_update(&err, AEROSPIKE_ERR, "Support for async is disabled, build software with async option");
+	as_error_update(
+		&err, AEROSPIKE_ERR,
+		"Support for async is disabled, build software with async option");
 	PyObject *py_err = NULL, *exception_type = NULL;
 	error_to_pyobject(&err, &py_err);
 	exception_type = raise_exception(&err);

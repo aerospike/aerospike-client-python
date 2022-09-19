@@ -258,4 +258,4 @@ class TestListInsert(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_insert(key, "age", "Fifth", False)
-        assert "an integer is required" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)

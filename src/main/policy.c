@@ -19,7 +19,6 @@
 
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
-#include <aerospike/as_predexp.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_status.h>
@@ -93,23 +92,15 @@
 		}                                                                      \
 	}
 
-#define POLICY_SET_PREDEXP_BASE_FIELD()                                        \
+#define POLICY_SET_EXPRESSIONS_FIELD()                                         \
 	{                                                                          \
-		if (predexp_list) {                                                    \
-			PyObject *py_predexp_list =                                        \
-				PyDict_GetItemString(py_policy, "predexp");                    \
-			if (py_predexp_list) {                                             \
-				if (PyDict_GetItemString(py_policy, "expressions")) {          \
-					return as_error_update(                                    \
-						err, AEROSPIKE_ERR_PARAM,                              \
-						"Got both predexp and expressions, can only handle "   \
-						"one or the other.");                                  \
-				}                                                              \
-				long number_predexp = PyList_Size(py_predexp_list);            \
-				as_predexp_list_init(predexp_list, number_predexp);            \
-				convert_predexp_list(py_predexp_list, predexp_list, err);      \
-				policy->base.predexp = predexp_list;                           \
-				*predexp_list_p = predexp_list;                                \
+		PyObject *py_exp_list =                                                \
+			PyDict_GetItemString(py_policy, "expressions");                    \
+		if (py_exp_list) {                                                     \
+			if (convert_exp_list(self, py_exp_list, &exp_list, err) ==         \
+				AEROSPIKE_OK) {                                                \
+				policy->filter_exp = exp_list;                                 \
+				*exp_list_p = exp_list;                                        \
 			}                                                                  \
 		}                                                                      \
 	}
@@ -185,6 +176,7 @@ static AerospikeConstants aerospike_constants[] = {
 	{AS_INDEX_STRING, "INDEX_STRING"},
 	{AS_INDEX_NUMERIC, "INDEX_NUMERIC"},
 	{AS_INDEX_GEO2DSPHERE, "INDEX_GEO2DSPHERE"},
+	{AS_INDEX_TYPE_DEFAULT, "INDEX_TYPE_DEFAULT"},
 	{AS_INDEX_TYPE_LIST, "INDEX_TYPE_LIST"},
 	{AS_INDEX_TYPE_MAPKEYS, "INDEX_TYPE_MAPKEYS"},
 	{AS_INDEX_TYPE_MAPVALUES, "INDEX_TYPE_MAPVALUES"},
@@ -195,6 +187,9 @@ static AerospikeConstants aerospike_constants[] = {
 	{AS_PRIVILEGE_WRITE, "PRIV_WRITE"},
 	{AS_PRIVILEGE_READ_WRITE, "PRIV_READ_WRITE"},
 	{AS_PRIVILEGE_READ_WRITE_UDF, "PRIV_READ_WRITE_UDF"},
+	{AS_PRIVILEGE_TRUNCATE, "PRIV_TRUNCATE"},
+	{AS_PRIVILEGE_UDF_ADMIN, "PRIV_UDF_ADMIN"},
+	{AS_PRIVILEGE_SINDEX_ADMIN, "PRIV_SINDEX_ADMIN"},
 
 	{OP_LIST_APPEND, "OP_LIST_APPEND"},
 	{OP_LIST_APPEND_ITEMS, "OP_LIST_APPEND_ITEMS"},
@@ -257,6 +252,7 @@ static AerospikeConstants aerospike_constants[] = {
 	{AS_MAP_RETURN_KEY, "MAP_RETURN_KEY"},
 	{AS_MAP_RETURN_VALUE, "MAP_RETURN_VALUE"},
 	{AS_MAP_RETURN_KEY_VALUE, "MAP_RETURN_KEY_VALUE"},
+	{AS_MAP_RETURN_EXISTS, "MAP_RETURN_EXISTS"},
 
 	{AS_RECORD_DEFAULT_TTL, "TTL_NAMESPACE_DEFAULT"},
 	{AS_RECORD_NO_EXPIRE_TTL, "TTL_NEVER_EXPIRE"},
@@ -289,6 +285,7 @@ static AerospikeConstants aerospike_constants[] = {
 	{AS_LIST_RETURN_REVERSE_RANK, "LIST_RETURN_REVERSE_RANK"},
 	{AS_LIST_RETURN_COUNT, "LIST_RETURN_COUNT"},
 	{AS_LIST_RETURN_VALUE, "LIST_RETURN_VALUE"},
+	{AS_LIST_RETURN_EXISTS, "LIST_RETURN_EXISTS"},
 	{AS_LIST_SORT_DROP_DUPLICATES, "LIST_SORT_DROP_DUPLICATES"},
 	{AS_LIST_SORT_DEFAULT, "LIST_SORT_DEFAULT"},
 	{AS_LIST_WRITE_ADD_UNIQUE, "LIST_WRITE_ADD_UNIQUE"},
@@ -462,7 +459,14 @@ static AerospikeConstants aerospike_constants[] = {
 	{AS_BYTES_MAP, "AS_BYTES_MAP"},
 	{AS_BYTES_LIST, "AS_BYTES_LIST"},
 	{AS_BYTES_GEOJSON, "AS_BYTES_GEOJSON"},
-	{AS_BYTES_TYPE_MAX, "AS_BYTES_TYPE_MAX"}};
+	{AS_BYTES_TYPE_MAX, "AS_BYTES_TYPE_MAX"},
+
+	/* Regex constants from predexp, still used by expressions */
+	{REGEX_NONE, "REGEX_NONE"},
+	{REGEX_EXTENDED, "REGEX_EXTENDED"},
+	{REGEX_ICASE, "REGEX_ICASE"},
+	{REGEX_NOSUB, "REGEX_NOSUB"},
+	{REGEX_NEWLINE, "REGEX_NEWLINE"}};
 
 static AerospikeJobConstants aerospike_job_constants[] = {
 	{"scan", "JOB_SCAN"}, {"query", "JOB_QUERY"}};
@@ -594,15 +598,17 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
 								   as_policy_admin *config_admin_policy)
 {
 
-	// Initialize Policy
-	POLICY_INIT(as_policy_admin);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_admin);
+	}
 	//Initialize policy with global defaults
 	as_policy_admin_copy(config_admin_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_FIELD(timeout, uint32_t);
-
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_FIELD(timeout, uint32_t);
+	}
 	// Update the policy
 	POLICY_UPDATE();
 
@@ -619,36 +625,34 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
 								   PyObject *py_policy, as_policy_apply *policy,
 								   as_policy_apply **policy_p,
 								   as_policy_apply *config_apply_policy,
-								   as_predexp_list *predexp_list,
-								   as_predexp_list **predexp_list_p,
 								   as_exp *exp_list, as_exp **exp_list_p)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_apply);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_apply);
+	}
 	//Initialize policy with global defaults
 	as_policy_apply_copy(config_apply_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
-	POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(compress, bool);
+		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(max_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(key, as_policy_key);
-	POLICY_SET_FIELD(replica, as_policy_replica);
-	//POLICY_SET_FIELD(gen, as_policy_gen); removed
-	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-	POLICY_SET_FIELD(durable_delete, bool);
+		POLICY_SET_FIELD(key, as_policy_key);
+		POLICY_SET_FIELD(replica, as_policy_replica);
+		//POLICY_SET_FIELD(gen, as_policy_gen); removed
+		POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+		POLICY_SET_FIELD(durable_delete, bool);
 
-	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
-
-	// C client 5.0 new expressions
-	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+		// C client 5.0 new expressions
+		POLICY_SET_EXPRESSIONS_BASE_FIELD();
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -667,17 +671,19 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
 								  as_policy_info **policy_p,
 								  as_policy_info *config_info_policy)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_info);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_info);
+	}
 	//Initialize policy with global defaults
 	as_policy_info_copy(config_info_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_FIELD(timeout, uint32_t);
-	POLICY_SET_FIELD(send_as_is, bool);
-	POLICY_SET_FIELD(check_bounds, bool);
-
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_FIELD(timeout, uint32_t);
+		POLICY_SET_FIELD(send_as_is, bool);
+		POLICY_SET_FIELD(check_bounds, bool);
+	}
 	// Update the policy
 	POLICY_UPDATE();
 
@@ -689,37 +695,38 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
- * exp_list, predexp_list are initialized by this function, caller must free.
+ * exp_list are initialized by this function, caller must free.
  */
 as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 								   PyObject *py_policy, as_policy_query *policy,
 								   as_policy_query **policy_p,
 								   as_policy_query *config_query_policy,
-								   as_predexp_list *predexp_list,
-								   as_predexp_list **predexp_list_p,
 								   as_exp *exp_list, as_exp **exp_list_p)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_query);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_query);
+	}
 	//Initialize policy with global defaults
 	as_policy_query_copy(config_query_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
-	POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(compress, bool);
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
+		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(max_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(deserialize, bool);
+		POLICY_SET_FIELD(deserialize, bool);
 
-	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
+		// C client 5.0 new expressions
+		POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
-	// C client 5.0 new expressions
-	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+		// C client 6.0.0
+		POLICY_SET_FIELD(short_query, bool);
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -737,38 +744,37 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
 								  PyObject *py_policy, as_policy_read *policy,
 								  as_policy_read **policy_p,
 								  as_policy_read *config_read_policy,
-								  as_predexp_list *predexp_list,
-								  as_predexp_list **predexp_list_p,
 								  as_exp *exp_list, as_exp **exp_list_p)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_read);
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_read);
+	}
 
 	//Initialize policy with global defaults
 	as_policy_read_copy(config_read_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
-	POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(compress, bool);
+		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(max_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(key, as_policy_key);
-	POLICY_SET_FIELD(replica, as_policy_replica);
-	POLICY_SET_FIELD(deserialize, bool);
+		POLICY_SET_FIELD(key, as_policy_key);
+		POLICY_SET_FIELD(replica, as_policy_replica);
+		POLICY_SET_FIELD(deserialize, bool);
 
-	// 4.0.0 new policies
-	POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+		// 4.0.0 new policies
+		POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+		POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
-	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
-
-	// C client 5.0 new expressions
-	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+		// C client 5.0 new expressions
+		POLICY_SET_EXPRESSIONS_BASE_FIELD();
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -782,40 +788,41 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_remove(
-	AerospikeClient *self, as_error *err, PyObject *py_policy,
-	as_policy_remove *policy, as_policy_remove **policy_p,
-	as_policy_remove *config_remove_policy, as_predexp_list *predexp_list,
-	as_predexp_list **predexp_list_p, as_exp *exp_list, as_exp **exp_list_p)
+as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
+									PyObject *py_policy,
+									as_policy_remove *policy,
+									as_policy_remove **policy_p,
+									as_policy_remove *config_remove_policy,
+									as_exp *exp_list, as_exp **exp_list_p)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_remove);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_remove);
+	}
 	//Initialize policy with global defaults
 	as_policy_remove_copy(config_remove_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
-	POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(compress, bool);
+		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(max_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(generation, uint16_t);
+		POLICY_SET_FIELD(generation, uint16_t);
 
-	POLICY_SET_FIELD(key, as_policy_key);
-	POLICY_SET_FIELD(gen, as_policy_gen);
-	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-	POLICY_SET_FIELD(replica, as_policy_replica);
-	POLICY_SET_FIELD(durable_delete, bool);
+		POLICY_SET_FIELD(key, as_policy_key);
+		POLICY_SET_FIELD(gen, as_policy_gen);
+		POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+		POLICY_SET_FIELD(replica, as_policy_replica);
+		POLICY_SET_FIELD(durable_delete, bool);
 
-	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
-
-	// C client 5.0 new expressions
-	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+		// C client 5.0 new expressions
+		POLICY_SET_EXPRESSIONS_BASE_FIELD();
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -833,35 +840,33 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 								  PyObject *py_policy, as_policy_scan *policy,
 								  as_policy_scan **policy_p,
 								  as_policy_scan *config_scan_policy,
-								  as_predexp_list *predexp_list,
-								  as_predexp_list **predexp_list_p,
 								  as_exp *exp_list, as_exp **exp_list_p)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_scan);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_scan);
+	}
 	//Initialize policy with global defaults
 	as_policy_scan_copy(config_scan_policy, policy);
 
-	// Set policy fields
-	// server side socket_timeout
-	POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		// server side socket_timeout
+		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
-	POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(compress, bool);
+		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(max_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(durable_delete, bool);
-	POLICY_SET_FIELD(records_per_second, uint32_t);
-	POLICY_SET_FIELD(max_records, uint64_t);
+		POLICY_SET_FIELD(durable_delete, bool);
+		POLICY_SET_FIELD(records_per_second, uint32_t);
+		POLICY_SET_FIELD(max_records, uint64_t);
 
-	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
-
-	// C client 5.0 new expressions
-	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+		// C client 5.0 new expressions
+		POLICY_SET_EXPRESSIONS_BASE_FIELD();
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -879,39 +884,37 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 								   PyObject *py_policy, as_policy_write *policy,
 								   as_policy_write **policy_p,
 								   as_policy_write *config_write_policy,
-								   as_predexp_list *predexp_list,
-								   as_predexp_list **predexp_list_p,
 								   as_exp *exp_list, as_exp **exp_list_p)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_write);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_write);
+	}
 	//Initialize policy with global defaults
 	as_policy_write_copy(config_write_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
-	// Base policy_fields
-	POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(compress, bool);
+		// Base policy_fields
+		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(max_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(key, as_policy_key);
-	POLICY_SET_FIELD(gen, as_policy_gen);
-	POLICY_SET_FIELD(exists, as_policy_exists);
-	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-	POLICY_SET_FIELD(durable_delete, bool);
-	POLICY_SET_FIELD(replica, as_policy_replica);
-	POLICY_SET_FIELD(compression_threshold, uint32_t);
+		POLICY_SET_FIELD(key, as_policy_key);
+		POLICY_SET_FIELD(gen, as_policy_gen);
+		POLICY_SET_FIELD(exists, as_policy_exists);
+		POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+		POLICY_SET_FIELD(durable_delete, bool);
+		POLICY_SET_FIELD(replica, as_policy_replica);
+		POLICY_SET_FIELD(compression_threshold, uint32_t);
 
-	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
-
-	// C client 5.0 new expressions
-	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+		// C client 5.0 new expressions
+		POLICY_SET_EXPRESSIONS_BASE_FIELD();
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -925,44 +928,45 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_operate(
-	AerospikeClient *self, as_error *err, PyObject *py_policy,
-	as_policy_operate *policy, as_policy_operate **policy_p,
-	as_policy_operate *config_operate_policy, as_predexp_list *predexp_list,
-	as_predexp_list **predexp_list_p, as_exp *exp_list, as_exp **exp_list_p)
+as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
+									 PyObject *py_policy,
+									 as_policy_operate *policy,
+									 as_policy_operate **policy_p,
+									 as_policy_operate *config_operate_policy,
+									 as_exp *exp_list, as_exp **exp_list_p)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_operate);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_operate);
+	}
 	//Initialize policy with global defaults
 	as_policy_operate_copy(config_operate_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
-	POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(compress, bool);
+		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(max_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(key, as_policy_key);
-	POLICY_SET_FIELD(gen, as_policy_gen);
-	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-	POLICY_SET_FIELD(replica, as_policy_replica);
-	POLICY_SET_FIELD(durable_delete, bool);
-	POLICY_SET_FIELD(deserialize, bool);
-	POLICY_SET_FIELD(exists, as_policy_exists);
+		POLICY_SET_FIELD(key, as_policy_key);
+		POLICY_SET_FIELD(gen, as_policy_gen);
+		POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+		POLICY_SET_FIELD(replica, as_policy_replica);
+		POLICY_SET_FIELD(durable_delete, bool);
+		POLICY_SET_FIELD(deserialize, bool);
+		POLICY_SET_FIELD(exists, as_policy_exists);
 
-	// 4.0.0 new policies
-	POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+		// 4.0.0 new policies
+		POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+		POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
-	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
-
-	// C client 5.0 new expressions
-	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+		// C client 5.0 new expressions
+		POLICY_SET_EXPRESSIONS_BASE_FIELD();
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
@@ -980,46 +984,144 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 								   PyObject *py_policy, as_policy_batch *policy,
 								   as_policy_batch **policy_p,
 								   as_policy_batch *config_batch_policy,
-								   as_predexp_list *predexp_list,
-								   as_predexp_list **predexp_list_p,
 								   as_exp *exp_list, as_exp **exp_list_p)
 {
-	// Initialize Policy
-	POLICY_INIT(as_policy_batch);
-
+	if(py_policy && py_policy != Py_None) {
+		// Initialize Policy
+		POLICY_INIT(as_policy_batch);
+	}
 	//Initialize policy with global defaults
 	as_policy_batch_copy(config_batch_policy, policy);
 
-	// Set policy fields
-	POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
+	if(py_policy && py_policy != Py_None) {
+		// Set policy fields
+		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
-	POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-	POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-	POLICY_SET_BASE_FIELD(compress, bool);
+		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
+		POLICY_SET_BASE_FIELD(max_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
+		POLICY_SET_BASE_FIELD(compress, bool);
 
-	POLICY_SET_FIELD(concurrent, bool);
-	POLICY_SET_FIELD(allow_inline, bool);
-	POLICY_SET_FIELD(send_set_name, bool);
-	POLICY_SET_FIELD(deserialize, bool);
-	POLICY_SET_FIELD(replica, as_policy_replica);
+		POLICY_SET_FIELD(concurrent, bool);
+		POLICY_SET_FIELD(allow_inline, bool);
+		POLICY_SET_FIELD(deserialize, bool);
+		POLICY_SET_FIELD(replica, as_policy_replica);
 
-	// 4.0.0 new policies
-	POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+		// 4.0.0 new policies
+		POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+		POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
-	// C client 4.6.7 new policy
-	POLICY_SET_PREDEXP_BASE_FIELD();
+		// C client 5.0 new expressions
+		POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
-	// C client 5.0 new expressions
-	POLICY_SET_EXPRESSIONS_BASE_FIELD();
+		// C client 6.0.0 (batch writes)
+		POLICY_SET_FIELD(allow_inline_ssd, bool);
+		POLICY_SET_FIELD(respond_all_keys, bool);
+	}
 
 	// Update the policy
 	POLICY_UPDATE();
 
 	return err->code;
 }
+
+// New with server 6.0, C client 5.2.0 (batch writes)
+as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
+										 PyObject *py_policy,
+										 as_policy_batch_write *policy,
+										 as_policy_batch_write **policy_p,
+										 as_exp *exp_list, as_exp **exp_list_p)
+{
+	POLICY_INIT(as_policy_batch_write);
+
+	// Set policy fields
+	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(gen, as_policy_gen);
+	POLICY_SET_FIELD(exists, as_policy_exists);
+	POLICY_SET_FIELD(durable_delete, bool);
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
+// New with server 6.0, C client 5.2.0 (batch writes)
+as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
+										PyObject *py_policy,
+										as_policy_batch_read *policy,
+										as_policy_batch_read **policy_p,
+										as_exp *exp_list, as_exp **exp_list_p)
+{
+	POLICY_INIT(as_policy_batch_read);
+
+	// Set policy fields
+	POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+	POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
+// New with server 6.0, C client 5.2.0 (batch writes)
+as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
+										 PyObject *py_policy,
+										 as_policy_batch_apply *policy,
+										 as_policy_batch_apply **policy_p,
+										 as_exp *exp_list, as_exp **exp_list_p)
+{
+	POLICY_INIT(as_policy_batch_apply);
+
+	// Set policy fields
+	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(ttl, uint32_t);
+	POLICY_SET_FIELD(durable_delete, bool);
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
+// New with server 6.0, C client 5.2.0 (batch writes)
+as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
+										  PyObject *py_policy,
+										  as_policy_batch_remove *policy,
+										  as_policy_batch_remove **policy_p,
+										  as_exp *exp_list, as_exp **exp_list_p)
+{
+	POLICY_INIT(as_policy_batch_remove);
+
+	// Set policy fields
+	POLICY_SET_FIELD(key, as_policy_key);
+	POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+	POLICY_SET_FIELD(gen, as_policy_gen);
+	POLICY_SET_FIELD(durable_delete, bool);
+	POLICY_SET_FIELD(generation, uint16_t);
+
+	// C client 5.0 new expressions
+	POLICY_SET_EXPRESSIONS_FIELD();
+
+	// Update the policy
+	POLICY_UPDATE();
+
+	return err->code;
+}
+
 as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
 								 as_bit_policy *policy)
 {

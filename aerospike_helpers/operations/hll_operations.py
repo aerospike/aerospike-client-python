@@ -15,7 +15,7 @@
 ##########################################################################
 '''
 Helper functions to create HyperLogLog operation dictionary arguments for
-the :meth:`aerospike.operate` and :meth:`aerospike.operate_ordered` methods of the aerospike client.
+the :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered` methods of the aerospike client.
 HyperLogLog bins and operations allow for your application to form fast, reasonable approximations
 of members in the union or intersection between multiple HyperLogLog bins.
 HyperLogLog’s estimates are a balance between complete accuracy and efficient savings
@@ -27,119 +27,71 @@ in space and speed in dealing with extremely large datasets.
 
 Example::
 
-    import sys
-
     import aerospike
-    from aerospike import exception as ex
     from aerospike_helpers.operations import hll_operations as hll_ops
     from aerospike_helpers.operations import operations
 
-
-    TEST_NS = "test"
-    TEST_SET = "demo"
     NUM_INDEX_BITS = 12
     NUM_MH_BITS = 24
 
     # Configure the client.
     config = {"hosts": [("127.0.0.1", 3000)]}
-
     # Create a client and connect it to the cluster.
-    try:
-        client = aerospike.client(config).connect()
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
+    client = aerospike.client(config).connect()
 
-    # Add HLL bins.
-    customers = ["Amy", "Farnsworth", "Scruffy"]
-    customer_record_keys = [
-        (TEST_NS, TEST_SET, "Amy"),
-        (TEST_NS, TEST_SET, "Farnsworth"),
-        (TEST_NS, TEST_SET, "Scruffy"),
-    ]
-    items_viewed = [
-        ("item%s" % str(i) for i in range(0, 500)),
-        ("item%s" % str(i) for i in range(0, 750)),
-        ("item%s" % str(i) for i in range(250, 1000)),
+    # Create customer keys
+    TEST_NS = "test"
+    TEST_SET = "demo"
+    customerNames = ["Amy", "Farnsworth", "Scruffy"]
+    keys = []
+    for customer in customerNames:
+        keys.append((TEST_NS, TEST_SET, customer))
+
+    itemsViewedPerCustomer = [
+        # [item1, item2, ... item500]
+        list("item%s" % str(i) for i in range(0, 500)), # Amy
+        list("item%s" % str(i) for i in range(0, 750)), # Farnsworth
+        list("item%s" % str(i) for i in range(250, 1000)), # Scruffy
     ]
 
-    for customer, key, items in zip(customers, customer_record_keys, items_viewed):
+    for key, itemsViewed in zip(keys, itemsViewedPerCustomer):
+        customerName = key[2]
         ops = [
-            operations.write("name", customer),
-            hll_ops.hll_add("viewed", list(items), NUM_INDEX_BITS, NUM_MH_BITS),
+            operations.write("name", customerName),
+            hll_ops.hll_add("viewed", itemsViewed, NUM_INDEX_BITS, NUM_MH_BITS),
         ]
-
-        try:
-            client.operate(key, ops)
-        except ex.ClientError as e:
-            print("Error: {0} [{1}]".format(e.msg, e.code))
-            sys.exit(1)
+        client.operate(key, ops)
 
     # Find out how many items viewed Amy, Farnsworth, and Scruffy have in common.
-    Farnsworth_viewed = client.get(customer_record_keys[1])[2]["viewed"]
-    Scruffy_viewed = client.get(customer_record_keys[2])[2]["viewed"]
-    viewed = [Farnsworth_viewed, Scruffy_viewed]
-    ops = [hll_ops.hll_get_intersect_count("viewed", viewed)]
-
-    try:
-        _, _, res = client.operate(customer_record_keys[0], ops)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    print(
-        "Estimated items viewed intersection: %d."
-        % res["viewed"]
-    )
-    print("Actual intersection: 250.\\n")
+    farnsworthRecord = client.get(keys[1])
+    scruffyRecord = client.get(keys[2])
+    farnsworthViewedItems = farnsworthRecord[2]["viewed"]
+    scruffyViewedItems = scruffyRecord[2]["viewed"]
+    viewed = [farnsworthViewedItems, scruffyViewedItems]
+    ops = [
+        hll_ops.hll_get_intersect_count("viewed", viewed)
+    ]
+    # Pass in Amy's key
+    _, _, res = client.operate(keys[0], ops)
+    print("Estimated items viewed intersection:", res["viewed"])
+    # Estimated items viewed intersection: 251
+    # Actual intersection: 250
 
     # Find out how many unique products Amy, Farnsworth, and Scruffy have viewed.
-    Farnsworth_viewed = client.get(customer_record_keys[1])[2]["viewed"]
-    Scruffy_viewed = client.get(customer_record_keys[2])[2]["viewed"]
-    viewed = [Farnsworth_viewed, Scruffy_viewed]
     ops = [hll_ops.hll_get_union_count("viewed", viewed)]
+    _, _, res = client.operate(keys[0], ops)
 
-    try:
-        _, _, res = client.operate(customer_record_keys[0], ops)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    print(
-        "Estimated items viewed union: %d."
-        % res["viewed"]
-    )
-    print("Actual union: 1000.\\n")
+    print("Estimated items viewed union:", res["viewed"])
+    # Estimated items viewed union: 1010
+    # Actual union: 1000
 
     # Find the similarity of Amy, Farnsworth, and Scruffy's product views.
-    Farnsworth_viewed = client.get(customer_record_keys[1])[2]["viewed"]
-    Scruffy_viewed = client.get(customer_record_keys[2])[2]["viewed"]
-    viewed = [Farnsworth_viewed, Scruffy_viewed]
     ops = [hll_ops.hll_get_similarity("viewed", viewed)]
+    _, _, res = client.operate(keys[0], ops)
 
-    try:
-        _, _, res = client.operate(customer_record_keys[0], ops)
-    except ex.ClientError as e:
-        print("Error: {0} [{1}]".format(e.msg, e.code))
-        sys.exit(1)
-
-    print(
-        "Estimated items viewed similarity: %f%%."
-        % (res["viewed"] * 100)
-    )
-    print("Actual similarity: 25%.")
-
-    """
-    Expected output:
-    Estimated items viewed intersection: 235.
-    Actual intersection: 250.
-
-    Estimated items viewed union: 922.
-    Actual union: 1000.
-
-    Estimated items viewed similarity: 25.488069%.
-    Actual similarity: 25%.
-    """
+    print("Estimated items viewed similarity: %f%%" % (res["viewed"] * 100))
+    # Estimated items viewed similarity: 24.888393%
+    # Actual similarity: 25%
 
 '''
 
@@ -155,10 +107,12 @@ VALUE_LIST_KEY = "value_list"
 
 
 def hll_add(bin_name: str, values, index_bit_count=None, mh_bit_count=None, policy=None):
-    """Creates a hll_add operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_add operation.
 
     Server will add the values to the hll bin.
     If the HLL bin does not exist, it will be created with index_bit_count and/or mh_bit_count if they have been supplied.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -182,10 +136,12 @@ def hll_add(bin_name: str, values, index_bit_count=None, mh_bit_count=None, poli
 
 
 def hll_describe(bin_name):
-    """Creates a hll_describe operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_describe operation.
 
     Server returns index and minhash bit counts used to create HLL bin in a list of integers. 
     The list size is 2.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -199,11 +155,13 @@ def hll_describe(bin_name):
 
 
 def hll_fold(bin_name: str, index_bit_count):
-    """Creates a hll_fold operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_fold operation.
 
     Servers folds index_bit_count to the specified value.
     This can only be applied when minhash bit count on the HLL bin is 0.
     Server does not return a value.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -219,9 +177,11 @@ def hll_fold(bin_name: str, index_bit_count):
 
 
 def hll_get_count(bin_name):
-    """Creates a hll_get_count operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_get_count operation.
 
     Server returns estimated count of elements in the HLL bin. 
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -235,9 +195,11 @@ def hll_get_count(bin_name):
 
 
 def hll_get_intersect_count(bin_name: str, hll_list):
-    """Creates a hll_get_intersect_count operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_get_intersect_count operation.
 
     Server returns estimate of elements that would be contained by the intersection of these HLL objects.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -253,10 +215,12 @@ def hll_get_intersect_count(bin_name: str, hll_list):
 
 
 def hll_get_similarity(bin_name: str, hll_list):
-    """Creates a hll_get_similarity operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_get_similarity operation.
 
     Server returns estimated similarity of the HLL objects.
     Server returns a float.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -271,10 +235,12 @@ def hll_get_similarity(bin_name: str, hll_list):
     return op_dict
 
 def hll_get_union(bin_name: str, hll_list):
-    """Creates a hll_get_union operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_get_union operation.
 
     Server returns an HLL object that is the union of all specified HLL objects
     in hll_list with the HLL bin.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -289,10 +255,12 @@ def hll_get_union(bin_name: str, hll_list):
     return op_dict
 
 def hll_get_union_count(bin_name: str, hll_list):
-    """Creates a hll_get_union_count operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_get_union_count operation.
 
     Server returns the estimated count of elements that would be contained by the union of all specified HLL objects
     in the list with the HLL bin.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -308,7 +276,7 @@ def hll_get_union_count(bin_name: str, hll_list):
 
 
 def hll_init(bin_name: str, index_bit_count=None, mh_bit_count=None, policy=None):
-    """Creates a hll_init operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_init operation.
 
     Server creates a new HLL or resets an existing HLL.
     If index_bit_count and mh_bit_count are None, an existing HLL bin will be reset but retain its configuration.
@@ -316,6 +284,8 @@ def hll_init(bin_name: str, index_bit_count=None, mh_bit_count=None, policy=None
     an existing HLL bin will set that config and retain its current value for the unset config.
     If the HLL bin does not exist, index_bit_count is required to create it, mh_bit_count is optional.
     Server does not return a value.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -337,11 +307,12 @@ def hll_init(bin_name: str, index_bit_count=None, mh_bit_count=None, policy=None
 
 
 def hll_refresh_count(bin_name: str):
-    """Creates a hll_refresh_count operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_refresh_count operation.
 
     Server updates the cached count if it is stale.
     Server returns the count. 
 
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
     Args:
         bin_name (str): The name of the bin to be operated on.
     """
@@ -353,10 +324,12 @@ def hll_refresh_count(bin_name: str):
     return op_dict
 
 def hll_set_union(bin_name: str, hll_list, policy=None):
-    """Creates a hll_set_union operation to be used with :meth:`aerospike.operate` or :meth:`aerospike.operate_ordered`.
+    """Creates a hll_set_union operation.
 
     Server sets the union of all specified HLL objects with the HLL bin.
     Server returns nothing.
+
+    Returns a dictionary to be used with :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered`.
 
     Args:
         bin_name (str): The name of the bin to be operated on.

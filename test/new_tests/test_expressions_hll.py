@@ -106,10 +106,10 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS)
 
     @pytest.mark.parametrize("policy, index_bc, mh_bc, bin, expected", [
-        (None, 12, None, 'hll_bin', {"": [12, 49]}),
-        (None, None, None, 'hll_bin', {"": [15, 49]}),
-        (None, 8, 20, 'hll_bin', {"": [8, 20]}),
-        ({'flags': aerospike.HLL_WRITE_CREATE_ONLY | aerospike.HLL_WRITE_NO_FAIL}, 15, 49, 'hll_bin', {"": [15, 49]})
+        (None, 12, None, 'hll_bin', {'hll_bin': [12, 49]}),
+        (None, None, None, 'hll_bin', {'hll_bin': [15, 49]}),
+        (None, 8, 20, 'hll_bin', {'hll_bin': [8, 20]}),
+        ({'flags': aerospike.HLL_WRITE_CREATE_ONLY | aerospike.HLL_WRITE_NO_FAIL}, 15, 49, 'hll_bin', {'hll_bin': [15, 49]})
     ])
     def test_hll_init_pos(self, policy, index_bc, mh_bc, bin, expected):
         """
@@ -123,7 +123,7 @@ class TestExpressions(TestBaseClass):
         expr = HLLDescribe(HLLInit(policy, index_bc, mh_bc, bin))
 
         ops = [
-            expressions.expression_read("", expr.compile())
+            expressions.expression_read(bin, expr.compile())
         ]
 
         _, _, res = self.as_connection.operate((self.test_ns, self.test_set, 0), ops)

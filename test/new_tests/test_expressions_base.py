@@ -199,13 +199,6 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BinType(bin), expected_bin_type).compile()
         verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, _NUM_RECORDS)
 
-    def test_predexp_and_expressions(self):
-        self.as_connection.put(('test', u'demo', 25), {'test': 'test_data'})
-
-        expr = Eq(KeyInt(), 25)
-        with pytest.raises(e.ParamError):
-            record = self.as_connection.remove(('test', u'demo', 25), policy={'expressions': expr.compile(), 'predexp': expr})
-
     def test_nested_logic_pos(self):
         """
         Test nested logical operators expression.
@@ -233,11 +226,11 @@ class TestExpressions(TestBaseClass):
         expr = BoolBin("t")
         ops = [
             operations.write("t", True),
-            expressions.expression_read("", expr.compile())
+            expressions.expression_read("test", expr.compile())
         ]
         _, _, res = test_client.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
         test_client.close()
-        assert res[""]
+        assert res["test"]
 
     def test_bool_bin_false(self):
         if self.server_version < [5, 6]:
@@ -251,11 +244,11 @@ class TestExpressions(TestBaseClass):
         expr = Not(BoolBin("t"))
         ops = [
             operations.write("t", True),
-            expressions.expression_read("", expr.compile())
+            expressions.expression_read("test", expr.compile())
         ]
         _, _, res = test_client.operate(('test', u'demo', _NUM_RECORDS - 1), ops)
         test_client.close()
-        assert not res[""]
+        assert not res["test"]
 
     def test_exclusive_pos(self):
         if self.server_version < [5, 6]:

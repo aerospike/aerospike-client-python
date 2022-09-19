@@ -472,7 +472,7 @@ class TestPythonSerializer(object):
                     serializer=aerospike.SERIALIZER_USER)
 
     def test_deserializer_raises_error(self):
-        # If the deserializer failed, we should get a bytearray
+        # If the deserializer failed, we should get a bytes
         # representation of the item
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(deserializer_error)
@@ -484,4 +484,4 @@ class TestPythonSerializer(object):
         _, _, response = self.as_connection.get(self.test_key)
 
         assert response['normal'] == 1234
-        assert isinstance(response['tuple'], bytearray)
+        assert isinstance(response['tuple'], bytes)

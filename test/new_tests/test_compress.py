@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from distutils.command.config import config
 import pytest
 import sys
 from .test_base_class import TestBaseClass
@@ -19,6 +20,8 @@ except:
 
 
 class TestCompress():
+
+    config = TestBaseClass.get_connection_config()
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.enterprise_in_use(),

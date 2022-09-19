@@ -183,7 +183,8 @@ class CClientBuild(build):
             cmd = [
                 'make',
                 'V=' + str(self.verbose),
-                'EVENT_LIB='+EVENT_LIB] 
+                'EVENT_LIB='+EVENT_LIB,
+            ] 
 
         def compile():
             print(cmd, library_dirs, libraries)
@@ -288,8 +289,9 @@ setup(
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
                 'src/main/query/add_ops.c',
+                'src/main/query/paginate.c',
+                'src/main/query/get_parts.c',
                 'src/main/query/foreach.c',
-                'src/main/query/predexp.c',
                 'src/main/query/results.c',
                 'src/main/query/select.c',
                 'src/main/query/where.c',
@@ -302,6 +304,7 @@ setup(
                 'src/main/scan/apply.c',
                 'src/main/scan/add_ops.c',
                 'src/main/scan/paginate.c',
+                'src/main/scan/get_parts.c',
                 'src/main/geospatial/type.c',
                 'src/main/geospatial/wrap.c',
                 'src/main/geospatial/unwrap.c',
@@ -309,7 +312,6 @@ setup(
                 'src/main/geospatial/dumps.c',
                 'src/main/policy.c',
                 'src/main/conversions.c',
-                'src/main/convert_predexp.c',
                 'src/main/convert_expressions.c',
                 'src/main/policy_config.c',
                 'src/main/calc_digest.c',
@@ -320,9 +322,14 @@ setup(
                 'src/main/cdt_types/type.c',
                 'src/main/key_ordered_dict/type.c',
                 'src/main/client/set_xdr_filter.c',
+                'src/main/client/get_expression_base64.c',
                 'src/main/client/get_nodes.c',
                 'src/main/convert_partition_filter.c',
-                'src/main/client/get_key_partition_id.c'
+                'src/main/client/get_key_partition_id.c',
+                'src/main/client/batch_write.c',
+                'src/main/client/batch_operate.c',
+                'src/main/client/batch_remove.c',
+                'src/main/client/batch_apply.c'
             ],
 
             # Compile
@@ -336,7 +343,7 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
-    packages=['aerospike_helpers', 'aerospike_helpers.operations',
+    packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions', 'aerospike_helpers.awaitable'],
 
     cmdclass={

@@ -220,4 +220,4 @@ class TestListPopRange(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_pop_range(
                 key, "contact_no", "Fifth", 2)
-        assert "an integer is required" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)

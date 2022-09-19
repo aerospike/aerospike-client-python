@@ -36,62 +36,61 @@
 #include <aerospike/as_nil.h>
 
 extern as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
-				 as_vector *unicodeStrVector, as_static_pool *static_pool,
-				 as_operations *ops, long *op, long *ret_type);
+						as_vector *unicodeStrVector,
+						as_static_pool *static_pool, as_operations *ops,
+						long *op, long *ret_type);
 
 // Struct for Python User-Data for the Callback
 typedef struct {
 	as_error error;
 	PyObject *py_results;
 	AerospikeClient *client;
+	PyObject *py_keys;
 } LocalData;
 
-static bool
-batch_read_operate_cb(const as_batch_read* results, uint32_t n, void* udata)
+static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
+								  void *udata)
 {
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
 	as_error *error = &data->error;
-	PyObject *py_err = NULL;
-	PyObject *py_arglist = NULL;
-	as_batch_read* r = NULL;
-	PyObject *py_rec;
+	as_batch_read *r = NULL;
 	PyObject *py_exception;
 
 	// Lock Python State
 	PyGILState_STATE gstate;
 	gstate = PyGILState_Ensure();
 
-	error_to_pyobject(error, &py_err);
-
-	PyList_Append(data->py_results, py_err);
-
 	for (uint32_t i = 0; i < n; i++) {
-		r = (as_batch_read*) &results[i];
+		PyObject *py_key = NULL;
+		PyObject *py_rec = NULL;
+		PyObject *py_rec_meta = NULL;
+		PyObject *py_rec_bins = NULL;
+		as_record *rec = NULL;
+		as_error err;
 
-		error->code = r->result;
+		r = (as_batch_read *)&results[i];
+		py_key = PyList_GetItem(data->py_keys, i);
+		rec = &r->record;
 
-		if (error->code == AEROSPIKE_OK) {
-			record_to_resultpyobject(data->client, error, 
-									&r->record,
-									&py_rec);
-		}
+		as_error_init(&err);
+		err.code = r->result;
 
-		error_to_pyobject(error, &py_err);
-
-		Py_INCREF(Py_None);
-		if (error->code == AEROSPIKE_OK) {
-			py_exception = Py_None;
+		if (err.code == AEROSPIKE_OK) {
+			metadata_to_pyobject(&err, rec, &py_rec_meta);
+			bins_to_pyobject(data->client, &err, rec, &py_rec_bins, false);
 		} else {
-			py_rec = Py_None;
-			py_exception = raise_exception(error);
+			py_rec_meta = raise_exception(&err);
+			Py_INCREF(Py_None);
+			py_rec_bins = Py_None;
 		}
 
-		py_arglist = PyTuple_New(3);
-		PyTuple_SetItem(py_arglist, 0, py_rec); //1-record tuple (key-tuple, meta, bin)
-		PyTuple_SetItem(py_arglist, 1, py_err); //2-error tuple
-		PyTuple_SetItem(py_arglist, 2, py_exception); //3-exception
-		PyList_Append(data->py_results, py_arglist);
+		py_rec = PyTuple_New(3);
+		PyTuple_SetItem(py_rec, 0, py_key);
+		PyTuple_SetItem(py_rec, 1, py_rec_meta);
+		PyTuple_SetItem(py_rec, 2, py_rec_bins);
+
+		PyList_Append(data->py_results, py_rec);
 	}
 
 	PyGILState_Release(gstate);
@@ -112,12 +111,10 @@ batch_read_operate_cb(const as_batch_read* results, uint32_t n, void* udata)
  * @param py_policy      		Python dict used to populate the operate_policy or map_policy.
  *******************************************************************************************************
  */
-static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
-												as_error *err, 
-												PyObject *py_keys,
-												PyObject *py_ops,
-												PyObject *py_meta,
-												PyObject *py_policy)
+static PyObject *
+AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self, as_error *err,
+									PyObject *py_keys, PyObject *py_ops,
+									PyObject *py_meta, PyObject *py_policy)
 {
 	long operation;
 	long return_type = -1;
@@ -125,16 +122,12 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
 	as_policy_batch *batch_policy_p = NULL;
 	PyObject *py_results = NULL;
 	as_batch batch;
-	
+
 	as_batch_init(&batch, 0);
 
 	// For expressions conversion.
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
-
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
 
 	as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
@@ -143,9 +136,10 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
 	as_operations_inita(&ops, ops_size);
 
 	if (py_policy) {
-		if (pyobject_to_policy_batch(self, err, py_policy, &policy, &batch_policy_p,
-								&self->as->config.policies.batch, &predexp_list,
-								&predexp_list_p, &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+		if (pyobject_to_policy_batch(self, err, py_policy, &policy,
+									 &batch_policy_p,
+									 &self->as->config.policies.batch,
+									 &exp_list, &exp_list_p) != AEROSPIKE_OK) {
 			goto CLEANUP;
 		}
 	}
@@ -155,7 +149,7 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
 
 	if (py_meta) {
 		if (check_for_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
-		goto CLEANUP;
+			goto CLEANUP;
 		}
 	}
 
@@ -180,14 +174,12 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
 	for (int i = 0; i < keys_size; i++) {
 		PyObject *py_key = PyList_GetItem(py_keys, i);
 		if (!PyTuple_Check(py_key)) {
-			as_error_update(err, AEROSPIKE_ERR_PARAM,
-							"Key should be a tuple.");
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be a tuple.");
 			goto CLEANUP;
 		}
 		pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
 		if (err->code != AEROSPIKE_OK) {
-			as_error_update(err, AEROSPIKE_ERR_PARAM,
-							"Key should be valid.");
+			as_error_update(err, AEROSPIKE_ERR_PARAM, "Key should be valid.");
 			goto CLEANUP;
 		}
 	}
@@ -197,12 +189,12 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
 	data.client = self;
 	py_results = PyList_New(0);
 	data.py_results = py_results;
+	data.py_keys = py_keys;
 
 	as_error_init(&data.error);
 
 	Py_BEGIN_ALLOW_THREADS
-	aerospike_batch_get_ops(self->as, &data.error, 
-							batch_policy_p, &batch, &ops,
+	aerospike_batch_get_ops(self->as, &data.error, batch_policy_p, &batch, &ops,
 							batch_read_operate_cb, &data);
 	Py_END_ALLOW_THREADS
 
@@ -221,28 +213,11 @@ CLEANUP:
 		as_exp_destroy(exp_list_p);
 	}
 
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
-	}
-
 	as_vector_destroy(unicodeStrVector);
 
 	as_operations_destroy(&ops);
 
 	as_batch_destroy(&batch);
-
-	if (err->code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(err, &py_err);
-		PyObject *exception_type = raise_exception(err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-
-		if (py_results) {
-			Py_DECREF(py_results);
-		}
-		return NULL;
-	}
 
 	return py_results;
 }
@@ -261,7 +236,7 @@ CLEANUP:
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds)
+									   PyObject *kwds)
 {
 	as_error err;
 	PyObject *py_policy = NULL;
@@ -275,30 +250,27 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 	// Python Function Keyword Arguments
 	static char *kwlist[] = {"keys", "list", "meta", "policy", NULL};
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:batch_getops", kwlist,
-									&py_keys, 
-									&py_ops, &py_meta,
+									&py_keys, &py_ops, &py_meta,
 									&py_policy) == false) {
 		return NULL;
 	}
 
-	if (!py_keys || !PyList_Check(py_keys) ||
-		!py_ops || !PyList_Check(py_ops)) {
+	if (!py_keys || !PyList_Check(py_keys) || !py_ops ||
+		!PyList_Check(py_ops)) {
 		as_error_update(&err, AEROSPIKE_ERR_PARAM,
 						"batch_getops keys/ops should be of type list");
 	}
-	
-	py_results = AerospikeClient_Batch_GetOps_Invoke(self, &err, 
-											py_keys, py_ops, 
-											py_meta, py_policy);
 
-	if (err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
+	py_results = AerospikeClient_Batch_GetOps_Invoke(
+		self, &err, py_keys, py_ops, py_meta, py_policy);
+
+	if (py_results == NULL) {
+ 		PyObject *py_err = NULL;
+ 		error_to_pyobject(&err, &py_err);
+ 		PyObject *exception_type = raise_exception(&err);
+ 		PyErr_SetObject(exception_type, py_err);
+ 		Py_DECREF(py_err);
+ 	}
 
 	return py_results;
 }

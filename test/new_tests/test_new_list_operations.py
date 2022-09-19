@@ -10,6 +10,14 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+Server61 = True
+
+from .test_base_class import TestBaseClass
+if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+    if pytest.__version__ < "3.0.0":
+        Server61 = False
+    else:
+        Server61 = False
 
 def get_list_result_from_operation(client, key, operation, bin):
     _, _, result_bins = client.operate(key, [operation])
@@ -329,6 +337,132 @@ class TestNewListOperations(object):
         result = get_list_result_from_operation(
             self.as_connection, self.test_key, operation, self.test_bin)
         assert len(result) == 4 and set(result) == set([5, 8, 9, 10])
+
+    def test_get_exists_by_index_range_no_count(self):
+        if not Server61:
+            pytest.skip('It only applies to >= 6.1 enterprise edition')
+        operation = {
+            'op': aerospike.OP_LIST_GET_BY_INDEX_RANGE,
+            'bin': self.test_bin,
+            'index': 2,
+            'return_type': aerospike.LIST_RETURN_EXISTS
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert result == True
+
+    def test_get_exists_by_index_range_inverted(self):
+        if not Server61:
+            pytest.skip('It only applies to >= 6.1 enterprise edition')
+        start = 0
+        count = 3
+        expected = True
+        operation = {
+            'op': aerospike.OP_LIST_GET_BY_INDEX_RANGE,
+            'bin': self.test_bin,
+            'index': start,
+            'count': count,
+            'return_type': aerospike.LIST_RETURN_EXISTS,
+            'inverted': True
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert result == expected
+
+    def test_get_exists_by_rank_range_no_count(self):
+        if not Server61:
+            pytest.skip('It only applies to >= 6.1 enterprise edition')
+        operation = {
+            'op': aerospike.OP_LIST_GET_BY_RANK_RANGE,
+            'bin': self.test_bin,
+            'rank': 2,
+            'return_type': aerospike.LIST_RETURN_EXISTS
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert result == True
+
+    def test_get_exists_by_value_no_duplicates(self):
+        if not Server61:
+            pytest.skip('It only applies to >= 6.1 enterprise edition')
+        '''
+        7 is in the 0th position, so we expect it exists
+        '''
+        operation = {
+            'op': aerospike.OP_LIST_GET_BY_VALUE,
+            'bin': self.test_bin,
+            'val': 7,
+            'return_type': aerospike.LIST_RETURN_EXISTS
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert result == True
+
+    def test_get_exists_by_value_with_duplicates(self):
+        if not Server61:
+            pytest.skip('It only applies to >= 6.1 enterprise edition')
+        '''
+        Add a list [0, 1, 0, 2, 0] with 3 0's
+        We expect True as the results
+        '''
+        dup_list = [0, 1, 0, 2, 0]
+        dup_key = 'test', 'list', 'dup'
+        self.keys.append(dup_key)
+
+        self.as_connection.put(dup_key, {self.test_bin: dup_list})
+
+        operation = {
+            'op': aerospike.OP_LIST_GET_BY_VALUE,
+            'bin': self.test_bin,
+            'val': 0,
+            'return_type': aerospike.LIST_RETURN_EXISTS
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, dup_key, operation, self.test_bin)
+        assert result == True
+
+    def test_get_exists_by_value_list(self):
+        if not Server61:
+            pytest.skip('It only applies to >= 6.1 enterprise edition')
+        values = [7, 5, 9]
+        operation = {
+            'op': aerospike.OP_LIST_GET_BY_VALUE_LIST,
+            'bin': self.test_bin,
+            'value_list': values,
+            'return_type': aerospike.LIST_RETURN_EXISTS
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert result == True
+
+    def test_get_exists_by_value_list_inverted(self):
+        if not Server61:
+            pytest.skip('It only applies to >= 6.1 enterprise edition')
+        values = [7, 5, 9]
+        operation = {
+            'op': aerospike.OP_LIST_GET_BY_VALUE_LIST,
+            'bin': self.test_bin,
+            'value_list': values,
+            'return_type': aerospike.LIST_RETURN_EXISTS,
+            'inverted': True
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert result == True
+
+    def test_get_exists_by_value_range(self):
+        if not Server61:
+            pytest.skip('It only applies to >= 6.1 enterprise edition')
+        operation = {
+            'op': aerospike.OP_LIST_GET_BY_VALUE_RANGE,
+            'bin': self.test_bin,
+            'value_begin': 5,
+            'value_end': 8,
+            'return_type': aerospike.LIST_RETURN_EXISTS
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin)
+        assert result == True
 
     #  REMOVE Family of operations
     def test_remove_by_index(self):

@@ -117,9 +117,13 @@ class BitRemove(_BaseExpr):
 
             Example::
 
-                # Let blob bin "c" == bytearray([1] * 5).
-                # Remove 1 element so that the returned value is bytearray([1] * 4).
-                expr = exp.BitRemove(None, 1, 1, exp.BlobBin("c")).compile()
+                # b = bytearray([1, 2, 3, 4, 5])
+                expr = exp.BitRemove(None, 1, 1, exp.BlobBin("b")).compile()
+                #   00000001 00000010 00000011 00000100 00000101
+                #   0        1 (selected byte)
+                #            xxxxxxxx (byte(s) to remove)
+                #   ============================================
+                #   00001001 <-- 00000001 00000001 00000001
         """
         self._children= (
             byte_offset,
@@ -177,6 +181,13 @@ class BitOr(_BaseExpr):
                 # Let blob bin "c" == bytearray([1] * 5).
                 # bitwise Or `8` with the first byte of blob bin c so that the returned value is bytearray([9, 1, 1, 1, 1]).
                 expr = exp.BitOr(None, 0, 8, bytearray([8]), exp.BlobBin("c")).compile()
+                #   00000001 00000001 00000001 00000001 00000001
+                #   0 (index)
+                #   xxxxxxxx (bits applied)
+                #   00001000 (OR operation)
+                #   ============================================
+                #   00001001 00000001 00000001 00000001 00000001
+
         """
         self._children= (
             bit_offset,
@@ -233,8 +244,16 @@ class BitAnd(_BaseExpr):
             Example::
 
                 # Let blob bin "c" == bytearray([1] * 5).
-                # bitwise and `0` with the first byte of blob bin c so that the returned value is bytearray([0, 5, 5, 5, 5]).
+                # bitwise and `0` with the first byte of blob bin c so that the returned value is bytearray([0, 1, 1, 1, 1]).
                 expr = exp.BitAnd(None, 0, 8, bytearray([0]), exp.BlobBin("c")).compile()
+                #   00000001 00000001 00000001 00000001 00000001
+                #   01234567 (offset)
+                #   ^(+8)
+                #   xxxxxxxx (bits selected)
+                #   00000000 (& operation)
+                #   ============================================
+                #   00000000 00000001 00000001 00000001 00000001
+
         """
         self._children= (
             bit_offset,
@@ -320,6 +339,12 @@ class BitRightShift(_BaseExpr):
                 # Let blob bin "c" == bytearray([8] * 5).
                 # Bit left shift the first byte of bin "c" to get bytearray([4, 8, 8, 8, 8]).
                 expr = exp.BitRightShift(None, 0, 8, 1, exp.BlobBin("c")).compile()
+                # 00001000 00001000 00001000 00001000 00001000
+                # 0 (offset=0)
+                # xxxxxxxx (selected bits -> by 1 only in that region)
+                # The rest of the bits are unaffected
+                # 00000100 00001000 00001000 00001000 00001000
+
         """
         self._children= (
             bit_offset,
@@ -349,9 +374,16 @@ class BitAdd(_BaseExpr):
 
             Example::
 
-                # Let blob bin "c" == bytearray([1] * 5).
-                # Bit add the second byte of bin "c" to get bytearray([1, 2, 1, 1, 1])
-                expr = exp.BitAdd(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL).compile()
+                # Assume we have a blob bin of five bytes: bytearray([1, 1, 1, 1, 1])
+                expr = exp.BitAdd(None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, exp.BlobBin("b")).compile()
+                # Treat the selected bits as a number and add the value to it
+                #   00000001 00000001 00000001 00000001 00000001
+                #   01234567 89012345 (offset)
+                #            ^(+8)
+                #            xxxxxxxx (bits selected)
+                # + 00000000 00000001 (value to add)
+                #   ============================================
+                #   00000001 00000010 00000001 00000001 00000001
         """
         self._children= (
             bit_offset,
@@ -474,6 +506,10 @@ class BitCount(_BaseExpr):
                 # Let blob bin "c" == bytearray([3] * 5).
                 # Count set bits starting at 3rd byte in bin "c" to get count of 6.
                 expr = exp.BitCount(16, 8 * 3, exp.BlobBin("c")).compile()
+                # 00000011 00000011 00000011 00000011 00000011
+                # 01234567 89012345 6 (offset = 16)
+                #                   12345678 90123456 78901234 (bit count = 24)
+                # Number of 1's = 6
         """
         self._children= (
             bit_offset,
@@ -517,16 +553,20 @@ class BitRightScan(_BaseExpr):
         """ Args:
                 bit_offset (int): Bit index of where to start reading.
                 bit_size (int): Number of bits to read.
-                value bool: Bit value to check for.
+                value (bool): Bit value to check for.
                 bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
             :return: Index of the right most bit starting from bit_offset set to value. Returns -1 if not found.
 
             Example::
 
-                # Let blob bin "c" == bytearray([3] * 5).
-                # Scan the first byte of bin "c" for the right most bit set to 1. (should get 7)
-                expr = exp.BitRightScan(0, 8, True, exp.BlobBin("c")).compile()
+                # b = bytearray([1, 0, 0, 0, 128])
+                expr = exp.BitRightScan(32, 8, True, exp.BlobBin("b")).compile()
+                # 00000001 00000000 00000000 00000000 10000000
+                # 01234567 89012345 67890123 45678901 2 (offset=32)
+                #                                     xxxxxxxx (selected bits)
+                #                                     01234567 (local offset)
+                # 1 found at local offset 0
         """
         self._children= (
             bit_offset,

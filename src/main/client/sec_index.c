@@ -30,20 +30,22 @@
 #include "exceptions.h"
 #include "policy.h"
 
-static bool getDataTypeFromPyObject(PyObject *py_datatype,
-									as_index_datatype *idx_datatype,
+static bool getTypeFromPyObject(PyObject *py_datatype,
+									int *idx_datatype,
 									as_error *err);
 
 static PyObject *
 createIndexWithCollectionType(AerospikeClient *self, PyObject *py_policy,
 							  PyObject *py_ns, PyObject *py_set,
 							  PyObject *py_bin, PyObject *py_name,
-							  PyObject *py_datatype, as_index_type index_type);
+							  PyObject *py_datatype, as_index_type index_type,
+							  as_cdt_ctx *ctx);
 
 static PyObject *createIndexWithDataAndCollectionType(
 	AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
 	PyObject *py_set, PyObject *py_bin, PyObject *py_name,
-	as_index_type index_type, as_index_datatype data_type);
+	as_index_type index_type, as_index_datatype data_type,
+	as_cdt_ctx *ctx);
 
 /**
  *******************************************************************************************************
@@ -84,7 +86,7 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
 
 	return createIndexWithDataAndCollectionType(
 		self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-		AS_INDEX_NUMERIC);
+		AS_INDEX_NUMERIC, NULL);
 }
 
 /**
@@ -126,7 +128,98 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
 
 	return createIndexWithDataAndCollectionType(
 		self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-		AS_INDEX_STRING);
+		AS_INDEX_STRING, NULL);
+}
+
+/**
+ *******************************************************************************************************
+ * Creates a cdt index for a bin in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
+											  PyObject *args, PyObject *kwds)
+{
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
+
+	// Python Function Arguments
+	PyObject *py_policy = NULL;
+	PyObject *py_ns = NULL;
+	PyObject *py_set = NULL;
+	PyObject *py_bin = NULL;
+	PyObject *py_indextype = NULL;
+	PyObject *py_datatype = NULL;
+	PyObject *py_name = NULL;
+	PyObject *py_ctx = NULL;
+	as_cdt_ctx ctx;
+	bool ctx_in_use = false;
+	PyObject *py_obj = NULL;
+	as_index_datatype data_type;
+	as_index_type index_type;
+
+	// Python Function Keyword Arguments
+	static char *kwlist[] = {"ns", "set", "bin", "index_type", "index_datatype",
+							 "name", "ctx", "policy", NULL};
+
+	// Python Function Argument Parsing
+	if (PyArg_ParseTupleAndKeywords(
+			args, kwds, "OOOOOOO|O:index_list_create", kwlist, &py_ns, &py_set,
+			&py_bin, &py_indextype, &py_datatype, &py_name, &py_ctx, &py_policy) == false) {
+		return NULL;
+	}
+
+	if (!getTypeFromPyObject(py_indextype, (int*)&index_type, &err)) {
+		goto CLEANUP;
+	}
+
+	if (!getTypeFromPyObject(py_datatype, (int*)&data_type, &err)) {
+		goto CLEANUP;
+	}
+
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
+
+	if (get_cdt_ctx(self, &err, &ctx, py_ctx, &ctx_in_use, &static_pool,
+					SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+	if(!ctx_in_use) {
+		goto CLEANUP;
+	}
+
+	py_obj = createIndexWithDataAndCollectionType(self, py_policy, 
+										py_ns, py_set, 
+										py_bin, py_name,
+										index_type,data_type,
+										&ctx);
+
+	as_cdt_ctx_destroy(&ctx);
+
+	return py_obj;
+
+CLEANUP:
+	if (py_obj == NULL) {
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if (PyObject_HasAttrString(exception_type, "name")) {
+			PyObject_SetAttrString(exception_type, "name", py_name);
+		}
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
+
+	return py_obj;
 }
 
 /**
@@ -265,7 +358,8 @@ PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
 
 	return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
 										 py_name, py_datatype,
-										 AS_INDEX_TYPE_LIST);
+										 AS_INDEX_TYPE_LIST,
+										 NULL);
 }
 
 PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
@@ -296,7 +390,8 @@ PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
 
 	return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
 										 py_name, py_datatype,
-										 AS_INDEX_TYPE_MAPKEYS);
+										 AS_INDEX_TYPE_MAPKEYS,
+										 NULL);
 }
 
 PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
@@ -328,7 +423,8 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
 
 	return createIndexWithCollectionType(self, py_policy, py_ns, py_set, py_bin,
 										 py_name, py_datatype,
-										 AS_INDEX_TYPE_MAPVALUES);
+										 AS_INDEX_TYPE_MAPVALUES,
+										 NULL);
 }
 
 PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
@@ -357,14 +453,14 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
 
 	return createIndexWithDataAndCollectionType(
 		self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-		AS_INDEX_GEO2DSPHERE);
+		AS_INDEX_GEO2DSPHERE, NULL);
 }
 
 /*
  * Convert a PyObject into an as_index_datatype, return False if the conversion fails for any reason.
  */
-static bool getDataTypeFromPyObject(PyObject *py_datatype,
-									as_index_datatype *idx_datatype,
+static bool getTypeFromPyObject(PyObject *py_datatype,
+									int *idx_datatype,
 									as_error *err)
 {
 
@@ -409,7 +505,8 @@ static PyObject *
 createIndexWithCollectionType(AerospikeClient *self, PyObject *py_policy,
 							  PyObject *py_ns, PyObject *py_set,
 							  PyObject *py_bin, PyObject *py_name,
-							  PyObject *py_datatype, as_index_type index_type)
+							  PyObject *py_datatype, as_index_type index_type,
+							  as_cdt_ctx *ctx)
 {
 
 	as_index_datatype data_type = AS_INDEX_STRING;
@@ -417,12 +514,12 @@ createIndexWithCollectionType(AerospikeClient *self, PyObject *py_policy,
 	as_error err;
 	as_error_init(&err);
 
-	if (!getDataTypeFromPyObject(py_datatype, &data_type, &err)) {
+	if (!getTypeFromPyObject(py_datatype, (int*)&data_type, &err)) {
 		return NULL;
 	}
 
 	return createIndexWithDataAndCollectionType(
-		self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type);
+		self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type, ctx);
 }
 
 /*
@@ -433,7 +530,8 @@ createIndexWithCollectionType(AerospikeClient *self, PyObject *py_policy,
 static PyObject *createIndexWithDataAndCollectionType(
 	AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
 	PyObject *py_set, PyObject *py_bin, PyObject *py_name,
-	as_index_type index_type, as_index_datatype data_type)
+	as_index_type index_type, as_index_datatype data_type,
+	as_cdt_ctx *ctx)
 {
 
 	// Initialize error
@@ -524,9 +622,10 @@ static PyObject *createIndexWithDataAndCollectionType(
 
 	// Invoke operation
 	Py_BEGIN_ALLOW_THREADS
-	aerospike_index_create_complex(self->as, &err, &task, info_policy_p,
+	aerospike_index_create_ctx(self->as, &err, &task, info_policy_p,
 								   namespace, set_ptr, bin_ptr, name,
-								   index_type, data_type);
+								   index_type, data_type,
+								   ctx);
 	Py_END_ALLOW_THREADS
 	if (err.code != AEROSPIKE_OK) {
 		as_error_update(&err, err.code, NULL);

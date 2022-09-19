@@ -444,12 +444,6 @@ as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy)
 		return status;
 	}
 
-	status = set_optional_bool_property(&batch_policy->send_set_name, py_policy,
-										"send_set_name");
-	if (status != AEROSPIKE_OK) {
-		return status;
-	}
-
 	status = set_optional_bool_property(&batch_policy->deserialize, py_policy,
 										"deserialize");
 	if (status != AEROSPIKE_OK) {

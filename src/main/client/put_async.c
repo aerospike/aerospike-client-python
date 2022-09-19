@@ -153,13 +153,9 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	as_policy_write *write_policy_p = NULL;
 	as_record rec;
 
-	// For converting predexp.
+	// For converting expressions.
 	as_exp exp_list;
 	as_exp *exp_list_p = NULL;
-
-	// For converting predexp.
-	as_predexp_list predexp_list;
-	as_predexp_list *predexp_list_p = NULL;
 
 	// Initialisation flags
 	bool record_initialised = false;
@@ -183,7 +179,9 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	if (!async_support) {
 		as_error err;
 		as_error_init(&err);
-		as_error_update(&err, AEROSPIKE_ERR, "Support for async is disabled, build software with async option");
+		as_error_update(
+			&err, AEROSPIKE_ERR,
+			"Support for async is disabled, build software with async option");
 		PyObject *py_err = NULL, *exception_type = NULL;
 		error_to_pyobject(&err, &py_err);
 		exception_type = raise_exception(&err);
@@ -223,7 +221,8 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	}
 
 	if (!self || !self->as) {
-		as_error_update(&uData->error, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		as_error_update(&uData->error, AEROSPIKE_ERR_PARAM,
+						"Invalid aerospike object");
 		goto CLEANUP;
 	}
 
@@ -240,8 +239,8 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	}
 
 	// Convert python bins and metadata objects to as_record
-	pyobject_to_record(self, &uData->error, py_bins, py_meta, &rec, serializer_option,
-					   &static_pool);
+	pyobject_to_record(self, &uData->error, py_bins, py_meta, &rec,
+					   serializer_option, &static_pool);
 	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -249,8 +248,7 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
 	// Convert python policy object to as_policy_write
 	pyobject_to_policy_write(self, &uData->error, py_policy, &write_policy,
 							 &write_policy_p, &self->as->config.policies.write,
-							 &predexp_list, &predexp_list_p, &exp_list,
-							 &exp_list_p);
+							 &exp_list, &exp_list_p);
 	if (uData->error.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
@@ -270,10 +268,6 @@ CLEANUP:
 
 	if (exp_list_p) {
 		as_exp_destroy(exp_list_p);
-	}
-
-	if (predexp_list_p) {
-		as_predexp_list_destroy(&predexp_list);
 	}
 
 	if (record_initialised == true) {
