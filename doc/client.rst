@@ -1478,7 +1478,7 @@ The metadata dictionary has the following key-value pairs:
     * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS`.
     * ``"gen"`` (:class:`int`): record generation
 
-.. _aerospike_polices:
+.. _aerospike_policies:
 
 Policies
 ========
