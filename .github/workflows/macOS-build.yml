@@ -1,0 +1,57 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
+
+name: Python application
+
+on:
+  push:
+    branches: [ "master", "stage" ]
+  pull_request:
+    branches: [ "master", "stage" ]
+
+jobs:
+  build:
+
+    runs-on: macos-10.15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+        submodules: recursive
+    - name: Build
+      run: |
+        brew install openssl@1.1
+
+        megaWheel="macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.macosx_10_11_intel.macosx_10_11_x86_64.macosx_10_12_intel.macosx_10_12_x86_64.whl"
+        baseWheelName="macosx_10_11_x86_64"
+        sslLibPath="/usr/local/Cellar/openssl@1.1/1.1.1l/lib/"
+        cClientVersion=""
+
+        export STATIC_SSL=1
+        export SSL_LIB_PATH=$sslLibPath
+        export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
+        pushd .
+
+        python3 setup.py sdist --formats=gztar
+
+        python3 -m venv .venv
+        source .venv/bin/activate
+        python3 setup.py build --force
+        python3 setup.py bdist_wheel
+        deactivate
+
+        pushd dist
+        for f in *.whl; do
+          [[ -e $f ]] || continue
+          location=`strindex $f $baseWheelName`
+          fName="${f:0:$location}$megaWheel"
+          mv $f $fName
+        done
+        popd
