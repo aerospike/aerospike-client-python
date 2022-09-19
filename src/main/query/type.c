@@ -133,6 +133,18 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
 	{"records_per_second", T_UINT,
 	 offsetof(AerospikeQuery, query) + offsetof(as_query, records_per_second),
 	 0, "Limit the query to process records at records_per_second."},
+	{"ttl", T_UINT,
+	 offsetof(AerospikeQuery, query) + offsetof(as_query, ttl),
+	 0, "The time-to-live (expiration) of the record in seconds. \
+			There are also special values that can be set in the record TTL: \
+			ZERO (defined as TTL_NAMESPACE_DEFAULT): which means that the \
+			   record will adopt the default TTL value from the namespace. \
+			0xFFFFFFFF (also, -1 in a signed 32 bit int): \
+			   (defined as TTL_NEVER_EXPIRE), which means that the record will never expire. \
+			0xFFFFFFFE (also, -2 in a signed 32 bit int): \
+			   (defined as TTL_DONT_UPDATE), which means that the record \
+			   ttl will not change when the record is updated. \
+	 	Note that the TTL value will be employed ONLY on background query writes."},
 	{NULL} /* Sentinel */
 };
 

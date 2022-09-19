@@ -82,6 +82,18 @@ class TestQueryApply(object):
         res = query.execute_background()
         assert isinstance(res, (int, long))
 
+    def test_background_execute_return_val_with_ttl(self, clean_test_background):
+        """
+        Ensure that Query.execute_background() returns an int like object
+        """
+        test_bin = 'tz'
+        query = self.as_connection.query(TEST_NS, TEST_SET)
+        query.max_records = 100
+        query.ttl = aerospike.TTL_DONT_UPDATE
+        query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
+        res = query.execute_background()
+        assert isinstance(res, (int, long))
+
     def test_background_execute_no_predicate(self, clean_test_background):
         """
         Ensure that Query.execute_background() gets applied to all records
