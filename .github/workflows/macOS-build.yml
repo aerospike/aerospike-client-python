@@ -28,16 +28,14 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build
       run: |
-        brew install openssl@1.1
-
         megaWheel="macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.macosx_10_11_intel.macosx_10_11_x86_64.macosx_10_12_intel.macosx_10_12_x86_64.whl"
         baseWheelName="macosx_10_11_x86_64"
-        sslLibPath="/usr/local/Cellar/openssl@1.1/1.1.1l/lib/"
+        sslLibPath="/usr/local/opt/openssl@1.1/1.1.1l/lib/"
         cClientVersion=""
 
         export STATIC_SSL=1
         export SSL_LIB_PATH=$sslLibPath
-        export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
+        export CPATH=/usr/local/opt/openssl@1.1/1.1.1l/include/
         pushd .
 
         python3 setup.py sdist --formats=gztar
