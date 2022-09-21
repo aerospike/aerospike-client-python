@@ -646,6 +646,15 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
 												  PyObject *args,
 												  PyObject *kwds);
 
+/**
+* Get the base64 representation of an aerospike CDT ctx.
+*
+* b64_string = client.get_cdtctx_base64(compiled_cdtctx)
+*
+*/
+PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self,
+											  PyObject *args, PyObject *kwds);
+
 /*******************************************************************************
  * LOG OPERATIONS
  ******************************************************************************/

@@ -1054,6 +1054,20 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+    .. method:: get_cdtctx_base64(expression) -> str
+
+        Get the base64 representation of a compiled aerospike CDT ctx.
+
+        See :ref:`aerospike_operation_helpers.cdt_ctx` for more details on CDT context.
+
+        :param list Aerospike CDT context: the compiled aerospike CDT ctx.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. include:: examples/get_cdtctx_base64.py
+            :code: python
+
+        .. versionchanged:: 7.1.1
+
 
     .. index::
         single: Admin Operations
