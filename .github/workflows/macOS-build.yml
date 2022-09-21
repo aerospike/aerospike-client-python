@@ -1,7 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
-name: Python application
+name: Build on MacOS
 
 on:
   push:
@@ -15,8 +12,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.6", "3.7"]
-        os: [macos-11, macos-12]
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
+        os: [macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
@@ -28,22 +25,9 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Build
       run: |
-        megaWheel="macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.macosx_10_11_intel.macosx_10_11_x86_64.macosx_10_12_intel.macosx_10_12_x86_64.whl"
-        baseWheelName="macosx_10_11_x86_64"
-
         export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
         export CPATH="/usr/local/opt/openssl@1.1/include/"
         export STATIC_SSL=1
 
-        python3 setup.py sdist --formats=gztar
-
         python3 setup.py build --force
         python3 setup.py install --force
-
-        # cd dist
-        # for f in *.whl; do
-        #   [[ -e $f ]] || continue
-        #   location=`strindex $f $baseWheelName`
-        #   fName="${f:0:$location}$megaWheel"
-        #   mv $f $fName
-        # done
