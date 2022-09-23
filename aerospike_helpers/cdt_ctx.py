@@ -83,6 +83,28 @@ Example::
 '''
 import aerospike
 
+#'index_type' - must be one of 'default', 'list', 'mapkeys', 'mapvalues'
+def index_type_string(index_type):
+    if index_type == aerospike.INDEX_TYPE_DEFAULT:
+        return "default"
+    if index_type == aerospike.INDEX_TYPE_LIST:
+        return "list"
+    if index_type == aerospike.INDEX_TYPE_MAPKEYS:
+        return "mapkeys"
+    if index_type == aerospike.INDEX_TYPE_MAPVALUES:
+        return "mapvalues"
+    return "invalid"
+
+#'index_datatype' - must be one of 'numeric', 'string', 'geo2dsphere'
+def index_datatype_string(index_datatype):
+    if index_datatype == aerospike.INDEX_NUMERIC:
+        return "numeric"
+    if index_datatype == aerospike.INDEX_STRING:
+        return "string"
+    if index_datatype == aerospike.INDEX_GEO2DSPHERE:
+        return "geo2dsphere"
+    return "invalid"
+
 
 CDT_CTX_ORDER_KEY = "order_key"
 CDT_CTX_PAD_KEY = "pad_key"

@@ -1140,3 +1140,7 @@ class TestQuery(TestBaseClass):
             
         assert records
         assert len(records) == 3
+
+    def test_query_with_base64_cdt_ctx(self):
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64({'ctx':ctx_list_index})
+        print(bs_b4_cdt)

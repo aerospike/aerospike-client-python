@@ -119,6 +119,31 @@ class TestCDTIndex(object):
 
         assert retobj == 0
 
+    def test_pos_cdtindex_with_info_command(self):
+        """
+            Invoke index_cdt_create() with correct arguments
+        """
+        policy = {}
+
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64({'ctx':ctx_list_index})
+        
+        r = []
+        r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
+        r.append(";indextype=%s" % (cdt_ctx.index_type_string(aerospike.INDEX_TYPE_LIST)))
+        r.append(";indexdata=string_list,%s" % (cdt_ctx.index_datatype_string(aerospike.INDEX_STRING)))
+        r.append(";context=%s" % (bs_b4_cdt))
+        req = ''.join(r)
+
+        # print("req is ==========={}", req)
+        retobj = self.as_connection.info_all(req, policy=None)
+        # print("res is ==========={}", res)
+
+        self.as_connection.index_remove('test', 'test_string_list_cdt_index',
+                                        policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_cdt_index')
+
+        assert retobj != 0
+
     def test_pos_cdtindex_with_listrank_correct_parameters(self):
         """
             Invoke index_cdt_create() with correct arguments
