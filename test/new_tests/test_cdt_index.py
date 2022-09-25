@@ -121,7 +121,7 @@ class TestCDTIndex(object):
 
     def test_pos_cdtindex_with_info_command(self):
         """
-            Invoke index_cdt_create() with correct arguments
+            Invoke index_cdt_create() with info command
         """
         policy = {}
 
