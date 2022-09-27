@@ -77,7 +77,7 @@ Example::
     print(result)
     # {'users': 4}
 
-    # Example 3: index_cdt_create() with info command
+    # Example 3: create a CDT secondary index from a base64 encoded _cdt_ctx with info command
     policy = {}
 
     bs_b4_cdt = client.get_cdtctx_base64({'ctx':ctx_list_index})
@@ -102,17 +102,17 @@ Example::
 '''
 import aerospike
 
-"""
-Converts index_type enum value to string.
-
-Args:
-    index_type (int): The index_type to convert into equivalent string value.
-
-Returns:
-    (string) - must be one of 'default', 'list', 'mapkeys', 'mapvalues'
-
-"""
 def index_type_string(index_type):
+    """
+    Converts index_type enum value to string.
+
+    Args:
+        index_type (int): The index_type to convert into equivalent string value.
+
+    Returns:
+        (string) - must be one of 'default', 'list', 'mapkeys', 'mapvalues'
+
+    """
     if index_type == aerospike.INDEX_TYPE_DEFAULT:
         return "default"
     if index_type == aerospike.INDEX_TYPE_LIST:
@@ -123,16 +123,16 @@ def index_type_string(index_type):
         return "mapvalues"
     return "invalid"
 
-"""
-Converts index_datatype enum value to string.
-
-Args:
-    index_datatype (int): The index_datatype to convert into equivalent string value.
-
-Returns:
-    (string) - must be one of must be one of 'numeric', 'string', 'geo2dsphere'
-"""
 def index_datatype_string(index_datatype):
+    """
+    Converts index_datatype enum value to string.
+
+    Args:
+        index_datatype (int): The index_datatype to convert into equivalent string value.
+
+    Returns:
+        (string) - must be one of must be one of 'numeric', 'string', 'geo2dsphere'
+    """
     if index_datatype == aerospike.INDEX_NUMERIC:
         return "numeric"
     if index_datatype == aerospike.INDEX_STRING:

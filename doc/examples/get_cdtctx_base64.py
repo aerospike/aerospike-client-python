@@ -27,7 +27,7 @@ def get_aerospike():
     endpoints = [
         ('x.y.z.a', 3000)]
 
-    hosts = [(address[0], address[1], tls_name) for address in endpoints]
+    hosts = [(address[0], address[1]) for address in endpoints]
 
     config = {
         'hosts': hosts,
@@ -39,5 +39,6 @@ ctx_list_index.append(add_ctx_op(list_index, 0))
 
 client = get_aerospike().connect()
 bs_b4_cdt = client.get_cdtctx_base64({'ctx':ctx_list_index})
+print("base64 encoded _cdt_ctx: ", bs_b4_cdt)
 assert bs_b4_cdt == "khAA"
 client.close()
