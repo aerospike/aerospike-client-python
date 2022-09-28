@@ -48,7 +48,7 @@ jobs:
       run: |
         sudo apt-get install libssl-dev
         sudo apt-get install python3-dev
-        python -m pip install pytest
+        python -m pip install pytest flake8
     - name: Build client
       run: |
         python setup.py build --force
