@@ -60,4 +60,5 @@ jobs:
         cd test
         python -m pytest ./new_tests
     - name: Lint Python code
+      run:
         flake8 --count --max-complexity=10 --show-source --max-line-length=127 aerospike_helpers benchmarks
