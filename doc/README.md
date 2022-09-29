@@ -18,12 +18,6 @@ pip install Sphinx
 
 ## Building the Documentation
 
-## Spell checking
-
-```bash
-sphinx-build -b spelling . build -W
-```
-
 ### HTML Documentation
 
 ```bash

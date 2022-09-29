@@ -48,14 +48,7 @@ jobs:
       run: |
         sudo apt-get install libssl-dev
         sudo apt-get install python3-dev
-        python -m pip install pytest flake8
-    - name: Documentation
-      run: |
-        # Spell check
-        cd docs/
-        sphinx-build -b spelling . build -W
-        # Build
-        sphinx-build -b html . htmldir -W
+        python -m pip install pytest
     - name: Build client
       run: |
         python setup.py build --force
