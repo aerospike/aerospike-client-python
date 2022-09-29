@@ -136,7 +136,6 @@ static int Aerospike_Clear(PyObject *aerospike)
 #if AS_EVENT_LIB_DEFINED
 	as_event_close_loops();
 #endif
-	remove_exception(NULL);
 	Py_CLEAR(Aerospike_State(aerospike)->exception);
 	Py_CLEAR(Aerospike_State(aerospike)->client);
 	Py_CLEAR(Aerospike_State(aerospike)->query);
