@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2020 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,19 +40,22 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Get_Invoke(
-		AerospikeClient * self,
-		PyObject * py_key, PyObject * py_policy)
+PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
+									 PyObject *py_policy)
 {
 	// Python Return Value
-	PyObject * py_rec = NULL;
+	PyObject *py_rec = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
 	as_policy_read read_policy;
-	as_policy_read * read_policy_p = NULL;
+	as_policy_read *read_policy_p = NULL;
 	as_key key;
-	as_record * rec = NULL;
+	as_record *rec = NULL;
+
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp *exp_list_p = NULL;
 
 	// Initialised flags
 	bool key_initialised = false;
@@ -67,7 +70,8 @@ PyObject * AerospikeClient_Get_Invoke(
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -80,31 +84,32 @@ PyObject * AerospikeClient_Get_Invoke(
 	key_initialised = true;
 
 	// Convert python policy object to as_policy_exists
-	pyobject_to_policy_read(&err, py_policy, &read_policy, &read_policy_p,
-			&self->as->config.policies.read);
+	pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
+							&self->as->config.policies.read, &exp_list,
+							&exp_list_p);
 	if (err.code != AEROSPIKE_OK) {
 		goto CLEANUP;
 	}
-
-	// Initialize record
-	as_record_init(rec, 0);
-	// Record initialised successfully.
-	record_initialised = true;
 
 	// Invoke operation
 	Py_BEGIN_ALLOW_THREADS
 	aerospike_key_get(self->as, &err, read_policy_p, &key, &rec);
 	Py_END_ALLOW_THREADS
 	if (err.code == AEROSPIKE_OK) {
-		record_to_pyobject(self, &err, rec, &key, &py_rec);
+		record_initialised = true;
+
+		if (record_to_pyobject(self, &err, rec, &key, &py_rec) !=
+			AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
 		if (!read_policy_p ||
-				( read_policy_p && read_policy_p->key == AS_POLICY_KEY_DIGEST)) {
+			(read_policy_p && read_policy_p->key == AS_POLICY_KEY_DIGEST)) {
 			// This is a special case.
 			// C-client returns NULL key, so to the user
 			// response will be (<ns>, <set>, None, <digest>)
 			// Using the same input key, just making primary key part to be None
 			// Only in case of POLICY_KEY_DIGEST or no policy specified
-			PyObject * p_key = PyTuple_GetItem( py_rec, 0 );
+			PyObject *p_key = PyTuple_GetItem(py_rec, 0);
 			Py_INCREF(Py_None);
 			PyTuple_SetItem(p_key, 2, Py_None);
 		}
@@ -115,22 +120,28 @@ PyObject * AerospikeClient_Get_Invoke(
 
 CLEANUP:
 
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);
+		;
+	}
+
 	if (key_initialised == true) {
 		// Destroy key only if it is initialised.
 		as_key_destroy(&key);
 	}
-	if (record_initialised == true) {
+
+	if (rec && record_initialised) {
 		// Destroy record only if it is initialised.
 		as_record_destroy(rec);
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
-		} 
+		}
 		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
@@ -155,18 +166,19 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Get(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Get(AerospikeClient *self, PyObject *args,
+							  PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_key = NULL;
-	PyObject * py_policy = NULL;
+	PyObject *py_key = NULL;
+	PyObject *py_policy = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "policy", NULL};
+	static char *kwlist[] = {"key", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist,
-			&py_key, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist, &py_key,
+									&py_policy) == false) {
 		return NULL;
 	}
 

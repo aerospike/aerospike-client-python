@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##########################################################################
-# Copyright 2013-2017 Aerospike, Inc.
+# Copyright 2013-2021 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ if len(args) != 1:
 config = {
     'hosts': [(options.host, options.port)],
     'policies': {
-        'timeout': options.timeout
+        'read': {'total_timeout': options.timeout}
     }
 }
 

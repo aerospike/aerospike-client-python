@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##########################################################################
-# Copyright 2013-2017 Aerospike, Inc.
+# Copyright 2013-2021 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ try:
         (key, meta, bins) = client.get(('test', 'cats', 'mr. peppy'))
         print("Before:", bins)
         client.increment(
-            key, 'lives', -1, {'gen': 2, 'ttl': 1000}, policy={'timeout': 1500})
+            key, 'lives', -1, {'gen': 2, 'ttl': 1000}, policy={'total_timeout': 1500})
         (key, meta, bins) = client.get(key)
         print("After:", bins)
         # the key we got back when we fetched the record with get() is useable

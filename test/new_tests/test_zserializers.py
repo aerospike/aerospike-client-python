@@ -16,10 +16,6 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
-HOSTLIST, USER, PASSWORD = TestBaseClass.get_hosts()
-
-
 class SomeClass(object):
     pass
 
@@ -88,9 +84,7 @@ class TestPythonSerializer(object):
         Invoke put() for record with no class serializer. There is an
         instance serializer
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
@@ -113,9 +107,7 @@ class TestPythonSerializer(object):
         and a class serializer has not been set,
         the instance serializer is used.
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
@@ -155,9 +147,7 @@ class TestPythonSerializer(object):
         """
         Invoke put() for mixed data record with builtin serializer
         """
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
@@ -220,9 +210,7 @@ class TestPythonSerializer(object):
         """
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
@@ -247,9 +235,7 @@ class TestPythonSerializer(object):
         """
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
@@ -273,9 +259,7 @@ class TestPythonSerializer(object):
         """
         aerospike.set_serializer(json.dumps)
         aerospike.set_deserializer(json.loads)
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist
         }
         client = TestBaseClass.get_new_connection(method_config)
 
@@ -295,9 +279,7 @@ class TestPythonSerializer(object):
         serializer
         """
 
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist,
             'serialization': (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
@@ -394,9 +376,7 @@ class TestPythonSerializer(object):
         """
         aerospike.set_serializer(json.dumps)
         aerospike.set_deserializer(json.loads)
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist
         }
         client = TestBaseClass.get_new_connection(method_config)
 
@@ -430,9 +410,7 @@ class TestPythonSerializer(object):
         the class serializer
         """
 
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist,
             'serialization': (5, instance_deserializer)}
 
         with pytest.raises(e.ParamError):
@@ -446,9 +424,7 @@ class TestPythonSerializer(object):
         with pytest.raises(e.ParamError):
             aerospike.set_deserializer(5)
 
-        hostlist, user, password = TestBaseClass.get_hosts()
         method_config = {
-            'hosts': hostlist,
             'serialization': (instance_serializer, 5)}
 
         with pytest.raises(e.ParamError):
@@ -496,7 +472,7 @@ class TestPythonSerializer(object):
                     serializer=aerospike.SERIALIZER_USER)
 
     def test_deserializer_raises_error(self):
-        # If the deserializer failed, we should get a bytearray
+        # If the deserializer failed, we should get a bytes
         # representation of the item
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(deserializer_error)
@@ -508,4 +484,4 @@ class TestPythonSerializer(object):
         _, _, response = self.as_connection.get(self.test_key)
 
         assert response['normal'] == 1234
-        assert isinstance(response['tuple'], bytearray)
+        assert isinstance(response['tuple'], bytes)

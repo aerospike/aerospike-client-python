@@ -4,11 +4,12 @@ try:
 except:
     import pickle
 
+
 class SomeClass(object):
     pass
 
 pos_data = [
-            (('test', 'demo', 1), {'age': 1, 'name': 'name1'}),         
+            (('test', 'demo', 1), {'age': 1, 'name': 'name1'}),
             (('test', 'demo', 2), {'age': 2, 'name': 'Mr John', 'bmi': 3.55}),
             (('test', 'demo', 'boolean_key'), {'is_present': True}),
             (('test', 'demo', 'string'), {'place': "New York", 'name': 'John'}),
@@ -88,7 +89,4 @@ key_neg = [
             -2, 'either key or digest is required'),
         (('test', 'demo'),
             -2, 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'),
-        
-        # reason="Invalid meta parameter has not been handled currently"
-        pytest.mark.xfail((('test', 'demo', 1), -2, "meta must be a dict")),
         ]

@@ -43,7 +43,7 @@ class TestExistsMany():
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
             self.keys.append(key)
-        records = self.as_connection.exists_many(self.keys, {'timeout': 1200})
+        records = self.as_connection.exists_many(self.keys, {'total_timeout': 1200})
 
         assert isinstance(records, list)
         assert len(records) == rec_length
@@ -167,117 +167,45 @@ class TestExistsMany():
         key = ('test', 'demo', 20)
         rec = {"name": "John"}
         meta = {'gen': 3, 'ttl': 1}
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 1000}
         put_data(self.as_connection, key, rec, meta, policy)
         keys.append(key)
         time.sleep(2)
         records = self.as_connection.exists_many(keys)
         assert isinstance(records, list)
         assert len(records) == 1
-        for x in records:
-            assert x[1] is None
+        for record in records:
+            assert record[1] is None
 
-    def test_exists_many_with_batch_direct_as_constructor_arg(self, put_data):
+    def test_exists_many_with_bytearray_key(self, put_data):
+        self.keys = [('test', 'demo', bytearray([1, 2, 3]))]
+        for key in self.keys:
+            put_data(self.as_connection, key, {'byte': 'array'})
 
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'policies': {'use_batch_direct': True}}
-        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
+        records = self.as_connection.exists_many(self.keys)
 
-        self.keys = []
-        rec_length = 5
-        for i in range(rec_length):
-            key = ('test', 'demo', i)
-            record = {'name': 'name%s' % (str(i)), 'age': i}
-            put_data(self.as_connection, key, record)
-            self.keys.append(key)
+        bytearray_key = records[0][0]
+        assert len(bytearray_key) == 4
 
-        self.keys.append(('test', 'demo', 'some_key'))
+        bytearray_pk = bytearray_key[2]
+        assert bytearray_pk == bytearray([1, 2, 3])
 
-        for i in range(15, 20):
-            key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'age': i}
-            put_data(self.as_connection, key, rec)
-            self.keys.append(key)
-
-        records = client_batch_direct.exists_many(self.keys)
-
-        assert isinstance(records, list)
-        assert len(records) == len(self.keys)
-
-        client_batch_direct.close()
-
-    def test_with_batch_direct_true_in_constructor_false_in_args(self, put_data):
-
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'policies': {'use_batch_direct': True}}
-        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
-        policies = {'use_batch_direct': False}
-        self.keys = []
-        rec_length = 5
-        for i in range(rec_length):
-            key = ('test', 'demo', i)
-            record = {'name': 'name%s' % (str(i)), 'age': i}
-            put_data(self.as_connection, key, record)
-            self.keys.append(key)
-
-        self.keys.append(('test', 'demo', 'some_key'))
-
-        for i in range(15, 20):
-            key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'age': i}
-            put_data(self.as_connection, key, rec)
-            self.keys.append(key)
-
-        records = client_batch_direct.exists_many(self.keys)
-
-        assert isinstance(records, list)
-        assert len(records) == len(self.keys)
-
-        client_batch_direct.close()
-
-    def test_exists_many_with_batch_direct_as_method_arg(self, put_data):
-
-        policies = {'use_batch_direct': True}
-
-        self.keys = []
-        rec_length = 5
-        for i in range(rec_length):
-            key = ('test', 'demo', i)
-            record = {'name': 'name%s' % (str(i)), 'age': i}
-            put_data(self.as_connection, key, record)
-            self.keys.append(key)
-
-        self.keys.append(('test', 'demo', 'some_key'))
-
-        for i in range(15, 20):
-            key = ('test', 'demo', i)
-            rec = {'name': 'name%s' % (str(i)), 'age': i}
-            put_data(self.as_connection, key, rec)
-            self.keys.append(key)
-
-        records = self.as_connection.exists_many(self.keys, policies)
-
-        assert isinstance(records, list)
-        assert len(records) == len(self.keys)
     # Negative Tests
 
     def test_neg_exists_many_with_none_keys(self):
 
-        try:
+        with pytest.raises(e.ParamError):
             self.as_connection.exists_many(None, {})
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Keys should be specified as a list or tuple."
+    def test_neg_exists_many_with_an_invalid_key_in_list(self):
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.exists_many([('test', 'demo', 1), ('test', 'demo', 2), 5])
 
     def test_neg_exists_many_with_invalid_key(self):
 
-        try:
+        with pytest.raises(e.ParamError):
             self.as_connection.exists_many("key")
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_neg_exists_many_with_invalid_timeout(self, put_data):
         self.keys = []
@@ -287,13 +215,9 @@ class TestExistsMany():
             record = {'name': 'name%s' % (str(i)), 'age': i}
             put_data(self.as_connection, key, record)
             self.keys.append(key)
-        policies = {'timeout': 0.2}
-        try:
+        policies = {'total_timeout': 0.2}
+        with pytest.raises(e.ParamError):
             self.as_connection.exists_many(self.keys, policies)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
 
     def test_neg_exists_many_with_proper_parameters_without_connection(
             self, put_data):
@@ -309,7 +233,7 @@ class TestExistsMany():
         client1 = aerospike.client(config)
 
         try:
-            client1.exists_many(self.keys, {'timeout': 20})
+            client1.exists_many(self.keys, {'total_timeout': 20})
 
         except e.ClusterError as exception:
             assert exception.code == 11
@@ -392,15 +316,13 @@ class TestExistsMany():
         key = ('test2', 'demo', 20)
         # self.as_connection.put(key, rec, meta, policy)
         keys.append(key)
-        try:
+        with pytest.raises(e.ClientError):
             self.as_connection.exists_many(keys)
-        except e.NamespaceNotFound as exception:
-            assert exception.code == 20
 
     def test_neg_exists_many_without_any_parameter(self):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.exists_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in str(
+        assert "argument 'keys' (pos 1)" in str(
             typeError.value)

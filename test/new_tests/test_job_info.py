@@ -47,8 +47,22 @@ class TestScanInfo(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.job_info()
-        assert "Required argument 'job_id' (pos 1) not found" in str(
+        assert "argument 'job_id' (pos 1)" in str(
             typeError.value)
+
+    @pytest.mark.xfail(reason="This test fails if job_info() finishes in < 1ms")
+    def test_job_info_with_small_timeout(self, connection_with_udf):
+        """
+        Invoke job_info() with correct policy and an expected timeout
+        """
+        policy = {'timeout': 1}
+
+        self.job_id = connection_with_udf.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ['age', 2], block=False)
+
+        with pytest.raises(e.TimeoutError):
+            job_info = self.as_connection.job_info(
+                self.job_id, aerospike.JOB_SCAN, policy)
 
     def test_job_info_with_correct_parameters(self):
         """
@@ -104,6 +118,16 @@ class TestScanInfo(object):
 
         assert response['status'] == aerospike.JOB_STATUS_COMPLETED
 
+    def test_job_info_with_largeid(self):
+        """
+        Invoke job_info() with a large scan id,
+        this should not raise an error
+        """
+        response = self.as_connection.job_info(
+            13287138843617152748, aerospike.JOB_SCAN)
+
+        assert response['status'] == aerospike.JOB_STATUS_COMPLETED
+
     def test_job_info_with_scanid_string(self):
         """
         Invoke job_info() with scan id incorrect
@@ -111,7 +135,8 @@ class TestScanInfo(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.job_info("string")
-        assert "an integer is required" in str(typeError.value)
+        assert(any(["job_info() argument 1 must be int" in str(typeError.value),
+         "job_info() argument 1 must be an int" in str(typeError.value)]))
 
     def test_job_info_with_correct_parameters_without_connection(self):
         """

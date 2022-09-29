@@ -71,7 +71,7 @@ class TestListGet(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_get()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_list_get_with_incorrect_policy(self):
@@ -160,8 +160,8 @@ class TestListGet(object):
         key = ('test', 'demo', 1)
         try:
             self.as_connection.list_get(key, "contact_no", -56)
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.OpNotApplicable as exception:
+            assert exception.code == 26
 
     def test_neg_list_get_meta_type_integer(self):
         """
@@ -183,4 +183,4 @@ class TestListGet(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_get(key, "contact_no", "Fifth")
-        assert "an integer is required" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)

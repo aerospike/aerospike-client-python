@@ -17,29 +17,32 @@ except:
 class TestGrantRoles(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] is None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
+        config = TestBaseClass.get_connection_config()
         TestGrantRoles.Me = self
-        self.client = aerospike.client(config).connect(user, password)
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
 
         try:
             self.client.admin_drop_user("example-test")
-        except:
+            time.sleep(1)
+        except e.InvalidUser:
             pass
         policy = {}
         user = "example-test"
         password = "foo2"
         roles = ["read-write"]
 
-        self.client.admin_create_user(user, password, roles, policy)
-
+        try:
+            self.client.admin_create_user(user, password, roles, policy)
+            time.sleep(1)
+        except e.UserExistsError:
+            pass
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -48,9 +51,11 @@ class TestGrantRoles(TestBaseClass):
         """
 
         policy = {}
-
-        self.client.admin_drop_user("example-test", policy)
-
+        try:
+            self.client.admin_drop_user("example-test", policy)
+            time.sleep(1)
+        except e.InvalidUser:
+            pass
         self.client.close()
 
     def test_grant_roles_without_any_parameters(self):
@@ -147,9 +152,12 @@ class TestGrantRoles(TestBaseClass):
         password = "abcd"
         roles = ["read-write"]
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        try:
+            self.client.admin_create_user(user, password, roles, policy)
+            time.sleep(1)
+        except e.UserExistsError:
+            pass
 
-        assert status == 0
         roles = ["read"]
         status = self.client.admin_grant_roles(user, roles, policy)
 
@@ -159,10 +167,9 @@ class TestGrantRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user(user)
 
-        assert user_details == ['read', 'read-write']
+        assert set(user_details) == set(['read', 'read-write'])
 
-        status = self.client.admin_drop_user("!#Q#AEQ@#$%&^*((^&*~~~````[")
-        assert status == 0
+        self.client.admin_drop_user(user)
 
     def test_grant_roles_with_empty_roles_list(self):
 

@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 
-import pytest
 import sys
+
+from distutils.version import LooseVersion
+import pytest
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
-from .test_base_class import TestBaseClass
 from aerospike import exception as e
-
 
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except ImportError:
     print("Please install aerospike python client.")
     sys.exit(1)
+
+
+def is_greater_451(version_str):
+    '''
+    Is the server version 4.5.1.0-pre or newer
+    '''
+    return LooseVersion(version_str) >= LooseVersion("4.5.1")
 
 
 class TestUdfRemove(object):
@@ -167,10 +175,12 @@ class TestIncorrectCallsToUDFRemove(object):
         policy = {}
         module = "some_fake_module_that_does_not_exist"
 
-        with pytest.raises(e.UDFError) as err_info:
+        if is_greater_451(self.string_server_version):
             self.as_connection.udf_remove(module, policy)
+        else:
+            with pytest.raises(e.UDFError) as err_info:
+                self.as_connection.udf_remove(module, policy)
 
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_UDF
 
     def test_udf_remove_without_parameters(self):
         """
@@ -178,7 +188,7 @@ class TestIncorrectCallsToUDFRemove(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.udf_remove()
-        assert "Required argument 'filename' (pos 1) not found" in str(
+        assert "argument 'filename' (pos 1)" in str(
             typeError.value)
 
     def test_udf_remove_with_none_as_parameters(self):

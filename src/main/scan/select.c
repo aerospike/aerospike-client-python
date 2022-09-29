@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,13 @@
 #undef TRACE
 #define TRACE()
 
-AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyObject * kwds)
+AerospikeScan *AerospikeScan_Select(AerospikeScan *self, PyObject *args,
+									PyObject *kwds)
 {
 	TRACE();
 
-	char * bin = NULL; 
-	PyObject * py_ustr = NULL;
+	char *bin = NULL;
+	PyObject *py_ustr = NULL;
 	as_error err;
 	as_error_init(&err);
 
@@ -42,35 +43,40 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 	}
 
 	if (!self->client->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
-	int nbins = (int) PyTuple_Size(args);
+	int nbins = (int)PyTuple_Size(args);
 	as_scan_select_init(&self->scan, nbins);
 
-	for ( int i = 0; i < nbins; i++ ) {
-		PyObject * py_bin = PyTuple_GetItem(args, i);
+	for (int i = 0; i < nbins; i++) {
+		PyObject *py_bin = PyTuple_GetItem(args, i);
 		if (py_bin) {
 			TRACE();
 			if (PyUnicode_Check(py_bin)) {
 				py_ustr = PyUnicode_AsUTF8String(py_bin);
 				bin = PyBytes_AsString(py_ustr);
-			} else if (PyString_Check(py_bin)) {
+			}
+			else if (PyString_Check(py_bin)) {
 				bin = PyString_AsString(py_bin);
-			} else if (PyByteArray_Check(py_bin)) {
+			}
+			else if (PyByteArray_Check(py_bin)) {
 				bin = PyByteArray_AsString(py_bin);
-			} else {
-				as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin name should be of type string");
-				PyObject * py_err = NULL;
+			}
+			else {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM,
+								"Bin name should be of type string");
+				PyObject *py_err = NULL;
 				error_to_pyobject(&err, &py_err);
 				PyObject *exception_type = raise_exception(&err);
 				PyErr_SetObject(exception_type, py_err);
 				Py_DECREF(py_err);
 				return NULL;
-
 			}
-		} else {
+		}
+		else {
 			TRACE();
 		}
 		as_scan_select(&self->scan, bin);
@@ -83,7 +89,7 @@ AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyOb
 CLEANUP:
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);

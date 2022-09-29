@@ -54,7 +54,7 @@ class TestGetMany():
         '''
         Proper call to the method
         '''
-        records = self.as_connection.get_many(self.keys, {'timeout': 30})
+        records = self.as_connection.get_many(self.keys, {'total_timeout': 30})
 
         assert isinstance(records, list)
         assert len(records) == 6
@@ -168,28 +168,28 @@ class TestGetMany():
             if x[0][2] == 'some_key':
                 assert x[2] is None
 
-    def test_pos_get_many_with_use_batch_direct(self):
+    def test_get_many_with_bytearray_key(self):
+        '''
+        Make sure that get many can handle a a key with a bytearray pk
+        '''
+        keys = [('test', 'demo', bytearray([1, 2, 3]))]
+        for key in keys:
+            self.as_connection.put(key, {'byte': 'array'})
 
-        hostlist, user, password = TestBaseClass.get_hosts()
-        config = {'policies': {'use_batch_direct': True}}
-        client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
+        records = self.as_connection.get_many(keys)
+        self.as_connection.remove(keys[0])
 
-        records = client_batch_direct.get_many(self.keys)
+        bytearray_key = records[0][0]
+        assert len(bytearray_key) == 4
 
-        assert isinstance(records, list)
-        assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3,
-                                                               4, 'float_value'])
-        assert records[5][2] == {'float_value': 4.3}
-
-        client_batch_direct.close()
+        bytearray_pk = bytearray_key[2]
+        assert bytearray_pk == bytearray([1, 2, 3])
 
     def test_pos_get_many_with_constructor_batch_direct_and_method_arg(self):
         '''
         This sets use batch_direct to true in the constructor
         and sets it to false in the policy argument to the function
         '''
-        hostlist, user, password = TestBaseClass.get_hosts()
         config = {'policies': {'use_batch_direct': True}}
         client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
 
@@ -216,77 +216,57 @@ class TestGetMany():
         Invoke get_many() without primary key
         """
         key = ('test', 'set')
-        try:
+        with pytest.raises(e.ParamError):
             key, _, _ = self.as_connection.get(key)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'
 
     def test_neg_get_many_with_proper_parameters_without_connection(self):
         config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
-        try:
-            client1.get_many(self.keys, {'timeout': 20})
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        with pytest.raises(e.ClusterError):
+            client1.get_many(self.keys, {'total_timeout': 20})
 
     def test_neg_prepend_Invalid_Key_without_set_name(self):
         """
         Invoke prepend() without set name
         """
         key = ('test', 1)
-        try:
+        with pytest.raises(e.ParamError):
             key, _, _ = self.as_connection.get(key)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == 'key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)'
 
     def test_neg_get_many_with_invalid_key(self):
 
-        try:
+        with pytest.raises(e.ParamError):
             self.as_connection.get_many("key")
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Keys should be specified as a list or tuple."
 
     def test_neg_get_many_with_invalid_timeout(self):
 
-        policies = {'timeout': 0.2}
-        try:
+        policies = {'total_timeout': 0.2}
+        with pytest.raises(e.ParamError):
             self.as_connection.get_many(self.keys, policies)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
 
     def test_neg_get_many_without_any_parameter(self):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.get_many()
 
-        assert "Required argument 'keys' (pos 1) not found" in str(
+        assert "argument 'keys' (pos 1)" in str(
             typeError.value)
 
     def test_neg_get_many_with_none_keys(self):
 
-        try:
+        with pytest.raises(e.ParamError):
             self.as_connection.get_many(None, {})
 
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Keys should be specified as a list or tuple."
+    def test_get_many_with_an_invalid_key_in_list_batch_direct(self):
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.get_many([('test', 'demo', 1), ('test', 'demo', 2), None],
+                                        {'use_batch_direct': True})
 
     def test_neg_prepend_Invalid_Key_Invalid_ns(self):
         """
         Invoke prepend() invalid namespace
         """
         key = ('test1', 'demo', 1)
-        try:
+        with pytest.raises(e.ClientError):
             key, _, _ = self.as_connection.get(key)
-
-        except e.NamespaceNotFound as exception:
-            assert exception.code == 20

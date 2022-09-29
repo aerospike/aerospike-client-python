@@ -293,7 +293,7 @@ class TestRemovebin(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_remove_bin_with_policy_send_gen_eq_not_equal(self, put_data):
@@ -365,7 +365,7 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
 
         policy = {
-            'timeout': 0.5
+            'total_timeout': 0.5
         }
         try:
             self.as_connection.remove_bin(key, ["age"], {}, policy)
@@ -414,7 +414,6 @@ class TestRemovebin(object):
         key = ('test', 'demo', 1)
         record = {"Name": "Herry", 'age': 60}
         put_data(self.as_connection, key, record)
-        pytest.set_trace()
         meta = {'gen': 2, 'ttl': 2 ** 65}
         with pytest.raises(e.ClientError) as typeError:
             self.as_connection.remove_bin(key, ["age"], meta=meta)

@@ -196,12 +196,6 @@ class TestSelect(object):
             'a': ["nanslkdl", 1, bytearray("asd;as[d'as;d", "utf-8")]
         }
 
-    def test_select_with_very_long_list_of_bin_names(self):
-        bins_to_select = ['a'] * 10 ** 5
-        _, _, rec = self.as_connection.select(self.test_key, bins_to_select)
-        assert 'a' in rec
-        assert rec['a'] is not None
-
     # Tests for error causing conditions
 
     def test_select_without_any_parameter(self):
@@ -209,7 +203,7 @@ class TestSelect(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.select()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_select_with_key_and_bins_without_connection(self):

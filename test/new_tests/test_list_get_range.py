@@ -90,7 +90,7 @@ class TestListGetRange(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_get_range()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_list_get_range_with_incorrect_policy(self):
@@ -217,4 +217,4 @@ class TestListGetRange(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_get_range(
                 key, "contact_no", "Fifth", 2)
-        assert "an integer is required" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)

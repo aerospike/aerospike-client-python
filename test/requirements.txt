@@ -1,0 +1,3 @@
+pytest
+psutil
+pytest-asyncio

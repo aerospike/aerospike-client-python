@@ -13,22 +13,19 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
-class TestDropRole(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestDropRole(object):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-            "hosts": hostlist
-        }
-        self.client = aerospike.client(config).connect(user, password)
+        config = TestBaseClass.get_connection_config()
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
 
         self.delete_users = []
 
@@ -40,7 +37,11 @@ class TestDropRole(TestBaseClass):
         policy = {}
 
         for user in self.delete_users:
-            self.client.admin_drop_user(user, policy)
+            try:
+                self.client.admin_drop_user(user, policy)
+                time.sleep(2)
+            except:
+                pass
 
         self.client.close()
 
@@ -49,7 +50,7 @@ class TestDropRole(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_drop_role()
 
-        assert "Required argument 'role' (pos 1) not found" in str(
+        assert "argument 'role' (pos 1)" in str(
             typeError.value)
 
     def test_drop_role_positive_with_policy(self):
@@ -60,6 +61,7 @@ class TestDropRole(TestBaseClass):
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(1)
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -68,35 +70,42 @@ class TestDropRole(TestBaseClass):
                                         "ns": "test", "set": "demo"}],
                                       {'timeout': 1000})
         time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [{"code": 10, "ns": "test", "set": "demo"}]
-
-        try:
-            self.client.admin_query_user("testcreaterole")
-            # user exists, clear it out.
-            self.client.admin_drop_user("testcreaterole")
-        except e.AdminError:
-            pass  # we are good, no such user exists
-
-        status = self.client.admin_create_user("testcreaterole", "createrole",
-                                               ["usr-sys-admin-test"])
-
-        assert status == 0
-        time.sleep(1)
-        users = self.client.admin_query_user("testcreaterole")
-
-        assert users == ["usr-sys-admin-test"]
 
         status = self.client.admin_drop_role(
             "usr-sys-admin-test", {'timeout': 1000})
 
         assert status == 0
+        time.sleep(1)
 
-        users = self.client.admin_query_user("testcreaterole")
+        with pytest.raises(e.InvalidRole):
+            self.client.admin_query_role("usr-sys-admin-test")
 
-        assert users == []
+    def test_drop_role_positive_with_policy_write(self):
+        """
+            Drop write role positive with policy
+        """
+        try:
+            self.client.admin_query_role("usr-sys-admin-test")
+            # role exists, clear it out.
+            self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(1)
+        except e.InvalidRole:
+            pass  # we are good, no such role exists
 
-        self.client.admin_drop_user("testcreaterole")
+        self.client.admin_create_role("usr-sys-admin-test",
+                                      [{"code": aerospike.PRIV_WRITE,
+                                        "ns": "test", "set": "demo"}],
+                                      {'timeout': 1000})
+        time.sleep(1)
+
+        status = self.client.admin_drop_role(
+            "usr-sys-admin-test", {'timeout': 1000})
+
+        assert status == 0
+        time.sleep(1)
+
+        with pytest.raises(e.InvalidRole):
+            self.client.admin_query_role("usr-sys-admin-test")
 
     def test_drop_role_positive(self):
         """
@@ -106,6 +115,8 @@ class TestDropRole(TestBaseClass):
             self.client.admin_query_role("usr-sys-admin-test")
             # role exists, clear it out.
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(1)
+
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
@@ -113,35 +124,15 @@ class TestDropRole(TestBaseClass):
                                       [{"code": aerospike.PRIV_USER_ADMIN},
                                        {"code": aerospike.PRIV_SYS_ADMIN}])
         time.sleep(1)
-        roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
+        privs = self.client.admin_query_role("usr-sys-admin-test")
+        assert privs == [
             {"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
-        try:
-            self.client.admin_query_user("testcreaterole")
-            # user exists, clear it out.
-            self.client.admin_drop_user("testcreaterole")
-        except e.AdminError:
-            pass  # we are good, no such user exists
-
-        status = self.client.admin_create_user("testcreaterole", "createrole",
-                                               ["usr-sys-admin-test"])
-
-        assert status == 0
+        self.client.admin_drop_role("usr-sys-admin-test")
         time.sleep(1)
-        users = self.client.admin_query_user("testcreaterole")
 
-        assert users == ["usr-sys-admin-test"]
-
-        status = self.client.admin_drop_role("usr-sys-admin-test")
-
-        assert status == 0
-
-        users = self.client.admin_query_user("testcreaterole")
-
-        assert users == []
-
-        self.client.admin_drop_user("testcreaterole")
+        with pytest.raises(e.InvalidRole):
+            self.client.admin_query_role("usr-sys-admin-test")
 
     def test_drop_non_existent_role(self):
         """
@@ -174,12 +165,14 @@ class TestDropRole(TestBaseClass):
             [{"code": aerospike.PRIV_USER_ADMIN}])
 
         assert status == 0
-
+        time.sleep(3)
         try:
             self.client.admin_drop_role("usr-sys-admin-test", {"timeout": 0.2})
 
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == 'timeout is invalid'
-
-        self.client.admin_drop_role("usr-sys-admin-test")
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+        except:
+            pass

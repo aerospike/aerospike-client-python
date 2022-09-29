@@ -13,19 +13,19 @@ except:
     sys.exit(1)
 
 
-class TestChangePassword(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestChangePassword(object):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] is None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
             Setup method
             """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
-        self.client = aerospike.client(config).connect(user, password)
+        config = TestBaseClass.get_connection_config()
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
 
         try:
             self.client.admin_create_user(
@@ -40,7 +40,10 @@ class TestChangePassword(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_user("testchangepassworduser")
+        try:
+            self.client.admin_drop_user("testchangepassworduser")
+        except:
+            pass
 
         self.client.close()
 
@@ -49,10 +52,12 @@ class TestChangePassword(TestBaseClass):
         with pytest.raises(TypeError):
             self.client.admin_change_password()
 
+    # NOTE: This will fail if auth_mode is PKI_AUTH (3).
+    @pytest.mark.xfail(reason="Might fail depending on auth_mode.")
     def test_change_password_with_proper_parameters(self):
 
         user = "testchangepassworduser"
-        config = {"hosts": TestChangePassword.hostlist}
+        config = self.connection_config
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
@@ -60,19 +65,18 @@ class TestChangePassword(TestBaseClass):
 
         status = self.clientreaduser.admin_change_password(user, password)
 
+
         assert status == 0
 
-        config = {
-            "hosts": TestChangePassword.hostlist
-        }
-        try:
+        time.sleep(2)
+        config = self.connection_config
+
+        # Assert that connecting to the server with the old password fails
+        with pytest.raises(
+            (aerospike.exception.InvalidPassword,
+                aerospike.exception.InvalidCredential)):
             self.clientreaduserwrong = aerospike.client(
                 config).connect(user, "aerospike")
-
-        except aerospike.exception.InvalidPassword as exception:
-            assert exception.code == 62
-        except aerospike.exception.ClientError as exception:
-            assert exception.code == -1
 
         self.clientreaduserright = aerospike.client(config).connect(
             user, "newpassword")
@@ -95,10 +99,12 @@ class TestChangePassword(TestBaseClass):
             assert exception.code == -2
             assert exception.msg == "timeout is invalid"
 
+    # NOTE: This will fail if auth_mode is PKI_AUTH (3).
+    @pytest.mark.xfail(reason="Might fail depending on auth_mode.")
     def test_change_password_with_proper_timeout_policy_value(self):
 
         user = "testchangepassworduser"
-        config = {"hosts": TestChangePassword.hostlist}
+        config = self.connection_config
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
@@ -109,20 +115,14 @@ class TestChangePassword(TestBaseClass):
             user, password, policy)
 
         assert status == 0
+        time.sleep(2)
+        config = self.connection_config
 
-        config = {
-            "hosts": TestChangePassword.hostlist
-        }
-
-        try:
+        with pytest.raises(
+            (aerospike.exception.InvalidPassword,
+                aerospike.exception.InvalidCredential)):
             self.clientreaduserwrong = aerospike.client(
                 config).connect(user, "aerospike")
-
-        except aerospike.exception.InvalidPassword as exception:
-            assert exception.code == 62
-            assert exception.msg is None
-        except aerospike.exception.ClientError as exception:
-            assert exception.code == -1
 
         self.clientreaduserright = aerospike.client(config).connect(
             user, "newpassword")
@@ -174,36 +174,15 @@ class TestChangePassword(TestBaseClass):
     def test_change_password_with_too_long_password(self):
 
         user = "testchangepassworduser"
-        config = {"hosts": TestChangePassword.hostlist}
+        config = self.connection_config
         self.clientreaduser = aerospike.client(config).connect(user,
                                                                "aerospike")
 
         policy = {'timeout': 100}
         password = "password" * 1000
 
-        status = self.clientreaduser.admin_change_password(
-            user, password, policy)
+        with pytest.raises(aerospike.exception.ClientError):
+            status = self.clientreaduser.admin_change_password(
+                user, password, policy)
 
-        assert status == 0
-
-        config = {
-            "hosts": TestChangePassword.hostlist
-        }
-
-        try:
-            self.clientreaduserwrong = aerospike.client(
-                config).connect(user, "aerospike")
-
-        except aerospike.exception.InvalidPassword as exception:
-            assert exception.code == 62
-            assert exception.msg is None
-        except aerospike.exception.ClientError as exception:
-            assert exception.code == -1
-
-        self.clientreaduserright = aerospike.client(config).connect(user,
-                                                                    password)
-
-        assert self.clientreaduserright is not None
-
-        self.clientreaduserright.close()
         self.clientreaduser.close()

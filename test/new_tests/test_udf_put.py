@@ -25,7 +25,7 @@ class TestUdfPut(TestBaseClass):
         """
         Teardown method
         """
-        udf_list = self.as_connection.udf_list({'timeout': 100})
+        udf_list = self.as_connection.udf_list()
         for udf in udf_list:
             if udf['name'] == self.udf_name:
                 self.as_connection.udf_remove(self.udf_name)
@@ -167,7 +167,7 @@ class TestUdfPut(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.udf_put()
 
-        assert "Required argument 'filename' (pos 1) not found" in str(
+        assert "argument 'filename' (pos 1)" in str(
             typeError.value)
 
     def test_udf_put_with_non_existent_filename(self):
@@ -206,7 +206,7 @@ class TestUdfPut(TestBaseClass):
         with pytest.raises(TypeError) as exception:
             self.as_connection.udf_put(None, None, None)
 
-        assert "an integer is required" in str(exception.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(exception.value)
 
     @pytest.mark.parametrize(
         "filename, ftype, policy",

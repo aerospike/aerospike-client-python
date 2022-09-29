@@ -13,21 +13,20 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-
-class TestCreateUser(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestCreateUser(object):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] is None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
+        config = TestBaseClass.get_connection_config()
 
-        self.client = aerospike.client(config).connect(user, password)
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
 
         self.delete_users = []
 
@@ -39,8 +38,11 @@ class TestCreateUser(TestBaseClass):
         policy = {}
 
         for user in self.delete_users:
-            self.client.admin_drop_user(user, policy)
-
+            try:
+                self.client.admin_drop_user(user, policy)
+            except:
+                pass
+        time.sleep(2)
         self.client.close()
 
     def test_create_user_without_any_parameters(self):
@@ -48,7 +50,7 @@ class TestCreateUser(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_create_user()
 
-        assert "Required argument 'user' (pos 1) not found" in str(
+        assert "argument 'user' (pos 1)" in str(
             typeError.value)
 
     def test_create_user_with_proper_parameters(self):
@@ -60,6 +62,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -84,6 +87,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -108,6 +112,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -127,6 +132,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -179,6 +185,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -211,6 +218,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -229,6 +237,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -247,6 +256,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -257,6 +267,9 @@ class TestCreateUser(TestBaseClass):
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
 
+        except e.ClientError:
+            pass
+
     def test_create_user_with_too_long_password(self):
 
         policy = {'timeout': 1000}
@@ -266,19 +279,12 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
-        status = self.client.admin_create_user(user, password, roles, policy)
-
-        assert status == 0
-        time.sleep(1)
-
-        user_details = self.client.admin_query_user(user, policy)
-
-        assert user_details == ['read-write']
-
-        self.delete_users.append(user)
+        with pytest.raises(e.ClientError):
+            self.client.admin_create_user(user, password, roles, policy)
 
     def test_create_user_with_empty_roles_list(self):
 
@@ -289,6 +295,7 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
@@ -308,14 +315,16 @@ class TestCreateUser(TestBaseClass):
 
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
+        time.sleep(2)
 
         assert status == 0
 
-        config = {"hosts": TestCreateUser.hostlist}
+        config = self.connection_config
 
         non_admin_client = None
 
@@ -368,7 +377,6 @@ class TestCreateUser(TestBaseClass):
         user = "user7"
         password = "user7"
         roles = ['read-write', list_item]
-        print(roles)
         try:
             self.client.admin_drop_user(user, policy)
         except:
@@ -383,9 +391,9 @@ class TestCreateUser(TestBaseClass):
         user = "user7"
         password = "user7"
         roles = ['read-write', "abc" * 50]
-        print(roles)
         try:
             self.client.admin_drop_user(user, policy)
+            time.sleep(2)
         except:
             pass
 

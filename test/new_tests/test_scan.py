@@ -4,6 +4,7 @@ import pytest
 import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from aerospike_helpers import expressions as exp
 from .as_status_codes import AerospikeStatus
 
 aerospike = pytest.importorskip("aerospike")
@@ -35,12 +36,6 @@ class TestScan(TestBaseClass):
         as_connection.operate(key, llist)
         self.record_count = 20
 
-        if TestBaseClass.has_ldt_support():
-            key = ('test', u'demo', 'ldt_key')
-            self.llist_bin = as_connection.llist(key, 'llist_key')
-            self.llist_bin.add(10)
-            self.record_count += 1
-
         def teardown():
             for i in range(19):
                 key = ('test', u'demo', i)
@@ -48,11 +43,6 @@ class TestScan(TestBaseClass):
 
             key = ('test', 'demo', 122)
             as_connection.remove(key)
-
-            if TestBaseClass.has_ldt_support():
-                self.llist_bin.remove(10)
-                key = ('test', 'demo', 'ldt_key')
-                as_connection.remove(key)
 
         request.addfinalizer(teardown)
 
@@ -101,6 +91,63 @@ class TestScan(TestBaseClass):
 
         assert len(records) == self.record_count
 
+    def test_scan_with_expressions_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        expr = exp.Not(exp.Eq(exp.StrBin('name'), 'name4'))
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'timeout': 2000, 'expressions': expr.compile()})
+        assert len(records) == self.record_count - 2 #2 because the last record has no "name" bin and won't be included in the result
+
+    # NOTE: This could fail if node record counts are small and unbalanced across nodes.
+    @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+    def test_scan_with_max_records_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        max_records = self.record_count // 2
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'max_records': max_records})
+        assert len(records) == self.record_count // 2
+
+    def test_scan_with_expressions_policy_no_set(self):
+
+        ns = 'test'
+        st = None
+
+        records = []
+
+        expr = exp.Not(exp.Eq(exp.StrBin('name'), 'name4'))
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'expressions': expr.compile()})
+
+        assert len(records) == self.record_count - 2 #2 because the last record has no "name" bin and won't be included in the result
+
     def test_scan_with_socket_timeout_policy(self):
 
         ns = 'test'
@@ -116,6 +163,22 @@ class TestScan(TestBaseClass):
 
         scan_obj.foreach(callback, {'socket_timeout': 9876})
 
+        assert len(records) == self.record_count
+
+    def test_scan_with_records_per_second_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        scan_obj.foreach(callback, {'records_per_second': 10})
         assert len(records) == self.record_count
 
     def test_scan_with_callback_returning_false(self):
@@ -179,6 +242,22 @@ class TestScan(TestBaseClass):
         # Depending on ldt support this could be record count -1 or minus 2
         assert 19 <= len(records) < self.record_count
 
+    def test_scan_with_results_method_and_expressions(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        expr = exp.Not(exp.Eq(exp.StrBin('name'), 'name4'))
+
+        scan_obj = self.as_connection.scan(ns, st)
+
+        scan_obj.select(u'name', u'age')
+
+        records = scan_obj.results({'expressions': expr.compile()})
+        # Only 19/20 records contain a bin called 'name' or 'age'
+        # Depending on ldt support this could be record count -2 or minus 3
+        assert 18 <= len(records) < self.record_count - 1
+
     def test_scan_with_options_positive(self):
         """
             Invoke scan() with options positive
@@ -187,9 +266,7 @@ class TestScan(TestBaseClass):
         records = []
 
         options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": True
         }
 
         def callback(input_tuple):
@@ -215,9 +292,7 @@ class TestScan(TestBaseClass):
         st = 'demo'
         records = []
         options = {
-            "percent": 80,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": True
         }
         scan_obj = self.as_connection.scan(ns, st)
         scan_obj.foreach(callback, {}, options)
@@ -269,73 +344,6 @@ class TestScan(TestBaseClass):
 
         for record in records:
             assert record != {}
-
-    def test_scan_with_options_includeldt_positive(self):
-        """
-            Invoke scan() with include ldt set to True
-        """
-        if not TestBaseClass.has_ldt_support():
-            pytest.skip()
-
-        ns = 'test'
-        st = 'demo'
-
-        records = []
-
-        options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH,
-            "include_ldt": True
-        }
-
-        def callback(input_tuple):
-            _, _, bins = input_tuple
-            records.append(bins)
-
-        scan_obj = self.as_connection.scan(ns, st)
-
-        scan_obj.foreach(callback, {}, options)
-        value = 0
-        for x in records:
-            if 'llist_key' in x.keys():
-                value = x['llist_key']
-
-        assert value == [10]
-        assert len(records) != 0
-
-    def test_scan_with_options_includeldt_negative(self):
-        """
-            Invoke scan() with include ldt set to False
-        """
-        if not TestBaseClass.has_ldt_support():
-            pytest.skip()
-        ns = 'test'
-        st = 'demo'
-
-        records = []
-
-        options = {
-            "percent": 100,
-            "concurrent": True,
-            "priority": aerospike.SCAN_PRIORITY_HIGH,
-            "include_ldt": False
-        }
-
-        def callback(input_tuple):
-            _, _, bins = input_tuple
-            records.append(bins)
-
-        scan_obj = self.as_connection.scan(ns, st)
-
-        scan_obj.foreach(callback, {}, options)
-        value = 0
-        for x in records:
-            if 'llist_key' in x.keys():
-                value = x['llist_key']
-
-        assert value is None
-        assert len(records) != 0
 
     def test_scan_with_multiple_foreach_on_same_scan_object(self):
         """
@@ -408,10 +416,10 @@ class TestScan(TestBaseClass):
             _, _, bins = input_tuple
             records.append(bins)
 
-        with pytest.raises(e.NamespaceNotFound) as err_info:
+        with pytest.raises(e.ClientError) as err_info:
             scan_obj.foreach(callback)
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_with_none_ns_and_set(self):
 
@@ -475,3 +483,21 @@ class TestScan(TestBaseClass):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+
+    def test_scan_with_invalid_expressions_policy(self):
+
+        ns = 'test'
+        st = 'demo'
+
+        records = []
+
+        expr = exp.Not(exp.Eq(exp.StrBin('name'), 2))
+
+        def callback(input_tuple):
+            _, _, bins = input_tuple
+            records.append(bins)
+
+        scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+
+        with pytest.raises(e.InvalidRequest):
+            scan_obj.foreach(callback, {'timeout': 2000, 'expressions': expr.compile()})

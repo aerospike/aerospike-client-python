@@ -17,6 +17,7 @@ except:
 class SomeClass(object):
     pass
 
+
 @pytest.mark.usefixtures("as_connection")
 class TestExists():
 
@@ -39,8 +40,6 @@ class TestExists():
         record = {"Name": "Jeff"}
         policy = {
             'timeout': 1000,
-            'replica': aerospike.POLICY_REPLICA_MASTER,
-            'consistency': aerospike.POLICY_CONSISTENCY_ONE
         }
 
         put_data(self.as_connection, key, record)
@@ -53,17 +52,11 @@ class TestExists():
     @pytest.mark.parametrize("key, record, policy", [
         (('test', 'demo', 'p_None'), {"name": "John"}, None),
         (('test', 'demo', 'p_Replica'), {"name": "Michel"}, {
-            'timeout': 1000,
-            'replica': aerospike.POLICY_REPLICA_ANY,
-            'consistency': aerospike.POLICY_CONSISTENCY_ONE}),
+            'total_timeout': 1000}),
         (('test', 'demo', "p_consistency_level"), {"name": "Michel"}, {
-            'timeout': 1000,
-            'replica': aerospike.POLICY_REPLICA_MASTER,
-            'consistency': aerospike.POLICY_CONSISTENCY_ALL}),
+            'total_timeout': 1000}),
         (('test', 'demo', "p_consistency_level"), {"name": "Michel"}, {
-            'timeout': 1000,
-            'replica': aerospike.POLICY_REPLICA_SEQUENCE,
-            'consistency': aerospike.POLICY_CONSISTENCY_ONE}),
+            'total_timeout': 1000}),
     ])
     def test_pos_exists_with_key_and_policy(
             self, key, record, policy, put_data):
@@ -82,7 +75,7 @@ class TestExists():
         key = ('test', 'demo', 30)
         rec = {"name": "John"}
         meta = {'gen': 3, 'ttl': 1}
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 1000}
         put_data(self.as_connection, key, rec, meta, policy)
         time.sleep(2)
 
@@ -95,8 +88,8 @@ class TestExists():
          e.RecordNotFound, 2),     # non-existent key
         # non-existent set
         (('test', 'set', 1), e.RecordNotFound, 2),
-        (('namespace', 'demo', 1), e.NamespaceNotFound,
-         20),           # non-existent Namespace
+        (('namespace', 'demo', 1), e.ClientError,
+         -1),           # non-existent Namespace
         # None set in key tuple.
         (('test', None, 2), e.RecordNotFound, 2),
         (('test', 'demo', 'Non_existing_key'),
@@ -133,7 +126,7 @@ class TestExists():
 
     @pytest.mark.parametrize("key, record, meta, policy", [
         (('test', 'demo', 20), {"name": "John"},
-         {'gen': 3, 'ttl': 1}, {'timeout': 2}),
+         {'gen': 3, 'ttl': 1}, {'total_timeout': 2}),
     ])
     def test_neg_exists_with_low_timeout(
             self, key, record, meta, policy, put_data):
@@ -151,14 +144,14 @@ class TestExists():
         with pytest.raises(TypeError) as typeError:
             self.as_connection.exists()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     @pytest.mark.parametrize("key, record, policy, ex_code, ex_msg", [
         # timeout_is_string
         (('test', 'demo', "timeout_is_string"),
             {'names': ['John', 'Marlen', 'Steve']},
-            {'timeout': "1000"}, -2, 'timeout is invalid'),
+            {'total_timeout': "1000"}, -2, 'timeout is invalid'),
         (('test', 'demo', "policy_is_string"),
             {"Name": "Jeff"}, "policy_str", -2, 'policy must be a dict'),
     ])
@@ -169,20 +162,17 @@ class TestExists():
         """
         put_data(self.as_connection, key, record)
 
-        try:
+        with pytest.raises(e.ParamError):
             key, _ = self.as_connection.exists(key, policy)
 
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg
+        # except e.ParamError as exception:
+        #     assert exception.code == ex_code
+        #     assert exception.msg == ex_msg
 
     @pytest.mark.parametrize("key, ex_code, ex_msg", test_data.key_neg)
     def test_neg_exists_key_invalid_data(self, key, ex_code, ex_msg):
         """
             Invoke exists() with invalid key
         """
-        try:
+        with pytest.raises(e.ParamError):
             key, _ = self.as_connection.exists(key)
-        except e.ParamError as exception:
-            assert exception.code == ex_code
-            assert exception.msg == ex_msg

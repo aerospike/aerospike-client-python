@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ------------------------------------------------------------------------------
-# Copyright 2013-2017 Aerospike, Inc.
+# Copyright 2013-2021 Aerospike, Inc.
 #
 # Portions may be licensed to Aerospike, Inc. under one or more contributor
 # license agreements.
@@ -57,7 +57,7 @@ main() {
 		*'centos'* )
 			distro_id='centos'
 			;;
-		*'redhat'* )
+		*'red hat'* )
 			distro_id='redhat'
 			;;
 		*'debian'* )
@@ -104,7 +104,7 @@ main() {
 	distro_version=${distro_version//[[:space:]]/}
 
 	case "$distro_id" in
-	'centos' | 'redhat' | 'rhel' | 'scientific' )
+	'centos' | 'redhat' | 'rhel' | 'scientific' | 'ol' )
 		distro_version=${distro_version%.*}
 		distro_long="${distro_id}${distro_version}"
 		distro_short="el${distro_version}"

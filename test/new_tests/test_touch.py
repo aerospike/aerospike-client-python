@@ -38,7 +38,7 @@ class TestTouch(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.touch()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_touch_with_correct_paramters(self):
@@ -225,9 +225,8 @@ class TestTouch(object):
         Invoke touch() with incorrect policy
         """
         key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 0.5
-        }
+        policy = {'total_timeout': 0.5}
+
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.touch(key, 120, {}, policy)
 

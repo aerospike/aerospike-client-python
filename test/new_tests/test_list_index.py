@@ -4,6 +4,7 @@ import pytest
 import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from .index_helpers import ensure_dropped_index
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -54,9 +55,11 @@ class TestListIndex(object):
             'test', 'demo', 'string_list', aerospike.INDEX_STRING,
             'test_string_list_index', policy)
 
-        assert retobj == 0
         self.as_connection.index_remove('test', 'test_string_list_index',
                                         policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
+
+        assert retobj == 0
 
     def test_pos_listindex_with_correct_parameters_numeric(self):
         """
@@ -70,6 +73,7 @@ class TestListIndex(object):
         assert retobj == 0
         self.as_connection.index_remove('test', 'test_numeric_list_index',
                                         policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_numeric_list_index')
 
     def test_pos_listindex_with_correct_parameters_set_length_extra(self):
             # Invoke index_list_create() with correct arguments and set length
@@ -100,6 +104,7 @@ class TestListIndex(object):
         assert retobj == 0
         self.as_connection.index_remove('test', 'test_string_list_index',
                                         policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
 
     def test_pos_create_same_listindex_multiple_times(self):
         """
@@ -110,14 +115,17 @@ class TestListIndex(object):
             'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
             'test_numeric_list_index', policy)
         if retobj == 0:
-            retobj = self.as_connection.index_list_create(
-                'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
-                'test_numeric_list_index', policy)
+            try:
+                self.as_connection.index_list_create(
+                    'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
+                    'test_numeric_list_index', policy)
+            except e.IndexFoundError:
+                assert self.server_version < [6, 1]
             self.as_connection.index_remove(
                 'test', 'test_numeric_list_index', policy)
-            assert retobj == 0
+            ensure_dropped_index(self.as_connection, 'test', 'test_numeric_list_index')
         else:
-            assert True is False
+            assert False
 
     def test_pos_create_same_listindex_multiple_times_different_bin(self):
         """
@@ -128,12 +136,17 @@ class TestListIndex(object):
             'test', 'demo', 'string_list', aerospike.INDEX_STRING,
             'test_string_list_index', policy)
         if retobj == 0:
-            retobj = self.as_connection.index_list_create(
-                'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
-                'test_string_list_index', policy)
-            assert retobj == 0
+            with pytest.raises(e.IndexFoundError):
+                retobj = self.as_connection.index_list_create(
+                    'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
+                    'test_string_list_index', policy)
+                self.as_connection.index_remove('test', 'test_string_list_index',
+                                                policy)
+                ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
+
             self.as_connection.index_remove('test', 'test_string_list_index',
                                             policy)
+            ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
         else:
             assert True is False
 
@@ -147,14 +160,16 @@ name
             'test', 'demo', 'string_list', aerospike.INDEX_STRING,
             'test_string_list_index', policy)
         if retobj == 0:
-            retobj = self.as_connection.index_list_create(
-                'test', 'demo', 'string_list', aerospike.INDEX_STRING,
-                'test_string_list_index1', policy)
-            assert retobj == 0
+            try:
+                retobj = self.as_connection.index_list_create(
+                    'test', 'demo', 'string_list', aerospike.INDEX_STRING,
+                    'test_string_list_index1', policy)
+            except e.IndexFoundError:
+                assert self.server_version < [6, 1]
+
             self.as_connection.index_remove('test', 'test_string_list_index',
                                             policy)
-            self.as_connection.index_remove(
-                'test', 'test_string_list_index1', policy)
+            ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
         else:
             assert True is False
 
@@ -164,12 +179,13 @@ name
         """
         policy = {'timeout': 1000}
         retobj = self.as_connection.index_list_create(
-            'test', 'demo', 'numeric_list', aerospike.INDEX_NUMERIC,
-            'test_numeric_list_index', policy)
+            'test', 'demo', 'num_list_pol', aerospike.INDEX_NUMERIC,
+            'test_numeric_list_index_pol', policy)
 
         assert retobj == 0
-        self.as_connection.index_remove('test', 'test_numeric_list_index',
+        self.as_connection.index_remove('test', 'test_numeric_list_index_pol',
                                         policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_numeric_list_index_pol')
 
     def test_pos_createlistindex_with_policystring(self):
         """
@@ -183,6 +199,7 @@ name
         assert retobj == 0
         self.as_connection.index_remove('test', 'test_string_list_index',
                                         policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
 
     """
     This test case causes a db crash and hence has been commented. Work pending
@@ -212,6 +229,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
 
         assert retobj == 0
         self.as_connection.index_remove('test', u'uni_name_index', policy)
+        ensure_dropped_index(self.as_connection, 'test', u'uni_name_index')
 
     def test_pos_create_list_integer_index_unicode(self):
         """
@@ -224,6 +242,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
 
         assert retobj == 0
         self.as_connection.index_remove('test', u'uni_age_index', policy)
+        ensure_dropped_index(self.as_connection, 'test', u'uni_age_index')
 
     def test_pos_create_list_geojson_index(self):
         """
@@ -236,6 +255,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
 
         assert retobj == 0
         self.as_connection.index_remove('test', 'geo_index', policy)
+        ensure_dropped_index(self.as_connection, 'test', 'geo_index')
 
     # Negative tests
     def test_neg_listindex_with_namespace_is_none(self):
@@ -283,6 +303,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             assert exception.msg == 'Set should be a string'
         self.as_connection.index_remove('test', 'test_string_list_index',
                                         policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
 
     def test_neg_listindex_with_bin_is_none(self):
         """
@@ -338,6 +359,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert retobj == 0
         self.as_connection.index_remove('test', 'test_numeric_list_index',
                                         policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_numeric_list_index')
 
     def test_neg_listindex_with_correct_parameters_no_connection(self):
         """
@@ -362,5 +384,5 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         with pytest.raises(TypeError) as typeError:
             self.as_connection.index_list_create()
 
-        assert "Required argument 'ns' (pos 1) not found" in str(typeError.
+        assert "argument 'ns' (pos 1)" in str(typeError.
                                                                  value)

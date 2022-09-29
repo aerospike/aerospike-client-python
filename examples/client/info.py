@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##########################################################################
-# Copyright 2013-2017 Aerospike, Inc.
+# Copyright 2013-2021 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -90,7 +90,7 @@ try:
         if len(args) > 0:
             request = ' '.join(args)
 
-        for node, (err, res) in list(client.info(request).items()):
+        for node, (err, res) in list(client.info_all(request).items()):
             if res is not None:
                 res = res.strip()
                 if len(res) > 0:

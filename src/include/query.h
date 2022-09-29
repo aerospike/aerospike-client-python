@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,9 +28,10 @@
  * FUNCTIONS
  ******************************************************************************/
 
-PyTypeObject * AerospikeQuery_Ready(void);
+PyTypeObject *AerospikeQuery_Ready(void);
 
-AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
+AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
+								   PyObject *kwds);
 
 /*******************************************************************************
  * OPERATIONS
@@ -48,15 +49,29 @@ AerospikeQuery * AerospikeQuery_New(AerospikeClient * client, PyObject * args, P
  *		query.select(bin, bin, bin)
  *
  */
-AerospikeQuery * AerospikeQuery_Select(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
+									  PyObject *kwds);
+
+/**
+ * Add a list of write operations to the query.
+ *
+ */
+AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
+									   PyObject *kwds);
 
 /**
  * Add a where predicate to the query.
  *
- *		query.where(bin, predicate)
+ * Selecting a single bin:
+ *
+ *		query.select(bin)
+ *
+ * Selecting multiple bins:
+ *
+ *		query.select(bin, bin, bin)
  *
  */
-AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args);
+AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args);
 
 /**
  * Apply the specified udf on the results of the query.
@@ -64,7 +79,8 @@ AerospikeQuery * AerospikeQuery_Where(AerospikeQuery * self, PyObject * args);
  *		query.apply(module, function, arglist)
  *
  */
-AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
+									 PyObject *kwds);
 
 /**
  * Execute the query and call the callback for each result returned.
@@ -75,16 +91,50 @@ AerospikeQuery * AerospikeQuery_Apply(AerospikeQuery * self, PyObject * args, Py
  *		query.foreach(each_result)
  *
  */
-PyObject * AerospikeQuery_Foreach(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
+								 PyObject *kwds);
 
 /**
- * Execute the query and return a generator
+ * Execute the query and return a generator.
  *
  *		for result in query.results():
  *			print result
  *
  */
-PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
+								 PyObject *kwds);
+
+/**
+ * Execute a UDF in the background. Returns the query id to allow status of the query to be monitored.
+ * */
+
+PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
+										   PyObject *kwds);
+
+/**
+ * Set pagination filter to receive records in bunch (max_records or page_size).
+ *
+ *    query.paginate()
+ *
+ */
+PyObject *AerospikeQuery_Paginate(AerospikeQuery *self);
+
+/**
+ * Gets the status of the query.
+ *
+ *    If using query pagination, did the previous paginated query with this query instance
+ *    return all records?
+ *
+ */
+PyObject *AerospikeQuery_Is_Done(AerospikeQuery *self);
+
+/**
+ * Gets the complete partition status of the query.
+ *
+ *    Returns a dictionary of the form {id:(id, init, done, digest), ...}.
+ *
+ */
+PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self);
 
 /**
  * Store the Unicode -> UTF8 string converted PyObject into 
@@ -93,6 +143,6 @@ PyObject * AerospikeQuery_Results(AerospikeQuery * self, PyObject * args, PyObje
  *		StoreUnicodePyObject(self, PyUnicode_AsUTF8String(py_bin));
  *
  */
-PyObject * StoreUnicodePyObject(AerospikeQuery * self, PyObject * obj);
+PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj);
 
-int64_t pyobject_to_int64(PyObject * py_obj);
+int64_t pyobject_to_int64(PyObject *py_obj);

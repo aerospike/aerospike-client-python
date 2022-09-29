@@ -14,27 +14,23 @@ except:
     sys.exit(1)
 
 
-class SomeClass(object):
-
-    pass
-
-
-class TestDropUser(TestBaseClass):
+@pytest.mark.usefixtures("connection_config")
+class TestDropUser(object):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
         Setup method.
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {'hosts': hostlist}
+        config = TestBaseClass.get_connection_config()
         TestDropUser.Me = self
-        self.client = aerospike.client(config).connect(user, password)
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
         try:
             self.client.admin_drop_user("foo-test")
+            time.sleep(2)
         except:
             pass
 
@@ -51,7 +47,7 @@ class TestDropUser(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_drop_user()
 
-        assert "Required argument 'user' (pos 1) not found" in str(
+        assert "argument 'user' (pos 1)" in str(
             typeError.value)
 
     def test_drop_user_with_policy_none(self):
@@ -115,7 +111,7 @@ class TestDropUser(TestBaseClass):
         status = self.client.admin_drop_user(user, policy)
         assert status == 0
 
-        time.sleep(1)
+        time.sleep(2)
 
         try:
             user_details = self.client.admin_query_user(user, policy)
@@ -215,6 +211,8 @@ class TestDropUser(TestBaseClass):
         assert "admin_drop_user() takes at most 2 arguments (3 given)" in str(
             typeError.value)
 
+    @pytest.mark.xfail(reason="It is no longer possible to create a user with"
+                       "a name too long")
     def test_drop_user_with_too_long_username(self):
 
         policy = {}
@@ -247,6 +245,7 @@ class TestDropUser(TestBaseClass):
             status = self.client.admin_create_user(
                 user, password, roles, policy)
             assert status == 0
+            time.sleep(1)
         except:
             pass
 

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,4 +24,26 @@
  *		aerospike.calc_digest()
  *
  */
-PyObject * Aerospike_Calc_Digest(PyObject * self, PyObject * args, PyObject * kwds);
+PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds);
+
+/**
+ * Get partition ID for given digest
+ *
+ *		aerospike.get_partition_id(digest)
+ *
+ */
+PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args);
+
+/**
+ * check whether async supported or not
+ *
+ *		aerospike.is_async_supoorted()
+ *
+ */
+PyObject *Aerospike_Is_AsyncSupported(PyObject *self);
+
+/*******************************************************************************
+ * Aerospike initialization
+ ******************************************************************************/
+
+PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds);

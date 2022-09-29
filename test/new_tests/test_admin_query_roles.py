@@ -17,22 +17,20 @@ except:
 class TestQueryRoles(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-            "hosts": hostlist
-        }
-        self.client = aerospike.client(config).connect(user, password)
+        config = TestBaseClass.get_connection_config()
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
         try:
             self.client.admin_drop_role("usr-sys-admin")
         except:
             pass
+        time.sleep(2)
         usr_sys_admin_privs = [
             {"code": aerospike.PRIV_USER_ADMIN},
             {"code": aerospike.PRIV_SYS_ADMIN}]
@@ -40,17 +38,20 @@ class TestQueryRoles(TestBaseClass):
             self.client.admin_drop_role("usr-sys-admin-test")
         except:
             pass
+        time.sleep(2)        
         self.client.admin_create_role(
             "usr-sys-admin-test", usr_sys_admin_privs)
         self.delete_users = []
-        time.sleep(1)
+        time.sleep(2)
 
     def teardown_method(self, method):
         """
         Teardown method
         """
-
-        self.client.admin_drop_role("usr-sys-admin-test")
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+        except:
+            pass
         self.client.close()
 
     def test_admin_query_roles_positive(self):

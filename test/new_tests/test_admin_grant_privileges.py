@@ -14,25 +14,25 @@ except:
     sys.exit(1)
 
 
-class TestGrantPrivileges(TestBaseClass):
+class TestGrantPrivileges(object):
+
+    config = TestBaseClass.get_connection_config()
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-            "hosts": hostlist
-        }
-        self.client = aerospike.client(config).connect(user, password)
+        config = self.config
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
 
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-        except:
+            time.sleep(1)
+        except e.InvalidRole:
             pass
         self.client.admin_create_role("usr-sys-admin-test",
                                       [{"code": aerospike.PRIV_USER_ADMIN},
@@ -45,18 +45,19 @@ class TestGrantPrivileges(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_role("usr-sys-admin-test")
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(1)
+        except e.InvalidRole:
+            pass
         self.client.close()
 
     def test_admin_grant_privileges_no_parameters(self):
         """
             Grant privileges with no parameters
         """
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.client.admin_grant_privileges()
-
-        assert "Required argument 'role' (pos 1) not found" in str(
-            typeError.value)
 
     def test_admin_grant_privileges_positive(self):
         """
@@ -76,6 +77,58 @@ class TestGrantPrivileges(TestBaseClass):
         status = self.client.admin_revoke_privileges(
             "usr-sys-admin-test",
             [{"code":  aerospike.PRIV_READ}])
+
+        assert status == 0
+
+    @pytest.mark.parametrize("privs", [
+        ([{"code": aerospike.PRIV_DATA_ADMIN, "ns": "", "set": ""}]),
+        ([{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]),
+        ([{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]),
+        ([{"code": aerospike.PRIV_READ_WRITE, "ns": "test", "set": "demo"}]),
+        ([{"code": aerospike.PRIV_READ_WRITE_UDF, "ns": "test", "set": "demo"}]),
+        ([{"code": aerospike.PRIV_TRUNCATE, "ns": "test", "set": "demo"}]),
+        ([{"code": aerospike.PRIV_UDF_ADMIN, "ns": "", "set": ""}]),
+        ([{"code": aerospike.PRIV_SINDEX_ADMIN, "ns": "", "set": ""}]),
+    ])
+    def test_admin_grant_privileges_all_positive(self, privs):
+        """
+            Grant privileges positive
+        """
+        status = self.client.admin_grant_privileges(
+            "usr-sys-admin-test",
+            privs)
+
+        assert status == 0
+        time.sleep(1)
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
+                         {'code': 1, 'ns': '', 'set': ''},
+                         *privs]
+
+        status = self.client.admin_revoke_privileges(
+            "usr-sys-admin-test",
+            privs)
+
+        assert status == 0
+
+    def test_admin_grant_privileges_positive_write(self):
+        """
+            Grant write privileges positive
+        """
+        status = self.client.admin_grant_privileges(
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_WRITE}])
+
+        assert status == 0
+        time.sleep(1)
+        roles = self.client.admin_query_role("usr-sys-admin-test")
+        assert roles == [{'code': 0, 'ns': '', 'set': ''},
+                         {'code': 1, 'ns': '', 'set': ''},
+                         {'code': 13, 'ns': '', 'set': ''}]
+
+        status = self.client.admin_revoke_privileges(
+            "usr-sys-admin-test",
+            [{"code":  aerospike.PRIV_WRITE}])
 
         assert status == 0
 

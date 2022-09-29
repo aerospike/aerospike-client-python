@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,12 @@
 
 #include <Python.h>
 
+// These sizes correspond to the structs in exception.c.
+#define RECORD_EXCEPTION_COUNT 10
+#define SERVER_EXCEPTION_COUNT 13
+#define INDEX_EXCEPTION_COUNT 6
+#define ADMIN_EXCEPTION_COUNT 22
+
 struct exceptions {
 	PyObject *AerospikeError;
 
@@ -29,30 +35,36 @@ struct exceptions {
 	//Server exceptions
 	PyObject *InvalidRequest;
 	PyObject *ServerFull;
-	PyObject *NoXDR;
+	PyObject *AlwaysForbidden;
 	PyObject *UnsupportedFeature;
 	PyObject *DeviceOverload;
 	PyObject *ForbiddenError;
 	PyObject *QueryError;
 	PyObject *InvalidGeoJSON;
-	PyObject *ScanAbortedError; //15
+	PyObject *OpNotApplicable;		//26
+	PyObject *FilteredOut;			//27
+	PyObject *LostConflict;			//28
+	PyObject *ScanAbortedError;		//15
 	PyObject *ElementNotFoundError; //23
-	PyObject *ElementExistsError; //24
-	PyObject *BatchDisabledError; //150
+	PyObject *ElementExistsError;	//24
+	PyObject *BatchDisabledError;	//150
 	PyObject *BatchMaxRequestError; //151
-	PyObject *BatchQueueFullError; //152
-	PyObject *QueryAbortedError; //210
+	PyObject *BatchQueueFullError;	//152
+	PyObject *QueryAbortedError;	//210
 
 	//Client exceptions
 	PyObject *ParamError;
 	PyObject *InvalidHostError;
 	PyObject *NamespaceNotFound;
 	PyObject *ConnectionError;
-	PyObject *TLSError; //-9
-	PyObject *InvalidNodeError; //-8
+	PyObject *BatchFailed;			  //-16
+	PyObject *NoResponse;			  //-15
+	PyObject *MaxRetriesExceeded;	  //-12
+	PyObject *TLSError;				  //-9
+	PyObject *InvalidNodeError;		  //-8
 	PyObject *NoMoreConnectionsError; // -7
-	PyObject *AsyncConnectionError; // -6
-	PyObject *ClientAbortError; // -5
+	PyObject *AsyncConnectionError;	  // -6
+	PyObject *ClientAbortError;		  // -5
 
 	//Record exceptions
 	PyObject *RecordError;
@@ -63,9 +75,9 @@ struct exceptions {
 	PyObject *RecordExistsError;
 	PyObject *RecordTooBig;
 	PyObject *RecordBusy;
+	PyObject *BinIncompatibleType;
 	PyObject *BinExistsError;
 	PyObject *BinNotFound;
-	PyObject *BinIncompatibleType;
 
 	//Index exceptions
 	PyObject *IndexError;
@@ -95,6 +107,11 @@ struct exceptions {
 	PyObject *RoleViolation;
 	PyObject *InvalidPrivilege;
 	PyObject *NotAuthenticated;
+	PyObject *InvalidWhitelist;
+	PyObject *NotWhitelisted;
+	PyObject *QuotasNotEnabled;
+	PyObject *InvalidQuota;
+	PyObject *QuotaExceeded;
 
 	//UDF exceptions
 	PyObject *UDFError;
@@ -108,73 +125,27 @@ struct exceptions {
 	//Query exceptions
 	PyObject *QueryQueueFull;
 	PyObject *QueryTimeout;
-
-	//LDT exceptions
-	PyObject *LDTError;
-	PyObject *LargeItemNotFound;
-	PyObject *LDTInternalError;
-	PyObject *LDTNotFound;
-	PyObject *LDTUniqueKeyError;
-	PyObject *LDTInsertError;
-	PyObject *LDTSearchError;
-	PyObject *LDTDeleteError;
-	PyObject *LDTInputParamError;
-	PyObject *LDTTypeMismatch;
-	PyObject *LDTBinNameNull;
-	PyObject *LDTBinNameNotString;
-	PyObject *LDTBinNameTooLong;
-	PyObject *LDTTooManyOpenSubrecs;
-	PyObject *LDTTopRecNotFound;
-	PyObject *LDTSubRecNotFound;
-	PyObject *LDTBinNotFound;
-	PyObject *LDTBinExistsError;
-	PyObject *LDTBinDamaged;
-	PyObject *LDTSubrecPoolDamaged;
-	PyObject *LDTSubrecDamaged;
-	PyObject *LDTSubrecOpenError;
-	PyObject *LDTSubrecUpdateError;
-	PyObject *LDTSubrecCreateError;
-	PyObject *LDTSubrecDeleteError;
-	PyObject *LDTSubrecCloseError;
-	PyObject *LDTToprecUpdateError;
-	PyObject *LDTToprecCreateError;
-	PyObject *LDTFilterFunctionBad;
-	PyObject *LDTFilterFunctionNotFound;
-	PyObject *LDTKeyFunctionBad;
-	PyObject *LDTKeyFunctionNotFound;
-	PyObject *LDTTransFunctionBad;
-	PyObject *LDTTransFunctionNotFound;
-	PyObject *LDTUntransFunctionBad;
-	PyObject *LDTUntransFunctionNotFound;
-	PyObject *LDTUserModuleBad;
-	PyObject *LDTUserModuleNotFound;
 };
 
 struct server_exceptions_struct {
-	PyObject * *server_exceptions[10];
-	char * server_exceptions_name[10];
-	int server_exceptions_codes[10];
+	PyObject **server_exceptions[SERVER_EXCEPTION_COUNT];
+	char *server_exceptions_name[SERVER_EXCEPTION_COUNT];
+	int server_exceptions_codes[SERVER_EXCEPTION_COUNT];
 };
 struct record_exceptions_struct {
-	PyObject * *record_exceptions[10];
-	char * record_exceptions_name[10];
-	int record_exceptions_codes[10];
+	PyObject **record_exceptions[RECORD_EXCEPTION_COUNT];
+	char *record_exceptions_name[RECORD_EXCEPTION_COUNT];
+	int record_exceptions_codes[RECORD_EXCEPTION_COUNT];
 };
 
 struct index_exceptions_struct {
-	PyObject * *index_exceptions[6];
-	char * index_exceptions_name[6];
-	int index_exceptions_codes[6];
+	PyObject **index_exceptions[INDEX_EXCEPTION_COUNT];
+	char *index_exceptions_name[INDEX_EXCEPTION_COUNT];
+	int index_exceptions_codes[INDEX_EXCEPTION_COUNT];
 };
 
 struct admin_exceptions_struct {
-	PyObject * *admin_exceptions[17];
-	char * admin_exceptions_name[17];
-	int admin_exceptions_codes[17];
-};
-
-struct ldt_exceptions_struct {
-	PyObject * *ldt_exceptions[37];
-	char * ldt_exceptions_name[37];
-	int ldt_exceptions_codes[37];
+	PyObject **admin_exceptions[ADMIN_EXCEPTION_COUNT];
+	char *admin_exceptions_name[ADMIN_EXCEPTION_COUNT];
+	int admin_exceptions_codes[ADMIN_EXCEPTION_COUNT];
 };

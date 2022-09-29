@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##########################################################################
-# Copyright 2013-2017 Aerospike, Inc.
+# Copyright 2013-2021 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ if options.help:
     print()
     sys.exit(1)
 
-if len(args) != 1:
+if len(args) == 1:
     optparser.print_help()
     print()
     sys.exit(1)

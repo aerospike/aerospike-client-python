@@ -14,13 +14,13 @@ except:
     sys.exit(1)
 
 
-@pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
+@pytest.mark.xfail(reason="Method is deprecated")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfo(object):
 
     def test_info_for_statistics(self):
         request = "statistics"
-        hosts = [host[:2] for host in self.connection_config['hosts']]
+        hosts = [host for host in self.connection_config['hosts']]
         nodes_info = self.as_connection.info(request, hosts)
 
         assert nodes_info is not None
@@ -45,7 +45,7 @@ class TestInfo(object):
         rec = {'names': ['John', 'Marlen', 'Steve']}
 
         self.as_connection.put(key, rec)
-        hosts = [host[:2] for host in self.connection_config['hosts']]
+        hosts = [host for host in self.connection_config['hosts']]
 
         response = self.as_connection.info(container_type, hosts)
         self.as_connection.remove(key)
@@ -62,7 +62,7 @@ class TestInfo(object):
 
         request = "statistics"
         policy = {'timeout': 1000}
-        hosts = [host[:2] for host in self.connection_config['hosts']]
+        hosts = [host for host in self.connection_config['hosts']]
 
         nodes_info = self.as_connection.info(
             request, hosts, policy)
@@ -73,7 +73,7 @@ class TestInfo(object):
     def test_info_for_invalid_request(self):
 
         request = "no_info"
-        hosts = [host[:2] for host in self.connection_config['hosts']]
+        hosts = [host for host in self.connection_config['hosts']]
         nodes_info = self.as_connection.info(request, hosts)
 
         assert isinstance(nodes_info, dict)
@@ -84,7 +84,7 @@ class TestInfo(object):
         Test that sending None as the request raises an error
         '''
         request = None
-        hosts = [host[:2] for host in self.connection_config['hosts']]
+        hosts = [host for host in self.connection_config['hosts']]
 
         try:
             self.as_connection.info(request, hosts)
@@ -98,7 +98,7 @@ class TestInfo(object):
         with pytest.raises(TypeError) as err_info:
             self.as_connection.info()
 
-        assert "Required argument 'command' (pos 1) not found" in str(
+        assert "argument 'command' (pos 1)" in str(
             err_info.value)
 
     def test_info_positive_for_sets_without_connection(self):
@@ -136,7 +136,7 @@ class TestInfo(object):
         with pytest.raises(e.ParamError):
             nodes_info = self.as_connection.info(request, hosts_tuple)
 
-    @pytest.mark.skip("This returns an empty dict",
+    @pytest.mark.skip("This returns an empty dict" +
                       "unsure if this is correct behavior")
     def test_info_host_as_list_of_list(self):
         """
@@ -159,13 +159,14 @@ class TestInfo(object):
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.info(request, config)
 
-        assert err_info.value.code == -2
-        assert err_info.value.msg == "Host address is of type incorrect"
-
     def test_host_address_too_long(self):
+        '''
+        due to > 3.0.0 implementation, this should just result in an exception
+        not a param error
+        '''
         request = 'statistics'
         addr = '1' * 47  # longest possible ipv6 is 45 characters
         # longest port is 5 characters
         # we are using a 4 char port, so we add 2
-        with pytest.raises(e.ParamError):
+        with pytest.raises(Exception):
             self.as_connection.info(request, [(addr, 3000)])

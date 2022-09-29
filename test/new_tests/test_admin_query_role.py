@@ -17,20 +17,18 @@ except:
 class TestQueryRole(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {
-            "hosts": hostlist
-        }
-        self.client = aerospike.client(config).connect(user, password)
+        config = TestBaseClass.get_connection_config()
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
         try:
             self.client.admin_drop_role("usr-sys-admin")
+            time.sleep(2)
         except:
             pass
         usr_sys_admin_privs = [
@@ -38,6 +36,7 @@ class TestQueryRole(TestBaseClass):
             {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
+            time.sleep(2)
         except:
             pass
         self.client.admin_create_role(
@@ -50,18 +49,18 @@ class TestQueryRole(TestBaseClass):
         """
         Teardown method
         """
-        self.client.admin_drop_role("usr-sys-admin-test")
+        try:
+            self.client.admin_drop_role("usr-sys-admin-test")
+        except:
+            pass
         self.client.close()
 
     def test_admin_query_role_no_parameters(self):
         """
         Query role with no parameters
         """
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.client.admin_query_role()
-
-        assert "Required argument 'role' (pos 1) not found" in str(
-            typeError.value)
 
     def test_admin_query_role_positive(self):
         """

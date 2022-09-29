@@ -76,7 +76,7 @@ class TestListPopRange(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_pop_range()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_list_pop_range_with_incorrect_policy(self):
@@ -99,6 +99,8 @@ class TestListPopRange(object):
         """
         Invoke list_pop_range() with non-existent key
         """
+        if self.server_version < [3, 15, 2]:
+            pytest.skip("Change of error beginning in 3.15")
         charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
         minLength = 5
         maxLength = 30
@@ -106,11 +108,9 @@ class TestListPopRange(object):
         key = ('test', 'demo', ''.join(map(lambda unused:
                                            random.choice(charSet),
                                            range(length))) + ".com")
-        try:
-            self.as_connection.list_pop_range(key, "abc", 0, 1)
 
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
+        with pytest.raises(e.RecordNotFound):
+            self.as_connection.list_pop_range(key, "abc", 0, 1)
 
     def test_neg_list_pop_range_with_nonexistent_bin(self):
         """
@@ -220,4 +220,4 @@ class TestListPopRange(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_pop_range(
                 key, "contact_no", "Fifth", 2)
-        assert "an integer is required" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)

@@ -1,5 +1,7 @@
+#pragma once
 /*******************************************************************************
- * Copyright 2017 Aerospike, Inc.
+
+ * Copyright 2017-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,4 +22,4 @@
 
 #include "macros.h"
 
-void setup_tls_config(as_config* config, PyObject* tls_config);
+void setup_tls_config(as_config *config, PyObject *tls_config);

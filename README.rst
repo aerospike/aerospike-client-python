@@ -8,117 +8,75 @@ Aerospike Python Client
 .. |Downloads| image:: https://img.shields.io/pypi/dm/aerospike.svg
 .. |License| image:: https://img.shields.io/pypi/l/aerospike.svg
 
-Dependencies
-------------
+Compatibility
+-------------
 
-The Python client for Aerospike works with Python 2.7, 3.4, 3.5, 3.6 running on
-**64-bit** OS X 10.9+ and Linux.
+The Python client for Aerospike works with Python 3.6, 3.7, 3.8, 3.9 running on
+**64-bit** macOS 10.15+ and Linux (RHEL/CentOS 7 & 8; Debian 8, 9 & 10; Ubuntu
+18.04 & 20.04).
 
-The client depends on:
+Python 3.6 hits `End of Life <https://endoflife.date/python>`__ on December 23rd,
+2021, and is now deprecated.
 
-- Python devel package
-- OpenSSL
-- The Aerospike C client
+**NOTE:** Aerospike Python client 5.0.0 and up MUST be used with Aerospike server 4.9 or later.
+If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
 
-RedHat 6+ and CentOS 6+
-~~~~~~~~~~~~~~~~~~~~~~~
-
-The following are dependencies for:
-
--  RedHat Enterprise (RHEL) 6 or newer
--  CentOS 6 or newer
--  Related distributions which use the ``yum`` package manager
-
-::
-
-    sudo yum install python-devel
-    sudo yum install openssl-devel
-
-Debian 6+ and Ubuntu 12.04+
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The following are dependencies for:
-
-- Debian 6 or newer
-- Ubuntu 12.04 or newer
-- Related distributions which use the ``apt`` package manager
-
-::
-
-    sudo apt-get install python-dev
-    sudo apt-get install libssl-dev
-
-OS X
-~~~~~~~~
-
-By default OS X will be missing command line tools. On Mavericks (OS X 10.9)
-and higher those `can be installed without Xcode <http://osxdaily.com/2014/02/12/install-command-line-tools-mac-os-x/>`__.
-
-::
-
-    xcode-select --install # install the command line tools, if missing
-
-OpenSSL can be installed through the `Homebrew <http://brew.sh/>`__ OS X package
-manager.
-
-::
-
-    brew install openssl
 
 Install
 -------
-
-Aerospike Python Client can be installed using ``pip``:
 
 ::
 
     pip install aerospike
 
+In most cases ``pip`` will install a precompiled binary (wheel) matching your OS
+and version of Python. If a matching wheel isn't found it, or the
+``--install-option`` argument is provided, pip will build the Python client
+from source.
+
+Please see the `build instructions <https://github.com/aerospike/aerospike-client-python/blob/master/BUILD.md>`__
+for more.
+
+Troubleshooting
+~~~~~~~~~~~~~~~
+
+::
+
+    # client >=3.8.0 will attempt a manylinux wheel installation for Linux distros
+    # to force a pip install from source:
+    pip install aerospike --no-binary :all:
+
     # to troubleshoot pip versions >= 6.0 you can
     pip install --no-cache-dir aerospike
-
-    # to trouleshoot installation on OS X El-Capitan (10.11) or OS X Sierra (10.12)
-    pip install --no-cache-dir --user aerospike
 
 If you run into trouble installing the client on a supported OS, you may be
 using an outdated ``pip``.
 Versions of ``pip`` older than 7.0.0 should be upgraded, as well as versions of
 ``setuptools`` older than 18.0.0.
 
-Lua files
-~~~~~~~~~~
 
-The system .lua files used for client side aggregation will be installed.
-By default pip will install the .lua files in a subdirectory named `aerospike/lua/` inside of the Python
-installations directory for platform specific files. The location of the files can be found by running:
+Troubleshooting macOS
+~~~~~~~~~~~~~~~~~~~~~
 
-``pip show -f aerospike``
+In some versions of macOS, Python 2.7 is installed as ``python`` with
+``pip`` as its associated package manager, and Python 3 is installed as ``python3``
+with ``pip3`` as the associated package manager. Make sure to use the ones that
+map to Python 3, such as ``pip3 install aerospike``.
 
-
-**Note** If the .lua files are stored somewhere besides `/usr/local/aerospike/lua`. and you wish to perform Stream UDF operations it will be necessary to specify the locations of the system modules as a configuration parameter to the Aerospike client constructor:
-
-    config = {'hosts': [('127.0.0.1', 3000)], 'lua': {'system_path': '/path/to/lua'} ...}
-    my_client = aerospike.client(config)
-
-
-OS X Installation
-~~~~~~~~~~~~~~~~~~
-Upgrading ``pip`` on OS X El-Capitan (10.11) or OS X Sierra(10.12)
-runs into `SIP issues <https://apple.stackexchange.com/questions/209572/how-to-use-pip-after-the-el-capitan-max-os-x-upgrade>`__
-with ``pip install --user aerospike`` as the recommended workaround to install aerospike on those versions of OS X.
-
-Attempting to install the client with pip for the system default Python may cause permssions issues when copying necesarry files. In order to avoid
+Attempting to install the client with pip for the system default Python may cause permissions issues when copying necessary files. In order to avoid
 those issues the client can be installed for the current user only with the command: ``pip install --user aerospike``
 
-If the version of Python is not in the officially supported list, or the ``--install-option`` argument is provided, pip will attempt to compile the client from source. Please see the `build directions in the GitHub repository <https://github.com/aerospike/aerospike-client-python/blob/master/BUILD.md>`__
-to troubleshoot any issues caused by compiling the client.
+::
+
+    # to trouleshoot installation on macOS try
+    pip install --no-cache-dir --user aerospike
 
 
 Build
 -----
 
-For instructions on manually building the Python client, please refer to the
-``BUILD.md`` file in this repo.
+For instructions on manually building the Python client, please refer to
+`BUILD.md <https://github.com/aerospike/aerospike-client-python/blob/master/BUILD.md>`__.
 
 Documentation
 -------------

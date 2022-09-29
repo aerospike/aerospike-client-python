@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,16 +40,19 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Remove_Invoke(
-		AerospikeClient * self,
-		PyObject * py_key, PyObject * py_meta, PyObject * py_policy)
+PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
+										PyObject *py_meta, PyObject *py_policy)
 {
 
 	// Aerospike Client Arguments
 	as_error err;
 	as_policy_remove remove_policy;
-	as_policy_remove * remove_policy_p = NULL;
+	as_policy_remove *remove_policy_p = NULL;
 	as_key key;
+
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp *exp_list_p = NULL;
 
 	// Initialisation flags
 	bool key_initialised = false;
@@ -63,7 +66,8 @@ PyObject * AerospikeClient_Remove_Invoke(
 	}
 
 	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER, "No connection to aerospike cluster");
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
 
@@ -77,25 +81,35 @@ PyObject * AerospikeClient_Remove_Invoke(
 
 	// Convert python policy object to as_policy_exists
 	if (py_policy) {
-		pyobject_to_policy_remove(&err, py_policy, &remove_policy, &remove_policy_p,
-				&self->as->config.policies.remove);
+		pyobject_to_policy_remove(
+			self, &err, py_policy, &remove_policy, &remove_policy_p,
+			&self->as->config.policies.remove, &exp_list, &exp_list_p);
 		if (err.code != AEROSPIKE_OK) {
 			goto CLEANUP;
-		} else {
+		}
+		else {
 			if (py_meta && PyDict_Check(py_meta)) {
-				PyObject * py_gen = PyDict_GetItemString(py_meta, "gen");
+				PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
 
 				if (py_gen) {
 					if (PyInt_Check(py_gen)) {
-						remove_policy_p->generation = (uint16_t) PyInt_AsLong(py_gen);
-					} else if (PyLong_Check(py_gen)) {
-						remove_policy_p->generation = (uint16_t) PyLong_AsLongLong(py_gen);
-						if ((uint16_t)-1 == remove_policy_p->generation && PyErr_Occurred()) {
-							as_error_update(&err, AEROSPIKE_ERR_PARAM, "integer value for gen exceeds sys.maxsize");
+						remove_policy_p->generation =
+							(uint16_t)PyInt_AsLong(py_gen);
+					}
+					else if (PyLong_Check(py_gen)) {
+						remove_policy_p->generation =
+							(uint16_t)PyLong_AsLongLong(py_gen);
+						if ((uint16_t)-1 == remove_policy_p->generation &&
+							PyErr_Occurred()) {
+							as_error_update(
+								&err, AEROSPIKE_ERR_PARAM,
+								"integer value for gen exceeds sys.maxsize");
 							goto CLEANUP;
 						}
-					} else {
-						as_error_update(&err, AEROSPIKE_ERR_PARAM, "Generation should be an int or long");
+					}
+					else {
+						as_error_update(&err, AEROSPIKE_ERR_PARAM,
+										"Generation should be an int or long");
 					}
 				}
 			}
@@ -112,18 +126,22 @@ PyObject * AerospikeClient_Remove_Invoke(
 
 CLEANUP:
 
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);
+	}
+
 	if (key_initialised == true) {
 		// Destroy the key if it is initialised successfully.
 		as_key_destroy(&key);
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		if (PyObject_HasAttrString(exception_type, "key")) {
 			PyObject_SetAttrString(exception_type, "key", py_key);
-		} 
+		}
 		if (PyObject_HasAttrString(exception_type, "bin")) {
 			PyObject_SetAttrString(exception_type, "bin", Py_None);
 		}
@@ -148,19 +166,20 @@ CLEANUP:
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject * AerospikeClient_Remove(AerospikeClient * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
+								 PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_key = NULL;
-	PyObject * py_policy = NULL;
-	PyObject * py_meta = NULL;
+	PyObject *py_key = NULL;
+	PyObject *py_policy = NULL;
+	PyObject *py_meta = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"key", "meta", "policy", NULL};
+	static char *kwlist[] = {"key", "meta", "policy", NULL};
 
 	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist,
-			&py_key, &py_meta, &py_policy) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist, &py_key,
+									&py_meta, &py_policy) == false) {
 		return NULL;
 	}
 

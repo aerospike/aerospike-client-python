@@ -6,8 +6,6 @@ import json
 from contextlib import contextmanager
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-host, user, password = TestBaseClass.get_hosts()
-using_auth = user or password
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
@@ -57,7 +55,7 @@ class TestConnect(object):
         """
 
         config = self.connection_config.copy()
-        config['policies'] = {'timeout': 10000}
+        config['policies'] = {'read': {'total_timeout': 10000}}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -83,14 +81,13 @@ class TestConnect(object):
         uni = json.dumps(self.connection_config['hosts'][0])
         hostlist = json.loads(uni)
         config = {
-            'hosts': [tuple(hostlist)],
-            'policies': {'use_batch_direct': True}
+            'hosts': [tuple(hostlist)]
         }
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
 
-    @pytest.mark.skip(TestBaseClass.tls_in_use(),
+    @pytest.mark.skipif(TestBaseClass.tls_in_use(),
                       reason="no default port for tls")
     def test_connect_hosts_missing_port(self):
         """
@@ -197,9 +194,9 @@ class TestConnect(object):
              e.ParamError, -2, "Hosts must be a list"),
             ({'hosts': [3000]}, e.ParamError, -2, "Invalid host"),
 
-            ({'hosts': [('127.0.0.1', 2000)]}, e.ClientError, -1,
+            ({'hosts': [('127.0.0.1', 2000)]}, e.ClientError, -10,
              "Failed to connect"),
-            ({'hosts': [('127.0.0.1', '3000')]}, e.ClientError, -1,
+            ({'hosts': [('127.0.0.1', '3000')]}, e.ClientError, -10,
              "Failed to connect")
         ],
         ids=[

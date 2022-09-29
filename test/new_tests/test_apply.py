@@ -5,10 +5,11 @@ import sys
 
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
-from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
+    from aerospike_helpers import expressions as exp
+    from aerospike import exception as e
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
@@ -57,10 +58,16 @@ def add_indexes_and_udfs(client):
     Load the UDFs used in the tests and setup indexes
     '''
     policy = {}
-    client.index_integer_create(
-        'test', 'demo', 'age', 'age_index', policy)
-    client.index_integer_create(
-        'test', 'demo', 'age1', 'age_index1', policy)
+    try:
+        client.index_integer_create(
+            'test', 'demo', 'age', 'age_index', policy)
+    except e.IndexFoundError:
+        pass
+    try:
+        client.index_integer_create(
+            'test', 'demo', 'age1', 'age_index1', policy)
+    except e.IndexFoundError:
+        pass
 
     udf_type = 0
     udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
@@ -75,8 +82,15 @@ def remove_indexes_and_udfs(client):
     '''
     policy = {}
 
-    client.index_remove('test', 'age_index', policy)
-    client.index_remove('test', 'age_index1', policy)
+    try:
+        client.index_remove('test', 'age_index', policy)
+    except e.IndexNotFound:
+        pass
+
+    try:
+        client.index_remove('test', 'age_index1', policy)
+    except e.IndexNotFound:
+        pass
 
     udf_files = ("sample.lua", "test_record_udf.lua", "udf_basic_ops.lua")
 
@@ -144,6 +158,49 @@ class TestApply(TestBaseClass):
         assert bins[test_bin] == expected
         assert retval == 0  # the list_append UDF returns 0
 
+    @pytest.mark.parametrize(
+        "func_args, test_bin, expressions, expected",
+        (
+            (
+                ['name', 1],
+                'name',
+                exp.Eq(exp.IntBin('age'), 1),
+                ['name1', 1]
+            ),
+        ), ids=[
+            "Integer",
+        ]
+    )
+    def test_apply_causing_list_append_with_correct_params_with_expressions(
+            self, func_args, test_bin, expressions, expected):
+
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(
+            key, 'sample', 'list_append', func_args, policy={'expressions': expressions.compile()})
+
+        _, _, bins = self.as_connection.get(key)
+
+        assert bins[test_bin] == expected
+        assert retval == 0  # the list_append UDF returns 0
+
+    def test_apply_return_bool_true(self):
+        """
+            Invoke apply() with UDF that will return booleans.
+        """
+        key = ('test', 'demo', 1)
+        retval = self.as_connection.apply(key, 'test_record_udf',
+                                          'bool_check', [])
+        assert retval == True
+
+    def test_apply_return_bool_false(self):
+        """
+            Invoke apply() with UDF that will return booleans.
+        """
+        key = ('test', 'demo', 'non_existent_record')
+        retval = self.as_connection.apply(key, 'test_record_udf',
+                                          'bool_check', [])
+        assert retval == False
+
     def test_apply_operations_on_map(self):
         """
             Invoke apply() with map
@@ -177,7 +234,7 @@ class TestApply(TestBaseClass):
         """
             Invoke apply() with policy
         """
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 1000}
         key = ('test', 'demo', 1)
         retval = self.as_connection.apply(
             key, 'sample', 'list_append', ['name', 'car'], policy)
@@ -311,7 +368,7 @@ class TestApply(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.apply()
 
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_apply_with_no_argument_in_lua(self):
@@ -321,14 +378,14 @@ class TestApply(TestBaseClass):
         key = ('test', 'demo', 1)
         with pytest.raises(TypeError) as typeError:
             self.as_connection.apply(key, 'sample', 'list_append_extra')
-        assert "Required argument 'args' (pos 4) not found" in str(
+        assert "argument 'args' (pos 4)" in str(
             typeError.value)
 
     def test_apply_with_incorrect_policy(self):
         """
             Invoke apply() with incorrect policy
         """
-        policy = {'timeout': 0.1}
+        policy = {'total_timeout': 0.1}
         key = ('test', 'demo', 1)
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.apply(key, 'sample', 'list_append',
@@ -341,7 +398,7 @@ class TestApply(TestBaseClass):
         """
             Invoke apply() with extra argument.
         """
-        policy = {'timeout': 1000}
+        policy = {'total_timeout': 1000}
         key = ('test', 'demo', 1)
         with pytest.raises(TypeError) as typeError:
             self.as_connection.apply(key, 'sample', 'list_append',
@@ -401,10 +458,7 @@ class TestApply(TestBaseClass):
             Invoke apply() with incorrect ns and set
         """
 
-        with pytest.raises(e.NamespaceNotFound) as err_info:
+        with pytest.raises(e.ClientError) as err_info:
             key = ('test1', 'demo', 1)
             self.as_connection.apply(key, 'sample', 'list_prepend',
                                      ['name', 'car'])
-
-            err_code = err_info.value.code
-            assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND

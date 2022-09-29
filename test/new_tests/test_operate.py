@@ -65,15 +65,6 @@ class TestOperate(object):
         """
         Setup class.
         """
-        # hostlist, user, password = TestBaseClass.get_hosts()
-
-        # config_no_typechecks = {'hosts': hostlist, 'strict_types': False}
-        # if user is None and password is None:
-        #     TestOperate.client_no_typechecks = aerospike.client(
-        #         config_no_typechecks).connect()
-        # else:
-        #     TestOperate.client_no_typechecks = aerospike.client(
-        #         config_no_typechecks).connect(user, password)
         cls.client_no_typechecks = TestBaseClass.get_new_connection(
           {'strict_types': False})
 
@@ -294,8 +285,11 @@ class TestOperate(object):
               "val": "aa"},
              {"op": aerospike.OPERATOR_INCR,
               "bin": "age",
-              "val": 3}, {"op": aerospike.OPERATOR_READ,
-                          "bin": "name"}]),
+              "val": 3}, 
+             {"op": aerospike.OPERATOR_READ,
+              "bin": "name"}
+            ]
+        ),
     ])
     def test_pos_operate_with_policy_gen_ignore(
             self, key, policy, meta, llist):
@@ -942,6 +936,97 @@ class TestOperate(object):
 
         assert bins == {'int_bin': 4}
 
+    def test_list_increment_with_valid_value(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "bin": "int_bin",
+              "index": 2,
+              "val": 20
+            }
+        ]
+
+        _, _, bins = self.as_connection.operate(key, list)
+
+        assert bins == {'int_bin': 23}
+        _, _, bins = self.as_connection.get(key)
+
+        assert bins['int_bin'] == [1, 2, 23, 4]
+
+    def test_list_increment_with_missing_value(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "bin": "int_bin",
+              "index": 2,
+            }
+        ]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, list)
+
+    def test_list_increment_with_missing_index(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "bin": "int_bin",
+              "val": 20
+            }
+        ]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, list)
+
+    def test_list_increment_with_missing_bin(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "index": 2,
+              "val": 20
+            }
+        ]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(key, list)
+
+    def test_list_increment_with_incorrect_value_type(self):
+        '''
+        previous list was [1, 2, 3, 4]
+        new should be [1, 2, 23, 4]
+        '''
+        key = ('test', 'demo', 'list_key')
+        list = [
+            {
+              "op": aerospike.OP_LIST_INCREMENT,
+              "index": 2,
+              "bin": "int_bin",
+              "val": "twenty"
+            }
+        ]
+
+        with pytest.raises(e.AerospikeError):
+            self.as_connection.operate(key, list)
+
     def test_pos_operate_with_list_get_range_val_out_of_bounds(self):
         """
         Invoke operate() with list_get_range operation and value out of bounds
@@ -1051,7 +1136,7 @@ class TestOperate(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_operate_list_operation_bin_notlist(self):
@@ -1109,8 +1194,8 @@ class TestOperate(object):
         key = ('test', 'demo', 'list_key')
         try:
             key, _, _ = self.as_connection.operate(key, list)
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.OpNotApplicable as exception:
+            assert exception.code == 26
 
     def test_neg_operate_with_command_invalid(self):
         """

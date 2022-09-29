@@ -3,6 +3,7 @@ import pytest
 import time
 import sys
 from .as_status_codes import AerospikeStatus
+from aerospike_helpers import expressions as exp
 from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
@@ -53,7 +54,7 @@ class TestScanApply(object):
     def test_scan_apply_with_correct_parameters_with_set(self):
         """
         Invoke scan_apply() with correct parameters.
-        The UDF should only apply to records in the ns and set
+        The UDF should only apply to records in the ns and set.
         """
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua",
                                                 "mytransform", ['age', 2])
@@ -84,6 +85,43 @@ class TestScanApply(object):
             _, _, bins = self.as_connection.get(key)
             assert bins['age'] == i + 2
 
+    def test_scan_apply_with_correct_policy_and_expressions(self):
+        """
+        Invoke scan_apply() with correct policy.
+        It should invoke the function on all records in the set that match the expressions.
+        """
+        expr = exp.And(
+            exp.Eq(exp.StrBin('name'), 'name4'),
+            exp.NE(exp.IntBin('age'), 3),
+        )
+
+        policy = {'timeout': 1000, 'expressions': expr.compile()}
+        scan_id = self.as_connection.scan_apply("test", None, "bin_lua",
+                                                "mytransform", ['age', 2],
+                                                policy)
+
+        wait_for_job_completion(self.as_connection, scan_id)
+
+        for i in range(5):
+            key = ('test', 'demo', i)
+            _, _, bins = self.as_connection.get(key)
+            if bins['name'] == 'name4':
+                assert bins['age'] == i + 2
+            else :
+                assert bins['age'] == i
+
+    def test_scan_apply_with_correct_policy_and_invalid_expressions(self):
+        """
+        Invoke scan_apply() with invalid expressions.
+        """
+        expr = exp.Eq(exp.StrBin('name'), 4)
+
+        policy = {'timeout': 1000, 'expressions': expr.compile()}
+        with pytest.raises(e.InvalidRequest):
+            scan_id = self.as_connection.scan_apply("test", None, "bin_lua",
+                                                    "mytransform", ['age', 2],
+                                                    policy)
+
     def test_scan_apply_with_none_set(self):
         """
         Invoke scan_apply() with set argument as None
@@ -103,6 +141,34 @@ class TestScanApply(object):
 
         _, _, rec = self.as_connection.get(('test', None, 'no_set'))
         assert rec['age'] == 12
+
+    def test_scan_apply_with_none_set_and_expressions(self):
+        """
+        Invoke scan_apply() with set argument as None
+        It should invoke the function on all records in NS that match the expressions
+        """
+        expr = exp.And(
+            exp.Eq(exp.StrBin('name'), 'name2'),
+            exp.NE(exp.IntBin('age'), 3)
+        )
+
+        policy = {'timeout': 1000, 'expressions': expr.compile()}
+        scan_id = self.as_connection.scan_apply("test", None, "bin_lua",
+                                                "mytransform", ['age', 2],
+                                                policy)
+
+        wait_for_job_completion(self.as_connection, scan_id)
+
+        for i in range(5):
+            key = ('test', 'demo', i)
+            _, _, bins = self.as_connection.get(key)
+            if bins['name'] == 'name2':
+                assert bins['age'] == i + 2
+            else :
+                assert bins['age'] == i
+
+        _, _, rec = self.as_connection.get(('test', None, 'no_set'))
+        assert rec['age'] == 10
 
     def test_scan_apply_with_extra_call_to_lua(self):
         """
@@ -168,9 +234,7 @@ class TestScanApply(object):
         """
         policy = {'timeout': 1000}
         options = {
-            "percent": 100,
-            "concurrent": False,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": False
         }
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua",
                                                 "mytransform",
@@ -281,51 +345,13 @@ class TestScanApply(object):
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
 
-    def test_scan_apply_with_percent_string(self):
-        """
-        Invoke scan_apply() with percent string
-        """
-        policy = {'timeout': 1000}
-        options = {
-            "percent": "80",
-            "concurrent": False,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
-        }
-        with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.scan_apply("test", "demo", "bin_lua",
-                                          "mytransform_incorrect",
-                                          ['age', 2], policy, options)
-
-        err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    def test_scan_apply_with_priority_string(self):
-        """
-        Invoke scan_apply() with priority string
-        """
-        policy = {'timeout': 1000}
-        options = {
-            "percent": 80,
-            "concurrent": False,
-            "priority": "aerospike.SCAN_PRIORITY_HIGH"
-        }
-        with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.scan_apply("test", "demo", "bin_lua",
-                                          "mytransform_incorrect",
-                                          ['age', 2], policy, options)
-
-        err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
-
     def test_scan_apply_with_concurrent_int(self):
         """
         Invoke scan_apply() with concurrent int
         """
         policy = {'timeout': 1000}
         options = {
-            "percent": 80,
-            "concurrent": 5,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": 5
         }
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.scan_apply("test", "demo", "bin_lua",
@@ -341,9 +367,7 @@ class TestScanApply(object):
         """
         policy = {'timeout': 1000}
         options = {
-            "percent": 80,
-            "concurrent": False,
-            "priority": aerospike.SCAN_PRIORITY_HIGH
+            "concurrent": False
         }
         with pytest.raises(TypeError) as typeError:
             self.as_connection.scan_apply("test", "demo", "bin_lua",
@@ -385,12 +409,10 @@ class TestScanApply(object):
         policy = {
             'timeout': 0.5
         }
-        with pytest.raises(e.ParamError) as err_info:
+
+        with pytest.raises(e.ParamError):
             self.as_connection.scan_apply(
                 "test", "demo", "bin_lua", "mytransform", ['age', 2], policy)
-
-        err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
 
     def test_scan_apply_with_non_existent_ns(self):
         """
@@ -441,5 +463,5 @@ class TestScanApply(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.scan_apply()
-        assert "Required argument 'ns' (pos 1) not found" in str(
+        assert "argument 'ns' (pos 1)" in str(
             typeError.value)

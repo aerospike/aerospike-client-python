@@ -161,7 +161,7 @@ class TestListInsert(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_insert()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_list_insert_with_incorrect_policy(self):
@@ -247,8 +247,8 @@ class TestListInsert(object):
 
         try:
             self.as_connection.list_insert(key, "age", -6, False)
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.OpNotApplicable as exception:
+            assert exception.code == 26
 
     def test_neg_list_insert_index_type_string(self):
         """
@@ -258,4 +258,4 @@ class TestListInsert(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_insert(key, "age", "Fifth", False)
-        assert "an integer is required" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)

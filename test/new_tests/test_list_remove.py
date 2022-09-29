@@ -81,7 +81,7 @@ class TestListRemove(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_remove()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_list_remove_with_incorrect_policy(self):
@@ -103,6 +103,8 @@ class TestListRemove(object):
         """
         Invoke list_remove() with non-existent key
         """
+        if self.server_version < [3, 15, 2]:
+            pytest.skip("Change of error beginning in 3.15")
         charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
         minLength = 5
         maxLength = 30
@@ -110,11 +112,9 @@ class TestListRemove(object):
         key = ('test', 'demo', ''.join(map(lambda unused:
                                            random.choice(charSet),
                                            range(length))) + ".com")
-        try:
-            self.as_connection.list_remove(key, "contact_no", 0)
 
-        except e.BinIncompatibleType as exception:
-            assert exception.code == 12
+        with pytest.raises(e.RecordNotFound):
+            self.as_connection.list_remove(key, "contact_no", 0)
 
     def test_neg_list_remove_with_nonexistent_bin(self):
         """
@@ -188,8 +188,8 @@ class TestListRemove(object):
         key = ('test', 'demo', 1)
         try:
             self.as_connection.list_remove(key, "contact_no", -56)
-        except e.InvalidRequest as exception:
-            assert exception.code == 4
+        except e.OpNotApplicable as exception:
+            assert exception.code == 26
 
     def test_neg_list_remove_meta_type_integer(self):
         """
@@ -211,4 +211,4 @@ class TestListRemove(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_remove(key, "contact_no", "Fifth")
-        assert "an integer is required" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)

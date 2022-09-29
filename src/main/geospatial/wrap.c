@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,15 +26,17 @@
 #include "geo.h"
 #include "policy.h"
 
-PyObject * AerospikeGeospatial_Wrap(AerospikeGeospatial * self, PyObject * args, PyObject * kwds)
+PyObject *AerospikeGeospatial_Wrap(AerospikeGeospatial *self, PyObject *args,
+								   PyObject *kwds)
 {
 
 	// Python function arguments
-	PyObject * py_geodata = NULL;
+	PyObject *py_geodata = NULL;
 	// Python function keyword arguments
-	static char * kwlist[] = {"geodata", NULL};
+	static char *kwlist[] = {"geodata", NULL};
 
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:wrap", kwlist, &py_geodata) == false) {
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:wrap", kwlist,
+									&py_geodata) == false) {
 		return NULL;
 	}
 
@@ -54,7 +56,7 @@ CLEANUP:
 
 	// If an error occurred, tell Python.
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
@@ -65,4 +67,3 @@ CLEANUP:
 	Py_INCREF(self->geo_data);
 	return PyLong_FromLong(0);
 }
-

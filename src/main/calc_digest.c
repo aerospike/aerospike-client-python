@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,14 @@
 #include "conversions.h"
 #include "exceptions.h"
 #include "module_functions.h"
+#include <aerospike/as_partition.h>
 
-static PyObject * Aerospike_Calc_Digest_Invoke(PyObject * py_ns, PyObject *py_set, PyObject * py_key)
+static PyObject *Aerospike_Calc_Digest_Invoke(PyObject *py_ns, PyObject *py_set,
+											  PyObject *py_key)
 {
 	// Python Return Value
-	PyObject * py_keydict = NULL;
-	PyObject * py_value = NULL;
+	PyObject *py_keydict = NULL;
+	PyObject *py_value = NULL;
 
 	// Aerospike Client Arguments
 	as_error err;
@@ -47,13 +49,14 @@ static PyObject * Aerospike_Calc_Digest_Invoke(PyObject * py_ns, PyObject *py_se
 		return NULL;
 	}
 
-	if (!PyString_Check(py_set)  && !PyUnicode_Check(py_set)) {
+	if (!PyString_Check(py_set) && !PyUnicode_Check(py_set)) {
 		PyErr_SetString(PyExc_TypeError, "Set should be a string or unicode");
 		return NULL;
 	}
 
-	if (!PyString_Check(py_key)  && !PyUnicode_Check(py_key) && !PyInt_Check(py_key) &&
-			!PyLong_Check(py_key) && !PyByteArray_Check(py_key)) {
+	if (!PyString_Check(py_key) && !PyUnicode_Check(py_key) &&
+		!PyInt_Check(py_key) && !PyLong_Check(py_key) &&
+		!PyByteArray_Check(py_key)) {
 		PyErr_SetString(PyExc_TypeError, "Key is invalid");
 		return NULL;
 	}
@@ -80,11 +83,14 @@ static PyObject * Aerospike_Calc_Digest_Invoke(PyObject * py_ns, PyObject *py_se
 	if (digest->init) {
 		len = sizeof(digest->value);
 		PyObject *py_len = PyLong_FromSize_t(len);
-		Py_ssize_t py_length =  PyLong_AsSsize_t(py_len);
-		py_value = PyByteArray_FromStringAndSize((const char *)digest->value, py_length);
+		Py_ssize_t py_length = PyLong_AsSsize_t(py_len);
+		py_value = PyByteArray_FromStringAndSize((const char *)digest->value,
+												 py_length);
 		Py_DECREF(py_len);
-	} else {
-		as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Digest could not be calculated");
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+						"Digest could not be calculated");
 		goto CLEANUP;
 	}
 
@@ -99,7 +105,7 @@ CLEANUP:
 	}
 
 	if (err.code != AEROSPIKE_OK) {
-		PyObject * py_err = NULL;
+		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyObject *exception_type = raise_exception(&err);
 		PyErr_SetObject(exception_type, py_err);
@@ -110,22 +116,45 @@ CLEANUP:
 	return py_value;
 }
 
-PyObject * Aerospike_Calc_Digest(PyObject * self, PyObject * args, PyObject * kwds)
+PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
 {
 	// Python Function Arguments
-	PyObject * py_ns = NULL;
-	PyObject * py_set = NULL;
-	PyObject * py_key = NULL;
+	PyObject *py_ns = NULL;
+	PyObject *py_set = NULL;
+	PyObject *py_key = NULL;
 
 	// Python Function Keyword Arguments
-	static char * kwlist[] = {"ns", "set", "key", NULL};
+	static char *kwlist[] = {"ns", "set", "key", NULL};
 
 	// Python Function Argument Parsing
 	if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO:calc_digest", kwlist,
-			&py_ns, &py_set, &py_key) == false) {
+									&py_ns, &py_set, &py_key) == false) {
 		return NULL;
 	}
 
 	// Invoke Operation
 	return Aerospike_Calc_Digest_Invoke(py_ns, py_set, py_key);
+}
+
+PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args)
+{
+	// Python Function Arguments
+	as_digest_value digest;
+
+	// Python Function Argument Parsing
+	if (PyArg_Parse(args, "(s)", &digest) == false) {
+		return NULL;
+	}
+
+	uint32_t part_id = 0;
+
+	part_id = as_partition_getid(digest, 4096);
+
+	// Invoke Operation
+	return PyLong_FromLong(part_id);
+}
+
+PyObject *Aerospike_Is_AsyncSupported(PyObject *self)
+{
+	return PyLong_FromLong(async_support);
 }

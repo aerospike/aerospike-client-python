@@ -2,6 +2,7 @@
 
 import pytest
 import sys
+import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
@@ -16,24 +17,29 @@ except:
 class TestSetPassword(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        TestBaseClass().get_hosts()[1] == None,
+        not TestBaseClass.auth_in_use(),
         reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
         Setup method
         """
-        hostlist, user, password = TestBaseClass().get_hosts()
-        config = {"hosts": hostlist}
+        config = TestBaseClass.get_connection_config()
         TestSetPassword.Me = self
-        self.client = aerospike.client(config).connect(user, password)
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
         try:
             self.client.admin_drop_user("testsetpassworduser")
-        except:
+            time.sleep(2)
+        except e.InvalidUser:
             pass
-        self.client.admin_create_user(
-            "testsetpassworduser", "aerospike", ["read"], {})
 
+        try:
+            self.client.admin_create_user(
+                "testsetpassworduser", "aerospike", ["read"], {})
+        except e.UserExistsError:
+            pass
+
+        time.sleep(2)
         self.delete_users = []
 
     def teardown_method(self, method):
@@ -41,8 +47,11 @@ class TestSetPassword(TestBaseClass):
         Teardown method
         """
 
-        self.client.admin_drop_user("testsetpassworduser")
-
+        try:
+            self.client.admin_drop_user("testsetpassworduser")
+            time.sleep(2)
+        except e.InvalidUser:
+            pass
         self.client.close()
 
     def test_set_password_without_any_parameters(self):
@@ -50,7 +59,7 @@ class TestSetPassword(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_set_password()
 
-        assert "Required argument 'user' (pos 1) not found" in str(
+        assert "argument 'user' (pos 1)" in str(
             typeError.value)
 
     def test_set_password_with_proper_parameters(self):
@@ -128,6 +137,5 @@ class TestSetPassword(TestBaseClass):
         user = "testsetpassworduser"
         password = "newpassword$" * 1000
 
-        status = self.client.admin_set_password(user, password, policy)
-
-        assert status == 0
+        with pytest.raises(e.ClientError):
+            self.client.admin_set_password(user, password, policy)

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2013-2017 Aerospike, Inc.
+ * Copyright 2013-2021 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,52 +28,107 @@
  * FUNCTIONS
  ******************************************************************************/
 
-PyTypeObject * AerospikeScan_Ready(void);
+PyTypeObject *AerospikeScan_Ready(void);
 
-AerospikeScan * AerospikeScan_New(AerospikeClient * client, PyObject * args, PyObject * kwds);
+AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
+								 PyObject *kwds);
 
 /*******************************************************************************
  * OPERATIONS
  ******************************************************************************/
 
 /**
- * Add a where predicate to the query.
+ * Select which bins will be returned.
  *
  * Selecting a single bin:
  *
- *    query.select(bin)
+ *    scan.select(bin)
  *
  * Selecting multiple bins:
  *
- *    query.select(bin, bin, bin)
+ *    scan.select(bin, bin, bin)
  *
  */
-AerospikeScan * AerospikeScan_Select(AerospikeScan * self, PyObject * args, PyObject * kwds);
+AerospikeScan *AerospikeScan_Select(AerospikeScan *self, PyObject *args,
+									PyObject *kwds);
 
 /**
- * Apply the specified udf on the results of the query.
+ * Apply the specified udf on the records scanned.
  *
- *    query.apply_each(module, function, arglist)
+ *    scan.apply_each(module, function, arglist)
  *
  */
 // PyObject * AerospikeScan_ApplyEach(AerospikeScan * self, PyObject * args, PyObject * kwds);
 
 /**
- * Execute the query and call the callback for each result returned.
+ * Execute the scan and call the callback for each result returned.
  *
  *    def each_result(result):
  *      print result
  *
- *    query.foreach(each_result)
+ *    scan.foreach(each_result)
  *
  */
-PyObject * AerospikeScan_Foreach(AerospikeScan * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
+								PyObject *kwds);
 
 /**
- * Execute the query and return a generator
+ * Execute the scan and return a generator.
  *
- *    for result in query.results():
+ *    for result in scan.results():
  *      print result
  *
  */
-PyObject * AerospikeScan_Results(AerospikeScan * self, PyObject * args, PyObject * kwds);
+PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
+								PyObject *kwds);
+
+/**
+ * Execute the scan in the background.
+ *
+ *    job_id = scan.execute_background()
+ *
+ */
+PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
+										  PyObject *kwds);
+
+/**
+ * Apply the specified udf on the results of the scan.
+ *
+ *    scan.apply(module, function, arglist)
+ *
+ */
+AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
+								   PyObject *kwds);
+
+/**
+ * Add an ops list to the scan.
+ *
+ */
+AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
+									 PyObject *kwds);
+
+/**
+ * Set pagination filter to receive records in bunch (max_records or page_size).
+ *
+ *    scan.paginate()
+ *
+ */
+PyObject *AerospikeScan_Paginate(AerospikeScan *self, PyObject *args,
+								 PyObject *kwds);
+
+/**
+ * Gets the status of scan.
+ *
+ *    scan.is_done()
+ *
+ */
+PyObject *AerospikeScan_Is_Done(AerospikeScan *self, PyObject *args,
+								PyObject *kwds);
+
+/**
+ * Gets the complete partition status of the scan.
+ *
+ *    Returns a dictionary of the form {id:(id, init, done, digest), ...}.
+ *
+ */
+PyObject *AerospikeScan_Get_Partitions_status(AerospikeScan *self);

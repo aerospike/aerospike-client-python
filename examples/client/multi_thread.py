@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ##########################################################################
-# Copyright 2013-2017 Aerospike, Inc.
+# Copyright 2013-2021 Aerospike, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -124,7 +124,7 @@ def readWork(nReads, thrName):
     t0 = float(time.time())
 
     for x in range(0, nReads):
-        kstr = 'k' + str(random.randint(0, numKeys))
+        kstr = 'k' + str(random.randrange(0, numKeys))
         key = (namespace, testSet, kstr)
         try:
             (key, _, _) = client.get(key)

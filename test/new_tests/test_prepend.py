@@ -30,6 +30,9 @@ class TestPrepend():
                 "bytearray_bin": bytearray(
                     "asd;as[d'as;d", "utf-8")})
 
+        key = ("test", "demo", "bytes_key")
+        as_connection.put(key, {"bytes_bin": b"x"})
+
         def teardown():
             """
             Teardown Method
@@ -39,6 +42,9 @@ class TestPrepend():
                 as_connection.remove(key)
 
             key = ('test', 'demo', 'bytearray_key')
+            as_connection.remove(key)
+
+            key = ('test', 'demo', 'bytes_key')
             as_connection.remove(key)
 
         request.addfinalizer(teardown)
@@ -260,6 +266,32 @@ class TestPrepend():
 
         self.as_connection.remove(key)
 
+    def test_pos_prepend_with_bytes(self):
+        """
+        Invoke prepend() with bytes value
+        """
+        key = ('test', 'demo', 'bytes_key')
+        self.as_connection.prepend(key, "bytes_bin", b'a')
+
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {
+            'bytes_bin': b'ax'}
+
+    def test_pos_prepend_with_bytes_new_key(self):
+        """
+        Invoke prepend() with bytes value with a new record(non-existing)
+        """
+        key = ('test', 'demo', 'bytes_new')
+        self.as_connection.prepend(
+            key, "bytes_bin", b'a')
+
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {'bytes_bin': b'a'}
+
+        self.as_connection.remove(key)
+
     # Negative tests
     def test_neg_prepend_with_no_parameters(self):
         """
@@ -267,7 +299,7 @@ class TestPrepend():
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.prepend()
-        assert "Required argument 'key' (pos 1) not found" in str(
+        assert "argument 'key' (pos 1)" in str(
             typeError.value)
 
     def test_neg_prepend_with_policy_key_gen_EQ_not_equal(self):
@@ -401,12 +433,8 @@ class TestPrepend():
         """
         key = ('test1', 'demo', 1)
         policy = {'timeout': 1000}
-        try:
+        with pytest.raises(e.ClientError):
             self.as_connection.prepend(key, "name", "ABC", {}, policy)
-            key, _, _ = self.as_connection.get(key)
-
-        except e.NamespaceNotFound as exception:
-            assert exception.code == 20
 
     @pytest.mark.parametrize("key, bin, value, meta, policy, ex_code, ex_msg", [
         (('test', 1), "name", "ABC", {}, {'timeout': 1000}, -2,
