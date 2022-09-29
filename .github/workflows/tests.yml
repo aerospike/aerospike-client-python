@@ -48,7 +48,17 @@ jobs:
       run: |
         sudo apt-get install libssl-dev
         sudo apt-get install python3-dev
-        python -m pip install pytest
+        python -m pip install pytest flake8
+    - name: Lint Python code
+      run: |
+        flake8 --count --max-complexity=10 --show-source --max-line-length=127 aerospike_helpers benchmarks
+    - name: Documentation
+      run: |
+        # Spell check
+        cd docs/
+        sphinx-build -b spelling . build -W
+        # Build
+        sphinx-build -b html . htmldir -W
     - name: Build client
       run: |
         python setup.py build --force
