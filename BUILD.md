@@ -53,9 +53,15 @@ sudo apt-get install build-essential python-dev
 
 AUR package is available for Python 3.
 
-```
+```sh
 yaourt -S aerospike-client-python
 ```
+
+Dependencies:
+
+ ```sh
+ sudo pacman -S binutils gcc
+ ```
 
 ### macOS
 
