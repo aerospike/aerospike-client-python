@@ -49,6 +49,14 @@ sudo apt-get install libssl-dev
 sudo apt-get install build-essential python-dev
 ```
 
+### Archlinux
+
+AUR package is available for Python 3.
+
+```
+yaourt -S aerospike-client-python
+```
+
 ### macOS
 
 By default macOS will be missing command line tools.
