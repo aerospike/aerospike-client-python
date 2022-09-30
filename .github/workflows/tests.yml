@@ -1,6 +1,13 @@
 name: Pytest Tests
+
+# Trigger test workflow whenever:
+# 1. A pull request is updated (e.g with new commits)
+# 2. Commits are pushed directly to the stage or master branch
 on:
   push:
+    branches: ["stage", "master"]
+  pull_request:
+    branches: ["stage"]
 jobs:
   tests:
     runs-on: ubuntu-latest
