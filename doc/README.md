@@ -29,3 +29,9 @@ Then open the index.html page in a browser:
 ```
 cd htmldir && open index.html
 ```
+
+Spelling check:
+```bash
+sphinx-build -b spelling . spelling
+```
+
