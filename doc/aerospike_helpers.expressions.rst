@@ -87,7 +87,7 @@ Aerospike expressions are evaluated server side, and expressions used for filter
 They do not return any values to the client or write any values to the server.
 
 When the following documentation says an expression returns a **list expression**,
-it means that the expression returns a list during evalution on the server side.
+it means that the expression returns a list during evaluation on the server side.
 
 Expressions used with :meth:`~aerospike_helpers.operations.expression_operations.expression_read`
 or :meth:`~aerospike_helpers.operations.expression_operations.expression_write` do send their return values to the client or write them to the server.
