@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinxcontrib.spelling"
 ]
 napoleon_google_docstring = True
 intersphinx_mapping = {"python": ("https://docs.python.org/3.8", None)}
