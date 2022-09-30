@@ -77,11 +77,69 @@ Example::
     print(result)
     # {'users': 4}
 
+    # Example 3: create a CDT secondary index from a base64 encoded _cdt_ctx with info command
+    policy = {}
+
+    bs_b4_cdt = client.get_cdtctx_base64({'ctx':ctx_list_index})
+    
+    r = []
+    r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
+    # use index_type_string to convert enum value to string
+    r.append(";indextype=%s" % (cdt_ctx.index_type_string(aerospike.INDEX_TYPE_LIST)))
+    # use index_datatype_string to convert enum value to string
+    r.append(";indexdata=string_list,%s" % (cdt_ctx.index_datatype_string(aerospike.INDEX_STRING)))
+    r.append(";context=%s" % (bs_b4_cdt))
+    req = ''.join(r)
+
+    # print("req is ==========={}", req)
+    retobj = client.info_all(req, policy=None)
+    # print("res is ==========={}", res)
+    client.index_remove('test', 'test_string_list_cdt_index', policy)
+
     # Cleanup
     client.remove(key)
     client.close()
 '''
 import aerospike
+
+def index_type_string(index_type):
+    """
+    Converts index_type enum value to string.
+
+    Args:
+        index_type (int): The index_type to convert into equivalent string value.
+
+    Returns:
+        (string) - must be one of 'default', 'list', 'mapkeys', 'mapvalues'
+
+    """
+    if index_type == aerospike.INDEX_TYPE_DEFAULT:
+        return "default"
+    if index_type == aerospike.INDEX_TYPE_LIST:
+        return "list"
+    if index_type == aerospike.INDEX_TYPE_MAPKEYS:
+        return "mapkeys"
+    if index_type == aerospike.INDEX_TYPE_MAPVALUES:
+        return "mapvalues"
+    return "invalid"
+
+def index_datatype_string(index_datatype):
+    """
+    Converts index_datatype enum value to string.
+
+    Args:
+        index_datatype (int): The index_datatype to convert into equivalent string value.
+
+    Returns:
+        (string) - must be one of must be one of 'numeric', 'string', 'geo2dsphere'
+    """
+    if index_datatype == aerospike.INDEX_NUMERIC:
+        return "numeric"
+    if index_datatype == aerospike.INDEX_STRING:
+        return "string"
+    if index_datatype == aerospike.INDEX_GEO2DSPHERE:
+        return "geo2dsphere"
+    return "invalid"
 
 
 CDT_CTX_ORDER_KEY = "order_key"

@@ -53,9 +53,7 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 {
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
-	as_error *error = &data->error;
 	as_batch_read *r = NULL;
-	PyObject *py_exception;
 
 	// Lock Python State
 	PyGILState_STATE gstate;

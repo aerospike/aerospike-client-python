@@ -474,6 +474,10 @@ Create an cdt index named index_name for list, map keys or map values (as define
 numeric, string or GeoJSON values (as defined by index_datatype) \
 on records of the specified ns, set whose bin is a list or map.");
 
+PyDoc_STRVAR(get_cdtctx_base64_doc,
+			 "get_cdtctx_base64(compiled_cdtctx: list) -> str\n\
+\n\
+Get the base64 representation of a compiled aerospike CDT ctx.");
 
 PyDoc_STRVAR(index_remove_doc, "index_remove(ns, index_name[, policy])\n\
 \n\
@@ -832,6 +836,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 	 METH_VARARGS | METH_KEYWORDS, index_string_create_doc},
 	{"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
 	 METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
+	{"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
+	 METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
 	{"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
 	 METH_VARARGS | METH_KEYWORDS, index_remove_doc},
 	{"index_list_create", (PyCFunction)AerospikeClient_Index_List_Create,
