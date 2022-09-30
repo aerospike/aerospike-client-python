@@ -63,7 +63,7 @@ jobs:
     - name: Build documentation
       run: |
         cd doc/
-        sphinx-build -b spelling . build -W
+        sphinx-build -b spelling . spelling -W --keep-going
         sphinx-build -b html . htmldir -W
     - name: Build client
       run: |
