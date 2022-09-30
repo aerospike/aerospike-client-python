@@ -171,7 +171,7 @@ Assume this boilerplate code is run before all examples below:
         Invoke the *callback* function for each of the records streaming back from the query.
 
         A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
-        If the query is using the "partition_filter" query policy the callback will recieve two arguments
+        If the query is using the "partition_filter" query policy the callback will receive two arguments
         The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
         as a normal callback.
 

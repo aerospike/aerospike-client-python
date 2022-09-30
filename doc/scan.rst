@@ -12,7 +12,7 @@ Overview
 ========
 
 The Scan object is used to return all the records in a specified set (which \
-can be ommitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
+can be omitted or :py:obj:`None`). A Scan with a :py:obj:`None` set returns all the \
 records in the namespace.
 
 The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_background`. The \
@@ -167,7 +167,7 @@ Methods
 
         .. note::
             A :ref:`aerospike_record_tuple` is passed as the argument to the callback function.
-            If the scan is using the "partition_filter" scan policy the callback will recieve two arguments
+            If the scan is using the "partition_filter" scan policy the callback will receive two arguments
             The first is a :class:`int` representing partition id, the second is the same :ref:`aerospike_record_tuple`
             as a normal callback.
 

@@ -384,7 +384,7 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
 def bit_lscan(bin_name: str, bit_offset, bit_size, value):
     """Creates a bit_lscan_operation.
 
-    Server returns an integer representing the bit offset of the first occurence
+    Server returns an integer representing the bit offset of the first occurrence
     of the specified value bit. Starts scanning at bit_offset for bit_size. Returns
     -1 if value not found.
 
@@ -493,7 +493,7 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
 def bit_rscan(bin_name: str, bit_offset, bit_size, value):
     """Creates a bit_rscan_operation.
 
-    Server returns an integer representing the bit offset of the last occurence
+    Server returns an integer representing the bit offset of the last occurrence
     of the specified value bit. Starts scanning at bit_offset for bit_size. Returns
     -1 if value not found.
 

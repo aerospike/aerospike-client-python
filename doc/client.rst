@@ -2455,7 +2455,7 @@ Partition Objects
         * ``"digest"``: :class:`bytearray` represents the digest of the record being queried.
         
             Should be 20 characters long.
-        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record recieved by a partition query.
+        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
 
     Default: ``{}`` (All partitions will be queried).
 
