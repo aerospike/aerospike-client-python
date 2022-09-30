@@ -174,7 +174,7 @@ Assume all in-line examples run this code beforehand::
     import aerospike
     import aerospike_helpers.expressions as exp
 
-aerospike\_helpers\.expressions\.base\ module
+aerospike\_helpers\.expressions\.base module
 ---------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.base
@@ -202,21 +202,21 @@ aerospike\_helpers\.expressions\.bit module
     :members:
     :special-members:
 
-aerospike\_helpers\.expressions\.hll\ module
+aerospike\_helpers\.expressions\.hll module
 --------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.hll
     :members:
     :special-members:
 
-aerospike\_helpers\.expressions\.arithmetic\ module
+aerospike\_helpers\.expressions\.arithmetic module
 ---------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.arithmetic
     :members:
     :special-members:
 
-aerospike\_helpers\.expressions\.bitwise_operators\ module
+aerospike\_helpers\.expressions\.bitwise_operators module
 ----------------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.bitwise_operators
@@ -224,7 +224,7 @@ aerospike\_helpers\.expressions\.bitwise_operators\ module
     :special-members:
 
 
-aerospike\_helpers\.expressions\.resources\ module
+aerospike\_helpers\.expressions\.resources module
 --------------------------------------------------
 
 .. automodule:: aerospike_helpers.expressions.resources
