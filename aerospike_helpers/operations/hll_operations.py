@@ -118,8 +118,8 @@ def hll_add(bin_name: str, values, index_bit_count=None, mh_bit_count=None, poli
     Args:
         bin_name (str): The name of the bin to be operated on.
         values: The values to be added to the HLL set.
-        index_bit_count: An optional number of index bits. Must be bewtween 4 and 16 inclusive.
-        mh_bit_count: An optional number of min hash bits. Must be bewtween 4 and 58 inclusive.
+        index_bit_count: An optional number of index bits. Must be between 4 and 16 inclusive.
+        mh_bit_count: An optional number of min hash bits. Must be between 4 and 58 inclusive.
         policy (dict): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
     """
     op_dict = {
@@ -166,7 +166,7 @@ def hll_fold(bin_name: str, index_bit_count):
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        index_bit_count: number of index bits. Must be bewtween 4 and 16 inclusive.
+        index_bit_count: number of index bits. Must be between 4 and 16 inclusive.
     """
     op_dict = {OP_KEY: aerospike.OP_HLL_FOLD, BIN_KEY: bin_name, INDEX_BIT_COUNT_KEY: index_bit_count}
 
@@ -272,8 +272,8 @@ def hll_init(bin_name: str, index_bit_count=None, mh_bit_count=None, policy=None
 
     Args:
         bin_name (str): The name of the bin to be operated on.
-        index_bit_count: An optional number of index bits. Must be bewtween 4 and 16 inclusive.
-        mh_bit_count: An optional number of min hash bits. Must be bewtween 4 and 58 inclusive.
+        index_bit_count: An optional number of index bits. Must be between 4 and 16 inclusive.
+        mh_bit_count: An optional number of min hash bits. Must be between 4 and 58 inclusive.
         policy (dict): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
     """
     op_dict = {

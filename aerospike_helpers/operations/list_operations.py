@@ -957,7 +957,7 @@ def list_sort(bin_name: str, sort_flags: int = 0, ctx: list = None):
 
     Args:
         bin_name (str): The name of the bin to sort.
-        sort_flags (int): :ref:`aerospike_list_sort_flag` modifiying the sorting behavior
+        sort_flags (int): :ref:`aerospike_list_sort_flag` modifying the sorting behavior
             (default ``aerospike.DEFAULT_LIST_SORT``).
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.

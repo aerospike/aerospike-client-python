@@ -158,7 +158,7 @@ class Apply(BatchRecord):
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
-            module (str): Name of the lua module previously registerd with the server.
+            module (str): Name of the lua module previously registered with the server.
             function (str): Name of the UDF to invoke.
             args (:obj:`list`): List of arguments to pass to the UDF.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
@@ -180,7 +180,7 @@ class Apply(BatchRecord):
 
             # Create a batch Apply to apply UDF "test_func" to bin "a" from the record.
             # Assume that "test_func" takes a bin name string as an argument.
-            # Assume the appropriate UDF module has already been registerd.
+            # Assume the appropriate UDF module has already been registered.
             import aerospike_helpers.operations as op
 
 

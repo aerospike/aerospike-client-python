@@ -334,7 +334,7 @@ class ListSort(_BaseExpr):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
-            order (int): Optional flags modifiying the behavior of list_sort. This should be constructed by bitwise
+            order (int): Optional flags modifying the behavior of list_sort. This should be constructed by bitwise
                 or'ing together values from :ref:`aerospike_list_sort_flag`.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
@@ -812,8 +812,8 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
                 objects.
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`list_return_types` values.
-            value (TypeValue): Value or vaule expression to get items relative to.
-            rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
+            value (TypeValue): Value or value expression to get items relative to.
+            rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
 
@@ -856,8 +856,8 @@ class ListGetByValueRelRankRange(_BaseExpr):
                 objects.
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`list_return_types` values.
-            value (TypeValue): Value or vaule expression to get items relative to.
-            rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
+            value (TypeValue): Value or value expression to get items relative to.
+            rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             count (TypeCount): Integer value or integer value expression, how many elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.

@@ -137,7 +137,7 @@ class Div(_BaseExpr):
     Div is also available via operator overloading using `/`
     and any subclass of _BaseExpr. See the second example.
 
-    Floor div is also avaliable via `//` but must be used with floats.
+    Floor div is also available via `//` but must be used with floats.
 
     Requires server version 5.6.0+.
     """
@@ -256,7 +256,7 @@ class Abs(_BaseExpr):
     Create operator that returns absolute value of a number.
     All arguments must resolve to integer or float.
 
-    Abs is also available via operator overloading using the bultin
+    Abs is also available via operator overloading using the built-in
     abs() function and any subclass of _BaseExpr. See the second example.
 
     Requires server version 5.6.0+.

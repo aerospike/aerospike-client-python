@@ -187,7 +187,7 @@ class HLLGetUnionCount(_BaseExpr):
 
 
 class HLLGetIntersectCount(_BaseExpr):
-    """Create an expression that performs an as_operations_hll_get_inersect_count."""
+    """Create an expression that performs an as_operations_hll_get_intersect_count."""
 
     _op = aerospike.OP_HLL_GET_INTERSECT_COUNT
 
@@ -221,7 +221,7 @@ class HLLGetSimilarity(_BaseExpr):
             values (TypeValue): A single HLL or list of HLLs, values or expressions, to calculate similarity with.
             bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
-        :return: Float bin, stimated similarity between 0.0 and 1.0.
+        :return: Float bin, estimated similarity between 0.0 and 1.0.
 
         Example::
 

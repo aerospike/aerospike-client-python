@@ -15,7 +15,7 @@
 ##########################################################################
 """
 Map expressions contain expressions for reading and modifying Maps. Most of
-these operations are from the stadard :mod:`Map API <aerospike_helpers.operations.map_operations>`.
+these operations are from the standard :mod:`Map API <aerospike_helpers.operations.map_operations>`.
 
 """
 
@@ -1039,8 +1039,8 @@ class MapGetByValueRelRankRangeToEnd(_BaseExpr):
                 objects.
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`map_return_types` values.
-            value (TypeValue): Value or vaule expression to get items relative to.
-            rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
+            value (TypeValue): Value or value expression to get items relative to.
+            rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
 
@@ -1079,8 +1079,8 @@ class MapGetByValueRelRankRange(_BaseExpr):
                 objects.
             return_type (int): Value specifying what should be returned from the operation.
                 This should be one of the :ref:`map_return_types` values.
-            value (TypeValue): Value or vaule expression to get items relative to.
-            rank (TypeRank): Rank intger expression. rank relative to "value" to start getting elements.
+            value (TypeValue): Value or value expression to get items relative to.
+            rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             count (TypeCount): Integer value or integer value expression, how many elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.

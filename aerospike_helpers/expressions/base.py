@@ -750,8 +750,8 @@ class CmpGeo(_BaseExpr):
 
     def __init__(self, expr0: "TypeGeo", expr1: "TypeGeo"):
         """Args:
-            expr0 (TypeGeo): Left expression in comparrison.
-            expr1 (TypeGeo): Right expression in comparrison.
+            expr0 (TypeGeo): Left expression in comparison.
+            expr1 (TypeGeo): Right expression in comparison.
 
         :return: (boolean value)
 
@@ -976,7 +976,7 @@ class Def(_BaseExpr):
             `var_name` (str): Variable name.
             `expr` (_BaseExpr): Variable is set to result of this expression.
 
-        :return: (a variabe name expression pair)
+        :return: (a variable name expression pair)
 
         Example::
 
