@@ -80,17 +80,23 @@ Fields
         Default: ``0`` (no limit)
 
     ttl (:class:`int`)
-	 0, "The time-to-live (expiration) of the record in seconds.
-			There are also special values that can be set in the record TTL:
-			ZERO (defined as TTL_NAMESPACE_DEFAULT): which means that the
-			   record will adopt the default TTL value from the namespace.
-			0xFFFFFFFF (also, -1 in a signed 32 bit int):
-			   (defined as TTL_NEVER_EXPIRE), which means that the record will never expire.
-			0xFFFFFFFE (also, -2 in a signed 32 bit int):
-			   (defined as TTL_DONT_UPDATE), which means that the record
-			   ttl will not change when the record is updated.
-               
-	 	Note that the TTL value will be employed ONLY on background query writes.
+	    The time-to-live (expiration) of the record in seconds.
+
+        There are also special values that can be set in the record TTL:
+
+            ``0`` (``TTL_NAMESPACE_DEFAULT``)
+                Which means that the record will adopt the default TTL value from the namespace.
+
+            ``0xFFFFFFFF`` (``TTL_NEVER_EXPIRE``)
+                (also, ``-1`` in a signed 32 bit int) Which means that the record will never expire.
+
+            ``0xFFFFFFFE`` (``TTL_DONT_UPDATE``)
+                (also, ``-2`` in a signed 32 bit int)
+                Which means that the record ttl will not change when the record is
+                updated.
+
+        .. note::
+    	 	Note that the TTL value will be employed ONLY on background query writes.
 
         Requires server version >= 6.0.0
         
