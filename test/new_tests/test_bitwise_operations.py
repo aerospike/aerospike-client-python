@@ -263,7 +263,7 @@ class TestBitwiseOperations(object):
         ]
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
-    
+
     def test_bit_remove_two_bytes(self):
         '''
         Perform a bit_remove op with offset 1 and byte_size 2.
@@ -279,7 +279,7 @@ class TestBitwiseOperations(object):
 
         assert len(bins[self.test_bin_zeroes]) == 3
         # should have len 3 after removing 2 0s
-    
+
     def test_bit_remove_randnumbytes_randoffset(self):
         '''
         Perform a bit_remove op with random offset and random byte_size.
@@ -294,7 +294,7 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin_zeroes] == bytearray([0] * (5 - num_bytes))
         # should have removed num_bytes 0s
-    
+
     def test_bit_remove_offset_out_of_range(self):
         '''
         Perform a bit_remove op with an offset outside the bit_map being
@@ -306,7 +306,7 @@ class TestBitwiseOperations(object):
 
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
-    
+
     def test_bit_remove_byte_size_too_large(self):
         '''
         Perform a bit_remove op with byte_size larger than bit_map being modified.
@@ -329,7 +329,7 @@ class TestBitwiseOperations(object):
 
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
-    
+
     def test_bit_remove_bad_bin_name(self):
         '''
         Perform a bit_remove op with on a non existent bin.
@@ -340,10 +340,10 @@ class TestBitwiseOperations(object):
 
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
-    
+
     def test_bit_remove_bad_arg_type(self):
         '''
-        Perform a bit_remove op with an unsuported float type argument.
+        Perform a bit_remove op with an unsupported float type argument.
         '''
         ops = [
             bitwise_operations.bit_remove("bad_name", 3, 3.5, None)
@@ -404,7 +404,7 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray(([rand_byte] * num_bytes) + [0] * (5 - num_bytes))
         assert bins[self.test_bin_zeroes] == expected_result
-    
+
     def test_bit_set_bit_index_out_of_range(self):
         ''''
         Perform a bit_set op with a bit offset that is larger than the bit_map being modified.
@@ -416,7 +416,7 @@ class TestBitwiseOperations(object):
         ]
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
-    
+
     def test_bit_set_bit_value_size_too_large(self):
         '''
         Perform a bit_set op with a value larger than the bit_map being modified.
@@ -444,7 +444,7 @@ class TestBitwiseOperations(object):
 
     def test_bit_set_bit_invalid_arg_type(self):
         '''
-        Perform a bit_set op with an unsuported float.
+        Perform a bit_set op with an unsupported float.
         '''
         value = 85323.9
         ops = [
@@ -464,7 +464,7 @@ class TestBitwiseOperations(object):
         ]
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
-    
+
     def test_bit_count_seven(self):
         '''
         Perform a bitwise count op.
@@ -498,7 +498,7 @@ class TestBitwiseOperations(object):
 
         _, _, result = self.as_connection.operate(self.test_key, ops)
         assert result['255'] == bit_size
-    
+
     def test_bit_count_bit_offset_out_of_range(self):
         '''
         Attempts to perform a bitwise count op with bit_offset outside of
@@ -521,7 +521,7 @@ class TestBitwiseOperations(object):
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
-    
+
     def test_bit_count_bit_size_with_offset_too_large(self):
         '''
         Attempts to perform a bitwise count past the bounds of the bitmap being counted.
@@ -623,7 +623,7 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([253] * 1 + [255] * 4)
         assert bins[self.five_255_bin] == expected_result
-    
+
     def test_bit_add_overflow_fail(self):
         '''
         Perform a bitwise add op that overflows with the BIT_OVERFLOW_FAIL action.
@@ -753,7 +753,7 @@ class TestBitwiseOperations(object):
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
-    
+
     def test_bit_and_invalid_bin_name(self):
         '''
         Perform a bitwise and op with a non existent bin name.
@@ -816,7 +816,7 @@ class TestBitwiseOperations(object):
 
         expected_result = bytearray([16] * 1)
         assert result['bitwise1'] == expected_result
-    
+
     def test_bit_get_fraction_of_byte(self):
         '''
         Perform a bitwise get op on a portion of a byte.
@@ -927,7 +927,7 @@ class TestBitwiseOperations(object):
 
         expected_result = 16
         assert result['bitwise1'] == expected_result
-    
+
     def test_bit_get_int_fraction_of_byte(self):
         '''
         Perform a bitwise get op on a portion of a byte.
@@ -1039,7 +1039,7 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([3] * 1 + [0] * 5)
         assert bins[self.test_bin_zeroes] == expected_result
-    
+
     def test_bit_insert_multiple_bytes(self):
         '''
         Perform a bitwise insert op.
@@ -1099,7 +1099,7 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([3] * 6 + [255] * 5)
         assert bins[self.five_255_bin] == expected_result
-    
+
     def test_bit_insert_value_byte_size_smaller_than_value(self):
         '''
         Perform a bitwise insert op where value_byte_size is smaller than the bitmap
@@ -1746,7 +1746,7 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytearray([99] * 1 + [255] * 4)
         assert bins[self.five_255_bin] == expected_result
-    
+
     def test_bit_subtract_overflow_fail(self):
         '''
         Perform a bitwise subtract op that overflows with the BIT_OVERFLOW_FAIL action.
