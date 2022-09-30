@@ -650,8 +650,6 @@ Operators for the single-record, multi-operation transaction method :py:meth:`Cl
     to create the arguments for :py:meth:`Client.operate` and :py:meth:`Client.operate_ordered`
     Old style operatiors are deprecated. The docs for old style operators were removed in client 6.0.0.
 
-.. _aerospike_policies:
-
 Policy Options
 --------------
 
