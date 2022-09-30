@@ -61,6 +61,7 @@ jobs:
         # Ignore E203 to be compatible with black
         flake8 --max-line-length=120 --count --extend-ignore=E203 aerospike_helpers/
     - name: Build documentation
+      run: |
         sphinx-build -b spelling . build -W
         sphinx-build -b html . htmldir -W
     - name: Build client
