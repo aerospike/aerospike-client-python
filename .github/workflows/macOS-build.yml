@@ -29,6 +29,9 @@ jobs:
       run: |
         # Use cask to install Docker daemon on top of the CLI interface
         brew install --cask docker
+        # Open to create symbolic links for accessing docker via this shell
+        open /Applications/Docker.app
+        # Install aerospike
         docker pull aerospike/aerospike-server
         docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
     - name: Integration tests
