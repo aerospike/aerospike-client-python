@@ -971,6 +971,7 @@ class ListGetByRank(_BaseExpr):
             :return: Expression.
 
             Example::
+
                 from aerospike_helpers.expressions.resources import ResultType
                 # Get the smallest element in list bin "a".
                 expr = exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, exp.ListBin("a")).compile()
