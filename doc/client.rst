@@ -701,6 +701,7 @@ User Defined Functions
 
         :param int job_id: the job ID returned by :meth:`scan_apply` or :meth:`query_apply`.
         :param module: one of :ref:`aerospike_job_constants`.
+        :param policy: optional :ref:`aerospike_info_policies`.
         :returns: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
