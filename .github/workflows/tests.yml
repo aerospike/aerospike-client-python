@@ -55,7 +55,7 @@ jobs:
       run: |
         sudo apt-get install libssl-dev
         sudo apt-get install python3-dev
-        python -m pip install pytest flake8 sphinx sphinxcontrib-spelling
+        python -m pip install pytest flake8 sphinx sphinxcontrib-spelling sphinx-rtd-theme
     - name: Lint aerospike_helpers
       run: |
         # Ignore E203 to be compatible with black
