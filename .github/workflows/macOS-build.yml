@@ -25,6 +25,10 @@ jobs:
 
         python3 setup.py build --force
         python3 setup.py install --force
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
     - name: Integration tests
       run: |
         cd test/
