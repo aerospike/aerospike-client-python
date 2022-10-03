@@ -135,6 +135,20 @@ Simply call `python` with the path to the example
 
     python examples/client/kvs.py
 
+## Contributing
+
+### Codestyle
+
+All code in `aerospike_helpers` must pass a lint test using `flake8`:
+```
+pip install flake8
+```
+
+The command is:
+```
+flake8 --max-line-length=120 --extend-ignore=E203 aerospike_helpers/
+```
+
 ## License
 
 The Aerospike Python Client is made availabled under the terms of the Apache License, Version 2, as stated in the file `LICENSE`.
