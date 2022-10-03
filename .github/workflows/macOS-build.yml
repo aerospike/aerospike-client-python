@@ -27,6 +27,12 @@ jobs:
         python3 setup.py install --force
     - name: Set up Aerospike Database
       run: |
+        # Install Docker
+        wget https://desktop.docker.com/mac/main/amd64/Docker.dmg
+        sudo hdiutil attach Docker.dmg
+        sudo /Volumes/Docker/Docker.app/Contents/MacOS/install --accept-license
+        sudo hdiutil detach /Volumes/Docker
+
         docker pull aerospike/aerospike-server
         docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
     - name: Integration tests
