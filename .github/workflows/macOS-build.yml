@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "master", "stage" ]
   pull_request:
-    branches: [ "master", "stage" ]
+    branches: [ "stage" ]
 
 jobs:
   build:
@@ -31,3 +31,7 @@ jobs:
 
         python3 setup.py build --force
         python3 setup.py install --force
+    - name: Integration tests
+        cd test/
+        python3 -m pip install -r requirements.txt
+        ./run
