@@ -51,11 +51,11 @@ jobs:
         docker ps
         docker ps -a
         docker logs --tail all gha_aerospike
-    - name: Install dependencies
+    - name: Install development dependencies
       run: |
         sudo apt-get install libssl-dev
         sudo apt-get install python3-dev
-        python -m pip install pytest flake8 sphinx sphinxcontrib-spelling sphinx-rtd-theme
+        python -m pip install -r doc/requirements.txt -r test/requirements.txt flake8
     - name: Lint aerospike_helpers
       run: |
         # Ignore E203 to be compatible with black
