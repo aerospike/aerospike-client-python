@@ -27,7 +27,8 @@ jobs:
         python3 setup.py install --force
     - name: Set up Aerospike Database
       run: |
-        brew install docker
+        # Use cask to install Docker daemon on top of the CLI interface
+        brew install --cask docker
         docker pull aerospike/aerospike-server
         docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
     - name: Integration tests
