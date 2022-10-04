@@ -1260,6 +1260,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		 * Set the individual policy groups new in 3.0
 		 * */
 
+<<<<<<< HEAD
         if (set_subpolicies(&config, py_policies) != AEROSPIKE_OK) {
             error_code = INIT_POLICY_PARAM_ERR;
             goto CONSTRUCTOR_ERROR;
@@ -1402,6 +1403,159 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->as = aerospike_new(&config);
 
     return 0;
+=======
+		if (set_subpolicies(&config, py_policies) != AEROSPIKE_OK) {
+			error_code = INIT_POLICY_PARAM_ERR;
+			goto CONSTRUCTOR_ERROR;
+		}
+
+		PyObject *py_login_timeout =
+			PyDict_GetItemString(py_policies, "login_timeout_ms");
+		if (py_login_timeout && PyInt_Check(py_login_timeout)) {
+			config.login_timeout_ms = PyInt_AsLong(py_login_timeout);
+		}
+
+		PyObject *py_auth_mode = PyDict_GetItemString(py_policies, "auth_mode");
+		if (py_auth_mode) {
+			if (PyInt_Check(py_auth_mode)) {
+				long auth_mode = PyInt_AsLong(py_auth_mode);
+				if ((long)AS_AUTH_INTERNAL == auth_mode ||
+					(long)AS_AUTH_EXTERNAL == auth_mode ||
+					(long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
+					(long)AS_AUTH_PKI == auth_mode) {
+					config.auth_mode = auth_mode;
+				}
+				else {
+					error_code = INIT_INVALID_AUTHMODE_ERR;
+					goto CONSTRUCTOR_ERROR;
+				}
+			}
+			else {
+				//it may come like auth_mode = None, for those non-integer cases, treat them as non-set
+				//error_code = INIT_INVALID_AUTHMODE_ERR;
+				//goto CONSTRUCTOR_ERROR;
+			}
+		}
+	}
+
+	// thread_pool_size
+	PyObject *py_thread_pool_size =
+		PyDict_GetItemString(py_config, "thread_pool_size");
+	if (py_thread_pool_size && PyInt_Check(py_thread_pool_size)) {
+		config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
+	}
+
+	// max_threads (backward compatibility)
+	PyObject *py_max_threads = PyDict_GetItemString(py_config, "max_threads");
+	if (py_max_threads &&
+		(PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
+		config.max_conns_per_node = PyInt_AsLong(py_max_threads);
+	}
+
+	// max_conns_per_node
+	PyObject *py_max_conns =
+		PyDict_GetItemString(py_config, "max_conns_per_node");
+	if (py_max_conns &&
+		(PyInt_Check(py_max_conns) || PyLong_Check(py_max_conns))) {
+		config.max_conns_per_node = PyInt_AsLong(py_max_conns);
+	}
+
+	//conn_timeout_ms
+	PyObject *py_connect_timeout =
+		PyDict_GetItemString(py_config, "connect_timeout");
+	if (py_connect_timeout && PyInt_Check(py_connect_timeout)) {
+		config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
+	}
+
+	//Whether to utilize shared connection
+	PyObject *py_share_connect =
+		PyDict_GetItemString(py_config, "use_shared_connection");
+	if (py_share_connect) {
+		self->use_shared_connection = PyObject_IsTrue(py_share_connect);
+	}
+
+	PyObject *py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
+	if (py_send_bool_as != NULL && PyLong_Check(py_send_bool_as)) {
+		int send_bool_as_temp = PyLong_AsLong(py_send_bool_as);
+		if (send_bool_as_temp >= SEND_BOOL_AS_PY_BYTES &&
+			send_bool_as_temp <= SEND_BOOL_AS_AS_BOOL) {
+			self->send_bool_as = send_bool_as_temp;
+		}
+	}
+
+	//compression_threshold
+	PyObject *py_compression_threshold =
+		PyDict_GetItemString(py_config, "compression_threshold");
+	if (py_compression_threshold && PyInt_Check(py_compression_threshold)) {
+		int compression_value = PyInt_AsLong(py_compression_threshold);
+		if (compression_value >= 0) {
+			config.policies.write.compression_threshold = compression_value;
+		}
+		else {
+			error_code = INIT_COMPRESSION_ERR;
+			goto CONSTRUCTOR_ERROR;
+		}
+	}
+
+	PyObject *py_tend_interval =
+		PyDict_GetItemString(py_config, "tend_interval");
+	if (py_tend_interval && PyInt_Check(py_tend_interval)) {
+		config.tender_interval = PyInt_AsLong(py_tend_interval);
+	}
+
+	PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
+	if (py_cluster_name && PyString_Check(py_cluster_name)) {
+		as_config_set_cluster_name(&config,
+								   strdup(PyString_AsString(py_cluster_name)));
+	}
+
+	//strict_types check
+	self->strict_types = true;
+	PyObject *py_strict_types = PyDict_GetItemString(py_config, "strict_types");
+	if (py_strict_types && PyBool_Check(py_strict_types)) {
+		if (Py_False == py_strict_types) {
+			self->strict_types = false;
+		}
+	}
+
+	if (set_rack_aware_config(&config, py_config) != INIT_SUCCESS) {
+		error_code = INIT_POLICY_PARAM_ERR;
+		goto CONSTRUCTOR_ERROR;
+	}
+	if (set_use_services_alternate(&config, py_config) != INIT_SUCCESS) {
+		error_code = INIT_POLICY_PARAM_ERR;
+		goto CONSTRUCTOR_ERROR;
+	}
+
+	PyObject *py_max_socket_idle = NULL;
+	py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
+	if (py_max_socket_idle && PyInt_Check(py_max_socket_idle)) {
+		long max_socket_idle = PyInt_AsLong(py_max_socket_idle);
+		if (max_socket_idle >= 0) {
+			config.max_socket_idle = (uint32_t)max_socket_idle;
+		}
+	}
+
+	PyObject *py_fail_if_not_connected = PyDict_GetItemString(py_config, "fail_if_not_connected");
+	if (py_fail_if_not_connected && PyBool_Check(py_fail_if_not_connected)) {
+		config.fail_if_not_connected = PyObject_IsTrue(py_fail_if_not_connected);
+	}
+
+	PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
+	PyObject *py_user_pwd = PyDict_GetItemString(py_config, "password");
+	if (py_user_name && PyString_Check(py_user_name) && py_user_pwd &&
+		PyString_Check(py_user_pwd)) {
+		char *username = PyString_AsString(py_user_name);
+		char *password = PyString_AsString(py_user_pwd);
+		as_config_set_user(&config, username, password);
+	}
+
+	self->as = aerospike_new(&config);
+
+	AerospikeClientConnect(self);
+	
+	return 0;
+>>>>>>> 2c363b40 (establish connection while constructing client object, passthrough connect/close calls)
 
 CONSTRUCTOR_ERROR:
 
@@ -1650,39 +1804,37 @@ PyTypeObject *AerospikeClient_Ready()
 AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
                                      PyObject *kwds)
 {
-    AerospikeClient *self = (AerospikeClient *)AerospikeClient_Type.tp_new(
-        &AerospikeClient_Type, args, kwds);
-    as_error err;
-    as_error_init(&err);
-    int return_code = 0;
-    return_code = AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
+	AerospikeClient *self = (AerospikeClient *)AerospikeClient_Type.tp_new(
+		&AerospikeClient_Type, args, kwds);
+	as_error err;
+	as_error_init(&err);
+	int return_code = 0;
+	return_code = AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
 
-    switch (return_code) {
-    // 0 Is success
-    case 0: {
-        // Initialize connection flag
-        self->is_conn_16 = false;
-        return self;
-    }
-    case -1: {
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
-        break;
-    }
-    default: {
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
-        break;
-    }
-    }
+	switch (return_code) {
+	// 0 Is success
+	case 0: {
+		return self;
+	}
+	case -1: {
+		if (PyErr_Occurred()) {
+			return NULL;
+		}
+		break;
+	}
+	default: {
+		if (PyErr_Occurred()) {
+			return NULL;
+		}
+		break;
+	}
+	}
 
-    PyObject *py_err = NULL;
-    as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
-    error_to_pyobject(&err, &py_err);
-    PyObject *exception_type = raise_exception(&err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
-    return NULL;
+	PyObject *py_err = NULL;
+	as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
+	error_to_pyobject(&err, &py_err);
+	PyObject *exception_type = raise_exception(&err);
+	PyErr_SetObject(exception_type, py_err);
+	Py_DECREF(py_err);
+	return NULL;
 }
