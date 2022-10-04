@@ -17,17 +17,6 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.9"
-    - name: Install Docker
-      run: |
-        curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-darwin-amd64
-        sudo install minikube-darwin-amd64 /usr/local/bin/minikube
-        minikube start
-        shopt -s expand_aliases
-        alias kubectl="minikube kubectl --"
-    - name: Set up Aerospike Database
-      run: |
-        kubectl create deployment aerospike --image=aerospike/aerospike-server
-        kubectl expose deployment aerospike --type=NodePort --port=3000
     - name: Build
       run: |
         export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
