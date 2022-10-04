@@ -50,6 +50,8 @@ AerospikeClient *AerospikeClient_New(PyObject *self, PyObject *args,
 /**
  * Connect to the database.
  */
+PyObject *AerospikeClientConnect(AerospikeClient *self);
+
 PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
                                   PyObject *kwds);
 

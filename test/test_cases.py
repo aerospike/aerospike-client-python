@@ -1158,6 +1158,8 @@ def get_aerospike():
         #     'keyfile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Client-Chainless/key.pem",  # noqa: E501
         #     'for_login_only': True,
         # }
+        'user':"generic_client",
+        'password':"generic_client"
     }
     # Optionally set policies for various method types
     write_policies = {"total_timeout": 2000, "max_retries": 0, "key": aerospike.POLICY_KEY_SEND}
