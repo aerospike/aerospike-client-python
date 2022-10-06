@@ -71,6 +71,7 @@ def remove_indexes_from_client(client):
     client.index_remove("test", "test_null_age_idx")
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
@@ -300,15 +301,11 @@ class TestQueryApply(object):
         """
         Invoke query_apply() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.query_apply("test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2])
-
-        err_code = err_info.value.code
-
-        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        client1.query_apply("test", "demo", self.age_range_pred,
+                            "query_apply", "mark_as_applied", ['name', 2])
 
     @pytest.mark.parametrize(
         "predicate",
@@ -334,15 +331,12 @@ class TestQueryApply(object):
         Invoke query.apply() with a stream udf.
         that accepts additional arguments.
         """
-        query_results = (
-            self.as_connection.query(
-                "test",
-                "demo",
-            )
-            .apply("query_apply_parameters", "query_params", [["age", 5]])
-            .results()
-        )
-
+        query_results = self.as_connection.query(
+            "test", "demo"
+        ).apply(
+            'query_apply_parameters', 'query_params', [['age', 5]]
+        ).results()
+        
         query_results.sort()
         assert query_results == [6, 7, 8, 9]
 
@@ -422,19 +416,13 @@ class TestQueryApply(object):
         Invoke query.apply() with a stream udf.
         arguments contain a serialized set.
         """
-        query_results = (
-            self.as_connection.query(
-                "test",
-                "demo",
-            )
-            .apply(
-                "query_apply_parameters",
-                "query_params",
-                [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
-            )
-            .results()
-        )
-
+        query_results = self.as_connection.query(
+            "test", "demo"
+        ).apply(
+            'query_apply_parameters', 'query_params', [['age', 5]
+            ,pickle.dumps({'lary', 'quinton', 'julie', 'mark'})]
+        ).results()
+        
         query_results.sort()
         assert query_results == [6, 7, 8, 9]
 
@@ -443,19 +431,13 @@ class TestQueryApply(object):
         Invoke query.apply() with a stream udf.
         that accepts additional arguments.
         """
-        query_results = (
-            self.as_connection.query(
-                "test",
-                "demo",
-            )
-            .apply(
-                "query_apply_parameters",
-                "query_params",
-                [["age", 2], ["id", ["john", ["hi"]], ["john", {"mary": 39}]], []],
-            )
-            .results()
-        )
-
+        query_results = self.as_connection.query(
+            "test", "demo"
+        ).apply(
+            'query_apply_parameters', 'query_params', [['age', 2],
+            ['id', ['john', ['hi']], ['john', {'mary' : 39}]], []]
+        ).results()
+        
         query_results.sort()
         assert query_results == [3, 4, 5, 6, 7, 8, 9]
 

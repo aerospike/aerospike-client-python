@@ -8,6 +8,7 @@ from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
 import aerospike
 from aerospike import exception as e
+from .test_base_class import TestBaseClass
 
 
 def is_greater_451(version_str):
@@ -17,6 +18,7 @@ def is_greater_451(version_str):
     return LooseVersion(version_str) >= LooseVersion("4.5.1")
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestUdfRemove(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -132,6 +134,7 @@ class TestUdfRemove(object):
 
 
 @pytest.mark.usefixtures("connection_with_udf")
+@pytest.mark.usefixtures("connection_config")
 class TestIncorrectCallsToUDFRemove(object):
     """
     These are all tests where udf_remove fails for various reasons,
@@ -149,16 +152,13 @@ class TestIncorrectCallsToUDFRemove(object):
         Test to verify that attempting to remove a UDF before connection
         raises an error
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
 
         client1 = aerospike.client(config)
         policy = {"timeout": 100}
         module = "example.lua"
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.udf_remove(module, policy)
-
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        client1.udf_remove(module, policy)
 
     def test_udf_remove_with_non_existent_module(self):
         """

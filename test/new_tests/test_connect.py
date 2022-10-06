@@ -139,7 +139,7 @@ class TestConnect(object):
 
     def test_connect_positive_reconnect(self):
         """
-        Connect/Close/Connect to client
+            Connect/Close are deprecated and no-op to client
         """
         config = self.connection_config.copy()
 
@@ -147,7 +147,7 @@ class TestConnect(object):
             assert client is not None
             assert client.is_connected()
             client.close()
-            assert client.is_connected() is False
+            assert client.is_connected() is True
             if TestBaseClass.user is None and TestBaseClass.password is None:
                 client.connect()
             else:

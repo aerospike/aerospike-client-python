@@ -30,6 +30,7 @@ def remove_map_keys(client):
 
 
 @pytest.mark.usefixtures("connection_with_config_funcs")
+@pytest.mark.usefixtures("connection_config")
 class TestMapKeysIndex(object):
     def setup_class(cls):
         cls.connection_setup_functions = [add_map_keys]
@@ -333,13 +334,11 @@ class TestMapKeysIndex(object):
         Invoke index_map_keys_create() with correct arguments no connection
         """
         policy = {}
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.index_map_keys_create(
-                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
-            )
+        retval = client1.index_map_keys_create(
+                'test', 'demo', 'string_map', aerospike.INDEX_STRING,
+                'test_string_map_index', policy)
 
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        assert retval == 0

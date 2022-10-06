@@ -8,7 +8,9 @@ from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("as_connection")
-class TestRemove:
+@pytest.mark.usefixtures("connection_config")
+class TestRemove():
+
     @pytest.mark.xfail(reason="open bug #client-533")
     def test_pos_remove_with_existing_record(self):
         """
@@ -300,18 +302,18 @@ class TestRemove:
             (code, _, _, _) = exception.value
             assert code == ex_code
 
-    def test_neg_remove_with_correct_parameters_without_connection(self):
+    def test_remove_with_correct_parameters_without_connection(self):
         """
         Invoke remove() with correct arguments without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
         key = ("test", "demo", 1)
 
-        with pytest.raises(e.ClusterError) as exception:
+        with pytest.raises(e.RecordNotFound) as exception:
             client1.remove(key)
             (code, _, _, _) = exception.value
-            assert code == 11
+            assert code == 2
 
     def test_neg_remove_with_no_parameters(self):
         """

@@ -241,12 +241,12 @@ class TestGet:
         await asyncio.gather(async_io(_input))
 
     @pytest.mark.asyncio
-    async def test_neg_get_with_only_key_no_connection(self):
+    async def test_get_with_only_key_no_connection(self):
         """
         Invoke get() with a key and not policy's dict no connection
         """
-        key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        key = ('test', 'demo', 1)
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
         async def async_io(key_input=None, policy_input=None):

@@ -53,6 +53,7 @@ from aerospike import exception as e
 # aerospike.OP_MAP_GET_BY_RANK_RANGE
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestOperate(object):
     def setup_class(cls):
         """
@@ -529,8 +530,8 @@ class TestOperate(object):
         """
         Invoke operate() with correct parameters without connection
         """
-        key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        key = ('test', 'demo', 1)
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},

@@ -13,7 +13,9 @@ from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("as_connection")
-class TestExistsMany:
+@pytest.mark.usefixtures("connection_config")
+class TestExistsMany():
+
     def test_pos_exists_many_without_policy(self, put_data):
         self.keys = []
         rec_length = 5
@@ -194,7 +196,8 @@ class TestExistsMany:
         with pytest.raises(e.ParamError):
             self.as_connection.exists_many(self.keys, policies)
 
-    def test_neg_exists_many_with_proper_parameters_without_connection(self, put_data):
+    def test_exists_many_with_proper_parameters_without_connection(
+            self, put_data):
         self.keys = []
         rec_length = 5
         for i in range(rec_length):
@@ -203,14 +206,10 @@ class TestExistsMany:
             put_data(self.as_connection, key, record)
             self.keys.append(key)
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        try:
-            client1.exists_many(self.keys, {"total_timeout": 20})
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert client1.exists_many(self.keys, {'total_timeout': 20}) is not None
 
     def test_neg_exists_many_with_extra_parameter_in_key(self, put_data):
         keys = []

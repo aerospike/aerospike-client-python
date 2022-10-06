@@ -90,6 +90,8 @@ def remove_indexes_and_udfs(client):
         client.udf_remove(module, policy)
 
 
+# adds cls.connection_config to this class
+@pytest.mark.usefixtures("connection_config")
 class TestApply(TestBaseClass):
     def setup_class(cls):
         # Register setup and teardown functions
@@ -295,16 +297,13 @@ class TestApply(TestBaseClass):
         """
         Invoke apply() with correct arguments without connection
         """
-        key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        key = ('test', 'demo', 1)
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.apply(key, "sample", "list_append", ["name", "car"])
+        retval = client1.apply(key, 'sample', 'list_append', ['name', 'car'])
 
-        err_code = err_info.value.code
-
-        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        assert retval == 0
 
     def test_apply_with_arg_causing_error(self):
         """

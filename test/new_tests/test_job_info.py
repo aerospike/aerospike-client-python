@@ -6,6 +6,7 @@ from aerospike import exception as e
 import aerospike
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestScanInfo(object):
 
     udf_to_load = "bin_lua.lua"
@@ -125,13 +126,11 @@ class TestScanInfo(object):
         Invoke job_info() with correct parameters without connection
         """
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.job_info(self.job_id, aerospike.JOB_SCAN)
-
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        response = client1.job_info(self.job_id, aerospike.JOB_SCAN)
+        assert response is not None
 
     def test_job_info_with_constant_out_of_valid_values(self):
         """

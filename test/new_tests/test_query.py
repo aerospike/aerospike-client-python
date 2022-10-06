@@ -57,6 +57,7 @@ ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestQuery(TestBaseClass):
     def setup_class(cls):
         client = TestBaseClass.get_new_connection()
@@ -962,21 +963,18 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with correct arguments without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            query = client1.query("test", "demo")
-            query.select("name", "test_age")
-            query.where(p.equals("test_age", 1))
+        query = client1.query('test', 'demo')
+        query.select('name', 'test_age')
+        query.where(p.equals('test_age', 1))
 
-            def callback(input_tuple):
-                pass
+        def callback(input_tuple):
+            pass
 
-            query.foreach(callback)
+        query.foreach(callback)
 
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_no_args(self):

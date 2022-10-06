@@ -8,6 +8,7 @@ from aerospike import exception as e
 import aerospike
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestIncrement(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -341,16 +342,11 @@ class TestIncrement(object):
         """
         Invoke increment() with correct parameters without connection
         """
-        key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        key = ('test', 'demo', 1)
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.increment(key, "age", 5)
-
-        err_code = err_info.value.code
-
-        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        assert 0 == client1.increment(key, "age", 5)
 
     @pytest.mark.skip(reason="This raises a system error." + " Something else should be raised")
     def test_increment_with_integer_greaterthan_maxsize(self):

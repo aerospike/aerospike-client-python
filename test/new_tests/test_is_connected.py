@@ -5,6 +5,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestIsConnected(object):
     def setup_class(cls):
         """
@@ -29,7 +30,7 @@ class TestIsConnected(object):
         Test that is_connected returns false before a connection is established
         """
         client = aerospike.client(self.config)
-        assert client.is_connected() is False
+        assert client.is_connected() is True
 
     def test_pos_is_connected(self):
         """
@@ -51,10 +52,10 @@ class TestIsConnected(object):
 
     def test_is_connected_after_close(self):
         """
-        Test that is_connected returns False after a successful calls to
-        connect() and close()
+        Test that is_connected returns True after a successful calls to
+        connect() and close() (deprecated and it is no-op)
         """
         self._connect()
         assert self.client.is_connected() is True
         self.client.close()
-        assert self.client.is_connected() is False
+        assert self.client.is_connected() is True
