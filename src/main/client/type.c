@@ -1552,7 +1552,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
 	self->as = aerospike_new(&config);
 
-	AerospikeClientConnect(self);
+	if (AerospikeClientConnect(self) == NULL) {
+		return -1;
+	}
 	
 	return 0;
 >>>>>>> 2c363b40 (establish connection while constructing client object, passthrough connect/close calls)
