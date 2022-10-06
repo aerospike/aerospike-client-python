@@ -697,12 +697,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         self.as_connection.index_remove("test", "test_numeric_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_numeric_list_cdt_index")
 
-    def test_neg_cdtindex_with_correct_parameters_no_connection(self):
+    def test_cdtindex_with_correct_parameters_no_connection(self):
         """
         Invoke index_cdt_create() with correct arguments no connection
         """
         policy = {}
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
         try:

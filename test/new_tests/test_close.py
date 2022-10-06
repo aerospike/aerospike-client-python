@@ -5,6 +5,17 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+    from aerospike import exception as e
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
+
+
+@pytest.mark.usefixtures("connection_config")
+class TestClose():
 
 class TestClose:
     def setup_class(cls):
@@ -16,7 +27,9 @@ class TestClose:
 
     def test_pos_close(self):
         """
-        Invoke close() after positive connect
+            Client call itself establishes connection.
+            Connect/Close are deprecated and no-op to client
+            Invoke close() after positive connect
         """
         self.client = TestBaseClass.get_new_connection()
         self.closeobject = self.client.close()
@@ -26,7 +39,7 @@ class TestClose:
         """
         Invoke close() without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         self.client = aerospike.client(config)
 
         try:
@@ -37,7 +50,8 @@ class TestClose:
 
     def test_neg_close(self):
         """
-        Invoke close() after negative connect
+            Connect/Close are deprecated and no-op to client
+            Invoke close() after negative connect
         """
         config = {"hosts": [("127.0.0.1", 2000)]}
 
@@ -48,6 +62,9 @@ class TestClose:
         assert "has no attribute" in str(attributeError.value)
 
     def test_close_twice_in_a_row(self):
+        """
+            Connect/Close are deprecated and no-op to client
+        """
         config = TestBaseClass.get_connection_config()
         if TestClose.user is None and TestClose.password is None:
             self.client = aerospike.client(config).connect()
@@ -56,8 +73,8 @@ class TestClose:
 
         assert self.client.is_connected()
         self.client.close()
-        assert self.client.is_connected() is False
+        assert self.client.is_connected() is True
 
         # This second call should not raise any errors
         self.client.close()
-        assert self.client.is_connected() is False
+        assert self.client.is_connected() is True

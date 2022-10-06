@@ -7,6 +7,7 @@ from .index_helpers import ensure_dropped_index
 import aerospike
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestListIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -347,7 +348,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke index_list_create() with correct arguments no connection
         """
         policy = {}
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
         try:

@@ -10,6 +10,7 @@ import aerospike
 
 
 @pytest.mark.usefixtures("as_connection")
+@pytest.mark.usefixtures("connection_config")
 class TestUdfPut(TestBaseClass):
     def setup_class(cls):
         cls.udf_name = "example.lua"
@@ -129,14 +130,11 @@ class TestUdfPut(TestBaseClass):
         filename = self.udf_name
         udf_type = 0
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
 
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.udf_put(filename, udf_type, policy)
-
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        client1.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_invalid_timeout_policy_value(self):
         """

@@ -6,6 +6,7 @@ from .as_status_codes import AerospikeStatus
 import aerospike
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestTouch(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -260,15 +261,11 @@ class TestTouch(object):
         """
         Invoke touch() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
         key = ("test", "demo", 1)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.touch(key, 120)
-
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        client1.touch(key, 120)
 
     def test_touch_withttlvalue_greaterthan_maxsize(self):
         """

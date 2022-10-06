@@ -8,6 +8,7 @@ import aerospike
 
 
 @pytest.mark.usefixtures("connection_with_udf")
+@pytest.mark.usefixtures("connection_config")
 class TestGetRegistered(object):
     def setup_class(cls):
         """
@@ -141,10 +142,7 @@ class TestGetRegistered(object):
         """
         policy = {"timeout": 5000}
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.udf_get(self.loaded_udf_name, self.udf_language, policy)
-
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        assert client1.udf_get(self.loaded_udf_name, self.udf_language, policy) is not None

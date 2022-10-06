@@ -7,6 +7,8 @@ import aerospike
 # @pytest.mark.usefixtures("as_connection")
 
 
+# adds cls.connection_config to this class
+@pytest.mark.usefixtures("connection_config")
 class TestAppend(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -423,19 +425,19 @@ class TestAppend(object):
         with pytest.raises(e.ParamError):
             self.as_connection.append(key, bin, "str")
 
-    def test_neg_append_with_correct_parameters_without_connection(self):
+    def test_append_with_correct_parameters_without_connection(self):
         """
         Invoke append() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
         key = ("test", "demo", 1)
 
-        try:
-            client1.append(key, "name", "str")
+        client1.append(key, "name2", "str")
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        (key, _, bins) = self.as_connection.get(key)
+
+        assert bins == {'age': 1, 'name': 'name1', 'name2': 'str'}
 
     def test_neg_append_with_low_timeout(self):
         """

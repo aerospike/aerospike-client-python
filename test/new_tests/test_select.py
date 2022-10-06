@@ -182,10 +182,7 @@ class TestSelect(object):
         config = self.connection_config
         disconnected_client = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            disconnected_client.select(self.test_key, bins_to_select)
-
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        disconnected_client.select(self.test_key, bins_to_select)
 
     def test_select_with_invalid_keys(self, invalid_key):
         """

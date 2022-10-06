@@ -7,6 +7,8 @@ from aerospike import exception as e
 
 import aerospike
 
+@pytest.mark.usefixtures("connection_config")
+class TestIndex(object):
 
 class TestIndex(object):
     @pytest.fixture(autouse=True)
@@ -439,14 +441,11 @@ class TestIndex(object):
     def test_createindex_with_correct_parameters_without_connection(self):
         # Invoke createindex() with correct arguments without connection
         policy = {}
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.index_integer_create("test", "demo", "age", "age_index", policy)
-
-        err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        assert 0 == client1.index_integer_create(
+                'test', 'demo', 'age', 'age_index', policy)
 
     def test_index_remove_no_args(self):
 

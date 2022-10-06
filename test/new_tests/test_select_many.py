@@ -23,6 +23,7 @@ def get_primary_key(record):
     return record[0][2]
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestSelectMany(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -292,15 +293,13 @@ class TestSelectMany(object):
 
     def test_select_many_with_proper_parameters_without_connection(self):
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
         filter_bins = ["title", "name"]
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.select_many(self.keys, filter_bins, {"timeout": 20})
-
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        client1.select_many(self.keys, filter_bins, {'timeout':
+                                                        20})
 
     def test_select_many_with_invalid_keys(self, invalid_key):
         # invalid_key will be an invalid key_tuple, so we wrap

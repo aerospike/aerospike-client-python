@@ -20,6 +20,7 @@ def wait_for_job_completion(as_connection, job_id):
         time.sleep(0.1)
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestScanApply(object):
     def setup_class(cls):
         cls.udf_to_load = "bin_lua.lua"
@@ -341,14 +342,11 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
-
-        err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+        client1.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ['age', 2])
 
     def test_scan_apply_with_incorrect_policy(self):
         """

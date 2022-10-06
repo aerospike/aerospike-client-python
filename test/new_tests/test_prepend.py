@@ -5,7 +5,9 @@ import aerospike
 from aerospike import exception as e
 
 
-class TestPrepend:
+@pytest.mark.usefixtures("connection_config")
+class TestPrepend():
+
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         """
@@ -482,7 +484,7 @@ class TestPrepend:
         """
         Invoke prepend() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
         key = ("test", "demo", 1)
 

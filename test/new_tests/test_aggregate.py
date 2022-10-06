@@ -261,11 +261,11 @@ class TestAggregate(object):
         except e.ClientError as exception:
             assert exception.code == -1
 
-    def test_neg_aggregate_with_correct_parameters_without_connection(self):
+    def test_aggregate_with_correct_parameters_without_connection(self):
         """
         Invoke aggregate() with correct arguments without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
         try:

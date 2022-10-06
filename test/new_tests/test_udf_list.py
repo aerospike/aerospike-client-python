@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestUdfList(object):
     def setup_class(cls):
         """
@@ -109,14 +110,10 @@ class TestUdfList(object):
         Test to verify error raised by trying to call udf_list without
         first calling connect
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
 
         client1 = aerospike.client(config)
 
         policy = {"timeout": 0}
 
-        with pytest.raises(e.ClusterError) as cluster_error:
-            client1.udf_list(policy)
-
-        assert cluster_error.value.code == 11
-        assert cluster_error.value.msg == "No connection to aerospike cluster"
+        client1.udf_list(policy)

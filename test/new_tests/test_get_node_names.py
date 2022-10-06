@@ -6,6 +6,7 @@ import aerospike
 
 
 @pytest.mark.usefixtures("as_connection")
+@pytest.mark.usefixtures("connection_config")
 class TestGetNodeNames(object):
     """
     Test Cases for the use of aerospike.Client.get_node_names
@@ -34,7 +35,7 @@ class TestGetNodeNames(object):
         Test that an attempt to call get_node_names before a connection
         is established will raise the expected error
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = self.connection_config.copy()
         unconnected_client = aerospike.client(config)
 
         try:

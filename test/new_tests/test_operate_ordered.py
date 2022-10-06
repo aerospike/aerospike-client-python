@@ -6,6 +6,7 @@ import aerospike
 from aerospike import exception as e
 
 
+@pytest.mark.usefixtures("connection_config")
 class TestOperateOrdered(object):
     def setup_class(cls):
         """
@@ -662,8 +663,8 @@ class TestOperateOrdered(object):
         """
         Invoke operate_ordered() with correct parameters without connection
         """
-        key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        key = ('test', 'demo', 1)
+        config = self.connection_config.copy()
         client1 = aerospike.client(config)
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},

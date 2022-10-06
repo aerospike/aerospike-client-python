@@ -140,11 +140,8 @@ class TestInfoSingleNodeIncorrectUsage(object):
         Test info with correct arguments without connection.
         """
         client1 = aerospike.client(self.connection_config)
-        with pytest.raises(e.ClusterError) as err_info:
-            client1.info_single_node("bins", self.connection_config["hosts"][0][:2])
-
-        assert err_info.value.code == 11
-        assert err_info.value.msg == "No connection to aerospike cluster."
+        with pytest.raises(e.ParamError) as err_info:
+            client1.info_single_node('bins', self.connection_config['hosts'][0][:2])
 
     def test_info_single_node_positive_with_extra_parameters(self):
         """
