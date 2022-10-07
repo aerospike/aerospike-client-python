@@ -297,16 +297,6 @@ class TestQueryApply(object):
         self._wait_for_query_complete(query_id)
         self._correct_items_have_been_applied()
 
-    def test_query_apply_with_correct_parameters_without_connection(self):
-        """
-        Invoke query_apply() with correct parameters without connection
-        """
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        client1.query_apply("test", "demo", self.age_range_pred,
-                            "query_apply", "mark_as_applied", ['name', 2])
-
     @pytest.mark.parametrize(
         "predicate",
         (
