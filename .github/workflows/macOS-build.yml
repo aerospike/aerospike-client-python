@@ -38,6 +38,7 @@ jobs:
         ./asinstall
         systemctl start aerospike
         logout
+    - name: Run tests
       run: |
         # Wait until server is fully spun up
         sleep 3
