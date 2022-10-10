@@ -25,7 +25,19 @@ jobs:
 
         python3 setup.py build --force
         python3 setup.py install --force
-    - name: Integration tests
+    - name: Run Aerospike server
+      run: |
+        # Setup VM
+        vagrant init ubuntu/focal64
+        vagrant up
+        vagrant ssh
+        # Setup Aerospike in VM
+        wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-community/6.1.0.1/aerospike-server-community-6.1.0.1-ubuntu20.04.tgz
+        tar -xvf aerospike.tgz
+        cd aerospike-server-community-6.1.0.1-ubuntu20.04/
+        ./asinstall
+        systemctl start aerospike
+        logout
       run: |
         # Wait until server is fully spun up
         sleep 3
