@@ -31,4 +31,4 @@ jobs:
         sleep 3
         cd test/
         python3 -m pip install -r requirements.txt
-        ./run
+        python3 -m pytest new_tests/
