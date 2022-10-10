@@ -107,7 +107,7 @@ class TestUdfList(object):
 
     def test_udf_list_with_proper_parameters_without_connection(self):
         """
-        Test to verify error raised by trying to call udf_list without
+        Test to verify call to udf_list without
         first calling connect
         """
         config = self.connection_config.copy()
@@ -116,4 +116,5 @@ class TestUdfList(object):
 
         policy = {"timeout": 0}
 
-        client1.udf_list(policy)
+        udf_list = client1.udf_list(policy)
+        assert udf_list is not None

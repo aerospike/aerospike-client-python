@@ -351,13 +351,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        try:
-            client1.index_list_create(
-                "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
-            )
+        retobj = client1.index_list_create(
+                'test', 'demo', 'string_list', aerospike.INDEX_STRING,
+                'test_string_list_index', policy)
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert retobj == 0
+        self.as_connection.index_remove('test', 'test_string_list_index',
+                                        policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
 
     def test_neg_listindex_with_no_paramters(self):
         """

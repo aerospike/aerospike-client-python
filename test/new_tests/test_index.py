@@ -446,6 +446,8 @@ class TestIndex(object):
 
         assert 0 == client1.index_integer_create(
                 'test', 'demo', 'age', 'age_index', policy)
+        self.as_connection.index_remove('test', 'age_index', policy)
+        ensure_dropped_index(self.as_connection, 'test', 'age_index')
 
     def test_index_remove_no_args(self):
 

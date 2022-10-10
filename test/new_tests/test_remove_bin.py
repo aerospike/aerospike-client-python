@@ -6,7 +6,6 @@ from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("as_connection")
-@pytest.mark.usefixtures("connection_config")
 class TestRemovebin(object):
     @pytest.mark.parametrize(
         "key, record, bin_for_removal",
@@ -247,17 +246,6 @@ class TestRemovebin(object):
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
-    def test_remove_bin_with_correct_parameters_without_connection(self, put_data):
-        """
-        Invoke remove_bin() with correct parameters without connection
-        """
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        key = ('test', 'demo', 1)
-        put_data(client1, key, {'name': "jeff", 'age': 45})
-
-        client1.remove_bin(key, ["age"])
 
     def test_neg_remove_bin_with_incorrect_meta(self):
         """
