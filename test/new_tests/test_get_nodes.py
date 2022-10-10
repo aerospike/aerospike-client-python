@@ -44,9 +44,5 @@ class TestGetNodes(object):
         config = self.connection_config.copy()
         unconnected_client = aerospike.client(config)
 
-        try:
-            unconnected_client.get_nodes()
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
-            assert exception.msg == "No connection to aerospike cluster"
+        response = unconnected_client.get_nodes()
+        assert response is not None

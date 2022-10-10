@@ -324,18 +324,3 @@ class TestBatchApply(TestBaseClass):
 
         with pytest.raises(exp_res):
             self.as_connection.batch_apply(keys, module, function, args, policy_batch, policy_batch_apply)
-
-    def test_batch_apply_neg_connection(self):
-        """
-        Test batch_apply negative with bad connection.
-        """
-
-        module = "lua_mod"
-        function = "lua_func"
-        args = []
-        keys = []
-
-        exp_res = e.ClientError
-        with pytest.raises(exp_res):
-            bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
-            bad_client.batch_apply(keys, module, function, args)

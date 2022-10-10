@@ -71,7 +71,6 @@ def remove_indexes_from_client(client):
     client.index_remove("test", "test_null_age_idx")
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
@@ -322,7 +321,7 @@ class TestQueryApply(object):
         that accepts additional arguments.
         """
         query_results = self.as_connection.query(
-            "test", "demo"
+            "test", "demo",
         ).apply(
             'query_apply_parameters', 'query_params', [['age', 5]]
         ).results()
@@ -407,7 +406,7 @@ class TestQueryApply(object):
         arguments contain a serialized set.
         """
         query_results = self.as_connection.query(
-            "test", "demo"
+            "test", "demo",
         ).apply(
             'query_apply_parameters', 'query_params', [['age', 5]
             ,pickle.dumps({'lary', 'quinton', 'julie', 'mark'})]
@@ -422,7 +421,7 @@ class TestQueryApply(object):
         that accepts additional arguments.
         """
         query_results = self.as_connection.query(
-            "test", "demo"
+            "test", "demo",
         ).apply(
             'query_apply_parameters', 'query_params', [['age', 2],
             ['id', ['john', ['hi']], ['john', {'mary' : 39}]], []]

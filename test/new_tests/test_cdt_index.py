@@ -705,20 +705,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        try:
-            client1.index_cdt_create(
-                "test",
-                "demo",
-                "string_list",
-                aerospike.INDEX_TYPE_LIST,
-                aerospike.INDEX_STRING,
-                "test_string_list_cdt_index",
-                {"ctx": ctx_list_index},
-                policy,
-            )
+        client1.index_cdt_create(
+            'test', 'demo', 'string_list', aerospike.INDEX_TYPE_LIST,
+            aerospike.INDEX_STRING,
+            'test_string_list_cdt_index', {'ctx': ctx_list_index}, policy)
+        self.as_connection.index_remove('test', 'test_string_list_cdt_index',
+                                        policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_cdt_index')
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
 
     def test_neg_cdtindex_with_no_paramters(self):
         """

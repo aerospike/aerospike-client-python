@@ -113,11 +113,8 @@ class TestExists():
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        try:
-            key, _ = client1.exists(key)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        key, _ = client1.exists(key)
+        assert key is not None
 
     @pytest.mark.parametrize(
         "key, record, meta, policy",

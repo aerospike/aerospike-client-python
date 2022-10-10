@@ -342,3 +342,5 @@ class TestMapKeysIndex(object):
                 'test_string_map_index', policy)
 
         assert retval == 0
+        self.as_connection.index_remove('test', 'test_string_map_index', policy)
+        ensure_dropped_index(self.as_connection, 'test', 'test_string_map_index')

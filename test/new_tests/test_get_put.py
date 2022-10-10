@@ -235,19 +235,6 @@ class TestGetPut:
         except e.RecordNotFound as exception:
             assert exception.code == 2
 
-    def test_get_with_only_key_no_connection(self):
-        """
-        Invoke get() with a key and not policy's dict no connection
-        """
-        key = ('test', 'demo', 1)
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        try:
-            client1.get(key)
-        except e.RecordNotFound as exception:
-            assert exception.code == 2
-
     # Put Tests
     def test_pos_put_with_policy_exists_create_or_replace(self):
         """
@@ -750,6 +737,7 @@ class TestGetPut:
         bins = {"name": "John"}
 
         assert 0 == client1.put(key, bins)
+        self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
         "key, record, meta, policy, ex_code, ex_msg",
