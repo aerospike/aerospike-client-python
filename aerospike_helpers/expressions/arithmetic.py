@@ -13,15 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-'''
+"""
 Arithmetic expressions provide arithmetic operator support for Aerospike expressions.
 
-'''
+"""
 
-#from __future__ import annotations
+# from __future__ import annotations
 from typing import Union
 
-import aerospike
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
@@ -37,18 +36,19 @@ TypeInteger = Union[_BaseExpr, int]
 
 
 class Add(_BaseExpr):
-    """ Create an add, (+) expression.
-        All arguments must be the same type (integer or float).
+    """Create an add, (+) expression.
+    All arguments must be the same type (integer or float).
 
-        Add is also available via operator overloading using `+`
-        and any subclass of _BaseExpr. See the second example.
+    Add is also available via operator overloading using `+`
+    and any subclass of _BaseExpr. See the second example.
 
-        Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.ADD
 
-    def __init__(self, *args: 'TypeNumber'):
-        """ Args:
+    def __init__(self, *args: "TypeNumber"):
+        """Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be added together.
 
         :return: (integer or float value).
@@ -67,20 +67,21 @@ class Add(_BaseExpr):
 
 class Sub(_BaseExpr):
     """
-        Create "subtract" (-) operator that applies to a variable number of expressions.
-        If only one argument is provided, return the negation of that argument.
-        Otherwise, return the sum of the 2nd to Nth argument subtracted from the 1st
-        argument. All arguments must resolve to the same type (integer or float).
+    Create "subtract" (-) operator that applies to a variable number of expressions.
+    If only one argument is provided, return the negation of that argument.
+    Otherwise, return the sum of the 2nd to Nth argument subtracted from the 1st
+    argument. All arguments must resolve to the same type (integer or float).
 
-        Sub is also available via operator overloading using `-`
-        and any subclass of _BaseExpr. See the second example.
+    Sub is also available via operator overloading using `-`
+    and any subclass of _BaseExpr. See the second example.
 
-        Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.SUB
 
-    def __init__(self, *args: 'TypeNumber'):
-        """ Args:
+    def __init__(self, *args: "TypeNumber"):
+        """Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be subtracted.
 
         :return: (integer or float value)
@@ -98,19 +99,20 @@ class Sub(_BaseExpr):
 
 class Mul(_BaseExpr):
     """
-        Create "multiply" (*) operator that applies to a variable number of expressions.
-        Return the product of all arguments. If only one argument is supplied, return
-        that argument. All arguments must resolve to the same type (integer or float).
+    Create "multiply" (*) operator that applies to a variable number of expressions.
+    Return the product of all arguments. If only one argument is supplied, return
+    that argument. All arguments must resolve to the same type (integer or float).
 
-        Mul is also available via operator overloading using `*`
-        and any subclass of _BaseExpr. See the second example.
+    Mul is also available via operator overloading using `*`
+    and any subclass of _BaseExpr. See the second example.
 
-        Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.MUL
 
-    def __init__(self, *args: 'TypeNumber'):
-        """ Args:
+    def __init__(self, *args: "TypeNumber"):
+        """Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be multiplied.
 
         :return: (integer or float value)
@@ -127,23 +129,23 @@ class Mul(_BaseExpr):
 
 
 class Div(_BaseExpr):
-    """ Create "divide" (/) operator that applies to a variable number of expressions.
-        If there is only one argument, returns the reciprocal for that argument.
-        Otherwise, return the first argument divided by the product of the rest.
-        All arguments must resolve to the same type (integer or float).
+    """Create "divide" (/) operator that applies to a variable number of expressions.
+    If there is only one argument, returns the reciprocal for that argument.
+    Otherwise, return the first argument divided by the product of the rest.
+    All arguments must resolve to the same type (integer or float).
 
-        Div is also available via operator overloading using `/`
-        and any subclass of _BaseExpr. See the second example.
+    Div is also available via operator overloading using `/`
+    and any subclass of _BaseExpr. See the second example.
 
-        Floor div is also avaliable via `//` but must be used with floats.
+    Floor div is also available via `//` but must be used with floats.
 
-        Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
 
     _op = _ExprOp.DIV
 
-    def __init__(self, *args: 'TypeNumber'):
-        """ Args:
+    def __init__(self, *args: "TypeNumber"):
+        """Args:
             `*args` (TypeNumber): Variable amount of float or integer expressions or values to be divided.
 
         :return: (integer or float value)
@@ -164,18 +166,19 @@ class Div(_BaseExpr):
 
 class Pow(_BaseExpr):
     """
-        Create "pow" operator that raises a "base" to the "exponent" power.
-        All arguments must resolve to floats.
+    Create "pow" operator that raises a "base" to the "exponent" power.
+    All arguments must resolve to floats.
 
-        Pow is also available via operator overloading using `**`
-        and any subclass of _BaseExpr. See the second example.
+    Pow is also available via operator overloading using `**`
+    and any subclass of _BaseExpr. See the second example.
 
-        Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.POW
 
-    def __init__(self, base: 'TypeFloat', exponent: 'TypeFloat'):
-        """ Args:
+    def __init__(self, base: "TypeFloat", exponent: "TypeFloat"):
+        """Args:
             base (TypeFloat): Float expression or value base.
             exponent (TypeFloat): Float expression or value exponent.
 
@@ -194,15 +197,16 @@ class Pow(_BaseExpr):
 
 class Log(_BaseExpr):
     """
-        Create "log" operator for logarithm of "num" with base "base".
-        All arguments must resolve to floats.
+    Create "log" operator for logarithm of "num" with base "base".
+    All arguments must resolve to floats.
 
-        Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.LOG
 
-    def __init__(self, num: 'TypeFloat', base: 'TypeFloat'):
-        """ Args:
+    def __init__(self, num: "TypeFloat", base: "TypeFloat"):
+        """Args:
             num (TypeFloat): Float expression or value number.
             base (TypeFloat): Float expression or value base.
 
@@ -218,18 +222,19 @@ class Log(_BaseExpr):
 
 class Mod(_BaseExpr):
     """
-       Create "modulo" (%) operator that determines the remainder of "numerator"
-       divided by "denominator". All arguments must resolve to integers.
+    Create "modulo" (%) operator that determines the remainder of "numerator"
+    divided by "denominator". All arguments must resolve to integers.
 
-       Mod is also available via operator overloading using `%`
-       and any subclass of _BaseExpr. See the second example.
+    Mod is also available via operator overloading using `%`
+    and any subclass of _BaseExpr. See the second example.
 
-       Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.MOD
 
-    def __init__(self, numerator: 'TypeInteger', denominator: 'TypeInteger'):
-        """ Args:
+    def __init__(self, numerator: "TypeInteger", denominator: "TypeInteger"):
+        """Args:
             numerator (TypeInteger): Integer expression or value numerator.
             denominator (TypeInteger): Integer expression or value denominator.
 
@@ -248,18 +253,19 @@ class Mod(_BaseExpr):
 
 class Abs(_BaseExpr):
     """
-       Create operator that returns absolute value of a number.
-       All arguments must resolve to integer or float.
+    Create operator that returns absolute value of a number.
+    All arguments must resolve to integer or float.
 
-       Abs is also available via operator overloading using the bultin
-       abs() function and any subclass of _BaseExpr. See the second example.
+    Abs is also available via operator overloading using the built-in
+    abs() function and any subclass of _BaseExpr. See the second example.
 
-       Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.ABS
 
-    def __init__(self, value: 'TypeNumber'):
-        """ Args:
+    def __init__(self, value: "TypeNumber"):
+        """Args:
             value (TypeNumber): Float or integer expression or value to take absolute value of.
 
         :return: (number value)
@@ -277,18 +283,19 @@ class Abs(_BaseExpr):
 
 class Floor(_BaseExpr):
     """
-        Create floor expression that rounds a floating point number down
-        to the closest integer value.
+    Create floor expression that rounds a floating point number down
+    to the closest integer value.
 
-        Floor is also available via operator overloading using the math.floor()
-        function and any subclass of _BaseExpr. See the second example.
+    Floor is also available via operator overloading using the math.floor()
+    function and any subclass of _BaseExpr. See the second example.
 
-        Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.FLOOR
 
-    def __init__(self, value: 'TypeFloat'):
-        """ Args:
+    def __init__(self, value: "TypeFloat"):
+        """Args:
             value (TypeFloat): Float expression or value to take floor of.
 
         :return: (float value)
@@ -307,18 +314,19 @@ class Floor(_BaseExpr):
 
 class Ceil(_BaseExpr):
     """
-       Create ceil expression that rounds a floating point number up
-       to the closest integer value.
+    Create ceil expression that rounds a floating point number up
+    to the closest integer value.
 
-       Ceil is also available via operator overloading using the math.ceil()
-       function and any subclass of _BaseExpr. See the second example.
+    Ceil is also available via operator overloading using the math.ceil()
+    function and any subclass of _BaseExpr. See the second example.
 
-       Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.CEIL
 
-    def __init__(self, value: 'TypeFloat'):
-        """ Args:
+    def __init__(self, value: "TypeFloat"):
+        """Args:
             value (TypeFloat): Float expression or value to take ceiling of.
 
         :return: (float value)
@@ -338,12 +346,13 @@ class Ceil(_BaseExpr):
 class ToInt(_BaseExpr):
     """Create expression that converts a float to an integer.
 
-       Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.TO_INT
 
-    def __init__(self, value: 'TypeFloat'):
-        """ Args:
+    def __init__(self, value: "TypeFloat"):
+        """Args:
             value (TypeFloat): Float expression or value to convert to int.
 
         :return: (integer value)
@@ -359,12 +368,13 @@ class ToInt(_BaseExpr):
 class ToFloat(_BaseExpr):
     """Create expression that converts an integer to a float.
 
-       Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.TO_FLOAT
 
-    def __init__(self, value: 'TypeInteger'):
-        """ Args:
+    def __init__(self, value: "TypeInteger"):
+        """Args:
             value (TypeInteger): Integer expression or value to convert to float.
 
         :return: (float value)
@@ -379,16 +389,18 @@ class ToFloat(_BaseExpr):
 
 class Min(_BaseExpr):
     """
-       Create expression that returns the minimum value in a variable number of expressions.
-       All arguments must be the same type (integer or float).
+    Create expression that returns the minimum value in a variable number of expressions.
+    All arguments must be the same type (integer or float).
 
-       Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.MIN
 
-    def __init__(self, *args: 'TypeNumber'):
-        """ Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the minimum value.
+    def __init__(self, *args: "TypeNumber"):
+        """Args:
+            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
+            minimum value.
 
         :return: (integer or float value).
 
@@ -402,15 +414,17 @@ class Min(_BaseExpr):
 
 class Max(_BaseExpr):
     """Create expression that returns the maximum value in a variable number of expressions.
-       All arguments must be the same type (integer or float).
+    All arguments must be the same type (integer or float).
 
-       Requires server version 5.6.0+.
+    Requires server version 5.6.0+.
     """
+
     _op = _ExprOp.MAX
 
-    def __init__(self, *args: 'TypeNumber'):
-        """ Args:
-            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the maximum value.
+    def __init__(self, *args: "TypeNumber"):
+        """Args:
+            `*args` (TypeNumber): Variable amount of float or integer expressions or values from which to find the
+            maximum value.
 
         :return: (integer or float value).
 

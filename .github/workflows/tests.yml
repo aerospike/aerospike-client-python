@@ -1,6 +1,14 @@
 name: Pytest Tests
+
+# Trigger test workflow whenever:
+# 1. A pull request is updated (e.g with new commits)
+# 2. Commits are pushed directly to the stage or master branch
 on:
   push:
+    branches: ["stage", "master"]
+  pull_request:
+    branches: ["stage"]
+  workflow_dispatch:
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -44,11 +52,20 @@ jobs:
         docker ps
         docker ps -a
         docker logs --tail all gha_aerospike
-    - name: Install dependencies
+    - name: Install development dependencies
       run: |
         sudo apt-get install libssl-dev
         sudo apt-get install python3-dev
-        python -m pip install pytest
+        python -m pip install -r doc/requirements.txt -r test/requirements.txt flake8
+    - name: Lint aerospike_helpers
+      run: |
+        # Ignore E203 to be compatible with black
+        flake8 --max-line-length=120 --count --extend-ignore=E203 aerospike_helpers/
+    - name: Build documentation
+      run: |
+        cd doc/
+        sphinx-build -b spelling . spelling -W --keep-going
+        sphinx-build -b html . htmldir -W
     - name: Build client
       run: |
         python setup.py build --force

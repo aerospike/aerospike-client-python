@@ -356,7 +356,7 @@ class TestQueryApply(object):
 
     def test_stream_udf_parameters(self):
         """
-        Invoke query.apply() with a stream udf. 
+        Invoke query.apply() with a stream udf.
         that accepts additional arguments.
         """
         query_results = self.as_connection.query(
@@ -364,14 +364,14 @@ class TestQueryApply(object):
         ).apply(
             'query_apply_parameters', 'query_params', [['age', 5]]
         ).results()
-        
+
         query_results.sort()
         assert query_results == [6,7,8,9]
 
     def test_stream_udf_parameters_with_set(self):
         """
-        Invoke query.apply() with a stream udf. 
-        arguments contain an unsuported set. 
+        Invoke query.apply() with a stream udf.
+        arguments contain an unsupported set.
         """
         with pytest.raises(e.ClientError) as err_info:
             query_id = self.as_connection.query(
@@ -380,7 +380,7 @@ class TestQueryApply(object):
                 'query_apply_parameters', 'query_params', [['job_type', 'job_type', 18],
                 ['id', ['john', {'id', 'args', 'kwargs', 'john'}, ['john', {'mary' : 39}]]], []]
             )
-        
+
         err_text = err_info.value.msg
         assert 'udf function argument type must be supported by Aerospike' in err_text
         err_code = err_info.value.code
@@ -393,17 +393,17 @@ class TestQueryApply(object):
                 'query_apply_parameters', 'query_params', [['job_type', 'job_type', 18],
                 ['id', ['john', ['john', {'mary' : 39, 'ken': {'lary', 'quinton', 'julie', 'mark'}}]]], []]
             )
-        
+
         err_text = err_info_dict.value.msg
         assert 'udf function argument type must be supported by Aerospike' in err_text
         err_code = err_info_dict.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
-    
+
 
     def test_stream_udf_parameters_with_tuple(self):
         """
-        Invoke query.apply() with a stream udf. 
-        arguments contain an unsuported tuple. 
+        Invoke query.apply() with a stream udf.
+        arguments contain an unsupported tuple.
         """
         with pytest.raises(e.ClientError) as err_info:
             query_id = self.as_connection.query(
@@ -412,7 +412,7 @@ class TestQueryApply(object):
                 'query_apply_parameters', 'query_params', [['job_type', 'job_type', 18],
                 ['id', ['john', ('id', 'args'), ['john', {'mary' : 39}]]], []]
             )
-        
+
         err_text = err_info.value.msg
         assert 'udf function argument type must be supported by Aerospike' in err_text
         err_code = err_info.value.code
@@ -421,7 +421,7 @@ class TestQueryApply(object):
 
     def test_stream_udf_parameters_with_string(self):
         """
-        Invoke query.apply() with a stream udf. 
+        Invoke query.apply() with a stream udf.
         arguments contain a string not wrapped in a list.
         This should cause an exception.
         """
@@ -431,7 +431,7 @@ class TestQueryApply(object):
             ).apply(
                 'query_apply_parameters', 'query_params', 'age'
             )
-        
+
         err_text = err_info.value.msg
         assert 'udf function arguments must be enclosed in a list' in err_text
         err_code = err_info.value.code
@@ -439,7 +439,7 @@ class TestQueryApply(object):
 
     def test_stream_udf_parameters_with_serialized_set(self):
         """
-        Invoke query.apply() with a stream udf. 
+        Invoke query.apply() with a stream udf.
         arguments contain a serialized set.
         """
         query_results = self.as_connection.query(
@@ -448,13 +448,13 @@ class TestQueryApply(object):
             'query_apply_parameters', 'query_params', [['age', 5]
             ,pickle.dumps({'lary', 'quinton', 'julie', 'mark'})]
         ).results()
-        
+
         query_results.sort()
         assert query_results == [6,7,8,9]
 
     def test_stream_udf_complicated_parameters(self):
         """
-        Invoke query.apply() with a stream udf. 
+        Invoke query.apply() with a stream udf.
         that accepts additional arguments.
         """
         query_results = self.as_connection.query(
@@ -463,7 +463,7 @@ class TestQueryApply(object):
             'query_apply_parameters', 'query_params', [['age', 2],
             ['id', ['john', ['hi']], ['john', {'mary' : 39}]], []]
         ).results()
-        
+
         query_results.sort()
         assert query_results == [3,4,5,6,7,8,9]
 

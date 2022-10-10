@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
-'''
+"""
 Helper functions to create map operation dictionaries arguments for.
 the :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered` methods of the aerospike client.
 
@@ -22,7 +22,7 @@ The ctx argument is a list of cdt_ctx context operation objects. See :class:`aer
 
 .. note:: Nested CDT (ctx) requires server version >= 4.6.0
 
-'''
+"""
 import aerospike
 import sys
 
@@ -40,7 +40,7 @@ RANK_KEY = "rank"
 CTX_KEY = "ctx"
 
 
-def map_set_policy(bin_name: str, policy, ctx: list=None):
+def map_set_policy(bin_name: str, policy, ctx: list = None):
     """Creates a map_set_policy_operation.
 
     The operation allows a user to set the policy for the map.
@@ -48,23 +48,21 @@ def map_set_policy(bin_name: str, policy, ctx: list=None):
     Args:
         bin_name (str): The name of the bin containing the map.
         policy (dict): The :ref:`map_policy dictionary <aerospike_map_policies>`.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_SET_POLICY,
-        BIN_KEY: bin_name,
-        POLICY_KEY: policy
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_SET_POLICY, BIN_KEY: bin_name, POLICY_KEY: policy}
 
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
 
     return op_dict
 
-def map_put(bin_name: str, key, value, map_policy: dict=None, ctx: list=None):
+
+def map_put(bin_name: str, key, value, map_policy: dict = None, ctx: list = None):
     """Creates a map_put operation.
 
     The operation allows a user to set the value of an item in the map stored
@@ -74,29 +72,26 @@ def map_put(bin_name: str, key, value, map_policy: dict=None, ctx: list=None):
         bin_name (str): The name of the bin containing the map.
         key: The key for the map.
         value: The item to store in the map with the corresponding key.
-        map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing items to the Map, and dictates the map order if there is no Map at the *bin_name* 
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_PUT,
-        BIN_KEY: bin_name,
-        KEY_KEY: key,
-        VALUE_KEY: value
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_PUT, BIN_KEY: bin_name, KEY_KEY: key, VALUE_KEY: value}
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
-    
+
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
-    
+
     return op_dict
 
 
-def map_put_items(bin_name: str, item_dict, map_policy: dict=None, ctx: list=None):
+def map_put_items(bin_name: str, item_dict, map_policy: dict = None, ctx: list = None):
     """Creates a map_put_items operation.
 
     The operation allows a user to add or update items in the map stored on the server.
@@ -104,17 +99,20 @@ def map_put_items(bin_name: str, item_dict, map_policy: dict=None, ctx: list=Non
     Args:
         bin_name (str): The name of the bin containing the map.
         item_dict (dict): A dictionary of key value pairs to be added to the map on the server.
-        map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing items to the Map, and dictates the map order if there is no Map at the *bin_name* 
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
+
     def sortKeys(d):
         try:
             if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
                 return dict(sorted(d.items()))
-        except Exception as e:
+        except Exception:
             pass
         return d
 
@@ -128,13 +126,14 @@ def map_put_items(bin_name: str, item_dict, map_policy: dict=None, ctx: list=Non
 
     item_dict = sortKeys(item_dict)
     op_dict[VALUE_KEY] = item_dict
-            
+
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
-    
+
     return op_dict
 
-def map_increment(bin_name: str, key, amount, map_policy: dict=None, ctx: list=None):
+
+def map_increment(bin_name: str, key, amount, map_policy: dict = None, ctx: list = None):
     """Creates a map_increment operation.
 
     The operation allows a user to increment the value of a value stored in the map on the server.
@@ -143,29 +142,26 @@ def map_increment(bin_name: str, key, amount, map_policy: dict=None, ctx: list=N
         bin_name (str): The name of the bin containing the map.
         key: The key for the value to be incremented.
         amount: The amount by which to increment the value stored in map[key]
-        map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing items to the Map, and dictates the map order if there is no Map at the *bin_name* 
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict =  {
-        OP_KEY: aerospike.OP_MAP_INCREMENT,
-        BIN_KEY: bin_name,
-        KEY_KEY: key,
-        VALUE_KEY: amount
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_INCREMENT, BIN_KEY: bin_name, KEY_KEY: key, VALUE_KEY: amount}
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
-    
+
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
 
     return op_dict
 
 
-def map_decrement(bin_name: str, key, amount, map_policy: dict=None, ctx: list=None):
+def map_decrement(bin_name: str, key, amount, map_policy: dict = None, ctx: list = None):
     """Creates a map_decrement operation.
 
     The operation allows a user to decrement the value of a value stored in the map on the server.
@@ -174,43 +170,39 @@ def map_decrement(bin_name: str, key, amount, map_policy: dict=None, ctx: list=N
         bin_name (str): The name of the bin containing the map.
         key: The key for the value to be decremented.
         amount: The amount by which to decrement the value stored in map[key]
-        map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing items to the Map, and dictates the map order if there is no Map at the *bin_name* 
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_DECREMENT,
-        BIN_KEY: bin_name,
-        KEY_KEY: key,
-        VALUE_KEY: amount
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_DECREMENT, BIN_KEY: bin_name, KEY_KEY: key, VALUE_KEY: amount}
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
-    
+
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
 
     return op_dict
 
-def map_size(bin_name: str, ctx: list=None):
+
+def map_size(bin_name: str, ctx: list = None):
     """Creates a map_size operation.
 
     The operation returns the size of the map stored in the specified bin.
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_SIZE,
-        BIN_KEY: bin_name
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_SIZE, BIN_KEY: bin_name}
 
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
@@ -218,22 +210,20 @@ def map_size(bin_name: str, ctx: list=None):
     return op_dict
 
 
-def map_clear(bin_name: str, ctx: list=None):
+def map_clear(bin_name: str, ctx: list = None):
     """Creates a map_clear operation.
 
     The operation removes all items from the map stored in the specified bin.
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_CLEAR,
-        BIN_KEY: bin_name
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_CLEAR, BIN_KEY: bin_name}
 
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
@@ -241,7 +231,7 @@ def map_clear(bin_name: str, ctx: list=None):
     return op_dict
 
 
-def map_remove_by_key(bin_name: str, key, return_type, ctx: list=None):
+def map_remove_by_key(bin_name: str, key, return_type, ctx: list = None):
     """Creates a map_remove_by_key operation.
 
     The operation removes an item, specified by the key from the map stored in the specified bin.
@@ -251,17 +241,13 @@ def map_remove_by_key(bin_name: str, key, return_type, ctx: list=None):
         key: The key to be removed from the map
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY,
-        BIN_KEY: bin_name,
-        KEY_KEY: key,
-        RETURN_TYPE_KEY: return_type
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY, BIN_KEY: bin_name, KEY_KEY: key, RETURN_TYPE_KEY: return_type}
 
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
@@ -269,7 +255,7 @@ def map_remove_by_key(bin_name: str, key, return_type, ctx: list=None):
     return op_dict
 
 
-def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: list=None):
+def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
     """Creates a map_remove_by_key operation.
 
     The operation removes items, specified by the keys in key_list from the map stored in the specified bin.
@@ -281,17 +267,18 @@ def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False,
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If true, keys with values not specified in the key_list will be removed,
             and those keys specified in the key_list will be kept. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY_LIST,
         BIN_KEY: bin_name,
         VALUE_KEY: key_list,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx is not None:
@@ -300,11 +287,13 @@ def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False,
     return op_dict
 
 
-def map_remove_by_key_range(bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: list=None):
+def map_remove_by_key_range(
+    bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_remove_by_key_range operation.
 
     The operation removes items, with keys between key_range_start(inclusive) and
-    key_range_end(exclusive) from the map. 
+    key_range_end(exclusive) from the map.
 
     Args:
         bin_name (str): The name of the bin containing the map.
@@ -314,10 +303,11 @@ def map_remove_by_key_range(bin_name: str, key_range_start, key_range_end, retur
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, values outside of the specified range will be removed, and
             values inside of the range will be kept. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY_RANGE,
@@ -325,7 +315,7 @@ def map_remove_by_key_range(bin_name: str, key_range_start, key_range_end, retur
         KEY_KEY: key_range_start,
         VALUE_KEY: key_range_end,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx is not None:
@@ -334,7 +324,7 @@ def map_remove_by_key_range(bin_name: str, key_range_start, key_range_end, retur
     return op_dict
 
 
-def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: list=None):
+def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
     """Creates a map_remove_by_value operation.
 
     The operation removes key value pairs whose value matches the specified value.
@@ -346,17 +336,18 @@ def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: 
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value different than the specified value will be removed.
             Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_VALUE,
         BIN_KEY: bin_name,
         VALUE_KEY: value,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx is not None:
@@ -365,7 +356,7 @@ def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: 
     return op_dict
 
 
-def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list=None):
+def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
     """Creates a map_remove_by_value_list operation.
 
     The operation removes key value pairs whose values are specified in the value_list.
@@ -377,17 +368,18 @@ def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=Fa
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value contained in value_list will be kept, and all others
             will be removed and returned.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_VALUE_LIST,
         BIN_KEY: bin_name,
         VALUE_KEY: value_list,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx is not None:
@@ -396,7 +388,7 @@ def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=Fa
     return op_dict
 
 
-def map_remove_by_value_range(bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list=None):
+def map_remove_by_value_range(bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list = None):
     """Creates a map_remove_by_value_range operation.
 
     The operation removes items, with values between value_start(inclusive) and
@@ -410,10 +402,11 @@ def map_remove_by_value_range(bin_name: str, value_start, value_end, return_type
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, values outside of the specified range will be removed, and
             values inside of the range will be kept. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE,
@@ -421,7 +414,7 @@ def map_remove_by_value_range(bin_name: str, value_start, value_end, return_type
         VALUE_KEY: value_start,
         RANGE_KEY: value_end,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx is not None:
@@ -430,7 +423,7 @@ def map_remove_by_value_range(bin_name: str, value_start, value_end, return_type
     return op_dict
 
 
-def map_remove_by_index(bin_name: str, index, return_type, ctx: list=None):
+def map_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
     """Creates a map_remove_by_index operation.
 
     The operation removes the entry at index from the map.
@@ -440,16 +433,17 @@ def map_remove_by_index(bin_name: str, index, return_type, ctx: list=None):
         index (int): The index of the entry to remove.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_INDEX,
         BIN_KEY: bin_name,
         INDEX_KEY: index,
-        RETURN_TYPE_KEY: return_type
+        RETURN_TYPE_KEY: return_type,
     }
 
     if ctx is not None:
@@ -458,7 +452,7 @@ def map_remove_by_index(bin_name: str, index, return_type, ctx: list=None):
     return op_dict
 
 
-def map_remove_by_index_range(bin_name: str, index_start, remove_amt, return_type, inverted=False, ctx: list=None):
+def map_remove_by_index_range(bin_name: str, index_start, remove_amt, return_type, inverted=False, ctx: list = None):
     """Creates a map_remove_by_index_range operation.
 
     The operation removes remove_amt entries starting at index_start from the map.
@@ -471,10 +465,11 @@ def map_remove_by_index_range(bin_name: str, index_start, remove_amt, return_typ
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If true, entries in the specified index range should be kept, and all other
             entries removed. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE,
@@ -482,7 +477,7 @@ def map_remove_by_index_range(bin_name: str, index_start, remove_amt, return_typ
         INDEX_KEY: index_start,
         VALUE_KEY: remove_amt,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx is not None:
@@ -491,7 +486,7 @@ def map_remove_by_index_range(bin_name: str, index_start, remove_amt, return_typ
     return op_dict
 
 
-def map_remove_by_rank(bin_name: str, rank, return_type, ctx: list=None):
+def map_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     """Creates a map_remove_by_rank operation.
 
     The operation removes the item with the specified rank from the map.
@@ -501,16 +496,17 @@ def map_remove_by_rank(bin_name: str, rank, return_type, ctx: list=None):
         rank (int): The rank of the entry to remove.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_RANK,
         BIN_KEY: bin_name,
         INDEX_KEY: rank,
-        RETURN_TYPE_KEY: return_type
+        RETURN_TYPE_KEY: return_type,
     }
 
     if ctx is not None:
@@ -519,7 +515,7 @@ def map_remove_by_rank(bin_name: str, rank, return_type, ctx: list=None):
     return op_dict
 
 
-def map_remove_by_rank_range(bin_name: str, rank_start, remove_amt, return_type, inverted=False, ctx: list=None):
+def map_remove_by_rank_range(bin_name: str, rank_start, remove_amt, return_type, inverted=False, ctx: list = None):
     """Creates a map_remove_by_rank_range operation.
 
     The operation removes `remove_amt` items beginning with the item with the specified rank from the map.
@@ -532,10 +528,11 @@ def map_remove_by_rank_range(bin_name: str, rank_start, remove_amt, return_type,
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, items with ranks inside the specified range should be kept,
             and all other entries removed. Default: False.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_REMOVE_BY_RANK_RANGE,
@@ -543,7 +540,7 @@ def map_remove_by_rank_range(bin_name: str, rank_start, remove_amt, return_type,
         INDEX_KEY: rank_start,
         VALUE_KEY: remove_amt,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx is not None:
@@ -552,7 +549,7 @@ def map_remove_by_rank_range(bin_name: str, rank_start, remove_amt, return_type,
     return op_dict
 
 
-def map_get_by_key(bin_name: str, key, return_type, ctx: list=None):
+def map_get_by_key(bin_name: str, key, return_type, ctx: list = None):
     """Creates a map_get_by_key operation.
 
     The operation returns an item, specified by the key from the map stored in the specified bin.
@@ -562,17 +559,13 @@ def map_get_by_key(bin_name: str, key, return_type, ctx: list=None):
         key: The key of the item to be returned from the map
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_GET_BY_KEY,
-        BIN_KEY: bin_name,
-        KEY_KEY: key,
-        RETURN_TYPE_KEY: return_type
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_GET_BY_KEY, BIN_KEY: bin_name, KEY_KEY: key, RETURN_TYPE_KEY: return_type}
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -580,7 +573,7 @@ def map_get_by_key(bin_name: str, key, return_type, ctx: list=None):
     return op_dict
 
 
-def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: list=None):
+def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: list = None):
     """Creates a map_get_by_key_range operation.
 
     The operation returns items with keys between key_range_start(inclusive) and
@@ -594,10 +587,11 @@ def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_t
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, values outside of the specified range will be returned, and
             values inside of the range will be ignored. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_KEY_RANGE,
@@ -605,7 +599,7 @@ def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_t
         KEY_KEY: key_range_start,
         RANGE_KEY: key_range_end,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx:
@@ -614,7 +608,7 @@ def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_t
     return op_dict
 
 
-def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: list=None):
+def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
     """Creates a map_get_by_key_list operation.
 
     The operation returns items, specified by the keys in key_list from the map stored in the specified bin.
@@ -626,17 +620,18 @@ def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ct
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If true, keys with values not specified in the key_list will be returned,
             and those keys specified in the key_list will be ignored. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_KEY_LIST,
         BIN_KEY: bin_name,
         VALUE_KEY: key_list,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx:
@@ -644,7 +639,8 @@ def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ct
 
     return op_dict
 
-def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: list=None):
+
+def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
     """Creates a map_get_by_value operation.
 
     The operation returns entries whose value matches the specified value.
@@ -656,17 +652,18 @@ def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: lis
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value different than the specified value will be returned.
             Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_VALUE,
         BIN_KEY: bin_name,
         VALUE_KEY: value,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx:
@@ -675,7 +672,7 @@ def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: lis
     return op_dict
 
 
-def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list=None):
+def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list = None):
     """Creates a map_get_by_value_range operation.
 
     The operation returns items, with values between value_start(inclusive) and
@@ -689,10 +686,11 @@ def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, i
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, values outside of the specified range will be returned, and
             values inside of the range will be ignored. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_VALUE_RANGE,
@@ -700,7 +698,7 @@ def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, i
         VALUE_KEY: value_start,
         RANGE_KEY: value_end,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx:
@@ -709,7 +707,7 @@ def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, i
     return op_dict
 
 
-def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, ctx: list=None):
+def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
     """Creates a map_get_by_value_list operation.
 
     The operation returns entries whose values are specified in the value_list.
@@ -721,17 +719,18 @@ def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, 
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value contained in value_list will be ignored, and all others
             will be returned.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_VALUE_LIST,
         BIN_KEY: bin_name,
         VALUE_KEY: key_list,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx:
@@ -740,7 +739,7 @@ def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, 
     return op_dict
 
 
-def map_get_by_index(bin_name: str, index, return_type, ctx: list=None):
+def map_get_by_index(bin_name: str, index, return_type, ctx: list = None):
     """Creates a map_get_by_index operation.
 
     The operation returns the entry at index from the map.
@@ -750,17 +749,13 @@ def map_get_by_index(bin_name: str, index, return_type, ctx: list=None):
         index (int): The index of the entry to return.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_GET_BY_INDEX,
-        BIN_KEY: bin_name,
-        INDEX_KEY: index,
-        RETURN_TYPE_KEY: return_type
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_GET_BY_INDEX, BIN_KEY: bin_name, INDEX_KEY: index, RETURN_TYPE_KEY: return_type}
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -768,7 +763,7 @@ def map_get_by_index(bin_name: str, index, return_type, ctx: list=None):
     return op_dict
 
 
-def map_get_by_index_range(bin_name: str, index_start, get_amt, return_type, inverted=False, ctx: list=None):
+def map_get_by_index_range(bin_name: str, index_start, get_amt, return_type, inverted=False, ctx: list = None):
     """Creates a map_get_by_index_range operation.
 
     The operation returns get_amt entries starting at index_start from the map.
@@ -781,10 +776,11 @@ def map_get_by_index_range(bin_name: str, index_start, get_amt, return_type, inv
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If true, entries in the specified index range should be ignored, and all other
             entries returned. Default: False
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_INDEX_RANGE,
@@ -792,7 +788,7 @@ def map_get_by_index_range(bin_name: str, index_start, get_amt, return_type, inv
         INDEX_KEY: index_start,
         VALUE_KEY: get_amt,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx:
@@ -801,7 +797,7 @@ def map_get_by_index_range(bin_name: str, index_start, get_amt, return_type, inv
     return op_dict
 
 
-def map_get_by_rank(bin_name: str, rank, return_type, ctx: list=None):
+def map_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     """Creates a map_get_by_rank operation.
 
     The operation returns the item with the specified rank from the map.
@@ -811,17 +807,13 @@ def map_get_by_rank(bin_name: str, rank, return_type, ctx: list=None):
         rank (int): The rank of the entry to return.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {
-        OP_KEY: aerospike.OP_MAP_GET_BY_RANK,
-        BIN_KEY: bin_name,
-        INDEX_KEY: rank,
-        RETURN_TYPE_KEY: return_type       
-    }
+    op_dict = {OP_KEY: aerospike.OP_MAP_GET_BY_RANK, BIN_KEY: bin_name, INDEX_KEY: rank, RETURN_TYPE_KEY: return_type}
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -829,7 +821,7 @@ def map_get_by_rank(bin_name: str, rank, return_type, ctx: list=None):
     return op_dict
 
 
-def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inverted=False, ctx: list=None):
+def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inverted=False, ctx: list = None):
     """Creates a map_get_by_rank_range operation.
 
     The operation returns item within the specified rank range from the map.
@@ -842,10 +834,11 @@ def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inver
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, items with ranks inside the specified range should be ignored,
             and all other entries returned. Default: False.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
     Returns:
-        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The format of the dictionary
-        should be considered an internal detail, and subject to change.
+        A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
+        format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {
         OP_KEY: aerospike.OP_MAP_GET_BY_RANK_RANGE,
@@ -853,7 +846,7 @@ def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inver
         INDEX_KEY: rank_start,
         VALUE_KEY: get_amt,
         RETURN_TYPE_KEY: return_type,
-        INVERTED_KEY: inverted
+        INVERTED_KEY: inverted,
     }
 
     if ctx:
@@ -861,8 +854,10 @@ def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inver
 
     return op_dict
 
+
 def map_remove_by_value_rank_range_relative(
-        bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list=None):
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+):
     """Create a map remove by value rank range relative operation
 
     Create map remove by value relative to rank range operation.
@@ -878,7 +873,8 @@ def map_remove_by_value_rank_range_relative(
         return_type: Specifies what to return from the operation.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -917,15 +913,14 @@ def map_remove_by_value_rank_range_relative(
         BIN_KEY: bin_name,
         VALUE_KEY: value,
         RANK_KEY: offset,
-        RETURN_TYPE_KEY: return_type
-
+        RETURN_TYPE_KEY: return_type,
     }
     if count is not None:
         op_dict[COUNT_KEY] = count
 
     if inverted:
         op_dict[INVERTED_KEY] = True
-    
+
     if ctx:
         op_dict[CTX_KEY] = ctx
 
@@ -933,7 +928,8 @@ def map_remove_by_value_rank_range_relative(
 
 
 def map_get_by_value_rank_range_relative(
-        bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list=None):
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+):
     """Create a map remove by value rank range relative operation
 
     Create list map get by value relative to rank range operation.
@@ -948,7 +944,8 @@ def map_get_by_value_rank_range_relative(
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -973,15 +970,14 @@ def map_get_by_value_rank_range_relative(
         BIN_KEY: bin_name,
         VALUE_KEY: value,
         RANK_KEY: offset,
-        RETURN_TYPE_KEY: return_type
-
+        RETURN_TYPE_KEY: return_type,
     }
     if count is not None:
         op_dict[COUNT_KEY] = count
 
     if inverted:
         op_dict[INVERTED_KEY] = True
-    
+
     if ctx:
         op_dict[CTX_KEY] = ctx
 
@@ -989,7 +985,8 @@ def map_get_by_value_rank_range_relative(
 
 
 def map_remove_by_key_index_range_relative(
-        bin_name: str, key, offset, return_type, count=None, inverted=False, ctx: list=None):
+    bin_name: str, key, offset, return_type, count=None, inverted=False, ctx: list = None
+):
     """Create a map get by value rank range relative operation
 
     Create map remove by key relative to index range operation.
@@ -1007,7 +1004,8 @@ def map_remove_by_key_index_range_relative(
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -1044,15 +1042,14 @@ def map_remove_by_key_index_range_relative(
         BIN_KEY: bin_name,
         KEY_KEY: key,
         INDEX_KEY: offset,
-        RETURN_TYPE_KEY: return_type
-
+        RETURN_TYPE_KEY: return_type,
     }
     if count is not None:
         op_dict[COUNT_KEY] = count
 
     if inverted:
         op_dict[INVERTED_KEY] = True
-    
+
     if ctx:
         op_dict[CTX_KEY] = ctx
 
@@ -1060,7 +1057,8 @@ def map_remove_by_key_index_range_relative(
 
 
 def map_get_by_key_index_range_relative(
-        bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list=None):
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+):
     """Create a map get by value rank range relative operation
 
     Create map get by key relative to index range operation.
@@ -1075,7 +1073,8 @@ def map_get_by_key_index_range_relative(
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation objects.
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
 
     Returns:
         A dictionary usable in operate or operate_ordered.The format of the dictionary
@@ -1104,15 +1103,14 @@ def map_get_by_key_index_range_relative(
         BIN_KEY: bin_name,
         KEY_KEY: value,
         INDEX_KEY: offset,
-        RETURN_TYPE_KEY: return_type
-
+        RETURN_TYPE_KEY: return_type,
     }
     if count is not None:
         op_dict[COUNT_KEY] = count
 
     if inverted:
         op_dict[INVERTED_KEY] = True
-    
+
     if ctx:
         op_dict[CTX_KEY] = ctx
 
