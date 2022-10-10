@@ -35,8 +35,8 @@ jobs:
         wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-community/6.1.0.1/aerospike-server-community-6.1.0.1-ubuntu20.04.tgz
         tar -xvf aerospike.tgz
         cd aerospike-server-community-6.1.0.1-ubuntu20.04/
-        ./asinstall
-        systemctl start aerospike
+        sudo ./asinstall
+        sudo systemctl start aerospike
         logout
     - name: Run tests
       run: |
