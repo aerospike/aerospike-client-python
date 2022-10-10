@@ -31,7 +31,7 @@ jobs:
         vagrant init ubuntu/focal64
         vagrant up
         # Setup Aerospike in VM
-        commands = "wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-community/6.1.0.1/aerospike-server-community-6.1.0.1-ubuntu20.04.tgz; \
+        commands="wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-community/6.1.0.1/aerospike-server-community-6.1.0.1-ubuntu20.04.tgz; \
         tar -xvf aerospike.tgz; \
         cd aerospike-server-community-6.1.0.1-ubuntu20.04/; \
         sudo ./asinstall; \
