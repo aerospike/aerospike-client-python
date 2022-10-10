@@ -1,35 +1,28 @@
 Python client Testing
 =========
 
-This testing includes unit-testing of all the API's provided by Python client.
+This testing includes integration testing of the Python client API.
 
 Dependencies
 ------------
+
 Install these Python dependencies for testing.
 
-`pip install -r requirements.txt`
+```
+pip install -r requirements.txt
+```
 
 Execution
 ---------
 
-You will find an executable bash script named _run_, which will kick start execution of all the test cases.
-You can execute individual test case by specifying individual test case name as command line parameter to _run_ script.
-e.g.
-
 ```
-$: ./run -v test_get_with_key_digest
-```
-
-For more options check [Pytest usage] and run:
-
-```
-$: py.test -v [options]
+python3 -m pytest new_tests/
 ```
 
 [Pytest usage]:http://pytest.org/latest/usage.html
 
-To set the server details, modify the file config.conf
-If a community-edition server is to be used, specify the list of hosts in the
+To set the server details, modify `config.conf`.
+If a community edition server is to be used, specify the list of hosts in the
 `[community-edition]` section. You can remove the `[enterprise-edition]` section
 or leave its options empty.
 
