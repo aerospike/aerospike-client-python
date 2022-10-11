@@ -144,7 +144,6 @@ class TestIncorrectCallsToUDFRemove(object):
         """
         cls.udf_to_load = "example.lua"
 
-
     def test_udf_remove_with_non_existent_module(self):
         """
         Test to ensure that the removal of a non existant UDF raises an Error

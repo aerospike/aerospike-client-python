@@ -338,9 +338,9 @@ class TestMapKeysIndex(object):
         client1 = aerospike.client(config)
 
         retval = client1.index_map_keys_create(
-                'test', 'demo', 'string_map', aerospike.INDEX_STRING,
-                'test_string_map_index', policy)
+            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+        )
 
         assert retval == 0
-        self.as_connection.index_remove('test', 'test_string_map_index', policy)
-        ensure_dropped_index(self.as_connection, 'test', 'test_string_map_index')
+        self.as_connection.index_remove("test", "test_string_map_index", policy)
+        ensure_dropped_index(self.as_connection, "test", "test_string_map_index")

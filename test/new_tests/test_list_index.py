@@ -352,13 +352,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         client1 = aerospike.client(config)
 
         retobj = client1.index_list_create(
-                'test', 'demo', 'string_list', aerospike.INDEX_STRING,
-                'test_string_list_index', policy)
+            "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+        )
 
         assert retobj == 0
-        self.as_connection.index_remove('test', 'test_string_list_index',
-                                        policy)
-        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_index')
+        self.as_connection.index_remove("test", "test_string_list_index", policy)
+        ensure_dropped_index(self.as_connection, "test", "test_string_list_index")
 
     def test_neg_listindex_with_no_paramters(self):
         """

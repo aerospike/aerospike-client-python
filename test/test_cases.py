@@ -1158,8 +1158,8 @@ def get_aerospike():
         #     'keyfile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Client-Chainless/key.pem",  # noqa: E501
         #     'for_login_only': True,
         # }
-        'user':"generic_client",
-        'password':"generic_client"
+        "user": "generic_client",
+        "password": "generic_client",
     }
     # Optionally set policies for various method types
     write_policies = {"total_timeout": 2000, "max_retries": 0, "key": aerospike.POLICY_KEY_SEND}
@@ -1176,6 +1176,10 @@ def run():
     # aerospike.set_log_level(aerospike.LOG_LEVEL_INFO)
 
     aeros = get_aerospike()
+
+    config = {"hosts": [("bad_addr", 3000)]}
+    bad_client = aerospike.client(config)
+
     # Connect once to establish a memory usage baseline.
     connect_to_cluster(aeros)
 

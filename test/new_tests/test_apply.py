@@ -297,11 +297,11 @@ class TestApply(TestBaseClass):
         """
         Invoke apply() with correct arguments without connection
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        retval = client1.apply(key, 'sample', 'list_append', ['name', 'car'])
+        retval = client1.apply(key, "sample", "list_append", ["name", "car"])
 
         assert retval == 0
 

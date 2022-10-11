@@ -6,8 +6,7 @@ from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("connection_config")
-class TestPrepend():
-
+class TestPrepend:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         """

@@ -141,7 +141,7 @@ class TestInfoSingleNodeIncorrectUsage(object):
         """
         client1 = aerospike.client(self.connection_config)
         with pytest.raises(e.ParamError) as err_info:
-            client1.info_single_node('bins', self.connection_config['hosts'][0][:2])
+            client1.info_single_node("bins", self.connection_config["hosts"][0][:2])
 
     def test_info_single_node_positive_with_extra_parameters(self):
         """

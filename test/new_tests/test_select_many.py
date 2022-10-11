@@ -298,8 +298,7 @@ class TestSelectMany(object):
 
         filter_bins = ["title", "name"]
 
-        client1.select_many(self.keys, filter_bins, {'timeout':
-                                                        20})
+        client1.select_many(self.keys, filter_bins, {"timeout": 20})
 
     def test_select_many_with_invalid_keys(self, invalid_key):
         # invalid_key will be an invalid key_tuple, so we wrap

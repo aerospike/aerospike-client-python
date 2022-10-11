@@ -14,8 +14,7 @@ class SomeClass(object):
 
 @pytest.mark.usefixtures("as_connection")
 @pytest.mark.usefixtures("connection_config")
-class TestExists():
-
+class TestExists:
     @pytest.mark.parametrize("key, record", test_data.pos_data)
     def test_pos_exists_with_diff_datatype(self, key, record, put_data):
         """
@@ -109,7 +108,7 @@ class TestExists():
         """
         Invoke exists() with a key and not policy's dict and no connection
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 

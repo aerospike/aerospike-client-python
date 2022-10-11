@@ -246,7 +246,6 @@ class TestRemovebin(object):
             assert exception.code == ex_code
             assert exception.msg == ex_msg
 
-
     def test_neg_remove_bin_with_incorrect_meta(self):
         """
         Invoke remove_bin() with incorrect meta

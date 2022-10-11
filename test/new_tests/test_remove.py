@@ -9,8 +9,7 @@ from aerospike import exception as e
 
 @pytest.mark.usefixtures("as_connection")
 @pytest.mark.usefixtures("connection_config")
-class TestRemove():
-
+class TestRemove:
     @pytest.mark.xfail(reason="open bug #client-533")
     def test_pos_remove_with_existing_record(self):
         """

@@ -442,7 +442,7 @@ class TestOperate(object):
         """
         Invoke operate() with correct parameters without connection
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
         llist = [operations.touch()]

@@ -184,6 +184,7 @@ class TestSelect(object):
 
         _, _, bins = disconnected_client.select(self.test_key, bins_to_select)
         assert bins is not None
+
     def test_select_with_invalid_keys(self, invalid_key):
         """
         Verify that different types of invalid keys will

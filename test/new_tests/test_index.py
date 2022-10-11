@@ -9,8 +9,6 @@ import aerospike
 
 @pytest.mark.usefixtures("connection_config")
 class TestIndex(object):
-
-class TestIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         for i in range(5):
