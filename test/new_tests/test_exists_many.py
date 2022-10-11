@@ -13,8 +13,7 @@ from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("as_connection")
-class TestExistsMany():
-
+class TestExistsMany:
     def test_pos_exists_many_without_policy(self, put_data):
         self.keys = []
         rec_length = 5
@@ -194,7 +193,6 @@ class TestExistsMany():
         policies = {"total_timeout": 0.2}
         with pytest.raises(e.ParamError):
             self.as_connection.exists_many(self.keys, policies)
-
 
     def test_neg_exists_many_with_extra_parameter_in_key(self, put_data):
         keys = []

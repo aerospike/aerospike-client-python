@@ -245,7 +245,7 @@ class TestGet:
         """
         Invoke get() with a key and not policy's dict no connection
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 

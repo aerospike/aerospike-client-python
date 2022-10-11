@@ -221,6 +221,6 @@ class TestListAppend(object):
     def test_list_append_with_no_connection(self):
         config = self.connection_config.copy()
         client = aerospike.client(config)
-        k = ('test', 'demo', 'no_con')
-        response = client.list_append(k, 'bob', 'item')
+        k = ("test", "demo", "no_con")
+        response = client.list_append(k, "bob", "item")
         assert response is not None

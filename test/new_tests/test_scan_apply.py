@@ -345,9 +345,9 @@ class TestScanApply(object):
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        response = client1.scan_apply(
-            "test", "demo", "bin_lua", "mytransform", ['age', 2])
+        response = client1.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
         assert response is not None
+
     def test_scan_apply_with_incorrect_policy(self):
         """
         Invoke scan_apply() with incorrect policy

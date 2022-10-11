@@ -437,7 +437,7 @@ class TestAppend(object):
 
         (key, _, bins) = self.as_connection.get(key)
 
-        assert bins == {'age': 1, 'name': 'name1', 'name2': 'str'}
+        assert bins == {"age": 1, "name": "name1", "name2": "str"}
 
     def test_neg_append_with_low_timeout(self):
         """

@@ -966,15 +966,14 @@ class TestQuery(TestBaseClass):
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        query = client1.query('test', 'demo')
-        query.select('name', 'test_age')
-        query.where(p.equals('test_age', 1))
+        query = client1.query("test", "demo")
+        query.select("name", "test_age")
+        query.where(p.equals("test_age", 1))
 
         def callback(input_tuple):
             pass
 
         query.foreach(callback)
-
 
     @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_no_args(self):

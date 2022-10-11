@@ -733,7 +733,7 @@ class TestGetPut:
         config = self.connection_config.copy()
         client1 = aerospike.client(config)
 
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         bins = {"name": "John"}
 
         assert 0 == client1.put(key, bins)

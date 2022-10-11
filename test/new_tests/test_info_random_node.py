@@ -135,7 +135,7 @@ class TestInfoRandomNodeIncorrectUsage(object):
         Test info with correct arguments without connection.
         """
         client1 = aerospike.client(self.connection_config)
-        response = client1.info_random_node('bins')
+        response = client1.info_random_node("bins")
         assert response is not None
 
     def test_info_random_node_positive_with_extra_parameters(self):
