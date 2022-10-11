@@ -35,7 +35,7 @@ jobs:
         tar -xvf aerospike.tgz; \
         cd aerospike-server-community-6.1.0.1-ubuntu20.04/; \
         sudo ./asinstall; \
-        sed -E "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" aerospike.conf; \
+        sed -E "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf; \
         sudo systemctl start aerospike; \
         logout;"
         vagrant ssh -c "$commands"
