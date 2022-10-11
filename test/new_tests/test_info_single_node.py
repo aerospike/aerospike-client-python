@@ -135,14 +135,6 @@ class TestInfoSingleNodeIncorrectUsage(object):
         with pytest.raises(e.ClientError):
             self.as_connection.info_single_node("abcd", self.connection_config["hosts"][0])
 
-    def test_info_single_node_positive_without_connection(self):
-        """
-        Test info with correct arguments without connection.
-        """
-        client1 = aerospike.client(self.connection_config)
-        with pytest.raises(e.ParamError) as err_info:
-            client1.info_single_node("bins", self.connection_config["hosts"][0][:2])
-
     def test_info_single_node_positive_with_extra_parameters(self):
         """
         Test info with extra parameters.

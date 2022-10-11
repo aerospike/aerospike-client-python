@@ -6,7 +6,6 @@ from .test_base_class import TestBaseClass
 import aerospike
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestUdfList(object):
     def setup_class(cls):
         """
@@ -104,17 +103,3 @@ class TestUdfList(object):
         """
         with pytest.raises(e.ParamError):
             self.client.udf_list(policy)
-
-    def test_udf_list_with_proper_parameters_without_connection(self):
-        """
-        Test to verify call to udf_list without
-        first calling connect
-        """
-        config = self.connection_config.copy()
-
-        client1 = aerospike.client(config)
-
-        policy = {"timeout": 0}
-
-        udf_list = client1.udf_list(policy)
-        assert udf_list is not None

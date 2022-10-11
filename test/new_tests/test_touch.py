@@ -6,7 +6,6 @@ from .as_status_codes import AerospikeStatus
 import aerospike
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestTouch(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -256,16 +255,6 @@ class TestTouch(object):
             self.as_connection.touch(key, 120, {}, "")
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    def test_touch_with_correct_paramters_without_connection(self):
-        """
-        Invoke touch() with correct parameters without connection
-        """
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-        key = ("test", "demo", 1)
-
-        client1.touch(key, 120)
 
     def test_touch_withttlvalue_greaterthan_maxsize(self):
         """

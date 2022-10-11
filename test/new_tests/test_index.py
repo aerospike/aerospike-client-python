@@ -7,7 +7,6 @@ from aerospike import exception as e
 
 import aerospike
 
-@pytest.mark.usefixtures("connection_config")
 class TestIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -435,17 +434,6 @@ class TestIndex(object):
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "uni_age_index", policy)
         ensure_dropped_index(self.as_connection, "test", "uni_age_index")
-
-    def test_createindex_with_correct_parameters_without_connection(self):
-        # Invoke createindex() with correct arguments without connection
-        policy = {}
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        assert 0 == client1.index_integer_create(
-                'test', 'demo', 'age', 'age_index', policy)
-        self.as_connection.index_remove('test', 'age_index', policy)
-        ensure_dropped_index(self.as_connection, 'test', 'age_index')
 
     def test_index_remove_no_args(self):
 

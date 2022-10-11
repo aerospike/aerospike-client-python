@@ -30,7 +30,6 @@ def remove_map_keys(client):
 
 
 @pytest.mark.usefixtures("connection_with_config_funcs")
-@pytest.mark.usefixtures("connection_config")
 class TestMapKeysIndex(object):
     def setup_class(cls):
         cls.connection_setup_functions = [add_map_keys]
@@ -326,21 +325,5 @@ class TestMapKeysIndex(object):
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
-        self.as_connection.index_remove("test", "uni_age_index", policy)
-        ensure_dropped_index(self.as_connection, "test", "uni_age_index")
-
-    def test_mapkeysindex_with_correct_parameters_no_connection(self):
-        """
-        Invoke index_map_keys_create() with correct arguments no connection
-        """
-        policy = {}
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        retval = client1.index_map_keys_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
-        )
-
-        assert retval == 0
-        self.as_connection.index_remove("test", "test_string_map_index", policy)
-        ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
+        self.as_connection.index_remove('test', u'uni_age_index', policy)
+        ensure_dropped_index(self.as_connection, 'test', u'uni_age_index')

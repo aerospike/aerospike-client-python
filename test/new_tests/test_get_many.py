@@ -11,7 +11,6 @@ except ImportError:
 import aerospike
 from aerospike import exception as e
 
-@pytest.mark.usefixtures("connection_config")
 class TestGetMany():
 
 class TestGetMany:
@@ -211,11 +210,6 @@ class TestGetMany:
         key = ("test", "set")
         with pytest.raises(e.ParamError):
             key, _, _ = self.as_connection.get(key)
-
-    def test_get_many_with_proper_parameters_without_connection(self):
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-        assert client1.get_many(self.keys, {'total_timeout': 20}) is not None
 
     def test_neg_prepend_Invalid_Key_without_set_name(self):
         """

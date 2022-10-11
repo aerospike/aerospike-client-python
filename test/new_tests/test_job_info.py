@@ -6,7 +6,6 @@ from aerospike import exception as e
 import aerospike
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestScanInfo(object):
 
     udf_to_load = "bin_lua.lua"
@@ -120,17 +119,6 @@ class TestScanInfo(object):
                 "job_info() argument 1 must be an int" in str(typeError.value),
             ]
         )
-
-    def test_job_info_with_correct_parameters_without_connection(self):
-        """
-        Invoke job_info() with correct parameters without connection
-        """
-
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        response = client1.job_info(self.job_id, aerospike.JOB_SCAN)
-        assert response is not None
 
     def test_job_info_with_constant_out_of_valid_values(self):
         """

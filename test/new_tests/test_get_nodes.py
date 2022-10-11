@@ -34,15 +34,3 @@ class TestGetNodes(object):
         """
         response = self.as_connection.get_nodes("parameter")
         assert response is not None
-
-    # Tests for behaviors that raise errors
-    def test_pos_get_nodes_without_connection(self):
-        """
-        Test that an attempt to call get_nodes before a connection
-        is established will raise the expected error
-        """
-        config = self.connection_config.copy()
-        unconnected_client = aerospike.client(config)
-
-        response = unconnected_client.get_nodes()
-        assert response is not None

@@ -13,8 +13,8 @@ class SomeClass(object):
 
 
 @pytest.mark.usefixtures("as_connection")
-@pytest.mark.usefixtures("connection_config")
-class TestExists:
+class TestExists():
+
     @pytest.mark.parametrize("key, record", test_data.pos_data)
     def test_pos_exists_with_diff_datatype(self, key, record, put_data):
         """
@@ -104,24 +104,12 @@ class TestExists:
         except ex as exception:
             assert exception.code == ex_code
 
-    def test_exists_with_only_key_without_connection(self):
-        """
-        Invoke exists() with a key and not policy's dict and no connection
-        """
-        key = ("test", "demo", 1)
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        key, _ = client1.exists(key)
-        assert key is not None
-
-    @pytest.mark.parametrize(
-        "key, record, meta, policy",
-        [
-            (("test", "demo", 20), {"name": "John"}, {"gen": 3, "ttl": 1}, {"total_timeout": 2}),
-        ],
-    )
-    def test_neg_exists_with_low_timeout(self, key, record, meta, policy, put_data):
+    @pytest.mark.parametrize("key, record, meta, policy", [
+        (('test', 'demo', 20), {"name": "John"},
+         {'gen': 3, 'ttl': 1}, {'total_timeout': 2}),
+    ])
+    def test_neg_exists_with_low_timeout(
+            self, key, record, meta, policy, put_data):
         try:
             put_data(self.as_connection, key, record, meta, policy)
         except e.TimeoutError as exception:

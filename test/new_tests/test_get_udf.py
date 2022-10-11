@@ -8,7 +8,6 @@ import aerospike
 
 
 @pytest.mark.usefixtures("connection_with_udf")
-@pytest.mark.usefixtures("connection_config")
 class TestGetRegistered(object):
     def setup_class(cls):
         """
@@ -135,14 +134,3 @@ class TestGetRegistered(object):
     def test_invalid_language_arg_types(self, ltype):
         with pytest.raises(TypeError):
             self.as_connection.udf_get(self.loaded_udf_name, ltype)
-
-    def test_udf_get_with_correct_paramters_without_connection(self):
-        """
-        Invoke udf_get() with correct parameters without connection
-        """
-        policy = {"timeout": 5000}
-
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        assert client1.udf_get(self.loaded_udf_name, self.udf_language, policy) is not None

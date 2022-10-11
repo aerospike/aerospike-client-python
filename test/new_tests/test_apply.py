@@ -90,8 +90,6 @@ def remove_indexes_and_udfs(client):
         client.udf_remove(module, policy)
 
 
-# adds cls.connection_config to this class
-@pytest.mark.usefixtures("connection_config")
 class TestApply(TestBaseClass):
     def setup_class(cls):
         # Register setup and teardown functions
@@ -291,18 +289,6 @@ class TestApply(TestBaseClass):
         (key, _, bins) = self.as_connection.get(key)
 
         assert bins["name"] == ["name1", "car"]
-        assert retval == 0
-
-    def test_apply_with_correct_parameters_without_connection(self):
-        """
-        Invoke apply() with correct arguments without connection
-        """
-        key = ("test", "demo", 1)
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        retval = client1.apply(key, "sample", "list_append", ["name", "car"])
-
         assert retval == 0
 
     def test_apply_with_arg_causing_error(self):

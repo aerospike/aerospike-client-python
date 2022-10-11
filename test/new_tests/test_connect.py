@@ -138,6 +138,10 @@ class TestConnect(object):
         assert err_info.value.code == -1
 
     def test_connect_positive_reconnect(self):
+        """
+         Client call itself establishes connection.
+         Connect/Close are deprecated and it is no-op to client
+        """
         config = self.connection_config.copy()
 
         with open_as_connection(config) as client:

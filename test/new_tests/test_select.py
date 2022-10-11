@@ -176,15 +176,6 @@ class TestSelect(object):
 
         assert "argument 'key' (pos 1)" in str(typeError.value)
 
-    def test_select_with_key_and_bins_without_connection(self):
-
-        bins_to_select = ["a"]
-        config = self.connection_config
-        disconnected_client = aerospike.client(config)
-
-        _, _, bins = disconnected_client.select(self.test_key, bins_to_select)
-        assert bins is not None
-
     def test_select_with_invalid_keys(self, invalid_key):
         """
         Verify that different types of invalid keys will

@@ -6,7 +6,6 @@ from aerospike import exception as e
 import aerospike
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestListAppend(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -217,10 +216,3 @@ class TestListAppend(object):
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
-
-    def test_list_append_with_no_connection(self):
-        config = self.connection_config.copy()
-        client = aerospike.client(config)
-        k = ("test", "demo", "no_con")
-        response = client.list_append(k, "bob", "item")
-        assert response is not None

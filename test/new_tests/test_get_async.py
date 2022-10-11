@@ -239,18 +239,3 @@ class TestGet:
                 assert exception.code == 2
 
         await asyncio.gather(async_io(_input))
-
-    @pytest.mark.asyncio
-    async def test_get_with_only_key_no_connection(self):
-        """
-        Invoke get() with a key and not policy's dict no connection
-        """
-        key = ("test", "demo", 1)
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        async def async_io(key_input=None, policy_input=None):
-            with pytest.raises(e.ClusterError):
-                key, _, _ = await io.get(client1, key_input)
-
-        await asyncio.gather(async_io(key))

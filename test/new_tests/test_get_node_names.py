@@ -6,7 +6,6 @@ import aerospike
 
 
 @pytest.mark.usefixtures("as_connection")
-@pytest.mark.usefixtures("connection_config")
 class TestGetNodeNames(object):
     """
     Test Cases for the use of aerospike.Client.get_node_names
@@ -28,14 +27,3 @@ class TestGetNodeNames(object):
         assert isinstance(response[0]["port"], int)
         assert isinstance(response[0]["node_name"], str)
         assert len(response[0]) == 3
-
-    # Tests for behaviors that raise errors
-    def test_pos_get_node_names_without_connection(self):
-        """
-        Test that an attempt to call get_node_names before a connection
-        is established will raise the expected error
-        """
-        config = self.connection_config.copy()
-        unconnected_client = aerospike.client(config)
-        response = unconnected_client.get_node_names()
-        assert response is not None
