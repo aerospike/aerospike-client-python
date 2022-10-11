@@ -23,7 +23,6 @@ def get_primary_key(record):
     return record[0][2]
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestSelectMany(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -290,15 +289,6 @@ class TestSelectMany(object):
             self.as_connection.select_many()
 
         assert "argument 'keys' (pos 1)" in str(typeError.value)
-
-    def test_select_many_with_proper_parameters_without_connection(self):
-
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        filter_bins = ["title", "name"]
-
-        client1.select_many(self.keys, filter_bins, {"timeout": 20})
 
     def test_select_many_with_invalid_keys(self, invalid_key):
         # invalid_key will be an invalid key_tuple, so we wrap

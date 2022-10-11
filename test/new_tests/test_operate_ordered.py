@@ -6,7 +6,6 @@ import aerospike
 from aerospike import exception as e
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestOperateOrdered(object):
     def setup_class(cls):
         """
@@ -658,25 +657,6 @@ class TestOperateOrdered(object):
             None,
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
-
-    def test_neg_operate_ordered_without_connection(self):
-        """
-        Invoke operate_ordered() with correct parameters without connection
-        """
-        key = ("test", "demo", 1)
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-        llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
-            {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
-            {"op": aerospike.OPERATOR_READ, "bin": "name"},
-        ]
-
-        try:
-            key, _, _ = client1.operate_ordered(key, llist)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
 
     def test_neg_operate_ordered_prepend_set_to_aerospike_null(self):
         """

@@ -26,20 +26,6 @@ class TestExistsMany:
         assert isinstance(records, list)
         assert len(records) == rec_length
 
-    def test_pos_exists_many_with_proper_parameters_without_connection(self, put_data):
-        self.keys = []
-        rec_length = 5
-        for i in range(rec_length):
-            key = ("test", "demo", i)
-            record = {"name": "name%s" % (str(i)), "age": i}
-            put_data(self.as_connection, key, record)
-            self.keys.append(key)
-        records = self.as_connection.exists_many(self.keys, {"total_timeout": 1200})
-
-        assert isinstance(records, list)
-        assert len(records) == rec_length
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4])
-
     def test_pos_exists_many_with_none_policy(self, put_data):
         self.keys = []
         rec_length = 5

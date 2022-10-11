@@ -53,7 +53,6 @@ from aerospike import exception as e
 # aerospike.OP_MAP_GET_BY_RANK_RANGE
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestOperate(object):
     def setup_class(cls):
         """
@@ -525,25 +524,6 @@ class TestOperate(object):
         (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {"my_age": 5, "age": 1, "name": "name1"}
-
-    def test_pos_operate_with_correct_paramters_without_connection(self):
-        """
-        Invoke operate() with correct parameters without connection
-        """
-        key = ("test", "demo", 1)
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-        llist = [
-            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
-            {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
-            {"op": aerospike.OPERATOR_READ, "bin": "name"},
-        ]
-
-        try:
-            key, _, _ = client1.operate(key, llist)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
 
     def test_pos_operate_write_set_to_aerospike_null(self):
         """

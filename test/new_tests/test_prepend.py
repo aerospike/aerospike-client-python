@@ -5,8 +5,8 @@ import aerospike
 from aerospike import exception as e
 
 
-@pytest.mark.usefixtures("connection_config")
-class TestPrepend:
+class TestPrepend():
+
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         """
@@ -478,17 +478,3 @@ class TestPrepend:
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
-
-    def test_neg_prepend_with_correct_parameters_without_connection(self):
-        """
-        Invoke prepend() with correct parameters without connection
-        """
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-        key = ("test", "demo", 1)
-
-        try:
-            client1.prepend(key, "name", "str")
-
-        except e.ClusterError as exception:
-            assert exception.code == 11

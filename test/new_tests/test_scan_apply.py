@@ -20,7 +20,6 @@ def wait_for_job_completion(as_connection, job_id):
         time.sleep(0.1)
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestScanApply(object):
     def setup_class(cls):
         cls.udf_to_load = "bin_lua.lua"
@@ -337,16 +336,6 @@ class TestScanApply(object):
 
         err_code = err_info.value.code
         assert err_code is AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    def test_scan_apply_with_correct_parameters_without_connection(self):
-        """
-        Invoke scan_apply() with correct parameters without connection
-        """
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        response = client1.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
-        assert response is not None
 
     def test_scan_apply_with_incorrect_policy(self):
         """

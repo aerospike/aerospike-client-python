@@ -57,7 +57,6 @@ ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestQuery(TestBaseClass):
     def setup_class(cls):
         client = TestBaseClass.get_new_connection()
@@ -958,22 +957,6 @@ class TestQuery(TestBaseClass):
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
-
-    def test_query_with_correct_parameters_without_connection(self):
-        """
-        Invoke query() with correct arguments without connection
-        """
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        query = client1.query("test", "demo")
-        query.select("name", "test_age")
-        query.where(p.equals("test_age", 1))
-
-        def callback(input_tuple):
-            pass
-
-        query.foreach(callback)
 
     @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_no_args(self):

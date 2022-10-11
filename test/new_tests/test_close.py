@@ -14,7 +14,6 @@ except:
     sys.exit(1)
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestClose():
 
 class TestClose:
@@ -27,30 +26,14 @@ class TestClose:
 
     def test_pos_close(self):
         """
-            Client call itself establishes connection.
-            Connect/Close are deprecated and no-op to client
             Invoke close() after positive connect
         """
         self.client = TestBaseClass.get_new_connection()
         self.closeobject = self.client.close()
         assert self.closeobject is None
 
-    def test_pos_close_without_connection(self):
-        """
-        Invoke close() without connection
-        """
-        config = self.connection_config.copy()
-        self.client = aerospike.client(config)
-
-        try:
-            self.closeobject = self.client.close()
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
-
     def test_neg_close(self):
         """
-            Connect/Close are deprecated and no-op to client
             Invoke close() after negative connect
         """
         config = {"hosts": [("127.0.0.1", 2000)]}
@@ -63,8 +46,9 @@ class TestClose:
 
     def test_close_twice_in_a_row(self):
         """
-            Connect/Close are deprecated and no-op to client
-        """
+         Client call itself establishes connection.
+         Connect/Close are deprecated and it is no-op to client
+         """
         config = TestBaseClass.get_connection_config()
         if TestClose.user is None and TestClose.password is None:
             self.client = aerospike.client(config).connect()

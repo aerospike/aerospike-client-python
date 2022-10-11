@@ -8,7 +8,6 @@ from aerospike import exception as e
 import aerospike
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestIncrement(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -338,17 +337,8 @@ class TestIncrement(object):
 
         assert bins == {"age": 11, "name": "name1"}
 
-    def test_increment_with_correct_parameters_without_connection(self):
-        """
-        Invoke increment() with correct parameters without connection
-        """
-        key = ("test", "demo", 1)
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        assert 0 == client1.increment(key, "age", 5)
-
-    @pytest.mark.skip(reason="This raises a system error." + " Something else should be raised")
+    @pytest.mark.skip(reason="This raises a system error." +
+                             " Something else should be raised")
     def test_increment_with_integer_greaterthan_maxsize(self):
         """
         Invoke increment() with integer greater then(2^63 - 1)

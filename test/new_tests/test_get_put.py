@@ -726,75 +726,30 @@ class TestGetPut:
         assert {"name": "John"} == bins
         self.as_connection.remove(key)
 
-    def test_put_with_string_record_without_connection(self):
+    @pytest.mark.parametrize("key, record, meta, policy, ex_code, ex_msg", [
+        (('test', 'demo', 1), {'name': 'john'},
+            {'gen': "wrong", 'ttl': 25000}, {'total_timeout': 1000},  # Gen as string
+            -2, "Generation should be an int or long"),
+        (('test', 'demo', 1), {'name': 'john'},
+            {'gen': 3, 'ttl': "25000"}, {'total_timeout': 1000},      # ttl as string
+            -2, "TTL should be an int or long"),
+        (('test', 'demo', 1), {'name': 'john'},
+            {'gen': 3, 'ttl': 25000}, {'total_timeout': "1000"},      # Timeout as string
+            -2, "timeout is invalid"),
+        (('test', 'demo', 1), {'name': 'john'},  # Policy as string
+            {'gen': 3, 'ttl': 25000}, "Policy",
+            -2, "policy must be a dict"),
+        (('test', 'demo', 1), {'i': 13},  # Meta as string
+            "OK", {'total_timeout': 1000},
+            -2, "meta must be a dict"),
+        (('test', 'demo', 1), {'i': 13},  # Meta as string
+            1234, {'total_timeout': 1000},
+            -2, "meta must be a dict"),
+    ])
+    def test_neg_put_with_invalid_metadata(
+            self, key, record, meta, policy, ex_code, ex_msg, put_data):
         """
-        Invoke put() for a record with string data without connection
-        """
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        key = ("test", "demo", 1)
-        bins = {"name": "John"}
-
-        assert 0 == client1.put(key, bins)
-        self.as_connection.remove(key)
-
-    @pytest.mark.parametrize(
-        "key, record, meta, policy, ex_code, ex_msg",
-        [
-            (
-                ("test", "demo", 1),
-                {"name": "john"},
-                {"gen": "wrong", "ttl": 25000},
-                {"total_timeout": 1000},  # Gen as string
-                -2,
-                "Generation should be an int or long",
-            ),
-            (
-                ("test", "demo", 1),
-                {"name": "john"},
-                {"gen": 3, "ttl": "25000"},
-                {"total_timeout": 1000},  # ttl as string
-                -2,
-                "TTL should be an int or long",
-            ),
-            (
-                ("test", "demo", 1),
-                {"name": "john"},
-                {"gen": 3, "ttl": 25000},
-                {"total_timeout": "1000"},  # Timeout as string
-                -2,
-                "timeout is invalid",
-            ),
-            (
-                ("test", "demo", 1),
-                {"name": "john"},  # Policy as string
-                {"gen": 3, "ttl": 25000},
-                "Policy",
-                -2,
-                "policy must be a dict",
-            ),
-            (
-                ("test", "demo", 1),
-                {"i": 13},  # Meta as string
-                "OK",
-                {"total_timeout": 1000},
-                -2,
-                "meta must be a dict",
-            ),
-            (
-                ("test", "demo", 1),
-                {"i": 13},  # Meta as string
-                1234,
-                {"total_timeout": 1000},
-                -2,
-                "meta must be a dict",
-            ),
-        ],
-    )
-    def test_neg_put_with_invalid_metadata(self, key, record, meta, policy, ex_code, ex_msg, put_data):
-        """
-        Invoke put() for a record with generation as string
+            Invoke put() for a record with generation as string
         """
         with pytest.raises(e.ParamError):
             put_data(self.as_connection, key, record, meta, policy)

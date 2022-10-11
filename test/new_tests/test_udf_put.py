@@ -10,7 +10,6 @@ import aerospike
 
 
 @pytest.mark.usefixtures("as_connection")
-@pytest.mark.usefixtures("connection_config")
 class TestUdfPut(TestBaseClass):
     def setup_class(cls):
         cls.udf_name = "example.lua"
@@ -123,18 +122,6 @@ class TestUdfPut(TestBaseClass):
         udf_type = 0
         with pytest.raises(e.ParamError):
             self.as_connection.udf_put(filename, udf_type, policy)
-
-    def test_udf_put_with_proper_parameters_without_connection(self):
-
-        policy = {}
-        filename = self.udf_name
-        udf_type = 0
-
-        config = self.connection_config.copy()
-
-        client1 = aerospike.client(config)
-
-        client1.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_invalid_timeout_policy_value(self):
         """

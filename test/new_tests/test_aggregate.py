@@ -261,29 +261,6 @@ class TestAggregate(object):
         except e.ClientError as exception:
             assert exception.code == -1
 
-    def test_aggregate_with_correct_parameters_without_connection(self):
-        """
-        Invoke aggregate() with correct arguments without connection
-        """
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        try:
-            query = client1.query("test", "demo")
-            query.select("name", "test_age")
-            query.where(p.between("test_age", 1, 5))
-            query.apply("stream_example", "count")
-
-            records = []
-
-            def user_callback(value):
-                records.append(value)
-
-            query.foreach(user_callback)
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
-
     def test_neg_aggregate_with_extra_parameter(self):
         """
         Invoke aggregate() with extra parameter

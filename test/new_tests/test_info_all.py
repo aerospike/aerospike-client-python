@@ -84,15 +84,6 @@ class TestInfo(object):
         with pytest.raises(TypeError):
             self.as_connection.info_all()
 
-    def test_info_all_without_connection(self):
-        """
-        Test info positive for sets without connection
-        """
-        client1 = aerospike.client(self.connection_config)
-
-        nodes_info = client1.info_all("sets")
-        assert nodes_info is not None
-
     def test_info_all_with_invalid_policy_type(self):
         """
         Test that sending a non dict/None as policy raises an error

@@ -7,7 +7,6 @@ from .index_helpers import ensure_dropped_index
 import aerospike
 
 
-@pytest.mark.usefixtures("connection_config")
 class TestListIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -342,22 +341,6 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert retobj == 0
         self.as_connection.index_remove("test", "test_numeric_list_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_numeric_list_index")
-
-    def test_neg_listindex_with_correct_parameters_no_connection(self):
-        """
-        Invoke index_list_create() with correct arguments no connection
-        """
-        policy = {}
-        config = self.connection_config.copy()
-        client1 = aerospike.client(config)
-
-        retobj = client1.index_list_create(
-            "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
-        )
-
-        assert retobj == 0
-        self.as_connection.index_remove("test", "test_string_list_index", policy)
-        ensure_dropped_index(self.as_connection, "test", "test_string_list_index")
 
     def test_neg_listindex_with_no_paramters(self):
         """

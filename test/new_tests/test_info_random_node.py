@@ -130,14 +130,6 @@ class TestInfoRandomNodeIncorrectUsage(object):
         with pytest.raises(e.ClientError):
             self.as_connection.info_random_node("abcd")
 
-    def test_info_random_node_positive_without_connection(self):
-        """
-        Test info with correct arguments without connection.
-        """
-        client1 = aerospike.client(self.connection_config)
-        response = client1.info_random_node("bins")
-        assert response is not None
-
     def test_info_random_node_positive_with_extra_parameters(self):
         """
         Test info with extra parameters.
