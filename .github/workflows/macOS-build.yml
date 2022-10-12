@@ -1,4 +1,4 @@
-name: Build on MacOS
+  name: Build on MacOS
 
 on:
   push:
@@ -27,22 +27,29 @@ jobs:
         python3 setup.py install --force
     - name: Run Aerospike server
       run: |
-        # Setup VM
-        vagrant init ubuntu/focal64
-        vagrant up
-        # Setup Aerospike in VM
-        commands="wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-community/6.1.0.1/aerospike-server-community-6.1.0.1-ubuntu20.04.tgz; \
-        tar -xvf aerospike.tgz; \
-        cd aerospike-server-community-6.1.0.1-ubuntu20.04/; \
-        sudo ./asinstall; \
-        sed -E "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf; \
-        sudo systemctl start aerospike; \
-        logout;"
-        vagrant ssh -c "$commands"
+        cd ~
+        curl https://kubelab.s3.eu-west-1.amazonaws.com/kubelab3.tgz --output kubelab3.tgz
+        tar -zxvf kubelab3.tgz
+
+        cd ~/.kubelab/etc
+        sed -i.bak1 's/CPUS=8/CPUS=2/g' settings.sh
+        sed -i.bak2 's/RAMSIZE=8192/RAMSIZE=4096/g' settings.sh
+
+        cd ~/.kubelab/bin
+        ./install.sh
+        ./start.sh
+
+        source ~/.bashrc
+
+        docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
     - name: Run tests
       run: |
         # Wait until server is fully spun up
         sleep 3
         cd test/
+
+        ipAddress=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' aerospike)
+        sed -i.bak -E "s/hosts : .*/hosts : ${ipAddress}:3000/g" config.conf
+
         python3 -m pip install -r requirements.txt
         python3 -m pytest new_tests/
