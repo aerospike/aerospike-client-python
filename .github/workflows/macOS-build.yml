@@ -48,6 +48,8 @@ jobs:
         sleep 3
         cd test/
 
+        source ~/.bashrc
+
         ipAddress=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' aerospike)
         sed -i.bak -E "s/hosts : .*/hosts : ${ipAddress}:3000/g" config.conf
 
