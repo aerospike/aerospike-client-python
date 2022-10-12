@@ -17,7 +17,7 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.9"
-    - name: Build
+    - name: Build client, install aerospike, run tests
       run: |
         export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
         export CPATH="/usr/local/opt/openssl@1.1/include/"
@@ -25,8 +25,10 @@ jobs:
 
         python3 setup.py build --force
         python3 setup.py install --force
-    - name: Run Aerospike server
-      run: |
+
+        # Save repo directory
+        pushd .
+
         cd ~
         curl https://kubelab.s3.eu-west-1.amazonaws.com/kubelab3.tgz --output kubelab3.tgz
         tar -zxvf kubelab3.tgz
@@ -42,14 +44,12 @@ jobs:
         source ~/.bashrc
 
         docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
-    - name: Run tests
-      run: |
+
+        popd
+
         # Wait until server is fully spun up
         sleep 3
         cd test/
-
-        source ~/.bashrc
-
         ipAddress=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' aerospike)
         sed -i.bak -E "s/hosts : .*/hosts : ${ipAddress}:3000/g" config.conf
 
