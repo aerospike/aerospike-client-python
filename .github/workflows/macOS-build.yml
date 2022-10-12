@@ -41,8 +41,7 @@ jobs:
         ./install.sh
         ./start.sh
 
-        source ~/.bashrc
-
+        export DOCKER_HOST=192.168.105.2
         docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
 
         popd
