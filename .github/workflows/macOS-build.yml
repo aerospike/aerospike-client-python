@@ -57,6 +57,7 @@ jobs:
 
         # Configure server for tests
         docker exec aerospike sed -E -i'.bak' "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+        docker exec service aerospike restart
 
         # Configure client to connect to server
         cd test/
