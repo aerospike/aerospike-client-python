@@ -63,5 +63,7 @@ jobs:
         ipAddress=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' aerospike)
         sed -i.bak -E "s/hosts : .*/hosts : ${ipAddress}:3000/g" config.conf
 
-        python3 -m pip install -r requirements.txt
-        python3 -m pytest new_tests/
+        ping $ipAddress
+
+        # python3 -m pip install -r requirements.txt
+        # python3 -m pytest new_tests/
