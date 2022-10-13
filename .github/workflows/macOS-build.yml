@@ -49,7 +49,7 @@ jobs:
         sleep 3
 
         export DOCKER_HOST=192.168.105.2
-        docker exec -it aerospike sed -E -i'.bak' "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+        docker exec aerospike sed -E -i'.bak' "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
 
         cd test/
         ipAddress=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' aerospike)
