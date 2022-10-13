@@ -17,13 +17,13 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.9"
-    - name: Cache kubelab
+    - name: Get cached kubelab
       id: kubelab-cache
       uses: actions/cache@v3
       with:
         path: ~/kubelab3.tgz
         key: kubelab-key
-    - name: Download kubelab
+    - name: Download kubelab to run docker
       if: steps.kubelab-cache.outputs.cache-hit != 'true'
       run: |
         cd ~
@@ -39,9 +39,6 @@ jobs:
         cd ~/.kubelab/bin
         ./install.sh
         ./start.sh
-
-        export DOCKER_HOST=192.168.105.2
-        docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
     - name: Build and install client
       run: |
         export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
@@ -52,12 +49,16 @@ jobs:
         python3 setup.py install --force
     - name: Run tests
       run: |
+        export DOCKER_HOST=192.168.105.2
+        docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
+
         # Wait until server is fully spun up
         sleep 3
 
-        export DOCKER_HOST=192.168.105.2
+        # Configure server for tests
         docker exec aerospike sed -E -i'.bak' "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
 
+        # Configure client to connect to server
         cd test/
         ipAddress=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' aerospike)
         sed -i.bak -E "s/hosts : .*/hosts : ${ipAddress}:3000/g" config.conf
