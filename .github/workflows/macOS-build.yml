@@ -56,8 +56,7 @@ jobs:
         sleep 3
 
         # Configure server for tests
-        docker exec aerospike sed -E -i'.bak' "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
-        docker exec aerospike service aerospike restart
+        asinfo -v "set-config:context=namespace;id=test;allow-ttl-without-nsup=true"
 
         # Configure client to connect to server
         cd test/
