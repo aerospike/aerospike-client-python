@@ -48,7 +48,7 @@ jobs:
         # Wait until server is fully spun up
         sleep 3
 
-        sed -Ei "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+        sed -E -i'.bak' "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
 
         cd test/
         export DOCKER_HOST=192.168.105.2
