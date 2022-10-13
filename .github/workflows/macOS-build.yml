@@ -17,21 +17,21 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.9"
-    - name: Build and install client
-      run: |
-        export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
-        export CPATH="/usr/local/opt/openssl@1.1/include/"
-        export STATIC_SSL=1
-
-        python3 setup.py build --force
-        python3 setup.py install --force
-
-    - name: Install kubelab for docker
+    - name: Cache kubelab
+      id: kubelab-cache
+      uses: actions/cache@v3
+      with:
+        path: ~/kubelab3.tgz
+        key: kubelab-key
+    - name: Download kubelab
+      if: steps.kubelab-cache.outputs.cache-hit != 'true'
       run: |
         cd ~
         curl https://kubelab.s3.eu-west-1.amazonaws.com/kubelab3.tgz --output kubelab3.tgz
+    - name: Install kubelab
+      run: |
+        cd ~
         tar -zxvf kubelab3.tgz
-
         cd ~/.kubelab/etc
         sed -i.bak1 's/CPUS=8/CPUS=2/g' settings.sh
         sed -i.bak2 's/RAMSIZE=8192/RAMSIZE=4096/g' settings.sh
@@ -42,7 +42,14 @@ jobs:
 
         export DOCKER_HOST=192.168.105.2
         docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
+    - name: Build and install client
+      run: |
+        export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
+        export CPATH="/usr/local/opt/openssl@1.1/include/"
+        export STATIC_SSL=1
 
+        python3 setup.py build --force
+        python3 setup.py install --force
     - name: Run tests
       run: |
         # Wait until server is fully spun up
