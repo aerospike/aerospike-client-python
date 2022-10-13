@@ -56,7 +56,7 @@ jobs:
         sleep 3
 
         # Configure server for tests
-        asinfo -v "set-config:context=namespace;id=test;allow-ttl-without-nsup=true"
+        docker exec aerospike asinfo -v "set-config:context=namespace;id=test;allow-ttl-without-nsup=true"
 
         # Configure client to connect to server
         cd test/
