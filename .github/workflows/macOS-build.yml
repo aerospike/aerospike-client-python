@@ -33,7 +33,7 @@ jobs:
         cd ~
         tar -zxvf kubelab3.tgz
         cd ~/.kubelab/etc
-        sed -i.bak1 's/CPUS=8/CPUS=4/g' settings.sh
+        sed -i.bak1 's/CPUS=8/CPUS=3/g' settings.sh
         # sed -i.bak2 's/RAMSIZE=8192/RAMSIZE=4096/g' settings.sh
 
         cd ~/.kubelab/bin
