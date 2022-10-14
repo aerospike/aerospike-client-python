@@ -80,7 +80,11 @@ The dependencies can be installed through the macOS package manager [Homebrew](h
     # substitute the paths to your OpenSSL 1.1 library
     export SSL_LIB_PATH=/usr/local/Cellar/openssl@1.1/1.1.1l/lib/
     export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
-    python setup.py build --force
+
+    pip install build
+    python3 -m build
+
+<!-- TODO: update all build cmds -->
 
 ### Troubleshooting macOS
 
@@ -106,7 +110,7 @@ MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py install --force
 
 Once the client is built:
 
-    python setup.py install --force
+    pip install .
 
 ### Troubleshooting macOS
 
