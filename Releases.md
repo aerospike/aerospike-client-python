@@ -7,8 +7,28 @@ date: 10/14/2022
 
 ## Deprecations​
 
-    - client().connect() has been deprecated and it is an no-op. Client call itself establishes the connection object.
-    - client().close() has been deprecated and it is an no-op. Client destroy unwinds the conection.
+    - client().connect() has been deprecated and it is a no-op. Client call itself establishes the connection object.
+    - client().close() has been deprecated and it is a no-op. Client destroy unwinds the conection.
+   - If user authentication method is used, then make sure to add user/password information into config dictionary for client call to succeed
+
+ex) config = {
+        'hosts': hosts,
+        'policies': {'auth_mode': aerospike.AUTH_INTERNAL},
+    }
+    client = aerospike.client(config)
+    client.connect(user, password)
+
+    the above is changed to:
+
+config = {
+        'hosts': hosts,
+        'policies': {'auth_mode': aerospike.AUTH_INTERNAL},
+        'user': user,
+        'password': password
+    }
+    client = aerospike.client(config)
+    #following is no-op
+    client.connect(user, password)
 
 
 # Version 7.1.1
