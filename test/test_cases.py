@@ -117,7 +117,7 @@ def gccallback(phase, info):
 
 
 def connect_to_cluster(aeros):
-    client = aeros.connect("generic_client", "generic_client")
+    client = aeros.connect('admin', 'admin')
     client.close()
     # gc.collect()
 
@@ -1137,12 +1137,41 @@ def test_send_key(aeros, namespace, setname):
 
     client.close()
 
+def test_create_user(aeros, namespace, setname):
+    policy = {"timeout": 1000}
+    user = "generic_client"
+    password = "generic_client"
+    #roles = ["data-admin", "user-admin", "sys-admin", "read-write", "read-write-udf", "quota-4k-2k-role", "sindex-admin", "truncate"]
+    roles = ["data-admin", "user-admin", "sys-admin", "read-write", "read-write-udf", "sindex-admin", "truncate"]
+
+    client = aeros.connect('admin', 'admin')
+    
+    usr_sys_admin_privs = [
+            {"code": aerospike.PRIV_USER_ADMIN},
+            {"code": aerospike.PRIV_SYS_ADMIN}]
+    try:
+        aeros.admin_drop_role("quota-4k-2k-role")
+        time.sleep(2)
+    except:
+        pass
+    # aeros.admin_create_role(
+    #        "quota-4k-2k-role", usr_sys_admin_privs, read_quota=40000, write_quota=20000)
+    # time.sleep(1)
+
+    try:
+       aeros.admin_drop_user(user, policy)
+       time.sleep(2)
+    except:
+       pass
+
+    status = aeros.admin_create_user(user, password, roles, policy)
 
 def get_aerospike():
     # tls_name = 'bob-cluster-a'
-    tls_name = "172.17.0.3"
+    tls_name = '172.31.1.163'
 
-    endpoints = [("172.17.0.3", 3000)]
+    endpoints = [
+        ('172.31.1.163', 3000)]
 
     hosts = [(address[0], address[1], tls_name) for address in endpoints]
 
@@ -1158,8 +1187,8 @@ def get_aerospike():
         #     'keyfile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Client-Chainless/key.pem",  # noqa: E501
         #     'for_login_only': True,
         # }
-        "user": "generic_client",
-        "password": "generic_client",
+        'user':"admin",
+        'password':"admin"
     }
     # Optionally set policies for various method types
     write_policies = {"total_timeout": 2000, "max_retries": 0, "key": aerospike.POLICY_KEY_SEND}
@@ -1177,13 +1206,13 @@ def run():
 
     aeros = get_aerospike()
 
-    config = {"hosts": [("bad_addr", 3000)]}
-    bad_client = aerospike.client(config)
+    # config = {"hosts": [("bad_addr", 3000)]}
+    # bad_client = aerospike.client(config)
 
     # Connect once to establish a memory usage baseline.
     connect_to_cluster(aeros)
-
-    test_memleak(aeros, "test", "demo")
+    test_create_user(aeros, "test", "demo")
+    # test_memleak(aeros, "test", "demo")
     # test_50levelcdt(aeros, "test", "demo")
     # test_sindex(aeros, "test", "demo")
     # test_send_key(aeros, "test", "demo")
