@@ -72,7 +72,7 @@ jobs:
         python3 -m build
     - name: Install client
       run: |
-        python setup.py install --force
+        pip install .
     - name: Run tests 
       run: |
         cd test
