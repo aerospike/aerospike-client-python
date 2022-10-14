@@ -4,15 +4,14 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "aerospike"
-description="Aerospike Client Library for Python"
-readme="README.rst"
-authors=[
-    {name="Aerospike, Inc.", email="info@aerospike.com"}
+description = "Aerospike Client Library for Python"
+authors = [
+    {name = "Aerospike, Inc.", email = "info@aerospike.com"}
 ]
-urls={Homepage="https://aerospike.com"}
-license={text = "Apache Software License"}
-keywords=["aerospike", "nosql", "database"]
-classifiers=[
+readme = "README.rst"
+license = {text = "Apache Software License"}
+keywords = ["aerospike", "nosql", "database"]
+classifiers = [
     "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
@@ -25,6 +24,9 @@ classifiers=[
 ]
 dynamic = ["version"]
 
+[project.urls]
+"Homepage" = "https://aerospike.com"
+
 [tool.setuptools]
-zip-safe=false
-include-package-data=true
+zip-safe = false
+include-package-data = true
