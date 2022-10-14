@@ -213,31 +213,7 @@ class CClientClean(clean):
 
 
 setup(
-    name='aerospike',
     version=version.strip(),
-    description='Aerospike Client Library for Python',
-    long_description=long_description,
-    author='Aerospike, Inc.',
-    author_email='info@aerospike.com',
-    url='http://aerospike.com',
-    license='Apache Software License',
-    keywords=['aerospike', 'nosql', 'database'],
-    classifiers=[
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: POSIX :: Linux',
-        'Operating System :: MacOS :: MacOS X',
-        'Programming Language :: Python :: 3.6',
-        'Programming Language :: Python :: 3.7',
-        'Programming Language :: Python :: 3.8',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: Implementation :: CPython',
-        'Topic :: Database'
-    ],
-
-    # Package Data Files
-    zip_safe=False,
-    include_package_data=True,
-
     # Data files
     ext_modules=[
         Extension(
