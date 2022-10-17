@@ -24,21 +24,9 @@ jobs:
         export STATIC_SSL=1
         python3 setup.py build --force
         python3 setup.py install --force
-    - name: Run Aerospike server
+    - name: Run Aerospike server on Vagrant
       run: |
-        # Setup VM
-        vagrant init ubuntu/focal64
         vagrant up
-        # Setup Aerospike in VM
-        vagrant ssh
-        wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-community/6.1.0.1/aerospike-server-community-6.1.0.1-ubuntu20.04.tgz
-        tar -xvf aerospike.tgz
-        cd aerospike-server-community-6.1.0.1-ubuntu20.04/
-        sudo ./asinstall
-        sed -Ei "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
-        sudo systemctl start aerospike
-        logout
-        # Wait until server is fully spun up
         sleep 3
     - name: Run tests
       run: |
