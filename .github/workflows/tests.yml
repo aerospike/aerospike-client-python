@@ -66,14 +66,23 @@ jobs:
         cd doc/
         sphinx-build -b spelling . spelling -W --keep-going
         sphinx-build -b html . htmldir -W
+    # Cache client build to save time if the source code didn't change
+    - name: Cache build
+      id: cache-build
+      uses: actions/cache@v3
+      with:
+        path: build/
+        # Only build if these files change
+        key: ${{ runner.os }}-${{ hashFiles(aerospike_helpers/**, aerospike-client-c/**, src/**) }}
     - name: Build client
+      if: steps.cache-build.outputs.cache-hit != 'true'
       run: |
         python3 -m pip install build
         python3 -m build
     - name: Install client
       run: |
         pip install .
-    - name: Run tests 
+    - name: Run tests
       run: |
         cd test
         python -m pytest ./new_tests
