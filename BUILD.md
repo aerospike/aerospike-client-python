@@ -91,20 +91,13 @@ The dependencies can be installed through the macOS package manager [Homebrew](h
 In some versions of macOS, Python 2.7 is installed as ``python`` with
 ``pip`` as its associated package manager, and Python 3 is installed as ``python3``
 with ``pip3`` as the associated package manager. Make sure to use the ones that
-map to Python 3, such as `python3 setup.py build --force`.
+map to Python 3.
 
 Building on macOS versions >= 10.15 , may cause a few additional errors to be generated. If the build command fails with an
 error similar to: `error: could not create '/usr/local/aerospike/lua': Permission denied` there are a couple of options:
 
 - Rerun the build command with the additional command line flags `--user --prefix=` *Note that there are no charcters after the '='.* This will cause the library to only be installed for the current user, and store the library's data files in a user specific location.
 - rerun the command with sudo.
-
-If an error similar to `ld: targeted OS version does not support use of thread local variables` appears, it can be fixed by temporarily setting the `MACOSX_DEPLOYMENT_TARGET` environment variable to `'10.12'` e.g.
-
-```sh
-MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py build --force
-MACOSX_DEPLOYMENT_TARGET=10.12 python setup.py install --force
-```
 
 ## Install
 
