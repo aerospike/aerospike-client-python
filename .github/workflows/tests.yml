@@ -75,4 +75,5 @@ jobs:
     - name: Run tests 
       run: |
         cd test
-        python -m pytest ./new_tests
+        # Exit immediately if a test fails
+        python -m pytest -x ./new_tests
