@@ -17,53 +17,31 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: "3.9"
-    - name: Get cached kubelab
-      id: kubelab-cache
-      uses: actions/cache@v3
-      with:
-        path: ~/kubelab3.tgz
-        key: kubelab-key
-    - name: Download kubelab to run docker
-      if: steps.kubelab-cache.outputs.cache-hit != 'true'
-      run: |
-        cd ~
-        curl https://kubelab.s3.eu-west-1.amazonaws.com/kubelab3.tgz --output kubelab3.tgz
-    - name: Install kubelab
-      run: |
-        cd ~
-        tar -zxvf kubelab3.tgz
-        cd ~/.kubelab/etc
-        sed -i.bak1 's/CPUS=8/CPUS=3/g' settings.sh
-        # sed -i.bak2 's/RAMSIZE=8192/RAMSIZE=4096/g' settings.sh
-
-        cd ~/.kubelab/bin
-        ./install.sh
-        ./start.sh
-    - name: Build and install client
+    - name: Build
       run: |
         export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
         export CPATH="/usr/local/opt/openssl@1.1/include/"
         export STATIC_SSL=1
-
         python3 setup.py build --force
         python3 setup.py install --force
-    - name: Run tests
+    - name: Run Aerospike server
       run: |
-        export DOCKER_HOST=192.168.105.2
-        docker run --name aerospike -d -p 3000:3000 aerospike/aerospike-server
-
+        # Setup VM
+        vagrant init ubuntu/focal64
+        vagrant up
+        # Setup Aerospike in VM
+        vagrant ssh
+        wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-community/6.1.0.1/aerospike-server-community-6.1.0.1-ubuntu20.04.tgz
+        tar -xvf aerospike.tgz
+        cd aerospike-server-community-6.1.0.1-ubuntu20.04/
+        sudo ./asinstall
+        sed -Ei "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+        sudo systemctl start aerospike
+        logout
         # Wait until server is fully spun up
         sleep 3
-
-        # Configure server for tests
-        docker exec aerospike asinfo -v "set-config:context=namespace;id=test;allow-ttl-without-nsup=true"
-
-        # Configure client to connect to server
+    - name: Run tests
+      run: |
         cd test/
-        ipAddress=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' aerospike)
-        sed -i.bak -E "s/hosts : .*/hosts : ${ipAddress}:3000/g" config.conf
-
-        ping $ipAddress
-
-        # python3 -m pip install -r requirements.txt
-        # python3 -m pytest new_tests/
+        python3 -m pip install -r requirements.txt
+        python3 -m pytest new_tests/
