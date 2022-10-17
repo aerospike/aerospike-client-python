@@ -11,6 +11,7 @@ except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
+
 @pytest.mark.usefixtures("as_connection")
 class TestGetNodeNames(object):
     """
@@ -40,7 +41,7 @@ class TestGetNodeNames(object):
         Test that an attempt to call get_node_names before a connection
         is established will raise the expected error
         """
-        config = {'hosts': [('127.0.0.1', 3000)]}
+        config = {"hosts": [("127.0.0.1", 3000)]}
         unconnected_client = aerospike.client(config)
 
         try:
@@ -48,4 +49,4 @@ class TestGetNodeNames(object):
 
         except e.ClusterError as exception:
             assert exception.code == 11
-            assert exception.msg == 'No connection to aerospike cluster.'
+            assert exception.msg == "No connection to aerospike cluster."

@@ -14,15 +14,12 @@ except:
 
 
 class TestListExtend(object):
-
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         keys = []
         for i in range(5):
-            key = ('test', 'demo', i)
-            rec = {'name': 'name%s' %
-                   (str(i)), 'contact_no': [i, i + 1],
-                   'city': ['Pune', 'Dehli']}
+            key = ("test", "demo", i)
+            rec = {"name": "name%s" % (str(i)), "contact_no": [i, i + 1], "city": ["Pune", "Dehli"]}
             as_connection.put(key, rec)
             keys.append(key)
 
@@ -35,31 +32,33 @@ class TestListExtend(object):
                     as_connection.remove(key)
                 except e.RecordNotFound:
                     pass
+
         request.addfinalizer(teardown)
 
-    @pytest.mark.parametrize("key, field, extend_value, expected", [
-        (('test', 'demo', 1),       # extend the list with integer values
-            "contact_no",
-            [12, 56, 89],
-            {'contact_no': [1, 2, 12, 56, 89], 'name': 'name1',
-             'city': ['Pune', 'Dehli']}),
-        (('test', 'demo', 2),                      # with float values
-            "contact_no",
-            [85.12, 85.46],
-            {'contact_no': [2, 3, 85.12, 85.46], 'city': ['Pune', 'Dehli'],
-             'name': 'name2'}),
-        (('test', 'demo', 1),                       # all values
-            "contact_no",
-            [False, [789, 45], 88, 15.2, 'aa'],
-            {'contact_no': [1, 2, 0, [789, 45], 88, 15.2, 'aa'],
-             'city': ['Pune', 'Dehli'], 'name': 'name1'}),
-
-    ])
-    def test_pos_list_extend_with_list_of_values(self,
-                                                 key,
-                                                 field,
-                                                 extend_value,
-                                                 expected):
+    @pytest.mark.parametrize(
+        "key, field, extend_value, expected",
+        [
+            (
+                ("test", "demo", 1),  # extend the list with integer values
+                "contact_no",
+                [12, 56, 89],
+                {"contact_no": [1, 2, 12, 56, 89], "name": "name1", "city": ["Pune", "Dehli"]},
+            ),
+            (
+                ("test", "demo", 2),  # with float values
+                "contact_no",
+                [85.12, 85.46],
+                {"contact_no": [2, 3, 85.12, 85.46], "city": ["Pune", "Dehli"], "name": "name2"},
+            ),
+            (
+                ("test", "demo", 1),  # all values
+                "contact_no",
+                [False, [789, 45], 88, 15.2, "aa"],
+                {"contact_no": [1, 2, 0, [789, 45], 88, 15.2, "aa"], "city": ["Pune", "Dehli"], "name": "name1"},
+            ),
+        ],
+    )
+    def test_pos_list_extend_with_list_of_values(self, key, field, extend_value, expected):
         """
         Invoke list_extend() extend the list with values
         """
@@ -72,41 +71,36 @@ class TestListExtend(object):
         Invoke list_extend() extend the list with integer values and
         policy is passed
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
 
         policy = {
-            'timeout': 1000,
-            'retry': aerospike.POLICY_RETRY_ONCE,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+            "timeout": 1000,
+            "retry": aerospike.POLICY_RETRY_ONCE,
+            "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
 
-        self.as_connection.list_extend(
-            key, "contact_no", [12, 56, 89], {}, policy)
+        self.as_connection.list_extend(key, "contact_no", [12, 56, 89], {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
 
-        assert bins == {
-            'contact_no': [1, 2, 12, 56, 89], 'name': 'name1',
-            'city': ['Pune', 'Dehli']}
+        assert bins == {"contact_no": [1, 2, 12, 56, 89], "name": "name1", "city": ["Pune", "Dehli"]}
 
     def test_pos_list_extend_with_nonexistent_key(self):
         """
         Invoke list_extend() with non-existent key
         """
-        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        charSet = "abcdefghijklmnopqrstuvwxyz1234567890"
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused:
-                                           random.choice(charSet),
-                                           range(length))) + ".com")
+        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
         status = self.as_connection.list_extend(key, "abc", [122, 789])
         assert status == 0
 
         (key, _, bins) = self.as_connection.get(key)
 
         assert status == 0
-        assert bins == {'abc': [122, 789]}
+        assert bins == {"abc": [122, 789]}
 
         self.as_connection.remove(key)
 
@@ -114,21 +108,19 @@ class TestListExtend(object):
         """
         Invoke list_extend() with non-existent bin
         """
-        key = ('test', 'demo', 1)
-        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        key = ("test", "demo", 1)
+        charSet = "abcdefghijklmnopqrstuvwxyz1234567890"
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = ''.join(map(lambda unused:
-                          random.choice(charSet), range(length))) + ".com"
+        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
         status = self.as_connection.list_extend(key, bin, [585, 789, 45])
         assert status == 0
 
         (key, _, bins) = self.as_connection.get(key)
 
         assert status == 0
-        assert bins == {'contact_no': [1, 2], 'name': 'name1',
-                        'city': ['Pune', 'Dehli'], bin: [585, 789, 45]}
+        assert bins == {"contact_no": [1, 2], "name": "name1", "city": ["Pune", "Dehli"], bin: [585, 789, 45]}
 
     # Negative Tests
     def test_neg_list_extend_with_no_parameters(self):
@@ -137,20 +129,16 @@ class TestListExtend(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_extend()
-        assert "argument 'key' (pos 1)" in str(
-            typeError.value)
+        assert "argument 'key' (pos 1)" in str(typeError.value)
 
     def test_neg_list_extend_with_incorrect_policy(self):
         """
         Invoke list_extend() with incorrect policy
         """
-        key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 0.5
-        }
+        key = ("test", "demo", 1)
+        policy = {"timeout": 0.5}
         try:
-            self.as_connection.list_extend(
-                key, "contact_no", ["str"], {}, policy)
+            self.as_connection.list_extend(key, "contact_no", ["str"], {}, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -160,20 +148,18 @@ class TestListExtend(object):
         """
         Invoke list_extend() with extra parameter.
         """
-        key = ('test', 'demo', 1)
-        policy = {'timeout': 1000}
+        key = ("test", "demo", 1)
+        policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
-            self.as_connection.list_extend(
-                key, "contact_no", [999], {}, policy, "")
+            self.as_connection.list_extend(key, "contact_no", [999], {}, policy, "")
 
-        assert "list_extend() takes at most 5 arguments (6 given)" in str(
-            typeError.value)
+        assert "list_extend() takes at most 5 arguments (6 given)" in str(typeError.value)
 
     def test_neg_list_extend_policy_is_string(self):
         """
         Invoke list_extend() with policy is string
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         try:
             self.as_connection.list_extend(key, "contact_no", [85], {}, "")
 
@@ -196,7 +182,7 @@ class TestListExtend(object):
         """
         Invoke list_extend() with bin is none
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         try:
             self.as_connection.list_extend(key, None, ["str"])
 
@@ -208,7 +194,7 @@ class TestListExtend(object):
         """
         Invoke list_extend() with string is passed in place of list
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         try:
             self.as_connection.list_extend(key, "contact_no", "str")
 
@@ -220,7 +206,7 @@ class TestListExtend(object):
         """
         Invoke list_extend() with metadata input is of type integer
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         try:
             self.as_connection.list_extend(key, "contact_no", [85], 888)
 

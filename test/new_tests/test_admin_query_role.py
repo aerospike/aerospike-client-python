@@ -17,30 +17,27 @@ except:
 class TestQueryRole(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(),
-        reason="No user specified, may be not secured cluster.")
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+    )
 
     def setup_method(self, method):
         """
         Setup method
         """
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(config['user'], config['password'])
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
             self.client.admin_drop_role("usr-sys-admin")
             time.sleep(2)
         except:
             pass
-        usr_sys_admin_privs = [
-            {"code": aerospike.PRIV_USER_ADMIN},
-            {"code": aerospike.PRIV_SYS_ADMIN}]
+        usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
             time.sleep(2)
         except:
             pass
-        self.client.admin_create_role(
-            "usr-sys-admin-test", usr_sys_admin_privs)
+        self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
 
         self.delete_users = []
         time.sleep(1)
@@ -64,28 +61,24 @@ class TestQueryRole(TestBaseClass):
 
     def test_admin_query_role_positive(self):
         """
-            Query role positive
+        Query role positive
         """
         roles = self.client.admin_query_role("usr-sys-admin-test")
-        assert roles == [
-            {'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
+        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
     def test_admin_query_role_positive_with_policy(self):
         """
-            Query role positive policy
+        Query role positive policy
         """
-        roles = self.client.admin_query_role(
-            "usr-sys-admin-test", {'timeout': 1000})
-        assert roles == [
-            {'code': 0, 'ns': '', 'set': ''}, {'code': 1, 'ns': '', 'set': ''}]
+        roles = self.client.admin_query_role("usr-sys-admin-test", {"timeout": 1000})
+        assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
     def test_admin_query_role_incorrect_role_name(self):
         """
-            Incorrect role name
+        Incorrect role name
         """
         try:
-            self.client.admin_query_role(
-                "usr-sys-admin-test-non-existent", {'timeout': 1000})
+            self.client.admin_query_role("usr-sys-admin-test-non-existent", {"timeout": 1000})
 
         except e.InvalidRole as exception:
             assert exception.code == 70
@@ -93,10 +86,10 @@ class TestQueryRole(TestBaseClass):
 
     def test_admin_query_role_incorrect_role_type(self):
         """
-            Incorrect role type
+        Incorrect role type
         """
         try:
-            self.client.admin_query_role(None, {'timeout': 1000})
+            self.client.admin_query_role(None, {"timeout": 1000})
 
         except e.ParamError as exception:
             assert exception.code == -2

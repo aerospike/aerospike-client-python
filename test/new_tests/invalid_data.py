@@ -11,7 +11,7 @@ INVALID_KEYS = [
     ("test", [], 1),
     ("test", "demo", None),
     ("test", "demo", []),
-    ("test", "demo", {})
+    ("test", "demo", {}),
 ]
 
 INVALID_BINS = [

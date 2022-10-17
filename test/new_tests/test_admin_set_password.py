@@ -17,8 +17,8 @@ except:
 class TestSetPassword(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(),
-        reason="No user specified, may be not secured cluster.")
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+    )
 
     def setup_method(self, method):
         """
@@ -26,7 +26,7 @@ class TestSetPassword(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestSetPassword.Me = self
-        self.client = aerospike.client(config).connect(config['user'], config['password'])
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
             self.client.admin_drop_user("testsetpassworduser")
             time.sleep(2)
@@ -34,8 +34,7 @@ class TestSetPassword(TestBaseClass):
             pass
 
         try:
-            self.client.admin_create_user(
-                "testsetpassworduser", "aerospike", ["read"], {})
+            self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"], {})
         except e.UserExistsError:
             pass
 
@@ -59,8 +58,7 @@ class TestSetPassword(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_set_password()
 
-        assert "argument 'user' (pos 1)" in str(
-            typeError.value)
+        assert "argument 'user' (pos 1)" in str(typeError.value)
 
     def test_set_password_with_proper_parameters(self):
 
@@ -73,7 +71,7 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_invalid_timeout_policy_value(self):
 
-        policy = {'timeout': 0.1}
+        policy = {"timeout": 0.1}
         user = "testsetpassworduser"
         password = "newpassword"
 
@@ -86,7 +84,7 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 50}
+        policy = {"timeout": 50}
         user = "testsetpassworduser"
         password = "newpassword"
 

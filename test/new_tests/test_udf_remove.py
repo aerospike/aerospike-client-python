@@ -18,14 +18,13 @@ except ImportError:
 
 
 def is_greater_451(version_str):
-    '''
+    """
     Is the server version 4.5.1.0-pre or newer
-    '''
+    """
     return LooseVersion(version_str) >= LooseVersion("4.5.1")
 
 
 class TestUdfRemove(object):
-
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         """
@@ -41,10 +40,10 @@ class TestUdfRemove(object):
             process to complete
             """
             udf_name = TestUdfRemove.udf_name
-            udf_list = as_connection.udf_list({'timeout': 100})
+            udf_list = as_connection.udf_list({"timeout": 100})
 
             for udf in udf_list:
-                if udf['name'] == udf_name:
+                if udf["name"] == udf_name:
                     as_connection.udf_remove(udf_name)
                     wait_for_udf_removal(as_connection, udf_name)
                     break
@@ -55,7 +54,7 @@ class TestUdfRemove(object):
         """
         Setup class, sets the name of the example UDF used in the tests
         """
-        cls.udf_name = u'example.lua'
+        cls.udf_name = "example.lua"
 
     def test_udf_remove_with_no_policy(self):
         """
@@ -67,22 +66,21 @@ class TestUdfRemove(object):
         assert status == AerospikeStatus.AEROSPIKE_OK
 
         wait_for_udf_removal(self.as_connection, module)
-        udf_list = self.as_connection.udf_list({'timeout': 100})
+        udf_list = self.as_connection.udf_list({"timeout": 100})
 
         present = False
         for udf in udf_list:
-            if 'example.lua' == udf['name']:
+            if "example.lua" == udf["name"]:
                 present = True
 
         assert not present
 
-    @pytest.mark.xfail(reason="This is the only method which allows" +
-                       " invalid timeout")
+    @pytest.mark.xfail(reason="This is the only method which allows" + " invalid timeout")
     def test_udf_remove_with_invalid_timeout_policy_value(self):
         """
         Verify that an incorrect timeout policy will not prevent UDF removal
         """
-        policy = {'timeout': 0.1}
+        policy = {"timeout": 0.1}
         module = "example.lua"
 
         with pytest.raises(e.ParamError):
@@ -98,7 +96,7 @@ class TestUdfRemove(object):
         Verify that udf_remove with a correct timeout policy argument
         functions.
         """
-        policy = {'timeout': 1000}
+        policy = {"timeout": 1000}
         module = "example.lua"
 
         status = self.as_connection.udf_remove(module, policy)
@@ -108,11 +106,11 @@ class TestUdfRemove(object):
         #  Wait for the removal to take place
         wait_for_udf_removal(self.as_connection, module)
 
-        udf_list = self.as_connection.udf_list({'timeout': 0})
+        udf_list = self.as_connection.udf_list({"timeout": 0})
 
         present = False
         for udf in udf_list:
-            if 'example.lua' == udf['name']:
+            if "example.lua" == udf["name"]:
                 present = True
 
         assert not present
@@ -121,8 +119,8 @@ class TestUdfRemove(object):
         """
         Test to ensure that unicode filenames may be used to remove UDFs
         """
-        policy = {'timeout': 100}
-        module = u"example.lua"
+        policy = {"timeout": 100}
+        module = "example.lua"
         status = self.as_connection.udf_remove(module, policy)
 
         assert status == AerospikeStatus.AEROSPIKE_OK
@@ -130,11 +128,11 @@ class TestUdfRemove(object):
         #  Wait for the removal to take place
         wait_for_udf_removal(self.as_connection, module)
 
-        udf_list = self.as_connection.udf_list({'timeout': 100})
+        udf_list = self.as_connection.udf_list({"timeout": 100})
 
         present = False
         for udf in udf_list:
-            if 'example.lua' == udf['name']:
+            if "example.lua" == udf["name"]:
                 present = True
 
         assert not present
@@ -146,6 +144,7 @@ class TestIncorrectCallsToUDFRemove(object):
     These are all tests where udf_remove fails for various reasons,
     So we skip removing and re-adding the UDF before and after each test
     """
+
     def setup_class(cls):
         """
         setup the class attribute indicating the udf to load
@@ -157,10 +156,10 @@ class TestIncorrectCallsToUDFRemove(object):
         Test to verify that attempting to remove a UDF before connection
         raises an error
         """
-        config = {'hosts': [('127.0.0.1', 3000)]}
+        config = {"hosts": [("127.0.0.1", 3000)]}
 
         client1 = aerospike.client(config)
-        policy = {'timeout': 100}
+        policy = {"timeout": 100}
         module = "example.lua"
 
         with pytest.raises(e.ClusterError) as err_info:
@@ -181,15 +180,13 @@ class TestIncorrectCallsToUDFRemove(object):
             with pytest.raises(e.UDFError) as err_info:
                 self.as_connection.udf_remove(module, policy)
 
-
     def test_udf_remove_without_parameters(self):
         """
         Test to verify that udf_remove raises an error with no parameters
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.udf_remove()
-        assert "argument 'filename' (pos 1)" in str(
-            typeError.value)
+        assert "argument 'filename' (pos 1)" in str(typeError.value)
 
     def test_udf_remove_with_none_as_parameters(self):
         """
@@ -201,23 +198,19 @@ class TestIncorrectCallsToUDFRemove(object):
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
-    @pytest.mark.parametrize('udf', [None, False, 1, 1.5,
-                                     ('cool', 'other')])
+    @pytest.mark.parametrize("udf", [None, False, 1, 1.5, ("cool", "other")])
     def test_udf_with_non_string_module_name(self, udf):
-        '''
+        """
         Tests for incorrect udf module name types
-        '''
+        """
         with pytest.raises(e.ParamError):
             self.as_connection.udf_remove(udf)
 
     @pytest.mark.xfail(reason="These do not raise errors")
-    @pytest.mark.parametrize(
-        "policy",
-        [False, 'policy', 5, (), []]
-    )
+    @pytest.mark.parametrize("policy", [False, "policy", 5, (), []])
     def test_udf_remove_with_invalid_policy_type(self, policy):
-        '''
+        """
         Tests for incorrect policy argument types
-        '''
+        """
         with pytest.raises(TypeError):
-            self.as_connection.udf_remove('example.lua', policy)
+            self.as_connection.udf_remove("example.lua", policy)

@@ -14,7 +14,6 @@ except:
 
 
 class TestIsConnected(object):
-
     def setup_class(cls):
         """
         Setup the config which is used in the tests

@@ -17,8 +17,8 @@ except:
 class TestQueryUser(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(),
-        reason="No user specified, may be not secured cluster.")
+        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+    )
 
     def setup_method(self, method):
         """
@@ -26,7 +26,7 @@ class TestQueryUser(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestQueryUser.Me = self
-        self.client = aerospike.client(config).connect(config['user'], config['password'])
+        self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
             self.client.admin_drop_user("example-test")
             time.sleep(1)
@@ -70,7 +70,7 @@ class TestQueryUser(TestBaseClass):
 
         time.sleep(2)
         user_details = self.client.admin_query_user(user)
-        assert user_details == ['read', 'read-write', 'sys-admin']
+        assert user_details == ["read", "read-write", "sys-admin"]
 
     def test_query_user_with_invalid_timeout_policy_value(self):
 
@@ -86,17 +86,17 @@ class TestQueryUser(TestBaseClass):
 
     def test_query_user_with_proper_timeout_policy_value(self):
 
-        policy = {'timeout': 30}
+        policy = {"timeout": 30}
         user = "example-test"
 
         time.sleep(2)
         user_details = self.client.admin_query_user(user, policy)
 
-        assert user_details == ['read', 'read-write', 'sys-admin']
+        assert user_details == ["read", "read-write", "sys-admin"]
 
     def test_query_user_with_none_username(self):
 
-        policy = {'timeout': 30}
+        policy = {"timeout": 30}
         user = None
 
         try:
@@ -146,18 +146,17 @@ class TestQueryUser(TestBaseClass):
 
     def test_query_user_with_extra_argument(self):
         """
-            Invoke query_user() with extra argument.
+        Invoke query_user() with extra argument.
         """
-        policy = {'timeout': 1000}
+        policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
             self.client.admin_query_user("foo", policy, "")
 
-        assert "admin_query_user() takes at most 2 arguments (3 given)" in str(
-            typeError.value)
+        assert "admin_query_user() takes at most 2 arguments (3 given)" in str(typeError.value)
 
     def test_query_user_with_policy_as_string(self):
         """
-            Invoke query_user() with policy as string
+        Invoke query_user() with policy as string
         """
         policy = ""
         try:

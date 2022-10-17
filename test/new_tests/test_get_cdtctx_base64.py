@@ -25,9 +25,11 @@ ctx_ops = {
     map_value: cdt_ctx.cdt_ctx_map_value,
 }
 
+
 def add_ctx_op(ctx_type, value):
     ctx_func = ctx_ops[ctx_type]
     return ctx_func(value)
+
 
 ctx_list_index = []
 ctx_list_index.append(add_ctx_op(list_index, 0))
@@ -38,11 +40,11 @@ ctx_list_rank.append(add_ctx_op(list_rank, -1))
 ctx_list_value = []
 ctx_list_value.append(add_ctx_op(list_value, 3))
 
-ctx_map_index= []
+ctx_map_index = []
 ctx_map_index.append(add_ctx_op(map_index, 0))
 
 ctx_map_key = []
-ctx_map_key.append(add_ctx_op(map_key, 'sb'))
+ctx_map_key.append(add_ctx_op(map_key, "sb"))
 
 ctx_map_rank = []
 ctx_map_rank.append(add_ctx_op(map_rank, -1))
@@ -60,33 +62,33 @@ except:
     sys.exit(1)
 
 from .test_base_class import TestBaseClass
+
 if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
     if pytest.__version__ < "3.0.0":
-        pytest.skip('It only applies to >= 6.1 enterprise edition')
+        pytest.skip("It only applies to >= 6.1 enterprise edition")
     else:
         pytestmark = pytest.mark.skip
+
 
 class TestCDTIndexB64(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         keys = []
         for i in range(5):
-            key = ('test', u'demo', i)
+            key = ("test", "demo", i)
             rec = {
-                'name': 'name%s' % (str(i)),
-                'addr': 'name%s' % (str(i)),
-                'numeric_list': [1, 2, 3, 4],
-                'string_list': ["a", "b", "c", "d"],
-                'geojson_list': [aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
-                                 aerospike.GeoJSON({"type": "Point", "coordinates": [-122.053321, 37.434212]})],
-                'numeric_map': {"a": 1,
-                                "b": 2,
-                                "c": 3},
-                'string_map': {"sa": "a",
-                                "sb": "b",
-                                "sc": "c"},
-                'age': i,
-                'no': i
+                "name": "name%s" % (str(i)),
+                "addr": "name%s" % (str(i)),
+                "numeric_list": [1, 2, 3, 4],
+                "string_list": ["a", "b", "c", "d"],
+                "geojson_list": [
+                    aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
+                    aerospike.GeoJSON({"type": "Point", "coordinates": [-122.053321, 37.434212]}),
+                ],
+                "numeric_map": {"a": 1, "b": 2, "c": 3},
+                "string_map": {"sa": "a", "sb": "b", "sc": "c"},
+                "age": i,
+                "no": i,
             }
             as_connection.put(key, rec)
             keys.append(key)
@@ -105,31 +107,30 @@ class TestCDTIndexB64(object):
 
     def test_get_cdtctxb64_with_correct_parameters(self):
         """
-            Invoke get_cdtctx_base64() with correct arguments
+        Invoke get_cdtctx_base64() with correct arguments
         """
         policy = {}
-        bs_b4_cdt = self.as_connection.get_cdtctx_base64({'ctx':ctx_list_index})
-        
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64({"ctx": ctx_list_index})
+
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
         r.append(";indextype=%s" % (cdt_ctx.index_type_string(aerospike.INDEX_TYPE_LIST)))
         r.append(";indexdata=string_list,%s" % (cdt_ctx.index_datatype_string(aerospike.INDEX_STRING)))
         r.append(";context=%s" % (bs_b4_cdt))
-        req = ''.join(r)
+        req = "".join(r)
 
         # print("req is ==========={}", req)
         retobj = self.as_connection.info_all(req, policy=None)
         # print("retobj is ==========={}", retobj)
 
-        self.as_connection.index_remove('test', 'test_string_list_cdt_index',
-                                        policy)
-        ensure_dropped_index(self.as_connection, 'test', 'test_string_list_cdt_index')
+        self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
+        ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
         assert retobj != 0
 
     def test_get_cdtctxb64_with_invalid_parameters(self):
         """
-            Invoke get_cdtctx_base64() with invalid arguments
+        Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
             bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
@@ -138,10 +139,9 @@ class TestCDTIndexB64(object):
 
     def test_get_cdtctxb64_with_invalid_ctx(self):
         """
-            Invoke get_cdtctx_base64() with invalid arguments
+        Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            bs_b4_cdt = self.as_connection.get_cdtctx_base64({'ctx':ctx_empty})
+            bs_b4_cdt = self.as_connection.get_cdtctx_base64({"ctx": ctx_empty})
         except e.ParamError as exception:
             pass
-

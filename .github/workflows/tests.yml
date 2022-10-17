@@ -32,7 +32,7 @@ jobs:
     - name: Lint aerospike_helpers
       run: |
         # Ignore E203 to be compatible with black
-        flake8 --max-line-length=120 --count --extend-ignore=E203 aerospike_helpers/
+        flake8 --max-line-length=120 --count --extend-ignore=E203 aerospike_helpers/ tests/
     - name: clang-format Check
       uses: jidicula/clang-format-action@v4.9.0
       with:
