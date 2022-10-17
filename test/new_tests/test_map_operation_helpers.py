@@ -307,7 +307,7 @@ class TestNewListOperationsHelpers(object):
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
-        assert ret_vals == True
+        assert ret_vals is True
 
     def test_map_get_exists_by_key_range(self):
         if not Server61:
@@ -315,7 +315,7 @@ class TestNewListOperationsHelpers(object):
         operations = [map_ops.map_get_by_key_range(self.test_bin, "a", "d", return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
-        assert ret_vals == True
+        assert ret_vals is True
 
     def test_map_get_exists_by_value(self):
         if not Server61:
@@ -323,7 +323,7 @@ class TestNewListOperationsHelpers(object):
         operations = [
             map_ops.map_get_by_value(self.test_bin, self.test_map["a"], return_type=aerospike.MAP_RETURN_EXISTS)
         ]
-        assert get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin) == True
+        assert get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin) is True
 
     def test_map_get_exists_by_value_list(self):
         if not Server61:
@@ -337,7 +337,7 @@ class TestNewListOperationsHelpers(object):
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
-        assert ret_vals == True
+        assert ret_vals is True
 
     def test_map_get_exists_by_value_range(self):
         if not Server61:
@@ -345,7 +345,7 @@ class TestNewListOperationsHelpers(object):
         operations = [map_ops.map_get_by_value_range(self.test_bin, 1, 4, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
-        assert ret_vals == True
+        assert ret_vals is True
 
     def test_map_get_exists_by_index(self):
         if not Server61:
@@ -353,7 +353,7 @@ class TestNewListOperationsHelpers(object):
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [map_ops.map_get_by_index(self.test_bin, 1, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
-        assert ret_vals == True
+        assert ret_vals is True
 
     def test_map_get_exists_by_index_range(self):
         if not Server61:
@@ -361,14 +361,14 @@ class TestNewListOperationsHelpers(object):
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [map_ops.map_get_by_index_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
-        assert ret_vals == True
+        assert ret_vals is True
 
     def test_map_get_exists_by_rank(self):
         if not Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [map_ops.map_get_by_rank(self.test_bin, 1, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
-        assert ret_vals == True
+        assert ret_vals is True
 
     def test_map_get_exists_by_rank_range(self):
         if not Server61:
@@ -376,4 +376,4 @@ class TestNewListOperationsHelpers(object):
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [map_ops.map_get_by_rank_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
-        assert ret_vals == True
+        assert ret_vals is True

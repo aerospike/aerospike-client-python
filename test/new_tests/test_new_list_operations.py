@@ -302,7 +302,7 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
         result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
-        assert result == True
+        assert result is True
 
     def test_get_exists_by_index_range_inverted(self):
         if not Server61:
@@ -331,7 +331,7 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
         result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
-        assert result == True
+        assert result is True
 
     def test_get_exists_by_value_no_duplicates(self):
         if not Server61:
@@ -346,7 +346,7 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
         result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
-        assert result == True
+        assert result is True
 
     def test_get_exists_by_value_with_duplicates(self):
         if not Server61:
@@ -368,7 +368,7 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
         result = get_list_result_from_operation(self.as_connection, dup_key, operation, self.test_bin)
-        assert result == True
+        assert result is True
 
     def test_get_exists_by_value_list(self):
         if not Server61:
@@ -381,7 +381,7 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
         result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
-        assert result == True
+        assert result is True
 
     def test_get_exists_by_value_list_inverted(self):
         if not Server61:
@@ -395,7 +395,7 @@ class TestNewListOperations(object):
             "inverted": True,
         }
         result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
-        assert result == True
+        assert result is True
 
     def test_get_exists_by_value_range(self):
         if not Server61:
@@ -408,7 +408,7 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
         result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
-        assert result == True
+        assert result is True
 
     #  REMOVE Family of operations
     def test_remove_by_index(self):

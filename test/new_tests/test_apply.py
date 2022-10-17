@@ -173,7 +173,7 @@ class TestApply(TestBaseClass):
         """
         key = ("test", "demo", 1)
         retval = self.as_connection.apply(key, "test_record_udf", "bool_check", [])
-        assert retval == True
+        assert retval is True
 
     def test_apply_return_bool_false(self):
         """

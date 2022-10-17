@@ -116,7 +116,7 @@ class TestScanPagination(TestBaseClass):
             scan_obj.foreach(callback, policy)
             assert scan_page_size[0] == scan_count[0]
             scan_count[0] = 0
-            if scan_obj.is_done() == True:
+            if scan_obj.is_done() is True:
                 # print(f"scan completed iter:{i}")
                 break
 

@@ -115,7 +115,7 @@ class TestQueryPagination(TestBaseClass):
             query_obj.foreach(callback, policy)
             assert query_page_size[0] == query_count[0]
             query_count[0] = 0
-            if query_obj.is_done() == True:
+            if query_obj.is_done() is True:
                 # print(f"query completed iter:{i}")
                 break
 
