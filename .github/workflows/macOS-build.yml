@@ -24,10 +24,24 @@ jobs:
         export STATIC_SSL=1
         python3 setup.py build --force
         python3 setup.py install --force
-    - name: Run Aerospike server on Vagrant
+    - name: Cache Vagrant image
+      id: cache-vagrant-image
+      uses: actions/cache@v3
+      with:
+        path: aerospike-server-ce-ubuntu-bionic.box
+        key: vagrant-image
+    - name: Use existing Vagrant image for Aerospike server
+      if: steps.cache-vagrant-image.outputs.cache-hit != 'true'
+      run: |
+        vagrant box add aerospike-server-ce-ubuntu-bionic aerospike-server-ce-ubuntu-bionic.box
+        vagrant init
+        vagrant up
+    - name: Create Vagrant image with Aerospike server
       run: |
         vagrant up
+        # Wait for server to start
         sleep 3
+        vagrant package --output aerospike-server-ce-ubuntu-bionic.box
     - name: Run tests
       run: |
         cd test/
