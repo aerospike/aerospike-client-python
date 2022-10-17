@@ -73,7 +73,7 @@ jobs:
       with:
         path: build/
         # Only build if these files change
-        key: ${{ runner.os }}-${{ hashFiles(aerospike_helpers/**, aerospike-client-c/**, src/**) }}
+        key: ${{ runner.os }}-${{ hashFiles('aerospike_helpers/**', 'aerospike-client-c/**', 'src/**') }}
     - name: Build client
       if: steps.cache-build.outputs.cache-hit != 'true'
       run: |
