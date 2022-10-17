@@ -3,7 +3,6 @@
 import pytest
 import sys
 import asyncio
-import time
 
 try:
     import cPickle as pickle
@@ -12,7 +11,6 @@ except:
 from . import test_data
 
 # from collections import OrderedDict
-from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:

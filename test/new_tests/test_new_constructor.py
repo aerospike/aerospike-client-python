@@ -2,7 +2,6 @@
 
 import pytest
 import sys
-import json
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 import copy

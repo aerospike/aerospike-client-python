@@ -2,7 +2,6 @@
 
 import pytest
 import sys
-from .test_base_class import TestBaseClass
 import time
 from . import test_data
 

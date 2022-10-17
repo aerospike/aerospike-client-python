@@ -3,11 +3,10 @@
 import pytest
 import sys
 
-from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
+    pass
 except:
     print("Please install aerospike python client.")
     sys.exit(1)

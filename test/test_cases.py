@@ -5,12 +5,10 @@ from aerospike import exception as ex
 import time
 import psutil
 import os
-import sys, gc
-import sys
+import gc
 from concurrent.futures import ThreadPoolExecutor
 from aerospike_helpers import cdt_ctx
 import aerospike
-from aerospike import exception as ae
 import ctypes
 import datetime
 from aerospike_helpers import cdt_ctx

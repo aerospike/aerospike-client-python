@@ -1,15 +1,11 @@
 # -*- coding: utf-8 -*-
 import sys
-import random
-import unittest
-from datetime import datetime
 import time
 
 import pytest
 
 from aerospike import exception as e
 from aerospike_helpers import expressions as exp
-from aerospike_helpers import cdt_ctx
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import operations

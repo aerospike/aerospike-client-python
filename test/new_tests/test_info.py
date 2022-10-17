@@ -4,7 +4,6 @@ import pytest
 import sys
 
 from aerospike import exception as e
-from .test_base_class import TestBaseClass
 
 aerospike = pytest.importorskip("aerospike")
 try:

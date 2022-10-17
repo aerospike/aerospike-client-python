@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from distutils.command.config import config
 import pytest
 import sys
 from .test_base_class import TestBaseClass
@@ -13,7 +12,6 @@ except ImportError:
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-    from aerospike import exception as e
     from aerospike_helpers.operations import operations
 except:
     print("Please install aerospike python client.")

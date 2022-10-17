@@ -2,12 +2,10 @@
 
 import pytest
 import sys
-from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 
-import pdb
 
 aerospike = pytest.importorskip("aerospike")
 try:

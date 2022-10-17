@@ -3,7 +3,6 @@ import pytest
 import sys
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
-from datetime import datetime
 
 aerospike = pytest.importorskip("aerospike")
 try:

@@ -5,7 +5,6 @@ import sys
 from distutils.version import LooseVersion
 
 import pytest
-from _pytest.runner import TestReport
 from _pytest.terminal import TerminalReporter
 import os
 from collections import namedtuple

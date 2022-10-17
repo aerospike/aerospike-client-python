@@ -7,14 +7,12 @@ import pytest
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
+    pass
 except:
     print("Please install aerospike python client.")
     sys.exit(1)
 
 from aerospike_helpers.expressions import *
-from aerospike_helpers.operations import operations
-from aerospike_helpers.expressions import arithmetic
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 

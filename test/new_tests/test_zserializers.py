@@ -6,7 +6,6 @@ from aerospike import exception as e
 
 import pytest
 import sys
-import marshal
 import json
 
 aerospike = pytest.importorskip("aerospike")

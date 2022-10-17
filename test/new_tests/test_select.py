@@ -4,7 +4,6 @@ import pytest
 import sys
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
-import time
 
 aerospike = pytest.importorskip("aerospike")
 try:

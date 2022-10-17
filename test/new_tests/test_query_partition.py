@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from time import time
 import pytest
 import sys
 from .test_base_class import TestBaseClass

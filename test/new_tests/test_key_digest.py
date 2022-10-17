@@ -3,7 +3,6 @@ Tests to demonstrate correct calculations of key digests
 """
 import pytest
 import aerospike
-import sys
 from binascii import b2a_hex
 
 

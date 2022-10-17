@@ -6,7 +6,7 @@ import pytest
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
+    pass
 except:
     print("Please install aerospike python client.")
     sys.exit(1)

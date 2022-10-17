@@ -1,5 +1,4 @@
 import os
-import pytest
 
 try:
     import ConfigParser as configparser

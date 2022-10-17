@@ -1,4 +1,3 @@
-import aerospike
 from aerospike import exception as e
 import time
 

@@ -202,7 +202,6 @@ class TestOperate(object):
         ]
         key, _, _ = self.as_connection.operate(key, llist)
         self.as_connection.remove(key)
-        pass
 
     def test_pos_map_clear(self):
         key = ("test", "map_test", 1)

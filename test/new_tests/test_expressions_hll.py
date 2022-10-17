@@ -4,14 +4,9 @@ import pytest
 import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from .as_status_codes import AerospikeStatus
-from aerospike_helpers import cdt_ctx
 from aerospike_helpers.expressions import *
-from aerospike_helpers.operations import map_operations
-from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import hll_operations
 from aerospike_helpers.operations import expression_operations as expressions
-from aerospike_helpers.operations import operations
 from math import sqrt, ceil, floor
 
 aerospike = pytest.importorskip("aerospike")

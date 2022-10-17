@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 import sys
-from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers.operations import hll_operations
 from math import sqrt

@@ -2,7 +2,7 @@
 import pytest
 import sys
 from .test_base_class import TestBaseClass
-from aerospike_helpers.operations import operations, list_operations, map_operations
+from aerospike_helpers.operations import list_operations, operations
 
 aerospike = pytest.importorskip("aerospike")
 try:

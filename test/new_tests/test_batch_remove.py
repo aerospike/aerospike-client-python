@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from cgi import print_form
-from cmath import rect
 import sys
 
 import pytest

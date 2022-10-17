@@ -919,7 +919,6 @@ class TestQuery(TestBaseClass):
 
         def callback(input_tuple):
             raise Exception("error")
-            pass
 
         with pytest.raises(e.ClientError) as err_info:
             query.foreach(callback)
@@ -940,7 +939,6 @@ class TestQuery(TestBaseClass):
                 """
                 no-op callback
                 """
-                pass
 
             query.foreach(callback)
 

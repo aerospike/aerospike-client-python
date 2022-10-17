@@ -2,17 +2,15 @@
 
 import pytest
 import sys
-import json
 import time
 import os
 
 from contextlib import contextmanager
 from .test_base_class import TestBaseClass
-from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")
 try:
-    import aerospike
+    pass
 except:
     print("Please install aerospike python client.")
     sys.exit(1)

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-from cgi import print_form
 import sys
 
 import pytest

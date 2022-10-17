@@ -2,10 +2,8 @@
 import pytest
 import time
 import sys
-import socket
 
 from .test_base_class import TestBaseClass
-from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 
 aerospike = pytest.importorskip("aerospike")

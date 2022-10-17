@@ -2,7 +2,6 @@
 import pytest
 import sys
 
-from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 

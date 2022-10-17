@@ -3,7 +3,6 @@
 import pytest
 import time
 import sys
-from .test_base_class import TestBaseClass
 
 try:
     from collections import Counter
