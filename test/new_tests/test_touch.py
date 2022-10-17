@@ -7,7 +7,7 @@ from .as_status_codes import AerospikeStatus
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

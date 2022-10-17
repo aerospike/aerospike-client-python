@@ -209,7 +209,7 @@ def connection_with_udf(request, as_connection):
     if udf_status["loaded"]:
         try:
             as_connection.udf_remove(udf_status["name"])
-        except:  # If this fails, it has already been removed
+        except Exception:  # If this fails, it has already been removed
             pass
 
 
@@ -248,7 +248,7 @@ def put_data(request):
         put_data.client = client
         try:
             client.remove(_key)
-        except:
+        except Exception:
             pass
         put_data.keys.append(put_data.key)
         return client.put(_key, _record, _meta, _policy)
@@ -258,7 +258,7 @@ def put_data(request):
             # pytest.set_trace()
             for key in put_data.keys:
                 put_data.client.remove(key)
-        except:
+        except Exception:
             pass
 
     request.addfinalizer(remove_key)

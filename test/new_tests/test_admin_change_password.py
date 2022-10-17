@@ -8,7 +8,7 @@ from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -41,7 +41,7 @@ class TestChangePassword(object):
 
         try:
             self.client.admin_drop_user("testchangepassworduser")
-        except:
+        except Exception:
             pass
 
         self.client.close()

@@ -10,7 +10,7 @@ from .index_helpers import ensure_dropped_index
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -287,7 +287,7 @@ class TestMapKeysIndex(object):
             try:
                 self.as_connection.index_remove("test", index_name, policy)
                 ensure_dropped_index(self.as_connection, "test", index_name)
-            except:
+            except Exception:
                 pass
 
         try:
@@ -303,7 +303,7 @@ class TestMapKeysIndex(object):
             try:
                 self.as_connection.index_remove("test", index_name, policy)
                 ensure_dropped_index(self.as_connection, "test", index_name)
-            except:
+            except Exception:
                 pass
 
     def test_createmapindex_with_policy(self):

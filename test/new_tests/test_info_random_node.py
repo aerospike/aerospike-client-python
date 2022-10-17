@@ -9,7 +9,7 @@ from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -68,7 +68,7 @@ class TestInfoSingleNode(object):
         try:
             self.as_connection.index_remove("test", "names_test_index")
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         self.as_connection.info_random_node(

@@ -9,7 +9,7 @@ from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -41,7 +41,7 @@ class TestCreateUser(object):
         for user in self.delete_users:
             try:
                 self.client.admin_drop_user(user, policy)
-            except:
+            except Exception:
                 pass
         time.sleep(2)
         self.client.close()
@@ -63,7 +63,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
@@ -88,7 +88,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.client.admin_create_user(user, password, roles)
@@ -113,7 +113,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         try:
@@ -133,7 +133,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
@@ -186,7 +186,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
@@ -219,7 +219,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
@@ -238,7 +238,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
@@ -257,7 +257,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         try:
@@ -280,7 +280,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         with pytest.raises(e.ClientError):
@@ -296,7 +296,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         try:
@@ -316,7 +316,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.client.admin_create_user(user, password, roles, policy)
@@ -348,7 +348,7 @@ class TestCreateUser(object):
         password = "user7"
         try:
             self.client.admin_drop_user(user, policy)
-        except:
+        except Exception:
             pass
 
         with pytest.raises(e.ParamError):
@@ -363,7 +363,7 @@ class TestCreateUser(object):
         roles = ["read-write", list_item]
         try:
             self.client.admin_drop_user(user, policy)
-        except:
+        except Exception:
             pass
 
         with pytest.raises(e.ClientError):
@@ -378,7 +378,7 @@ class TestCreateUser(object):
         try:
             self.client.admin_drop_user(user, policy)
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         with pytest.raises(e.ClientError):

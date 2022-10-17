@@ -10,7 +10,7 @@ aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
     from aerospike import exception as e
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -68,7 +68,7 @@ class TestOperate(object):
         def teardown():
             try:
                 as_connection.remove(key)
-            except:
+            except Exception:
                 pass
             """
             Teardown Method

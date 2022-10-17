@@ -9,7 +9,7 @@ from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -54,7 +54,7 @@ class TestQueryUsers(TestBaseClass):
 
         try:
             self.client.admin_drop_user("example-test", policy)
-        except:
+        except Exception:
             pass
         self.client.close()
 

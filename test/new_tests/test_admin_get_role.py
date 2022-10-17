@@ -9,7 +9,7 @@ from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -29,13 +29,13 @@ class TestGetRole(TestBaseClass):
         try:
             self.client.admin_drop_role("usr-sys-admin")
             time.sleep(2)
-        except:
+        except Exception:
             pass
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
             time.sleep(2)
-        except:
+        except Exception:
             pass
         self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs)
 
@@ -48,7 +48,7 @@ class TestGetRole(TestBaseClass):
         """
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-        except:
+        except Exception:
             pass
         self.client.close()
 

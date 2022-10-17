@@ -37,7 +37,7 @@ def add_ctx_op(ctx_type, value):
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

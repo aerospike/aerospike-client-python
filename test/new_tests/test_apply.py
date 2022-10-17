@@ -11,7 +11,7 @@ try:
     import aerospike
     from aerospike_helpers import expressions as exp
     from aerospike import exception as e
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

@@ -11,7 +11,7 @@ import json
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -65,7 +65,7 @@ class TestPythonSerializer(object):
         def teardown():
             try:
                 as_connection.remove(self.test_key)
-            except:
+            except Exception:
                 pass
             aerospike.unset_serializers()
 

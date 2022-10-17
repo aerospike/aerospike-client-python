@@ -2,7 +2,7 @@ import os
 
 try:
     import ConfigParser as configparser
-except:
+except Exception:
     import configparser
 import aerospike
 

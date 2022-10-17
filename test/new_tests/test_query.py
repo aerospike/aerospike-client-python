@@ -59,7 +59,7 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

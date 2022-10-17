@@ -9,7 +9,7 @@ from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -32,7 +32,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_drop_user("testcreaterole")
             time.sleep(2)
-        except:
+        except Exception:
             pass  # do nothing, EAFP
 
         self.delete_users = []
@@ -329,7 +329,7 @@ class TestCreateRole(object):
         try:
             self.client.admin_drop_role(role_name)  # clear out if it exists
             time.sleep(2)
-        except:
+        except Exception:
             pass  # EAFP
         status = self.client.admin_create_role(
             role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 1000}

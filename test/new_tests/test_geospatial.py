@@ -11,7 +11,7 @@ import time
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -167,47 +167,47 @@ def add_geo_data(connection):
 def remove_geo_indexes(connection):
     try:
         connection.index_remove("test", "loc_index")
-    except:
+    except Exception:
         pass
 
     try:
         connection.index_remove("test", "loc_polygon_index")
-    except:
+    except Exception:
         pass
 
     try:
         connection.index_remove("test", "loc_circle_index")
-    except:
+    except Exception:
         pass
 
     try:
         connection.index_remove("test", "geo_list_index")
-    except:
+    except Exception:
         pass
 
     try:
         connection.index_remove("test", "geo_map_key_index")
-    except:
+    except Exception:
         pass
 
     try:
         connection.index_remove("test", "geo_map_val_index")
-    except:
+    except Exception:
         pass
 
     try:
         connection.index_remove("test", "geo_loc_list_index")
-    except:
+    except Exception:
         pass
 
     try:
         connection.index_remove("test", "geo_loc_map_key_index")
-    except:
+    except Exception:
         pass
 
     try:
         connection.index_remove("test", "geo_loc_map_val_index")
-    except:
+    except Exception:
         pass
 
 
@@ -801,7 +801,7 @@ class TestGeospatial(object):
         try:
             status = self.as_connection.index_remove("test", "loc_index")
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.as_connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index")
@@ -815,7 +815,7 @@ class TestGeospatial(object):
         try:
             status = self.as_connection.index_remove("test", "loc_index")
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
         status = self.as_connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index", {"timeout": 2000})

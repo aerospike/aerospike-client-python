@@ -14,7 +14,7 @@ from aerospike_helpers.operations import operations
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -404,7 +404,7 @@ class TestPredEveryWhere(object):
                 key = "test", "pred_lut", i
                 _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expr.compile()})
                 results.append(res)
-            except:
+            except Exception:
                 pass
             self.as_connection.remove(key)
 
@@ -444,7 +444,7 @@ class TestPredEveryWhere(object):
                 key = "test", "pred_ttl", i
                 _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expr})
                 results.append(res)
-            except:
+            except Exception:
                 pass
             self.as_connection.remove(key)
 
@@ -475,7 +475,7 @@ class TestPredEveryWhere(object):
                 key = "test", "demo", i
                 _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expr})
                 results.append(res)
-            except:
+            except Exception:
                 pass
             self.as_connection.remove(key)
 

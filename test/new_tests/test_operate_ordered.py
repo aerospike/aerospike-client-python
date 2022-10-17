@@ -7,7 +7,7 @@ aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
     from aerospike import exception as e
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -547,14 +547,14 @@ class TestOperateOrdered(object):
         """
         try:
             self.as_connection.remove(key)
-        except:
+        except Exception:
             pass
         _, _, bins = TestOperateOrdered.client_no_typechecks.operate_ordered(key, llist)
         assert bins == expected
 
         try:
             self.as_connection.remove(key)
-        except:
+        except Exception:
             pass
 
     def test_pos_operate_ordered_with_bin_length_extra_nostricttypes(self):

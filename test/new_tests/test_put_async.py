@@ -6,7 +6,7 @@ import asyncio
 
 try:
     import cPickle as pickle
-except:
+except Exception:
     import pickle
 from . import test_data
 
@@ -17,7 +17,7 @@ try:
     import aerospike
     from aerospike import exception as e
     from aerospike_helpers.awaitable import io
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

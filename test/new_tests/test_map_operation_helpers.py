@@ -7,7 +7,7 @@ from aerospike_helpers.operations import map_operations as map_ops
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

@@ -12,7 +12,7 @@ gconfig = TestBaseClass.get_connection_config()
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

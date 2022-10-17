@@ -9,7 +9,7 @@ from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -41,7 +41,7 @@ class TestDropRole(object):
             try:
                 self.client.admin_drop_user(user, policy)
                 time.sleep(2)
-            except:
+            except Exception:
                 pass
 
         self.client.close()
@@ -167,5 +167,5 @@ class TestDropRole(object):
             assert exception.msg == "timeout is invalid"
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
-        except:
+        except Exception:
             pass

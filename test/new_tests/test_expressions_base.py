@@ -11,7 +11,7 @@ from aerospike_helpers.operations import operations
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

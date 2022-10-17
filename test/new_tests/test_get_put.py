@@ -6,7 +6,7 @@ from contextlib import contextmanager
 
 try:
     import cPickle as pickle
-except:
+except Exception:
     import pickle
 from . import test_data
 
@@ -17,7 +17,7 @@ aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
     from aerospike import exception as e
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 

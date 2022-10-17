@@ -9,7 +9,7 @@ from aerospike import exception as e
 aerospike = pytest.importorskip("aerospike")
 try:
     import aerospike
-except:
+except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
@@ -31,7 +31,7 @@ class TestDropUser(object):
         try:
             self.client.admin_drop_user("foo-test")
             time.sleep(2)
-        except:
+        except Exception:
             pass
 
     def teardown_method(self, method):
@@ -238,7 +238,7 @@ class TestDropUser(object):
             status = self.client.admin_create_user(user, password, roles, policy)
             assert status == 0
             time.sleep(1)
-        except:
+        except Exception:
             pass
 
         status = self.client.admin_drop_user(user)
