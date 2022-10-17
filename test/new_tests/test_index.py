@@ -389,7 +389,7 @@ class TestIndex(object):
         """
         policy = {}
         try:
-            retobj = self.as_connection.index_remove("test", "notarealindex", policy)
+            self.as_connection.index_remove("test", "notarealindex", policy)
         except e.IndexNotFound:
             assert self.server_version <= [6, 0]
 
@@ -417,7 +417,7 @@ class TestIndex(object):
         # Invoke createindex() with long index name
         policy = {}
         with pytest.raises(e.InvalidRequest):
-            retobj = self.as_connection.index_integer_create("test", "demo", "age", "index" * 100, policy)
+            self.as_connection.index_integer_create("test", "demo", "age", "index" * 100, policy)
 
     def test_create_string_index_unicode_positive(self):
         """

@@ -264,7 +264,7 @@ class TestHLL(object):
         Invoke hll_get_union() with expected errors.
         """
 
-        records = [record[2]["hll_binu"] for record in self.as_connection.get_many(self.test_keys)]
+        [record[2]["hll_binu"] for record in self.as_connection.get_many(self.test_keys)]
 
         ops = [hll_operations.hll_get_union("hll_bin", [])]
 

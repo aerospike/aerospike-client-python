@@ -141,8 +141,7 @@ class TestScanPagination(TestBaseClass):
 
     def test_scan_pagination_with_timeout_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -161,8 +160,7 @@ class TestScanPagination(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_scan_pagination_with_max_records_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -181,8 +179,7 @@ class TestScanPagination(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
     def test_scan_pagination_with_all_records_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -205,8 +202,7 @@ class TestScanPagination(TestBaseClass):
 
     def test_scan_pagination_with_socket_timeout_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -223,8 +219,7 @@ class TestScanPagination(TestBaseClass):
 
     def test_scan_pagination_with_records_per_second_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -303,7 +298,7 @@ class TestScanPagination(TestBaseClass):
     def test_scan_pagination_without_any_parameter(self):
 
         with pytest.raises(e.ParamError) as err:
-            scan_obj = self.as_connection.scan()
+            self.as_connection.scan()
             assert True
 
     def test_scan_pagination_with_non_existent_ns_and_set(self):
@@ -342,7 +337,7 @@ class TestScanPagination(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_pagination_with_callback_non_callable(self):
-        records = []
+        pass
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()

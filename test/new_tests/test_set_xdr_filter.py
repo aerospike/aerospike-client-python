@@ -22,7 +22,6 @@ class TestSetXDRFilter(object):
     def setup_method(self, request, as_connection):
         try:
             dc_request = "get-config:context=xdr"
-            addr_name_dict = {}
             nodes = self.as_connection.get_node_names()
             node_name = nodes[0]["node_name"]
 
@@ -31,7 +30,7 @@ class TestSetXDRFilter(object):
             ns_request = "get-config:context=xdr;dc=%s" % self.dc
             ns_response = self.as_connection.info_single_node(ns_request, node_name)
             self.ns = ns_response.split("namespaces=")[1].split(";")[0]
-        except Exception as exc:
+        except Exception:
             pytest.skip("Could not parse a data center or namespace, xdr may be disabled, skipping set_xdr_flags.")
 
     def test_set_xdr_filter_pos(self):

@@ -143,7 +143,7 @@ class TestQueryPagination(TestBaseClass):
             + self.partition_1002_count
             + self.partition_1003_count
         )
-        max_records = self.partition_1000_count / num_populated_partitions
+        self.partition_1000_count / num_populated_partitions
 
         for i in range(num_populated_partitions):
             query_obj.foreach(
@@ -160,8 +160,7 @@ class TestQueryPagination(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_query_pagination_with_max_records_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -231,7 +230,7 @@ class TestQueryPagination(TestBaseClass):
     def test_query_pagination_without_any_parameter(self):
 
         with pytest.raises(e.ParamError) as err:
-            query_obj = self.as_connection.query()
+            self.as_connection.query()
             assert True
 
     def test_query_pagination_with_non_existent_ns_and_set(self):
@@ -270,7 +269,7 @@ class TestQueryPagination(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_query_pagination_with_callback_non_callable(self):
-        records = []
+        pass
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
         query_obj.paginate()

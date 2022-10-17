@@ -429,7 +429,6 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
-        records = []
 
         def callback(input_tuple):
             _, _, bins = input_tuple
@@ -858,7 +857,7 @@ class TestQuery(TestBaseClass):
         Invoke query() without any mandatory parameters.
         """
         with pytest.raises(e.ParamError) as err_info:
-            query = self.as_connection.query()
+            self.as_connection.query()
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -915,7 +914,6 @@ class TestQuery(TestBaseClass):
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
 
-        records = []
 
         def callback(input_tuple):
             raise Exception("error")
@@ -951,7 +949,7 @@ class TestQuery(TestBaseClass):
         should raises a param error.
         """
         with pytest.raises(e.ParamError) as err_info:
-            query = self.as_connection.query(1, "demo")
+            self.as_connection.query(1, "demo")
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -961,7 +959,7 @@ class TestQuery(TestBaseClass):
         Invoke query() with set argument not a string
         """
         with pytest.raises(e.ParamError) as err_info:
-            query = self.as_connection.query("test", 1)
+            self.as_connection.query("test", 1)
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM

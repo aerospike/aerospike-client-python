@@ -122,11 +122,11 @@ class TestBatchExpressionsOperations(TestBaseClass):
         """
         with pytest.raises(expected):
             ops = [expressions.expression_read(name, expr, flags)]
-            res = self.as_connection.batch_get_ops(self.keys, ops)
+            self.as_connection.batch_get_ops(self.keys, ops)
             # print("test_read_neg: ", res)
 
     def test_batch_result_output_format(self):
-        pp = pprint.PrettyPrinter(2, 80)
+        pprint.PrettyPrinter(2, 80)
         policy = {"key": aerospike.POLICY_KEY_SEND}
         map_policy = {
             "map_write_mode": aerospike.MAP_UPDATE,

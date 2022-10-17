@@ -191,4 +191,4 @@ class TestGrantRoles(TestBaseClass):
         roles = ["read" * 25, "read-write" * 25]
 
         with pytest.raises(e.ClientError) as err:
-            status = self.client.admin_grant_roles(user, roles)
+            self.client.admin_grant_roles(user, roles)

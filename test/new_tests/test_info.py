@@ -120,13 +120,13 @@ class TestInfo(object):
         request = "statistics"
 
         with pytest.raises(e.ParamError):
-            nodes_info = self.as_connection.info(request, host_arg)
+            self.as_connection.info(request, host_arg)
 
     def test_info_with_host_as_tuple(self):
         request = "statistics"
         hosts_tuple = tuple(self.connection_config["hosts"])
         with pytest.raises(e.ParamError):
-            nodes_info = self.as_connection.info(request, hosts_tuple)
+            self.as_connection.info(request, hosts_tuple)
 
     @pytest.mark.skip("This returns an empty dict" + "unsure if this is correct behavior")
     def test_info_host_as_list_of_list(self):

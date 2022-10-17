@@ -133,7 +133,7 @@ class TestCDTIndexB64(object):
         Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
+            self.as_connection.get_cdtctx_base64(ctx_list_index)
         except e.ParamError as exception:
             pass
 

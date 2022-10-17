@@ -108,7 +108,7 @@ class TestQueryApply(object):
 
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        job_id = query.execute_background()
+        query.execute_background()
         # Give time for the query to finish
 
         time.sleep(5)
@@ -138,7 +138,7 @@ class TestQueryApply(object):
         query = self.as_connection.query(TEST_NS, TEST_SET)
         # query.where(number_predicate)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        job_id = query.execute_background(policy)
+        query.execute_background(policy)
         # Give time for the query to finish
         time.sleep(5)
         # wait_for_job_completion(self.as_connection, job_id)
@@ -344,4 +344,4 @@ class TestQueryApply(object):
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         # Policy needs to be a dict. Not a string
         with pytest.raises(exception.ParamError):
-            res = query.execute_background("Honesty is the best Policy")
+            query.execute_background("Honesty is the best Policy")

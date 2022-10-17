@@ -61,7 +61,7 @@ class TestInfo(object):
 
         request = "statistics"
         policy = {"timeout": 1000}
-        hosts = [host for host in self.connection_config["hosts"]]
+        [host for host in self.connection_config["hosts"]]
 
         nodes_info = self.as_connection.info_all(request, policy)
 
@@ -71,7 +71,7 @@ class TestInfo(object):
     def test_info_all_for_invalid_request(self):
 
         request = "fake_request_string_not_real"
-        hosts = [host for host in self.connection_config["hosts"]]
+        [host for host in self.connection_config["hosts"]]
         nodes_info = self.as_connection.info_all(request)
 
         assert isinstance(nodes_info, dict)
@@ -81,7 +81,6 @@ class TestInfo(object):
         """
         Test that sending None as the request raises an error
         """
-        request = None
 
         with pytest.raises(e.ParamError):
             self.as_connection.info_all(None)
@@ -104,7 +103,6 @@ class TestInfo(object):
         """
         Test that sending a non dict/None as policy raises an error
         """
-        request = None
 
         with pytest.raises(e.ParamError):
             self.as_connection.info_all(None, [])

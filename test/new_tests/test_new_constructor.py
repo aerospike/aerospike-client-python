@@ -24,7 +24,7 @@ def test_setting_key():
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)
 
-    client = aerospike.client(config)
+    aerospike.client(config)
 
 
 def test_setting_consistency():
@@ -33,7 +33,7 @@ def test_setting_consistency():
     policies = {"read": read_policy}
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)
-    client = aerospike.client(config)
+    aerospike.client(config)
 
 
 def test_setting_consistency():
@@ -42,7 +42,7 @@ def test_setting_consistency():
     policies = {"read": read_policy}
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)
-    client = aerospike.client(config)
+    aerospike.client(config)
 
 
 def test_setting_consistency():
@@ -51,7 +51,7 @@ def test_setting_consistency():
     policies = {"read": read_policy}
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)
-    client = aerospike.client(config)
+    aerospike.client(config)
 
 
 def test_setting_conmmit_level():
@@ -60,7 +60,7 @@ def test_setting_conmmit_level():
     policies = {"write": write_policy}
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)
-    client = aerospike.client(config)
+    aerospike.client(config)
 
 
 def test_setting_exists():
@@ -69,7 +69,7 @@ def test_setting_exists():
     policies = {"write": write_policy}
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)
-    client = aerospike.client(config)
+    aerospike.client(config)
 
 
 def test_setting_gen():
@@ -78,7 +78,7 @@ def test_setting_gen():
     policies = {"write": write_policy}
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)
-    client = aerospike.client(config)
+    aerospike.client(config)
 
 
 def test_setting_wrong_type():
@@ -87,7 +87,7 @@ def test_setting_wrong_type():
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)
     with pytest.raises(e.ParamError):
-        client = aerospike.client(config)
+        aerospike.client(config)
 
 
 def test_setting_rack_aware_and_rack_id():
@@ -109,7 +109,7 @@ def test_setting_rack_aware_non_bool():
     config = copy.deepcopy(gconfig)
     config["rack_aware"] = "True"
     with pytest.raises(e.ParamError):
-        client = aerospike.client(config)
+        aerospike.client(config)
 
 
 @pytest.mark.parametrize(
@@ -125,7 +125,7 @@ def test_setting_rack_id_wrong_type(rack_id):
     config = copy.deepcopy(gconfig)
     config["rack_id"] = rack_id
     with pytest.raises(e.ParamError):
-        client = aerospike.client(config)
+        aerospike.client(config)
 
 
 def test_setting_wrong_type_services_alternate():
@@ -135,4 +135,4 @@ def test_setting_wrong_type_services_alternate():
     config = copy.deepcopy(gconfig)
     config["use_services_alternate"] = "True"
     with pytest.raises(e.ParamError):
-        client = aerospike.client(config)
+        aerospike.client(config)

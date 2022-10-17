@@ -103,7 +103,7 @@ class TestUdfPut(TestBaseClass):
         filename = "empty.lua"
         udf_type = 0
         with pytest.raises(e.LuaFileNotFound):
-            status = self.as_connection.udf_put(filename, udf_type, policy)
+            self.as_connection.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_filename_too_long(self):
 
@@ -111,7 +111,7 @@ class TestUdfPut(TestBaseClass):
         filename = "a" * 510 + ".lua"
         udf_type = 0
         with pytest.raises(e.ParamError):
-            status = self.as_connection.udf_put(filename, udf_type, policy)
+            self.as_connection.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_empty_filename(self):
 
@@ -119,7 +119,7 @@ class TestUdfPut(TestBaseClass):
         filename = ""
         udf_type = 0
         with pytest.raises(e.ParamError):
-            status = self.as_connection.udf_put(filename, udf_type, policy)
+            self.as_connection.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_empty_filename_beginning_with_slash(self):
 
@@ -127,7 +127,7 @@ class TestUdfPut(TestBaseClass):
         filename = "/"
         udf_type = 0
         with pytest.raises(e.ParamError):
-            status = self.as_connection.udf_put(filename, udf_type, policy)
+            self.as_connection.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_proper_parameters_without_connection(self):
 

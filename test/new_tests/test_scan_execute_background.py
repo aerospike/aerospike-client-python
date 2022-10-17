@@ -334,4 +334,4 @@ class TestScanApply(object):
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
         # Policy needs to be a dict. Not a string
         with pytest.raises(exception.ParamError):
-            res = scan.execute_background("Honesty is the best Policy")
+            scan.execute_background("Honesty is the best Policy")

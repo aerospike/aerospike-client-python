@@ -23,7 +23,6 @@ class TestListBasics(object):
             Teardown method.
             """
             key = ("test", "map_test", 1)
-            binname = "my_map"
             self.as_connection.remove(key)
 
         request.addfinalizer(teardown)

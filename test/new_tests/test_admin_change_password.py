@@ -168,6 +168,6 @@ class TestChangePassword(object):
         password = "password" * 1000
 
         with pytest.raises(aerospike.exception.ClientError):
-            status = self.clientreaduser.admin_change_password(user, password, policy)
+            self.clientreaduser.admin_change_password(user, password, policy)
 
         self.clientreaduser.close()

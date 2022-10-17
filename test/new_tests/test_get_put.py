@@ -848,7 +848,7 @@ class TestGetPut:
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "integer value exceeds sys.maxsize"
-        except SystemError as exception:
+        except SystemError:
             pass
 
     def test_edge_put_with_key_as_an_integer_greater_than_maxsize(self):

@@ -757,7 +757,7 @@ class TestPut:
             except e.ParamError as exception:
                 assert exception.code == -2
                 assert exception.msg == "integer value exceeds sys.maxsize"
-            except SystemError as exception:
+            except SystemError:
                 pass
 
         await asyncio.gather(async_io(key, bins))

@@ -284,7 +284,7 @@ class TestSelectMany(object):
     )
     def test_select_many_with_invalid_bin_names_list(self, bins):
         with pytest.raises(e.ParamError):
-            records = self.as_connection.select_many(self.keys, bins)
+            self.as_connection.select_many(self.keys, bins)
 
     def test_select_many_without_any_parameter(self):
         """

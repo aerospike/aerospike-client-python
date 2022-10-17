@@ -12,17 +12,17 @@ except Exception:
 class TestInvalidClientConfig(object):
     def test_no_config(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client()
+            aerospike.client()
         assert "No config argument" in err.value.msg
 
     def test_config_not_dict(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client([])
+            aerospike.client([])
         assert "Config must be a dict" in err.value.msg
 
     def test_no_host_in_config(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client({})
+            aerospike.client({})
         assert "Hosts must be a list" in err.value.msg
 
     def test_wrong_host_type(self):

@@ -73,8 +73,7 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_timeout_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -90,8 +89,7 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_expressions_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -112,8 +110,7 @@ class TestScan(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_scan_with_max_records_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -130,8 +127,7 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_expressions_policy_no_set(self):
 
-        ns = "test"
-        st = None
+        pass
 
         records = []
 
@@ -151,8 +147,7 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_socket_timeout_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -168,8 +163,7 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_records_per_second_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -379,8 +373,7 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_select_binnames_bytearray(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 
@@ -399,7 +392,7 @@ class TestScan(TestBaseClass):
     def test_scan_without_any_parameter(self):
 
         with pytest.raises(e.ParamError) as err:
-            scan_obj = self.as_connection.scan()
+            self.as_connection.scan()
             assert True
 
     def test_scan_with_non_existent_ns_and_set(self):
@@ -459,7 +452,7 @@ class TestScan(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_with_callback_non_callable(self):
-        records = []
+        pass
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
@@ -483,8 +476,7 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_invalid_expressions_policy(self):
 
-        ns = "test"
-        st = "demo"
+        pass
 
         records = []
 

@@ -435,7 +435,7 @@ class TestOperate(object):
         assert bins[self.test_map_bin] == ["c", self.test_map["c"]]
 
     def test_map_remove_by_key_ret_key_val_test_with_list_read_odd(self):
-        result_map = self.test_map.copy()
+        self.test_map.copy()
         self.as_connection.put(self.test_map_key, {"cool_list": [1, 2, 3]})
         ops = [
             {"op": aerospike.OPERATOR_READ, "bin": "cool_list"},
@@ -451,7 +451,7 @@ class TestOperate(object):
         assert bins["cool_list"] == [1, 2, 3]
 
     def test_map_remove_by_key_ret_key_val_test_with_list_read_even(self):
-        result_map = self.test_map.copy()
+        self.test_map.copy()
         self.as_connection.put(self.test_map_key, {"cool_list": [1, 2, 3, 4]})
         ops = [
             {"op": aerospike.OPERATOR_READ, "bin": "cool_list"},

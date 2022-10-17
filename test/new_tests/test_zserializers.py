@@ -105,7 +105,7 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        response = client.put(self.test_key, self.mixed_record)
+        client.put(self.test_key, self.mixed_record)
 
         _, _, bins = client.get(self.test_key)
 
@@ -122,7 +122,7 @@ class TestPythonSerializer(object):
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
 
-        response = self.as_connection.put(self.test_key, self.mixed_record)
+        self.as_connection.put(self.test_key, self.mixed_record)
 
         _, _, bins = self.as_connection.get(self.test_key)
 
@@ -354,7 +354,7 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (5, instance_deserializer)}
 
         with pytest.raises(e.ParamError):
-            client = aerospike.client(method_config)
+            aerospike.client(method_config)
 
     def test_instance_deserializer_non_callable(self):
         """
@@ -367,7 +367,7 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, 5)}
 
         with pytest.raises(e.ParamError):
-            client = aerospike.client(method_config)
+            aerospike.client(method_config)
 
     def test_serializer_with_no_args(self):
         aerospike.set_serializer(serializer_no_arg)

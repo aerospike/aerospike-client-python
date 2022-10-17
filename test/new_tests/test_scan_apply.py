@@ -113,7 +113,7 @@ class TestScanApply(object):
 
         policy = {"timeout": 1000, "expressions": expr.compile()}
         with pytest.raises(e.InvalidRequest):
-            scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
+            self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
     def test_scan_apply_with_none_set(self):
         """

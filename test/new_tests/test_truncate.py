@@ -160,7 +160,7 @@ class TestTruncate(object):
     @pytest.mark.parametrize("fake_namespace, fake_set", (("", "truncate"), ("test", "")))
     def test_truncate_empty_container_names(self, fake_namespace, fake_set):
         with pytest.raises(e.ClientError):
-            ret_code = self.as_connection.truncate(fake_namespace, fake_set, 0)
+            self.as_connection.truncate(fake_namespace, fake_set, 0)
         self._assert_truncation_status(self.truncated_keys, exists=True)
 
     def test_nanos_argument_before_cf_epoch(self):

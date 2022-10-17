@@ -26,7 +26,6 @@ class TestScanInfo(object):
             key = ("test", "demo", i)
             rec = {"age": i}
             connection_with_udf.put(key, rec)
-        policy = {}
         self.job_id = connection_with_udf.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
 
         def teardown():
@@ -57,7 +56,7 @@ class TestScanInfo(object):
         self.job_id = connection_with_udf.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], block=False)
 
         with pytest.raises(e.TimeoutError):
-            job_info = self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN, policy)
+            self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN, policy)
 
     def test_job_info_with_correct_parameters(self):
         """
@@ -145,7 +144,7 @@ class TestScanInfo(object):
         Invoke job_info() with the scan module out of the expected range
         """
         with pytest.raises(e.ParamError):
-            response = self.as_connection.job_info(self.job_id, "not query nor scan")
+            self.as_connection.job_info(self.job_id, "not query nor scan")
 
     @pytest.mark.parametrize("module", (None, 1.5, {}, [], 0))
     def test_job_info_with_module_wrong_type(self, module):
@@ -153,4 +152,4 @@ class TestScanInfo(object):
         Invoke job_info() with the scan module argument of the wrong type
         """
         with pytest.raises(TypeError):
-            response = self.as_connection.job_info(self.job_id, module)
+            self.as_connection.job_info(self.job_id, module)

@@ -212,7 +212,7 @@ class TestCreateRole(object):
             "write_quota": 0,
         }
 
-        status = self.client.admin_drop_role("usr-sys-admin-test")
+        self.client.admin_drop_role("usr-sys-admin-test")
 
     def test_create_role_whitelist_quota_positive(self):
         """
@@ -252,7 +252,7 @@ class TestCreateRole(object):
             "write_quota": 30,
         }
 
-        status = self.client.admin_drop_role("usr-sys-admin-test")
+        self.client.admin_drop_role("usr-sys-admin-test")
 
     def test_create_role_incorrect_role_type(self):
         """

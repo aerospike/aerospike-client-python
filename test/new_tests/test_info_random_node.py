@@ -151,7 +151,7 @@ class TestInfoRandomNodeIncorrectUsage(object):
         """
         Test info with extra parameters.
         """
-        host = self.connection_config["hosts"][0]
+        self.connection_config["hosts"][0]
         policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.info_random_node("bins", policy, "")

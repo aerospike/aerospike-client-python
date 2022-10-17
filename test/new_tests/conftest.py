@@ -138,7 +138,7 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
             s.connect((address, port))
             s.close()
             return True
-        except Exception as e:
+        except Exception:
             pass
         time.sleep(interval)
     return False
