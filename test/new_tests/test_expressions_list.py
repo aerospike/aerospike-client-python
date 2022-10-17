@@ -5,7 +5,7 @@ import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions import *
+from aerospike_helpers.expressions import And, Eq, ListAppend, ListAppendItems, ListClear, ListGetByIndex, ListGetByIndexRange, ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, ListGetByValue, ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, ListInsert, ListInsertItems, ListRemoveByIndex, ListRemoveByIndexRange, ListRemoveByIndexRangeToEnd, ListRemoveByRank, ListRemoveByRankRange, ListRemoveByRankRangeToEnd, ListRemoveByValue, ListRemoveByValueList, ListRemoveByValueRange, ListRemoveByValueRelRankRange, ListRemoveByValueRelRankToEnd, ListSet, ListSize, ListSort, Or, ResultType
 
 aerospike = pytest.importorskip("aerospike")
 try:

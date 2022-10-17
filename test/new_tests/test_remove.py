@@ -2,7 +2,7 @@
 
 import pytest
 import sys
-from .test_data import *
+from .test_data import key_neg
 
 aerospike = pytest.importorskip("aerospike")
 try:

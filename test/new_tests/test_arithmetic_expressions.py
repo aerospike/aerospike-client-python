@@ -12,7 +12,7 @@ except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-from aerospike_helpers.expressions import *
+from aerospike_helpers.expressions import Abs, Add, Ceil, Div, Eq, FloatBin, Floor, IntBin, Log, Max, Min, Mod, Mul, Pow, StrBin, Sub, ToFloat, ToInt
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 

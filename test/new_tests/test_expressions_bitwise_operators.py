@@ -11,7 +11,7 @@ except Exception:
     print("Please install aerospike python client.")
     sys.exit(1)
 
-from aerospike_helpers.expressions import *
+from aerospike_helpers.expressions import Eq, IntAnd, IntArithmeticRightShift, IntBin, IntCount, IntLeftScan, IntLeftShift, IntNot, IntOr, IntRightScan, IntRightShift, IntXOr
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 

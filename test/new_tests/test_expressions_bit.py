@@ -3,7 +3,7 @@
 import pytest
 import sys
 from .test_base_class import TestBaseClass
-from aerospike_helpers.expressions import *
+from aerospike_helpers.expressions import BitAdd, BitAnd, BitCount, BitGet, BitGetInt, BitInsert, BitLeftScan, BitLeftShift, BitNot, BitOr, BitRemove, BitResize, BitRightScan, BitRightShift, BitSet, BitSetInt, BitSubtract, BitXor, Eq
 
 aerospike = pytest.importorskip("aerospike")
 try:
