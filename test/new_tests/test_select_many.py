@@ -322,7 +322,7 @@ class TestSelectMany(object):
         raises an error
         """
         key = self.keys[0]
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.select_many(key, ["name"], {})
 
     def test_select_many_with_invalid_timeout(self):
@@ -344,16 +344,16 @@ class TestSelectMany(object):
 
     @pytest.mark.parametrize("keys_arg", (None, {}, False, "a", 1))
     def test_select_many_with_invalid_keys_type(self, keys_arg):
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.select_many(keys_arg, ["name"], {})
 
     @pytest.mark.parametrize("bins", (None, {}, False, "a", 1))
     def test_select_many_with_invalid_bins_arg_type(self, bins):
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.select_many(self.keys, bins)
 
     @pytest.mark.parametrize("policy", ([], False, 1, "policy"))
     def test_select_many_with_invalid_policy_arg_type(self, policy):
         bins = ["name"]
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.select_many(self.keys, bins, policy)

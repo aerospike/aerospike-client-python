@@ -229,7 +229,7 @@ class TestQueryPagination(TestBaseClass):
 
     def test_query_pagination_without_any_parameter(self):
 
-        with pytest.raises(e.ParamError) as err:
+        with pytest.raises(e.ParamError):
             self.as_connection.query()
             assert True
 

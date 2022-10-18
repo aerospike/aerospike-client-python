@@ -177,7 +177,7 @@ class TestIncorrectCallsToUDFRemove(object):
         if is_greater_451(self.string_server_version):
             self.as_connection.udf_remove(module, policy)
         else:
-            with pytest.raises(e.UDFError) as err_info:
+            with pytest.raises(e.UDFError):
                 self.as_connection.udf_remove(module, policy)
 
     def test_udf_remove_without_parameters(self):

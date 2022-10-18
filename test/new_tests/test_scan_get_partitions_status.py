@@ -120,7 +120,7 @@ class TestScanGetPartitionsStatus(TestBaseClass):
 
         # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
         scan_obj.paginate()
-        results = scan_obj.results()
+        scan_obj.results()
 
         stats = scan_obj.get_partitions_status()
         assert stats
@@ -129,7 +129,7 @@ class TestScanGetPartitionsStatus(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
-        results = scan_obj.results()
+        scan_obj.results()
 
         stats = scan_obj.get_partitions_status()
         assert not stats

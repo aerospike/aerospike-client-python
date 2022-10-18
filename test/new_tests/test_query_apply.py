@@ -96,7 +96,7 @@ class TestQueryApply(object):
         Invoke query_apply() without any mandatory parameters.
         It should raise a type error as the wrong parameters are passed
         """
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.as_connection.query_apply()
 
     def test_query_apply_with_correct_parameters_no_policy(self):
@@ -159,7 +159,7 @@ class TestQueryApply(object):
 
         policy = {"total_timeout": 0, "expressions": expr}
         with pytest.raises(e.ParamError):
-            query_id = self.as_connection.query_apply(
+            self.as_connection.query_apply(
                 "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
             )
 
@@ -330,7 +330,7 @@ class TestQueryApply(object):
     def test_invalid_predicate_tuple(self, predicate):
 
         with pytest.raises(e.ParamError) as err_info:
-            query_id = self.as_connection.query_apply(
+            self.as_connection.query_apply(
                 "test", "demo", predicate, "query_apply", "mark_as_applied", ["name", 2]
             )
 
@@ -360,7 +360,7 @@ class TestQueryApply(object):
         arguments contain an unsupported set.
         """
         with pytest.raises(e.ClientError) as err_info:
-            query_id = self.as_connection.query("test", "demo",).apply(
+            self.as_connection.query("test", "demo",).apply(
                 "query_apply_parameters",
                 "query_params",
                 [
@@ -376,7 +376,7 @@ class TestQueryApply(object):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
         with pytest.raises(e.ClientError) as err_info_dict:
-            query_id = self.as_connection.query("test", "demo",).apply(
+            self.as_connection.query("test", "demo",).apply(
                 "query_apply_parameters",
                 "query_params",
                 [
@@ -397,7 +397,7 @@ class TestQueryApply(object):
         arguments contain an unsupported tuple.
         """
         with pytest.raises(e.ClientError) as err_info:
-            query_id = self.as_connection.query("test", "demo",).apply(
+            self.as_connection.query("test", "demo",).apply(
                 "query_apply_parameters",
                 "query_params",
                 [["job_type", "job_type", 18], ["id", ["john", ("id", "args"), ["john", {"mary": 39}]]], []],
@@ -415,7 +415,7 @@ class TestQueryApply(object):
         This should cause an exception.
         """
         with pytest.raises(e.ClientError) as err_info:
-            query_id = self.as_connection.query(
+            self.as_connection.query(
                 "test",
                 "demo",
             ).apply("query_apply_parameters", "query_params", "age")

@@ -27,7 +27,8 @@ class TestIndex(object):
             ensure_dropped_index(self.as_connection, "test", "name_index")
             for i in range(5):
                 key = ("test", "demo", i)
-                rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i}
+                # TODO: unneeded variable?
+                rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i} # noqa: F841
                 as_connection.remove(key)
 
         request.addfinalizer(teardown)

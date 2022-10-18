@@ -174,11 +174,11 @@ class TestTruncate(object):
     def test_nanos_argument_between_int64_and_uint64(self):
         # This may stop raising a client error in 2264
         # as the value will no longer be in the future then
-        with pytest.raises(e.ClientError) as ex:
+        with pytest.raises(e.ClientError):
             self.as_connection.truncate("test", "truncate", 2**63 + 1)
 
     def test_nanos_argument_between_int32_and_uint32(self):
-        with pytest.raises(e.ClientError) as ex:
+        with pytest.raises(e.ClientError):
             self.as_connection.truncate("test", "truncate", 2**31 + 1)
 
     def test_nanos_argument_negative(self):

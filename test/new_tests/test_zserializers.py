@@ -137,7 +137,7 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
+        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
         _, _, bins = client.get(self.test_key)
 
@@ -169,7 +169,8 @@ class TestPythonSerializer(object):
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
 
-        rec = {"normal": 1234, "tuple": (1, 2, 3)}
+        # TODO: unnecessary variable?
+        rec = {"normal": 1234, "tuple": (1, 2, 3)} # noqa: F841
         response = self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
 
         assert response == 0
@@ -189,7 +190,8 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        rec = {"normal": 1234, "tuple": (1, 2, 3)}
+        # TODO: unnecessary variable?
+        rec = {"normal": 1234, "tuple": (1, 2, 3)} # noqa: F841
         response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
         assert response == 0
@@ -211,7 +213,7 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
 
         _, _, bins = client.get(self.test_key)
 
@@ -229,7 +231,7 @@ class TestPythonSerializer(object):
         client = TestBaseClass.get_new_connection(method_config)
 
         aerospike.unset_serializers()
-        response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
+        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
         _, _, bins = client.get(self.test_key)
 
@@ -246,7 +248,7 @@ class TestPythonSerializer(object):
         client = TestBaseClass.get_new_connection(method_config)
 
         aerospike.unset_serializers()
-        response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
 
         _, _, bins = client.get(self.test_key)
 

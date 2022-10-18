@@ -27,37 +27,37 @@ class TestInvalidClientConfig(object):
 
     def test_wrong_host_type(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client({"hosts": (())})
+            aerospike.client({"hosts": (())})
         assert "Hosts must be a list" in err.value.msg
 
     def test_empty_host_in_config(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client({"hosts": []})
+            aerospike.client({"hosts": []})
         assert "Hosts must not be empty" in err.value.msg
 
     def test_invalid_host_in_list(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client({"hosts": [("localhost", 3000), ()]})
+            aerospike.client({"hosts": [("localhost", 3000), ()]})
         assert "Invalid host" in err.value.msg
 
     def test_lua_user_path_too_long(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client({"hosts": [("localhost", 3000)], "lua": {"user_path": "a" * 256}})
+            aerospike.client({"hosts": [("localhost", 3000)], "lua": {"user_path": "a" * 256}})
         assert "Lua user path too long" in err.value.msg
 
     def test_non_callable_serializer(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client({"hosts": [("localhost", 3000)], "serialization": (5, lambda x: 5)})
+            aerospike.client({"hosts": [("localhost", 3000)], "serialization": (5, lambda x: 5)})
         assert "Serializer must be callable" in err.value.msg
 
     def test_non_callable_deserializer(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client({"hosts": [("localhost", 3000)], "serialization": (lambda x: 5, 5)})
+            aerospike.client({"hosts": [("localhost", 3000)], "serialization": (lambda x: 5, 5)})
         assert "Deserializer must be callable" in err.value.msg
 
     def test_negative_threshold_value(self):
         with pytest.raises(e.ParamError) as err:
-            client = aerospike.client({"hosts": [("localhost", 3000)], "compression_threshold": -1})
+            aerospike.client({"hosts": [("localhost", 3000)], "compression_threshold": -1})
         assert "Compression value must not be negative" in err.value.msg
 
     @pytest.mark.parametrize("policy", ["read", "write", "operate", "batch", "scan", "query", "apply", "remove"])
@@ -68,13 +68,13 @@ class TestInvalidClientConfig(object):
     def test_invalid_subpolicy_base_types(self, policy, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {policy: subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {policy: subpolicy}})
 
     @pytest.mark.parametrize("key, value", [("deserialize", "nope"), ("key", "send"), ("replica", "maybe?")])
     def test_invalid_read_policy_types(self, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {"read": subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {"read": subpolicy}})
 
     @pytest.mark.parametrize(
         "key, value",
@@ -89,7 +89,7 @@ class TestInvalidClientConfig(object):
     def test_invalid_write_policy_types(self, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {"write": subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {"write": subpolicy}})
 
     @pytest.mark.parametrize(
         "key, value",
@@ -104,7 +104,7 @@ class TestInvalidClientConfig(object):
     def test_invalid_operat_policy_types(self, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {"operate": subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {"operate": subpolicy}})
 
     @pytest.mark.parametrize(
         "key, value",
@@ -117,13 +117,13 @@ class TestInvalidClientConfig(object):
     def test_invalid_batch_policy_types(self, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {"batch": subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {"batch": subpolicy}})
 
     @pytest.mark.parametrize("key, value", [("durable_delete", "durable")])  # should be bool
     def test_invalid_scan_policy_types(self, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {"scan": subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {"scan": subpolicy}})
 
     #  Keep this parametrized in case query gets additional policies
     @pytest.mark.parametrize(
@@ -135,7 +135,7 @@ class TestInvalidClientConfig(object):
     def test_invalid_query_policy_types(self, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {"query": subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {"query": subpolicy}})
 
     @pytest.mark.parametrize(
         "key, value",
@@ -150,7 +150,7 @@ class TestInvalidClientConfig(object):
     def test_invalid_apply_policy_types(self, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {"apply": subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {"apply": subpolicy}})
 
     @pytest.mark.parametrize(
         "key, value",
@@ -165,4 +165,4 @@ class TestInvalidClientConfig(object):
     def test_invalid_remove_policy_types(self, key, value):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
-            client = aerospike.client({"hosts": [("localhost", 3000)], "policies": {"remove": subpolicy}})
+            aerospike.client({"hosts": [("localhost", 3000)], "policies": {"remove": subpolicy}})

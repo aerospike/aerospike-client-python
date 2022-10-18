@@ -363,7 +363,7 @@ class TestPut:
         """
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            with pytest.raises(e.ParamError) as paramError:
+            with pytest.raises(e.ParamError):
                 await io.put(self.as_connection, key, rec, meta, policy, serialize)
 
         await asyncio.gather(async_io())
@@ -376,7 +376,7 @@ class TestPut:
         key = ("test", "demo", 1)
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            with pytest.raises(e.ParamError) as paramError:
+            with pytest.raises(e.ParamError):
                 await io.put(self.as_connection, key, rec, meta, policy, serialize)
 
         await asyncio.gather(async_io(key))
@@ -389,7 +389,7 @@ class TestPut:
         """
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            with pytest.raises(e.ParamError) as paramError:
+            with pytest.raises(e.ParamError):
                 await io.put(self.as_connection, key, rec, meta, policy, serialize)
 
         await asyncio.gather(async_io(key, record))
@@ -407,7 +407,7 @@ class TestPut:
         """
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            with pytest.raises(e.ParamError) as paramError:
+            with pytest.raises(e.ParamError):
                 await io.put(self.as_connection, key, rec, meta, policy, serialize)
 
         await asyncio.gather(async_io(key, record))
@@ -428,7 +428,7 @@ class TestPut:
         """
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            with pytest.raises(e.ClientError) as clientError:
+            with pytest.raises(e.ClientError):
                 await io.put(self.as_connection, key, rec, meta, policy, serialize)
 
         await asyncio.gather(async_io(key, record))

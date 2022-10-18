@@ -65,14 +65,14 @@ class TestGetKeyDigest(object):
         """
         Invoke get_key_digest() with a ns and no other parameters
         """
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.as_connection.get_key_digest("test")
 
     def test_get_key_digest_with_only_ns_and_set(self):
         """
         Invoke get_key_digest() with a ns and no other parameters
         """
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.as_connection.get_key_digest("test", "set")
 
     @pytest.mark.parametrize("ns", [1, None, False, {}, [], ()])

@@ -138,7 +138,7 @@ class TestInfoSingleNodeIncorrectUsage(object):
         """
         Test info for incorrect command.
         """
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.ClientError):
             self.as_connection.info_single_node("abcd", self.connection_config["hosts"][0])
 
     def test_info_single_node_positive_without_connection(self):
@@ -168,7 +168,7 @@ class TestInfoSingleNodeIncorrectUsage(object):
         Test info with incorrect host.
         """
         host = "wrong"
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.info_single_node("bins", host)
 
     @pytest.mark.parametrize("command", (None, 5, ["info"], {}, False))
@@ -176,7 +176,7 @@ class TestInfoSingleNodeIncorrectUsage(object):
         """
         Test info for None command.
         """
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.info_single_node(command, self.connection_config["hosts"][0][:2])
 
     @pytest.mark.parametrize("hostname", (None, 5, ["localhost"], {}, 3000.0))
@@ -184,7 +184,7 @@ class TestInfoSingleNodeIncorrectUsage(object):
         """
         Test info for invalid hostname types.
         """
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.info_single_node("info", hostname)
 
     def test_info_single_node_positive_with_incorrect_policy(self):
@@ -205,5 +205,5 @@ class TestInfoSingleNodeIncorrectUsage(object):
         Test info with incorrect host type.
         """
 
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.info_single_node("bins", host)

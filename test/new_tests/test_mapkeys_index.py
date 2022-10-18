@@ -55,7 +55,7 @@ class TestMapKeysIndex(object):
         Invoke index_mapkeys_create() with extra parameters.
         """
         policy = {}
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.as_connection.index_map_keys_create(
                 "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy, 1
             )
@@ -212,7 +212,7 @@ class TestMapKeysIndex(object):
         Test with various conditions raising paramerrors
         """
 
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.index_map_keys_create(ns, test_set, test_bin, index_type, index_name, policy)
             self.as_connection.index_remove(ns, index_name)
             ensure_dropped_index(self.as_connection, ns, index_name)

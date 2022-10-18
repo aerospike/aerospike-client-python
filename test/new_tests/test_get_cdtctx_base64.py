@@ -134,7 +134,7 @@ class TestCDTIndexB64(object):
         """
         try:
             self.as_connection.get_cdtctx_base64(ctx_list_index)
-        except e.ParamError as exception:
+        except e.ParamError:
             pass
 
     def test_get_cdtctxb64_with_invalid_ctx(self):
@@ -142,6 +142,6 @@ class TestCDTIndexB64(object):
         Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            bs_b4_cdt = self.as_connection.get_cdtctx_base64({"ctx": ctx_empty})
-        except e.ParamError as exception:
+            self.as_connection.get_cdtctx_base64({"ctx": ctx_empty})
+        except e.ParamError:
             pass

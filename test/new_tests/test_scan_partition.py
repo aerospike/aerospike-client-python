@@ -118,9 +118,6 @@ class TestScanPartition(TestBaseClass):
 
     def test_scan_partition_with_timeout_policy(self):
 
-        ns = "test"
-        st = "demo"
-
         records = []
 
         def callback(part_id, input_tuple):
@@ -137,9 +134,6 @@ class TestScanPartition(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_scan_partition_with_max_records_policy(self):
 
-        ns = "test"
-        st = "demo"
-
         records = []
 
         max_records = self.partition_1000_count // 2
@@ -155,9 +149,6 @@ class TestScanPartition(TestBaseClass):
 
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_scan_partition_with_all_records_policy(self):
-
-        ns = "test"
-        st = "demo"
 
         records = []
 
@@ -179,9 +170,6 @@ class TestScanPartition(TestBaseClass):
 
     def test_scan_partition_with_socket_timeout_policy(self):
 
-        ns = "test"
-        st = "demo"
-
         records = []
 
         def callback(part_id, input_tuple):
@@ -195,9 +183,6 @@ class TestScanPartition(TestBaseClass):
         assert len(records) == self.partition_1000_count
 
     def test_scan_partition_with_records_per_second_policy(self):
-
-        ns = "test"
-        st = "demo"
 
         records = []
 
@@ -273,8 +258,8 @@ class TestScanPartition(TestBaseClass):
 
     def test_scan_partition_without_any_parameter(self):
 
-        with pytest.raises(e.ParamError) as err:
-            scan_obj = self.as_connection.scan()
+        with pytest.raises(e.ParamError):
+            self.as_connection.scan()
             assert True
 
     def test_scan_partition_with_non_existent_ns_and_set(self):
@@ -311,7 +296,8 @@ class TestScanPartition(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_partition_with_callback_non_callable(self):
-        records = []
+        # TODO
+        records = [] # noqa: F841
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 

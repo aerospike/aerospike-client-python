@@ -292,14 +292,14 @@ class TestScanApply(object):
         """
         Invoke scan_apply() set as an int
         """
-        with pytest.raises(e.ParamError) as typeError:
+        with pytest.raises(e.ParamError):
             self.as_connection.scan_apply("test", 5, "bin_lua", "mytransform", ["age", 2])
 
     def test_scan_apply_with_set_is_int(self):
         """
         Invoke scan_apply() set as an int
         """
-        with pytest.raises(e.ParamError) as typeError:
+        with pytest.raises(e.ParamError):
             self.as_connection.scan_apply("test", 5, "bin_lua", "mytransform", ["age", 2])
 
     def test_scan_apply_with_module_function_none(self):
@@ -376,21 +376,21 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with a namespace name which does not exist
         """
-        with pytest.raises(e.NamespaceNotFound) as typeError:
+        with pytest.raises(e.NamespaceNotFound):
             self.as_connection.scan_apply("fake_not_real_ns", None, "bin_lua", "mytransform", ["age", 2])
 
     def test_scan_apply_with_non_string_module(self):
         """
         Invoke scan_apply() with a namespace name which does not exist
         """
-        with pytest.raises(e.ParamError) as typeError:
+        with pytest.raises(e.ParamError):
             self.as_connection.scan_apply("test", None, 15, "mytransform", ["age", 2])
 
     def test_scan_apply_with_non_string_function(self):
         """
         Invoke scan_apply() with a namespace name which does not exist
         """
-        with pytest.raises(e.ParamError) as typeError:
+        with pytest.raises(e.ParamError):
             self.as_connection.scan_apply("test", None, "bin_lua", 14, ["age", 2])
 
     def test_scan_apply_with_non_existent_set(self):

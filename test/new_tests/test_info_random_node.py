@@ -133,7 +133,7 @@ class TestInfoRandomNodeIncorrectUsage(object):
         """
         Test info for incorrect command.
         """
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.ClientError):
             self.as_connection.info_random_node("abcd")
 
     def test_info_random_node_positive_without_connection(self):
@@ -163,7 +163,7 @@ class TestInfoRandomNodeIncorrectUsage(object):
         """
         Test info for None command.
         """
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.info_random_node(command)
 
     def test_info_random_node_positive_with_incorrect_policy(self):

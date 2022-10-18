@@ -109,7 +109,7 @@ class TestGetRegistered(object):
         policy = {"timeout": 1000}
 
         # Check for status or empty udf contents
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.as_connection.udf_get(self.loaded_udf_name, self.udf_language, policy, "")
 
     @pytest.mark.parametrize("policy", ("", (), [], False, 1))

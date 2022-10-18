@@ -419,7 +419,7 @@ class TestRemovebin(object):
         Invoke remove_bin() with extra parameter.
         """
         key = ("test", "demo", 1)
-        with pytest.raises(e.ClientError) as typeError:
+        with pytest.raises(e.ClientError):
             self.as_connection.remove_bin(key, [1.5])
 
     @pytest.mark.skip(reason="system error")
@@ -428,7 +428,7 @@ class TestRemovebin(object):
         record = {"Name": "Herry", "age": 60}
         put_data(self.as_connection, key, record)
         meta = {"gen": 2, "ttl": 2**65}
-        with pytest.raises(e.ClientError) as typeError:
+        with pytest.raises(e.ClientError):
             self.as_connection.remove_bin(key, ["age"], meta=meta)
 
     @pytest.mark.skip(reason="system error")
@@ -437,5 +437,5 @@ class TestRemovebin(object):
         record = {"Name": "Herry", "age": 60}
         put_data(self.as_connection, key, record)
         meta = {"gen": 2**65, "ttl": 2}
-        with pytest.raises(e.ClientError) as typeError:
+        with pytest.raises(e.ClientError):
             self.as_connection.remove_bin(key, ["age"], meta=meta)

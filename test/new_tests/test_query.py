@@ -592,7 +592,7 @@ class TestQuery(TestBaseClass):
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
         with pytest.raises(e.ParamError):
-            records = query.results(options=False)
+            query.results(options=False)
 
     def test_query_with_results_invalid_nobins_options(self):
         """
@@ -602,7 +602,7 @@ class TestQuery(TestBaseClass):
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
         with pytest.raises(e.ParamError):
-            records = query.results(options={"nobins": "false"})
+            query.results(options={"nobins": "false"})
 
     def test_query_with_unicode_binnames_in_select_and_where(self):
         """
@@ -759,11 +759,12 @@ class TestQuery(TestBaseClass):
         with pytest.raises(e.ParamError):
             query.where("test_age", "between")
 
+    # TODO: incorrect test
     def test_query_with_policy_notuple(self):
         """
         Invoke query() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 1000} # noqa: F841
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):

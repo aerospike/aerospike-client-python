@@ -147,7 +147,7 @@ class TestInfo(object):
 
         config = [(127, 3000)]
 
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.info(request, config)
 
     def test_host_address_too_long(self):

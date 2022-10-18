@@ -98,7 +98,7 @@ class TestUdfList(object):
 
     def test_udf_list_with_extra_arg(self):
         policy = {"timeout": 3000}
-        with pytest.raises(TypeError) as err_info:
+        with pytest.raises(TypeError):
             self.client.udf_list(policy, "extra_parameter")
 
     @pytest.mark.parametrize("policy", [False, 1000, [], (), "timeout:5000"])

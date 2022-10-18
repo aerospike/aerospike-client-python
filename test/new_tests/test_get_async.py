@@ -149,7 +149,7 @@ class TestGet:
         """
 
         async def async_io(key_input=None, policy_input=None):
-            with pytest.raises(e.ParamError) as paramError:
+            with pytest.raises(e.ParamError):
                 await io.get(self.as_connection)
 
         await asyncio.gather(async_io())

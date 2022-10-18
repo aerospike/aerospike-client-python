@@ -411,6 +411,6 @@ class TestApply(TestBaseClass):
         Invoke apply() with incorrect ns and set
         """
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.ClientError):
             key = ("test1", "demo", 1)
             self.as_connection.apply(key, "sample", "list_prepend", ["name", "car"])

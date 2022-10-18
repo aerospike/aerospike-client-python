@@ -152,7 +152,7 @@ class TestExpressions(TestBaseClass):
 
         expr = Eq(KeyInt(), 26)
         with pytest.raises(e.FilteredOut):
-            record = self.as_connection.remove(("test", "demo", 25), policy={"expressions": expr.compile()})
+            self.as_connection.remove(("test", "demo", 25), policy={"expressions": expr.compile()})
 
     def test_scan_with_results_method_and_expressions(self):
         ns = "test"
@@ -305,4 +305,4 @@ class TestExpressions(TestBaseClass):
 
         expr = Cond(GT(IntBin("age"), _NUM_RECORDS), True, Unknown())
         with pytest.raises(e.FilteredOut):
-            record = self.as_connection.get(("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()})
+            self.as_connection.get(("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()})

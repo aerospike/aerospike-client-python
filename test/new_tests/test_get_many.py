@@ -181,6 +181,7 @@ class TestGetMany:
         bytearray_pk = bytearray_key[2]
         assert bytearray_pk == bytearray([1, 2, 3])
 
+    # TODO: incorrect test
     def test_pos_get_many_with_constructor_batch_direct_and_method_arg(self):
         """
         This sets use batch_direct to true in the constructor
@@ -189,7 +190,7 @@ class TestGetMany:
         config = {"policies": {"use_batch_direct": True}}
         client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
 
-        policy = {"use_batch_direct": False}
+        policy = {"use_batch_direct": False} # noqa: F841
         records = client_batch_direct.get_many(self.keys)
 
         assert isinstance(records, list)

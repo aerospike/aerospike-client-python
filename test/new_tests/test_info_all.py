@@ -87,7 +87,7 @@ class TestInfo(object):
 
     def test_info_all_without_parameters(self):
 
-        with pytest.raises(TypeError) as err_info:
+        with pytest.raises(TypeError):
             self.as_connection.info_all()
 
     def test_info_all_without_connection(self):
@@ -96,7 +96,7 @@ class TestInfo(object):
         """
         client1 = aerospike.client(self.connection_config)
 
-        with pytest.raises(e.ClusterError) as err_info:
+        with pytest.raises(e.ClusterError):
             client1.info_all("sets")
 
     def test_info_all_with_invalid_policy_type(self):

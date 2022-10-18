@@ -124,7 +124,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
         # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
         query_obj.paginate()
-        results = query_obj.results()
+        query_obj.results()
 
         stats = query_obj.get_partitions_status()
         assert stats
@@ -133,7 +133,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
-        results = query_obj.results()
+        query_obj.results()
 
         stats = query_obj.get_partitions_status()
         assert not stats

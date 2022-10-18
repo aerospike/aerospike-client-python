@@ -274,9 +274,6 @@ class TestQueryPartition(TestBaseClass):
     # @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_query_partition_with_all_records_policy(self):
 
-        ns = "test"
-        st = "demo"
-
         records = []
 
         max_records = (
@@ -434,8 +431,6 @@ class TestQueryPartition(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_query_partition_with_callback_non_callable(self):
-        records = []
-
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:

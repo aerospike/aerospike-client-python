@@ -887,7 +887,7 @@ class TestOperate(object):
         key = ("test", "demo", 1)
         policy = {"timeout": 1000}
         llist = [operations.prepend("name", "ram")]
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(TypeError):
             self.as_connection.operate(key, llist, {}, policy, "")
 
     def test_neg_operate_policy_is_string(self):

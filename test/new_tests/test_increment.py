@@ -261,7 +261,7 @@ class TestIncrement(object):
         """
         key = ("test", "demo", 1)
         policy = {"total_timeout": 0.5}
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(e.ParamError):
             self.as_connection.increment(key, "age", 5, {}, policy)
 
     def test_increment_with_nonexistent_key(self):
@@ -489,5 +489,5 @@ class TestIncrement(object):
 
     def test_increment_with_no_inc_value(self):
         key = ("test", "demo", 1)
-        with pytest.raises(TypeError) as err_info:
+        with pytest.raises(TypeError):
             self.as_connection.increment(key, "age")

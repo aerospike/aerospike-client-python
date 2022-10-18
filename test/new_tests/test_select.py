@@ -220,7 +220,7 @@ class TestSelect(object):
         bins_to_select = ()
         #  This test fails with pytest.raises, but does actually raise
         #  the error
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.InvalidRequest):
             self.as_connection.select(self.test_key, bins_to_select)
 
     def test_select_invalid_bin_name_tuple_raises_error(self):
