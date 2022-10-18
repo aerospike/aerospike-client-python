@@ -263,9 +263,9 @@ class TestUserSerializer(object):
         method_config = TestBaseClass.get_connection_config()
         method_config["serialization"] = (client_serialize_function, client_deserialize_function)
         if method_config["user"] is None and method_config["password"] is None:
-            aerospike.client(method_config).connect()
+            client = aerospike.client(method_config).connect()
         else:
-            aerospike.client(method_config).connect(method_config["user"], method_config["password"])
+            client = aerospike.client(method_config).connect(method_config["user"], method_config["password"])
         aerospike.set_serializer(serialize_function)
         aerospike.set_deserializer(deserialize_function)
         key = ("test", "demo", 1)
@@ -312,9 +312,9 @@ class TestUserSerializer(object):
         method_config = TestBaseClass.get_connection_config()
         method_config["serialization"] = (client_serialize_function, client_deserialize_function)
         if method_config["user"] is None and method_config["password"] is None:
-            aerospike.client(method_config).connect()
+            client = aerospike.client(method_config).connect()
         else:
-            aerospike.client(method_config).connect(method_config["user"], method_config["password"])
+            client = aerospike.client(method_config).connect(method_config["user"], method_config["password"])
 
         aerospike.set_serializer(serialize_function)
         aerospike.set_deserializer(deserialize_function)

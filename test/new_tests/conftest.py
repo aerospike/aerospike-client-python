@@ -42,16 +42,16 @@ if test_memleak == 1:
     snapshot2 = []
 
     @pytest.hookimpl(hookwrapper=True)
-    def pytest_terminal_summary(terminalreporter):  # type: (TerminalReporter) -> generator
+    def pytest_terminal_summary(terminalreporter):  # type: (TerminalReporter) -> generator # noqa: F821
         yield
 
         # you can do here anything - I just print report info
         print("*" * 8 + "HERE CUSTOM LOGIC" + "*" * 8)
 
-        for failed in terminalreporter.stats.get("failed", []):  # type: TestReport
+        for failed in terminalreporter.stats.get("failed", []):  # type: TestReport # noqa: F821
             print("failed! node_id:%s, duration: %s" % (failed.nodeid, failed.duration))
 
-        for passed in terminalreporter.stats.get("passed", []):  # type: TestReport
+        for passed in terminalreporter.stats.get("passed", []):  # type: TestReport # noqa: F821
             print(
                 "passed! node_id:%s, duration: %s, details: %s" % (passed.nodeid, passed.duration, str(passed.longrepr))
             )

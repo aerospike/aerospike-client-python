@@ -1,5 +1,6 @@
 import pytest
 from aerospike import exception as e
+import sys
 
 aerospike = pytest.importorskip("aerospike")
 try:
