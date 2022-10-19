@@ -8,10 +8,8 @@ import os
 import gc
 from concurrent.futures import ThreadPoolExecutor
 from aerospike_helpers import cdt_ctx
-import aerospike
 import ctypes
 import datetime
-from aerospike_helpers import cdt_ctx
 from aerospike_helpers.operations import hll_operations
 
 list_index = "list_index"

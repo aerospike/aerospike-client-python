@@ -130,7 +130,8 @@ class TestPythonSerializer(object):
         # We check that the data is the same as what we stored
         assert bins == {"normal": 1234, "tuple": (1, 2, 3)}
 
-    def test_builtin_with_class_serializer(self):
+    # TODO: duplicate test name
+    def test_builtin_with_class_serializer(self):  # noqa: F811
         """
         Invoke put() for mixed data record with builtin serializer
         """

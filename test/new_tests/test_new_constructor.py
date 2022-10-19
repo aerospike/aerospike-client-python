@@ -26,19 +26,10 @@ def test_setting_key():
 
     aerospike.client(config)
 
-
-def test_setting_consistency():
+# TODO: duplicate test name
+def test_setting_consistency():  # noqa: F811
     cons_val = aerospike.POLICY_CONSISTENCY_ONE
     read_policy = {"consistency_level": cons_val}
-    policies = {"read": read_policy}
-    config = copy.deepcopy(gconfig)
-    config["policies"].update(policies)
-    aerospike.client(config)
-
-
-def test_setting_consistency():
-    replica_val = aerospike.POLICY_REPLICA_MASTER
-    read_policy = {"replica": replica_val}
     policies = {"read": read_policy}
     config = copy.deepcopy(gconfig)
     config["policies"].update(policies)

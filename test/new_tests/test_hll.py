@@ -5,7 +5,6 @@ from aerospike import exception as e
 from aerospike_helpers.operations import hll_operations
 from math import sqrt
 
-import pytest
 
 aerospike = pytest.importorskip("aerospike")
 try:
