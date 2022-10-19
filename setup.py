@@ -231,11 +231,8 @@ setup(
     # Data files
     ext_modules=[
         Extension(
-            # Extension Name
-            'aerospike',
-
-            # Source Files
-            src_files,
+            name='aerospike',
+            sources=src_files,
 
             # Compile
             include_dirs=include_dirs,
