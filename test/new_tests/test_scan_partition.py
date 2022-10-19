@@ -297,7 +297,7 @@ class TestScanPartition(TestBaseClass):
 
     def test_scan_partition_with_callback_non_callable(self):
         # TODO
-        records = [] # noqa: F841
+        records = []  # noqa: F841
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 

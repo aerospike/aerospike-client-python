@@ -187,7 +187,7 @@ class TestGrantRoles(TestBaseClass):
     # TODO: incorrect test
     def test_grant_roles_with_role_name_exceeding_max_length(self):
 
-        policy = {"timeout": 1000} # noqa: F841
+        policy = {"timeout": 1000}  # noqa: F841
         user = "example-test"
         roles = ["read" * 25, "read-write" * 25]
 

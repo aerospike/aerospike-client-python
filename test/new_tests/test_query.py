@@ -765,7 +765,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with policy
         """
-        policy = {"timeout": 1000} # noqa: F841
+        policy = {"timeout": 1000}  # noqa: F841
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):

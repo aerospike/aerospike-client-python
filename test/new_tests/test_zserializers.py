@@ -171,7 +171,7 @@ class TestPythonSerializer(object):
         aerospike.set_deserializer(class_deserializer)
 
         # TODO: unnecessary variable?
-        rec = {"normal": 1234, "tuple": (1, 2, 3)} # noqa: F841
+        rec = {"normal": 1234, "tuple": (1, 2, 3)}  # noqa: F841
         response = self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
 
         assert response == 0
@@ -192,7 +192,7 @@ class TestPythonSerializer(object):
         client = TestBaseClass.get_new_connection(method_config)
 
         # TODO: unnecessary variable?
-        rec = {"normal": 1234, "tuple": (1, 2, 3)} # noqa: F841
+        rec = {"normal": 1234, "tuple": (1, 2, 3)}  # noqa: F841
         response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
         assert response == 0

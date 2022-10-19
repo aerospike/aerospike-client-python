@@ -28,7 +28,7 @@ class TestIndex(object):
             for i in range(5):
                 key = ("test", "demo", i)
                 # TODO: unneeded variable?
-                rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i} # noqa: F841
+                rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i}  # noqa: F841
                 as_connection.remove(key)
 
         request.addfinalizer(teardown)
