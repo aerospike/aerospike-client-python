@@ -32,7 +32,6 @@ import glob
 machine = platform.machine()
 os.putenv('ARCHFLAGS', '-arch ' + machine)
 os.environ['ARCHFLAGS'] = '-arch ' + machine
-AEROSPIKE_C_VERSION = os.getenv('AEROSPIKE_C_VERSION')
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 AEROSPIKE_C_HOME = os.path.join(BASEPATH, 'aerospike-client-c')
 
