@@ -5,7 +5,10 @@ import sys
 
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
-from aerospike_helpers.expressions import And, Eq, IntBin, ListGetByIndex, ListGetByIndexRange, ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, ListGetByValue, ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, ListSize, ResultType
+from aerospike_helpers.expressions import And, Eq, IntBin, ListGetByIndex, ListGetByIndexRange, \
+    ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, ListGetByValue, \
+    ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, \
+    ListSize, ResultType
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -90,7 +93,8 @@ class TestGetExpressionBase64(object):
         b64 = self.as_connection.get_expression_base64(expr)
         expected = (
             "lxCTAZV/AgCVGwWVfwIAkxMHAJNRBKlpbGlzdF9iaW4BA5NRBKlpbGlzdF9iaW4CkwGVfwQAkxYBBpV/BAC"
-            "UGQcBB5NRBKlpbGlzdF9iaW6SfpECkwGVfwIAkxcFkn6SAgaVfwQAlBsHAQGTUQSpaWxpc3RfYmluApMBlX8CAJMYBQGVfwQAlBgHAQOTUQSpaWxpc3RfYmluAZMBlX8CAJMVAwGVfwQ"
+            "UGQcBB5NRBKlpbGlzdF9iaW6SfpECkwGVfwIAkxcFkn6SAgaVfwQAlBsHAQGTUQSpaWxpc3RfYmluApMBlX8CAJMYBQGVfwQAlBgHAQOTU\
+                QSpaWxpc3RfYmluAZMBlX8CAJMVAwGVfwQ"
             "AkxoHAZNRBKlpbGlzdF9iaW4BkwGVfwIAlBoFAZV/AgCREJNRBKlpbGlzdF9iaW6TUQSpaWxpc3RfYmluAg=="
         )
 

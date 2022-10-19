@@ -103,7 +103,8 @@ class TestBatchApply(TestBaseClass):
         request.addfinalizer(teardown)
 
     @pytest.mark.parametrize(
-        "name, keys, module, function, args, policy_batch, policy_batch_apply, exp_res, exp_rec, exp_change, change_bin",
+        "name, keys, module, function, args, policy_batch, policy_batch_apply, exp_res, exp_rec, exp_change, \
+            change_bin",
         [
             (
                 "list-append",

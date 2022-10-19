@@ -106,10 +106,12 @@ def gccallback(phase, info):
         print("Unreachable objects: \n{}".format("\n".join([str(garb) for garb in gc.garbage])))
         print()
         print(
-            f"gc DONE current rss = {process.memory_info().rss}, memory increase bytes = {process.memory_info().rss - initial_rss_usage}"
+            f"gc DONE current rss = {process.memory_info().rss}, \
+                memory increase bytes = {process.memory_info().rss - initial_rss_usage}"
         )
         print(
-            f"gc DONE current vms = {process.memory_info().vms}, memory increase bytes = {process.memory_info().vms - initial_vms_usage}"
+            f"gc DONE current vms = {process.memory_info().vms}, \
+                memory increase bytes = {process.memory_info().vms - initial_vms_usage}"
         )
         print()
 
@@ -144,7 +146,8 @@ def test_memleak(aeros, namespace, setname):
         # assert client.put(k, {'bin1': val}) == 0
         # assert client.remove(k) == 0
         print(
-            f"run:{i} rss:{process.memory_info().rss} rss_change:{process.memory_info().rss - initial_rss_usage} vms:{process.memory_info().vms} vms_change: {process.memory_info().vms - initial_vms_usage}"
+            f"run:{i} rss:{process.memory_info().rss} rss_change:{process.memory_info().rss - initial_rss_usage} \
+                vms:{process.memory_info().vms} vms_change: {process.memory_info().vms - initial_vms_usage}"
         )
         # n = gc.collect()
         # print("Number of unreachable objects collected by GC:", n)
@@ -154,7 +157,8 @@ def test_memleak(aeros, namespace, setname):
 
     # client.close()
     print(
-        f"test DONE rss:{process.memory_info().rss} rss_change:{process.memory_info().rss - initial_rss_usage} vms:{process.memory_info().vms} vms_change: {process.memory_info().vms - initial_vms_usage}"
+        f"test DONE rss:{process.memory_info().rss} rss_change:{process.memory_info().rss - initial_rss_usage} \
+            vms:{process.memory_info().vms} vms_change: {process.memory_info().vms - initial_vms_usage}"
     )
 
 
@@ -172,7 +176,8 @@ def test_hllop(aeros, namespace, setname):
     client.operate(key, ops)
     t1, t2, res = client.get(key)
     print("res is ==========={}", t1, t2, res)
-    # > {'bin1': b'\x00\x04\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00%\x00\x00\x00\x00:\x00\x00\x00\x00\x00'}
+    # > {'bin1': b'\x00\x04\x04\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00
+    # \x00%\x00\x00\x00\x00:\x00\x00\x00\x00\x00'}
     client.close()
 
 
@@ -1149,8 +1154,8 @@ def get_aerospike():
         # 'tls': {
         #     'enable': True,
         #     'cafile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Platinum/cacert.pem",
-        #     'certfile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Client-Chainless/cert.pem",
-        #     'keyfile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Client-Chainless/key.pem",
+        #     'certfile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Client-Chainless/cert.pem",  # noqa: E501
+        #     'keyfile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Client-Chainless/key.pem",  # noqa: E501
         #     'for_login_only': True,
         # }
     }
@@ -1188,6 +1193,7 @@ if __name__ == "__main__":
     print()
     # time.sleep(5)
     print(
-        f"main DONE rss:{process.memory_info().rss} rss_change:{process.memory_info().rss - initial_rss_usage} vms:{process.memory_info().vms} vms_change: {process.memory_info().vms - initial_vms_usage}"
+        f"main DONE rss:{process.memory_info().rss} rss_change:{process.memory_info().rss - initial_rss_usage} \
+            vms:{process.memory_info().vms} vms_change: {process.memory_info().vms - initial_vms_usage}"
     )
     print("Current date and time: ", datetime.datetime.now())
