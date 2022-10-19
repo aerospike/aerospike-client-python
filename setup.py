@@ -19,13 +19,10 @@ from __future__ import print_function
 import os
 import platform
 import sys
-from subprocess import Popen
 from subprocess import call
 from setuptools import setup, Extension
 from distutils.command.build import build
 from distutils.command.clean import clean
-from multiprocessing import cpu_count
-import time
 import io
 
 ################################################################################
@@ -157,6 +154,7 @@ if EVENT_LIB is not None:
     else:
         print("Building aerospike with no-async support\n")
 
+
 class CClientBuild(build):
 
     def run(self):
@@ -167,8 +165,10 @@ class CClientBuild(build):
                 'make',
                 'clean'
             ]
+
             def clean():
                 call(cmd, cwd=CCLIENT_PATH)
+
             self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
         os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
@@ -185,7 +185,7 @@ class CClientBuild(build):
                 'make',
                 'V=' + str(self.verbose),
                 'EVENT_LIB='+EVENT_LIB,
-            ] 
+            ]
 
         def compile():
             print(cmd, library_dirs, libraries)
