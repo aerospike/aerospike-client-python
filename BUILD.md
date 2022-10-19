@@ -84,8 +84,6 @@ The dependencies can be installed through the macOS package manager [Homebrew](h
     pip install build
     python3 -m build
 
-<!-- TODO: update all build cmds -->
-
 ### Troubleshooting macOS
 
 In some versions of macOS, Python 2.7 is installed as ``python`` with
