@@ -48,22 +48,37 @@ EVENT_LIB = os.getenv('EVENT_LIB')
 # GENERIC BUILD SETTINGS
 ################################################################################
 
-include_dirs = ['src/include'] + \
-    [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
-    ['/usr/local/opt/openssl/include'] + \
-    ['aerospike-client-c/modules/common/src/include']
+include_dirs = [
+    'src/include',
+    '/usr/local/opt/openssl/include',
+    'aerospike-client-c/modules/common/src/include'
+]
+include_dirs.extend([x for x in os.getenv('CPATH', '').split(':') if len(x) > 0])
+
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
-    '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
-    '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
+    '-std=gnu99',
+    '-g',
+    '-Wall',
+    '-fPIC',
+    '-O1',
+    '-DDEBUG',
+    '-fno-common',
+    '-fno-strict-aliasing',
+    '-Wno-strict-prototypes',
+    '-D_FILE_OFFSET_BITS=64',
+    '-D_REENTRANT',
     '-DMARCH_' + machine,
     '-Wno-implicit-function-declaration'
 ]
+
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
 extra_objects = []
 extra_link_args = []
-library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
+library_dirs = [
+    '/usr/local/opt/openssl/lib',
+    '/usr/local/lib'
+]
 libraries = [
     'ssl',
     'crypto',
@@ -71,13 +86,15 @@ libraries = [
     'm',
     'z'
 ]
+
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
 ################################################################################
 
 if STATIC_SSL:
-    extra_objects.extend(
-        [SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
+    extra_objects.append(SSL_LIB_PATH + 'libssl.a')
+    extra_objects.append(SSL_LIB_PATH + 'libcrypto.a')
+
     libraries.remove('ssl')
     libraries.remove('crypto')
     library_dirs.remove('/usr/local/opt/openssl/lib')
@@ -90,9 +107,7 @@ if DARWIN:
     # ---------------------------------------------------------------------------
     # Mac Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
-    extra_compile_args = extra_compile_args + [
-        '-D_DARWIN_UNLIMITED_SELECT'
-    ]
+    extra_compile_args.append('-D_DARWIN_UNLIMITED_SELECT')
 
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Darwin-' + machine
 
@@ -100,22 +115,19 @@ elif LINUX:
     # ---------------------------------------------------------------------------
     # Linux Specific Compiler and Linker Settings
     # ---------------------------------------------------------------------------
-    extra_compile_args = extra_compile_args + [
-        '-rdynamic', '-finline-functions'
-    ]
-    libraries = libraries + ['rt']
+    extra_compile_args.append('-rdynamic')
+    extra_compile_args.append('-finline-functions')
+
+    libraries.append('rt')
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
-include_dirs = include_dirs + [
-    '/usr/local/opt/openssl/include',
-    AEROSPIKE_C_TARGET + '/include'
-    ]
-extra_objects = extra_objects + [
-    AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
-]
+include_dirs.append('/usr/local/opt/openssl/include')
+include_dirs.append(AEROSPIKE_C_TARGET + '/include')
+
+extra_objects.append(AEROSPIKE_C_TARGET + '/lib/libaerospike.a')
 
 os.putenv('CPATH', ':'.join(include_dirs))
 os.environ['CPATH'] = ':'.join(include_dirs)
@@ -140,17 +152,18 @@ CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 if EVENT_LIB is not None:
     if EVENT_LIB == "libuv":
-        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
-        library_dirs = library_dirs + ['/usr/local/lib/']
-        libraries = libraries + ['uv']
+        extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
+        library_dirs.append('/usr/local/lib/')
+        libraries.append('uv')
     elif EVENT_LIB == "libevent":
-        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
-        library_dirs = library_dirs + ['/usr/local/lib/']
-        libraries = libraries + ['event_core', 'event_pthreads']
+        extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
+        library_dirs.append('/usr/local/lib/')
+        libraries.append('event_core')
+        libraries.append('event_pthreads')
     elif EVENT_LIB == "libev":
-        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
-        library_dirs = library_dirs + ['/usr/local/lib/']
-        libraries = libraries + ['ev']
+        extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
+        library_dirs.append('/usr/local/lib/')
+        libraries.append('ev')
     else:
         print("Building aerospike with no-async support\n")
 
@@ -175,17 +188,14 @@ class CClientBuild(build):
         os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
         os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
         os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
+
         # build core client
         cmd = [
             'make',
             'V=' + str(self.verbose),
         ]
         if EVENT_LIB is not None:
-            cmd = [
-                'make',
-                'V=' + str(self.verbose),
-                'EVENT_LIB='+EVENT_LIB,
-            ]
+            cmd.append('EVENT_LIB=' + EVENT_LIB)
 
         def compile():
             print(cmd, library_dirs, libraries)
@@ -321,8 +331,13 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
-    packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
-              'aerospike_helpers.expressions', 'aerospike_helpers.awaitable'],
+    packages=[
+        'aerospike_helpers',
+        'aerospike_helpers.operations',
+        'aerospike_helpers.batch',
+        'aerospike_helpers.expressions',
+        'aerospike_helpers.awaitable'
+    ],
 
     cmdclass={
         'build': CClientBuild,
