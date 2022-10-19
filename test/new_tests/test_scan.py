@@ -73,8 +73,6 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_timeout_policy(self):
 
-        pass
-
         records = []
 
         def callback(input_tuple):
@@ -88,8 +86,6 @@ class TestScan(TestBaseClass):
         assert len(records) == self.record_count
 
     def test_scan_with_expressions_policy(self):
-
-        pass
 
         records = []
 
@@ -110,8 +106,6 @@ class TestScan(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_scan_with_max_records_policy(self):
 
-        pass
-
         records = []
 
         max_records = self.record_count // 2
@@ -126,8 +120,6 @@ class TestScan(TestBaseClass):
         assert len(records) == self.record_count // 2
 
     def test_scan_with_expressions_policy_no_set(self):
-
-        pass
 
         records = []
 
@@ -147,8 +139,6 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_socket_timeout_policy(self):
 
-        pass
-
         records = []
 
         def callback(input_tuple):
@@ -162,8 +152,6 @@ class TestScan(TestBaseClass):
         assert len(records) == self.record_count
 
     def test_scan_with_records_per_second_policy(self):
-
-        pass
 
         records = []
 
@@ -373,8 +361,6 @@ class TestScan(TestBaseClass):
 
     def test_scan_with_select_binnames_bytearray(self):
 
-        pass
-
         records = []
 
         def callback(input_tuple):
@@ -452,7 +438,6 @@ class TestScan(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_with_callback_non_callable(self):
-        pass
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
@@ -475,8 +460,6 @@ class TestScan(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_with_invalid_expressions_policy(self):
-
-        pass
 
         records = []
 

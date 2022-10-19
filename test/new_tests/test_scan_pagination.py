@@ -141,8 +141,6 @@ class TestScanPagination(TestBaseClass):
 
     def test_scan_pagination_with_timeout_policy(self):
 
-        pass
-
         records = []
 
         def callback(part_id, input_tuple):
@@ -160,8 +158,6 @@ class TestScanPagination(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_scan_pagination_with_max_records_policy(self):
 
-        pass
-
         records = []
 
         max_records = self.partition_1000_count
@@ -178,8 +174,6 @@ class TestScanPagination(TestBaseClass):
 
     @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
     def test_scan_pagination_with_all_records_policy(self):
-
-        pass
 
         records = []
 
@@ -202,8 +196,6 @@ class TestScanPagination(TestBaseClass):
 
     def test_scan_pagination_with_socket_timeout_policy(self):
 
-        pass
-
         records = []
 
         def callback(part_id, input_tuple):
@@ -218,8 +210,6 @@ class TestScanPagination(TestBaseClass):
         assert len(records) == self.partition_1000_count
 
     def test_scan_pagination_with_records_per_second_policy(self):
-
-        pass
 
         records = []
 
@@ -337,7 +327,6 @@ class TestScanPagination(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_pagination_with_callback_non_callable(self):
-        pass
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()

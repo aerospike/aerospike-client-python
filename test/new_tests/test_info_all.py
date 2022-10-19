@@ -61,7 +61,7 @@ class TestInfo(object):
 
         request = "statistics"
         policy = {"timeout": 1000}
-        [host for host in self.connection_config["hosts"]]
+        # hosts = [host for host in self.connection_config["hosts"]]
 
         nodes_info = self.as_connection.info_all(request, policy)
 
@@ -71,7 +71,7 @@ class TestInfo(object):
     def test_info_all_for_invalid_request(self):
 
         request = "fake_request_string_not_real"
-        [host for host in self.connection_config["hosts"]]
+        # hosts = [host for host in self.connection_config["hosts"]]
         nodes_info = self.as_connection.info_all(request)
 
         assert isinstance(nodes_info, dict)

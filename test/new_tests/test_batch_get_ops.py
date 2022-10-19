@@ -126,7 +126,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
             # print("test_read_neg: ", res)
 
     def test_batch_result_output_format(self):
-        pprint.PrettyPrinter(2, 80)
+        # pp = pprint.PrettyPrinter(2, 80)
         policy = {"key": aerospike.POLICY_KEY_SEND}
         map_policy = {
             "map_write_mode": aerospike.MAP_UPDATE,

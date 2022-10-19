@@ -160,8 +160,6 @@ class TestQueryPagination(TestBaseClass):
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
     def test_query_pagination_with_max_records_policy(self):
 
-        pass
-
         records = []
 
         max_records = self.partition_1000_count
@@ -269,7 +267,6 @@ class TestQueryPagination(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_query_pagination_with_callback_non_callable(self):
-        pass
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
         query_obj.paginate()
