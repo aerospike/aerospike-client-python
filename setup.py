@@ -19,7 +19,7 @@ from __future__ import print_function
 import os
 import platform
 import sys
-from subprocess import call
+import subprocess
 from setuptools import setup, Extension
 from distutils.command.build import build
 from distutils.command.clean import clean
@@ -180,7 +180,7 @@ class CClientBuild(build):
             ]
 
             def clean():
-                call(cmd, cwd=CCLIENT_PATH)
+                subprocess.run(cmd, cwd=CCLIENT_PATH)
 
             self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
@@ -199,7 +199,7 @@ class CClientBuild(build):
 
         def compile():
             print(cmd, library_dirs, libraries)
-            call(cmd, cwd=CCLIENT_PATH)
+            subprocess.run(cmd, cwd=CCLIENT_PATH)
 
         self.execute(compile, [], 'Compiling core aerospike-client-c')
         # run original c-extension build code
@@ -217,7 +217,7 @@ class CClientClean(clean):
         ]
 
         def clean():
-            call(cmd, cwd=CCLIENT_PATH)
+            subprocess.run(cmd, cwd=CCLIENT_PATH)
 
         self.execute(clean, [], 'Clean core aerospike-client-c')
 
