@@ -5,7 +5,10 @@ import sys
 
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
-from aerospike_helpers.expressions import And, Eq, IntBin, ListGetByIndex, ListGetByIndexRange, ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, ListGetByValue, ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, ListSize, ResultType
+from aerospike_helpers.expressions import And, Eq, IntBin, ListGetByIndex, ListGetByIndexRange, \
+    ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, ListGetByValue, \
+    ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, \
+    ListSize, ResultType
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -99,8 +102,10 @@ class TestSetXDRFilter(object):
 
         response = self.as_connection.set_xdr_filter(self.dc, self.ns, expr)
         expected = (
-            "xdr-set-filter:dc=%s;namespace=%s;exp=lxCTAZV/AgCVGwWVfwIAkxMHAJNRBKlpbGlzdF9iaW4BA5NRBKlpbGlzdF9iaW4CkwGVfwQAkxYBBpV/BAC"
-            "UGQcBB5NRBKlpbGlzdF9iaW6SfpECkwGVfwIAkxcFkn6SAgaVfwQAlBsHAQGTUQSpaWxpc3RfYmluApMBlX8CAJMYBQGVfwQAlBgHAQOTUQSpaWxpc3RfYmluAZMBlX8CAJMVAwGVfwQ"
+            "xdr-set-filter:dc=%s;namespace=%s;exp=lxCTAZV/AgCVGwWVfwIAkxMHAJNRBKlpbGlzdF9iaW4BA5NRBKlpbGlzdF9iaW4CkwGV\
+                fwQAkxYBBpV/BAC"
+            "UGQcBB5NRBKlpbGlzdF9iaW6SfpECkwGVfwIAkxcFkn6SAgaVfwQAlBsHAQGTUQSpaWxpc3RfYmluApMBlX8CAJMYBQGVfwQAlBgHAQOTU\
+                QSpaWxpc3RfYmluAZMBlX8CAJMVAwGVfwQ"
             "AkxoHAZNRBKlpbGlzdF9iaW4BkwGVfwIAlBoFAZV/AgCREJNRBKlpbGlzdF9iaW6TUQSpaWxpc3RfYmluAg==\tok\n"
         ) % (self.dc, self.ns)
         assert response == expected

@@ -347,7 +347,8 @@ class TestQuery(TestBaseClass):
             assert self.server_version < [6, 0]
         except e.MaxRetriesExceeded as err_info:
             err_code = err_info.code
-            # Changed to AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED because AEROSPIKE_ERR_INDEX_NOT_FOUND is now a retriable error.
+            # Changed to AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
+            # because AEROSPIKE_ERR_INDEX_NOT_FOUND is now a retriable error.
             assert err_code == AerospikeStatus.AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
             assert "AEROSPIKE_ERR_INDEX_NOT_FOUND" in err_info.msg
 
@@ -653,7 +654,7 @@ class TestQuery(TestBaseClass):
 
         query.foreach(callback)
 
-        # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+        # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)  # noqa: E501
         assert len(records) >= expected_min_length or len(records) <= expected_max_length
 
     def test_query_with_correct_parameters_exp(self):
@@ -664,7 +665,7 @@ class TestQuery(TestBaseClass):
         from .test_base_class import TestBaseClass
 
         if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
-            # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)
+            # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)  # noqa: E501
             pytest.skip("It deprecated and it only applies to < 5.7 earlier and enterprise edition")
 
         expr = exp.Eq(exp.IntBin("test_age"), 4)

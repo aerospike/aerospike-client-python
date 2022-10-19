@@ -5,7 +5,13 @@ import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions import And, Eq, ListAppend, ListAppendItems, ListClear, ListGetByIndex, ListGetByIndexRange, ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, ListGetByValue, ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, ListInsert, ListInsertItems, ListRemoveByIndex, ListRemoveByIndexRange, ListRemoveByIndexRangeToEnd, ListRemoveByRank, ListRemoveByRankRange, ListRemoveByRankRangeToEnd, ListRemoveByValue, ListRemoveByValueList, ListRemoveByValueRange, ListRemoveByValueRelRankRange, ListRemoveByValueRelRankToEnd, ListSet, ListSize, ListSort, Or, ResultType
+from aerospike_helpers.expressions import And, Eq, ListAppend, ListAppendItems, ListClear, ListGetByIndex, \
+    ListGetByIndexRange, ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, \
+    ListGetByValue, ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, \
+    ListGetByValueRelRankRangeToEnd, ListInsert, ListInsertItems, ListRemoveByIndex, ListRemoveByIndexRange, \
+    ListRemoveByIndexRangeToEnd, ListRemoveByRank, ListRemoveByRankRange, ListRemoveByRankRangeToEnd, \
+    ListRemoveByValue, ListRemoveByValueList, ListRemoveByValueRange, ListRemoveByValueRelRankRange, \
+    ListRemoveByValueRelRankToEnd, ListSet, ListSize, ListSort, Or, ResultType
 
 aerospike = pytest.importorskip("aerospike")
 try:
@@ -183,7 +189,8 @@ class TestExpressions(TestBaseClass):
                 [bytearray("bytearray_test3", "utf8")],
                 1,
             ),
-            # (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9), NOTE: this won't work because booleans are not serialized by default in expressions.
+            # (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9)
+            # NOTE: this won't work because booleans are not serialized by default in expressions.
             (None, None, None, aerospike.LIST_RETURN_VALUE, [None], _NUM_RECORDS),
             (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
             ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
@@ -221,10 +228,14 @@ class TestExpressions(TestBaseClass):
         "ctx_types, ctx_indexes, begin, end, return_type, check, expected",
         [
             (None, None, 4, 7, aerospike.LIST_RETURN_VALUE, [[4], [5], [6]], 3),
-            # (None, None, 5, aerospike.CDTInfinite(), aerospike.LIST_RETURN_COUNT, [10, 10, 10], 4), temporarily failing because of bool jump rank
-            # (None, None, 4, 7, aerospike.LIST_RETURN_RANK, [[2], [2], [2]], 3), temporarily failing because of bool jump rank
-            # (None, None, 5, aerospike.CDTInfinite(), aerospike.LIST_RETURN_COUNT, [10, 10, 10], 5), temporarily failing because of bool jump rank
-            # (None, None, 4, 7, aerospike.LIST_RETURN_RANK, [[1], [1], [1]], 3), temporarily failing because of bool jump rank
+            # (None, None, 5, aerospike.CDTInfinite(), aerospike.LIST_RETURN_COUNT, [10, 10, 10], 4),
+            # temporarily failing because of bool jump rank
+            # (None, None, 4, 7, aerospike.LIST_RETURN_RANK, [[2], [2], [2]], 3),
+            # temporarily failing because of bool jump rank
+            # (None, None, 5, aerospike.CDTInfinite(), aerospike.LIST_RETURN_COUNT, [10, 10, 10], 5),
+            # temporarily failing because of bool jump rank
+            # (None, None, 4, 7, aerospike.LIST_RETURN_RANK, [[1], [1], [1]], 3),
+            # temporarily failing because of bool jump rank
             (None, None, "string_test3", "string_test6", aerospike.LIST_RETURN_INDEX, [[2], [2], [2]], 3),
             (
                 None,
@@ -393,7 +404,8 @@ class TestExpressions(TestBaseClass):
             ([list_index], [3], 26, 0, aerospike.LIST_RETURN_COUNT, 3, _NUM_RECORDS),
             ([list_index], [3], 7, 1, aerospike.LIST_RETURN_COUNT, 3, 2),
             ([list_index], [3], 7, 2, aerospike.LIST_RETURN_VALUE, [27, 28], 2),
-            # (None, None, "string_test8", 0,  aerospike.LIST_RETURN_COUNT, 10, 1), temporarily failing because of bool jump rank
+            # (None, None, "string_test8", 0,  aerospike.LIST_RETURN_COUNT, 10, 1),
+            # temporarily failing because of bool jump rank
         ],
     )
     def test_list_get_by_value_rel_rank_range_to_end_pos(

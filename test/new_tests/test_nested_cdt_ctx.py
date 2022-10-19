@@ -1250,7 +1250,8 @@ class TestCTXOperations(object):
         self, return_type, value_begin, value_end, inverted, list_indexes, expected
     ):
         """
-        Invoke list_get_by_value_range() get elements with values between value_begin and value_end with expected failures.
+        Invoke list_get_by_value_range() get elements with values between value_begin and value_end with expected
+        failures.
         """
         ctx = []
         for place in list_indexes:
@@ -1408,7 +1409,8 @@ class TestCTXOperations(object):
     )
     def test_ctx_list_remove_by_index_range_negative(self, index, return_type, count, inverted, list_indexes, expected):
         """
-        Invoke Invoke list_remove_by_index_range() to remove elements starting at index for count with expected failures.
+        Invoke Invoke list_remove_by_index_range() to remove elements starting at index for count with expected
+        failures.
         """
         ctx = []
         for place in list_indexes:
@@ -4414,7 +4416,8 @@ class TestCTXOperations(object):
         self, ctx_types, value, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin
     ):
         """
-        Invoke map_remove_by_value_rank_range_relative() to remove elements starting with value for count by relative rank.
+        Invoke map_remove_by_value_rank_range_relative() to remove elements starting with value for count by relative
+        rank.
         """
         ctx = []
         for x in range(0, len(list_indexes)):
@@ -4622,7 +4625,8 @@ class TestCTXOperations(object):
         self, ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin
     ):
         """
-        Invoke map_remove_by_key_index_range_relative() to remove elements starting with value for count by relative rank.
+        Invoke map_remove_by_key_index_range_relative() to remove elements starting with value for count by relative
+        rank.
         """
         ctx = []
         for x in range(0, len(list_indexes)):
