@@ -101,7 +101,7 @@ class TestQueryPagination(TestBaseClass):
         policy = {"max_records": query_page_size[0], "partition_filter": partition_filter, "records_per_second": 4000}
 
         def callback(part_id, input_tuple):
-            if input_tuple == None:
+            if input_tuple is None:
                 return True  # query complete
             (_, _, record) = input_tuple
             records.append(record)

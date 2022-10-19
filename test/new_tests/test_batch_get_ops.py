@@ -152,10 +152,10 @@ class TestBatchExpressionsOperations(TestBaseClass):
         # print("\nThe record from batch_get_ops")
         # pp.pprint(rec)
 
-        assert rec[0][-1] != None
-        assert rec[1][-1] != None
+        assert rec[0][-1] is not None
+        assert rec[1][-1] is not None
         assert rec[2][-2] == e.RecordNotFound
-        assert rec[2][-1] == None
+        assert rec[2][-1] is None
 
         # print("\nThe record coming from opreate")
         # rec = self.as_connection.operate(key1, ops, policy=policy)

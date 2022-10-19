@@ -132,7 +132,7 @@ class TestHLL(object):
         ops = [hll_operations.hll_get_count("fake_hll_bin")]
 
         _, _, res = self.as_connection.operate(self.test_keys[2], ops)
-        assert res["fake_hll_bin"] == None
+        assert res["fake_hll_bin"] is None
 
     def test_pos_hll_describe(self):
         """
@@ -150,7 +150,7 @@ class TestHLL(object):
         ops = [hll_operations.hll_describe("fake_hll_bin")]
 
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
-        assert res["fake_hll_bin"] == None
+        assert res["fake_hll_bin"] is None
 
     def test_pos_hll_fold(self):
         """
