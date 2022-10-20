@@ -2,6 +2,7 @@
 
 import pytest
 from .test_base_class import TestBaseClass
+import aerospike
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 from aerospike_helpers import cdt_ctx
@@ -52,8 +53,6 @@ ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
 ctx_empty = []
-
-import aerospike
 
 if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
     if pytest.__version__ < "3.0.0":

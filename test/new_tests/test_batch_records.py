@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-
-
-
 from aerospike_helpers.batch import records as br
 from .test_base_class import TestBaseClass
 

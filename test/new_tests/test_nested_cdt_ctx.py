@@ -3,7 +3,7 @@ import random
 from datetime import datetime
 
 import pytest
-
+import aerospike
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
 from aerospike_helpers.operations import list_operations
@@ -31,9 +31,6 @@ ctx_ops = {
 def add_ctx_op(ctx_type, value):
     ctx_func = ctx_ops[ctx_type]
     return ctx_func(value)
-
-
-import aerospike
 
 
 class TestCTXOperations(object):
@@ -4638,8 +4635,8 @@ class TestCTXOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.nested_map_bin] == expected_bin
 
-
     # TODO: duplicate test name
+
     @pytest.mark.parametrize(
         "key, offset, return_type, count, inverted, list_indexes, expected",
         [

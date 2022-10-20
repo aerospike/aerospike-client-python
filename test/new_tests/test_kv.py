@@ -2,7 +2,6 @@ import pytest
 from aerospike import exception as e
 
 
-
 def get_key_with_digest_only(key):
     """
     Takes a key tuple, and removes a key tuple

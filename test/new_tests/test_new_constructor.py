@@ -2,13 +2,12 @@
 
 import pytest
 from .test_base_class import TestBaseClass
+import aerospike
 from aerospike import exception as e
 import copy
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
-
-import aerospike
 
 
 def test_setting_key():

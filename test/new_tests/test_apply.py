@@ -174,7 +174,7 @@ class TestApply(TestBaseClass):
         """
         key = ("test", "demo", "non_existent_record")
         retval = self.as_connection.apply(key, "test_record_udf", "bool_check", [])
-        assert retval == False
+        assert retval is False
 
     def test_apply_operations_on_map(self):
         """

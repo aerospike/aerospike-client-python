@@ -6,7 +6,6 @@ from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
 
-
 class TestQueryPagination(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

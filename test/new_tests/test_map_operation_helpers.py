@@ -1,13 +1,11 @@
 # -*- coding: utf-8 -*-
 import pytest
+import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import map_operations as map_ops
-
-import aerospike
+from .test_base_class import TestBaseClass
 
 Server61 = True
-
-from .test_base_class import TestBaseClass
 
 if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
     if pytest.__version__ < "3.0.0":
