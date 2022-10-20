@@ -68,10 +68,11 @@ jobs:
         sphinx-build -b html . htmldir -W
     - name: Build client
       run: |
-        python setup.py build --force
+        python3 -m pip install build
+        python3 -m build
     - name: Install client
       run: |
-        python setup.py install --force
+        pip install .
     - name: Run tests 
       run: |
         cd test
