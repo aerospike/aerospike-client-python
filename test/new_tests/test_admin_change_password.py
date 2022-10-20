@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import sys
 import time
 from .test_base_class import TestBaseClass
 

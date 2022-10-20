@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-import sys
 import time
 
 from aerospike_helpers import expressions as exp

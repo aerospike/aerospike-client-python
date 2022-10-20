@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import sys
 import time
 from . import test_data
 

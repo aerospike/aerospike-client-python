@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import sys
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
 from .test_base_class import TestBaseClass

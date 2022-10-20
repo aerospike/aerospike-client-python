@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import sys
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 

@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-import sys
 import random
 from datetime import datetime
 from aerospike import exception as e

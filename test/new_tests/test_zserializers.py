@@ -5,7 +5,6 @@ from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 
 import pytest
-import sys
 import json
 
 import aerospike

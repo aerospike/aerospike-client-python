@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import sys
 import pytest
 
 from .as_status_codes import AerospikeStatus

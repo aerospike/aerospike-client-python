@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 
-import sys
 
 import pytest
 from aerospike_helpers.operations import map_operations as mh
-import pprint
 
 import aerospike
 

@@ -1,4 +1,3 @@
-import sys
 import pytest
 from aerospike import exception as e
 

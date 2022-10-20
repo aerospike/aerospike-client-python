@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import sys
 import json
 from contextlib import contextmanager
 from .test_base_class import TestBaseClass

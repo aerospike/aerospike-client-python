@@ -2,7 +2,6 @@
 
 import pytest
 import time
-import sys
 
 try:
     from collections import Counter

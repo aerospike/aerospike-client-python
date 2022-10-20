@@ -1,6 +1,5 @@
 import pytest
 from aerospike import exception as e
-import sys
 
 import aerospike
 

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 import time
-import sys
 import pickle
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e

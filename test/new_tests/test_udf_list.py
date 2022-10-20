@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-import sys
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 

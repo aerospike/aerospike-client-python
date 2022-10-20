@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-import sys
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
