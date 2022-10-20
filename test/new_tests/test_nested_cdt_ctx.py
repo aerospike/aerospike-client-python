@@ -784,6 +784,7 @@ class TestCTXOperations(object):
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected
 
+    # TODO: duplicate test name
     @pytest.mark.parametrize(
         "list_indexes, expected",
         [
@@ -792,7 +793,7 @@ class TestCTXOperations(object):
             (["cat"], e.ParamError),
         ],
     )
-    def test_ctx_list_size(self, list_indexes, expected):
+    def test_ctx_list_size1(self, list_indexes, expected):
         """
         Invoke list_size() to get the size of a list with expected failures.
         """
@@ -4637,6 +4638,8 @@ class TestCTXOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.nested_map_bin] == expected_bin
 
+
+    # TODO: duplicate test name
     @pytest.mark.parametrize(
         "key, offset, return_type, count, inverted, list_indexes, expected",
         [
@@ -4646,7 +4649,7 @@ class TestCTXOperations(object):
             ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [0, 0, 0, 0], e.OpNotApplicable),
         ],
     )
-    def test_ctx_map_remove_by_key_index_range_relative_negative(
+    def test_ctx_map_remove_by_key_index_range_relative_negative1(
         self, key, offset, return_type, count, inverted, list_indexes, expected
     ):
         """
@@ -4665,6 +4668,7 @@ class TestCTXOperations(object):
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
 
+    # TODO: duplicate test name
     @pytest.mark.parametrize(
         "ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin",
         [
@@ -4750,7 +4754,7 @@ class TestCTXOperations(object):
             ),
         ],
     )
-    def test_ctx_map_remove_by_key_index_range_relative(
+    def test_ctx_map_remove_by_key_index_range_relative1(
         self, ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin
     ):
         """

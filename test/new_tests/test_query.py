@@ -3,6 +3,7 @@
 import pytest
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
+import aerospike
 from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
@@ -54,8 +55,6 @@ ctx_map_rank.append(add_ctx_op(map_rank, -1))
 
 ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
-
-import aerospike
 
 
 class TestQuery(TestBaseClass):

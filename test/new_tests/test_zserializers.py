@@ -125,7 +125,7 @@ class TestPythonSerializer(object):
         assert bins == {"normal": 1234, "tuple": (1, 2, 3)}
 
     # TODO: duplicate test name
-    def test_builtin_with_class_serializer(self):  # noqa: F811
+    def test_builtin_with_class_serializer(self):
         """
         Invoke put() for mixed data record with builtin serializer
         """
@@ -139,7 +139,7 @@ class TestPythonSerializer(object):
         assert bins == {"normal": 1234, "tuple": (1, 2, 3)}
         client.close()
 
-    def test_builtin_with_class_serializer(self):
+    def test_builtin_with_class_serializer1(self):
         """
         Invoke put() for mixed data record with builtin serializer
         """

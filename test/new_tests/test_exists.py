@@ -42,6 +42,7 @@ class TestExists:
         assert meta["gen"] is not None
         assert meta["ttl"] is not None
 
+    # TODO: duplicate test name
     @pytest.mark.parametrize(
         "key, record, policy",
         [
@@ -51,7 +52,7 @@ class TestExists:
             (("test", "demo", "p_consistency_level"), {"name": "Michel"}, {"total_timeout": 1000}),
         ],
     )
-    def test_pos_exists_with_key_and_policy(self, key, record, policy, put_data):
+    def test_pos_exists_with_key_and_policy1(self, key, record, policy, put_data):
         """
         Invoke exists() with key and policy.
         """

@@ -6,7 +6,6 @@ from distutils.version import LooseVersion
 
 import pytest
 from _pytest.terminal import TerminalReporter
-import os
 from collections import namedtuple
 from itertools import groupby
 import tracemalloc
@@ -22,8 +21,6 @@ if test_memleak == 1:
     from psutil import Process
 
     _proc = Process(os.getpid())
-
-    from itertools import groupby
 
     LEAK_LIMIT = 0
 

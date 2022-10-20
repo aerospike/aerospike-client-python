@@ -4,7 +4,6 @@ import random
 from aerospike import exception as e
 
 
-
 class TestListClear(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

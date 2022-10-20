@@ -91,7 +91,8 @@ class TestNewRelativeCDTValues(object):
 
         assert set(result) == set(("a", "b", "c", "d", "e", "f", "g"))
 
-    def test_map_value_wildcard(self):
+    # TODO: duplicate test names
+    def test_map_value_wildcard1(self):
         operation = map_ops.map_get_by_value(
             self.cdt_map_bin,
             [1, aerospike.CDTWildcard()],

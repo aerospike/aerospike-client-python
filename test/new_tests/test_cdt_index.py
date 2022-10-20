@@ -54,8 +54,6 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 import aerospike
 
-from .test_base_class import TestBaseClass
-
 if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
     if pytest.__version__ < "3.0.0":
         pytest.skip("It only applies to >= 6.1 enterprise edition")
@@ -248,7 +246,8 @@ class TestCDTIndex(object):
 
         assert retobj == 0
 
-    def test_pos_cdtindex_with_correct_parameters(self):
+    # TODO: duplicate test name
+    def test_pos_cdtindex_with_correct_parameters1(self):
         """
         Invoke index_cdt_create() with correct arguments
         """

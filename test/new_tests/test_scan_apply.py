@@ -289,13 +289,6 @@ class TestScanApply(object):
         with pytest.raises(e.ParamError):
             self.as_connection.scan_apply("test", 5, "bin_lua", "mytransform", ["age", 2])
 
-    def test_scan_apply_with_set_is_int(self):
-        """
-        Invoke scan_apply() set as an int
-        """
-        with pytest.raises(e.ParamError):
-            self.as_connection.scan_apply("test", 5, "bin_lua", "mytransform", ["age", 2])
-
     def test_scan_apply_with_module_function_none(self):
         """
         Invoke scan_apply() with None module function

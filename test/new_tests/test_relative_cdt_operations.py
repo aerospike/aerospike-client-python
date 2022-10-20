@@ -1,17 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
-import sys
+import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import map_operations as map_ops
-
-aerospike = pytest.importorskip("aerospike")
-
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
 
 
 def get_list_result_from_operation(client, key, operation, binname):
@@ -109,6 +101,7 @@ class TestNewRelativeListOperations(object):
         for item in list_items:
             assert item not in expected
 
+    # TODO: duplicate test name?
     @pytest.mark.parametrize(
         "return_type, expected",
         (
@@ -119,7 +112,7 @@ class TestNewRelativeListOperations(object):
             (aerospike.LIST_RETURN_REVERSE_INDEX, 3),
         ),
     )
-    def test_list_remove_by_value_rank_range_relative(self, return_type, expected):
+    def test_list_remove_by_value_rank_range_relative1(self, return_type, expected):
         """
         Without a return type this should return the value
         """
@@ -246,11 +239,6 @@ class TestNewRelativeListOperations(object):
         # Ensure that the expected items were removed
         for item in list_items:
             assert item not in expected
-
-
-def get_list_result_from_operation(client, key, operation, binname):
-    _, _, result_bins = client.operate(key, [operation])
-    return result_bins[binname]
 
 
 class TestNewRelativeMapOperations(object):

@@ -196,7 +196,8 @@ class TestBitwiseOperations(object):
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin_zeroes] == bytearray([0] * 20)
 
-    def test_bit_resize_partial_no_fail(self):
+    # TODO: duplicate test name
+    def test_bit_resize_partial_no_fail1(self):
         """
         By default we can create a new bin with resize.
         """
@@ -733,16 +734,6 @@ class TestBitwiseOperations(object):
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
 
-    def test_bit_get_bit_size_too_large(self):
-        """
-        Perform a bitwise get with a bit_size larger than the bitmap
-        being read.
-        """
-        ops = [bitwise_operations.bit_get(self.test_bin_ones, 0, 41)]
-
-        with pytest.raises(e.OpNotApplicable):
-            self.as_connection.operate(self.test_key, ops)
-
     def test_bit_get_bad_bin_name(self):
         """
         Perform a bitwise get with a non existent bin.
@@ -812,16 +803,6 @@ class TestBitwiseOperations(object):
         being read.
         """
         ops = [bitwise_operations.bit_get_int(self.test_bin_ones, 41, 1, False)]
-
-        with pytest.raises(e.OpNotApplicable):
-            self.as_connection.operate(self.test_key, ops)
-
-    def test_bit_get_int_bit_size_too_large(self):
-        """
-        Perform a bitwise get int with a bit_size larger than the bitmap
-        being read.
-        """
-        ops = [bitwise_operations.bit_get_int(self.test_bin_ones, 0, 41, False)]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
