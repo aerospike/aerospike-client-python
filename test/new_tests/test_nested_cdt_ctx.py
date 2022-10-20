@@ -770,7 +770,7 @@ class TestCTXOperations(object):
             ([0, 2, 2], 1),
         ],
     )
-    def test_ctx_list_size(self, list_indexes, expected):
+    def test_ctx_list_size_duplicate(self, list_indexes, expected):
         """
         Invoke list_size() to get the size of a list.
         """
