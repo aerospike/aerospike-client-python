@@ -56,12 +56,7 @@ ctx_map_rank.append(add_ctx_op(map_rank, -1))
 ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestQuery(TestBaseClass):

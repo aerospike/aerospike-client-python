@@ -6,12 +6,7 @@ from aerospike_helpers.operations import hll_operations
 from math import sqrt
 
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestHLL(object):

@@ -9,13 +9,8 @@ try:
 except ImportError:
     from counter26 import Counter
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-    from aerospike import exception as e
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
+from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("as_connection")

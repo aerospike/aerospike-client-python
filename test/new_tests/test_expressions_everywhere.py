@@ -11,12 +11,7 @@ from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import operations
 
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 geo_circle = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-132.0, 37.5], 1000]})
 

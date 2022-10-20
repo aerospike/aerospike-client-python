@@ -6,12 +6,7 @@ import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestRevokeRoles(TestBaseClass):

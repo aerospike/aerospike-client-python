@@ -10,12 +10,7 @@ from .as_status_codes import AerospikeStatus
 from aerospike import predicates as p
 
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 def add_sindex(client):

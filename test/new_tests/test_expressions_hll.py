@@ -10,12 +10,7 @@ from aerospike_helpers.operations import hll_operations
 from aerospike_helpers.operations import expression_operations as expressions
 from math import sqrt, ceil, floor
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 # Constants
 _NUM_RECORDS = 9

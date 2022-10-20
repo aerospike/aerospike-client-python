@@ -8,12 +8,7 @@ from aerospike import exception as e
 from aerospike import predicates as p
 import time
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 def get_geo_object():

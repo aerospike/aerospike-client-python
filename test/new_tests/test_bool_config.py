@@ -7,12 +7,7 @@ from aerospike import exception as e
 from aerospike_helpers.operations import operations as operation
 from .test_base_class import TestBaseClass
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 random.seed(datetime.now())
 

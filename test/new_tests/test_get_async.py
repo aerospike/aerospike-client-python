@@ -12,14 +12,9 @@ from . import test_data
 
 # from collections import OrderedDict
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-    from aerospike import exception as e
-    from aerospike_helpers.awaitable import io
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
+from aerospike import exception as e
+from aerospike_helpers.awaitable import io
 
 
 class SomeClass(object):

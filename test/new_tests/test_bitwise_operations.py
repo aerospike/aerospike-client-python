@@ -6,12 +6,7 @@ from datetime import datetime
 from aerospike import exception as e
 from aerospike_helpers.operations import bitwise_operations
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 random.seed(datetime.now())
 

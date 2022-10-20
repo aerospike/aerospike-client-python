@@ -5,12 +5,7 @@ import sys
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestListIndex(object):

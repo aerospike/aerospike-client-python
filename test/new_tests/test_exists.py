@@ -5,13 +5,8 @@ import sys
 import time
 from . import test_data
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-    from aerospike import exception as e
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
+from aerospike import exception as e
 
 
 class SomeClass(object):

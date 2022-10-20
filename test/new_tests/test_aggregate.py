@@ -4,12 +4,7 @@ import sys
 from aerospike import exception as e
 from aerospike import predicates as p
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 def add_stream_udf(client):

@@ -4,12 +4,7 @@ import sys
 
 import pytest
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations as op

@@ -14,12 +14,7 @@ from aerospike_helpers.expressions import And, Eq, ListBin, ListGetByIndexRangeT
     MapRemoveByValue, MapRemoveByValueList, MapRemoveByValueRange, MapRemoveByValueRelRankRange, \
     MapRemoveByValueRelRankRangeToEnd, MapSize, ResultType
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 # Constants
 _NUM_RECORDS = 9

@@ -7,13 +7,7 @@ import os
 
 from contextlib import contextmanager
 from .test_base_class import TestBaseClass
-
-aerospike = pytest.importorskip("aerospike")
-try:
-    pass
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 test_memleak = int(os.environ.get("TEST_MEMLEAK", 0))
 if test_memleak != 1:

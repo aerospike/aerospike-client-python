@@ -6,13 +6,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    pass
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
-
+import aerospike
 
 class TestQueryPagination(TestBaseClass):
     @pytest.fixture(autouse=True)

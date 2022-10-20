@@ -4,13 +4,7 @@ import pytest
 import sys
 
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    pass
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
-
+import aerospike
 
 @pytest.mark.usefixtures("as_connection")
 class TestGetKeyDigest(object):

@@ -2,12 +2,7 @@ import pytest
 from aerospike import exception as e
 import sys
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestInvalidClientConfig(object):

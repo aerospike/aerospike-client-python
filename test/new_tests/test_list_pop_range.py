@@ -4,12 +4,7 @@ import sys
 import random
 from aerospike import exception as e
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestListPopRange(object):

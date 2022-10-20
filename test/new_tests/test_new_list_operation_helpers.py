@@ -4,12 +4,7 @@ import sys
 from aerospike import exception as e
 from aerospike_helpers.operations import list_operations
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 def get_list_result_from_operation(client, key, operation, bin):

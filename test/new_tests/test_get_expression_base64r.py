@@ -10,12 +10,7 @@ from aerospike_helpers.expressions import And, Eq, IntBin, ListGetByIndex, ListG
     ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, \
     ListSize, ResultType
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")

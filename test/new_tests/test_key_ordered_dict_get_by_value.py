@@ -7,12 +7,7 @@ from aerospike_helpers.operations import list_operations as lop
 from aerospike import KeyOrderedDict
 import aerospike_helpers.cdt_ctx as ctx
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestOrderedDictGetByValue(object):

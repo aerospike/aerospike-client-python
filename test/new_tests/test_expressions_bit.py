@@ -7,12 +7,7 @@ from aerospike_helpers.expressions import BitAdd, BitAnd, BitCount, BitGet, BitG
     BitLeftShift, BitNot, BitOr, BitRemove, BitResize, BitRightScan, BitRightShift, BitSet, BitSetInt, BitSubtract, \
     BitXor, Eq
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 # Constants
 _NUM_RECORDS = 9

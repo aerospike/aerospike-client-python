@@ -5,12 +5,7 @@ import sys
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 @pytest.mark.usefixtures("connection_config")

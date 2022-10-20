@@ -4,13 +4,7 @@ import sys
 
 import pytest
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    pass
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
-
+import aerospike
 from aerospike_helpers.batch import records as br
 from .test_base_class import TestBaseClass
 

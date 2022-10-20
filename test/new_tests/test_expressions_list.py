@@ -13,12 +13,7 @@ from aerospike_helpers.expressions import And, Eq, ListAppend, ListAppendItems, 
     ListRemoveByValue, ListRemoveByValueList, ListRemoveByValueRange, ListRemoveByValueRelRankRange, \
     ListRemoveByValueRelRankToEnd, ListSet, ListSize, ListSort, Or, ResultType
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 # Constants
 _NUM_RECORDS = 9

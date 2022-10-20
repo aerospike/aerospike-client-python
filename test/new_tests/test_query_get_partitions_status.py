@@ -4,14 +4,6 @@ import pytest
 import sys
 from .test_base_class import TestBaseClass
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    pass
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
-
-
 class TestQueryGetPartitionsStatus(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

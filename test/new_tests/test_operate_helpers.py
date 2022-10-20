@@ -4,13 +4,8 @@ import sys
 from .test_base_class import TestBaseClass
 from aerospike_helpers.operations import list_operations, operations
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-    from aerospike import exception as e
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
+from aerospike import exception as e
 
 # OPERATIONS
 # aerospike.OPERATOR_WRITE

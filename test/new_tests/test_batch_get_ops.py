@@ -6,12 +6,7 @@ import pytest
 from aerospike_helpers.operations import map_operations as mh
 import pprint
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except Exception:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 from aerospike_helpers.expressions import Add, Cond, Def, GE, IntBin, LT, Let, Mul, Unknown, Var
 from aerospike_helpers.operations import expression_operations as expressions
