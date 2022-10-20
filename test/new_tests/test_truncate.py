@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 import time
-import aerospike
 from aerospike import exception as e
 
 

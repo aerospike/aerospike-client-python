@@ -3,7 +3,6 @@
 import pytest
 
 
-import aerospike
 
 
 @pytest.mark.usefixtures("as_connection")

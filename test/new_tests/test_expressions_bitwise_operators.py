@@ -3,7 +3,6 @@
 
 import pytest
 
-import aerospike
 from aerospike_helpers.expressions import (
     Eq,
     IntAnd,

@@ -4,7 +4,6 @@ import math
 
 import pytest
 
-import aerospike
 
 from aerospike_helpers.expressions import (
     Abs,

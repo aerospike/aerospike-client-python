@@ -5,7 +5,6 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
-import aerospike
 
 
 class TestScanPagination(TestBaseClass):

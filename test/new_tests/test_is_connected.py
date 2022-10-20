@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import pytest
 from .test_base_class import TestBaseClass
 
 import aerospike

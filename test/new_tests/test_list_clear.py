@@ -3,7 +3,6 @@ import pytest
 import random
 from aerospike import exception as e
 
-import aerospike
 
 
 class TestListClear(object):
