@@ -24,12 +24,6 @@ jobs:
       with:
         python-version: '3.9'
         architecture: 'x64'
-    - name: Print Docker debug info
-      run: |
-        docker inspect gha_aerospike
-        docker ps
-        docker ps -a
-        docker logs --tail all gha_aerospike
     - name: Install development dependencies
       run: |
         sudo apt-get install libssl-dev
@@ -51,7 +45,7 @@ jobs:
     - name: Install client
       run: |
         pip install .
-    - name: Run tests 
+    - name: Run tests
       run: |
         cd test
         python -m pytest ./new_tests
