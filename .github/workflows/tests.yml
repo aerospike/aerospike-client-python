@@ -26,8 +26,6 @@ jobs:
       with:
         python-version: '3.9'
         architecture: 'x64'
-    - name: Print Python debug info
-      run: python --version
     - name: Setup test config file
       run: |
         sudo apt-get install jq
