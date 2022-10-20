@@ -3,6 +3,7 @@ from aerospike import exception as e
 
 import aerospike
 
+
 def get_key_with_digest_only(key):
     """
     Takes a key tuple, and removes a key tuple

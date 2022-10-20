@@ -5,6 +5,7 @@ import pytest
 
 import aerospike
 
+
 @pytest.mark.usefixtures("as_connection")
 class TestGetKeyDigest(object):
     def test_get_key_digest_with_integer_key(self):

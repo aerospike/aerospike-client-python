@@ -20,6 +20,7 @@ def test_setting_key():
 
     aerospike.client(config)
 
+
 # TODO: duplicate test name
 def test_setting_consistency():  # noqa: F811
     cons_val = aerospike.POLICY_CONSISTENCY_ONE

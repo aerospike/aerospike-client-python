@@ -4,8 +4,20 @@
 import pytest
 
 import aerospike
-from aerospike_helpers.expressions import Eq, IntAnd, IntArithmeticRightShift, IntBin, IntCount, IntLeftScan, \
-    IntLeftShift, IntNot, IntOr, IntRightScan, IntRightShift, IntXOr
+from aerospike_helpers.expressions import (
+    Eq,
+    IntAnd,
+    IntArithmeticRightShift,
+    IntBin,
+    IntCount,
+    IntLeftScan,
+    IntLeftShift,
+    IntNot,
+    IntOr,
+    IntRightScan,
+    IntRightShift,
+    IntXOr,
+)
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 

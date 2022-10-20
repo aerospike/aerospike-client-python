@@ -910,7 +910,6 @@ class TestQuery(TestBaseClass):
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
 
-
         def callback(input_tuple):
             raise Exception("error")
 

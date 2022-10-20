@@ -5,6 +5,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 
+
 class TestScanGetPartitionsStatus(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

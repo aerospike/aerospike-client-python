@@ -3,6 +3,7 @@
 import pytest
 from .test_base_class import TestBaseClass
 
+
 class TestQueryGetPartitionsStatus(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

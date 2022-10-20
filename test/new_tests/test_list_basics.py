@@ -3,6 +3,7 @@ import pytest
 
 import aerospike
 
+
 class TestListBasics(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

@@ -3,8 +3,23 @@
 import pytest
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from aerospike_helpers.expressions import And, Eq, GE, GT, HLLAdd, HLLBin, HLLDescribe, HLLGetCount, \
-    HLLGetIntersectCount, HLLGetSimilarity, HLLGetUnion, HLLGetUnionCount, HLLInit, HLLMayContain, LE
+from aerospike_helpers.expressions import (
+    And,
+    Eq,
+    GE,
+    GT,
+    HLLAdd,
+    HLLBin,
+    HLLDescribe,
+    HLLGetCount,
+    HLLGetIntersectCount,
+    HLLGetSimilarity,
+    HLLGetUnion,
+    HLLGetUnionCount,
+    HLLInit,
+    HLLMayContain,
+    LE,
+)
 from aerospike_helpers.operations import hll_operations
 from aerospike_helpers.operations import expression_operations as expressions
 from math import sqrt, ceil, floor

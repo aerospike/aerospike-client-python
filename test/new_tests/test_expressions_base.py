@@ -3,9 +3,39 @@
 import pytest
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-from aerospike_helpers.expressions import And, BinExists, BinType, BoolBin, Cond, Def, DeviceSize, DigestMod, Eq, \
-    Exclusive, GE, GT, IntBin, IsTombstone, KeyBlob, KeyExists, KeyInt, KeyStr, LT, LastUpdateTime, Let, ListBin, NE, \
-    Not, Or, SetName, SinceUpdateTime, TTL, Unknown, Var, VoidTime
+from aerospike_helpers.expressions import (
+    And,
+    BinExists,
+    BinType,
+    BoolBin,
+    Cond,
+    Def,
+    DeviceSize,
+    DigestMod,
+    Eq,
+    Exclusive,
+    GE,
+    GT,
+    IntBin,
+    IsTombstone,
+    KeyBlob,
+    KeyExists,
+    KeyInt,
+    KeyStr,
+    LT,
+    LastUpdateTime,
+    Let,
+    ListBin,
+    NE,
+    Not,
+    Or,
+    SetName,
+    SinceUpdateTime,
+    TTL,
+    Unknown,
+    Var,
+    VoidTime,
+)
 from aerospike_helpers.operations import expression_operations as expressions
 from aerospike_helpers.operations import operations
 

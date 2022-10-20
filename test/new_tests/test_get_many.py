@@ -184,7 +184,7 @@ class TestGetMany:
         config = {"policies": {"use_batch_direct": True}}
         client_batch_direct = TestBaseClass.get_new_connection(add_config=config)
 
-        policy = {"use_batch_direct": False} # noqa: F841
+        policy = {"use_batch_direct": False}  # noqa: F841
         records = client_batch_direct.get_many(self.keys)
 
         assert isinstance(records, list)

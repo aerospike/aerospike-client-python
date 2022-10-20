@@ -4,10 +4,24 @@ import pytest
 
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
-from aerospike_helpers.expressions import And, Eq, IntBin, ListGetByIndex, ListGetByIndexRange, \
-    ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, ListGetByValue, \
-    ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, \
-    ListSize, ResultType
+from aerospike_helpers.expressions import (
+    And,
+    Eq,
+    IntBin,
+    ListGetByIndex,
+    ListGetByIndexRange,
+    ListGetByIndexRangeToEnd,
+    ListGetByRank,
+    ListGetByRankRange,
+    ListGetByRankRangeToEnd,
+    ListGetByValue,
+    ListGetByValueList,
+    ListGetByValueRange,
+    ListGetByValueRelRankRange,
+    ListGetByValueRelRankRangeToEnd,
+    ListSize,
+    ResultType,
+)
 
 import aerospike
 

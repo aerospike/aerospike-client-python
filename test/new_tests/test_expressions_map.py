@@ -3,15 +3,51 @@
 import pytest
 from .test_base_class import TestBaseClass
 from aerospike_helpers import cdt_ctx
-from aerospike_helpers.expressions import And, Eq, ListBin, ListGetByIndexRangeToEnd, ListSort, MapClear, \
-    MapGetByIndex, MapGetByIndexRange, MapGetByIndexRangeToEnd, MapGetByKey, MapGetByKeyList, MapGetByKeyRange, \
-    MapGetByKeyRelIndexRange, MapGetByKeyRelIndexRangeToEnd, MapGetByRank, MapGetByRankRange, MapGetByRankRangeToEnd, \
-    MapGetByValue, MapGetByValueList, MapGetByValueRange, MapGetByValueRelRankRange, MapGetByValueRelRankRangeToEnd, \
-    MapIncrement, MapPut, MapPutItems, MapRemoveByIndex, MapRemoveByIndexRange, MapRemoveByIndexRangeToEnd, \
-    MapRemoveByKey, MapRemoveByKeyList, MapRemoveByKeyRange, MapRemoveByKeyRelIndexRange, \
-    MapRemoveByKeyRelIndexRangeToEnd, MapRemoveByRank, MapRemoveByRankRange, MapRemoveByRankRangeToEnd, \
-    MapRemoveByValue, MapRemoveByValueList, MapRemoveByValueRange, MapRemoveByValueRelRankRange, \
-    MapRemoveByValueRelRankRangeToEnd, MapSize, ResultType
+from aerospike_helpers.expressions import (
+    And,
+    Eq,
+    ListBin,
+    ListGetByIndexRangeToEnd,
+    ListSort,
+    MapClear,
+    MapGetByIndex,
+    MapGetByIndexRange,
+    MapGetByIndexRangeToEnd,
+    MapGetByKey,
+    MapGetByKeyList,
+    MapGetByKeyRange,
+    MapGetByKeyRelIndexRange,
+    MapGetByKeyRelIndexRangeToEnd,
+    MapGetByRank,
+    MapGetByRankRange,
+    MapGetByRankRangeToEnd,
+    MapGetByValue,
+    MapGetByValueList,
+    MapGetByValueRange,
+    MapGetByValueRelRankRange,
+    MapGetByValueRelRankRangeToEnd,
+    MapIncrement,
+    MapPut,
+    MapPutItems,
+    MapRemoveByIndex,
+    MapRemoveByIndexRange,
+    MapRemoveByIndexRangeToEnd,
+    MapRemoveByKey,
+    MapRemoveByKeyList,
+    MapRemoveByKeyRange,
+    MapRemoveByKeyRelIndexRange,
+    MapRemoveByKeyRelIndexRangeToEnd,
+    MapRemoveByRank,
+    MapRemoveByRankRange,
+    MapRemoveByRankRangeToEnd,
+    MapRemoveByValue,
+    MapRemoveByValueList,
+    MapRemoveByValueRange,
+    MapRemoveByValueRelRankRange,
+    MapRemoveByValueRelRankRangeToEnd,
+    MapSize,
+    ResultType,
+)
 
 import aerospike
 

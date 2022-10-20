@@ -4,10 +4,24 @@ import pytest
 
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
-from aerospike_helpers.expressions import And, Eq, IntBin, ListGetByIndex, ListGetByIndexRange, \
-    ListGetByIndexRangeToEnd, ListGetByRank, ListGetByRankRange, ListGetByRankRangeToEnd, ListGetByValue, \
-    ListGetByValueList, ListGetByValueRange, ListGetByValueRelRankRange, ListGetByValueRelRankRangeToEnd, \
-    ListSize, ResultType
+from aerospike_helpers.expressions import (
+    And,
+    Eq,
+    IntBin,
+    ListGetByIndex,
+    ListGetByIndexRange,
+    ListGetByIndexRangeToEnd,
+    ListGetByRank,
+    ListGetByRankRange,
+    ListGetByRankRangeToEnd,
+    ListGetByValue,
+    ListGetByValueList,
+    ListGetByValueRange,
+    ListGetByValueRelRankRange,
+    ListGetByValueRelRankRangeToEnd,
+    ListSize,
+    ResultType,
+)
 
 import aerospike
 
@@ -96,12 +110,15 @@ class TestSetXDRFilter(object):
 
         response = self.as_connection.set_xdr_filter(self.dc, self.ns, expr)
         expected = (
-            "xdr-set-filter:dc=%s;namespace=%s;exp=lxCTAZV/AgCVGwWVfwIAkxMHAJNRBKlpbGlzdF9iaW4BA5NRBKlpbGlzdF9iaW4CkwGV\
+            (
+                "xdr-set-filter:dc=%s;namespace=%s;exp=lxCTAZV/AgCVGwWVfwIAkxMHAJNRBKlpbGlzdF9iaW4BA5NRBKlpbGlzdF9iaW4CkwGV\
                 fwQAkxYBBpV/BAC"
-            "UGQcBB5NRBKlpbGlzdF9iaW6SfpECkwGVfwIAkxcFkn6SAgaVfwQAlBsHAQGTUQSpaWxpc3RfYmluApMBlX8CAJMYBQGVfwQAlBgHAQOTU\
+                "UGQcBB5NRBKlpbGlzdF9iaW6SfpECkwGVfwIAkxcFkn6SAgaVfwQAlBsHAQGTUQSpaWxpc3RfYmluApMBlX8CAJMYBQGVfwQAlBgHAQOTU\
                 QSpaWxpc3RfYmluAZMBlX8CAJMVAwGVfwQ"
-            "AkxoHAZNRBKlpbGlzdF9iaW4BkwGVfwIAlBoFAZV/AgCREJNRBKlpbGlzdF9iaW6TUQSpaWxpc3RfYmluAg==\tok\n"
-        ) % (self.dc, self.ns)
+                "AkxoHAZNRBKlpbGlzdF9iaW4BkwGVfwIAlBoFAZV/AgCREJNRBKlpbGlzdF9iaW6TUQSpaWxpc3RfYmluAg==\tok\n"
+            )
+            % (self.dc, self.ns)
+        )
         assert response == expected
 
     def test_set_xdr_filter_none_filter_pos(self):

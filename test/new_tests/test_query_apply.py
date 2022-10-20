@@ -324,9 +324,7 @@ class TestQueryApply(object):
     def test_invalid_predicate_tuple(self, predicate):
 
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.query_apply(
-                "test", "demo", predicate, "query_apply", "mark_as_applied", ["name", 2]
-            )
+            self.as_connection.query_apply("test", "demo", predicate, "query_apply", "mark_as_applied", ["name", 2])
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM

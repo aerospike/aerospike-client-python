@@ -7,6 +7,7 @@ from .as_status_codes import AerospikeStatus
 
 import aerospike
 
+
 class TestScanPartition(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
