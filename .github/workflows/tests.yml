@@ -20,38 +20,10 @@ jobs:
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
-        # config-file: 'test/test-instance-data/aerospike.conf'
-        # feature-key-file: 'test/test-instance-data/features.conf'
     - uses: actions/setup-python@v2
       with:
         python-version: '3.9'
         architecture: 'x64'
-    - name: Print Python debug info
-      run: python --version
-    - name: Setup test config file
-      run: |
-        sudo apt-get install jq
-        cd test
-        CID=$(docker ps -a | grep 'aerospike-server' | awk 'NF>1{print $NF}')
-        echo $CID
-        CIP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $CID)
-        echo $CIP
-        python - <<EOF
-        import configparser
-        config = configparser.ConfigParser(delimiters=(":"))
-        config["enterprise-edition"] = {"hosts": "", "user": "", "password": ""}
-        config["community-edition"] = {"hosts": "$CIP" + ":3000"}
-        with open("config.conf", "w") as conf:
-            config.write(conf)
-        EOF
-        cat ./config.conf
-        cd ..
-    - name: Print Docker debug info
-      run: |
-        docker inspect gha_aerospike
-        docker ps
-        docker ps -a
-        docker logs --tail all gha_aerospike
     - name: Install development dependencies
       run: |
         sudo apt-get install libssl-dev
@@ -73,7 +45,7 @@ jobs:
     - name: Install client
       run: |
         pip install .
-    - name: Run tests 
+    - name: Run tests
       run: |
         cd test
         python -m pytest ./new_tests
