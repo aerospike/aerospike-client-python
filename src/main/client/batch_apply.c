@@ -45,7 +45,7 @@ static bool batch_apply_cb(const as_batch_result *results, uint32_t n,
 	// Extract callback user-data
 	LocalData *data = (LocalData *)udata;
 	as_error err;
-    as_error_init(&err);
+	as_error_init(&err);
 	PyObject *py_key = NULL;
 	PyObject *py_batch_record = NULL;
 	bool success = true;
@@ -61,24 +61,28 @@ static bool batch_apply_cb(const as_batch_result *results, uint32_t n,
 
 		// NOTE these conversions shouldn't go wrong but if they do, return
 		if (key_to_pyobject(&err, res->key, &py_key) != AEROSPIKE_OK) {
-            as_log_error("unable to convert res->key at results index: %d", i);
+			as_log_error("unable to convert res->key at results index: %d", i);
 			success = false;
-            break;
+			break;
 		}
 
 		py_batch_record = PyObject_CallMethodObjArgs(
 			data->batch_records_module, data->func_name, py_key, NULL);
 		if (py_batch_record == NULL) {
-            as_log_error("unable to instance BatchRecord at results index: %d", i);
+			as_log_error("unable to instance BatchRecord at results index: %d",
+						 i);
 			success = false;
 			Py_DECREF(py_key);
 			break;
 		}
 		Py_DECREF(py_key);
 
-		as_batch_result_to_BatchRecord(data->client, &err, res, py_batch_record);
+		as_batch_result_to_BatchRecord(data->client, &err, res,
+									   py_batch_record);
 		if (err.code != AEROSPIKE_OK) {
-            as_log_error("as_batch_result_to_BatchRecord failed at results index: %d", i);
+			as_log_error(
+				"as_batch_result_to_BatchRecord failed at results index: %d",
+				i);
 			success = false;
 			break;
 		}
@@ -205,7 +209,8 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
 	PyObject *br_module = NULL;
 	PyObject *sys_modules = PyImport_GetModuleDict();
 
-	if (PyMapping_HasKeyString(sys_modules, "aerospike_helpers.batch.records")) {
+	if (PyMapping_HasKeyString(sys_modules,
+							   "aerospike_helpers.batch.records")) {
 		br_module = PyMapping_GetItemString(sys_modules,
 											"aerospike_helpers.batch.records");
 	}
@@ -242,8 +247,8 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
 	data.py_results = PyObject_GetAttrString(br_instance, "batch_records");
 	data.batch_records_module = br_module;
 
-    as_error batch_apply_err;
-    as_error_init(&batch_apply_err);
+	as_error batch_apply_err;
+	as_error_init(&batch_apply_err);
 
 	Py_BEGIN_ALLOW_THREADS
 

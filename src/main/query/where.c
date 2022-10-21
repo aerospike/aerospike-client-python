@@ -44,8 +44,7 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 	}
 }
 
-static int AerospikeQuery_Where_Add(AerospikeQuery *self,
-									PyObject *py_ctx,
+static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 									as_predicate_type predicate,
 									as_index_datatype in_datatype,
 									PyObject *py_bin, PyObject *py_val1,
@@ -58,16 +57,16 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 	bool ctx_in_use = false;
 	int rc = 0;
 
-	if(py_ctx) {
+	if (py_ctx) {
 		as_static_pool static_pool;
 		memset(&static_pool, 0, sizeof(static_pool));
 		pctx = cf_malloc(sizeof(as_cdt_ctx));
 		memset(pctx, 0, sizeof(as_cdt_ctx));
-		if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use, &static_pool,
-						SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+		if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use,
+						&static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
 			return err.code;
 		}
-		if(!ctx_in_use) {
+		if (!ctx_in_use) {
 			cf_free(pctx);
 			pctx = NULL;
 		}
@@ -87,7 +86,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				bin = PyByteArray_AsString(py_bin);
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 
 			if (PyUnicode_Check(py_val1)) {
@@ -99,27 +99,30 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				val = strdup(PyString_AsString(py_val1));
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 
 			as_query_where_init(&self->query, 1);
 			if (index_type == AS_INDEX_TYPE_DEFAULT) {
-				as_query_where_with_ctx(&self->query, bin, pctx, as_equals(STRING, val));
+				as_query_where_with_ctx(&self->query, bin, pctx,
+										as_equals(STRING, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_LIST) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_contains(LIST, STRING, val));
+										as_contains(LIST, STRING, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_contains(MAPKEYS, STRING, val));
+										as_contains(MAPKEYS, STRING, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_contains(MAPVALUES, STRING, val));
+										as_contains(MAPVALUES, STRING, val));
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 			if (py_ubin) {
 				Py_DECREF(py_ubin);
@@ -138,28 +141,31 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				bin = PyByteArray_AsString(py_bin);
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 			int64_t val = pyobject_to_int64(py_val1);
 
 			as_query_where_init(&self->query, 1);
 			if (index_type == AS_INDEX_TYPE_DEFAULT) {
-				as_query_where_with_ctx(&self->query, bin, pctx, as_equals(NUMERIC, val));
+				as_query_where_with_ctx(&self->query, bin, pctx,
+										as_equals(NUMERIC, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_LIST) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_contains(LIST, NUMERIC, val));
+										as_contains(LIST, NUMERIC, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_contains(MAPKEYS, NUMERIC, val));
+										as_contains(MAPKEYS, NUMERIC, val));
 			}
 			else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_contains(MAPVALUES, NUMERIC, val));
+										as_contains(MAPVALUES, NUMERIC, val));
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 			if (py_ubin) {
 				Py_DECREF(py_ubin);
@@ -174,7 +180,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 			PyObject *py_err = NULL;
 			error_to_pyobject(&err, &py_err);
 			PyErr_SetObject(PyExc_Exception, py_err);
-			rc = 1; break;
+			rc = 1;
+			break;
 		}
 
 		break;
@@ -192,7 +199,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				bin = PyByteArray_AsString(py_bin);
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 			int64_t min = pyobject_to_int64(py_val1);
 			int64_t max = pyobject_to_int64(py_val2);
@@ -200,22 +208,23 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 			as_query_where_init(&self->query, 1);
 			if (index_type == 0) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_range(DEFAULT, NUMERIC, min, max));
+										as_range(DEFAULT, NUMERIC, min, max));
 			}
 			else if (index_type == 1) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_range(LIST, NUMERIC, min, max));
+										as_range(LIST, NUMERIC, min, max));
 			}
 			else if (index_type == 2) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_range(MAPKEYS, NUMERIC, min, max));
+										as_range(MAPKEYS, NUMERIC, min, max));
 			}
 			else if (index_type == 3) {
 				as_query_where_with_ctx(&self->query, bin, pctx,
-							   as_range(MAPVALUES, NUMERIC, min, max));
+										as_range(MAPVALUES, NUMERIC, min, max));
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 			if (py_ubin) {
 				Py_DECREF(py_ubin);
@@ -238,7 +247,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				bin = PyByteArray_AsString(py_bin);
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 
 			if (PyUnicode_Check(py_val1)) {
@@ -250,12 +260,13 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 				val = strdup(PyString_AsString(py_val1));
 			}
 			else {
-				rc = 1; break;
+				rc = 1;
+				break;
 			}
 
 			as_query_where_init(&self->query, 1);
-			as_query_where_with_ctx(&self->query, bin, pctx, AS_PREDICATE_RANGE, index_type,
-						   in_datatype, val);
+			as_query_where_with_ctx(&self->query, bin, pctx, AS_PREDICATE_RANGE,
+									index_type, in_datatype, val);
 
 			if (py_ubin) {
 				Py_DECREF(py_ubin);
@@ -269,7 +280,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 			PyObject *py_err = NULL;
 			error_to_pyobject(&err, &py_err);
 			PyErr_SetObject(PyExc_Exception, py_err);
-			rc = 1; break;
+			rc = 1;
+			break;
 		}
 		break;
 	}
@@ -279,27 +291,26 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self,
 		PyObject *py_err = NULL;
 		error_to_pyobject(&err, &py_err);
 		PyErr_SetObject(PyExc_Exception, py_err);
-		rc = 1; break;
+		rc = 1;
+		break;
 	}
 	}
 
-	if(rc) {
+	if (rc) {
 		assert(false);
 		if (ctx_in_use) {
 			as_cdt_ctx_destroy(pctx);
 		}
-		if(pctx) {
+		if (pctx) {
 			cf_free(pctx);
 		}
 	}
 	return rc;
-
 }
 
-AerospikeQuery *AerospikeQuery_Where_Invoke(
-	AerospikeQuery *self,
-	PyObject *py_arg1,
-	PyObject *py_arg2)
+AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
+											PyObject *py_arg1,
+											PyObject *py_arg2)
 {
 	as_error err;
 	int rc = 0;
@@ -384,11 +395,8 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 						"No connection to aerospike cluster");
 		goto CLEANUP;
 	}
-	
-	return AerospikeQuery_Where_Invoke(
-		self,
-		py_cdt_ctx,
-		py_pred);
+
+	return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred);
 
 CLEANUP:
 	error_to_pyobject(&err, &py_err);

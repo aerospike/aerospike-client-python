@@ -77,7 +77,8 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 		if (err.code == AEROSPIKE_OK) {
 			metadata_to_pyobject(&err, rec, &py_rec_meta);
 			bins_to_pyobject(data->client, &err, rec, &py_rec_bins, false);
-		} else {
+		}
+		else {
 			py_rec_meta = raise_exception(&err);
 			Py_INCREF(Py_None);
 			py_rec_bins = Py_None;
@@ -263,12 +264,12 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 		self, &err, py_keys, py_ops, py_meta, py_policy);
 
 	if (py_results == NULL) {
- 		PyObject *py_err = NULL;
- 		error_to_pyobject(&err, &py_err);
- 		PyObject *exception_type = raise_exception(&err);
- 		PyErr_SetObject(exception_type, py_err);
- 		Py_DECREF(py_err);
- 	}
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+	}
 
 	return py_results;
 }

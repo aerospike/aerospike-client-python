@@ -598,14 +598,14 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
 								   as_policy_admin *config_admin_policy)
 {
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_admin);
 	}
 	//Initialize policy with global defaults
 	as_policy_admin_copy(config_admin_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_FIELD(timeout, uint32_t);
 	}
@@ -627,14 +627,14 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
 								   as_policy_apply *config_apply_policy,
 								   as_exp *exp_list, as_exp **exp_list_p)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_apply);
 	}
 	//Initialize policy with global defaults
 	as_policy_apply_copy(config_apply_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
@@ -671,14 +671,14 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
 								  as_policy_info **policy_p,
 								  as_policy_info *config_info_policy)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_info);
 	}
 	//Initialize policy with global defaults
 	as_policy_info_copy(config_info_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_FIELD(timeout, uint32_t);
 		POLICY_SET_FIELD(send_as_is, bool);
@@ -703,14 +703,14 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 								   as_policy_query *config_query_policy,
 								   as_exp *exp_list, as_exp **exp_list_p)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_query);
 	}
 	//Initialize policy with global defaults
 	as_policy_query_copy(config_query_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 		POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
@@ -746,7 +746,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
 								  as_policy_read *config_read_policy,
 								  as_exp *exp_list, as_exp **exp_list_p)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_read);
 	}
@@ -754,7 +754,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
 	//Initialize policy with global defaults
 	as_policy_read_copy(config_read_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
@@ -795,14 +795,14 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
 									as_policy_remove *config_remove_policy,
 									as_exp *exp_list, as_exp **exp_list_p)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_remove);
 	}
 	//Initialize policy with global defaults
 	as_policy_remove_copy(config_remove_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
@@ -842,14 +842,14 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 								  as_policy_scan *config_scan_policy,
 								  as_exp *exp_list, as_exp **exp_list_p)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_scan);
 	}
 	//Initialize policy with global defaults
 	as_policy_scan_copy(config_scan_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		// server side socket_timeout
 		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
@@ -886,14 +886,14 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 								   as_policy_write *config_write_policy,
 								   as_exp *exp_list, as_exp **exp_list_p)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_write);
 	}
 	//Initialize policy with global defaults
 	as_policy_write_copy(config_write_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
@@ -935,14 +935,14 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 									 as_policy_operate *config_operate_policy,
 									 as_exp *exp_list, as_exp **exp_list_p)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_operate);
 	}
 	//Initialize policy with global defaults
 	as_policy_operate_copy(config_operate_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 
@@ -986,14 +986,14 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 								   as_policy_batch *config_batch_policy,
 								   as_exp *exp_list, as_exp **exp_list_p)
 {
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Initialize Policy
 		POLICY_INIT(as_policy_batch);
 	}
 	//Initialize policy with global defaults
 	as_policy_batch_copy(config_batch_policy, policy);
 
-	if(py_policy && py_policy != Py_None) {
+	if (py_policy && py_policy != Py_None) {
 		// Set policy fields
 		POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
 

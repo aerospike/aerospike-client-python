@@ -467,8 +467,9 @@ PyDoc_STRVAR(index_string_create_doc,
 \n\
 Create a string index with index_name on the bin in the specified ns, set.");
 
-PyDoc_STRVAR(index_cdt_create_doc,
-			 "index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
+PyDoc_STRVAR(
+	index_cdt_create_doc,
+	"index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
 \n\
 Create an cdt index named index_name for list, map keys or map values (as defined by index_type) and for \
 numeric, string or GeoJSON values (as defined by index_datatype) \
@@ -514,9 +515,8 @@ PyDoc_STRVAR(get_many_doc, "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
 Batch-read multiple records with applying list of operations and returns them as a list. \
 Any record that does not exist will have a None value for metadata and status in the record tuple.");
 
-PyDoc_STRVAR(
-	batch_get_ops_doc,
-	"batch_get_ops(keys, ops, meta, policy) -> [ (key, meta, bins)]\n\
+PyDoc_STRVAR(batch_get_ops_doc,
+			 "batch_get_ops(keys, ops, meta, policy) -> [ (key, meta, bins)]\n\
 \n\
 Batch-read multiple records, and return them as a list. \
 Any record that does not exist will have a exception type value as metadata and None value as bin in the record tuple.");
@@ -1392,9 +1392,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		}
 	}
 
-	PyObject *py_fail_if_not_connected = PyDict_GetItemString(py_config, "fail_if_not_connected");
+	PyObject *py_fail_if_not_connected =
+		PyDict_GetItemString(py_config, "fail_if_not_connected");
 	if (py_fail_if_not_connected && PyBool_Check(py_fail_if_not_connected)) {
-		config.fail_if_not_connected = PyObject_IsTrue(py_fail_if_not_connected);
+		config.fail_if_not_connected =
+			PyObject_IsTrue(py_fail_if_not_connected);
 	}
 
 	self->as = aerospike_new(&config);
@@ -1589,25 +1591,24 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeClient_Type = {
-	PyVarObject_HEAD_INIT(NULL, 0) 
-	"aerospike.Client", // tp_name
-	sizeof(AerospikeClient), // tp_basicsize
-	0, // tp_itemsize
-	(destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
-	0, // tp_print
-	0, // tp_getattr
-	0, // tp_setattr
-	0, // tp_compare
-	0, // tp_repr
-	0, // tp_as_number
-	0, // tp_as_sequence
-	0, // tp_as_mapping
-	0, // tp_hash
-	0, // tp_call
-	0, // tp_str
-	0, // tp_getattro
-	0, // tp_setattro
-	0, // tp_as_buffer
+	PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Client", // tp_name
+	sizeof(AerospikeClient),						   // tp_basicsize
+	0,												   // tp_itemsize
+	(destructor)AerospikeClient_Type_Dealloc,		   // tp_dealloc
+	0,												   // tp_print
+	0,												   // tp_getattr
+	0,												   // tp_setattr
+	0,												   // tp_compare
+	0,												   // tp_repr
+	0,												   // tp_as_number
+	0,												   // tp_as_sequence
+	0,												   // tp_as_mapping
+	0,												   // tp_hash
+	0,												   // tp_call
+	0,												   // tp_str
+	0,												   // tp_getattro
+	0,												   // tp_setattro
+	0,												   // tp_as_buffer
 	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
 	// tp_flags
 	"The Client class manages the connections and trasactions against\n"

@@ -601,7 +601,7 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+										   PyObject *args, PyObject *kwds);
 
 /**
  * Create secondary geospatial index
@@ -652,8 +652,8 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
 * b64_string = client.get_cdtctx_base64(compiled_cdtctx)
 *
 */
-PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
+										  PyObject *kwds);
 
 /*******************************************************************************
  * LOG OPERATIONS

@@ -168,8 +168,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
 	// TODO check that py_object is an instance of class
 
-	py_batch_records =
-		PyObject_GetAttrString(py_obj, FIELD_NAME_BATCH_RECORDS);
+	py_batch_records = PyObject_GetAttrString(py_obj, FIELD_NAME_BATCH_RECORDS);
 	if (py_batch_records == NULL || !PyList_Check(py_batch_records)) {
 		as_error_update(err, AEROSPIKE_ERR_PARAM,
 						"%s must be a list of BatchRecord",
@@ -202,8 +201,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
 		// extract as_batch_base_record fields
 		// all batch_records classes should have these
-		py_key =
-			PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_KEY);
+		py_key = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_KEY);
 		if (py_key == NULL || !PyTuple_Check(py_key)) {
 			as_error_update(err, AEROSPIKE_ERR_PARAM,
 							"py_key is NULL or not a tuple, %s must be a "
@@ -465,14 +463,16 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
 		PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
 		PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT,
-							py_in_doubt);
+							   py_in_doubt);
 		Py_DECREF(py_in_doubt);
 
 		if (*result_code == AEROSPIKE_OK) {
 			PyObject *rec = NULL;
 
-			if (PyObject_HasAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD)) {
-				PyObject_DelAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD);
+			if (PyObject_HasAttrString(py_batch_record,
+									   FIELD_NAME_BATCH_RECORD)) {
+				PyObject_DelAttrString(py_batch_record,
+									   FIELD_NAME_BATCH_RECORD);
 			}
 
 			if (result_rec) {

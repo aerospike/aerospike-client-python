@@ -133,8 +133,7 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
 	{"records_per_second", T_UINT,
 	 offsetof(AerospikeQuery, query) + offsetof(as_query, records_per_second),
 	 0, "Limit the query to process records at records_per_second."},
-	{"ttl", T_UINT,
-	 offsetof(AerospikeQuery, query) + offsetof(as_query, ttl),
+	{"ttl", T_UINT, offsetof(AerospikeQuery, query) + offsetof(as_query, ttl),
 	 0, "The time-to-live (expiration) of the record in seconds. \
 			There are also special values that can be set in the record TTL: \
 			ZERO (defined as TTL_NAMESPACE_DEFAULT): which means that the \
@@ -249,8 +248,8 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
 				free(p->value.string);
 			}
 		}
-		if(i == 0){
-			if(p->ctx){
+		if (i == 0) {
+			if (p->ctx) {
 				as_cdt_ctx_destroy(p->ctx);
 				cf_free(p->ctx);
 			}
