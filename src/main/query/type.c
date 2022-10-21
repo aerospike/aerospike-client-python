@@ -64,7 +64,7 @@ The predicate is produced by one of the aerospike.predicates methods equals() an
 The list cdt_ctx is produced by one of the aerospike_helpers.cdt_ctx methods");
 
 PyDoc_STRVAR(execute_background_doc,
-			 "execute_background([policy]) -> list of (key, meta, bins)\n\
+             "execute_background([policy]) -> list of (key, meta, bins)\n\
 \n\
 Buffer the records resulting from the query, and return them as a list of records.");
 
@@ -78,7 +78,7 @@ If using query pagination, did the previous paginated query with this query inst
 return all records?");
 
 PyDoc_STRVAR(get_parts_doc,
-			 "get_parts() -> {int: (int, bool, bool, bytearray[20]), ...}\n\
+             "get_parts() -> {int: (int, bool, bool, bytearray[20]), ...}\n\
 \n\
 Gets the complete partition status of the query. \
 Returns a dictionary of the form {id:(id, init, done, digest), ...}.");
@@ -89,52 +89,52 @@ Returns a dictionary of the form {id:(id, init, done, digest), ...}.");
 
 static PyMethodDef AerospikeQuery_Type_Methods[] = {
 
-	{"apply", (PyCFunction)AerospikeQuery_Apply, METH_VARARGS | METH_KEYWORDS,
-	 apply_doc},
+    {"apply", (PyCFunction)AerospikeQuery_Apply, METH_VARARGS | METH_KEYWORDS,
+     apply_doc},
 
-	{"foreach", (PyCFunction)AerospikeQuery_Foreach,
-	 METH_VARARGS | METH_KEYWORDS, foreach_doc},
+    {"foreach", (PyCFunction)AerospikeQuery_Foreach,
+     METH_VARARGS | METH_KEYWORDS, foreach_doc},
 
-	{"results", (PyCFunction)AerospikeQuery_Results,
-	 METH_VARARGS | METH_KEYWORDS, results_doc},
+    {"results", (PyCFunction)AerospikeQuery_Results,
+     METH_VARARGS | METH_KEYWORDS, results_doc},
 
-	{"select", (PyCFunction)AerospikeQuery_Select, METH_VARARGS | METH_KEYWORDS,
-	 select_doc},
+    {"select", (PyCFunction)AerospikeQuery_Select, METH_VARARGS | METH_KEYWORDS,
+     select_doc},
 
-	{"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
+    {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
 
-	{"execute_background", (PyCFunction)AerospikeQuery_ExecuteBackground,
-	 METH_VARARGS | METH_KEYWORDS, execute_background_doc},
+    {"execute_background", (PyCFunction)AerospikeQuery_ExecuteBackground,
+     METH_VARARGS | METH_KEYWORDS, execute_background_doc},
 
-	{"add_ops", (PyCFunction)AerospikeQuery_Add_Ops,
-	 METH_VARARGS | METH_KEYWORDS, add_ops_doc},
+    {"add_ops", (PyCFunction)AerospikeQuery_Add_Ops,
+     METH_VARARGS | METH_KEYWORDS, add_ops_doc},
 
-	{"paginate", (PyCFunction)AerospikeQuery_Paginate, METH_NOARGS,
-	 paginate_doc},
+    {"paginate", (PyCFunction)AerospikeQuery_Paginate, METH_NOARGS,
+     paginate_doc},
 
-	{"is_done", (PyCFunction)AerospikeQuery_Is_Done, METH_NOARGS, is_done_doc},
+    {"is_done", (PyCFunction)AerospikeQuery_Is_Done, METH_NOARGS, is_done_doc},
 
-	{"get_partitions_status", (PyCFunction)AerospikeQuery_Get_Partitions_status,
-	 METH_NOARGS, get_parts_doc},
+    {"get_partitions_status", (PyCFunction)AerospikeQuery_Get_Partitions_status,
+     METH_NOARGS, get_parts_doc},
 
-	{NULL}};
+    {NULL}};
 
 /*******************************************************************************
  * PYTHON CUSTOM MEMBERS
  ******************************************************************************/
 
 static PyMemberDef AerospikeQuery_Type_custom_members[] = {
-	{"max_records", T_ULONG,
-	 offsetof(AerospikeQuery, query) + offsetof(as_query, max_records), 0,
-	 "Approximate number of records to return to the client. \
+    {"max_records", T_ULONG,
+     offsetof(AerospikeQuery, query) + offsetof(as_query, max_records), 0,
+     "Approximate number of records to return to the client. \
 	 	This number is divided by the number of nodes invloved in the query. \
 		The actual number of records returned may be less than max_records if \
 		record counts are small and unbalanced across nodes."},
-	{"records_per_second", T_UINT,
-	 offsetof(AerospikeQuery, query) + offsetof(as_query, records_per_second),
-	 0, "Limit the query to process records at records_per_second."},
-	{"ttl", T_UINT, offsetof(AerospikeQuery, query) + offsetof(as_query, ttl),
-	 0, "The time-to-live (expiration) of the record in seconds. \
+    {"records_per_second", T_UINT,
+     offsetof(AerospikeQuery, query) + offsetof(as_query, records_per_second),
+     0, "Limit the query to process records at records_per_second."},
+    {"ttl", T_UINT, offsetof(AerospikeQuery, query) + offsetof(as_query, ttl),
+     0, "The time-to-live (expiration) of the record in seconds. \
 			There are also special values that can be set in the record TTL: \
 			ZERO (defined as TTL_NAMESPACE_DEFAULT): which means that the \
 			   record will adopt the default TTL value from the namespace. \
@@ -144,7 +144,7 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
 			   (defined as TTL_DONT_UPDATE), which means that the record \
 			   ttl will not change when the record is updated. \
 	 	Note that the TTL value will be employed ONLY on background query writes."},
-	{NULL} /* Sentinel */
+    {NULL} /* Sentinel */
 };
 
 /*******************************************************************************
@@ -152,173 +152,173 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
  ******************************************************************************/
 
 static PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
-										 PyObject *kwds)
+                                         PyObject *kwds)
 {
-	AerospikeQuery *self = NULL;
+    AerospikeQuery *self = NULL;
 
-	self = (AerospikeQuery *)type->tp_alloc(type, 0);
+    self = (AerospikeQuery *)type->tp_alloc(type, 0);
 
-	if (self) {
-		self->client = NULL;
-	}
+    if (self) {
+        self->client = NULL;
+    }
 
-	return (PyObject *)self;
+    return (PyObject *)self;
 }
 
 static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
-									PyObject *kwds)
+                                    PyObject *kwds)
 {
-	PyObject *py_namespace = NULL;
-	PyObject *py_set = NULL;
-	PyObject *py_ustr_set = NULL;
+    PyObject *py_namespace = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_ustr_set = NULL;
 
-	as_error err;
-	as_error_init(&err);
+    as_error err;
+    as_error_init(&err);
 
-	static char *kwlist[] = {"namespace", "set", NULL};
+    static char *kwlist[] = {"namespace", "set", NULL};
 
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
-									&py_namespace, &py_set) == false) {
-		as_query_destroy(&self->query);
-		as_error_update(&err, AEROSPIKE_ERR_PARAM,
-						"query() expects atleast 1 parameter");
-		goto CLEANUP;
-	}
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
+                                    &py_namespace, &py_set) == false) {
+        as_query_destroy(&self->query);
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "query() expects atleast 1 parameter");
+        goto CLEANUP;
+    }
 
-	char *namespace = NULL;
-	char *set = NULL;
+    char *namespace = NULL;
+    char *set = NULL;
 
-	if (PyString_Check(py_namespace)) {
-		namespace = PyString_AsString(py_namespace);
-	}
-	else {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM,
-						"Namespace should be a string");
-		goto CLEANUP;
-	}
+    if (PyString_Check(py_namespace)) {
+        namespace = PyString_AsString(py_namespace);
+    }
+    else {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Namespace should be a string");
+        goto CLEANUP;
+    }
 
-	if (py_set) {
-		if (PyString_Check(py_set)) {
-			set = PyString_AsString(py_set);
-		}
-		else if (PyUnicode_Check(py_set)) {
-			py_ustr_set = PyUnicode_AsUTF8String(py_set);
-			set = PyBytes_AsString(py_ustr_set);
-		}
-		else if (py_set != Py_None) {
-			as_error_update(&err, AEROSPIKE_ERR_PARAM,
-							"Set should be string, unicode or None");
-			goto CLEANUP;
-		}
-	}
+    if (py_set) {
+        if (PyString_Check(py_set)) {
+            set = PyString_AsString(py_set);
+        }
+        else if (PyUnicode_Check(py_set)) {
+            py_ustr_set = PyUnicode_AsUTF8String(py_set);
+            set = PyBytes_AsString(py_ustr_set);
+        }
+        else if (py_set != Py_None) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Set should be string, unicode or None");
+            goto CLEANUP;
+        }
+    }
 
-	self->unicodeStrVector = NULL;
-	self->static_pool = NULL;
-	as_query_init(&self->query, namespace, set);
+    self->unicodeStrVector = NULL;
+    self->static_pool = NULL;
+    as_query_init(&self->query, namespace, set);
 
 CLEANUP:
-	if (py_ustr_set) {
-		Py_DECREF(py_ustr_set);
-	}
+    if (py_ustr_set) {
+        Py_DECREF(py_ustr_set);
+    }
 
-	if (err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_XDECREF(py_err);
-		return -1;
-	}
+    if (err.code != AEROSPIKE_OK) {
+        PyObject *py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyObject *exception_type = raise_exception(&err);
+        PyErr_SetObject(exception_type, py_err);
+        Py_XDECREF(py_err);
+        return -1;
+    }
 
-	return 0;
+    return 0;
 }
 
 static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
 {
-	int i;
-	for (i = 0; i < self->u_objs.size; i++) {
-		Py_XDECREF(self->u_objs.ob[i]);
-	}
+    int i;
+    for (i = 0; i < self->u_objs.size; i++) {
+        Py_XDECREF(self->u_objs.ob[i]);
+    }
 
-	for (i = 0; i < self->query.where.size; i++) {
-		as_predicate *p = &self->query.where.entries[i];
-		if (p) {
-			if (p->dtype == AS_INDEX_STRING ||
-				p->dtype == AS_INDEX_GEO2DSPHERE) {
-				free(p->value.string);
-			}
-		}
-		if (i == 0) {
-			if (p->ctx) {
-				as_cdt_ctx_destroy(p->ctx);
-				cf_free(p->ctx);
-			}
-		}
-	}
+    for (i = 0; i < self->query.where.size; i++) {
+        as_predicate *p = &self->query.where.entries[i];
+        if (p) {
+            if (p->dtype == AS_INDEX_STRING ||
+                p->dtype == AS_INDEX_GEO2DSPHERE) {
+                free(p->value.string);
+            }
+        }
+        if (i == 0) {
+            if (p->ctx) {
+                as_cdt_ctx_destroy(p->ctx);
+                cf_free(p->ctx);
+            }
+        }
+    }
 
-	as_query_destroy(&self->query);
+    as_query_destroy(&self->query);
 
-	if (self->unicodeStrVector != NULL) {
-		for (unsigned int i = 0; i < self->unicodeStrVector->size; ++i) {
-			free(as_vector_get_ptr(self->unicodeStrVector, i));
-		}
+    if (self->unicodeStrVector != NULL) {
+        for (unsigned int i = 0; i < self->unicodeStrVector->size; ++i) {
+            free(as_vector_get_ptr(self->unicodeStrVector, i));
+        }
 
-		as_vector_destroy(self->unicodeStrVector);
-	}
+        as_vector_destroy(self->unicodeStrVector);
+    }
 
-	Py_CLEAR(self->client);
-	Py_TYPE(self)->tp_free((PyObject *)self);
+    Py_CLEAR(self->client);
+    Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 static PyTypeObject AerospikeQuery_Type = {
-	PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Query", // tp_name
-	sizeof(AerospikeQuery),							  // tp_basicsize
-	0,												  // tp_itemsize
-	(destructor)AerospikeQuery_Type_Dealloc,
-	// tp_dealloc
-	0, // tp_print
-	0, // tp_getattr
-	0, // tp_setattr
-	0, // tp_compare
-	0, // tp_repr
-	0, // tp_as_number
-	0, // tp_as_sequence
-	0, // tp_as_mapping
-	0, // tp_hash
-	0, // tp_call
-	0, // tp_str
-	0, // tp_getattro
-	0, // tp_setattro
-	0, // tp_as_buffer
-	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-	// tp_flags
-	"The Query class assists in populating the parameters of a query\n"
-	"operation. To create a new instance of the Query class, call the\n"
-	"query() method on an instance of a Client class.\n",
-	// tp_doc
-	0,									// tp_traverse
-	0,									// tp_clear
-	0,									// tp_richcompare
-	0,									// tp_weaklistoffset
-	0,									// tp_iter
-	0,									// tp_iternext
-	AerospikeQuery_Type_Methods,		// tp_methods
-	AerospikeQuery_Type_custom_members, // tp_members
-	0,									// tp_getset
-	0,									// tp_base
-	0,									// tp_dict
-	0,									// tp_descr_get
-	0,									// tp_descr_set
-	0,									// tp_dictoffset
-	(initproc)AerospikeQuery_Type_Init, // tp_init
-	0,									// tp_alloc
-	AerospikeQuery_Type_New,			// tp_new
-	0,									// tp_free
-	0,									// tp_is_gc
-	0									// tp_bases
+    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Query", // tp_name
+    sizeof(AerospikeQuery),                           // tp_basicsize
+    0,                                                // tp_itemsize
+    (destructor)AerospikeQuery_Type_Dealloc,
+    // tp_dealloc
+    0, // tp_print
+    0, // tp_getattr
+    0, // tp_setattr
+    0, // tp_compare
+    0, // tp_repr
+    0, // tp_as_number
+    0, // tp_as_sequence
+    0, // tp_as_mapping
+    0, // tp_hash
+    0, // tp_call
+    0, // tp_str
+    0, // tp_getattro
+    0, // tp_setattro
+    0, // tp_as_buffer
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    // tp_flags
+    "The Query class assists in populating the parameters of a query\n"
+    "operation. To create a new instance of the Query class, call the\n"
+    "query() method on an instance of a Client class.\n",
+    // tp_doc
+    0,                                  // tp_traverse
+    0,                                  // tp_clear
+    0,                                  // tp_richcompare
+    0,                                  // tp_weaklistoffset
+    0,                                  // tp_iter
+    0,                                  // tp_iternext
+    AerospikeQuery_Type_Methods,        // tp_methods
+    AerospikeQuery_Type_custom_members, // tp_members
+    0,                                  // tp_getset
+    0,                                  // tp_base
+    0,                                  // tp_dict
+    0,                                  // tp_descr_get
+    0,                                  // tp_descr_set
+    0,                                  // tp_dictoffset
+    (initproc)AerospikeQuery_Type_Init, // tp_init
+    0,                                  // tp_alloc
+    AerospikeQuery_Type_New,            // tp_new
+    0,                                  // tp_free
+    0,                                  // tp_is_gc
+    0                                   // tp_bases
 };
 
 /*******************************************************************************
@@ -327,30 +327,30 @@ static PyTypeObject AerospikeQuery_Type = {
 
 PyTypeObject *AerospikeQuery_Ready()
 {
-	return PyType_Ready(&AerospikeQuery_Type) == 0 ? &AerospikeQuery_Type
-												   : NULL;
+    return PyType_Ready(&AerospikeQuery_Type) == 0 ? &AerospikeQuery_Type
+                                                   : NULL;
 }
 
 AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
-								   PyObject *kwds)
+                                   PyObject *kwds)
 {
-	AerospikeQuery *self = (AerospikeQuery *)AerospikeQuery_Type.tp_new(
-		&AerospikeQuery_Type, args, kwds);
-	self->client = client;
+    AerospikeQuery *self = (AerospikeQuery *)AerospikeQuery_Type.tp_new(
+        &AerospikeQuery_Type, args, kwds);
+    self->client = client;
 
-	if (AerospikeQuery_Type.tp_init((PyObject *)self, args, kwds) == 0) {
-		Py_INCREF(client);
-		return self;
-	}
-	else {
-		return NULL;
-	}
+    if (AerospikeQuery_Type.tp_init((PyObject *)self, args, kwds) == 0) {
+        Py_INCREF(client);
+        return self;
+    }
+    else {
+        return NULL;
+    }
 }
 
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj)
 {
-	if (self->u_objs.size < MAX_UNICODE_OBJECTS) {
-		self->u_objs.ob[self->u_objs.size++] = obj;
-	}
-	return obj;
+    if (self->u_objs.size < MAX_UNICODE_OBJECTS) {
+        self->u_objs.ob[self->u_objs.size++] = obj;
+    }
+    return obj;
 }

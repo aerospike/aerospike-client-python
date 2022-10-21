@@ -24,5 +24,5 @@
 #include "exceptions.h"
 
 as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
-				 as_vector *unicodeStrVector, as_static_pool *static_pool,
-				 as_operations *ops, long *op, long *ret_type);
+                 as_vector *unicodeStrVector, as_static_pool *static_pool,
+                 as_operations *ops, long *op, long *ret_type);
