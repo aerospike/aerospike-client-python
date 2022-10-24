@@ -74,6 +74,13 @@ The dependencies can be installed through the macOS package manager [Homebrew](h
     brew install openssl@1
     # brew uninstall openssl@3
 
+### All distros
+
+Install `clang-format` for formatting the C source code:
+```
+sudo apt install clang-format
+```
+
 ## Build
 
     export STATIC_SSL=1
@@ -142,6 +149,11 @@ pip install flake8
 The command is:
 ```
 flake8 --max-line-length=120 --extend-ignore=E203 aerospike_helpers/
+```
+
+All C source code must be formatted with `clang-format`:
+```
+clang-format -i <filename>
 ```
 
 ## License

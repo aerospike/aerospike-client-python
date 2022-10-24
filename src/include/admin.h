@@ -34,7 +34,7 @@
  *
  */
 PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
-											PyObject *args, PyObject *kwds);
+                                            PyObject *args, PyObject *kwds);
 
 /**
  * Drop an existing user from the database.
@@ -43,7 +43,7 @@ PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 
 /**
  * Set the password for an existing user.
@@ -52,7 +52,7 @@ PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Admin_Set_Password(AerospikeClient *self,
-											 PyObject *args, PyObject *kwds);
+                                             PyObject *args, PyObject *kwds);
 
 /**
  * Change the password for an existing user.
@@ -61,7 +61,7 @@ PyObject *AerospikeClient_Admin_Set_Password(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
-												PyObject *args, PyObject *kwds);
+                                                PyObject *args, PyObject *kwds);
 
 /**
  * Grant security roles to an existing user.
@@ -70,7 +70,7 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
-											PyObject *args, PyObject *kwds);
+                                            PyObject *args, PyObject *kwds);
 
 /**
  * Revoke the roles specified from an existing user.
@@ -79,7 +79,7 @@ PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
-											 PyObject *args, PyObject *kwds);
+                                             PyObject *args, PyObject *kwds);
 
 /**
  * Retrieve the roles of an existing user.
@@ -88,7 +88,7 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Query_User(AerospikeClient *self,
-										   PyObject *args, PyObject *kwds);
+                                           PyObject *args, PyObject *kwds);
 
 /**
  * Retrieve the info of an existing user.
@@ -97,7 +97,7 @@ PyObject *AerospikeClient_Admin_Query_User(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
-												PyObject *args, PyObject *kwds);
+                                                PyObject *args, PyObject *kwds);
 
 /**
  * Retrieve the roles for all existing users in the database.
@@ -106,7 +106,7 @@ PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Query_Users(AerospikeClient *self,
-											PyObject *args, PyObject *kwds);
+                                            PyObject *args, PyObject *kwds);
 
 /**
  * Retrieve the info for all existing users in the database.
@@ -115,8 +115,8 @@ PyObject *AerospikeClient_Admin_Query_Users(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Query_Users_Info(AerospikeClient *self,
-												 PyObject *args,
-												 PyObject *kwds);
+                                                 PyObject *args,
+                                                 PyObject *kwds);
 
 /**
  * Create a new role in the database.
@@ -125,7 +125,7 @@ PyObject *AerospikeClient_Admin_Query_Users_Info(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Create_Role(AerospikeClient *self,
-											PyObject *args, PyObject *kwds);
+                                            PyObject *args, PyObject *kwds);
 /**
  * Drop a user defined role in the database.
  *
@@ -133,7 +133,7 @@ PyObject *AerospikeClient_Admin_Create_Role(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Drop_Role(AerospikeClient *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 /**
  * Grant privileges to a user defined role in the database.
  *
@@ -141,8 +141,8 @@ PyObject *AerospikeClient_Admin_Drop_Role(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Admin_Grant_Privileges(AerospikeClient *self,
-												 PyObject *args,
-												 PyObject *kwds);
+                                                 PyObject *args,
+                                                 PyObject *kwds);
 /**
  * Revoke privileges from a user defined role in the database.
  *
@@ -150,8 +150,8 @@ PyObject *AerospikeClient_Admin_Grant_Privileges(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Revoke_Privileges(AerospikeClient *self,
-												  PyObject *args,
-												  PyObject *kwds);
+                                                  PyObject *args,
+                                                  PyObject *kwds);
 /**
  * Query a user defined role in the database.
  *
@@ -159,7 +159,7 @@ PyObject *AerospikeClient_Admin_Revoke_Privileges(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Query_Role(AerospikeClient *self,
-										   PyObject *args, PyObject *kwds);
+                                           PyObject *args, PyObject *kwds);
 /**
  * Query all user defined roles in the database.
  *
@@ -167,7 +167,7 @@ PyObject *AerospikeClient_Admin_Query_Role(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Query_Roles(AerospikeClient *self,
-											PyObject *args, PyObject *kwds);
+                                            PyObject *args, PyObject *kwds);
 /**
  * Get a user defined role in the database.
  *
@@ -175,7 +175,7 @@ PyObject *AerospikeClient_Admin_Query_Roles(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Get_Role(AerospikeClient *self, PyObject *args,
-										 PyObject *kwds);
+                                         PyObject *kwds);
 /**
  * Get all user defined roles in the database.
  *
@@ -183,7 +183,7 @@ PyObject *AerospikeClient_Admin_Get_Role(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Admin_Get_Roles(AerospikeClient *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 /**
  * Set read and write quotas for a user defined role in the database.
  *
@@ -191,7 +191,7 @@ PyObject *AerospikeClient_Admin_Get_Roles(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Admin_Set_Quotas(AerospikeClient *self,
-										   PyObject *args, PyObject *kwds);
+                                           PyObject *args, PyObject *kwds);
 /**
  * Set IP whitelist for a user defined role in the database.
  *
@@ -199,4 +199,4 @@ PyObject *AerospikeClient_Admin_Set_Quotas(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Admin_Set_Whitelist(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+                                              PyObject *args, PyObject *kwds);

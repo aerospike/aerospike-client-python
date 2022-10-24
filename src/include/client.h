@@ -41,7 +41,7 @@ PyTypeObject *AerospikeClient_Ready(void);
  * Create a new Aerospike client object and connect to the database.
  */
 AerospikeClient *AerospikeClient_New(PyObject *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /*******************************************************************************
  * CONNECTION OPERATIONS
@@ -51,25 +51,25 @@ AerospikeClient *AerospikeClient_New(PyObject *self, PyObject *args,
  * Connect to the database.
  */
 PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 
 /**
  * Close the connections to the database.
  */
 PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
-								PyObject *kwds);
+                                PyObject *kwds);
 
 /**
  * Checks the connection to the database.
  */
 PyObject *AerospikeClient_is_connected(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 
 /**
  * Get the shm_key to the cluster.
  */
 PyObject *AerospikeClient_shm_key(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 
 /*******************************************************************************
  * KVS OPERATIONS
@@ -82,13 +82,13 @@ PyObject *AerospikeClient_shm_key(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Apply(AerospikeClient *self, PyObject *args,
-								PyObject *kwds);
+                                PyObject *kwds);
 
 PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
-									   PyObject *py_module,
-									   PyObject *py_function,
-									   PyObject *py_arglist,
-									   PyObject *py_policy);
+                                       PyObject *py_module,
+                                       PyObject *py_function,
+                                       PyObject *py_arglist,
+                                       PyObject *py_policy);
 /**
  * Check existence of a record in the database.
  *
@@ -96,10 +96,10 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
  *
  */
 PyObject *AerospikeClient_Exists(AerospikeClient *self, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 
 PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self, PyObject *py_key,
-										PyObject *py_policy);
+                                        PyObject *py_policy);
 
 /**
  * Read a record from the database.
@@ -108,10 +108,10 @@ PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self, PyObject *py_key,
  *
  */
 PyObject *AerospikeClient_Get(AerospikeClient *self, PyObject *args,
-							  PyObject *kwds);
+                              PyObject *kwds);
 
 PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
-									 PyObject *py_policy);
+                                     PyObject *py_policy);
 
 /**
  * Async Read a record from the database.
@@ -120,7 +120,7 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
  *
  */
 PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
-									PyObject *kwds);
+                                    PyObject *kwds);
 
 /**
  * Project specific bins of a record from the database.
@@ -129,7 +129,7 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Select(AerospikeClient *self, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 
 /**
  * Write a record in the database.
@@ -138,12 +138,12 @@ PyObject *AerospikeClient_Select(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Put(AerospikeClient *self, PyObject *args,
-							  PyObject *kwds);
+                              PyObject *kwds);
 
 PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
-									 PyObject *py_bins, PyObject *py_meta,
-									 PyObject *py_policy,
-									 long serializer_option);
+                                     PyObject *py_bins, PyObject *py_meta,
+                                     PyObject *py_policy,
+                                     long serializer_option);
 
 /**
  * Write a record async in the database.
@@ -152,7 +152,7 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
  *
  */
 PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
-									PyObject *kwds);
+                                    PyObject *kwds);
 
 /**
  * Remove a record from the database.
@@ -161,10 +161,10 @@ PyObject *AerospikeClient_Put_Async(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 
 PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
-										PyObject *py_meta, PyObject *py_policy);
+                                        PyObject *py_meta, PyObject *py_policy);
 
 /**
  * Remove bin from the database.
@@ -173,7 +173,7 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
  *
  */
 extern PyObject *AerospikeClient_RemoveBin(AerospikeClient *self,
-										   PyObject *args, PyObject *kwds);
+                                           PyObject *args, PyObject *kwds);
 /**
  * Append a string to a string bin value of a record in the database.
  *
@@ -181,7 +181,7 @@ extern PyObject *AerospikeClient_RemoveBin(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 /**
  * Prepend a string to a string bin value of a record in the database.
  *
@@ -189,7 +189,7 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 /**
  * Increment bin value of a record to the database.
  *
@@ -197,7 +197,7 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
-									PyObject *kwds);
+                                    PyObject *kwds);
 /**
  * Touch a record in the database.
  *
@@ -205,7 +205,7 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
-								PyObject *kwds);
+                                PyObject *kwds);
 /**
  * Performs operate operations
  *
@@ -213,7 +213,7 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 /**
  * Performs operate ordered operations
  *
@@ -221,7 +221,7 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
-										 PyObject *kwds);
+                                         PyObject *kwds);
 
 /*******************************************************************************
  * LIST FUNCTIONS(CDT)
@@ -233,7 +233,7 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListAppend(AerospikeClient *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /**
  * Extend the list value in bin with the given items.
@@ -242,7 +242,7 @@ PyObject *AerospikeClient_ListAppend(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListExtend(AerospikeClient *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /**
  * Insert val at the specified index of the list value in bin.
@@ -251,7 +251,7 @@ PyObject *AerospikeClient_ListExtend(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListInsert(AerospikeClient *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /**
  * Insert the items at the specified index of a list value in bin.
@@ -260,7 +260,7 @@ PyObject *AerospikeClient_ListInsert(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListInsertItems(AerospikeClient *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 
 /**
  * Remove and get back a list element at a given index of a list value in bin.
@@ -269,7 +269,7 @@ PyObject *AerospikeClient_ListInsertItems(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListPop(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 
 /**
  * Remove and get back a list element at a given index of a list value in bin.
@@ -278,7 +278,7 @@ PyObject *AerospikeClient_ListPop(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListPopRange(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 
 /**
  * Remove a list element at a given index of a list value in bin.
@@ -287,7 +287,7 @@ PyObject *AerospikeClient_ListPopRange(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListRemove(AerospikeClient *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /**
  * Remove list elements at a given index of a list value in bin.
@@ -296,7 +296,7 @@ PyObject *AerospikeClient_ListRemove(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListRemoveRange(AerospikeClient *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 
 /**
  * Remove all the elements from a list value in bin.
@@ -305,7 +305,7 @@ PyObject *AerospikeClient_ListRemoveRange(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListClear(AerospikeClient *self, PyObject *args,
-									PyObject *kwds);
+                                    PyObject *kwds);
 
 /**
  * Set list element val at the specified index of a list value in bin.
@@ -314,7 +314,7 @@ PyObject *AerospikeClient_ListClear(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListSet(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 
 /**
  * Get the list element at the specified index of a list value in bin.
@@ -323,7 +323,7 @@ PyObject *AerospikeClient_ListSet(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListGet(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 
 /**
  * Get the list of count elements starting at a specified index of a list value in bin.
@@ -332,7 +332,7 @@ PyObject *AerospikeClient_ListGet(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListGetRange(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 
 /**
  * Remove elements from the list which are not within the range starting at the
@@ -342,7 +342,7 @@ PyObject *AerospikeClient_ListGetRange(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListTrim(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 /**
  * Count the elements of the list value in bin.
@@ -351,7 +351,7 @@ PyObject *AerospikeClient_ListTrim(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_ListSize(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 /*******************************************************************************
  * MAP FUNCTIONS
@@ -364,67 +364,67 @@ PyObject *AerospikeClient_ListSize(AerospikeClient *self, PyObject *args,
  */
 
 PyObject *AerospikeClient_MapSetPolicy(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 PyObject *AerospikeClient_MapPut(AerospikeClient *self, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 PyObject *AerospikeClient_MapPutItems(AerospikeClient *self, PyObject *args,
-									  PyObject *kwds);
+                                      PyObject *kwds);
 PyObject *AerospikeClient_MapIncrement(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 PyObject *AerospikeClient_MapDecrement(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 PyObject *AerospikeClient_MapSize(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 PyObject *AerospikeClient_MapClear(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 PyObject *AerospikeClient_MapRemoveByKey(AerospikeClient *self, PyObject *args,
-										 PyObject *kwds);
+                                         PyObject *kwds);
 PyObject *AerospikeClient_MapRemoveByKeyList(AerospikeClient *self,
-											 PyObject *args, PyObject *kwds);
+                                             PyObject *args, PyObject *kwds);
 PyObject *AerospikeClient_MapRemoveByKeyRange(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+                                              PyObject *args, PyObject *kwds);
 
 PyObject *AerospikeClient_MapRemoveByValue(AerospikeClient *self,
-										   PyObject *args, PyObject *kwds);
+                                           PyObject *args, PyObject *kwds);
 PyObject *AerospikeClient_MapRemoveByValueList(AerospikeClient *self,
-											   PyObject *args, PyObject *kwds);
+                                               PyObject *args, PyObject *kwds);
 PyObject *AerospikeClient_MapRemoveByValueRange(AerospikeClient *self,
-												PyObject *args, PyObject *kwds);
+                                                PyObject *args, PyObject *kwds);
 
 PyObject *AerospikeClient_MapRemoveByIndex(AerospikeClient *self,
-										   PyObject *args, PyObject *kwds);
+                                           PyObject *args, PyObject *kwds);
 PyObject *AerospikeClient_MapRemoveByIndexRange(AerospikeClient *self,
-												PyObject *args, PyObject *kwds);
+                                                PyObject *args, PyObject *kwds);
 
 PyObject *AerospikeClient_MapRemoveByRank(AerospikeClient *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 PyObject *AerospikeClient_MapRemoveByRankRange(AerospikeClient *self,
-											   PyObject *args, PyObject *kwds);
+                                               PyObject *args, PyObject *kwds);
 
 PyObject *AerospikeClient_MapGetByKey(AerospikeClient *self, PyObject *args,
-									  PyObject *kwds);
+                                      PyObject *kwds);
 PyObject *AerospikeClient_MapGetByKeyRange(AerospikeClient *self,
-										   PyObject *args, PyObject *kwds);
+                                           PyObject *args, PyObject *kwds);
 
 PyObject *AerospikeClient_MapGetByValue(AerospikeClient *self, PyObject *args,
-										PyObject *kwds);
+                                        PyObject *kwds);
 PyObject *AerospikeClient_MapGetByValueRange(AerospikeClient *self,
-											 PyObject *args, PyObject *kwds);
+                                             PyObject *args, PyObject *kwds);
 PyObject *AerospikeClient_MapGetByValueList(AerospikeClient *self,
-											PyObject *args, PyObject *kwds);
+                                            PyObject *args, PyObject *kwds);
 PyObject *AerospikeClient_MapGetByKeyList(AerospikeClient *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 
 PyObject *AerospikeClient_MapGetByIndex(AerospikeClient *self, PyObject *args,
-										PyObject *kwds);
+                                        PyObject *kwds);
 PyObject *AerospikeClient_MapGetByIndexRange(AerospikeClient *self,
-											 PyObject *args, PyObject *kwds);
+                                             PyObject *args, PyObject *kwds);
 
 PyObject *AerospikeClient_MapGetByRank(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 PyObject *AerospikeClient_MapGetByRankRange(AerospikeClient *self,
-											PyObject *args, PyObject *kwds);
+                                            PyObject *args, PyObject *kwds);
 
 /*******************************************************************************
  * SCAN OPERATIONS
@@ -448,11 +448,11 @@ PyObject *AerospikeClient_MapGetByRankRange(AerospikeClient *self,
  *
  */
 AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
-									PyObject *kwds);
+                                    PyObject *kwds);
 PyObject *AerospikeClient_ScanApply(AerospikeClient *self, PyObject *args,
-									PyObject *kwds);
+                                    PyObject *kwds);
 PyObject *AerospikeClient_ScanInfo(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 /*******************************************************************************
  * QUERY OPERATIONS
@@ -478,11 +478,11 @@ PyObject *AerospikeClient_ScanInfo(AerospikeClient *self, PyObject *args,
  *
  */
 AerospikeQuery *AerospikeClient_Query(AerospikeClient *self, PyObject *args,
-									  PyObject *kwds);
+                                      PyObject *kwds);
 PyObject *AerospikeClient_QueryApply(AerospikeClient *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 
 /*******************************************************************************
  * INFO OPERATIONS
@@ -499,7 +499,7 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_InfoSingleNode(AerospikeClient *self, PyObject *args,
-										 PyObject *kwds);
+                                         PyObject *kwds);
 
 /**
  * Performs a `info` operation. This will invoke the info request against a random
@@ -512,7 +512,7 @@ PyObject *AerospikeClient_InfoSingleNode(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_InfoRandomNode(AerospikeClient *self, PyObject *args,
-										 PyObject *kwds);
+                                         PyObject *kwds);
 
 /**
  *  ----------------------------- DEPRECATED ---------------------------------
@@ -532,7 +532,7 @@ PyObject *AerospikeClient_InfoRandomNode(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_InfoNode(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 /*******************************************************************************
  * UDF OPERATIONS
@@ -544,7 +544,7 @@ PyObject *AerospikeClient_InfoNode(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 
 /**
  * De-registers a UDF.
@@ -553,7 +553,7 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /**
  * Lists the UDFs
@@ -562,7 +562,7 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_UDF_List(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 /**
  * Gets the registered UDFs
@@ -571,7 +571,7 @@ PyObject *AerospikeClient_UDF_List(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
-									  PyObject *kwds);
+                                      PyObject *kwds);
 
 /*******************************************************************************
  * SECONDARY INDEX OPERATIONS
@@ -583,7 +583,7 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
-											   PyObject *args, PyObject *kwds);
+                                               PyObject *args, PyObject *kwds);
 
 /**
  * Create secondary string index
@@ -592,7 +592,7 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+                                              PyObject *args, PyObject *kwds);
 
 /**
  * Create secondary cdt index
@@ -601,7 +601,7 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+                                           PyObject *args, PyObject *kwds);
 
 /**
  * Create secondary geospatial index
@@ -610,7 +610,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
-												PyObject *args, PyObject *kwds);
+                                                PyObject *args, PyObject *kwds);
 
 /**
  * Remove secondary index
@@ -619,7 +619,7 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 /**
  * Create secondary list index
  *
@@ -627,7 +627,7 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
-											PyObject *args, PyObject *kwds);
+                                            PyObject *args, PyObject *kwds);
 /**
  * Create secondary map keys index
  *
@@ -635,7 +635,7 @@ PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
-												PyObject *args, PyObject *kwds);
+                                                PyObject *args, PyObject *kwds);
 /**
  * Create secondary map values index
  *
@@ -643,8 +643,8 @@ PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
-												  PyObject *args,
-												  PyObject *kwds);
+                                                  PyObject *args,
+                                                  PyObject *kwds);
 
 /**
 * Get the base64 representation of an aerospike CDT ctx.
@@ -652,8 +652,8 @@ PyObject *AerospikeClient_Index_Map_Values_Create(AerospikeClient *self,
 * b64_string = client.get_cdtctx_base64(compiled_cdtctx)
 *
 */
-PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
+                                          PyObject *kwds);
 
 /*******************************************************************************
  * LOG OPERATIONS
@@ -665,7 +665,7 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self,
  *
  */
 PyObject *AerospikeClient_Set_Log_Level(AerospikeClient *self, PyObject *args,
-										PyObject *kwds);
+                                        PyObject *kwds);
 
 /**
  * Sets the log handler
@@ -674,7 +674,7 @@ PyObject *AerospikeClient_Set_Log_Level(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Set_Log_Handler(AerospikeClient *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 
 /**
  * Get records in a batch
@@ -683,7 +683,7 @@ PyObject *AerospikeClient_Set_Log_Handler(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 /**
  * Get records in a batch
@@ -692,7 +692,7 @@ PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 
 /**
  * Read/Write multiple records for specified batch keys in one batch call.
@@ -704,7 +704,7 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /**
  * Perform read/write operations on multiple keys.
@@ -714,7 +714,7 @@ PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
-										PyObject *kwds);
+                                        PyObject *kwds);
 
 /**
  * Remove multiple records by key.
@@ -724,7 +724,7 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 
 /**
  * Apply a user defined function (UDF) to multiple keys.
@@ -734,7 +734,7 @@ PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
-									  PyObject *kwds);
+                                      PyObject *kwds);
 
 /**
  * Filter bins from records in a batch
@@ -743,7 +743,7 @@ PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Select_Many(AerospikeClient *self, PyObject *args,
-									  PyObject *kwds);
+                                      PyObject *kwds);
 
 /**
  * Check existence of given keys
@@ -752,7 +752,7 @@ PyObject *AerospikeClient_Select_Many(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Exists_Many(AerospikeClient *self, PyObject *args,
-									  PyObject *kwds);
+                                      PyObject *kwds);
 
 /**
 * Perform xdr-set-filter info operation on the database.
@@ -761,7 +761,7 @@ PyObject *AerospikeClient_Exists_Many(AerospikeClient *self, PyObject *args,
 *
 */
 PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 
 /**
 * Get the base64 representation of an aerospike expression.
@@ -770,14 +770,14 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
 *
 */
 PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+                                              PyObject *args, PyObject *kwds);
 
 /**
  * Send an info request to the entire cluster
  * client.info_all("statistics", {}")
 */
 PyObject *AerospikeClient_InfoAll(AerospikeClient *self, PyObject *args,
-								  PyObject *kwds);
+                                  PyObject *kwds);
 
 /**
 * Perform info operation on the database.
@@ -786,7 +786,7 @@ PyObject *AerospikeClient_InfoAll(AerospikeClient *self, PyObject *args,
 *
 */
 PyObject *AerospikeClient_Info(AerospikeClient *self, PyObject *args,
-							   PyObject *kwds);
+                               PyObject *kwds);
 
 /**
 * Perform get nodes operation on the database.
@@ -795,7 +795,7 @@ PyObject *AerospikeClient_Info(AerospikeClient *self, PyObject *args,
 *
 */
 PyObject *AerospikeClient_GetNodes(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 /**
 * Perform get node name operation on the database.
 *
@@ -803,7 +803,7 @@ PyObject *AerospikeClient_GetNodes(AerospikeClient *self, PyObject *args,
 *
 */
 PyObject *AerospikeClient_GetNodeNames(AerospikeClient *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 /**
 * Perforrm get key digest operation on the database.
 *
@@ -811,7 +811,7 @@ PyObject *AerospikeClient_GetNodeNames(AerospikeClient *self, PyObject *args,
 *
 */
 PyObject *AerospikeClient_Get_Key_Digest(AerospikeClient *self, PyObject *args,
-										 PyObject *kwds);
+                                         PyObject *kwds);
 /**
 * Perform get key's partition id from cluster.
 *
@@ -819,7 +819,7 @@ PyObject *AerospikeClient_Get_Key_Digest(AerospikeClient *self, PyObject *args,
 *
 */
 PyObject *AerospikeClient_Get_Key_PartitionID(AerospikeClient *self,
-											  PyObject *args, PyObject *kwds);
+                                              PyObject *args, PyObject *kwds);
 /**
  * Return search string for host port combination
  */
@@ -828,16 +828,16 @@ char *return_search_string(aerospike *as);
  * Close the aerospike object depending on the global_hosts entries
  */
 void close_aerospike_object(aerospike *as, as_error *err, char *alias_to_search,
-							PyObject *py_persistent_item, bool do_destroy);
+                            PyObject *py_persistent_item, bool do_destroy);
 /**
  * Check type for 'operate' operation
  */
 int check_type(AerospikeClient *self, PyObject *py_value, int op,
-			   as_error *err);
+               as_error *err);
 
 /*******************************************************************************
  * TRUNCATE OPERATIONS
  ******************************************************************************/
 
 PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
