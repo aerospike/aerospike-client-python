@@ -29,72 +29,72 @@
 #define TRACE()
 
 AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
-									  PyObject *kwds)
+                                      PyObject *kwds)
 {
-	TRACE();
+    TRACE();
 
-	int nbins = (int)PyTuple_Size(args);
-	char *bin = NULL;
-	PyObject *py_ubin = NULL;
-	as_error err;
-	as_error_init(&err);
+    int nbins = (int)PyTuple_Size(args);
+    char *bin = NULL;
+    PyObject *py_ubin = NULL;
+    as_error err;
+    as_error_init(&err);
 
-	if (!self || !self->client->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
+    if (!self || !self->client->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
 
-	if (!self->client->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-						"No connection to aerospike cluster");
-		goto CLEANUP;
-	}
+    if (!self->client->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
 
-	as_query_select_init(&self->query, nbins);
+    as_query_select_init(&self->query, nbins);
 
-	for (int i = 0; i < nbins; i++) {
-		PyObject *py_bin = PyTuple_GetItem(args, i);
-		if (PyUnicode_Check(py_bin)) {
-			py_ubin = PyUnicode_AsUTF8String(py_bin);
-			bin = PyBytes_AsString(py_ubin);
-		}
-		else if (PyString_Check(py_bin)) {
-			// TRACE();
-			bin = PyString_AsString(py_bin);
-		}
-		else if (PyByteArray_Check(py_bin)) {
-			bin = PyByteArray_AsString(py_bin);
-		}
-		else {
-			// TRACE();
-			as_error_update(&err, AEROSPIKE_ERR_PARAM,
-							"Bin name should be of type string");
-			PyObject *py_err = NULL;
-			error_to_pyobject(&err, &py_err);
-			PyObject *exception_type = raise_exception(&err);
-			PyErr_SetObject(exception_type, py_err);
-			Py_DECREF(py_err);
-			return NULL;
-		}
+    for (int i = 0; i < nbins; i++) {
+        PyObject *py_bin = PyTuple_GetItem(args, i);
+        if (PyUnicode_Check(py_bin)) {
+            py_ubin = PyUnicode_AsUTF8String(py_bin);
+            bin = PyBytes_AsString(py_ubin);
+        }
+        else if (PyString_Check(py_bin)) {
+            // TRACE();
+            bin = PyString_AsString(py_bin);
+        }
+        else if (PyByteArray_Check(py_bin)) {
+            bin = PyByteArray_AsString(py_bin);
+        }
+        else {
+            // TRACE();
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Bin name should be of type string");
+            PyObject *py_err = NULL;
+            error_to_pyobject(&err, &py_err);
+            PyObject *exception_type = raise_exception(&err);
+            PyErr_SetObject(exception_type, py_err);
+            Py_DECREF(py_err);
+            return NULL;
+        }
 
-		as_query_select(&self->query, bin);
+        as_query_select(&self->query, bin);
 
-		if (py_ubin) {
-			Py_DECREF(py_ubin);
-			py_ubin = NULL;
-		}
-	}
+        if (py_ubin) {
+            Py_DECREF(py_ubin);
+            py_ubin = NULL;
+        }
+    }
 
 CLEANUP:
-	if (err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
+    if (err.code != AEROSPIKE_OK) {
+        PyObject *py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyObject *exception_type = raise_exception(&err);
+        PyErr_SetObject(exception_type, py_err);
+        Py_DECREF(py_err);
+        return NULL;
+    }
 
-	Py_INCREF(self);
-	return self;
+    Py_INCREF(self);
+    return self;
 }
