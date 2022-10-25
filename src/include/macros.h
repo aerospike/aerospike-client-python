@@ -28,12 +28,14 @@
     #define PyString_FromString PyUnicode_FromString
     #define PyString_FromStringAndSize PyUnicode_FromStringAndSize
 
-    #if PY_MINOR_VERSION < 7
-        #define PyString_AsString PyUnicode_AsUTF8
-    #else
-        #define PyString_AsString (char *)PyUnicode_AsUTF8
-        #define PyEval_InitThreads Py_Initialize
-    #endif
+	#if PY_MINOR_VERSION < 7
+		#define PyString_AsString PyUnicode_AsUTF8
+	#else
+		#define PyString_AsString (char *)PyUnicode_AsUTF8
+        #ifdef Py_Initialize
+            #define PyEval_InitThreads Py_Initialize
+        #endif
+	#endif
 
     #define PyString_Size PyUnicode_GET_SIZE
     #define PyString_GET_SIZE PyUnicode_GET_SIZE
