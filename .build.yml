@@ -3,6 +3,7 @@ name: aerospike-client-python
 container:
   - base:
       - docker.qe.aerospike.com/build/aerospike-client-python:manylinux2014
+      - docker.qe.aerospike.com/build/aerospike-client-python:arm-manylinux2014
 
 build:
   - name: build
