@@ -5,6 +5,6 @@ wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-
 tar -xvf aerospike.tgz
 cd aerospike-server-community-6.1.0.1-ubuntu20.04/
 sudo ./asinstall
-# Configure aerospike server to run tests
-sed -Ei "s/^namespace test.*$/namespace test {\n\tdefault-ttl 3d\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
 sudo systemctl start aerospike
+# Configure aerospike server to run tests
+asinfo -v "set-config:context=namespace;id=test;allow-ttl-without-nsup=true"
