@@ -1166,6 +1166,27 @@ def test_create_user(aeros, namespace, setname):
 
     status = aeros.admin_create_user(user, password, roles, policy)
 
+def test_large_put(aeros, namespace, setname):
+
+    client = aeros.connect('generic_client', 'generic_client')
+
+    # Records are addressable via a tuple of (namespace, set, primary key)
+    key = (namespace, setname, 'send-key-test')
+
+    f = open('/home/randersen/NYTZ131.json')
+    data = json.load(f)
+    f.close()
+    
+    #Test to make sure the doc was properly loaded
+    print(data["TimeZoneName"])
+    
+    key = (namespace, setname, "America/New_York")
+    
+    try:
+        client.put(key, {"tzzone": data})
+    except Exception as e:
+        print(e)
+
 def get_aerospike():
     # tls_name = 'bob-cluster-a'
     tls_name = '172.31.1.163'
