@@ -131,7 +131,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     PyObject *py_batch_type = NULL;
     PyObject *py_key = NULL;
     PyObject *py_batch_records = NULL;
-    PyObject *py_ops_list = NULL;
+    PyObject *py_meta = NULL, *py_ops_list = NULL;
 
     // setup for op conversion
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
@@ -256,6 +256,11 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             }
         }
 
+        py_meta = NULL;
+        if (batch_type == AS_BATCH_READ || batch_type == AS_BATCH_WRITE) {
+            py_meta = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_META);
+        }
+
         Py_ssize_t py_ops_size = 0;
         if (py_ops_list != NULL && py_ops_list != Py_None) {
             py_ops_size = PyList_Size(py_ops_list);
@@ -265,29 +270,35 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         long return_type = -1;
 
         as_operations *ops = NULL;
-        if (py_ops_size) {
+        if (batch_type == AS_BATCH_READ || batch_type == AS_BATCH_WRITE &&
+            (py_ops_size || py_meta)) {
             ops = as_operations_new(py_ops_size);
             garb->ops_to_free = ops;
-        }
 
-        for (Py_ssize_t i = 0; i < py_ops_size; i++) {
-
-            PyObject *py_op = PyList_GetItem(py_ops_list, i);
-            if (py_op == NULL || !PyDict_Check(py_op)) {
-                as_error_update(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "py_op is NULL or not a dict, %s must be a dict \
-                                 produced by an aerospike operation helper",
-                    FIELD_NAME_BATCH_OPS);
-                goto CLEANUP0;
+            if (py_meta) {
+                if (check_for_meta(py_meta, ops, err) != AEROSPIKE_OK) {
+                    goto CLEANUP0;
+                }
             }
 
-            if (add_op(self, err, py_op, unicodeStrVector, &static_pool, ops,
-                       &operation, &return_type) != AEROSPIKE_OK) {
-                goto CLEANUP0;
+            for (Py_ssize_t i = 0; i < py_ops_size; i++) {
+
+                PyObject *py_op = PyList_GetItem(py_ops_list, i);
+                if (py_op == NULL || !PyDict_Check(py_op)) {
+                    as_error_update(
+                        err, AEROSPIKE_ERR_PARAM,
+                        "py_op is NULL or not a dict, %s must be a dict \
+                                    produced by an aerospike operation helper",
+                        FIELD_NAME_BATCH_OPS);
+                    goto CLEANUP0;
+                }
+
+                if (add_op(self, err, py_op, unicodeStrVector, &static_pool, ops,
+                        &operation, &return_type) != AEROSPIKE_OK) {
+                    goto CLEANUP0;
+                }
             }
         }
-
         switch (batch_type) {
         case AS_BATCH_READ:;
 
@@ -492,6 +503,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     goto CLEANUP3;
 
 CLEANUP0:
+    if (py_meta) {
+        Py_XDECREF(py_meta);
+    }
     Py_XDECREF(py_ops_list);
 CLEANUP1:
     Py_XDECREF(py_batch_type);

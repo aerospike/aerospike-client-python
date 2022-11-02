@@ -38,6 +38,7 @@
 #define FIELD_NAME_BATCH_HASWRITE "_has_write"
 #define FIELD_NAME_BATCH_KEY "key"
 #define FIELD_NAME_BATCH_OPS "ops"
+#define FIELD_NAME_BATCH_META "meta"
 #define FIELD_NAME_BATCH_RESULT "result"
 #define FIELD_NAME_BATCH_RECORD "record"
 #define FIELD_NAME_BATCH_POLICY "policy"
