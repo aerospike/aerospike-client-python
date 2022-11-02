@@ -122,6 +122,7 @@ class TestBatchWrite(TestBaseClass):
                         br.Write(
                             ("test", "demo", 1),
                             [op.write("new", 10), op.read("new")],
+                            meta={"gen": 1, "ttl":aerospike.TTL_NEVER_EXPIRE},
                             policy={
                                 "key": aerospike.POLICY_KEY_SEND,
                                 "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
@@ -184,6 +185,7 @@ class TestBatchWrite(TestBaseClass):
                         br.Write(
                             ("test", "demo", 1),
                             [op.write("new", 10), op.read("new")],
+                            meta={"gen": 1, "ttl":aerospike.TTL_NEVER_EXPIRE},
                             policy={
                                 "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
                                 "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
@@ -374,6 +376,7 @@ class TestBatchWrite(TestBaseClass):
         res = self.as_connection.batch_write(batch_records, policy)
 
         for i, batch_rec in enumerate(res.batch_records):
+            # print("name:", name)
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]
 
@@ -422,6 +425,7 @@ class TestBatchWrite(TestBaseClass):
                             [
                                 op.read("count"),
                             ],
+                            meta=None,
                             policy="bad policy",
                         )
                     ]
