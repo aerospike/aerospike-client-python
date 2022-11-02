@@ -1,20 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import pytest
-import sys
 from .test_base_class import TestBaseClass
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-    from aerospike import exception as e
-except:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestIsConnected(object):
-
     def setup_class(cls):
         """
         Setup the config which is used in the tests

@@ -1,32 +1,21 @@
 # -*- coding: utf-8 -*-
 import pytest
-import sys
 import random
-from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestListPop(object):
-
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         keys = []
         for i in range(5):
-            key = ('test', 'demo', i)
-            rec = {'name': 'name%s' %
-                   (str(i)),
-                   'contact_no': [i, i + 1],
-                   'city': ['Pune', 'Dehli']}
+            key = ("test", "demo", i)
+            rec = {"name": "name%s" % (str(i)), "contact_no": [i, i + 1], "city": ["Pune", "Dehli"]}
             self.as_connection.put(key, rec)
             keys.append(key)
-        key = ('test', 'demo', 2)
+        key = ("test", "demo", 2)
         self.as_connection.list_append(key, "contact_no", [45, 50, 80])
         keys.append(key)
 
@@ -46,7 +35,7 @@ class TestListPop(object):
         """
         Invoke list_pop() pop string with correct parameters
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
 
         bins = self.as_connection.list_pop(key, "contact_no", 0)
 
@@ -56,14 +45,14 @@ class TestListPop(object):
         """
         Invoke list_append() append list with correct policy
         """
-        key = ('test', 'demo', 2)
+        key = ("test", "demo", 2)
         policy = {
-            'timeout': 1000,
-            'retry': aerospike.POLICY_RETRY_ONCE,
-            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
+            "timeout": 1000,
+            "retry": aerospike.POLICY_RETRY_ONCE,
+            "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
 
-        bins = self.as_connection.list_pop(key, 'contact_no', 2, {}, policy)
+        bins = self.as_connection.list_pop(key, "contact_no", 2, {}, policy)
 
         assert bins == [45, 50, 80]
 
@@ -74,17 +63,14 @@ class TestListPop(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_pop()
-        assert "argument 'key' (pos 1)" in str(
-            typeError.value)
+        assert "argument 'key' (pos 1)" in str(typeError.value)
 
     def test_neg_list_pop_with_incorrect_policy(self):
         """
         Invoke list_pop() with incorrect policy
         """
-        key = ('test', 'demo', 1)
-        policy = {
-            'timeout': 0.5
-        }
+        key = ("test", "demo", 1)
+        policy = {"timeout": 0.5}
         try:
             self.as_connection.list_pop(key, "contact_no", 0, {}, policy)
 
@@ -98,13 +84,11 @@ class TestListPop(object):
         """
         if self.server_version < [3, 15, 2]:
             pytest.skip("Change of error beginning in 3.15")
-        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        charSet = "abcdefghijklmnopqrstuvwxyz1234567890"
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ('test', 'demo', ''.join(map(lambda unused:
-                                           random.choice(charSet),
-                                           range(length))) + ".com")
+        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
 
         with pytest.raises(e.RecordNotFound):
             self.as_connection.list_pop(key, "abc", 0)
@@ -113,13 +97,12 @@ class TestListPop(object):
         """
         Invoke list_pop() with non-existent bin
         """
-        key = ('test', 'demo', 1)
-        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
+        key = ("test", "demo", 1)
+        charSet = "abcdefghijklmnopqrstuvwxyz1234567890"
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = ''.join(map(lambda unused:
-                          random.choice(charSet), range(length))) + ".com"
+        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
         try:
             self.as_connection.list_pop(key, bin, 0)
 
@@ -130,19 +113,18 @@ class TestListPop(object):
         """
         Invoke list_pop() with extra parameter.
         """
-        key = ('test', 'demo', 1)
-        policy = {'timeout': 1000}
+        key = ("test", "demo", 1)
+        policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_pop(key, "contact_no", 1, {}, policy, "")
 
-        assert "list_pop() takes at most 5 arguments (6 given)" in str(
-            typeError.value)
+        assert "list_pop() takes at most 5 arguments (6 given)" in str(typeError.value)
 
     def test_neg_list_pop_policy_is_string(self):
         """
         Invoke list_pop() with policy is string
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         try:
             self.as_connection.list_pop(key, "contact_no", 1, {}, "")
 
@@ -165,7 +147,7 @@ class TestListPop(object):
         """
         Invoke list_pop() with bin is none
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         try:
             self.as_connection.list_pop(key, None, 1)
 
@@ -177,7 +159,7 @@ class TestListPop(object):
         """
         Invoke list_pop() with negative index
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         try:
             self.as_connection.list_pop(key, "contact_no", -56)
         except e.OpNotApplicable as exception:
@@ -187,7 +169,7 @@ class TestListPop(object):
         """
         Invoke list_pop() with metadata input is of type integer
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
         try:
             self.as_connection.list_pop(key, "contact_no", 1, 888)
 
@@ -199,7 +181,7 @@ class TestListPop(object):
         """
         Invoke list_pop() with index is of type string
         """
-        key = ('test', 'demo', 1)
+        key = ("test", "demo", 1)
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_pop(key, "contact_no", "Fifth")

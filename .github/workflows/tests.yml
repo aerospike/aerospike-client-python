@@ -29,10 +29,10 @@ jobs:
         sudo apt-get install libssl-dev
         sudo apt-get install python3-dev
         python -m pip install -r doc/requirements.txt -r test/requirements.txt flake8
-    - name: Lint aerospike_helpers
+    - name: Lint Python code
       run: |
         # Ignore E203 to be compatible with black
-        flake8 --max-line-length=120 --count --extend-ignore=E203 aerospike_helpers/
+        flake8 --max-line-length=120 --count --extend-ignore=E203 aerospike_helpers/ test/
     - name: clang-format Check
       uses: jidicula/clang-format-action@v4.9.0
       with:

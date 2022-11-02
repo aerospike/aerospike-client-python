@@ -9,10 +9,11 @@ PREDICATE_METHDOS = [
     as_predicates.geo_contains_geojson_point,
     as_predicates.geo_contains_point,
     as_predicates.geo_within_geojson_region,
-    as_predicates.geo_within_radius
+    as_predicates.geo_within_radius,
 ]
 
-@pytest.mark.parametrize('predicate', PREDICATE_METHDOS)
+
+@pytest.mark.parametrize("predicate", PREDICATE_METHDOS)
 def test_invalid_predicate_use(predicate):
     with pytest.raises(TypeError):
         predicate()

@@ -6,7 +6,7 @@
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
-#LICENSE-2.0
+# LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
@@ -125,7 +125,7 @@ AEROSPIKE_ERR_BIN_EXISTS = 6
 AEROSPIKE_ERR_CLUSTER_CHANGE = 7
 
 #
-#or storage device space
+# or storage device space
 #    reserved for the specified namespace.
 #
 AEROSPIKE_ERR_SERVER_FULL = 8
@@ -323,7 +323,7 @@ AEROSPIKE_ERR_BATCH_MAX_REQUESTS_EXCEEDED = 151
 AEROSPIKE_ERR_BATCH_QUEUES_FULL = 152
 
 #
-#Unsupported GeoJSON
+# Unsupported GeoJSON
 #
 AEROSPIKE_ERR_GEO_INVALID_GEOJSON = 160
 

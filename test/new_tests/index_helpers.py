@@ -1,4 +1,3 @@
-import aerospike
 from aerospike import exception as e
 import time
 
@@ -24,5 +23,5 @@ def ensure_dropped_index(client, namespace, index_name):
         responses = client.info_all("sindex")
         if not index_found_in_info_res(responses, index_name):
             return
-        time.sleep(.5)
+        time.sleep(0.5)
         retries += 1
