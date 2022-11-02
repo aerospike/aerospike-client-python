@@ -1,25 +1,18 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-import sys
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 @pytest.mark.usefixtures("as_connection")
 class TestUdfPut(TestBaseClass):
-
     def setup_class(cls):
-        cls.udf_name = 'example.lua'
+        cls.udf_name = "example.lua"
 
     def teardown_method(self, method):
         """
@@ -27,10 +20,9 @@ class TestUdfPut(TestBaseClass):
         """
         udf_list = self.as_connection.udf_list()
         for udf in udf_list:
-            if udf['name'] == self.udf_name:
+            if udf["name"] == self.udf_name:
                 self.as_connection.udf_remove(self.udf_name)
-                wait_for_udf_removal(
-                    self.as_connection, self.udf_name)
+                wait_for_udf_removal(self.as_connection, self.udf_name)
 
     def test_udf_put_with_proper_parameters_no_policy(self):
         """
@@ -48,7 +40,7 @@ class TestUdfPut(TestBaseClass):
 
         present = False
         for udf in udf_list:
-            if self.udf_name == udf['name']:
+            if self.udf_name == udf["name"]:
                 present = True
                 break
 
@@ -60,7 +52,7 @@ class TestUdfPut(TestBaseClass):
         to the server
         """
 
-        policy = {'timeout': 1000}
+        policy = {"timeout": 1000}
         filename = self.udf_name
         udf_type = 0
 
@@ -72,7 +64,7 @@ class TestUdfPut(TestBaseClass):
 
         present = False
         for udf in udf_list:
-            if udf['name'] == filename:
+            if udf["name"] == filename:
                 present = True
                 break
 
@@ -81,7 +73,7 @@ class TestUdfPut(TestBaseClass):
     def test_udf_put_with_filename_unicode(self):
 
         policy = {}
-        filename = u"example.lua"
+        filename = "example.lua"
         udf_type = 0
 
         status = self.as_connection.udf_put(filename, udf_type, policy)
@@ -94,7 +86,7 @@ class TestUdfPut(TestBaseClass):
 
         present = False
         for udf in udf_list:
-            if 'example.lua' == udf['name']:
+            if "example.lua" == udf["name"]:
                 present = True
 
         assert present
@@ -105,7 +97,7 @@ class TestUdfPut(TestBaseClass):
         filename = "empty.lua"
         udf_type = 0
         with pytest.raises(e.LuaFileNotFound):
-            status = self.as_connection.udf_put(filename, udf_type, policy)
+            self.as_connection.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_filename_too_long(self):
 
@@ -113,7 +105,7 @@ class TestUdfPut(TestBaseClass):
         filename = "a" * 510 + ".lua"
         udf_type = 0
         with pytest.raises(e.ParamError):
-            status = self.as_connection.udf_put(filename, udf_type, policy)
+            self.as_connection.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_empty_filename(self):
 
@@ -121,7 +113,7 @@ class TestUdfPut(TestBaseClass):
         filename = ""
         udf_type = 0
         with pytest.raises(e.ParamError):
-            status = self.as_connection.udf_put(filename, udf_type, policy)
+            self.as_connection.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_empty_filename_beginning_with_slash(self):
 
@@ -129,7 +121,7 @@ class TestUdfPut(TestBaseClass):
         filename = "/"
         udf_type = 0
         with pytest.raises(e.ParamError):
-            status = self.as_connection.udf_put(filename, udf_type, policy)
+            self.as_connection.udf_put(filename, udf_type, policy)
 
     def test_udf_put_with_proper_parameters_without_connection(self):
 
@@ -137,7 +129,7 @@ class TestUdfPut(TestBaseClass):
         filename = self.udf_name
         udf_type = 0
 
-        config = {'hosts': [('127.0.0.1', 3000)]}
+        config = {"hosts": [("127.0.0.1", 3000)]}
 
         client1 = aerospike.client(config)
 
@@ -150,7 +142,7 @@ class TestUdfPut(TestBaseClass):
         """
         Test that invalid timeout policy causes an error on udf put
         """
-        policy = {'timeout': 0.1}
+        policy = {"timeout": 0.1}
         filename = self.udf_name
         udf_type = 0
 
@@ -167,8 +159,7 @@ class TestUdfPut(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.udf_put()
 
-        assert "argument 'filename' (pos 1)" in str(
-            typeError.value)
+        assert "argument 'filename' (pos 1)" in str(typeError.value)
 
     def test_udf_put_with_non_existent_filename(self):
         """
@@ -188,7 +179,7 @@ class TestUdfPut(TestBaseClass):
         """
         Test to verify that an invalid udf_type causes an error
         """
-        policy = {'timeout': 0}
+        policy = {"timeout": 0}
         filename = self.udf_name
         udf_type = 1
 
@@ -214,25 +205,23 @@ class TestUdfPut(TestBaseClass):
             (1, 0, {}),
             (None, 0, {}),
             ((), 0, {}),
-            ('example.lua', '0', {}),
-            ('example.lua', (), {}),
-            ('example.lua', None, {}),
-            ('example.lua', 0, []),
-            ('example.lua', 0, 'policy'),
-            ('example.lua', 0, 5)
-
-        )
+            ("example.lua", "0", {}),
+            ("example.lua", (), {}),
+            ("example.lua", None, {}),
+            ("example.lua", 0, []),
+            ("example.lua", 0, "policy"),
+            ("example.lua", 0, 5),
+        ),
     )
     def test_udf_put_invalid_arg_types(self, filename, ftype, policy):
-        '''
+        """
         Incorrect type for second argument raise a type error,
         the others cause a param error
-        '''
+        """
         with pytest.raises((e.ParamError, TypeError)):
             self.as_connection.udf_put(filename, ftype, policy)
 
     def test_udf_put_with_extra_arg(self):
         policy = {}
         with pytest.raises(TypeError):
-            self.as_connection.udf_put(
-                self.udf_name, 1, policy, 'extra_arg')
+            self.as_connection.udf_put(self.udf_name, 1, policy, "extra_arg")
