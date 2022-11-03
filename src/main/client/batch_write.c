@@ -258,7 +258,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
         py_meta = NULL;
         if (batch_type == AS_BATCH_READ || batch_type == AS_BATCH_WRITE) {
-            py_meta = PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_META);
+            py_meta =
+                PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_META);
         }
 
         Py_ssize_t py_ops_size = 0;
@@ -270,8 +271,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         long return_type = -1;
 
         as_operations *ops = NULL;
-        if (batch_type == AS_BATCH_READ || batch_type == AS_BATCH_WRITE &&
-            (py_ops_size || py_meta)) {
+        if (batch_type == AS_BATCH_READ ||
+            batch_type == AS_BATCH_WRITE && (py_ops_size || py_meta)) {
             ops = as_operations_new(py_ops_size);
             garb->ops_to_free = ops;
 
@@ -293,8 +294,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                     goto CLEANUP0;
                 }
 
-                if (add_op(self, err, py_op, unicodeStrVector, &static_pool, ops,
-                        &operation, &return_type) != AEROSPIKE_OK) {
+                if (add_op(self, err, py_op, unicodeStrVector, &static_pool,
+                           ops, &operation, &return_type) != AEROSPIKE_OK) {
                     goto CLEANUP0;
                 }
             }
