@@ -72,7 +72,13 @@ class Write(BatchRecord):
                 flags.
     """
 
-    def __init__(self, key: tuple, ops: "TypeOps", meta:"TypeOps" = None, policy: "TypeBatchPolicyWrite" = None) -> None:
+    def __init__(
+        self,
+        key: tuple,
+        ops: "TypeOps",
+        meta: "TypeOps" = None,
+        policy: "TypeBatchPolicyWrite" = None
+    ) -> None:
         """
         Example::
 
@@ -123,7 +129,7 @@ class Read(BatchRecord):
         key: tuple,
         ops: ty.Union[TypeOps, None],
         read_all_bins: bool = False,
-        meta:"TypeOps" = None, 
+        meta: "TypeOps" = None,
         policy: "TypeBatchPolicyRead" = None,
     ) -> None:
         """
