@@ -122,7 +122,7 @@ class TestBatchWrite(TestBaseClass):
                         br.Write(
                             ("test", "demo", 1),
                             [op.write("new", 10), op.read("new")],
-                            meta={"gen": 1, "ttl":aerospike.TTL_NEVER_EXPIRE},
+                            meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE},
                             policy={
                                 "key": aerospike.POLICY_KEY_SEND,
                                 "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
@@ -185,7 +185,7 @@ class TestBatchWrite(TestBaseClass):
                         br.Write(
                             ("test", "demo", 1),
                             [op.write("new", 10), op.read("new")],
-                            meta={"gen": 1, "ttl":aerospike.TTL_NEVER_EXPIRE},
+                            meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE},
                             policy={
                                 "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
                                 "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
