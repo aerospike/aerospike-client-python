@@ -272,9 +272,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
         as_operations *ops = NULL;
         if (batch_type == AS_BATCH_READ ||
-            batch_type == AS_BATCH_WRITE && (py_ops_size || 
-            (py_meta != NULL && py_meta != Py_None))) {
-                
+            batch_type == AS_BATCH_WRITE &&
+                (py_ops_size || (py_meta != NULL && py_meta != Py_None))) {
+
             ops = as_operations_new(py_ops_size);
             garb->ops_to_free = ops;
 
@@ -504,7 +504,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                 PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
                                        Py_None);
             }
-        } 
+        }
         // else {
         //     printf("aerospike_batch_write record:%d failed:%d", i, *result_code );
         // }
