@@ -58,4 +58,4 @@ class TestIsConnected(object):
         self._connect()
         assert self.client.is_connected() is True
         self.client.close()
-        assert self.client.is_connected() is True
+        assert self.client.is_connected() is False

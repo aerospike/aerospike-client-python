@@ -57,8 +57,8 @@ class TestClose:
 
         assert self.client.is_connected()
         self.client.close()
-        assert self.client.is_connected() is True
+        assert self.client.is_connected() is False
 
         # This second call should not raise any errors
         self.client.close()
-        assert self.client.is_connected() is True
+        assert self.client.is_connected() is False
