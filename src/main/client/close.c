@@ -56,11 +56,34 @@ PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
 		goto CLEANUP;
 	}
 
-	if (!self->has_connected) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM,
-						"Invalid aerospike client configuration");
-		goto CLEANUP;		
+	if (!self->is_conn_16) {
+		goto CLEANUP;
 	}
+
+	if (self->use_shared_connection) {
+		alias_to_search = return_search_string(self->as);
+		py_persistent_item =
+			PyDict_GetItemString(py_global_hosts, alias_to_search);
+
+		if (py_persistent_item) {
+			global_host = (AerospikeGlobalHosts *)py_persistent_item;
+			// It is only safe to do a reference counted close if the
+			// local as is pointing to the global as
+			if (self->as == global_host->as) {
+				close_aerospike_object(self->as, &err, alias_to_search,
+									   py_persistent_item, false);
+			}
+		}
+
+		PyMem_Free(alias_to_search);
+		alias_to_search = NULL;
+	}
+	else {
+		Py_BEGIN_ALLOW_THREADS
+		aerospike_close(self->as, &err);
+		Py_END_ALLOW_THREADS
+	}
+	self->is_conn_16 = false;
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {

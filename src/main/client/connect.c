@@ -172,30 +172,24 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
 	PyObject *py_username = NULL;
 	PyObject *py_password = NULL;
 
+	if (self->as && aerospike_cluster_is_connected(self->as)) {
+		Py_INCREF(self);
+		return (PyObject *)self;
+	}
+
 	if (PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) ==
 		false) {
 		return NULL;
 	}
 
-	if (!self->has_connected) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM,
-						"Invalid aerospike client configuration");
-		goto CLEANUP;		
+	if (py_username && PyString_Check(py_username) && py_password &&
+		PyString_Check(py_password)) {
+		char *username = PyString_AsString(py_username);
+		char *password = PyString_AsString(py_password);
+		as_config_set_user(&self->as->config, username, password);
 	}
 
-CLEANUP:
-
-	if (err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-
-		return NULL;
-	}
-	Py_INCREF(self);
-	return (PyObject *)self;
+	return AerospikeClientConnect(self);
 }
 
 /**
