@@ -148,7 +148,7 @@ class TestConnect(object):
             assert client is not None
             assert client.is_connected()
             client.close()
-            assert client.is_connected() is True
+            assert client.is_connected() is False
             if TestBaseClass.user is None and TestBaseClass.password is None:
                 client.connect()
             else:
@@ -172,6 +172,7 @@ class TestConnect(object):
     def test_connect_with_extra_args(self):
         with pytest.raises(TypeError):
             client = aerospike.client(self.connection_config)
+            client.close()
             client.connect("username", "password", "extra arg")
 
     @pytest.mark.parametrize(
