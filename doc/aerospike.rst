@@ -28,9 +28,8 @@ Client
 
 .. py:function:: client(config)
 
-    Creates a new instance of the :class:`Client` class.
+    Creates a new instance of the :class:`Client` class and immediately connects to the cluster.
 
-    This client can connect to the cluster and perform operations on the database.
     See :ref:`client` for more details.
 
     Internally, this is a wrapper function which calls the constructor for the :class:`Client` class.
@@ -360,6 +359,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
             If ``tls-name`` is specified, it must match the tls-name specified in the node's \
             server configuration file, as well as the server's CA certificate.
 
+        * **user** (:class:`str`)
+            (Optional) A defined user with roles in the cluster. See :meth:`admin_create_user`.
+        * **password** (:class:`str`)
+            (Optional) The password will be hashed by the client using bcrypt.
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
 
