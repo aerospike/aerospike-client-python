@@ -20,7 +20,9 @@ class TestScanGetPartitionsStatus(TestBaseClass):
         for i in range(1, 100000):
             put = 0
             key = (self.test_ns, self.test_set, str(i))
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+            rec_partition = as_connection.get_key_partition_id(
+                self.test_ns, self.test_set, str(i)
+            )
 
             if rec_partition == 1000:
                 self.partition_1000_count += 1
@@ -47,7 +49,9 @@ class TestScanGetPartitionsStatus(TestBaseClass):
             for i in range(1, 100000):
                 put = 0
                 key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+                rec_partition = as_connection.get_key_partition_id(
+                    self.test_ns, self.test_set, str(i)
+                )
 
                 if rec_partition == 1000:
                     self.partition_1000_count += 1
@@ -100,7 +104,11 @@ class TestScanGetPartitionsStatus(TestBaseClass):
         scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
 
         policy = {
-            "partition_filter": {"begin": 1001, "count": 1, "partition_status": partition_status},
+            "partition_filter": {
+                "begin": 1001,
+                "count": 1,
+                "partition_status": partition_status,
+            },
         }
 
         scan_obj2.foreach(resume_callback, policy)

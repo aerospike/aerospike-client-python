@@ -20,7 +20,9 @@ class TestScanInfo(object):
             key = ("test", "demo", i)
             rec = {"age": i}
             connection_with_udf.put(key, rec)
-        self.job_id = connection_with_udf.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
+        self.job_id = connection_with_udf.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ["age", 2]
+        )
 
         def teardown():
             """
@@ -47,7 +49,9 @@ class TestScanInfo(object):
         """
         policy = {"timeout": 1}
 
-        self.job_id = connection_with_udf.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], block=False)
+        self.job_id = connection_with_udf.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ["age", 2], block=False
+        )
 
         with pytest.raises(e.TimeoutError):
             self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN, policy)
@@ -57,7 +61,10 @@ class TestScanInfo(object):
         Invoke job_info() with correct parameters
         """
         job_info = self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN)
-        valid_statuses = (aerospike.JOB_STATUS_COMPLETED, aerospike.JOB_STATUS_INPROGRESS)
+        valid_statuses = (
+            aerospike.JOB_STATUS_COMPLETED,
+            aerospike.JOB_STATUS_INPROGRESS,
+        )
         assert job_info["status"] in valid_statuses
 
         expected_fields = ("status", "progress_pct", "records_read")
@@ -73,7 +80,10 @@ class TestScanInfo(object):
         policy = {"timeout": 1000}
         job_info = self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN, policy)
 
-        valid_statuses = (aerospike.JOB_STATUS_COMPLETED, aerospike.JOB_STATUS_INPROGRESS)
+        valid_statuses = (
+            aerospike.JOB_STATUS_COMPLETED,
+            aerospike.JOB_STATUS_INPROGRESS,
+        )
         assert job_info["status"] in valid_statuses
 
     def test_job_info_with_incorrect_policy(self):

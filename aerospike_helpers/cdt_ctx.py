@@ -204,7 +204,9 @@ def cdt_ctx_list_value(value):
     return _cdt_ctx(id=aerospike.CDT_CTX_LIST_VALUE, value=value)
 
 
-def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> _cdt_ctx:
+def cdt_ctx_list_index_create(
+    index: int, order: int = 0, pad: bool = False
+) -> _cdt_ctx:
     """
     Creates a nested cdt_ctx object to create an list and insert at a given index.
 
@@ -225,7 +227,9 @@ def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> 
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(
-        id=aerospike.CDT_CTX_LIST_INDEX_CREATE, value=index, extra_args={CDT_CTX_ORDER_KEY: order, CDT_CTX_PAD_KEY: pad}
+        id=aerospike.CDT_CTX_LIST_INDEX_CREATE,
+        value=index,
+        extra_args={CDT_CTX_ORDER_KEY: order, CDT_CTX_PAD_KEY: pad},
     )
 
 
@@ -299,4 +303,8 @@ def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
-    return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY_CREATE, value=key, extra_args={CDT_CTX_ORDER_KEY: order})
+    return _cdt_ctx(
+        id=aerospike.CDT_CTX_MAP_KEY_CREATE,
+        value=key,
+        extra_args={CDT_CTX_ORDER_KEY: order},
+    )

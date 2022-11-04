@@ -85,7 +85,9 @@ def add_ctx_op(ctx_type, value):
     return ctx_func(value)
 
 
-def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
+def verify_multiple_expression_result(
+    client, test_ns, test_set, expr, op_bin, expected
+):
     keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
 
     # batch get
@@ -155,10 +157,18 @@ class TestExpressions(TestBaseClass):
                 "slist_bin": ["b", "d", "f"],
                 "llist_bin": [[1, 2], [1, 3], [1, 4]],
                 "mlist_bin": [{1: 2}, {1: 3}, {1: 4}],
-                "bylist_bin": ["b".encode("utf8"), "d".encode("utf8"), "f".encode("utf8")],
+                "bylist_bin": [
+                    "b".encode("utf8"),
+                    "d".encode("utf8"),
+                    "f".encode("utf8"),
+                ],
                 "bolist_bin": [False, False, True],
                 "nlist_bin": [None, aerospike.null, aerospike.null],
-                "bllist_bin": [TestUsrDefinedClass(1), TestUsrDefinedClass(3), TestUsrDefinedClass(4)],
+                "bllist_bin": [
+                    TestUsrDefinedClass(1),
+                    TestUsrDefinedClass(3),
+                    TestUsrDefinedClass(4),
+                ],
                 "flist_bin": [1.0, 2.0, 6.0],
             }
             self.as_connection.put(key, rec)
@@ -174,14 +184,56 @@ class TestExpressions(TestBaseClass):
         "ctx_types, ctx_indexes, bin_type, index, return_type, check, expected",
         [
             (None, None, ResultType.INTEGER, 1, aerospike.LIST_RETURN_VALUE, 8, 1),
-            (None, None, ResultType.STRING, 2, aerospike.LIST_RETURN_VALUE, "string_test3", 1),
-            (None, None, ResultType.BLOB, 6, aerospike.LIST_RETURN_VALUE, "bytes_test3".encode("utf8"), 1),
-            (None, None, ResultType.BLOB, 5, aerospike.LIST_RETURN_VALUE, bytearray("bytearray_test3", "utf8"), 1),
-            (None, None, ResultType.LIST, 3, aerospike.LIST_RETURN_VALUE, [26, 27, 28, 6], 1),
-            ([list_index], [3], ResultType.INTEGER, 3, aerospike.LIST_RETURN_VALUE, 6, 1),
+            (
+                None,
+                None,
+                ResultType.STRING,
+                2,
+                aerospike.LIST_RETURN_VALUE,
+                "string_test3",
+                1,
+            ),
+            (
+                None,
+                None,
+                ResultType.BLOB,
+                6,
+                aerospike.LIST_RETURN_VALUE,
+                "bytes_test3".encode("utf8"),
+                1,
+            ),
+            (
+                None,
+                None,
+                ResultType.BLOB,
+                5,
+                aerospike.LIST_RETURN_VALUE,
+                bytearray("bytearray_test3", "utf8"),
+                1,
+            ),
+            (
+                None,
+                None,
+                ResultType.LIST,
+                3,
+                aerospike.LIST_RETURN_VALUE,
+                [26, 27, 28, 6],
+                1,
+            ),
+            (
+                [list_index],
+                [3],
+                ResultType.INTEGER,
+                3,
+                aerospike.LIST_RETURN_VALUE,
+                6,
+                1,
+            ),
         ],
     )
-    def test_list_get_by_index_pos(self, ctx_types, ctx_indexes, bin_type, index, return_type, check, expected):
+    def test_list_get_by_index_pos(
+        self, ctx_types, ctx_indexes, bin_type, index, return_type, check, expected
+    ):
         """
         Invoke ListGetByIndex().
         """
@@ -195,15 +247,34 @@ class TestExpressions(TestBaseClass):
 
         expr = Eq(ListGetByIndex(ctx, return_type, bin_type, index, "list_bin"), check)
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "list_bin",
+            expected,
         )
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, return_type, check, expected",
         [
             (None, None, 8, aerospike.LIST_RETURN_VALUE, [8], 1),
-            (None, None, "string_test3", aerospike.LIST_RETURN_VALUE, ["string_test3"], 1),
-            (None, None, "bytes_test3".encode("utf8"), aerospike.LIST_RETURN_VALUE, ["bytes_test3".encode("utf8")], 1),
+            (
+                None,
+                None,
+                "string_test3",
+                aerospike.LIST_RETURN_VALUE,
+                ["string_test3"],
+                1,
+            ),
+            (
+                None,
+                None,
+                "bytes_test3".encode("utf8"),
+                aerospike.LIST_RETURN_VALUE,
+                ["bytes_test3".encode("utf8")],
+                1,
+            ),
             (
                 None,
                 None,
@@ -215,7 +286,14 @@ class TestExpressions(TestBaseClass):
             # (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9)
             # NOTE: this won't work because booleans are not serialized by default in expressions.
             (None, None, None, aerospike.LIST_RETURN_VALUE, [None], _NUM_RECORDS),
-            (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
+            (
+                None,
+                None,
+                [26, 27, 28, 6],
+                aerospike.LIST_RETURN_VALUE,
+                [[26, 27, 28, 6]],
+                1,
+            ),
             ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
             (
                 None,
@@ -225,12 +303,35 @@ class TestExpressions(TestBaseClass):
                 [{31: 31, 32: 32, 33: 33, 8: 8}],
                 1,
             ),
-            (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], _NUM_RECORDS),
-            (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], _NUM_RECORDS),
-            (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1),
+            (
+                None,
+                None,
+                aerospike.null,
+                aerospike.LIST_RETURN_VALUE,
+                [aerospike.null],
+                _NUM_RECORDS,
+            ),
+            (
+                None,
+                None,
+                GEO_POLY,
+                aerospike.LIST_RETURN_VALUE,
+                [GEO_POLY],
+                _NUM_RECORDS,
+            ),
+            (
+                None,
+                None,
+                TestUsrDefinedClass(4),
+                aerospike.LIST_RETURN_VALUE,
+                [TestUsrDefinedClass(4)],
+                1,
+            ),
         ],
     )
-    def test_list_get_by_value_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_pos(
+        self, ctx_types, ctx_indexes, value, return_type, check, expected
+    ):
         """
         Invoke ListGetByValue().
         """
@@ -244,7 +345,12 @@ class TestExpressions(TestBaseClass):
 
         expr = Eq(ListGetByValue(ctx, return_type, value, "list_bin"), check)
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "list_bin",
+            expected,
         )
 
     @pytest.mark.parametrize(
@@ -259,7 +365,15 @@ class TestExpressions(TestBaseClass):
             # temporarily failing because of bool jump rank
             # (None, None, 4, 7, aerospike.LIST_RETURN_RANK, [[1], [1], [1]], 3),
             # temporarily failing because of bool jump rank
-            (None, None, "string_test3", "string_test6", aerospike.LIST_RETURN_INDEX, [[2], [2], [2]], 3),
+            (
+                None,
+                None,
+                "string_test3",
+                "string_test6",
+                aerospike.LIST_RETURN_INDEX,
+                [[2], [2], [2]],
+                3,
+            ),
             (
                 None,
                 None,
@@ -287,7 +401,15 @@ class TestExpressions(TestBaseClass):
                 [[[26, 27, 28, 6]], [[26, 27, 28, 7]], [[26, 27, 28, 8]]],
                 3,
             ),
-            ([list_index], [3], 5, 9, aerospike.LIST_RETURN_REVERSE_RANK, [[3], [3], [3]], 4),
+            (
+                [list_index],
+                [3],
+                5,
+                9,
+                aerospike.LIST_RETURN_REVERSE_RANK,
+                [[3], [3], [3]],
+                4,
+            ),
             (
                 None,
                 None,
@@ -303,12 +425,18 @@ class TestExpressions(TestBaseClass):
                 TestUsrDefinedClass(4),
                 TestUsrDefinedClass(7),
                 aerospike.LIST_RETURN_VALUE,
-                [[TestUsrDefinedClass(4)], [TestUsrDefinedClass(5)], [TestUsrDefinedClass(6)]],
+                [
+                    [TestUsrDefinedClass(4)],
+                    [TestUsrDefinedClass(5)],
+                    [TestUsrDefinedClass(6)],
+                ],
                 3,
             ),  # NOTE py_bytes cannot be compard directly server side
         ],
     )
-    def test_list_get_by_value_range_pos(self, ctx_types, ctx_indexes, begin, end, return_type, check, expected):
+    def test_list_get_by_value_range_pos(
+        self, ctx_types, ctx_indexes, begin, end, return_type, check, expected
+    ):
         """
         Invoke ListGetByValueRange().
         """
@@ -327,17 +455,38 @@ class TestExpressions(TestBaseClass):
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "list_bin",
+            expected,
         )
 
     @pytest.mark.parametrize(
         "ctx, begin, end, return_type, check, expected",
         [
-            ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], e.ParamError),
-            (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], e.InvalidRequest),
+            (
+                "bad ctx",
+                10,
+                13,
+                aerospike.LIST_RETURN_VALUE,
+                [[10], [11], [12]],
+                e.ParamError,
+            ),
+            (
+                None,
+                10,
+                13,
+                aerospike.LIST_RETURN_VALUE,
+                [[10], [11], 12],
+                e.InvalidRequest,
+            ),
         ],
     )
-    def test_list_get_by_value_range_neg(self, ctx, begin, end, return_type, check, expected):
+    def test_list_get_by_value_range_neg(
+        self, ctx, begin, end, return_type, check, expected
+    ):
         """
         Invoke ListGetByValue() with expected failures.
         """
@@ -350,15 +499,41 @@ class TestExpressions(TestBaseClass):
 
         with pytest.raises(expected):
             verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+                self.as_connection,
+                self.test_ns,
+                self.test_set,
+                expr.compile(),
+                "list_bin",
+                expected,
             )
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, return_type, check, expected",
         [
-            (None, None, [8, [26, 27, 28, 8]], aerospike.LIST_RETURN_VALUE, [8, [26, 27, 28, 8]], 1),
-            (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, [3, "string_test3"], 1),
-            (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, ["string_test3", 3], 0),
+            (
+                None,
+                None,
+                [8, [26, 27, 28, 8]],
+                aerospike.LIST_RETURN_VALUE,
+                [8, [26, 27, 28, 8]],
+                1,
+            ),
+            (
+                None,
+                None,
+                ["string_test3", 3],
+                aerospike.LIST_RETURN_VALUE,
+                [3, "string_test3"],
+                1,
+            ),
+            (
+                None,
+                None,
+                ["string_test3", 3],
+                aerospike.LIST_RETURN_VALUE,
+                ["string_test3", 3],
+                0,
+            ),
             (
                 None,
                 None,
@@ -367,8 +542,22 @@ class TestExpressions(TestBaseClass):
                 [8, "bytes_test8".encode("utf8"), GEO_POLY],
                 1,
             ),
-            (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
-            (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 1),
+            (
+                None,
+                None,
+                LIST_BIN_EXAMPLE,
+                aerospike.LIST_RETURN_VALUE,
+                LIST_BIN_EXAMPLE,
+                1,
+            ),
+            (
+                None,
+                None,
+                LIST_BIN_EXAMPLE,
+                aerospike.LIST_RETURN_INDEX,
+                [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+                1,
+            ),
             (
                 None,
                 None,
@@ -382,7 +571,9 @@ class TestExpressions(TestBaseClass):
             ([list_index], [3], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
         ],
     )
-    def test_list_get_by_value_list_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_list_pos(
+        self, ctx_types, ctx_indexes, value, return_type, check, expected
+    ):
         """
         Invoke ListGetByValueList().
         """
@@ -396,14 +587,30 @@ class TestExpressions(TestBaseClass):
 
         expr = Eq(ListGetByValueList(ctx, return_type, value, "list_bin"), check)
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "list_bin",
+            expected,
         )
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, return_type, check, expected",
-        [(None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest)],
+        [
+            (
+                None,
+                None,
+                [10, [26, 27, 28, 10]],
+                aerospike.LIST_RETURN_VALUE,
+                (10, [26, 27, 28, 10]),
+                e.InvalidRequest,
+            )
+        ],
     )
-    def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_list_neg(
+        self, ctx_types, ctx_indexes, value, return_type, check, expected
+    ):
         """
         Invoke ListGetByValueList() with expected failures.
         """
@@ -418,7 +625,12 @@ class TestExpressions(TestBaseClass):
         expr = Eq(ListGetByValueList(ctx, return_type, value, "list_bin"), check)
         with pytest.raises(expected):
             verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+                self.as_connection,
+                self.test_ns,
+                self.test_set,
+                expr.compile(),
+                "list_bin",
+                expected,
             )
 
     @pytest.mark.parametrize(
@@ -445,9 +657,17 @@ class TestExpressions(TestBaseClass):
         else:
             ctx = None
 
-        expr = Eq(ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, "list_bin"), check)
+        expr = Eq(
+            ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, "list_bin"),
+            check,
+        )
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "list_bin",
+            expected,
         )
 
     @pytest.mark.parametrize(
@@ -468,17 +688,33 @@ class TestExpressions(TestBaseClass):
         else:
             ctx = None
 
-        expr = ListGetByValueRelRankRangeToEnd(ctx, return_type, value, rank, "list_bin")
+        expr = ListGetByValueRelRankRangeToEnd(
+            ctx, return_type, value, rank, "list_bin"
+        )
         with pytest.raises(expected):
             verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+                self.as_connection,
+                self.test_ns,
+                self.test_set,
+                expr.compile(),
+                "list_bin",
+                expected,
             )
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, rank, count, return_type, check, expected",
         [
             ([list_index], [3], 26, 0, 3, aerospike.LIST_RETURN_COUNT, 3, _NUM_RECORDS),
-            ([list_index], [3], 26, 0, 2, aerospike.LIST_RETURN_VALUE, [27, 26], _NUM_RECORDS),
+            (
+                [list_index],
+                [3],
+                26,
+                0,
+                2,
+                aerospike.LIST_RETURN_VALUE,
+                [27, 26],
+                _NUM_RECORDS,
+            ),
             (None, None, "string_test10", 0, 1, aerospike.LIST_RETURN_INDEX, [3], 2),
         ],
     )
@@ -496,9 +732,19 @@ class TestExpressions(TestBaseClass):
         else:
             ctx = None
 
-        expr = Eq(ListGetByValueRelRankRange(ctx, return_type, value, rank, count, "list_bin"), check)
+        expr = Eq(
+            ListGetByValueRelRankRange(
+                ctx, return_type, value, rank, count, "list_bin"
+            ),
+            check,
+        )
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "list_bin",
+            expected,
         )
 
     @pytest.mark.parametrize(
@@ -506,7 +752,10 @@ class TestExpressions(TestBaseClass):
         [
             ("ilist_bin", [ResultType.INTEGER, 6, 1, 7, [2, 6], 1]),
             ("slist_bin", [ResultType.STRING, "f", "b", "g", ["d", "f"], "b"]),
-            ("llist_bin", [ResultType.LIST, [1, 4], [1, 2], [1, 6], [[1, 3], [1, 4]], [1, 2]]),
+            (
+                "llist_bin",
+                [ResultType.LIST, [1, 4], [1, 2], [1, 6], [[1, 3], [1, 4]], [1, 2]],
+            ),
             (
                 "bylist_bin",
                 [
@@ -531,7 +780,9 @@ class TestExpressions(TestBaseClass):
                 ListGetByValueRelRankRange(
                     None,
                     aerospike.LIST_RETURN_COUNT,
-                    ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, values[0], 0, bin),
+                    ListGetByIndex(
+                        None, aerospike.LIST_RETURN_VALUE, values[0], 0, bin
+                    ),
                     1,
                     3,
                     bin,
@@ -543,7 +794,9 @@ class TestExpressions(TestBaseClass):
                     None,
                     aerospike.LIST_RETURN_INDEX,
                     values[1],
-                    ListGetByValueRange(None, aerospike.LIST_RETURN_VALUE, values[2], values[3], bin),
+                    ListGetByValueRange(
+                        None, aerospike.LIST_RETURN_VALUE, values[2], values[3], bin
+                    ),
                 ),
                 [2],
             ),
@@ -552,7 +805,9 @@ class TestExpressions(TestBaseClass):
                     None,
                     aerospike.LIST_RETURN_COUNT,
                     values[4],
-                    ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, values[5], 1, bin),
+                    ListGetByValueRelRankRangeToEnd(
+                        None, aerospike.LIST_RETURN_VALUE, values[5], 1, bin
+                    ),
                 ),
                 2,
             ),
@@ -581,11 +836,21 @@ class TestExpressions(TestBaseClass):
                 ),
                 1,
             ),
-            Eq(ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin), 2),
+            Eq(
+                ListGetByRankRange(
+                    None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin
+                ),
+                2,
+            ),
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize(
@@ -595,9 +860,7 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 None,
                 {"write_flags": aerospike.LIST_WRITE_ADD_UNIQUE},
-                [
-                    20, [3, 9], 4, [24, 25], 10, 1, [2, 6], None, 3, 6, 2
-                ],
+                [20, [3, 9], 4, [24, 25], 10, 1, [2, 6], None, 3, 6, 2],
                 [[1, 2, 3, 4, 6, 9, 20], [10, 24, 25], [1], []],
             ),
             (
@@ -605,7 +868,17 @@ class TestExpressions(TestBaseClass):
                 None,
                 {},
                 [
-                    "h", ["e", "g"], "c", ["x", "y"], "b", "b", ["d", "f"], "b", None, "f", "d"
+                    "h",
+                    ["e", "g"],
+                    "c",
+                    ["x", "y"],
+                    "b",
+                    "b",
+                    ["d", "f"],
+                    "b",
+                    None,
+                    "f",
+                    "d",
                 ],
                 [
                     ["b", "c", "d", "e", "f", "g", "h"],
@@ -635,7 +908,12 @@ class TestExpressions(TestBaseClass):
                     [1, 4],
                     [1, 3],  #
                 ],
-                [[[1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 9], [1, 20]], [[1, 10], [1, 24], [1, 25]], [[1, 2]], []],
+                [
+                    [[1, 2], [1, 3], [1, 4], [1, 5], [1, 6], [1, 9], [1, 20]],
+                    [[1, 10], [1, 24], [1, 25]],
+                    [[1, 2]],
+                    [],
+                ],
             ),
             (
                 "mlist_bin",
@@ -654,23 +932,53 @@ class TestExpressions(TestBaseClass):
                     {1: 4},
                     {1: 3},  #
                 ],
-                [[{1: 2}, {1: 3}, {1: 4}, {1: 5}, {1: 6}, {1: 9}, {1: 20}], [{1: 10}, {1: 24}, {1: 25}], [{1: 2}], []],
+                [
+                    [{1: 2}, {1: 3}, {1: 4}, {1: 5}, {1: 6}, {1: 9}, {1: 20}],
+                    [{1: 10}, {1: 24}, {1: 25}],
+                    [{1: 2}],
+                    [],
+                ],
             ),
             (
                 "bylist_bin",
                 None,
                 {},
                 [
-                    b"h", [b"e", b"g"], b"c", [b"x", b"y"], b"b", b"b", [b"d", b"f"], b"b", b"e", b"f", b"d"
+                    b"h",
+                    [b"e", b"g"],
+                    b"c",
+                    [b"x", b"y"],
+                    b"b",
+                    b"b",
+                    [b"d", b"f"],
+                    b"b",
+                    b"e",
+                    b"f",
+                    b"d",
                 ],
-                [[b"b", b"c", b"d", b"e", b"f", b"g", b"h"], [b"b", b"x", b"y"], [b"b"], []],
+                [
+                    [b"b", b"c", b"d", b"e", b"f", b"g", b"h"],
+                    [b"b", b"x", b"y"],
+                    [b"b"],
+                    [],
+                ],
             ),
             (
                 "flist_bin",
                 None,
                 {},
                 [
-                    20.0, [3.0, 9.0], 4.0, [24.0, 25.0], 10.0, 1.0, [2.0, 6.0], 1.0, 3.0, 6.0, 2.0
+                    20.0,
+                    [3.0, 9.0],
+                    4.0,
+                    [24.0, 25.0],
+                    10.0,
+                    1.0,
+                    [2.0, 6.0],
+                    1.0,
+                    3.0,
+                    6.0,
+                    2.0,
                 ],
                 [[1.0, 2.0, 3.0, 4.0, 6.0, 9.0, 20.0], [10.0, 24.0, 25.0], [1.0], []],
             ),
@@ -694,7 +1002,12 @@ class TestExpressions(TestBaseClass):
                             ctx,
                             policy,
                             values[0],
-                            ListAppendItems(ctx, policy, values[1], ListInsert(ctx, policy, 1, values[2], bin)),
+                            ListAppendItems(
+                                ctx,
+                                policy,
+                                values[1],
+                                ListInsert(ctx, policy, 1, values[2], bin),
+                            ),
                         ),
                     ),
                 ),  # NOTE: invalid on ordered lists
@@ -709,25 +1022,52 @@ class TestExpressions(TestBaseClass):
                         aerospike.LIST_RETURN_VALUE,
                         0,
                         ListInsertItems(
-                            ctx, policy, 0, values[3], ListSet(ctx, policy, 0, values[4], ListClear(ctx, bin))
+                            ctx,
+                            policy,
+                            0,
+                            values[3],
+                            ListSet(ctx, policy, 0, values[4], ListClear(ctx, bin)),
                         ),
                     ),
                 ),
                 expected[1],
             ),
-            Eq(ListRemoveByValue(ctx, values[5], ListRemoveByValueList(ctx, values[6], bin)), []),
+            Eq(
+                ListRemoveByValue(
+                    ctx, values[5], ListRemoveByValueList(ctx, values[6], bin)
+                ),
+                [],
+            ),
             Eq(
                 ListRemoveByValueRange(
-                    ctx, values[7], values[8], ListRemoveByValueRelRankToEnd(ctx, values[9], 0, bin)
+                    ctx,
+                    values[7],
+                    values[8],
+                    ListRemoveByValueRelRankToEnd(ctx, values[9], 0, bin),
                 ),
                 expected[3],
             ),
-            Eq(ListRemoveByValueRelRankRange(ctx, values[10], 0, 2, ListRemoveByIndex(ctx, 0, bin)), []),
-            Eq(ListRemoveByIndexRange(ctx, 0, 1, ListRemoveByIndexRangeToEnd(ctx, 1, bin)), []),
+            Eq(
+                ListRemoveByValueRelRankRange(
+                    ctx, values[10], 0, 2, ListRemoveByIndex(ctx, 0, bin)
+                ),
+                [],
+            ),
+            Eq(
+                ListRemoveByIndexRange(
+                    ctx, 0, 1, ListRemoveByIndexRangeToEnd(ctx, 1, bin)
+                ),
+                [],
+            ),
             Eq(ListRemoveByRank(ctx, 0, ListRemoveByRankRangeToEnd(ctx, 1, bin)), []),
             Eq(ListRemoveByRankRange(ctx, 1, 2, bin), expected[2]),
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )

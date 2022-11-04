@@ -22,7 +22,9 @@ class TestScanPartition(TestBaseClass):
         for i in range(1, 100000):
             put = 0
             key = (self.test_ns, self.test_set, str(i))
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+            rec_partition = as_connection.get_key_partition_id(
+                self.test_ns, self.test_set, str(i)
+            )
 
             if rec_partition == 1000:
                 self.partition_1000_count += 1
@@ -53,7 +55,9 @@ class TestScanPartition(TestBaseClass):
             for i in range(1, 100000):
                 put = 0
                 key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+                rec_partition = as_connection.get_key_partition_id(
+                    self.test_ns, self.test_set, str(i)
+                )
 
                 if rec_partition == 1000:
                     self.partition_1000_count += 1
@@ -118,7 +122,9 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"timeout": 1001, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback, {"timeout": 1001, "partition_filter": {"begin": 1000, "count": 1}}
+        )
 
         assert len(records) == self.partition_1000_count
 
@@ -136,7 +142,13 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"max_records": max_records, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback,
+            {
+                "max_records": max_records,
+                "partition_filter": {"begin": 1000, "count": 1},
+            },
+        )
         assert len(records) == self.partition_1000_count // 2
 
     @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
@@ -157,7 +169,13 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"max_records": max_records, "partition_filter": {"begin": 1000, "count": 4}})
+        scan_obj.foreach(
+            callback,
+            {
+                "max_records": max_records,
+                "partition_filter": {"begin": 1000, "count": 4},
+            },
+        )
         assert len(records) == max_records
 
     def test_scan_partition_with_socket_timeout_policy(self):
@@ -170,7 +188,10 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"socket_timeout": 9876, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback,
+            {"socket_timeout": 9876, "partition_filter": {"begin": 1000, "count": 1}},
+        )
 
         assert len(records) == self.partition_1000_count
 
@@ -184,7 +205,10 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"records_per_second": 10, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback,
+            {"records_per_second": 10, "partition_filter": {"begin": 1000, "count": 1}},
+        )
         assert len(records) == self.partition_1000_count
 
     def test_scan_partition_with_callback_returning_false(self):
@@ -202,7 +226,9 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback, {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 1}}
+        )
         assert len(records) == 10
 
     def test_scan_partition_with_results_method(self):
@@ -267,7 +293,9 @@ class TestScanPartition(TestBaseClass):
             records.append(record)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+            scan_obj.foreach(
+                callback, {"partition_filter": {"begin": 1001, "count": 1}}
+            )
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
@@ -282,7 +310,10 @@ class TestScanPartition(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}})
+            scan_obj.foreach(
+                callback,
+                {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}},
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -306,7 +337,9 @@ class TestScanPartition(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+            scan_obj.foreach(
+                callback, {"partition_filter": {"begin": 1001, "count": 1}}
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -339,7 +372,11 @@ class TestScanPartition(TestBaseClass):
         scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
 
         policy = {
-            "partition_filter": {"begin": 1001, "count": 1, "partition_status": partition_status},
+            "partition_filter": {
+                "begin": 1001,
+                "count": 1,
+                "partition_status": partition_status,
+            },
         }
 
         scan_obj2.foreach(resume_callback, policy)
@@ -370,7 +407,11 @@ class TestScanPartition(TestBaseClass):
         scan_obj2 = self.as_connection.scan(self.test_ns, self.test_set)
 
         policy = {
-            "partition_filter": {"begin": 1001, "count": 1, "partition_status": partition_status},
+            "partition_filter": {
+                "begin": 1001,
+                "count": 1,
+                "partition_status": partition_status,
+            },
         }
 
         results = scan_obj2.results(policy)

@@ -123,7 +123,10 @@ class TestMapWriteFlags(object):
         self.keys.append(key)
         self.as_connection.put(key, {"map": {"existing": "old"}})
 
-        map_policy = {"map_write_flags": aerospike.MAP_WRITE_FLAGS_UPDATE_ONLY | aerospike.MAP_WRITE_FLAGS_NO_FAIL}
+        map_policy = {
+            "map_write_flags": aerospike.MAP_WRITE_FLAGS_UPDATE_ONLY
+            | aerospike.MAP_WRITE_FLAGS_NO_FAIL
+        }
         ops = [
             map_ops.map_put("map", "existing", "new", map_policy=map_policy),
             map_ops.map_put("map", "new", "new", map_policy=map_policy),
@@ -151,7 +154,11 @@ class TestMapWriteFlags(object):
             )
         }
         ops = [
-            map_ops.map_put_items("map", {"existing": "new", "new1": "new1", "new2": "new2"}, map_policy=map_policy),
+            map_ops.map_put_items(
+                "map",
+                {"existing": "new", "new1": "new1", "new2": "new2"},
+                map_policy=map_policy,
+            ),
         ]
 
         self.as_connection.operate(key, ops)
@@ -169,9 +176,18 @@ class TestMapWriteFlags(object):
         self.keys.append(key)
         self.as_connection.put(key, {"map": {"existing": "old"}})
 
-        map_policy = {"map_write_flags": (aerospike.MAP_WRITE_FLAGS_CREATE_ONLY | aerospike.MAP_WRITE_FLAGS_NO_FAIL)}
+        map_policy = {
+            "map_write_flags": (
+                aerospike.MAP_WRITE_FLAGS_CREATE_ONLY
+                | aerospike.MAP_WRITE_FLAGS_NO_FAIL
+            )
+        }
         ops = [
-            map_ops.map_put_items("map", {"existing": "new", "new1": "new1", "new2": "new2"}, map_policy=map_policy),
+            map_ops.map_put_items(
+                "map",
+                {"existing": "new", "new1": "new1", "new2": "new2"},
+                map_policy=map_policy,
+            ),
         ]
 
         self.as_connection.operate(key, ops)
@@ -191,7 +207,11 @@ class TestMapWriteFlags(object):
 
         map_policy = {"map_write_flags": "waving flag"}
         ops = [
-            map_ops.map_put_items("map", {"existing": "new", "new1": "new1", "new2": "new2"}, map_policy=map_policy),
+            map_ops.map_put_items(
+                "map",
+                {"existing": "new", "new1": "new1", "new2": "new2"},
+                map_policy=map_policy,
+            ),
         ]
 
         with pytest.raises(e.ParamError):

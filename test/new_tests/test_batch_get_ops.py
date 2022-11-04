@@ -6,7 +6,18 @@ from aerospike_helpers.operations import map_operations as mh
 
 import aerospike
 
-from aerospike_helpers.expressions import Add, Cond, Def, GE, IntBin, LT, Let, Mul, Unknown, Var
+from aerospike_helpers.expressions import (
+    Add,
+    Cond,
+    Def,
+    GE,
+    IntBin,
+    LT,
+    Let,
+    Mul,
+    Unknown,
+    Var,
+)
 from aerospike_helpers.operations import expression_operations as expressions
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
@@ -17,7 +28,9 @@ class TestBatchExpressionsOperations(TestBaseClass):
     def setup(self, request, as_connection):
         # TODO this should be changed to 6.0 before release.
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support batch get ops.")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support batch get ops."
+            )
             pytest.xfail()
 
         self.test_ns = "test"
@@ -64,7 +77,10 @@ class TestBatchExpressionsOperations(TestBaseClass):
                 {"test_name": 100},
             ),
             (
-                Let(Def("bal", IntBin("balance")), Cond(GE(Var("bal"), 50), Add(Var("bal"), 50), Unknown())),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(GE(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ),
                 aerospike.EXP_READ_DEFAULT,
                 "test_name2",
                 {"test_name2": 150},
@@ -102,7 +118,10 @@ class TestBatchExpressionsOperations(TestBaseClass):
         [
             ("bad_expr", aerospike.EXP_READ_DEFAULT, "test_name2", e.ParamError),
             (
-                Let(Def("bal", IntBin("balance")), Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown())).compile(),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ).compile(),
                 "bad_flags",
                 "test_name3",
                 e.ParamError,
@@ -135,9 +154,13 @@ class TestBatchExpressionsOperations(TestBaseClass):
         ops = [mh.map_put_items("scores", scores2, map_policy)]
         self.as_connection.operate(key2, ops, policy=policy)
 
-        ops = [mh.map_get_by_rank_range("scores", -3, 3, aerospike.MAP_RETURN_KEY_VALUE)]
+        ops = [
+            mh.map_get_by_rank_range("scores", -3, 3, aerospike.MAP_RETURN_KEY_VALUE)
+        ]
         non_existent_key = ("test", "demo", "batch-ops-non_existent_key")
-        rec = self.as_connection.batch_get_ops([key1, key2, non_existent_key], ops, policy=policy)
+        rec = self.as_connection.batch_get_ops(
+            [key1, key2, non_existent_key], ops, policy=policy
+        )
 
         self.as_connection.remove(key1)
         self.as_connection.remove(key2)

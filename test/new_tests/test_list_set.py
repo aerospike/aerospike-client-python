@@ -12,7 +12,11 @@ class TestListSet(object):
         keys = []
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "contact_no": [i, i + 1], "city": ["Pune", "Dehli"]}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "contact_no": [i, i + 1],
+                "city": ["Pune", "Dehli"],
+            }
             self.as_connection.put(key, rec)
             keys.append(key)
         key = ("test", "demo", 2)
@@ -39,42 +43,66 @@ class TestListSet(object):
                 "contact_no",
                 5,
                 1000,
-                {"city": ["Pune", "Dehli"], "contact_no": [1, 2, None, None, None, 1000], "name": "name1"},
+                {
+                    "city": ["Pune", "Dehli"],
+                    "contact_no": [1, 2, None, None, None, 1000],
+                    "name": "name1",
+                },
             ),
             (
                 ("test", "demo", 1),  # list element with list
                 "contact_no",
                 5,
                 [500, 1000],
-                {"city": ["Pune", "Dehli"], "contact_no": [1, 2, None, None, None, [500, 1000]], "name": "name1"},
+                {
+                    "city": ["Pune", "Dehli"],
+                    "contact_no": [1, 2, None, None, None, [500, 1000]],
+                    "name": "name1",
+                },
             ),
             (
                 ("test", "demo", 1),  # list element with string
                 "contact_no",
                 5,
                 "string",
-                {"city": ["Pune", "Dehli"], "contact_no": [1, 2, None, None, None, "string"], "name": "name1"},
+                {
+                    "city": ["Pune", "Dehli"],
+                    "contact_no": [1, 2, None, None, None, "string"],
+                    "name": "name1",
+                },
             ),
             (
                 ("test", "demo", 1),  # float
                 "contact_no",
                 5,
                 45.896,
-                {"city": ["Pune", "Dehli"], "contact_no": [1, 2, None, None, None, 45.896], "name": "name1"},
+                {
+                    "city": ["Pune", "Dehli"],
+                    "contact_no": [1, 2, None, None, None, 45.896],
+                    "name": "name1",
+                },
             ),
             (
                 ("test", "demo", 1),  # Boolean
                 "contact_no",
                 5,
                 False,
-                {"city": ["Pune", "Dehli"], "contact_no": [1, 2, None, None, None, 0], "name": "name1"},
+                {
+                    "city": ["Pune", "Dehli"],
+                    "contact_no": [1, 2, None, None, None, 0],
+                    "name": "name1",
+                },
             ),
             (
                 ("test", "demo", 1),  # Bytearray
                 "contact_no",
                 0,
                 bytearray("asd;as[d'as;d", "utf-8"),
-                {"contact_no": [bytearray(b"asd;as[d'as;d"), 2], "city": ["Pune", "Dehli"], "name": "name1"},
+                {
+                    "contact_no": [bytearray(b"asd;as[d'as;d"), 2],
+                    "city": ["Pune", "Dehli"],
+                    "name": "name1",
+                },
             ),
         ],
     )
@@ -98,7 +126,11 @@ class TestListSet(object):
         assert status == 0
 
         key, _, bins = self.as_connection.get(key)
-        assert bins == {"city": ["Pune", "Dehli"], "contact_no": [1, 2, None, None, None, {"k1": 56}], "name": "name1"}
+        assert bins == {
+            "city": ["Pune", "Dehli"],
+            "contact_no": [1, 2, None, None, None, {"k1": 56}],
+            "name": "name1",
+        }
 
     def test_pos_list_set_with_correct_policy(self):
         """
@@ -129,7 +161,11 @@ class TestListSet(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = (
+            "test",
+            "demo",
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com",
+        )
         status = self.as_connection.list_set(key, "contact_no", 0, 100)
         assert status == 0
         key, _, bins = self.as_connection.get(key)
@@ -167,7 +203,9 @@ class TestListSet(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
         try:
             self.as_connection.list_set(key, bin, 0, 75)
 
@@ -250,4 +288,6 @@ class TestListSet(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_set(key, "contact_no", "Fifth", 448)
-        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(
+            typeError.value
+        )

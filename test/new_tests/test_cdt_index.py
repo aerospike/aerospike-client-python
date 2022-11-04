@@ -52,7 +52,9 @@ ctx_map_rank.append(add_ctx_op(map_rank, -1))
 ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
-if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+if TestBaseClass.major_ver < 6 or (
+    TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+):
     if pytest.__version__ < "3.0.0":
         pytest.skip("It only applies to >= 6.1 enterprise edition")
     else:
@@ -71,8 +73,12 @@ class TestCDTIndex(object):
                 "numeric_list": [1, 2, 3, 4],
                 "string_list": ["a", "b", "c", "d"],
                 "geojson_list": [
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [-122.053321, 37.434212]}),
+                    aerospike.GeoJSON(
+                        {"type": "Point", "coordinates": [-122.096449, 37.421868]}
+                    ),
+                    aerospike.GeoJSON(
+                        {"type": "Point", "coordinates": [-122.053321, 37.434212]}
+                    ),
                 ],
                 "numeric_map": {"a": 1, "b": 2, "c": 3},
                 "string_map": {"sa": "a", "sb": "b", "sc": "c"},
@@ -125,8 +131,13 @@ class TestCDTIndex(object):
 
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
-        r.append(";indextype=%s" % (cdt_ctx.index_type_string(aerospike.INDEX_TYPE_LIST)))
-        r.append(";indexdata=string_list,%s" % (cdt_ctx.index_datatype_string(aerospike.INDEX_STRING)))
+        r.append(
+            ";indextype=%s" % (cdt_ctx.index_type_string(aerospike.INDEX_TYPE_LIST))
+        )
+        r.append(
+            ";indexdata=string_list,%s"
+            % (cdt_ctx.index_datatype_string(aerospike.INDEX_STRING))
+        )
         r.append(";context=%s" % (bs_b4_cdt))
         req = "".join(r)
 
@@ -359,8 +370,12 @@ class TestCDTIndex(object):
                 )
             except e.IndexFoundError:
                 assert self.server_version < [6, 1]
-            self.as_connection.index_remove("test", "test_numeric_list_cdt_index", policy)
-            ensure_dropped_index(self.as_connection, "test", "test_numeric_list_cdt_index")
+            self.as_connection.index_remove(
+                "test", "test_numeric_list_cdt_index", policy
+            )
+            ensure_dropped_index(
+                self.as_connection, "test", "test_numeric_list_cdt_index"
+            )
         else:
             assert False
 
@@ -391,11 +406,19 @@ class TestCDTIndex(object):
                     {"ctx": ctx_list_index},
                     policy,
                 )
-                self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-                ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
+                self.as_connection.index_remove(
+                    "test", "test_string_list_cdt_index", policy
+                )
+                ensure_dropped_index(
+                    self.as_connection, "test", "test_string_list_cdt_index"
+                )
 
-            self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-            ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
+            self.as_connection.index_remove(
+                "test", "test_string_list_cdt_index", policy
+            )
+            ensure_dropped_index(
+                self.as_connection, "test", "test_string_list_cdt_index"
+            )
         else:
             assert True is False
 
@@ -430,8 +453,12 @@ class TestCDTIndex(object):
             except e.IndexFoundError:
                 assert self.server_version < [6, 1]
 
-            self.as_connection.index_remove("test", "test_string_list_cdt_index", policy)
-            ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
+            self.as_connection.index_remove(
+                "test", "test_string_list_cdt_index", policy
+            )
+            ensure_dropped_index(
+                self.as_connection, "test", "test_string_list_cdt_index"
+            )
         else:
             assert True is False
 
@@ -452,8 +479,12 @@ class TestCDTIndex(object):
         )
 
         assert retobj == 0
-        self.as_connection.index_remove("test", "test_numeric_list_cdt_index_pol", policy)
-        ensure_dropped_index(self.as_connection, "test", "test_numeric_list_cdt_index_pol")
+        self.as_connection.index_remove(
+            "test", "test_numeric_list_cdt_index_pol", policy
+        )
+        ensure_dropped_index(
+            self.as_connection, "test", "test_numeric_list_cdt_index_pol"
+        )
 
     def test_pos_createcdtindex_with_policystring(self):
         """

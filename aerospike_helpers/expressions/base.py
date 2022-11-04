@@ -809,7 +809,9 @@ class And(_BaseExpr):
                       exp.Eq(exp.IntBin("a"), 0)),
                     exp.LT(exp.IntBin("b"), 3)).compile()
         """
-        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Or(_BaseExpr):
@@ -830,7 +832,9 @@ class Or(_BaseExpr):
                     exp.Eq(exp.IntBin("a"), 0),
                     exp.Eq(exp.IntBin("b"), 0)).compile()
         """
-        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Exclusive(_BaseExpr):
@@ -851,7 +855,9 @@ class Exclusive(_BaseExpr):
                             exp.Eq(exp.IntBin("a"), 0),
                             exp.Eq(exp.IntBin("b"), 0)).compile()
         """
-        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 #######################################
@@ -932,7 +938,9 @@ class Cond(_BaseExpr):
             # Divide isn't supported, so we get -1
             # (('test', 'demo', 'key', bytearray(b'...')), {'ttl': 2592000, 'gen': 2}, {'results': -1})
         """
-        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Let(_BaseExpr):
@@ -960,7 +968,9 @@ class Let(_BaseExpr):
                     exp.GT(5, exp.Var("x")),
                     exp.LT(exp.Var("x"), 10))).compile()
         """
-        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Def(_BaseExpr):

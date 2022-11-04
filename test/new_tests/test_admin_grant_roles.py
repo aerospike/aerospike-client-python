@@ -11,7 +11,8 @@ import aerospike
 class TestGrantRoles(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may be not secured cluster.",
     )
 
     def setup_method(self, method):
@@ -20,7 +21,9 @@ class TestGrantRoles(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestGrantRoles.Me = self
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
 
         try:
             self.client.admin_drop_user("example-test")

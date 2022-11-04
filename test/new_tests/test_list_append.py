@@ -12,7 +12,11 @@ class TestListAppend(object):
         keys = []
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "contact_no": [i, i + 1], "city": ["Pune", "Dehli"]}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "contact_no": [i, i + 1],
+                "city": ["Pune", "Dehli"],
+            }
             as_connection.put(key, rec)
             keys.append(key)
 
@@ -35,37 +39,61 @@ class TestListAppend(object):
                 ("test", "demo", 1),  # append integer value to a list
                 "contact_no",
                 50000,
-                {"contact_no": [1, 2, 50000], "name": "name1", "city": ["Pune", "Dehli"]},
+                {
+                    "contact_no": [1, 2, 50000],
+                    "name": "name1",
+                    "city": ["Pune", "Dehli"],
+                },
             ),
             (
                 ("test", "demo", 1),  # string
                 "city",
                 "Chennai",
-                {"contact_no": [1, 2], "name": "name1", "city": ["Pune", "Dehli", "Chennai"]},
+                {
+                    "contact_no": [1, 2],
+                    "name": "name1",
+                    "city": ["Pune", "Dehli", "Chennai"],
+                },
             ),
             (
                 ("test", "demo", 1),  # Unicode string
                 "city",
                 "Mumbai",
-                {"contact_no": [1, 2], "city": ["Pune", "Dehli", "Mumbai"], "name": "name1"},
+                {
+                    "contact_no": [1, 2],
+                    "city": ["Pune", "Dehli", "Mumbai"],
+                    "name": "name1",
+                },
             ),
             (
                 ("test", "demo", 2),  # float
                 "contact_no",
                 85.12,
-                {"contact_no": [2, 3, 85.12], "city": ["Pune", "Dehli"], "name": "name2"},
+                {
+                    "contact_no": [2, 3, 85.12],
+                    "city": ["Pune", "Dehli"],
+                    "name": "name2",
+                },
             ),
             (
                 ("test", "demo", 3),  # map
                 "contact_no",
                 {"k1": 29},
-                {"contact_no": [3, 4, {"k1": 29}], "city": ["Pune", "Dehli"], "name": "name3"},
+                {
+                    "contact_no": [3, 4, {"k1": 29}],
+                    "city": ["Pune", "Dehli"],
+                    "name": "name3",
+                },
             ),
             (
                 ("test", "demo", 1),  # bytearray
                 "contact_no",
                 bytearray("asd;as[d'as;d", "utf-8"),
-                {"contact_no": [1, 2, bytearray(b"asd;as[d'as;d")], "city": ["Pune", "Dehli"], "name": "name1"},
+                {
+                    "contact_no": [1, 2, bytearray(b"asd;as[d'as;d")],
+                    "city": ["Pune", "Dehli"],
+                    "name": "name1",
+                },
             ),
             (
                 ("test", "demo", 1),  # boolean
@@ -99,7 +127,11 @@ class TestListAppend(object):
 
         (key, _, bins) = self.as_connection.get(key)
 
-        assert bins == {"contact_no": [2, 3, [45, 50, 80]], "city": ["Pune", "Dehli"], "name": "name2"}
+        assert bins == {
+            "contact_no": [2, 3, [45, 50, 80]],
+            "city": ["Pune", "Dehli"],
+            "name": "name2",
+        }
 
     def test_pos_list_append_with_nonexistent_key(self):
         """
@@ -109,7 +141,11 @@ class TestListAppend(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = (
+            "test",
+            "demo",
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com",
+        )
         status = self.as_connection.list_append(key, "abc", 122)
         assert status == 0
 
@@ -128,14 +164,21 @@ class TestListAppend(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
         status = self.as_connection.list_append(key, bin, 585)
         assert status == 0
 
         (key, _, bins) = self.as_connection.get(key)
 
         assert status == 0
-        assert bins == {"contact_no": [1, 2], "name": "name1", "city": ["Pune", "Dehli"], bin: [585]}
+        assert bins == {
+            "contact_no": [1, 2],
+            "name": "name1",
+            "city": ["Pune", "Dehli"],
+            bin: [585],
+        }
 
     # Negative Tests
     def test_neg_list_append_with_no_parameters(self):
@@ -168,7 +211,9 @@ class TestListAppend(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_append(key, "contact_no", 999, {}, policy, "")
 
-        assert "list_append() takes at most 5 arguments (6 given)" in str(typeError.value)
+        assert "list_append() takes at most 5 arguments (6 given)" in str(
+            typeError.value
+        )
 
     def test_neg_list_append_policy_is_string(self):
         """

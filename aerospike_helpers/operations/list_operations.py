@@ -88,7 +88,11 @@ def list_append_items(bin_name: str, values, policy: dict = None, ctx: list = No
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.
         The format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_APPEND_ITEMS, BIN_KEY: bin_name, VALUE_KEY: values}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_APPEND_ITEMS,
+        BIN_KEY: bin_name,
+        VALUE_KEY: values,
+    }
 
     if policy:
         op_dict[LIST_POLICY_KEY] = policy
@@ -118,7 +122,12 @@ def list_insert(bin_name: str, index, value, policy: dict = None, ctx: list = No
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.
         The format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_INSERT, BIN_KEY: bin_name, INDEX_KEY: index, VALUE_KEY: value}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_INSERT,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: value,
+    }
 
     if policy:
         op_dict[LIST_POLICY_KEY] = policy
@@ -129,7 +138,9 @@ def list_insert(bin_name: str, index, value, policy: dict = None, ctx: list = No
     return op_dict
 
 
-def list_insert_items(bin_name: str, index, values, policy: dict = None, ctx: list = None):
+def list_insert_items(
+    bin_name: str, index, values, policy: dict = None, ctx: list = None
+):
     """
     Creates a list insert items operation.
 
@@ -148,7 +159,12 @@ def list_insert_items(bin_name: str, index, values, policy: dict = None, ctx: li
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.
         The format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_INSERT_ITEMS, BIN_KEY: bin_name, INDEX_KEY: index, VALUE_KEY: values}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_INSERT_ITEMS,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: values,
+    }
 
     if policy:
         op_dict[LIST_POLICY_KEY] = policy
@@ -177,7 +193,12 @@ def list_increment(bin_name: str, index, value, policy: dict = None, ctx: list =
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.
         The format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_INCREMENT, BIN_KEY: bin_name, INDEX_KEY: index, VALUE_KEY: value}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_INCREMENT,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: value,
+    }
 
     if policy:
         op_dict[LIST_POLICY_KEY] = policy
@@ -229,7 +250,12 @@ def list_pop_range(bin_name: str, index, count, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_POP_RANGE, BIN_KEY: bin_name, INDEX_KEY: index, VALUE_KEY: count}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_POP_RANGE,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: count,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -277,7 +303,12 @@ def list_remove_range(bin_name: str, index, count, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_REMOVE_RANGE, BIN_KEY: bin_name, INDEX_KEY: index, VALUE_KEY: count}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_REMOVE_RANGE,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: count,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -324,7 +355,12 @@ def list_set(bin_name: str, index, value, policy: dict = None, ctx: list = None)
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_SET, BIN_KEY: bin_name, INDEX_KEY: index, VALUE_KEY: value}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_SET,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: value,
+    }
     if policy:
         op_dict[LIST_POLICY_KEY] = policy
 
@@ -373,7 +409,12 @@ def list_get_range(bin_name: str, index, count, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_GET_RANGE, BIN_KEY: bin_name, INDEX_KEY: index, VALUE_KEY: count}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_GET_RANGE,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: count,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -397,7 +438,12 @@ def list_trim(bin_name: str, index, count, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_TRIM, BIN_KEY: bin_name, INDEX_KEY: index, VALUE_KEY: count}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_TRIM,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        VALUE_KEY: count,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -461,7 +507,9 @@ def list_get_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def list_get_by_index_range(bin_name: str, index, return_type, count=None, inverted=False, ctx: list = None):
+def list_get_by_index_range(
+    bin_name: str, index, return_type, count=None, inverted=False, ctx: list = None
+):
     """Create a list get index range operation.
 
     The list get by index range operation gets `count` items starting at `index` and returns a value
@@ -518,7 +566,12 @@ def list_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_GET_BY_RANK, BIN_KEY: bin_name, RETURN_TYPE_KEY: return_type, RANK_KEY: rank}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_GET_BY_RANK,
+        BIN_KEY: bin_name,
+        RETURN_TYPE_KEY: return_type,
+        RANK_KEY: rank,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -526,7 +579,9 @@ def list_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: list = None):
+def list_get_by_rank_range(
+    bin_name: str, rank, return_type, count=None, inverted=False, ctx: list = None
+):
     """Create a list get by rank range operation.
 
     Server selects `count` items starting at the specified `rank` and returns selected data
@@ -565,7 +620,9 @@ def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverte
     return op_dict
 
 
-def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def list_get_by_value(
+    bin_name: str, value, return_type, inverted=False, ctx: list = None
+):
     """Create a list get by value operation.
 
     Server selects list items with a value equal to `value` and returns selected data specified by
@@ -598,7 +655,9 @@ def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: li
     return op_dict
 
 
-def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
+def list_get_by_value_list(
+    bin_name: str, value_list, return_type, inverted=False, ctx: list = None
+):
     """Create a list get by value list operation.
 
     Server selects list items with a value contained in `value_list` and returns selected data
@@ -632,7 +691,9 @@ def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=Fals
     return op_dict
 
 
-def list_get_by_value_range(bin_name: str, return_type, value_begin, value_end, inverted=False, ctx: list = None):
+def list_get_by_value_range(
+    bin_name: str, return_type, value_begin, value_end, inverted=False, ctx: list = None
+):
     """Create a list get by value list operation.
 
     Server selects list items with a value greater than or equal to `value_begin`
@@ -705,7 +766,9 @@ def list_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def list_remove_by_index_range(bin_name: str, index, return_type, count=None, inverted=False, ctx: list = None):
+def list_remove_by_index_range(
+    bin_name: str, index, return_type, count=None, inverted=False, ctx: list = None
+):
     """Create a list remove by index range operation.
 
     The list remove by index range operation removes `count` starting at `index` and returns a value
@@ -775,7 +838,9 @@ def list_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: list = None):
+def list_remove_by_rank_range(
+    bin_name: str, rank, return_type, count=None, inverted=False, ctx: list = None
+):
     """Create a list remove by rank range operation.
 
     Server removes `count` items starting at the specified `rank` and returns selected data
@@ -814,7 +879,9 @@ def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inve
     return op_dict
 
 
-def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def list_remove_by_value(
+    bin_name: str, value, return_type, inverted=False, ctx: list = None
+):
     """Create a list remove by value operation.
 
     Server removes list items with a value equal to `value` and returns selected data specified by
@@ -848,7 +915,9 @@ def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx:
     return op_dict
 
 
-def list_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
+def list_remove_by_value_list(
+    bin_name: str, value_list, return_type, inverted=False, ctx: list = None
+):
     """Create a list remove by value list operation.
 
     Server removes list items with a value matching one contained in `value_list`
@@ -883,7 +952,12 @@ def list_remove_by_value_list(bin_name: str, value_list, return_type, inverted=F
 
 
 def list_remove_by_value_range(
-    bin_name: str, return_type, value_begin=None, value_end=None, inverted=False, ctx: list = None
+    bin_name: str,
+    return_type,
+    value_begin=None,
+    value_end=None,
+    inverted=False,
+    ctx: list = None,
 ):
     """Create a list remove by value range operation.
 
@@ -942,7 +1016,11 @@ def list_set_order(bin_name: str, list_order, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_SET_ORDER, BIN_KEY: bin_name, LIST_ORDER_KEY: list_order}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_SET_ORDER,
+        BIN_KEY: bin_name,
+        LIST_ORDER_KEY: list_order,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -965,7 +1043,11 @@ def list_sort(bin_name: str, sort_flags: int = 0, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`.The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_LIST_SORT, BIN_KEY: bin_name, SORT_FLAGS_KEY: sort_flags}
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_SORT,
+        BIN_KEY: bin_name,
+        SORT_FLAGS_KEY: sort_flags,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -974,7 +1056,13 @@ def list_sort(bin_name: str, sort_flags: int = 0, ctx: list = None):
 
 
 def list_get_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str,
+    value,
+    offset,
+    return_type,
+    count=None,
+    inverted=False,
+    ctx: list = None,
 ):
     """Create a list get by value rank range relative operation
 
@@ -1052,7 +1140,13 @@ def list_get_by_value_rank_range_relative(
 
 
 def list_remove_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str,
+    value,
+    offset,
+    return_type,
+    count=None,
+    inverted=False,
+    ctx: list = None,
 ):
     """Create a list get by value rank range relative operation
 

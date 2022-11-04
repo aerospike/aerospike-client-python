@@ -14,7 +14,9 @@ class TestRemovebin(object):
             (("test", "demo", 2), {"name": "jeff", "age": 45}, ["name"]),
         ],
     )
-    def test_pos_remove_bin_with_correct_parameters(self, key, record, bin_for_removal, put_data):
+    def test_pos_remove_bin_with_correct_parameters(
+        self, key, record, bin_for_removal, put_data
+    ):
         """
         Invoke remove_bin() with correct parameters
         """
@@ -60,7 +62,12 @@ class TestRemovebin(object):
         (key, meta, bins) = self.as_connection.get(key)
         del record["age"]
         assert bins == record
-        assert key == ("test", "demo", None, bytearray(b"\xbd\x87-\x84\xae99|\x06z\x12\xf3\xef\x12\xb9\x1a\xa2\x1a;'"))
+        assert key == (
+            "test",
+            "demo",
+            None,
+            bytearray(b"\xbd\x87-\x84\xae99|\x06z\x12\xf3\xef\x12\xb9\x1a\xa2\x1a;'"),
+        )
 
     def test_pos_remove_bin_with_policy_send_gen_eq_positive(self, put_data):
         """
@@ -90,7 +97,9 @@ class TestRemovebin(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_remove_bin_with_policy_key_digest(self, put_data):
@@ -154,7 +163,9 @@ class TestRemovebin(object):
             (("test", "demo", 4), {"name": "jeff", "age": 45}, ["name", "age"]),
         ],
     )
-    def test_pos_remove_bin_with_unicode_all(self, key, record, bins_for_removal, put_data):
+    def test_pos_remove_bin_with_unicode_all(
+        self, key, record, bins_for_removal, put_data
+    ):
         """
         Invoke remove_bin() with unicode bin name
         """
@@ -205,7 +216,9 @@ class TestRemovebin(object):
             ),
         ],
     )
-    def test_pos_remove_bin_with_policy(self, key, record, policy, bin_for_removal, put_data):
+    def test_pos_remove_bin_with_policy(
+        self, key, record, policy, bin_for_removal, put_data
+    ):
         """
         Invoke remove_bin() with policy
         """
@@ -330,7 +343,9 @@ class TestRemovebin(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_neg_remove_bin_with_policy_send_gen_GT_lesser(self, put_data):
@@ -364,7 +379,9 @@ class TestRemovebin(object):
             "test",
             "demo",
             None,
-            bytearray(b"\x1b\xb9\xda`\xa7\xbd\xe0\xc1\xdet1\xe4\x82\x94\xc7\xb3\xd8\xd5\x7f."),
+            bytearray(
+                b"\x1b\xb9\xda`\xa7\xbd\xe0\xc1\xdet1\xe4\x82\x94\xc7\xb3\xd8\xd5\x7f."
+            ),
         )
 
     def test_neg_remove_bin_with_incorrect_policy_value(self):
@@ -406,7 +423,9 @@ class TestRemovebin(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin(key, ["age"], {}, policy, "")
 
-        assert "remove_bin() takes at most 4 arguments (5 given)" in str(typeError.value)
+        assert "remove_bin() takes at most 4 arguments (5 given)" in str(
+            typeError.value
+        )
 
     def test_remove_bin_with_non_string_bin_nane(self):
         """

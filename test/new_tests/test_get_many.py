@@ -52,7 +52,9 @@ class TestGetMany:
 
         assert isinstance(records, list)
         assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4, "float_value"])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, "float_value"]
+        )
         assert records[5][2] == {"float_value": 4.3}
 
     def test_pos_get_many_with_none_policy(self):
@@ -61,7 +63,9 @@ class TestGetMany:
 
         assert isinstance(records, list)
         assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4, "float_value"])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, "float_value"]
+        )
         assert records[5][2] == {"float_value": 4.3}
 
     def test_pos_get_many_with_non_existent_keys(self):
@@ -75,7 +79,9 @@ class TestGetMany:
 
         assert isinstance(records, list)
         assert len(records) == 7
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4, "non-existent", "float_value"])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, "non-existent", "float_value"]
+        )
         for x in records:
             if x[0][2] == "non-existent":
                 assert x[2] is None
@@ -93,7 +99,9 @@ class TestGetMany:
                     "test",
                     "demo",
                     "gm_non_existing_key",
-                    bytearray(b"\x8da\xd1\x12\x1a\x8f\xa2\xfc*m\xbc\xc7}\xb0\xc8\x13\x80;'\x07"),
+                    bytearray(
+                        b"\x8da\xd1\x12\x1a\x8f\xa2\xfc*m\xbc\xc7}\xb0\xc8\x13\x80;'\x07"
+                    ),
                 ),
                 None,
                 None,
@@ -250,7 +258,10 @@ class TestGetMany:
     def test_get_many_with_an_invalid_key_in_list_batch_direct(self):
 
         with pytest.raises(e.ParamError):
-            self.as_connection.get_many([("test", "demo", 1), ("test", "demo", 2), None], {"use_batch_direct": True})
+            self.as_connection.get_many(
+                [("test", "demo", 1), ("test", "demo", 2), None],
+                {"use_batch_direct": True},
+            )
 
     def test_neg_prepend_Invalid_Key_Invalid_ns(self):
         """

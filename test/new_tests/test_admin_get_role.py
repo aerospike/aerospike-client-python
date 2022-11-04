@@ -11,7 +11,8 @@ import aerospike
 class TestGetRole(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may be not secured cluster.",
     )
 
     def setup_method(self, method):
@@ -19,13 +20,18 @@ class TestGetRole(TestBaseClass):
         Setup method
         """
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
         try:
             self.client.admin_drop_role("usr-sys-admin")
             time.sleep(2)
         except Exception:
             pass
-        usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+        usr_sys_admin_privs = [
+            {"code": aerospike.PRIV_USER_ADMIN},
+            {"code": aerospike.PRIV_SYS_ADMIN},
+        ]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
             time.sleep(2)
@@ -59,7 +65,10 @@ class TestGetRole(TestBaseClass):
         """
         roles = self.client.admin_get_role("usr-sys-admin-test")
         assert roles == {
-            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
+            "privileges": [
+                {"ns": "", "set": "", "code": 0},
+                {"ns": "", "set": "", "code": 1},
+            ],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
@@ -71,7 +80,10 @@ class TestGetRole(TestBaseClass):
         """
         roles = self.client.admin_get_role("usr-sys-admin-test", {"timeout": 1000})
         assert roles == {
-            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
+            "privileges": [
+                {"ns": "", "set": "", "code": 0},
+                {"ns": "", "set": "", "code": 1},
+            ],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
@@ -82,7 +94,9 @@ class TestGetRole(TestBaseClass):
         Incorrect role name
         """
         try:
-            self.client.admin_get_role("usr-sys-admin-test-non-existent", {"timeout": 1000})
+            self.client.admin_get_role(
+                "usr-sys-admin-test-non-existent", {"timeout": 1000}
+            )
 
         except e.InvalidRole as exception:
             assert exception.code == 70

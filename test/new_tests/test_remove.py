@@ -47,7 +47,12 @@ class TestRemove:
         assert code == 2
 
         key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
+        rec = {
+            "name": "name%s" % (str(1)),
+            "addr": "name%s" % (str(1)),
+            "age": 1,
+            "no": 1,
+        }
         self.as_connection.put(key, rec)
 
     @pytest.mark.xfail(reason="open bug #client-533")
@@ -75,7 +80,12 @@ class TestRemove:
         assert code == 2
 
         key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
+        rec = {
+            "name": "name%s" % (str(1)),
+            "addr": "name%s" % (str(1)),
+            "age": 1,
+            "no": 1,
+        }
         self.as_connection.put(key, rec)
 
     @pytest.mark.xfail(reason="open bug #client-533")
@@ -86,7 +96,11 @@ class TestRemove:
 
         key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
         meta = {"gen": 0}
-        policy = {"timeout": 1000, "retry": aerospike.POLICY_RETRY_ONCE, "key": aerospike.POLICY_KEY_DIGEST}
+        policy = {
+            "timeout": 1000,
+            "retry": aerospike.POLICY_RETRY_ONCE,
+            "key": aerospike.POLICY_KEY_DIGEST,
+        }
         retobj = self.as_connection.put(key, policy)
 
         assert retobj == 0
@@ -128,7 +142,12 @@ class TestRemove:
         assert code == 2
 
         key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
+        rec = {
+            "name": "name%s" % (str(1)),
+            "addr": "name%s" % (str(1)),
+            "age": 1,
+            "no": 1,
+        }
         self.as_connection.put(key, rec)
 
     @pytest.mark.xfail(reason="Issue1 : open bug #client-533")
@@ -158,7 +177,12 @@ class TestRemove:
         assert code == 2
 
         key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
+        rec = {
+            "name": "name%s" % (str(1)),
+            "addr": "name%s" % (str(1)),
+            "age": 1,
+            "no": 1,
+        }
         self.as_connection.put(key, rec)
 
     @pytest.mark.xfail(reason="open bug #client-533")
@@ -189,7 +213,12 @@ class TestRemove:
         assert code == 2
 
         key = ("test", "demo", 1)
-        rec = {"name": "name%s" % (str(1)), "addr": "name%s" % (str(1)), "age": 1, "no": 1}
+        rec = {
+            "name": "name%s" % (str(1)),
+            "addr": "name%s" % (str(1)),
+            "age": 1,
+            "no": 1,
+        }
         self.as_connection.put(key, rec)
 
     # Negative Tests
@@ -244,7 +273,12 @@ class TestRemove:
 
         (key, meta, bins) = self.as_connection.get(key)
 
-        assert key == ("test", "demo", None, bytearray(b"\xdd)Fs9\xa151\x91{\x1c\n\xc0\xac zV\x10Z+"))
+        assert key == (
+            "test",
+            "demo",
+            None,
+            bytearray(b"\xdd)Fs9\xa151\x91{\x1c\n\xc0\xac zV\x10Z+"),
+        )
         assert meta is not None
         assert bins == record
 

@@ -71,7 +71,9 @@ class TestListGetRange(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
         bins = self.as_connection.list_get_range(key, bin, 0, 1)
         assert [] == bins
 
@@ -105,7 +107,11 @@ class TestListGetRange(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = (
+            "test",
+            "demo",
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com",
+        )
         try:
             self.as_connection.list_get_range(key, "abc", 0, 1)
 
@@ -121,7 +127,9 @@ class TestListGetRange(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_get_range(key, "contact_no", 1, 1, {}, policy, "")
 
-        assert "list_get_range() takes at most 6 arguments (7 given)" in str(typeError.value)
+        assert "list_get_range() takes at most 6 arguments (7 given)" in str(
+            typeError.value
+        )
 
     def test_neg_list_get_range_policy_is_string(self):
         """
@@ -198,4 +206,6 @@ class TestListGetRange(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_get_range(key, "contact_no", "Fifth", 2)
-        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(
+            typeError.value
+        )

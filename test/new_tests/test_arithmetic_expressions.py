@@ -33,7 +33,9 @@ class TestExpressionsArithmetic(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support arithmetic expressions."
+            )
             pytest.xfail()
 
         self.test_ns = "test"
@@ -57,7 +59,12 @@ class TestExpressionsArithmetic(TestBaseClass):
             _, _, res = self.as_connection.get(self.key, policy={"expressions": expr})
 
     @pytest.mark.parametrize(
-        "bin, val, check", [(IntBin("ibin"), [5], 10), (IntBin("ibin"), [5, 100], 110), (FloatBin("fbin"), [3.0], 8.0)]
+        "bin, val, check",
+        [
+            (IntBin("ibin"), [5], 10),
+            (IntBin("ibin"), [5, 100], 110),
+            (FloatBin("fbin"), [3.0], 8.0),
+        ],
     )
     def test_add_pos(self, bin, val, check):
         """
@@ -100,8 +107,16 @@ class TestExpressionsArithmetic(TestBaseClass):
     @pytest.mark.parametrize(
         "expression, expected",
         [
-            (Eq(IntBin("ibin") + Add(IntBin("ibin"), IntBin("ibin")) + 5, 15), e.FilteredOut),
-            (Eq(IntBin("ibin") + Add(FloatBin("fbin"), FloatBin("fbin")) + 5.0, 20.0), e.InvalidRequest),
+            (
+                Eq(IntBin("ibin") + Add(IntBin("ibin"), IntBin("ibin")) + 5, 15),
+                e.FilteredOut,
+            ),
+            (
+                Eq(
+                    IntBin("ibin") + Add(FloatBin("fbin"), FloatBin("fbin")) + 5.0, 20.0
+                ),
+                e.InvalidRequest,
+            ),
         ],
     )
     def test_add_overloaded_neg(self, expression, expected):
@@ -160,8 +175,17 @@ class TestExpressionsArithmetic(TestBaseClass):
     @pytest.mark.parametrize(
         "expression, expected",
         [
-            (Eq(IntBin("ibin") - Sub(IntBin("ibin"), IntBin("ibin")) - 5, -5), e.FilteredOut),
-            (Eq(FloatBin("fbin") - Sub(IntBin("ibin"), FloatBin("fbin")) - 5.0, -10.0), e.InvalidRequest),
+            (
+                Eq(IntBin("ibin") - Sub(IntBin("ibin"), IntBin("ibin")) - 5, -5),
+                e.FilteredOut,
+            ),
+            (
+                Eq(
+                    FloatBin("fbin") - Sub(IntBin("ibin"), FloatBin("fbin")) - 5.0,
+                    -10.0,
+                ),
+                e.InvalidRequest,
+            ),
         ],
     )
     def test_sub_overloaded_neg(self, expression, expected):
@@ -207,7 +231,10 @@ class TestExpressionsArithmetic(TestBaseClass):
     @pytest.mark.parametrize(
         "expression",
         [
-            Eq(IntBin("ibin") * Mul(IntBin("ibin"), IntBin("ibin")) * IntBin("ibin"), 625),
+            Eq(
+                IntBin("ibin") * Mul(IntBin("ibin"), IntBin("ibin")) * IntBin("ibin"),
+                625,
+            ),
             Eq(FloatBin("fbin") * Mul(FloatBin("fbin"), FloatBin("fbin")) * 5.0, 625.0),
         ],
     )
@@ -220,8 +247,19 @@ class TestExpressionsArithmetic(TestBaseClass):
     @pytest.mark.parametrize(
         "expression, expected",
         [
-            (Eq(IntBin("ibin") * Mul(IntBin("ibin"), IntBin("ibin")) * IntBin("ibin"), 5), e.FilteredOut),
-            (Eq(IntBin("ibin") * Mul(FloatBin("fbin"), FloatBin("fbin")) * 5.0, 5.0), e.InvalidRequest),
+            (
+                Eq(
+                    IntBin("ibin")
+                    * Mul(IntBin("ibin"), IntBin("ibin"))
+                    * IntBin("ibin"),
+                    5,
+                ),
+                e.FilteredOut,
+            ),
+            (
+                Eq(IntBin("ibin") * Mul(FloatBin("fbin"), FloatBin("fbin")) * 5.0, 5.0),
+                e.InvalidRequest,
+            ),
         ],
     )
     def test_mul_overloaded_neg(self, expression, expected):
@@ -267,8 +305,20 @@ class TestExpressionsArithmetic(TestBaseClass):
     @pytest.mark.parametrize(
         "expression",
         [
-            Eq(IntBin("ibin") * 100 / Div(IntBin("ibin"), IntBin("ibin")) / IntBin("ibin"), 4),
-            Eq(FloatBin("fbin") * 100.0 / Div(FloatBin("fbin"), FloatBin("fbin")) / 5.0, 4.0),
+            Eq(
+                IntBin("ibin")
+                * 100
+                / Div(IntBin("ibin"), IntBin("ibin"))
+                / IntBin("ibin"),
+                4,
+            ),
+            Eq(
+                FloatBin("fbin")
+                * 100.0
+                / Div(FloatBin("fbin"), FloatBin("fbin"))
+                / 5.0,
+                4.0,
+            ),
         ],
     )
     def test_div_overloaded_pos(self, expression):
@@ -280,8 +330,26 @@ class TestExpressionsArithmetic(TestBaseClass):
     @pytest.mark.parametrize(
         "expression, expected",
         [  # Note that the parens in Div() do not overload precedence with /.
-            (Eq(IntBin("ibin") * 100 / Div(IntBin("ibin"), IntBin("ibin")) / IntBin("ibin"), 3), e.FilteredOut),
-            (Eq(IntBin("ibin") * 100.0 / Div(FloatBin("fbin"), FloatBin("fbin")) / 5.0, 4.0), e.InvalidRequest),
+            (
+                Eq(
+                    IntBin("ibin")
+                    * 100
+                    / Div(IntBin("ibin"), IntBin("ibin"))
+                    / IntBin("ibin"),
+                    3,
+                ),
+                e.FilteredOut,
+            ),
+            (
+                Eq(
+                    IntBin("ibin")
+                    * 100.0
+                    / Div(FloatBin("fbin"), FloatBin("fbin"))
+                    / 5.0,
+                    4.0,
+                ),
+                e.InvalidRequest,
+            ),
         ],
     )
     def test_div_overloaded_neg(self, expression, expected):
@@ -292,7 +360,10 @@ class TestExpressionsArithmetic(TestBaseClass):
 
     @pytest.mark.parametrize(
         "expression",
-        [Eq(FloatBin("fbin") * 5.1 // 5.0, 5.0), Eq(FloatBin("fbin") // FloatBin("fbin") // FloatBin("fbin"), 0.0)],
+        [
+            Eq(FloatBin("fbin") * 5.1 // 5.0, 5.0),
+            Eq(FloatBin("fbin") // FloatBin("fbin") // FloatBin("fbin"), 0.0),
+        ],
     )
     def test_floor_div_overloaded_pos(self, expression):
         """
@@ -315,7 +386,11 @@ class TestExpressionsArithmetic(TestBaseClass):
         self.verify_expression_neg(expression.compile(), expected)
 
     @pytest.mark.parametrize(
-        "bin, val, check", [(FloatBin("fbin"), [2.0], 25.0), (FloatBin("fbin"), [FloatBin("fbin")], 3125.0)]
+        "bin, val, check",
+        [
+            (FloatBin("fbin"), [2.0], 25.0),
+            (FloatBin("fbin"), [FloatBin("fbin")], 3125.0),
+        ],
     )
     def test_pow_pos(self, bin, val, check):
         """
@@ -373,7 +448,10 @@ class TestExpressionsArithmetic(TestBaseClass):
 
     @pytest.mark.parametrize(
         "bin, val, check",
-        [(Pow(FloatBin("fbin"), 4.0), [5.0], 4.0), (Pow(FloatBin("fbin"), 10.0), [FloatBin("fbin")], 10.0)],
+        [
+            (Pow(FloatBin("fbin"), 4.0), [5.0], 4.0),
+            (Pow(FloatBin("fbin"), 10.0), [FloatBin("fbin")], 10.0),
+        ],
     )
     def test_log_pos(self, bin, val, check):
         """
@@ -503,7 +581,9 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         self.verify_expression_neg(expression.compile(), expected)
 
-    @pytest.mark.parametrize("val, check", [(8.953, 8.0), (Add(FloatBin("fbin"), 4.5), 9.0)])
+    @pytest.mark.parametrize(
+        "val, check", [(8.953, 8.0), (Add(FloatBin("fbin"), 4.5), 9.0)]
+    )
     def test_floor_pos(self, val, check):
         """
         Test arithmetic Floor expression with correct parameters.
@@ -529,7 +609,9 @@ class TestExpressionsArithmetic(TestBaseClass):
 
         self.verify_expression_neg(expr, expected)
 
-    @pytest.mark.parametrize("expression", [Eq(math.floor(FloatBin("fbin") + 1.6), 6.0)])
+    @pytest.mark.parametrize(
+        "expression", [Eq(math.floor(FloatBin("fbin") + 1.6), 6.0)]
+    )
     def test_floor_overloaded_pos(self, expression):
         """
         Test arithmetic Floor expression with correct parameters.
@@ -549,7 +631,9 @@ class TestExpressionsArithmetic(TestBaseClass):
         """
         self.verify_expression_neg(expression.compile(), expected)
 
-    @pytest.mark.parametrize("val, check", [(8.953, 9.0), (Add(FloatBin("fbin"), 4.5), 10.0)])
+    @pytest.mark.parametrize(
+        "val, check", [(8.953, 9.0), (Add(FloatBin("fbin"), 4.5), 10.0)]
+    )
     def test_ceil_pos(self, val, check):
         """
         Test arithmetic Ceil expression with correct parameters.

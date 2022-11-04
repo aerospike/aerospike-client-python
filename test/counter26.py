@@ -60,7 +60,9 @@ class Counter(dict):
 
     @classmethod
     def fromkeys(cls, iterable, v=None):
-        raise NotImplementedError("Counter.fromkeys() is undefined.  Use Counter(iterable) instead.")
+        raise NotImplementedError(
+            "Counter.fromkeys() is undefined.  Use Counter(iterable) instead."
+        )
 
     def update(self, iterable=None, **kwds):
         """Like dict.update() but add counts instead of replacing them.

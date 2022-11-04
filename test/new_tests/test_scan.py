@@ -21,7 +21,13 @@ class TestScan(TestBaseClass):
             as_connection.put(key, rec)
 
         key = ("test", "demo", 122)
-        llist = [{"op": aerospike.OPERATOR_APPEND, "bin": bytearray("asd;adk\0kj", "utf-8"), "val": "john"}]
+        llist = [
+            {
+                "op": aerospike.OPERATOR_APPEND,
+                "bin": bytearray("asd;adk\0kj", "utf-8"),
+                "val": "john",
+            }
+        ]
         # Creates a record with the key 122, with one bytearray key.
         self.bytearray_bin = bytearray("asd;adk\0kj", "utf-8")
         as_connection.operate(key, llist)

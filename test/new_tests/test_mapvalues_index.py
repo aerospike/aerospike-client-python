@@ -56,7 +56,12 @@ class TestMapValuesIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -69,7 +74,11 @@ class TestMapValuesIndex(object):
         and the policy argument not passed
         """
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index"
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -83,7 +92,12 @@ class TestMapValuesIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -98,7 +112,12 @@ class TestMapValuesIndex(object):
         policy = {}
         with pytest.raises(e.InvalidRequest) as err_info:
             self.as_connection.index_map_values_create(
-                "test", set_name, "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+                "test",
+                set_name,
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                policy,
             )
 
         err_code = err_info.value.code
@@ -111,7 +130,12 @@ class TestMapValuesIndex(object):
         policy = {}
         try:
             self.as_connection.index_map_values_create(
-                "test1", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+                "test1",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_map_index",
+                policy,
             )
         except e.InvalidRequest:
             assert self.server_version < [6, 1]
@@ -124,7 +148,12 @@ class TestMapValuesIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo1", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo1",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -137,7 +166,12 @@ class TestMapValuesIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "string_map1", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            "demo",
+            "string_map1",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -154,15 +188,29 @@ class TestMapValuesIndex(object):
             ("test", "demo", "string_map", None),
             ("test", "demo", "string_map", 1),
         ),
-        ids=("ns is None", "ns is int", "set is int", "bin is None", "index name is none", "index name is int"),
+        ids=(
+            "ns is None",
+            "ns is int",
+            "set is int",
+            "bin is None",
+            "index name is none",
+            "index name is int",
+        ),
     )
-    def test_mapvaluesindex_with_invalid_params(self, test_ns, test_set, test_bin, test_idx_name):
+    def test_mapvaluesindex_with_invalid_params(
+        self, test_ns, test_set, test_bin, test_idx_name
+    ):
 
         policy = {}
 
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.index_map_values_create(
-                test_ns, test_set, test_bin, aerospike.INDEX_STRING, test_idx_name, policy
+                test_ns,
+                test_set,
+                test_bin,
+                aerospike.INDEX_STRING,
+                test_idx_name,
+                policy,
             )
 
         err_code = err_info.value.code
@@ -179,7 +227,9 @@ class TestMapValuesIndex(object):
             )
             try:
                 self.as_connection.index_remove("test", "test_string_map_index")
-                ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
+                ensure_dropped_index(
+                    self.as_connection, "test", "test_string_map_index"
+                )
             except Exception:
                 pass
 
@@ -193,13 +243,23 @@ class TestMapValuesIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
         assert retobj == AerospikeStatus.AEROSPIKE_OK
 
         try:
             retobj = self.as_connection.index_map_values_create(
-                "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+                "test",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_map_index",
+                policy,
             )
         except e.IndexFoundError:
             assert self.server_version < [6, 1]
@@ -215,13 +275,23 @@ class TestMapValuesIndex(object):
         policy = {}
 
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
         assert retobj == AerospikeStatus.AEROSPIKE_OK
 
         with pytest.raises(e.IndexFoundError):
             retobj = self.as_connection.index_map_values_create(
-                "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_string_map_index", policy
+                "test",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_NUMERIC,
+                "test_string_map_index",
+                policy,
             )
             self.as_connection.index_remove("test", "test_string_map_index", policy)
             ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
@@ -236,13 +306,23 @@ class TestMapValuesIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         try:
             retobj = self.as_connection.index_map_values_create(
-                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index1", policy
+                "test",
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index1",
+                policy,
             )
             self.as_connection.index_remove("test", "test_string_map_index1", policy)
             ensure_dropped_index(self.as_connection, "test", "test_string_map_index1")
@@ -260,7 +340,12 @@ class TestMapValuesIndex(object):
         """
         policy = {"timeout": 1000}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -273,7 +358,12 @@ class TestMapValuesIndex(object):
         """
         policy = {"timeout": 1000}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -304,7 +394,12 @@ qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "uni_name_index", policy
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_STRING,
+            "uni_name_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -317,7 +412,12 @@ qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         retobj = self.as_connection.index_map_values_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "uni_age_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "uni_age_index",
+            policy,
         )
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -335,7 +435,12 @@ qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
 
         with pytest.raises(e.ClusterError) as err_info:
             client1.index_map_values_create(
-                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+                "test",
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                policy,
             )
 
         err_code = err_info.value.code

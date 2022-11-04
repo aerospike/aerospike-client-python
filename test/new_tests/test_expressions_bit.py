@@ -45,7 +45,9 @@ GEO_POLY = aerospike.GeoJSON(
 )
 
 
-def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
+def verify_multiple_expression_result(
+    client, test_ns, test_set, expr, op_bin, expected
+):
     keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
 
     # batch get
@@ -84,7 +86,13 @@ class TestExpressions(TestBaseClass):
         "policy, bytes_size, flags, bin, expected",
         [
             (None, 10, None, "1bits_bin", bytearray([1])),
-            ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY}, 10, None, "1bits_bin", bytearray([1])),
+            (
+                {"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY},
+                10,
+                None,
+                "1bits_bin",
+                bytearray([1]),
+            ),
             (None, 10, aerospike.BIT_RESIZE_FROM_FRONT, "1bits_bin", bytearray([0])),
         ],
     )
@@ -96,14 +104,25 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitGet(8, 8, BitResize(policy, bytes_size, flags, bin)), expected)
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize(
         "policy, byte_offset, byte_size, bin, expected",
         [
             (None, 0, 1, "1bits_bin", bytearray([0] * 1)),
-            ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY}, 0, 1, "1bits_bin", bytearray([0] * 1)),
+            (
+                {"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY},
+                0,
+                1,
+                "1bits_bin",
+                bytearray([0] * 1),
+            ),
         ],
     )
     def test_bit_remove_ops_pos(self, policy, byte_offset, byte_size, bin, expected):
@@ -114,73 +133,130 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitRemove(policy, byte_offset, byte_size, bin), bytearray([1] * 7))
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_BitInsert_pos(self, policy):
         """
         Test BitInsert expression.
         """
 
-        expr = Eq(BitInsert(policy, 1, bytearray([3]), "1bits_bin"), bytearray([1, 3, 1, 1, 1, 1, 1, 1, 1]))
-
-        verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+        expr = Eq(
+            BitInsert(policy, 1, bytearray([3]), "1bits_bin"),
+            bytearray([1, 3, 1, 1, 1, 1, 1, 1, 1]),
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+        verify_multiple_expression_result(
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
+        )
+
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_bit_set_pos(self, policy):
         """
         Test BitSet expression.
         """
 
         expr = Eq(
-            BitSet(policy, 7, 1, bytearray([255]), BitSet(policy, 0, 8 * 8, bytearray([0] * 8), "1bits_bin")),
+            BitSet(
+                policy,
+                7,
+                1,
+                bytearray([255]),
+                BitSet(policy, 0, 8 * 8, bytearray([0] * 8), "1bits_bin"),
+            ),
             bytearray([1] + [0] * 7),
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_BitOr_pos(self, policy):
         """
         Test BitOr expression.
         """
 
-        expr = Eq(BitOr(policy, 0, 8, bytearray([8]), "1bits_bin"), bytearray([9] + [1] * 7))
-
-        verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+        expr = Eq(
+            BitOr(policy, 0, 8, bytearray([8]), "1bits_bin"), bytearray([9] + [1] * 7)
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+        verify_multiple_expression_result(
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
+        )
+
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_BitXor_pos(self, policy):
         """
         Test BitXor expression.
         """
 
-        expr = Eq(BitXor(policy, 0, 8, bytearray([1]), "1bits_bin"), bytearray([0] + [1] * 7))
-
-        verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+        expr = Eq(
+            BitXor(policy, 0, 8, bytearray([1]), "1bits_bin"), bytearray([0] + [1] * 7)
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+        verify_multiple_expression_result(
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
+        )
+
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_bit_and_pos(self, policy):
         """
         Test BitAnd expression.
         """
 
-        expr = Eq(BitAnd(policy, 0, 8, bytearray([0]), "1bits_bin"), bytearray([0] + [1] * 7))
-
-        verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+        expr = Eq(
+            BitAnd(policy, 0, 8, bytearray([0]), "1bits_bin"), bytearray([0] + [1] * 7)
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+        verify_multiple_expression_result(
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
+        )
+
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_bit_not_pos(self, policy):
         """
         Test BitNot expression.
@@ -189,10 +265,17 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitNot(policy, 0, 64, "1bits_bin"), bytearray([254] * 8))
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_bit_left_shift_pos(self, policy):
         """
         Test BitLeftShift expression.
@@ -201,25 +284,48 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitLeftShift(policy, 0, 8, 3, "1bits_bin"), bytearray([8] + [1] * 7))
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_bit_right_shift_pos(self, policy):
         """
         Test BitRightShift expression.
         """
 
-        expr = Eq(BitRightShift(policy, 0, 8, 1, BitLeftShift(None, 0, 8, 3, "1bits_bin")), bytearray([4] + [1] * 7))
+        expr = Eq(
+            BitRightShift(policy, 0, 8, 1, BitLeftShift(None, 0, 8, 3, "1bits_bin")),
+            bytearray([4] + [1] * 7),
+        )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize(
         "policy, bit_offset, bit_size, value, action, bin, expected",
         [
-            (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, "1bits_bin", bytearray([1] + [2] + [1] * 6)),
+            (
+                None,
+                8,
+                8,
+                1,
+                aerospike.BIT_OVERFLOW_FAIL,
+                "1bits_bin",
+                bytearray([1] + [2] + [1] * 6),
+            ),
             (
                 {"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY},
                 8,
@@ -231,7 +337,9 @@ class TestExpressions(TestBaseClass):
             ),
         ],
     )
-    def test_bit_add_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
+    def test_bit_add_pos(
+        self, policy, bit_offset, bit_size, value, action, bin, expected
+    ):
         """
         Test BitAdd expression.
         """
@@ -239,13 +347,26 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitAdd(policy, bit_offset, bit_size, value, action, bin), expected)
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize(
         "policy, bit_offset, bit_size, value, action, bin, expected",
         [
-            (None, 8, 8, 1, aerospike.BIT_OVERFLOW_FAIL, "1bits_bin", bytearray([1] + [0] + [1] * 6)),
+            (
+                None,
+                8,
+                8,
+                1,
+                aerospike.BIT_OVERFLOW_FAIL,
+                "1bits_bin",
+                bytearray([1] + [0] + [1] * 6),
+            ),
             (
                 {"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY},
                 8,
@@ -257,18 +378,29 @@ class TestExpressions(TestBaseClass):
             ),
         ],
     )
-    def test_bit_subtract_pos(self, policy, bit_offset, bit_size, value, action, bin, expected):
+    def test_bit_subtract_pos(
+        self, policy, bit_offset, bit_size, value, action, bin, expected
+    ):
         """
         Test BitSubtract expression.
         """
 
-        expr = Eq(BitSubtract(policy, bit_offset, bit_size, value, action, bin), expected)
-
-        verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+        expr = Eq(
+            BitSubtract(policy, bit_offset, bit_size, value, action, bin), expected
         )
 
-    @pytest.mark.parametrize("policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})])
+        verify_multiple_expression_result(
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
+        )
+
+    @pytest.mark.parametrize(
+        "policy", [(None), ({"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY})]
+    )
     def test_bit_set_int_pos(self, policy):
         """
         Test BitSetInt expression.
@@ -277,10 +409,17 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitSetInt(policy, 7, 1, 0, "1bits_bin"), bytearray([0] + [1] * 7))
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), "1bits_bin", _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            "1bits_bin",
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [(8, 8, "1bits_bin", bytearray([1]))])
+    @pytest.mark.parametrize(
+        "bit_offset, bit_size, bin, expected", [(8, 8, "1bits_bin", bytearray([1]))]
+    )
     def test_bit_get_pos(self, bit_offset, bit_size, bin, expected):
         """
         Test BitGet expression.
@@ -289,10 +428,17 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitGet(bit_offset, bit_size, bin), expected)
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [(16, 8 * 3, "1bits_bin", 3)])
+    @pytest.mark.parametrize(
+        "bit_offset, bit_size, bin, expected", [(16, 8 * 3, "1bits_bin", 3)]
+    )
     def test_bit_count_pos(self, bit_offset, bit_size, bin, expected):
         """
         Test BitCount expression.
@@ -301,10 +447,17 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitCount(bit_offset, bit_size, bin), expected)
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [(0, 8, True, "1bits_bin", 7)])
+    @pytest.mark.parametrize(
+        "bit_offset, bit_size, value, bin, expected", [(0, 8, True, "1bits_bin", 7)]
+    )
     def test_bit_left_scan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
         Test BitLeftScan expression.
@@ -313,10 +466,17 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitLeftScan(bit_offset, bit_size, value, bin), expected)
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("bit_offset, bit_size, value, bin, expected", [(0, 8, True, "1bits_bin", 7)])
+    @pytest.mark.parametrize(
+        "bit_offset, bit_size, value, bin, expected", [(0, 8, True, "1bits_bin", 7)]
+    )
     def test_bit_right_scan_pos(self, bit_offset, bit_size, value, bin, expected):
         """
         Test BitRightScan expression.
@@ -325,10 +485,17 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitRightScan(bit_offset, bit_size, value, bin), expected)
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
-    @pytest.mark.parametrize("bit_offset, bit_size, bin, expected", [(0, 8, "1bits_bin", 1)])
+    @pytest.mark.parametrize(
+        "bit_offset, bit_size, bin, expected", [(0, 8, "1bits_bin", 1)]
+    )
     def test_bit_get_int_pos(self, bit_offset, bit_size, bin, expected):
         """
         Test BitGetInt expression.
@@ -337,5 +504,10 @@ class TestExpressions(TestBaseClass):
         expr = Eq(BitGetInt(bit_offset, bit_size, True, bin), expected)
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )

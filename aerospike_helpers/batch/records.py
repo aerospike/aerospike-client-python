@@ -72,7 +72,9 @@ class Write(BatchRecord):
                 flags.
     """
 
-    def __init__(self, key: tuple, ops: "TypeOps", policy: "TypeBatchPolicyWrite" = None) -> None:
+    def __init__(
+        self, key: tuple, ops: "TypeOps", policy: "TypeBatchPolicyWrite" = None
+    ) -> None:
         """
         Example::
 
@@ -173,7 +175,12 @@ class Apply(BatchRecord):
     """
 
     def __init__(
-        self, key: tuple, module: str, function: str, args: "TypeUDFArgs", policy: "TypeBatchPolicyApply" = None
+        self,
+        key: tuple,
+        module: str,
+        function: str,
+        args: "TypeUDFArgs",
+        policy: "TypeBatchPolicyApply" = None,
     ) -> None:
         """
         Example::

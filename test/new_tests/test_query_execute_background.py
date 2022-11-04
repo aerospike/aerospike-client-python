@@ -31,7 +31,9 @@ def wait_for_job_completion(as_connection, job_id):
 
 def add_indexes_to_client(client):
     try:
-        client.index_integer_create(TEST_NS, TEST_SET, "number", "test_background_number_idx")
+        client.index_integer_create(
+            TEST_NS, TEST_SET, "number", "test_background_number_idx"
+        )
     except exception.IndexFoundError:
         pass
 
@@ -114,7 +116,9 @@ class TestQueryApply(object):
         time.sleep(5)
         # wait_for_job_completion(self.as_connection, job_id)
 
-        validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
+        validate_records(
+            self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike"
+        )
 
     def test_background_execute_exp_everywhere(self, clean_test_background):
         """
@@ -122,9 +126,13 @@ class TestQueryApply(object):
         """
         from .test_base_class import TestBaseClass
 
-        if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
+        if TestBaseClass.major_ver >= 6 or (
+            TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7
+        ):
             # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)  # noqa: E501
-            pytest.skip("It deprecated and it only applies to < 5.7 earlier and enterprise edition")
+            pytest.skip(
+                "It deprecated and it only applies to < 5.7 earlier and enterprise edition"
+            )
 
         test_bin = "tpred"
         keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
@@ -185,9 +193,13 @@ class TestQueryApply(object):
         """
         from .test_base_class import TestBaseClass
 
-        if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
+        if TestBaseClass.major_ver >= 6 or (
+            TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7
+        ):
             # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)  # noqa: E501
-            pytest.skip("It deprecated and it only applies to < 5.7 earlier and enterprise edition")
+            pytest.skip(
+                "It deprecated and it only applies to < 5.7 earlier and enterprise edition"
+            )
 
         test_bin = "tops_preds"
         keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
@@ -229,7 +241,9 @@ class TestQueryApply(object):
         # Give time for the query to finish
         time.sleep(5)
 
-        validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
+        validate_records(
+            self.as_connection, keys, lambda rec: rec[test_bin] == "new_val"
+        )
 
     def test_background_execute_with_ops_and_preds(self, clean_test_background):
         """
@@ -264,7 +278,9 @@ class TestQueryApply(object):
         query.execute_background()
         time.sleep(3)
 
-        validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
+        validate_records(
+            self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike"
+        )
 
     def test_background_execute_sindex_predicate(self, clean_test_background):
         """
@@ -293,9 +309,13 @@ class TestQueryApply(object):
         """
         from .test_base_class import TestBaseClass
 
-        if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
+        if TestBaseClass.major_ver >= 6 or (
+            TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7
+        ):
             # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)  # noqa: E501
-            pytest.skip("It deprecated and it only applies to < 5.7 earlier and enterprise edition")
+            pytest.skip(
+                "It deprecated and it only applies to < 5.7 earlier and enterprise edition"
+            )
 
         test_bin = "t4"
         keys = [(TEST_NS, TEST_SET, i) for i in range(500)]
@@ -313,7 +333,9 @@ class TestQueryApply(object):
         # Records with number > 10 should not have had the UDF applied
         validate_records(self.as_connection, keys[10:], lambda rec: test_bin not in rec)
         #  Records with number < 10 should have had the udf applied
-        validate_records(self.as_connection, keys[:10], lambda rec: rec[test_bin] == "aerospike")
+        validate_records(
+            self.as_connection, keys[:10], lambda rec: rec[test_bin] == "aerospike"
+        )
 
     def test_background_execute_with_policy(self, clean_test_background):
         """

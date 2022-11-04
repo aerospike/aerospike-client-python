@@ -46,7 +46,11 @@ class TestListTrim(object):
         # assert list == [4, 5, 6, [45, 50, 80]]
 
         (key, _, bins) = self.as_connection.get(key)
-        assert bins == {"city": ["Pune", "Dehli", "Mumbai"], "contact_no": [4, 5, 6, [45, 50, 80]], "name": "name1"}
+        assert bins == {
+            "city": ["Pune", "Dehli", "Mumbai"],
+            "contact_no": [4, 5, 6, [45, 50, 80]],
+            "name": "name1",
+        }
 
     def test_pos_list_trim_with_correct_policy(self):
         """
@@ -64,7 +68,11 @@ class TestListTrim(object):
         # assert list == [2, 3, 4]
 
         (key, _, bins) = self.as_connection.get(key)
-        assert bins == {"city": ["Pune", "Dehli", "Mumbai"], "contact_no": [2, 3, 4], "name": "name2"}
+        assert bins == {
+            "city": ["Pune", "Dehli", "Mumbai"],
+            "contact_no": [2, 3, 4],
+            "name": "name2",
+        }
 
     # Negative Tests
     def test_neg_list_trim_with_no_parameters(self):
@@ -98,7 +106,11 @@ class TestListTrim(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = (
+            "test",
+            "demo",
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com",
+        )
         with pytest.raises(e.RecordNotFound):
             self.as_connection.list_trim(key, "abc", 0, 1)
 
@@ -111,7 +123,9 @@ class TestListTrim(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
         try:
             self.as_connection.list_trim(key, bin, 0, 1)
 
@@ -194,4 +208,6 @@ class TestListTrim(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_trim(key, "contact_no", "Fifth", 2)
-        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(
+            typeError.value
+        )

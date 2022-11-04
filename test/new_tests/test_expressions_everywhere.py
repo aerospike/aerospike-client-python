@@ -12,7 +12,9 @@ from aerospike_helpers.operations import operations
 
 import aerospike
 
-geo_circle = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-132.0, 37.5], 1000]})
+geo_circle = aerospike.GeoJSON(
+    {"type": "AeroCircle", "coordinates": [[-132.0, 37.5], 1000]}
+)
 
 geo_point = aerospike.GeoJSON({"type": "Point", "coordinates": [-132.0, 37.5]})
 
@@ -39,7 +41,12 @@ class TestPredEveryWhere(object):
         self.test_data.append({"string_list": ["s1", "s2", "s3", "s4"]})
         self.test_data.append({"map_bin": {"k1": 1, "k2": 2, "k3": 3, "k4": 4}})
 
-        georec = {"id": 1, "point": geo_point, "region": geo_circle, "geolist": [geo_point]}
+        georec = {
+            "id": 1,
+            "point": geo_point,
+            "region": geo_circle,
+            "geolist": [geo_point],
+        }
 
         self.test_data.append(georec)
         self.test_data_bin = "test_data"
@@ -89,10 +96,15 @@ class TestPredEveryWhere(object):
             ),
             (  # test and
                 [
-                    list_operations.list_remove_by_index_range("charges", 0, 3, aerospike.LIST_RETURN_COUNT),
+                    list_operations.list_remove_by_index_range(
+                        "charges", 0, 3, aerospike.LIST_RETURN_COUNT
+                    ),
                     operations.increment("acct_balance", -23),
                 ],
-                exp.And(exp.GE(exp.IntBin("acct_balance"), 10), exp.LE(exp.IntBin("acct_balance"), 50)),
+                exp.And(
+                    exp.GE(exp.IntBin("acct_balance"), 10),
+                    exp.LE(exp.IntBin("acct_balance"), 50),
+                ),
                 {
                     "account_id": 4,
                     "user_name": "user4",
@@ -105,7 +117,10 @@ class TestPredEveryWhere(object):
             ),
             (  # test or
                 [map_operations.map_put("meta", "lupdated", "now")],
-                exp.Or(exp.Eq(exp.StrBin("user_name"), "user2"), exp.GE(exp.IntBin("acct_balance"), 50)),
+                exp.Or(
+                    exp.Eq(exp.StrBin("user_name"), "user2"),
+                    exp.GE(exp.IntBin("acct_balance"), 50),
+                ),
                 {
                     "account_id": 2,
                     "user_name": "user2",
@@ -119,14 +134,26 @@ class TestPredEveryWhere(object):
             (  # test integer greater
                 [map_operations.map_clear("meta")],
                 exp.GT(exp.IntBin("account_id"), 2),
-                {"account_id": 3, "user_name": "user3", "acct_balance": 30, "charges": [8, 13], "meta": {}},
+                {
+                    "account_id": 3,
+                    "user_name": "user3",
+                    "acct_balance": 30,
+                    "charges": [8, 13],
+                    "meta": {},
+                },
                 {"meta": None},
                 3,
             ),
             (  # test integer greatereq
                 [map_operations.map_clear("meta")],
                 exp.GE(exp.IntBin("account_id"), 2),
-                {"account_id": 3, "user_name": "user3", "acct_balance": 30, "charges": [8, 13], "meta": {}},
+                {
+                    "account_id": 3,
+                    "user_name": "user3",
+                    "acct_balance": 30,
+                    "charges": [8, 13],
+                    "meta": {},
+                },
                 {"meta": None},
                 3,
             ),
@@ -197,7 +224,12 @@ class TestPredEveryWhere(object):
             ),
             (  # test list or int
                 [list_operations.list_append("charges", 2)],
-                exp.Eq(exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, 14, "charges"), 1),
+                exp.Eq(
+                    exp.ListGetByValue(
+                        None, aerospike.LIST_RETURN_COUNT, 14, "charges"
+                    ),
+                    1,
+                ),
                 {
                     "account_id": 4,
                     "user_name": "user4",
@@ -211,7 +243,14 @@ class TestPredEveryWhere(object):
             (  # test list and int
                 [list_operations.list_append("charges", 2)],
                 exp.LT(
-                    exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "charges"), 120
+                    exp.ListGetByRank(
+                        None,
+                        aerospike.LIST_RETURN_VALUE,
+                        exp.ResultType.INTEGER,
+                        -1,
+                        "charges",
+                    ),
+                    120,
                 ),
                 {
                     "account_id": 4,
@@ -225,7 +264,12 @@ class TestPredEveryWhere(object):
             ),
             (  # test list or str
                 [list_operations.list_append("string_list", "s5")],
-                exp.Eq(exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, "s2", "string_list"), 1),
+                exp.Eq(
+                    exp.ListGetByValue(
+                        None, aerospike.LIST_RETURN_COUNT, "s2", "string_list"
+                    ),
+                    1,
+                ),
                 {"string_list": ["s1", "s2", "s3", "s4", "s5"]},
                 {"string_list": 5},
                 5,
@@ -254,41 +298,71 @@ class TestPredEveryWhere(object):
             # ),
             (  # test map_key_iterate_or
                 [map_operations.map_put("map_bin", "k5", 5)],
-                exp.Eq(exp.MapGetByKey(None, aerospike.MAP_RETURN_COUNT, exp.ResultType.INTEGER, "k3", "map_bin"), 1),
+                exp.Eq(
+                    exp.MapGetByKey(
+                        None,
+                        aerospike.MAP_RETURN_COUNT,
+                        exp.ResultType.INTEGER,
+                        "k3",
+                        "map_bin",
+                    ),
+                    1,
+                ),
                 {"map_bin": {"k1": 1, "k2": 2, "k3": 3, "k4": 4, "k5": 5}},
                 {"map_bin": 5},
                 6,
             ),
             (  # test map_key_iterate_and
                 [map_operations.map_put("map_bin", "k5", 5)],
-                exp.Eq(exp.MapGetByKey(None, aerospike.MAP_RETURN_COUNT, exp.ResultType.INTEGER, "k7", "map_bin"), 0),
+                exp.Eq(
+                    exp.MapGetByKey(
+                        None,
+                        aerospike.MAP_RETURN_COUNT,
+                        exp.ResultType.INTEGER,
+                        "k7",
+                        "map_bin",
+                    ),
+                    0,
+                ),
                 {"map_bin": {"k1": 1, "k2": 2, "k3": 3, "k4": 4, "k5": 5}},
                 {"map_bin": 5},
                 6,
             ),
             (  # test mapval_iterate_and
                 [map_operations.map_put("map_bin", "k5", 5)],
-                exp.Eq(exp.MapGetByValue(None, aerospike.MAP_RETURN_COUNT, 7, "map_bin"), 0),
+                exp.Eq(
+                    exp.MapGetByValue(None, aerospike.MAP_RETURN_COUNT, 7, "map_bin"), 0
+                ),
                 {"map_bin": {"k1": 1, "k2": 2, "k3": 3, "k4": 4, "k5": 5}},
                 {"map_bin": 5},
                 6,
             ),
             (  # test mapval_iterate_or
-                [map_operations.map_get_by_key("map_bin", "k1", aerospike.MAP_RETURN_VALUE)],
-                exp.Eq(exp.MapGetByValue(None, aerospike.MAP_RETURN_COUNT, 3, "map_bin"), 1),
+                [
+                    map_operations.map_get_by_key(
+                        "map_bin", "k1", aerospike.MAP_RETURN_VALUE
+                    )
+                ],
+                exp.Eq(
+                    exp.MapGetByValue(None, aerospike.MAP_RETURN_COUNT, 3, "map_bin"), 1
+                ),
                 {"map_bin": {"k1": 1, "k2": 2, "k3": 3, "k4": 4}},
                 {"map_bin": 1},
                 6,
             ),
         ],
     )
-    def test_expressions_key_operate(self, ops, expressions, expected_bins, expected_res, key_num):
+    def test_expressions_key_operate(
+        self, ops, expressions, expected_bins, expected_res, key_num
+    ):
         """
         Invoke the C client aerospike_key_operate with expressions.
         """
         key = ("test", "pred_evry", key_num)
 
-        _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expressions.compile()})
+        _, _, res = self.as_connection.operate(
+            key, ops, policy={"expressions": expressions.compile()}
+        )
         assert res == expected_res
 
         _, _, bins = self.as_connection.get(key)
@@ -300,22 +374,37 @@ class TestPredEveryWhere(object):
             (  # test mapval_iterate_or
                 [
                     map_operations.map_put_items("map_bin", {"k5": 5, "k6": 6}),
-                    map_operations.map_get_by_key("map_bin", "k1", aerospike.MAP_RETURN_VALUE),
+                    map_operations.map_get_by_key(
+                        "map_bin", "k1", aerospike.MAP_RETURN_VALUE
+                    ),
                 ],
-                exp.LT(exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0, "map_bin"), 3),
+                exp.LT(
+                    exp.MapGetByRank(
+                        None,
+                        aerospike.MAP_RETURN_VALUE,
+                        exp.ResultType.INTEGER,
+                        0,
+                        "map_bin",
+                    ),
+                    3,
+                ),
                 {"map_bin": {"k1": 1, "k2": 2, "k3": 3, "k4": 4, "k5": 5, "k6": 6}},
                 [("map_bin", 6), ("map_bin", 1)],
                 6,
             )
         ],
     )
-    def test_expressions_key_operate_ordered(self, ops, expressions, expected_bins, expected_res, key_num):
+    def test_expressions_key_operate_ordered(
+        self, ops, expressions, expected_bins, expected_res, key_num
+    ):
         """
         Invoke the C client aerospike_key_operate with expressions using operate_ordered.
         """
         key = ("test", "pred_evry", key_num)
 
-        _, _, res = self.as_connection.operate_ordered(key, ops, policy={"expressions": expressions.compile()})
+        _, _, res = self.as_connection.operate_ordered(
+            key, ops, policy={"expressions": expressions.compile()}
+        )
         assert res == expected_res
 
         _, _, bins = self.as_connection.get(key)
@@ -325,23 +414,40 @@ class TestPredEveryWhere(object):
         "ops, expressions, expected, key_num",
         [
             (  # test mapval_iterate_or
-                [map_operations.map_get_by_key("map_bin", "k1", aerospike.MAP_RETURN_VALUE)],
+                [
+                    map_operations.map_get_by_key(
+                        "map_bin", "k1", aerospike.MAP_RETURN_VALUE
+                    )
+                ],
                 exp.Not(
-                    exp.Eq(exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0, "map_bin"), 1)
+                    exp.Eq(
+                        exp.MapGetByRank(
+                            None,
+                            aerospike.MAP_RETURN_VALUE,
+                            exp.ResultType.INTEGER,
+                            0,
+                            "map_bin",
+                        ),
+                        1,
+                    )
                 ),
                 e.FilteredOut,
                 6,
             )
         ],
     )
-    def test_expressions_key_operate_ordered_negative(self, ops, expressions, expected, key_num):
+    def test_expressions_key_operate_ordered_negative(
+        self, ops, expressions, expected, key_num
+    ):
         """
         Invoke the C client aerospike_key_operate with expressions using operate_ordered with expected failures.
         """
         key = ("test", "pred_evry", key_num)
 
         with pytest.raises(expected):
-            _, _, res = self.as_connection.operate_ordered(key, ops, policy={"expressions": expressions.compile()})
+            _, _, res = self.as_connection.operate_ordered(
+                key, ops, policy={"expressions": expressions.compile()}
+            )
 
     @pytest.mark.parametrize(
         "ops, expressions, key_num, bin",
@@ -366,7 +472,9 @@ class TestPredEveryWhere(object):
         """
         key = ("test", "pred_evry", key_num)
 
-        _, _, _ = self.as_connection.operate(key, ops, policy={"expressions": expressions.compile()})
+        _, _, _ = self.as_connection.operate(
+            key, ops, policy={"expressions": expressions.compile()}
+        )
 
         _, _, bins = self.as_connection.get(key)
         assert bins["id"] == 2
@@ -396,7 +504,9 @@ class TestPredEveryWhere(object):
         for i in range(10):
             try:
                 key = "test", "pred_lut", i
-                _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expr.compile()})
+                _, _, res = self.as_connection.operate(
+                    key, ops, policy={"expressions": expr.compile()}
+                )
                 results.append(res)
             except Exception:
                 pass
@@ -428,7 +538,8 @@ class TestPredEveryWhere(object):
         results = []
 
         expr = exp.And(
-            exp.GT(exp.VoidTime(), void_time_range_start), exp.LT(exp.VoidTime(), void_time_range_end)
+            exp.GT(exp.VoidTime(), void_time_range_start),
+            exp.LT(exp.VoidTime(), void_time_range_end),
         ).compile()
 
         ops = [operations.read("time")]
@@ -436,7 +547,9 @@ class TestPredEveryWhere(object):
         for i in range(10):
             try:
                 key = "test", "pred_ttl", i
-                _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expr})
+                _, _, res = self.as_connection.operate(
+                    key, ops, policy={"expressions": expr}
+                )
                 results.append(res)
             except Exception:
                 pass
@@ -467,7 +580,9 @@ class TestPredEveryWhere(object):
         for i in range(100):
             try:
                 key = "test", "demo", i
-                _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expr})
+                _, _, res = self.as_connection.operate(
+                    key, ops, policy={"expressions": expr}
+                )
                 results.append(res)
             except Exception:
                 pass
@@ -486,22 +601,35 @@ class TestPredEveryWhere(object):
             ),
             (  # incorrect bin type
                 [
-                    list_operations.list_remove_by_index_range("charges", 0, 3, aerospike.LIST_RETURN_COUNT),
+                    list_operations.list_remove_by_index_range(
+                        "charges", 0, 3, aerospike.LIST_RETURN_COUNT
+                    ),
                     operations.increment("acct_balance", -23),
                 ],
-                exp.And(exp.GE(exp.StrBin("acct_balance"), 10), exp.LE(exp.IntBin("acct_balance"), 50)).compile(),
+                exp.And(
+                    exp.GE(exp.StrBin("acct_balance"), 10),
+                    exp.LE(exp.IntBin("acct_balance"), 50),
+                ).compile(),
                 e.InvalidRequest,
                 4,
             ),
             (  # filtered out
                 [map_operations.map_put("meta", "lupdated", "now")],
                 exp.Not(
-                    exp.Or(exp.Eq(exp.StrBin("user_name"), "user2"), exp.GE(exp.IntBin("acct_balance"), 50))
+                    exp.Or(
+                        exp.Eq(exp.StrBin("user_name"), "user2"),
+                        exp.GE(exp.IntBin("acct_balance"), 50),
+                    )
                 ).compile(),
                 e.FilteredOut,
                 2,
             ),
-            ([map_operations.map_put("meta", "lupdated", "now")], [], e.ParamError, 2),  # empty expressions list
+            (
+                [map_operations.map_put("meta", "lupdated", "now")],
+                [],
+                e.ParamError,
+                2,
+            ),  # empty expressions list
             (  # expressions not in list
                 [map_operations.map_put("meta", "lupdated", "now")],
                 ("bad expressions",),
@@ -510,7 +638,9 @@ class TestPredEveryWhere(object):
             ),
         ],
     )
-    def test_expressions_key_operate_negative(self, ops, expressions, expected, key_num):
+    def test_expressions_key_operate_negative(
+        self, ops, expressions, expected, key_num
+    ):
         """
         Invoke the C client aerospike_key_operate with expressions. Expecting failures.
         """
@@ -525,18 +655,25 @@ class TestPredEveryWhere(object):
             (exp.Eq(exp.IntBin("account_id"), 2), 1, "account_id", 2),
             (exp.Eq(exp.StrBin("user_name"), "user2"), 1, "account_id", 2),
             (
-                exp.Or(exp.Eq(exp.StrBin("user_name"), "user2"), exp.GE(exp.IntBin("acct_balance"), 30)),
+                exp.Or(
+                    exp.Eq(exp.StrBin("user_name"), "user2"),
+                    exp.GE(exp.IntBin("acct_balance"), 30),
+                ),
                 2,
                 "account_id",
                 3,
             ),
         ],
     )
-    def test_pos_get_many_with_expressions(self, expressions, rec_place, rec_bin, expected):
+    def test_pos_get_many_with_expressions(
+        self, expressions, rec_place, rec_bin, expected
+    ):
         """
         Proper call to get_many with expressions in policy
         """
-        records = self.as_connection.get_many(self.keys, {"expressions": expressions.compile()})
+        records = self.as_connection.get_many(
+            self.keys, {"expressions": expressions.compile()}
+        )
 
         # assert isinstance(records, list)
         # assert records[2][2]['age'] == 2
@@ -549,18 +686,33 @@ class TestPredEveryWhere(object):
         expr = exp.Or(
             exp.Eq(exp.IntBin("account_id"), 4),
             exp.Eq(exp.StrBin("user_name"), "user3"),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "charges"), 12),
+            exp.LT(
+                exp.ListGetByRank(
+                    None,
+                    aerospike.LIST_RETURN_VALUE,
+                    exp.ResultType.INTEGER,
+                    -1,
+                    "charges",
+                ),
+                12,
+            ),
         )
 
         matched_recs = []
-        records = self.as_connection.get_many(self.keys, {"expressions": expr.compile()})
+        records = self.as_connection.get_many(
+            self.keys, {"expressions": expr.compile()}
+        )
         for rec in records:
             if rec[2] is not None:
                 matched_recs.append(rec[2])
 
         assert len(matched_recs) == 3
         for rec in matched_recs:
-            assert rec["account_id"] == 1 or rec["account_id"] == 3 or rec["account_id"] == 4
+            assert (
+                rec["account_id"] == 1
+                or rec["account_id"] == 3
+                or rec["account_id"] == 4
+            )
 
     def test_pos_select_many_with_large_expressions(self):
         """
@@ -569,18 +721,33 @@ class TestPredEveryWhere(object):
         expr = exp.Or(
             exp.Eq(exp.IntBin("account_id"), 4),
             exp.Eq(exp.StrBin("user_name"), "user3"),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "charges"), 12),
+            exp.LT(
+                exp.ListGetByRank(
+                    None,
+                    aerospike.LIST_RETURN_VALUE,
+                    exp.ResultType.INTEGER,
+                    -1,
+                    "charges",
+                ),
+                12,
+            ),
         )
 
         matched_recs = []
-        records = self.as_connection.select_many(self.keys, ["account_id"], {"expressions": expr.compile()})
+        records = self.as_connection.select_many(
+            self.keys, ["account_id"], {"expressions": expr.compile()}
+        )
         for rec in records:
             if rec[2] is not None:
                 matched_recs.append(rec[2])
 
         assert len(matched_recs) == 3
         for rec in matched_recs:
-            assert rec["account_id"] == 1 or rec["account_id"] == 3 or rec["account_id"] == 4
+            assert (
+                rec["account_id"] == 1
+                or rec["account_id"] == 3
+                or rec["account_id"] == 4
+            )
 
     def test_pos_remove_with_expressions(self):
         """
@@ -598,14 +765,20 @@ class TestPredEveryWhere(object):
         """
         expr = exp.Eq(exp.IntBin("account_id"), 3)
         with pytest.raises(e.FilteredOut):
-            self.as_connection.remove(self.keys[0], policy={"expressions": expr.compile()})
+            self.as_connection.remove(
+                self.keys[0], policy={"expressions": expr.compile()}
+            )
 
     def test_remove_bin_with_expressions(self):
         """
         Call remove_bin with expressions in policy.
         """
         expr = exp.Eq(exp.IntBin("account_id"), 1)
-        self.as_connection.remove_bin(self.keys[0], ["account_id", "user_name"], policy={"expressions": expr.compile()})
+        self.as_connection.remove_bin(
+            self.keys[0],
+            ["account_id", "user_name"],
+            policy={"expressions": expr.compile()},
+        )
 
         rec = self.as_connection.get(self.keys[0])
         assert rec[2].get("account_id") is None and rec[2].get("user_name") is None
@@ -617,7 +790,9 @@ class TestPredEveryWhere(object):
         expr = exp.Eq(exp.IntBin("account_id"), 4)
         with pytest.raises(e.FilteredOut):
             self.as_connection.remove_bin(
-                self.keys[0], ["account_id", "user_name"], policy={"expressions": expr.compile()}
+                self.keys[0],
+                ["account_id", "user_name"],
+                policy={"expressions": expr.compile()},
             )
 
     def test_put_with_expressions(self):
@@ -625,7 +800,9 @@ class TestPredEveryWhere(object):
         Call put with expressions in policy.
         """
         expr = exp.Eq(exp.IntBin("account_id"), 1)
-        self.as_connection.put(self.keys[0], {"newkey": "newval"}, policy={"expressions": expr.compile()})
+        self.as_connection.put(
+            self.keys[0], {"newkey": "newval"}, policy={"expressions": expr.compile()}
+        )
 
         rec = self.as_connection.get(self.keys[0])
         assert rec[2]["newkey"] == "newval"
@@ -636,7 +813,9 @@ class TestPredEveryWhere(object):
         """
         expr = exp.Eq(exp.IntBin("account_id"), 1)
         key = ("test", "demo", 10)
-        self.as_connection.put(key, {"newkey": "newval"}, policy={"expressions": expr.compile()})
+        self.as_connection.put(
+            key, {"newkey": "newval"}, policy={"expressions": expr.compile()}
+        )
 
         rec = self.as_connection.get(key)
         self.as_connection.remove(key)
@@ -648,7 +827,11 @@ class TestPredEveryWhere(object):
         """
         expr = exp.Eq(exp.IntBin("account_id"), 4)
         with pytest.raises(e.FilteredOut):
-            self.as_connection.put(self.keys[0], {"newkey": "newval"}, policy={"expressions": expr.compile()})
+            self.as_connection.put(
+                self.keys[0],
+                {"newkey": "newval"},
+                policy={"expressions": expr.compile()},
+            )
 
     def test_get_with_expressions(self):
         """
@@ -674,11 +857,22 @@ class TestPredEveryWhere(object):
 
         expr = exp.And(
             exp.Eq(exp.IntBin("acct_balance"), 20),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "charges"), 20),
+            exp.LT(
+                exp.ListGetByRank(
+                    None,
+                    aerospike.LIST_RETURN_VALUE,
+                    exp.ResultType.INTEGER,
+                    -1,
+                    "charges",
+                ),
+                20,
+            ),
         )
 
         result = self.as_connection.select(
-            self.keys[1], ["account_id", "acct_balance"], {"expressions": expr.compile()}
+            self.keys[1],
+            ["account_id", "acct_balance"],
+            {"expressions": expr.compile()},
         )
         assert result[2]["account_id"] == 2 and result[2]["acct_balance"] == 20
 
@@ -688,11 +882,24 @@ class TestPredEveryWhere(object):
         """
         expr = exp.And(
             exp.Eq(exp.IntBin("acct_balance"), 20),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "charges"), 10),
+            exp.LT(
+                exp.ListGetByRank(
+                    None,
+                    aerospike.LIST_RETURN_VALUE,
+                    exp.ResultType.INTEGER,
+                    -1,
+                    "charges",
+                ),
+                10,
+            ),
         )
 
         with pytest.raises(e.FilteredOut):
-            self.as_connection.select(self.keys[1], ["account_id", "acct_balance"], {"expressions": expr.compile()})
+            self.as_connection.select(
+                self.keys[1],
+                ["account_id", "acct_balance"],
+                {"expressions": expr.compile()},
+            )
 
     def test_exists_many_with_large_expressions(self):
         """
@@ -702,11 +909,22 @@ class TestPredEveryWhere(object):
         expr = exp.Or(
             exp.Eq(exp.IntBin("account_id"), 4),
             exp.Eq(exp.StrBin("user_name"), "user3"),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "charges"), 12),
+            exp.LT(
+                exp.ListGetByRank(
+                    None,
+                    aerospike.LIST_RETURN_VALUE,
+                    exp.ResultType.INTEGER,
+                    -1,
+                    "charges",
+                ),
+                12,
+            ),
         )
 
         matched_recs = []
-        records = self.as_connection.exists_many(self.keys, {"expressions": expr.compile()})
+        records = self.as_connection.exists_many(
+            self.keys, {"expressions": expr.compile()}
+        )
         for rec in records:
             if rec[1] is not None:
                 matched_recs.append(rec[1])

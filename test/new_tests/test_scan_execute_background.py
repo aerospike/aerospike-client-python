@@ -226,7 +226,9 @@ class TestScanApply(object):
         job_id = scan.execute_background()
         wait_for_job_completion(self.as_connection, job_id)
 
-        validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "new_val")
+        validate_records(
+            self.as_connection, keys, lambda rec: rec[test_bin] == "new_val"
+        )
 
     def test_background_execute_with_map_ops(self):
         """
@@ -237,7 +239,11 @@ class TestScanApply(object):
 
         scan = self.as_connection.scan(TEST_NS, TEST_SET3)
 
-        ops = [map_operations.map_remove_by_value_range(test_bin, 20, 35, aerospike.MAP_RETURN_NONE)]
+        ops = [
+            map_operations.map_remove_by_value_range(
+                test_bin, 20, 35, aerospike.MAP_RETURN_NONE
+            )
+        ]
 
         scan.add_ops(ops)
         job_id = scan.execute_background()
@@ -282,7 +288,9 @@ class TestScanApply(object):
         job_id = scan.execute_background()
         wait_for_job_completion(self.as_connection, job_id)
 
-        validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
+        validate_records(
+            self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike"
+        )
 
     @pytest.mark.xfail(reason="Scan does not implement .where()")
     def test_background_execute_sindex_predicate(self):

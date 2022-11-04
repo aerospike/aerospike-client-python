@@ -39,7 +39,9 @@ class TestOperate(object):
         """
         Setup class.
         """
-        cls.client_no_typechecks = TestBaseClass.get_new_connection({"strict_types": False})
+        cls.client_no_typechecks = TestBaseClass.get_new_connection(
+            {"strict_types": False}
+        )
 
     def teardown_class(cls):
         TestOperate.client_no_typechecks.close()
@@ -55,8 +57,12 @@ class TestOperate(object):
         self.test_map = test_map
         self.test_map_bin = "test_map"
         key_order_policy = {"map_order": aerospike.MAP_KEY_ORDERED}
-        as_connection.map_put_items(key, bin="test_map", items=test_map, map_policy=key_order_policy)
-        as_connection.map_put_items(key, bin="test_map2", items=test_map, map_policy=key_order_policy)
+        as_connection.map_put_items(
+            key, bin="test_map", items=test_map, map_policy=key_order_policy
+        )
+        as_connection.map_put_items(
+            key, bin="test_map2", items=test_map, map_policy=key_order_policy
+        )
 
         def teardown():
             try:
@@ -75,8 +81,18 @@ class TestOperate(object):
             (
                 ("test", "map_test", 1),
                 [
-                    {"op": aerospike.OP_MAP_PUT, "bin": "my_map", "key": "age", "val": 97},
-                    {"op": aerospike.OP_MAP_INCREMENT, "bin": "my_map", "key": "age", "val": 1},
+                    {
+                        "op": aerospike.OP_MAP_PUT,
+                        "bin": "my_map",
+                        "key": "age",
+                        "val": 97,
+                    },
+                    {
+                        "op": aerospike.OP_MAP_INCREMENT,
+                        "bin": "my_map",
+                        "key": "age",
+                        "val": 1,
+                    },
                     {
                         "op": aerospike.OP_MAP_GET_BY_KEY,
                         "bin": "my_map",
@@ -89,8 +105,18 @@ class TestOperate(object):
             (
                 ("test", "map_test", 1),
                 [
-                    {"op": aerospike.OP_MAP_PUT, "bin": "my_map", "key": "age", "val": 22},
-                    {"op": aerospike.OP_MAP_DECREMENT, "bin": "my_map", "key": "age", "val": 1},
+                    {
+                        "op": aerospike.OP_MAP_PUT,
+                        "bin": "my_map",
+                        "key": "age",
+                        "val": 22,
+                    },
+                    {
+                        "op": aerospike.OP_MAP_DECREMENT,
+                        "bin": "my_map",
+                        "key": "age",
+                        "val": 1,
+                    },
                     {
                         "op": aerospike.OP_MAP_GET_BY_KEY,
                         "bin": "my_map",
@@ -135,8 +161,18 @@ class TestOperate(object):
             (
                 ("test", "map_test", 1),
                 [
-                    {"op": aerospike.OP_MAP_PUT, "bin": "my_map", "key": "age", "val": 97},
-                    {"op": aerospike.OP_MAP_INCREMENT, "bin": "my_map", "key": "age", "val": 1},
+                    {
+                        "op": aerospike.OP_MAP_PUT,
+                        "bin": "my_map",
+                        "key": "age",
+                        "val": 97,
+                    },
+                    {
+                        "op": aerospike.OP_MAP_INCREMENT,
+                        "bin": "my_map",
+                        "key": "age",
+                        "val": 1,
+                    },
                     {
                         "op": aerospike.OP_MAP_GET_BY_KEY,
                         "bin": "my_map",
@@ -149,8 +185,18 @@ class TestOperate(object):
             (
                 ("test", "map_test", 1),
                 [
-                    {"op": aerospike.OP_MAP_PUT, "bin": "my_map", "key": "age", "val": 22},
-                    {"op": aerospike.OP_MAP_DECREMENT, "bin": "my_map", "key": "age", "val": 1},
+                    {
+                        "op": aerospike.OP_MAP_PUT,
+                        "bin": "my_map",
+                        "key": "age",
+                        "val": 22,
+                    },
+                    {
+                        "op": aerospike.OP_MAP_DECREMENT,
+                        "bin": "my_map",
+                        "key": "age",
+                        "val": 1,
+                    },
                     {
                         "op": aerospike.OP_MAP_GET_BY_KEY,
                         "bin": "my_map",
@@ -191,7 +237,11 @@ class TestOperate(object):
     def test_pos_operate_set_map_policy(self):
         key = ("test", "map_test", 1)
         llist = [
-            {"op": aerospike.OP_MAP_SET_POLICY, "bin": "my_map", "map_policy": {"map_sort": aerospike.MAP_KEY_ORDERED}}
+            {
+                "op": aerospike.OP_MAP_SET_POLICY,
+                "bin": "my_map",
+                "map_policy": {"map_sort": aerospike.MAP_KEY_ORDERED},
+            }
         ]
         key, _, _ = self.as_connection.operate(key, llist)
         self.as_connection.remove(key)
@@ -246,7 +296,14 @@ class TestOperate(object):
     def test_op_map_put_existing_key(self):
         result_map = self.test_map.copy()
         result_map["a"] = "b"
-        ops = [{"op": aerospike.OP_MAP_PUT, "bin": self.test_map_bin, "key": "a", "val": "b"}]
+        ops = [
+            {
+                "op": aerospike.OP_MAP_PUT,
+                "bin": self.test_map_bin,
+                "key": "a",
+                "val": "b",
+            }
+        ]
 
         self.as_connection.operate(self.test_map_key, ops)
         _, _, bins = self.as_connection.get(self.test_map_key)
@@ -255,7 +312,14 @@ class TestOperate(object):
     def test_op_map_put_new_key(self):
         result_map = self.test_map.copy()
         result_map["new"] = "value"
-        ops = [{"op": aerospike.OP_MAP_PUT, "bin": self.test_map_bin, "key": "new", "val": "value"}]
+        ops = [
+            {
+                "op": aerospike.OP_MAP_PUT,
+                "bin": self.test_map_bin,
+                "key": "new",
+                "val": "value",
+            }
+        ]
 
         self.as_connection.operate(self.test_map_key, ops)
         _, _, bins = self.as_connection.get(self.test_map_key)
@@ -263,7 +327,12 @@ class TestOperate(object):
 
     @pytest.mark.parametrize("required_key", ("bin", "key", "val"))
     def test_op_map_put_missing_required_keys(self, required_key):
-        op = {"op": aerospike.OP_MAP_PUT, "bin": "test_map", "key": "new", "val": "value"}
+        op = {
+            "op": aerospike.OP_MAP_PUT,
+            "bin": "test_map",
+            "key": "new",
+            "val": "value",
+        }
         del op[required_key]
 
         ops = [op]
@@ -274,7 +343,13 @@ class TestOperate(object):
         result_map = self.test_map.copy()
         result_map["new"] = "value"
         result_map["new2"] = "value2"
-        ops = [{"op": aerospike.OP_MAP_PUT_ITEMS, "bin": self.test_map_bin, "val": {"new": "value", "new2": "value2"}}]
+        ops = [
+            {
+                "op": aerospike.OP_MAP_PUT_ITEMS,
+                "bin": self.test_map_bin,
+                "val": {"new": "value", "new2": "value2"},
+            }
+        ]
 
         self.as_connection.operate(self.test_map_key, ops)
         _, _, bins = self.as_connection.get(self.test_map_key)
@@ -282,7 +357,11 @@ class TestOperate(object):
 
     @pytest.mark.parametrize("key", ("bin", "val"))
     def test_op_map_put_items_missing_required_entry(self, key):
-        op = {"op": aerospike.OP_MAP_PUT_ITEMS, "bin": "test_map", "val": {"new": "value", "new2": "value2"}}
+        op = {
+            "op": aerospike.OP_MAP_PUT_ITEMS,
+            "bin": "test_map",
+            "val": {"new": "value", "new2": "value2"},
+        }
         del op[key]
         ops = [op]
 
@@ -292,7 +371,14 @@ class TestOperate(object):
     def test_map_increment(self):
         result_map = self.test_map.copy()
         result_map["a"] = result_map["a"] + 2
-        ops = [{"op": aerospike.OP_MAP_INCREMENT, "bin": self.test_map_bin, "key": "a", "val": 2}]
+        ops = [
+            {
+                "op": aerospike.OP_MAP_INCREMENT,
+                "bin": self.test_map_bin,
+                "key": "a",
+                "val": 2,
+            }
+        ]
 
         self.as_connection.operate(self.test_map_key, ops)
         _, _, bins = self.as_connection.get(self.test_map_key)
@@ -300,14 +386,26 @@ class TestOperate(object):
 
     @pytest.mark.parametrize("val", ("str", [1, 2, 3], (), {"a": "b"}))
     def test_map_increment_invalid_type(self, val):
-        ops = [{"op": aerospike.OP_MAP_INCREMENT, "bin": self.test_map_bin, "key": "a", "val": val}]
+        ops = [
+            {
+                "op": aerospike.OP_MAP_INCREMENT,
+                "bin": self.test_map_bin,
+                "key": "a",
+                "val": val,
+            }
+        ]
 
         with pytest.raises(Exception):
             self.as_connection.operate(self.test_map_key, ops)
 
     @pytest.mark.parametrize("key", ("bin", "key", "val"))
     def test_op_map_put_incr_missing_required_entry(self, key):
-        op = {"op": aerospike.OP_MAP_INCREMENT, "bin": self.test_map_bin, "key": "a", "val": 1}
+        op = {
+            "op": aerospike.OP_MAP_INCREMENT,
+            "bin": self.test_map_bin,
+            "key": "a",
+            "val": 1,
+        }
         del op[key]
         ops = [op]
 
@@ -317,7 +415,14 @@ class TestOperate(object):
     def test_map_decrement(self):
         result_map = self.test_map.copy()
         result_map["a"] = result_map["a"] - 2
-        ops = [{"op": aerospike.OP_MAP_DECREMENT, "bin": self.test_map_bin, "key": "a", "val": 2}]
+        ops = [
+            {
+                "op": aerospike.OP_MAP_DECREMENT,
+                "bin": self.test_map_bin,
+                "key": "a",
+                "val": 2,
+            }
+        ]
 
         self.as_connection.operate(self.test_map_key, ops)
         _, _, bins = self.as_connection.get(self.test_map_key)
@@ -325,14 +430,26 @@ class TestOperate(object):
 
     @pytest.mark.parametrize("val", ("str", [1, 2, 3], (), {"a": "b"}))
     def test_map_decrement_invalid_type(self, val):
-        ops = [{"op": aerospike.OP_MAP_DECREMENT, "bin": self.test_map_bin, "key": "a", "val": val}]
+        ops = [
+            {
+                "op": aerospike.OP_MAP_DECREMENT,
+                "bin": self.test_map_bin,
+                "key": "a",
+                "val": val,
+            }
+        ]
 
         with pytest.raises(Exception):
             self.as_connection.operate(self.test_map_key, ops)
 
     @pytest.mark.parametrize("key", ("bin", "key", "val"))
     def test_op_map_put_decr_missing_required_entry(self, key):
-        op = {"op": aerospike.OP_MAP_DECREMENT, "bin": self.test_map_bin, "key": "a", "val": 1}
+        op = {
+            "op": aerospike.OP_MAP_DECREMENT,
+            "bin": self.test_map_bin,
+            "key": "a",
+            "val": 1,
+        }
         del op[key]
         ops = [op]
 
@@ -376,7 +493,9 @@ class TestOperate(object):
     def test_map_remove_by_key(self):
         result_map = self.test_map.copy()
         del result_map["c"]
-        ops = [{"op": aerospike.OP_MAP_REMOVE_BY_KEY, "bin": self.test_map_bin, "key": "c"}]
+        ops = [
+            {"op": aerospike.OP_MAP_REMOVE_BY_KEY, "bin": self.test_map_bin, "key": "c"}
+        ]
 
         _, _, bins = self.as_connection.operate(self.test_map_key, ops)
         _, _, bins = self.as_connection.get(self.test_map_key)
@@ -553,7 +672,12 @@ class TestOperate(object):
 
     @pytest.mark.parametrize("entry", ("bin", "key", "val"))
     def test_map_remove_by_key_range_missing_entry(self, entry):
-        op = {"op": aerospike.OP_MAP_REMOVE_BY_KEY_RANGE, "bin": self.test_map_bin, "key": "b", "val": "d"}
+        op = {
+            "op": aerospike.OP_MAP_REMOVE_BY_KEY_RANGE,
+            "bin": self.test_map_bin,
+            "key": "b",
+            "val": "d",
+        }
 
         del op[entry]
         ops = [op]

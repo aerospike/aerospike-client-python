@@ -55,7 +55,9 @@ class TestUserSerializer(object):
         for keys in versioninfo:
             for value in versioninfo[keys]:
                 if value is not None:
-                    versionlist = value[value.find("build") + 6 : value.find("\n")].split(".")
+                    versionlist = value[
+                        value.find("build") + 6 : value.find("\n")
+                    ].split(".")
                     if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                         TestUserSerializer.skip_old_server = False
 
@@ -227,8 +229,17 @@ class TestUserSerializer(object):
             "special": "!@#@#$QSDAsd;as",
             "list": ["nanslkdl", 1, bytes("asd;as[d'as;d", "utf-8")],
             "bytes": bytes("asd;as[d'as;d", "utf-8"),
-            "nestedlist": ["nanslkdl", 1, bytes("asd;as[d'as;d", "utf-8"), [1, bytes("asd;as[d'as;d", "utf-8")]],
-            "nestedmap": {"key": "asd';q;'1';", "pi": 3.14, "nest": {"pi1": 3.12, "t": 1}},
+            "nestedlist": [
+                "nanslkdl",
+                1,
+                bytes("asd;as[d'as;d", "utf-8"),
+                [1, bytes("asd;as[d'as;d", "utf-8")],
+            ],
+            "nestedmap": {
+                "key": "asd';q;'1';",
+                "pi": 3.14,
+                "nest": {"pi1": 3.12, "t": 1},
+            },
         }
         res = TestUserSerializer.client.put(key, rec, {}, {}, aerospike.SERIALIZER_USER)
 
@@ -242,8 +253,17 @@ class TestUserSerializer(object):
             "special": "!@#@#$QSDAsd;as",
             "list": ["nanslkdl", 1, bytes("asd;as[d'as;d", "utf-8")],
             "bytes": bytes("asd;as[d'as;d", "utf-8"),
-            "nestedlist": ["nanslkdl", 1, bytes("asd;as[d'as;d", "utf-8"), [1, bytes("asd;as[d'as;d", "utf-8")]],
-            "nestedmap": {"key": "asd';q;'1';", "pi": 3.14, "nest": {"pi1": 3.12, "t": 1}},
+            "nestedlist": [
+                "nanslkdl",
+                1,
+                bytes("asd;as[d'as;d", "utf-8"),
+                [1, bytes("asd;as[d'as;d", "utf-8")],
+            ],
+            "nestedmap": {
+                "key": "asd';q;'1';",
+                "pi": 3.14,
+                "nest": {"pi1": 3.12, "t": 1},
+            },
         }
 
         self.delete_keys.append(key)
@@ -255,11 +275,16 @@ class TestUserSerializer(object):
         #    with a specification in put. Client one is called
 
         method_config = TestBaseClass.get_connection_config()
-        method_config["serialization"] = (client_serialize_function, client_deserialize_function)
+        method_config["serialization"] = (
+            client_serialize_function,
+            client_deserialize_function,
+        )
         if method_config["user"] is None and method_config["password"] is None:
             client = aerospike.client(method_config).connect()
         else:
-            client = aerospike.client(method_config).connect(method_config["user"], method_config["password"])
+            client = aerospike.client(method_config).connect(
+                method_config["user"], method_config["password"]
+            )
         aerospike.set_serializer(serialize_function)
         aerospike.set_deserializer(deserialize_function)
         key = ("test", "demo", 1)
@@ -270,8 +295,17 @@ class TestUserSerializer(object):
             "special": "!@#@#$QSDAsd;as",
             "list": ["nanslkdl", 1, bytearray("asd;as[d'as;d")],
             "bytes": bytearray("asd;as[d'as;d"),
-            "nestedlist": ["nanslkdl", 1, bytearray("asd;as[d'as;d"), [1, bytearray("asd;as[d'as;d")]],
-            "nestedmap": {"key": "asd';q;'1';", "pi": 314, "nest": {"pi1": 312, "t": 1}},
+            "nestedlist": [
+                "nanslkdl",
+                1,
+                bytearray("asd;as[d'as;d"),
+                [1, bytearray("asd;as[d'as;d")],
+            ],
+            "nestedmap": {
+                "key": "asd';q;'1';",
+                "pi": 314,
+                "nest": {"pi1": 312, "t": 1},
+            },
         }
 
         res = client.put(key, rec, {}, {}, aerospike.SERIALIZER_USER)
@@ -292,7 +326,11 @@ class TestUserSerializer(object):
                 bytearray("asd;as[d'as;d", "utf-8"),
                 [1, bytearray("asd;as[d'as;d", "utf-8")],
             ],
-            "nestedmap": {"key": "asd';q;'1';", "pi": 314, "nest": {"pi1": 312, "t": 1}},
+            "nestedmap": {
+                "key": "asd';q;'1';",
+                "pi": 314,
+                "nest": {"pi1": 312, "t": 1},
+            },
         }
         client.close()
 
@@ -304,11 +342,16 @@ class TestUserSerializer(object):
         #    Invoke put() for mixed data with class and instance serialziers
         #    with no specification in put
         method_config = TestBaseClass.get_connection_config()
-        method_config["serialization"] = (client_serialize_function, client_deserialize_function)
+        method_config["serialization"] = (
+            client_serialize_function,
+            client_deserialize_function,
+        )
         if method_config["user"] is None and method_config["password"] is None:
             client = aerospike.client(method_config).connect()
         else:
-            client = aerospike.client(method_config).connect(method_config["user"], method_config["password"])
+            client = aerospike.client(method_config).connect(
+                method_config["user"], method_config["password"]
+            )
 
         aerospike.set_serializer(serialize_function)
         aerospike.set_deserializer(deserialize_function)
@@ -320,8 +363,17 @@ class TestUserSerializer(object):
             "special": "!@#@#$QSDAsd;as",
             "list": ["nanslkdl", 1, bytes("asd;as[d'as;d", "utf-8")],
             "bytes": bytes("asd;as[d'as;d", "utf-8"),
-            "nestedlist": ["nanslkdl", 1, bytes("asd;as[d'as;d", "utf-8"), [1, bytes("asd;as[d'as;d", "utf-8")]],
-            "nestedmap": {"key": "asd';q;'1';", "pi": 3.14, "nest": {"pi1": 312, "t": 1}},
+            "nestedlist": [
+                "nanslkdl",
+                1,
+                bytes("asd;as[d'as;d", "utf-8"),
+                [1, bytes("asd;as[d'as;d", "utf-8")],
+            ],
+            "nestedmap": {
+                "key": "asd';q;'1';",
+                "pi": 3.14,
+                "nest": {"pi1": 312, "t": 1},
+            },
         }
 
         res = client.put(key, rec, {}, {})
@@ -337,7 +389,11 @@ class TestUserSerializer(object):
             "list": ["nanslkdl", 1, "asd;as[d'as;d"],
             "bytes": "asd;as[d'as;d",
             "nestedlist": ["nanslkdl", 1, "asd;as[d'as;d", [1, "asd;as[d'as;d"]],
-            "nestedmap": {"key": "asd';q;'1';", "pi": 3.14, "nest": {"pi1": 312, "t": 1}},
+            "nestedmap": {
+                "key": "asd';q;'1';",
+                "pi": 3.14,
+                "nest": {"pi1": 312, "t": 1},
+            },
         }
         client.close()
         self.delete_keys.append(key)

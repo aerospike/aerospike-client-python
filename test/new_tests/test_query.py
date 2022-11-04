@@ -77,35 +77,63 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            client.index_list_create("test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "numeric_list_index")
+            client.index_list_create(
+                "test",
+                "demo",
+                "numeric_list",
+                aerospike.INDEX_NUMERIC,
+                "numeric_list_index",
+            )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_list_create("test", "demo", "string_list", aerospike.INDEX_STRING, "string_list_index")
+            client.index_list_create(
+                "test",
+                "demo",
+                "string_list",
+                aerospike.INDEX_STRING,
+                "string_list_index",
+            )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_keys_create("test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_index")
+            client.index_map_keys_create(
+                "test",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_NUMERIC,
+                "numeric_map_index",
+            )
         except e.IndexFoundError:
             pass
 
         try:
-            client.index_map_keys_create("test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_index")
-        except e.IndexFoundError:
-            pass
-
-        try:
-            client.index_map_values_create(
-                "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "numeric_map_values_index"
+            client.index_map_keys_create(
+                "test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_index"
             )
         except e.IndexFoundError:
             pass
 
         try:
             client.index_map_values_create(
-                "test", "demo", "string_map", aerospike.INDEX_STRING, "string_map_values_index"
+                "test",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_NUMERIC,
+                "numeric_map_values_index",
+            )
+        except e.IndexFoundError:
+            pass
+
+        try:
+            client.index_map_values_create(
+                "test",
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "string_map_values_index",
             )
         except e.IndexFoundError:
             pass
@@ -116,7 +144,9 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            client.index_integer_create("test", "demo", bytearray("sal\0kj", "utf-8"), "sal_index")
+            client.index_integer_create(
+                "test", "demo", bytearray("sal\0kj", "utf-8"), "sal_index"
+            )
         except e.IndexFoundError:
             pass
 
@@ -232,7 +262,11 @@ class TestQuery(TestBaseClass):
                 "numeric_list": [i, i + 1, i + 2],
                 "string_list": ["str" + str(i), "str" + str(i + 1), "str" + str(i + 2)],
                 "numeric_map": {"a": i, "b": i + 1, "c": i + 2},
-                "string_map": {"a": "a" + str(i), "b": "b" + str(i + 1), "c": "c" + str(i + 2)},
+                "string_map": {
+                    "a": "a" + str(i),
+                    "b": "b" + str(i + 1),
+                    "c": "c" + str(i + 2),
+                },
                 "test_age_none": 1,
                 "test_age": i,
                 "no": i,
@@ -240,11 +274,22 @@ class TestQuery(TestBaseClass):
             as_connection.put(key, rec)
         for i in range(5, 10):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "test_age": i, "no": i}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "addr": "name%s" % (str(i)),
+                "test_age": i,
+                "no": i,
+            }
             as_connection.put(key, rec)
 
         key = ("test", "demo", 122)
-        llist = [{"op": aerospike.OPERATOR_WRITE, "bin": bytearray("sal\0kj", "utf-8"), "val": 80000}]
+        llist = [
+            {
+                "op": aerospike.OPERATOR_WRITE,
+                "bin": bytearray("sal\0kj", "utf-8"),
+                "val": 80000,
+            }
+        ]
         as_connection.operate(key, llist)
 
         key = ("test", None, 145)
@@ -631,7 +676,9 @@ class TestQuery(TestBaseClass):
             "numeric list range",
         ),
     )
-    def test_query_with_correct_parameters_predicates(self, predicate, expected_min_length, expected_max_length):
+    def test_query_with_correct_parameters_predicates(
+        self, predicate, expected_min_length, expected_max_length
+    ):
         """
         Invoke query() with correct arguments and using predicate contains
         """
@@ -648,7 +695,9 @@ class TestQuery(TestBaseClass):
         query.foreach(callback)
 
         # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)  # noqa: E501
-        assert len(records) >= expected_min_length or len(records) <= expected_max_length
+        assert (
+            len(records) >= expected_min_length or len(records) <= expected_max_length
+        )
 
     def test_query_with_correct_parameters_exp(self):
         """
@@ -657,9 +706,13 @@ class TestQuery(TestBaseClass):
 
         from .test_base_class import TestBaseClass
 
-        if TestBaseClass.major_ver >= 6 or (TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7):
+        if TestBaseClass.major_ver >= 6 or (
+            TestBaseClass.major_ver >= 5 and TestBaseClass.minor_ver >= 7
+        ):
             # print("TestBaseClass.major_ver:", TestBaseClass.major_ver, "TestBaseClass.minor_ver:", TestBaseClass.minor_ver)  # noqa: E501
-            pytest.skip("It deprecated and it only applies to < 5.7 earlier and enterprise edition")
+            pytest.skip(
+                "It deprecated and it only applies to < 5.7 earlier and enterprise edition"
+            )
 
         expr = exp.Eq(exp.IntBin("test_age"), 4)
 
@@ -703,9 +756,18 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):
-            query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1, 3)
+            query.where(
+                "numeric_map",
+                "range",
+                aerospike.INDEX_TYPE_MAPVALUES,
+                aerospike.INDEX_NUMERIC,
+                1,
+                3,
+            )
 
-    def test_removed_query_with_correct_parameters_containsstring_mapvalues_notuple(self):
+    def test_removed_query_with_correct_parameters_containsstring_mapvalues_notuple(
+        self,
+    ):
         """
         Invoke query() with mapvalue string index
         and using predicate contains
@@ -713,7 +775,13 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):
-            query.where("string_map", "contains", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_STRING, "a1")
+            query.where(
+                "string_map",
+                "contains",
+                aerospike.INDEX_TYPE_MAPVALUES,
+                aerospike.INDEX_STRING,
+                "a1",
+            )
 
     def test_test_removed_query_containsstring_notuple(self):
         """
@@ -723,7 +791,13 @@ class TestQuery(TestBaseClass):
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):
-            query.where("string_list", "contains", aerospike.INDEX_TYPE_LIST, aerospike.INDEX_STRING, "str3")
+            query.where(
+                "string_list",
+                "contains",
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_STRING,
+                "str3",
+            )
 
     def test_removed_query_with_correct_parameters_between_notuple(self):
         """
@@ -799,7 +873,9 @@ class TestQuery(TestBaseClass):
         # that match the where clause, if it matched all in the ns,
         # this would return 6
         query.foreach(callback, policy)
-        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+        if TestBaseClass.major_ver < 6 or (
+            TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+        ):
             assert len(records) == 1
         else:
             assert len(records) == 6
@@ -822,7 +898,9 @@ class TestQuery(TestBaseClass):
         # that match the where clause, if it matched all in the ns,
         # this would return 6
         query.foreach(callback, policy)
-        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+        if TestBaseClass.major_ver < 6 or (
+            TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+        ):
             assert len(records) == 1
         else:
             assert len(records) == 6
@@ -983,14 +1061,25 @@ class TestQuery(TestBaseClass):
         """ """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC)
+        query.where(
+            "numeric_map",
+            "range",
+            aerospike.INDEX_TYPE_MAPVALUES,
+            aerospike.INDEX_NUMERIC,
+        )
 
     @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_one_end_args(self):
         """ """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC, 1)
+        query.where(
+            "numeric_map",
+            "range",
+            aerospike.INDEX_TYPE_MAPVALUES,
+            aerospike.INDEX_NUMERIC,
+            1,
+        )
 
     def test_query_with_list_cdt_ctx(self):
         """
@@ -998,7 +1087,9 @@ class TestQuery(TestBaseClass):
         """
         from .test_base_class import TestBaseClass
 
-        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+        if TestBaseClass.major_ver < 6 or (
+            TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+        ):
             pytest.skip("It only applies to >= 6.1 enterprise edition")
 
         # ctx = []
@@ -1009,7 +1100,10 @@ class TestQuery(TestBaseClass):
 
         query = self.as_connection.query("test", "demo")
         query.select("numeric_list")
-        query.where(p.range("numeric_list", aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_list_index})
+        query.where(
+            p.range("numeric_list", aerospike.INDEX_TYPE_DEFAULT, 2, 4),
+            {"ctx": ctx_list_index},
+        )
 
         records = []
 
@@ -1030,13 +1124,18 @@ class TestQuery(TestBaseClass):
         """
         from .test_base_class import TestBaseClass
 
-        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+        if TestBaseClass.major_ver < 6 or (
+            TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+        ):
             pytest.skip("It only applies to >= 6.1 enterprise edition")
 
         query = self.as_connection.query("test", "demo")
         query.select("numeric_map")
 
-        query.where(p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_map_index})
+        query.where(
+            p.range("numeric_map", aerospike.INDEX_TYPE_DEFAULT, 2, 4),
+            {"ctx": ctx_map_index},
+        )
 
         records = []
 

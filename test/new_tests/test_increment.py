@@ -83,7 +83,9 @@ class TestIncrement(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_increment_with_policy_key_digest(self):
@@ -94,7 +96,11 @@ class TestIncrement(object):
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"total_timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {
+            "total_timeout": 1000,
+            "key": aerospike.POLICY_KEY_DIGEST,
+            "retry": aerospike.POLICY_RETRY_NONE,
+        }
         self.as_connection.increment(key, "age", 5, {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -137,7 +143,9 @@ class TestIncrement(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_increment_with_policy_key_gen_EQ_positive(self):
@@ -164,7 +172,9 @@ class TestIncrement(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_increment_with_policy_key_gen_EQ_not_equal(self):
@@ -247,7 +257,9 @@ class TestIncrement(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_increment_with_incorrect_policy(self):
@@ -352,7 +364,9 @@ class TestIncrement(object):
 
         assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
-    @pytest.mark.skip(reason="This raises a system error." + " Something else should be raised")
+    @pytest.mark.skip(
+        reason="This raises a system error." + " Something else should be raised"
+    )
     def test_increment_with_integer_greaterthan_maxsize(self):
         """
         Invoke increment() with integer greater then(2^63 - 1)
@@ -449,7 +463,11 @@ class TestIncrement(object):
         with pytest.raises(e.BinIncompatibleType):
             self.as_connection.increment(key, "age", 1.5)
 
-    @pytest.mark.parametrize("add_value", (bytearray("abc", "utf-8"), None, "a"), ids=["bytes", "None", "string"])
+    @pytest.mark.parametrize(
+        "add_value",
+        (bytearray("abc", "utf-8"), None, "a"),
+        ids=["bytes", "None", "string"],
+    )
     def test_increment_by_non_numeric_value(self, add_value):
         key = ("test", "demo", 1)
         with pytest.raises(e.ParamError) as err_info:

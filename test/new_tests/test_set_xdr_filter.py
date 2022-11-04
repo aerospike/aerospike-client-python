@@ -42,11 +42,19 @@ class TestSetXDRFilter(object):
             ns_response = self.as_connection.info_single_node(ns_request, node_name)
             self.ns = ns_response.split("namespaces=")[1].split(";")[0]
         except Exception:
-            pytest.skip("Could not parse a data center or namespace, xdr may be disabled, skipping set_xdr_flags.")
+            pytest.skip(
+                "Could not parse a data center or namespace, xdr may be disabled, skipping set_xdr_flags."
+            )
 
     def test_set_xdr_filter_pos(self):
-        response = self.as_connection.set_xdr_filter(self.dc, self.ns, (Eq(IntBin("bin1"), 6).compile()))
-        assert response == "xdr-set-filter:dc=%s;namespace=%s;exp=kwGTUQKkYmluMQY=\tok\n" % (self.dc, self.ns)
+        response = self.as_connection.set_xdr_filter(
+            self.dc, self.ns, (Eq(IntBin("bin1"), 6).compile())
+        )
+        assert (
+            response
+            == "xdr-set-filter:dc=%s;namespace=%s;exp=kwGTUQKkYmluMQY=\tok\n"
+            % (self.dc, self.ns)
+        )
 
     def test_set_xdr_filter_large_expression_pos(self):
         bin = "ilist_bin"
@@ -55,7 +63,9 @@ class TestSetXDRFilter(object):
                 ListGetByValueRelRankRange(
                     None,
                     aerospike.LIST_RETURN_COUNT,
-                    ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, bin),
+                    ListGetByIndex(
+                        None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, bin
+                    ),
                     1,
                     3,
                     bin,
@@ -76,7 +86,9 @@ class TestSetXDRFilter(object):
                     None,
                     aerospike.LIST_RETURN_COUNT,
                     [2, 6],
-                    ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 1, 1, bin),
+                    ListGetByValueRelRankRangeToEnd(
+                        None, aerospike.LIST_RETURN_VALUE, 1, 1, bin
+                    ),
                 ),
                 2,
             ),
@@ -105,7 +117,12 @@ class TestSetXDRFilter(object):
                 ),
                 1,
             ),
-            Eq(ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin), 2),
+            Eq(
+                ListGetByRankRange(
+                    None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin
+                ),
+                2,
+            ),
         ).compile()
 
         response = self.as_connection.set_xdr_filter(self.dc, self.ns, expr)
@@ -123,7 +140,10 @@ class TestSetXDRFilter(object):
 
     def test_set_xdr_filter_none_filter_pos(self):
         response = self.as_connection.set_xdr_filter(self.dc, self.ns, None)
-        assert response == "xdr-set-filter:dc=%s;namespace=%s;exp=null\tok\n" % (self.dc, self.ns)
+        assert response == "xdr-set-filter:dc=%s;namespace=%s;exp=null\tok\n" % (
+            self.dc,
+            self.ns,
+        )
 
     def test_set_xdr_filter_bad_filter_neg(self):
         with pytest.raises(e.ParamError):

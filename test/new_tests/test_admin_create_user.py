@@ -12,7 +12,8 @@ import aerospike
 class TestCreateUser(object):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may be not secured cluster.",
     )
 
     def setup_method(self, method):
@@ -21,7 +22,9 @@ class TestCreateUser(object):
         """
         config = TestBaseClass.get_connection_config()
 
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
 
         self.delete_users = []
 
@@ -323,8 +326,12 @@ class TestCreateUser(object):
         non_admin_client = None
 
         try:
-            non_admin_client = aerospike.client(config).connect("non_admin_test", "non_admin_test")
-            status = non_admin_client.admin_create_user("user78", password, roles, policy)
+            non_admin_client = aerospike.client(config).connect(
+                "non_admin_test", "non_admin_test"
+            )
+            status = non_admin_client.admin_create_user(
+                "user78", password, roles, policy
+            )
 
             if non_admin_client:
                 non_admin_client.close()

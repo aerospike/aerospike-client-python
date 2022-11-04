@@ -11,7 +11,8 @@ import aerospike
 class TestGetRoles(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may not be secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may not be secured cluster.",
     )
 
     def setup_method(self, method):
@@ -19,13 +20,18 @@ class TestGetRoles(TestBaseClass):
         Setup method
         """
         config = TestBaseClass.get_connection_config()
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
         try:
             self.client.admin_drop_role("usr-sys-admin")
         except Exception:
             pass
         time.sleep(2)
-        usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+        usr_sys_admin_privs = [
+            {"code": aerospike.PRIV_USER_ADMIN},
+            {"code": aerospike.PRIV_SYS_ADMIN},
+        ]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
         except Exception:
@@ -52,7 +58,10 @@ class TestGetRoles(TestBaseClass):
         roles = self.client.admin_get_roles()
 
         assert roles["usr-sys-admin-test"] == {
-            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
+            "privileges": [
+                {"ns": "", "set": "", "code": 0},
+                {"ns": "", "set": "", "code": 1},
+            ],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
@@ -65,7 +74,10 @@ class TestGetRoles(TestBaseClass):
         roles = self.client.admin_get_roles({"timeout": 1000})
 
         assert roles["usr-sys-admin-test"] == {
-            "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],
+            "privileges": [
+                {"ns": "", "set": "", "code": 0},
+                {"ns": "", "set": "", "code": 1},
+            ],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,

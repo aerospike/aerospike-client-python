@@ -68,7 +68,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bit_resize operation with resize from front flags.
         """
-        ops = [bitwise_operations.bit_resize(self.test_bin_ones, 10, resize_flags=aerospike.BIT_RESIZE_FROM_FRONT)]
+        ops = [
+            bitwise_operations.bit_resize(
+                self.test_bin_ones, 10, resize_flags=aerospike.BIT_RESIZE_FROM_FRONT
+            )
+        ]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -83,7 +87,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bit_resize operation with grow only resize flags.
         """
-        ops = [bitwise_operations.bit_resize(self.test_bin_ones, 10, resize_flags=aerospike.BIT_RESIZE_GROW_ONLY)]
+        ops = [
+            bitwise_operations.bit_resize(
+                self.test_bin_ones, 10, resize_flags=aerospike.BIT_RESIZE_GROW_ONLY
+            )
+        ]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -94,7 +102,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bit_resize operation with shrink only resize flags.
         """
-        ops = [bitwise_operations.bit_resize(self.test_bin_ones, 1, resize_flags=aerospike.BIT_RESIZE_SHRINK_ONLY)]
+        ops = [
+            bitwise_operations.bit_resize(
+                self.test_bin_ones, 1, resize_flags=aerospike.BIT_RESIZE_SHRINK_ONLY
+            )
+        ]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -121,7 +133,11 @@ class TestBitwiseOperations(object):
         from the front should leave:
         [1, 1, 1, 1, 1]
         """
-        ops = [bitwise_operations.bit_resize(self.zero_one_bin, 5, resize_flags=aerospike.BIT_RESIZE_FROM_FRONT)]
+        ops = [
+            bitwise_operations.bit_resize(
+                self.zero_one_bin, 5, resize_flags=aerospike.BIT_RESIZE_FROM_FRONT
+            )
+        ]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -155,7 +171,9 @@ class TestBitwiseOperations(object):
         Update a bin with resize using the update only flag.
         """
         bit_policy = {"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY}
-        ops = [bitwise_operations.bit_resize(self.test_bin_zeroes, 10, policy=bit_policy)]
+        ops = [
+            bitwise_operations.bit_resize(self.test_bin_zeroes, 10, policy=bit_policy)
+        ]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -166,7 +184,9 @@ class TestBitwiseOperations(object):
         Attempt to update a bin using the create only flag, should fail.
         """
         bit_policy = {"bit_write_flags": aerospike.BIT_WRITE_CREATE_ONLY}
-        ops = [bitwise_operations.bit_resize(self.test_bin_zeroes, 10, policy=bit_policy)]
+        ops = [
+            bitwise_operations.bit_resize(self.test_bin_zeroes, 10, policy=bit_policy)
+        ]
         with pytest.raises(e.BinExistsError):
             self.as_connection.operate(self.test_key, ops)
 
@@ -202,7 +222,10 @@ class TestBitwiseOperations(object):
         """
         By default we can create a new bin with resize.
         """
-        bit_policy = {"bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY | aerospike.BIT_WRITE_NO_FAIL}
+        bit_policy = {
+            "bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY
+            | aerospike.BIT_WRITE_NO_FAIL
+        }
         ops = [bitwise_operations.bit_resize("new_binname", 10, policy=bit_policy)]
         self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -212,7 +235,11 @@ class TestBitwiseOperations(object):
         """
         Resize with grow only flags.
         """
-        ops = [bitwise_operations.bit_resize(self.test_bin_ones, 1, resize_flags=aerospike.BIT_RESIZE_GROW_ONLY)]
+        ops = [
+            bitwise_operations.bit_resize(
+                self.test_bin_ones, 1, resize_flags=aerospike.BIT_RESIZE_GROW_ONLY
+            )
+        ]
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
 
@@ -220,7 +247,11 @@ class TestBitwiseOperations(object):
         """
         Prevent bin growth with shrin only flag.
         """
-        ops = [bitwise_operations.bit_resize(self.test_bin_ones, 10, resize_flags=aerospike.BIT_RESIZE_SHRINK_ONLY)]
+        ops = [
+            bitwise_operations.bit_resize(
+                self.test_bin_ones, 10, resize_flags=aerospike.BIT_RESIZE_SHRINK_ONLY
+            )
+        ]
         with pytest.raises(e.InvalidRequest):
             self.as_connection.operate(self.test_key, ops)
 
@@ -244,7 +275,9 @@ class TestBitwiseOperations(object):
         """
         offset = random.randint(0, 4)
         num_bytes = random.randint(1, (5 - offset))
-        ops = [bitwise_operations.bit_remove(self.test_bin_zeroes, offset, num_bytes, None)]
+        ops = [
+            bitwise_operations.bit_remove(self.test_bin_zeroes, offset, num_bytes, None)
+        ]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -306,7 +339,11 @@ class TestBitwiseOperations(object):
         rand_byte = random.randint(0, 255)
         value.append(rand_byte)
         rand_offset = random.randint(0, 4) * 8
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, rand_offset, 8, 1, value, None)]
+        ops = [
+            bitwise_operations.bit_set(
+                self.test_bin_zeroes, rand_offset, 8, 1, value, None
+            )
+        ]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -338,7 +375,11 @@ class TestBitwiseOperations(object):
         num_bytes = random.randint(1, 5)
         for x in range(0, num_bytes):
             value.append(rand_byte)
-        ops = [bitwise_operations.bit_set(self.test_bin_zeroes, 0, (num_bytes * 8), num_bytes, value, None)]
+        ops = [
+            bitwise_operations.bit_set(
+                self.test_bin_zeroes, 0, (num_bytes * 8), num_bytes, value, None
+            )
+        ]
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -455,7 +496,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise add op.
         """
-        ops = [bitwise_operations.bit_add(self.test_bin_ones, 0, 8, 1, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.test_bin_ones, 0, 8, 1, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -467,7 +512,17 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise add op with an offset that lands inbetween bytes.
         """
-        ops = [bitwise_operations.bit_add(self.test_bin_zeroes, 4, 8, 255, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.test_bin_zeroes,
+                4,
+                8,
+                255,
+                False,
+                aerospike.BIT_OVERFLOW_FAIL,
+                None,
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -479,7 +534,17 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise add op with multiple bytes.
         """
-        ops = [bitwise_operations.bit_add(self.test_bin_zeroes, 8, 16, 65535, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.test_bin_zeroes,
+                8,
+                16,
+                65535,
+                False,
+                aerospike.BIT_OVERFLOW_FAIL,
+                None,
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -491,7 +556,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise add op on a nonexistent bin.
         """
-        ops = [bitwise_operations.bit_add("bad_name", 8, 16, 65535, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                "bad_name", 8, 16, 65535, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
@@ -501,7 +570,11 @@ class TestBitwiseOperations(object):
         Perform a bitwise add op with a bit_offset that is out of range
         for the bitmap being modified.
         """
-        ops = [bitwise_operations.bit_add(self.test_bin_zeroes, 41, 1, 1, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.test_bin_zeroes, 41, 1, 1, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -511,7 +584,11 @@ class TestBitwiseOperations(object):
         Perform a bitwise add op with a bit size too large for
         the bitmap being modified.
         """
-        ops = [bitwise_operations.bit_add(self.test_bin_zeroes, 0, 41, 1, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.test_bin_zeroes, 0, 41, 1, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -520,7 +597,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise add op subtraction.
         """
-        ops = [bitwise_operations.bit_add(self.five_255_bin, 0, 8, 254, True, aerospike.BIT_OVERFLOW_WRAP, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.five_255_bin, 0, 8, 254, True, aerospike.BIT_OVERFLOW_WRAP, None
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -532,7 +613,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise add op that overflows with the BIT_OVERFLOW_FAIL action.
         """
-        ops = [bitwise_operations.bit_add(self.five_255_bin, 0, 8, 1, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.five_255_bin, 0, 8, 1, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -541,7 +626,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise add op that overflows with the BIT_OVERFLOW_SATURATE action.
         """
-        ops = [bitwise_operations.bit_add(self.five_255_bin, 0, 8, 1, False, aerospike.BIT_OVERFLOW_SATURATE, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.five_255_bin, 0, 8, 1, False, aerospike.BIT_OVERFLOW_SATURATE, None
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -553,7 +642,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise add op that overflows with the BIT_OVERFLOW_WRAP action.
         """
-        ops = [bitwise_operations.bit_add(self.five_255_bin, 0, 8, 1, False, aerospike.BIT_OVERFLOW_WRAP, None)]
+        ops = [
+            bitwise_operations.bit_add(
+                self.five_255_bin, 0, 8, 1, False, aerospike.BIT_OVERFLOW_WRAP, None
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1384,7 +1477,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise subtract op.
         """
-        ops = [bitwise_operations.bit_subtract(self.test_bin_ones, 0, 8, 1, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_subtract(
+                self.test_bin_ones, 0, 8, 1, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1396,7 +1493,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise subtract op with an offset that lands inbetween bytes.
         """
-        ops = [bitwise_operations.bit_subtract(self.five_255_bin, 4, 8, 255, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_subtract(
+                self.five_255_bin, 4, 8, 255, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1409,7 +1510,9 @@ class TestBitwiseOperations(object):
         Perform a bitwise subtract op with multiple bytes.
         """
         ops = [
-            bitwise_operations.bit_subtract(self.test_bin_ones, 8, 16, 257, False, aerospike.BIT_OVERFLOW_FAIL, None)
+            bitwise_operations.bit_subtract(
+                self.test_bin_ones, 8, 16, 257, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
         ]
 
         self.as_connection.operate(self.test_key, ops)
@@ -1422,7 +1525,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise subtract op on a nonexistent bin.
         """
-        ops = [bitwise_operations.bit_subtract("bad_name", 8, 16, 257, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_subtract(
+                "bad_name", 8, 16, 257, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
@@ -1433,7 +1540,9 @@ class TestBitwiseOperations(object):
         for the bitmap being modified.
         """
         ops = [
-            bitwise_operations.bit_subtract(self.test_bin_zeroes, 41, 1, 1, False, aerospike.BIT_OVERFLOW_FAIL, None)
+            bitwise_operations.bit_subtract(
+                self.test_bin_zeroes, 41, 1, 1, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
         ]
 
         with pytest.raises(e.OpNotApplicable):
@@ -1445,7 +1554,9 @@ class TestBitwiseOperations(object):
         the bitmap being modified.
         """
         ops = [
-            bitwise_operations.bit_subtract(self.test_bin_zeroes, 0, 41, 1, False, aerospike.BIT_OVERFLOW_FAIL, None)
+            bitwise_operations.bit_subtract(
+                self.test_bin_zeroes, 0, 41, 1, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
         ]
 
         with pytest.raises(e.OpNotApplicable):
@@ -1455,7 +1566,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise subtract op subtraction.
         """
-        ops = [bitwise_operations.bit_subtract(self.five_255_bin, 0, 8, 156, True, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_subtract(
+                self.five_255_bin, 0, 8, 156, True, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1467,7 +1582,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise subtract op that overflows with the BIT_OVERFLOW_FAIL action.
         """
-        ops = [bitwise_operations.bit_subtract(self.test_bin_ones, 0, 8, 255, False, aerospike.BIT_OVERFLOW_FAIL, None)]
+        ops = [
+            bitwise_operations.bit_subtract(
+                self.test_bin_ones, 0, 8, 255, False, aerospike.BIT_OVERFLOW_FAIL, None
+            )
+        ]
 
         with pytest.raises(e.OpNotApplicable):
             self.as_connection.operate(self.test_key, ops)
@@ -1477,7 +1596,15 @@ class TestBitwiseOperations(object):
         Perform a bitwise subtract op that overflows with the BIT_OVERFLOW_SATURATE action.
         """
         ops = [
-            bitwise_operations.bit_subtract(self.test_bin_ones, 0, 8, 255, False, aerospike.BIT_OVERFLOW_SATURATE, None)
+            bitwise_operations.bit_subtract(
+                self.test_bin_ones,
+                0,
+                8,
+                255,
+                False,
+                aerospike.BIT_OVERFLOW_SATURATE,
+                None,
+            )
         ]
 
         self.as_connection.operate(self.test_key, ops)
@@ -1490,7 +1617,11 @@ class TestBitwiseOperations(object):
         """
         Perform a bitwise subtract op that overflows with the BIT_OVERFLOW_WRAP action.
         """
-        ops = [bitwise_operations.bit_subtract(self.five_255_bin, 0, 8, 1, False, aerospike.BIT_OVERFLOW_WRAP, None)]
+        ops = [
+            bitwise_operations.bit_subtract(
+                self.five_255_bin, 0, 8, 1, False, aerospike.BIT_OVERFLOW_WRAP, None
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 
@@ -1597,7 +1728,9 @@ class TestBitwiseOperations(object):
         bit_policy = {
             "bit_write_flags": aerospike.BIT_WRITE_UPDATE_ONLY,
         }
-        ops = [bitwise_operations.bit_xor(self.test_bin_zeroes, 7, 8, 1, value, bit_policy)]
+        ops = [
+            bitwise_operations.bit_xor(self.test_bin_zeroes, 7, 8, 1, value, bit_policy)
+        ]
 
         self.as_connection.operate(self.test_key, ops)
 

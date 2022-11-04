@@ -19,8 +19,12 @@ class TestListIndex(object):
                 "numeric_list": [1, 2, 3, 4],
                 "string_list": ["a", "b", "c", "d"],
                 "geojson_list": [
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [-122.053321, 37.434212]}),
+                    aerospike.GeoJSON(
+                        {"type": "Point", "coordinates": [-122.096449, 37.421868]}
+                    ),
+                    aerospike.GeoJSON(
+                        {"type": "Point", "coordinates": [-122.053321, 37.434212]}
+                    ),
                 ],
                 "age": i,
                 "no": i,
@@ -46,7 +50,12 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+            "test",
+            "demo",
+            "string_list",
+            aerospike.INDEX_STRING,
+            "test_string_list_index",
+            policy,
         )
 
         self.as_connection.index_remove("test", "test_string_list_index", policy)
@@ -60,7 +69,12 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+            "test",
+            "demo",
+            "numeric_list",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_list_index",
+            policy,
         )
 
         assert retobj == 0
@@ -76,7 +90,12 @@ class TestListIndex(object):
         policy = {}
         try:
             self.as_connection.index_list_create(
-                "test", set_name, "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+                "test",
+                set_name,
+                "string_list",
+                aerospike.INDEX_STRING,
+                "test_string_list_index",
+                policy,
             )
             assert False
         except e.InvalidRequest as exception:
@@ -90,7 +109,12 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "string_list1", aerospike.INDEX_STRING, "test_string_list_index", policy
+            "test",
+            "demo",
+            "string_list1",
+            aerospike.INDEX_STRING,
+            "test_string_list_index",
+            policy,
         )
 
         assert retobj == 0
@@ -103,12 +127,22 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+            "test",
+            "demo",
+            "numeric_list",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_list_index",
+            policy,
         )
         if retobj == 0:
             try:
                 self.as_connection.index_list_create(
-                    "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+                    "test",
+                    "demo",
+                    "numeric_list",
+                    aerospike.INDEX_NUMERIC,
+                    "test_numeric_list_index",
+                    policy,
                 )
             except e.IndexFoundError:
                 assert self.server_version < [6, 1]
@@ -123,15 +157,29 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+            "test",
+            "demo",
+            "string_list",
+            aerospike.INDEX_STRING,
+            "test_string_list_index",
+            policy,
         )
         if retobj == 0:
             with pytest.raises(e.IndexFoundError):
                 retobj = self.as_connection.index_list_create(
-                    "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_string_list_index", policy
+                    "test",
+                    "demo",
+                    "numeric_list",
+                    aerospike.INDEX_NUMERIC,
+                    "test_string_list_index",
+                    policy,
                 )
-                self.as_connection.index_remove("test", "test_string_list_index", policy)
-                ensure_dropped_index(self.as_connection, "test", "test_string_list_index")
+                self.as_connection.index_remove(
+                    "test", "test_string_list_index", policy
+                )
+                ensure_dropped_index(
+                    self.as_connection, "test", "test_string_list_index"
+                )
 
             self.as_connection.index_remove("test", "test_string_list_index", policy)
             ensure_dropped_index(self.as_connection, "test", "test_string_list_index")
@@ -145,12 +193,22 @@ class TestListIndex(object):
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+            "test",
+            "demo",
+            "string_list",
+            aerospike.INDEX_STRING,
+            "test_string_list_index",
+            policy,
         )
         if retobj == 0:
             try:
                 retobj = self.as_connection.index_list_create(
-                    "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index1", policy
+                    "test",
+                    "demo",
+                    "string_list",
+                    aerospike.INDEX_STRING,
+                    "test_string_list_index1",
+                    policy,
                 )
             except e.IndexFoundError:
                 assert self.server_version < [6, 1]
@@ -166,7 +224,12 @@ class TestListIndex(object):
         """
         policy = {"timeout": 1000}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "num_list_pol", aerospike.INDEX_NUMERIC, "test_numeric_list_index_pol", policy
+            "test",
+            "demo",
+            "num_list_pol",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_list_index_pol",
+            policy,
         )
 
         assert retobj == 0
@@ -179,7 +242,12 @@ class TestListIndex(object):
         """
         policy = {"timeout": 1000}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+            "test",
+            "demo",
+            "string_list",
+            aerospike.INDEX_STRING,
+            "test_string_list_index",
+            policy,
         )
 
         assert retobj == 0
@@ -209,7 +277,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "string_list", aerospike.INDEX_STRING, "uni_name_index", policy
+            "test",
+            "demo",
+            "string_list",
+            aerospike.INDEX_STRING,
+            "uni_name_index",
+            policy,
         )
 
         assert retobj == 0
@@ -222,7 +295,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "uni_age_index", policy
+            "test",
+            "demo",
+            "numeric_list",
+            aerospike.INDEX_NUMERIC,
+            "uni_age_index",
+            policy,
         )
 
         assert retobj == 0
@@ -235,7 +313,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo", "geojson_list", aerospike.INDEX_GEO2DSPHERE, "geo_index", policy
+            "test",
+            "demo",
+            "geojson_list",
+            aerospike.INDEX_GEO2DSPHERE,
+            "geo_index",
+            policy,
         )
 
         assert retobj == 0
@@ -250,7 +333,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         policy = {}
         try:
             self.as_connection.index_list_create(
-                None, "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+                None,
+                "demo",
+                "string_list",
+                aerospike.INDEX_STRING,
+                "test_string_list_index",
+                policy,
             )
 
         except e.ParamError as exception:
@@ -264,7 +352,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         policy = {}
         try:
             self.as_connection.index_list_create(
-                "test", 1, "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+                "test",
+                1,
+                "string_list",
+                aerospike.INDEX_STRING,
+                "test_string_list_index",
+                policy,
             )
             assert False
         except e.ParamError as exception:
@@ -280,7 +373,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         policy = {}
         try:
             self.as_connection.index_list_create(
-                "test", None, "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+                "test",
+                None,
+                "string_list",
+                aerospike.INDEX_STRING,
+                "test_string_list_index",
+                policy,
             )
 
         except e.ParamError as exception:
@@ -296,7 +394,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         policy = {}
         try:
             self.as_connection.index_list_create(
-                "test", "demo", None, aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+                "test",
+                "demo",
+                None,
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_list_index",
+                policy,
             )
 
         except e.ParamError as exception:
@@ -309,7 +412,9 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         try:
-            self.as_connection.index_list_create("test", "demo", "string_list", aerospike.INDEX_STRING, None, policy)
+            self.as_connection.index_list_create(
+                "test", "demo", "string_list", aerospike.INDEX_STRING, None, policy
+            )
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -323,7 +428,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
 
         try:
             self.as_connection.index_list_create(
-                "test1", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+                "test1",
+                "demo",
+                "numeric_list",
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_list_index",
+                policy,
             )
 
         except e.InvalidRequest as exception:
@@ -335,7 +445,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
         retobj = self.as_connection.index_list_create(
-            "test", "demo1", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
+            "test",
+            "demo1",
+            "numeric_list",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_list_index",
+            policy,
         )
 
         assert retobj == 0
@@ -352,7 +467,12 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
 
         try:
             client1.index_list_create(
-                "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+                "test",
+                "demo",
+                "string_list",
+                aerospike.INDEX_STRING,
+                "test_string_list_index",
+                policy,
             )
 
         except e.ClusterError as exception:

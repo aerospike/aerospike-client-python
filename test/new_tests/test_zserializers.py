@@ -81,12 +81,17 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        response = client.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
         assert response == 0
 
         _, _, bins = client.get(self.test_key)
 
-        assert bins == {"normal": 1234, "tuple": ("instance serialized", "instance deserialized")}
+        assert bins == {
+            "normal": 1234,
+            "tuple": ("instance serialized", "instance deserialized"),
+        }
         client.close()
 
     def test_put_with_no_serializer_arg_and_instance_serializer_set(self):
@@ -103,7 +108,10 @@ class TestPythonSerializer(object):
 
         _, _, bins = client.get(self.test_key)
 
-        assert bins == {"normal": 1234, "tuple": ("instance serialized", "instance deserialized")}
+        assert bins == {
+            "normal": 1234,
+            "tuple": ("instance serialized", "instance deserialized"),
+        }
         client.close()
 
     def test_put_with_no_serializer_arg_and_class_serializer_set(self):
@@ -132,7 +140,9 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
+        client.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON
+        )
 
         _, _, bins = client.get(self.test_key)
 
@@ -146,7 +156,9 @@ class TestPythonSerializer(object):
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
 
-        response = self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
+        response = self.as_connection.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON
+        )
 
         assert response == 0
 
@@ -166,13 +178,18 @@ class TestPythonSerializer(object):
 
         # TODO: unnecessary variable?
         rec = {"normal": 1234, "tuple": (1, 2, 3)}  # noqa: F841
-        response = self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        response = self.as_connection.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
 
         assert response == 0
 
         _, _, bins = self.as_connection.get(self.test_key)
 
-        assert bins == {"normal": 1234, "tuple": ("class serialized", "class deserialized")}
+        assert bins == {
+            "normal": 1234,
+            "tuple": ("class serialized", "class deserialized"),
+        }
 
     def test_builtin_with_class_serializer_and_instance_serializer(self):
         """
@@ -187,7 +204,9 @@ class TestPythonSerializer(object):
 
         # TODO: unnecessary variable?
         rec = {"normal": 1234, "tuple": (1, 2, 3)}  # noqa: F841
-        response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
+        response = client.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON
+        )
 
         assert response == 0
 
@@ -208,11 +227,16 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        client.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
 
         _, _, bins = client.get(self.test_key)
 
-        assert bins == {"normal": 1234, "tuple": ("instance serialized", "instance deserialized")}
+        assert bins == {
+            "normal": 1234,
+            "tuple": ("instance serialized", "instance deserialized"),
+        }
         client.close()
 
     def test_with_unset_serializer_python_serializer(self):
@@ -226,7 +250,9 @@ class TestPythonSerializer(object):
         client = TestBaseClass.get_new_connection(method_config)
 
         aerospike.unset_serializers()
-        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
+        client.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON
+        )
 
         _, _, bins = client.get(self.test_key)
 
@@ -243,20 +269,27 @@ class TestPythonSerializer(object):
         client = TestBaseClass.get_new_connection(method_config)
 
         aerospike.unset_serializers()
-        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        client.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
 
         _, _, bins = client.get(self.test_key)
 
         # tuples JSON-encode to a list, and we use this fact to check which
         # serializer ran:
-        assert bins == {"normal": 1234, "tuple": ("instance serialized", "instance deserialized")}
+        assert bins == {
+            "normal": 1234,
+            "tuple": ("instance serialized", "instance deserialized"),
+        }
         client.close()
 
     def test_setting_serializer_is_a_per_rec_setting(self):
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
 
-        self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        self.as_connection.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
 
         self.as_connection.put(("test", "demo", "test_record_2"), self.mixed_record)
 
@@ -270,7 +303,9 @@ class TestPythonSerializer(object):
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
 
-        self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        self.as_connection.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
 
         aerospike.unset_serializers()
 
@@ -284,7 +319,9 @@ class TestPythonSerializer(object):
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
 
-        self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        self.as_connection.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
 
         aerospike.set_deserializer(instance_deserializer)
 
@@ -296,7 +333,9 @@ class TestPythonSerializer(object):
     def test_only_setting_a_serializer(self):
         aerospike.set_serializer(class_serializer)
 
-        self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        self.as_connection.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
 
         _, _, record = self.as_connection.get(self.test_key)
         # this should not have been deserialized with the class serializer
@@ -308,7 +347,9 @@ class TestPythonSerializer(object):
         aerospike.set_deserializer(class_deserializer)
 
         with pytest.raises(e.ClientError):
-            self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+            self.as_connection.put(
+                self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+            )
 
     def test_class_serializer_unset(self):
         """
@@ -322,7 +363,9 @@ class TestPythonSerializer(object):
 
         aerospike.unset_serializers()
         with pytest.raises(e.ClientError) as err_info:
-            client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+            client.put(
+                self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+            )
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
@@ -371,14 +414,18 @@ class TestPythonSerializer(object):
         aerospike.set_deserializer(class_deserializer)
 
         with pytest.raises(e.ClientError):
-            self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+            self.as_connection.put(
+                self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+            )
 
     def test_serializer_with_two_args(self):
         aerospike.set_serializer(serializer_two_arg)
         aerospike.set_deserializer(class_deserializer)
 
         with pytest.raises(e.ClientError):
-            self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+            self.as_connection.put(
+                self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+            )
 
     def test_put_with_invalid_serializer_constant(self):
 
@@ -395,7 +442,9 @@ class TestPythonSerializer(object):
         aerospike.set_deserializer(class_deserializer)
 
         with pytest.raises(e.ClientError):
-            self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+            self.as_connection.put(
+                self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+            )
 
     def test_deserializer_raises_error(self):
         # If the deserializer failed, we should get a bytes
@@ -403,7 +452,9 @@ class TestPythonSerializer(object):
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(deserializer_error)
 
-        self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
+        self.as_connection.put(
+            self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER
+        )
 
         _, _, response = self.as_connection.get(self.test_key)
 

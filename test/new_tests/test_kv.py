@@ -42,7 +42,13 @@ class TestKV(object):
             "i": 1234,
             "s": "abcd",
             "b": bytearray("efgh", "utf-8"),
-            "l": [1357, "aceg", bytearray("aceg", "utf-8"), [1, 3, 5, 7], {"a": 1, "c": 3, "e": 5, "g": 7}],
+            "l": [
+                1357,
+                "aceg",
+                bytearray("aceg", "utf-8"),
+                [1, 3, 5, 7],
+                {"a": 1, "c": 3, "e": 5, "g": 7},
+            ],
             "m": {
                 "i": 2468,
                 "s": "bdfh",
@@ -122,7 +128,13 @@ class TestKV(object):
             "i": 1234,
             "s": "abcd",
             "b": bytearray("efgh", "utf-8"),
-            "l": [1357, "aceg", bytearray("aceg", "utf-8"), [1, 3, 5, 7], {"a": 1, "c": 3, "e": 5, "g": 7}],
+            "l": [
+                1357,
+                "aceg",
+                bytearray("aceg", "utf-8"),
+                [1, 3, 5, 7],
+                {"a": 1, "c": 3, "e": 5, "g": 7},
+            ],
             "m": {
                 "i": 2468,
                 "s": "bdfh",
@@ -147,11 +159,15 @@ class TestKV(object):
         assert self.record_count == 1, "set should have 1 record"
 
         # read it
-        (key, meta, extracted_record) = self.as_connection.get(get_key_with_digest_only(key))
+        (key, meta, extracted_record) = self.as_connection.get(
+            get_key_with_digest_only(key)
+        )
         assert record_to_insert == extracted_record, "records do not match"
 
         # Add a bin to the stored record
-        status = self.as_connection.put(get_key_with_digest_only(key), {"hello": "world"})
+        status = self.as_connection.put(
+            get_key_with_digest_only(key), {"hello": "world"}
+        )
         assert status == 0, "wrong return code"
 
         # Add a new value to the local record which matches the one
@@ -159,7 +175,9 @@ class TestKV(object):
         record_to_insert["hello"] = "world"
 
         # fetch the remote key and verify it matches the local version
-        (key, meta, extracted_record) = self.as_connection.get(get_key_with_digest_only(key))
+        (key, meta, extracted_record) = self.as_connection.get(
+            get_key_with_digest_only(key)
+        )
         assert record_to_insert == extracted_record, "records do not match"
 
         # remove it
@@ -197,10 +215,17 @@ class TestKV(object):
 
         for i in range(3):
             key = ("test", "unittest", i)
-            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "addr": "name%s" % (str(i)),
+                "age": i,
+                "no": i,
+            }
             self.as_connection.put(key, rec)
 
-        self.as_connection.index_integer_create("test", "unittest", "age", "age_index", {})
+        self.as_connection.index_integer_create(
+            "test", "unittest", "age", "age_index", {}
+        )
 
         query = self.as_connection.query("test", "unittest")
 

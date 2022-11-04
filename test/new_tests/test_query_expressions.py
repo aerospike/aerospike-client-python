@@ -16,9 +16,13 @@ def seconds_to_nanos(num):
 
 
 # GeoConstants
-geo_object1 = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-122.0, 37.5], 1000]})
+geo_object1 = aerospike.GeoJSON(
+    {"type": "AeroCircle", "coordinates": [[-122.0, 37.5], 1000]}
+)
 
-geo_object2 = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-132.0, 37.5], 1000]})
+geo_object2 = aerospike.GeoJSON(
+    {"type": "AeroCircle", "coordinates": [[-132.0, 37.5], 1000]}
+)
 
 geo_point1 = aerospike.GeoJSON({"coordinates": [-122.0, 37.5], "type": "Point"})
 
@@ -83,9 +87,19 @@ def clean_test_demo_namespace(as_connection):
         geok1 = "test", "geo", 1
         geok2 = "test", "geo", 2
 
-        georec1 = {"id": 1, "point": geo_point1, "region": geo_object1, "geolist": [geo_point1]}
+        georec1 = {
+            "id": 1,
+            "point": geo_point1,
+            "region": geo_object1,
+            "geolist": [geo_point1],
+        }
 
-        georec2 = {"id": 2, "point": geo_point2, "region": geo_object2, "geolist": [geo_point2]}
+        georec2 = {
+            "id": 2,
+            "point": geo_point2,
+            "region": geo_object2,
+            "geolist": [geo_point2],
+        }
 
         as_connection.put(geok1, georec1)
         as_connection.put(geok2, georec2)
@@ -194,16 +208,22 @@ class TestQueryExpressions(object):
         assert_each_record_bins(results, lambda b: b["positive_i"] != 5)
 
     def test_or(self):
-        expr = exp.Or(exp.Eq(exp.IntBin("positive_i"), 5), exp.Eq(exp.IntBin("positive_i"), 10))
+        expr = exp.Or(
+            exp.Eq(exp.IntBin("positive_i"), 5), exp.Eq(exp.IntBin("positive_i"), 10)
+        )
         results = self.query.results(policy={"expressions": expr.compile()})
         assert len(results) == 2
         assert_each_record_bins(results, lambda b: b["positive_i"] in (5, 10))
 
     def test_and(self):
-        expr = exp.And(exp.GT(exp.IntBin("positive_i"), 10), exp.LT(exp.IntBin("positive_i"), 20))
+        expr = exp.And(
+            exp.GT(exp.IntBin("positive_i"), 10), exp.LT(exp.IntBin("positive_i"), 20)
+        )
         results = self.query.results(policy={"expressions": expr.compile()})
         assert len(results) == 9
-        assert_each_record_bins(results, lambda b: b["positive_i"] > 10 and b["positive_i"] < 20)
+        assert_each_record_bins(
+            results, lambda b: b["positive_i"] > 10 and b["positive_i"] < 20
+        )
 
     def test_string_regex(self):
         expr = exp.CmpRegex(aerospike.REGEX_ICASE, ".*O.*", exp.StrBin("name"))
@@ -214,7 +234,14 @@ class TestQueryExpressions(object):
     # List Tests
     def test_list_or_int(self):
         expr = exp.GT(
-            exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "plus_five_l"), 10
+            exp.ListGetByRank(
+                None,
+                aerospike.LIST_RETURN_VALUE,
+                exp.ResultType.INTEGER,
+                -1,
+                "plus_five_l",
+            ),
+            10,
         )
         results = self.query.results(policy={"expressions": expr.compile()})
         assert len(results) == 94  # This isn't true for 0,1,2,3,4,5 so 100 - 6
@@ -222,41 +249,70 @@ class TestQueryExpressions(object):
 
     def test_list_and_int(self):
         expr = exp.GT(
-            exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0, "plus_five_l"), 10
+            exp.ListGetByRank(
+                None,
+                aerospike.LIST_RETURN_VALUE,
+                exp.ResultType.INTEGER,
+                0,
+                "plus_five_l",
+            ),
+            10,
         )
         results = self.query.results(policy={"expressions": expr.compile()})
         assert len(results) == 89  # This isn't true for the first 11
         assert_each_record_bins(results, lambda b: b["plus_five_l"][-1] > 10)
 
     def test_list_or_str(self):
-        expr = exp.GE(exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, "Bob", "slist"), 1)
+        expr = exp.GE(
+            exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, "Bob", "slist"), 1
+        )
         query = self.as_connection.query("test", "demo2")
         results = query.results(policy={"expressions": expr.compile()})
         assert len(results) == 2
-        assert_each_record_bins(results, lambda b: any([name == "Bob" for name in b["slist"]]))
+        assert_each_record_bins(
+            results, lambda b: any([name == "Bob" for name in b["slist"]])
+        )
 
     def test_list_and_str(self):
-        expr = exp.Eq(exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, "Bob", "slist"), 0)
+        expr = exp.Eq(
+            exp.ListGetByValue(None, aerospike.LIST_RETURN_COUNT, "Bob", "slist"), 0
+        )
         # Only one friend list without Bob
         query = self.as_connection.query("test", "demo2")
         results = query.results(policy={"expressions": expr.compile()})
         assert len(results) == 1
-        assert_each_record_bins(results, lambda b: all([name != "Bob" for name in b["slist"]]))
+        assert_each_record_bins(
+            results, lambda b: all([name != "Bob" for name in b["slist"]])
+        )
 
     # Mapkey Tests
     def test_mapkey_iterate_or(self):
-        expr = exp.GE(exp.MapGetByKey(None, aerospike.LIST_RETURN_COUNT, exp.ResultType.INTEGER, "Bob", "map"), 1)
+        expr = exp.GE(
+            exp.MapGetByKey(
+                None, aerospike.LIST_RETURN_COUNT, exp.ResultType.INTEGER, "Bob", "map"
+            ),
+            1,
+        )
         query = self.as_connection.query("test", "demo3")
         results = query.results(policy={"expressions": expr.compile()})
         assert len(results) == 2
-        assert_each_record_bins(results, lambda b: any([key == "Bob" for key in b["map"]]))
+        assert_each_record_bins(
+            results, lambda b: any([key == "Bob" for key in b["map"]])
+        )
 
     def test_mapkey_iterate_and(self):
-        expr = exp.Eq(exp.MapGetByKey(None, aerospike.LIST_RETURN_COUNT, exp.ResultType.INTEGER, "Bob", "map"), 0)
+        expr = exp.Eq(
+            exp.MapGetByKey(
+                None, aerospike.LIST_RETURN_COUNT, exp.ResultType.INTEGER, "Bob", "map"
+            ),
+            0,
+        )
         query = self.as_connection.query("test", "demo3")
         results = query.results(policy={"expressions": expr.compile()})
         assert len(results) == 1
-        assert_each_record_bins(results, lambda b: all([key != "Bob" for key in b["map"]]))
+        assert_each_record_bins(
+            results, lambda b: all([key != "Bob" for key in b["map"]])
+        )
 
     # MapValueTest
     def test_mapvalue_iterate_or(self):
@@ -264,16 +320,22 @@ class TestQueryExpressions(object):
         query = self.as_connection.query("test", "demo3")
         results = query.results(policy={"expressions": expr.compile()})
         assert len(results) == 2
-        assert_each_record_bins(results, lambda b: any([b["map"][key] == 3 for key in b["map"]]))
+        assert_each_record_bins(
+            results, lambda b: any([b["map"][key] == 3 for key in b["map"]])
+        )
 
     def test_mapvalue_iterate_and(self):
         expr = exp.Eq(exp.MapGetByValue(None, aerospike.LIST_RETURN_COUNT, 3, "map"), 0)
         query = self.as_connection.query("test", "demo3")
         results = query.results(policy={"expressions": expr.compile()})
         assert len(results) == 1
-        assert_each_record_bins(results, lambda b: all([b["map"][key] != 3 for key in b["map"]]))
+        assert_each_record_bins(
+            results, lambda b: all([b["map"][key] != 3 for key in b["map"]])
+        )
 
-    @pytest.mark.xfail(reason="This only works when not running data in memory")  # TODO test this on device config
+    @pytest.mark.xfail(
+        reason="This only works when not running data in memory"
+    )  # TODO test this on device config
     def test_rec_device_size(self):
         long_str_len = 65 * 1024
         long_str = long_str_len * "a"  # A 65K string
@@ -340,7 +402,10 @@ class TestQueryExpressions(object):
 
         query = self.as_connection.query("test", "ttl")
 
-        expr = exp.And(exp.GT(exp.VoidTime(), void_time_range_start), exp.LT(exp.VoidTime(), void_time_range_end))
+        expr = exp.And(
+            exp.GT(exp.VoidTime(), void_time_range_start),
+            exp.LT(exp.VoidTime(), void_time_range_end),
+        )
         results = query.results(policy={"expressions": expr.compile()})
         assert len(results) == 7
         assert_each_record_bins(results, lambda b: b["time"] == "earlier")

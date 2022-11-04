@@ -46,7 +46,11 @@ class TestListRemoveRange(object):
         assert status == 0
 
         (key, _, bins) = self.as_connection.get(key)
-        assert bins == {"city": ["Pune", "Dehli", "Mumbai"], "contact_no": [1, 2, 3, [45, 50, 80]], "name": "name1"}
+        assert bins == {
+            "city": ["Pune", "Dehli", "Mumbai"],
+            "contact_no": [1, 2, 3, [45, 50, 80]],
+            "name": "name1",
+        }
 
     def test_pos_list_remove_range_with_correct_policy(self):
         """
@@ -60,11 +64,17 @@ class TestListRemoveRange(object):
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
 
-        status = self.as_connection.list_remove_range(key, "contact_no", 0, 3, {}, policy)
+        status = self.as_connection.list_remove_range(
+            key, "contact_no", 0, 3, {}, policy
+        )
         assert status == 0
 
         (key, _, bins) = self.as_connection.get(key)
-        assert bins == {"city": ["Pune", "Dehli", "Mumbai"], "contact_no": [5, 6, 7], "name": "name2"}
+        assert bins == {
+            "city": ["Pune", "Dehli", "Mumbai"],
+            "contact_no": [5, 6, 7],
+            "name": "name2",
+        }
 
     # Negative Tests
     def test_neg_list_remove_range_with_no_parameters(self):
@@ -98,7 +108,11 @@ class TestListRemoveRange(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = (
+            "test",
+            "demo",
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com",
+        )
         with pytest.raises(e.RecordNotFound):
             self.as_connection.list_remove_range(key, "abc", 0, 1)
 
@@ -111,7 +125,9 @@ class TestListRemoveRange(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
         try:
             self.as_connection.list_remove_range(key, bin, 0, 1)
 
@@ -125,9 +141,13 @@ class TestListRemoveRange(object):
         key = ("test", "demo", 1)
         policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
-            self.as_connection.list_remove_range(key, "contact_no", 1, 1, {}, policy, "")
+            self.as_connection.list_remove_range(
+                key, "contact_no", 1, 1, {}, policy, ""
+            )
 
-        assert "list_remove_range() takes at most 6 arguments (7 given)" in str(typeError.value)
+        assert "list_remove_range() takes at most 6 arguments (7 given)" in str(
+            typeError.value
+        )
 
     def test_neg_list_remove_range_policy_is_string(self):
         """
@@ -204,4 +224,6 @@ class TestListRemoveRange(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_remove_range(key, "contact_no", "Fifth", 2)
-        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(
+            typeError.value
+        )

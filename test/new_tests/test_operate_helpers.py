@@ -59,7 +59,9 @@ class TestOperate(object):
         """
         Setup class.
         """
-        cls.client_no_typechecks = TestBaseClass.get_new_connection({"strict_types": False})
+        cls.client_no_typechecks = TestBaseClass.get_new_connection(
+            {"strict_types": False}
+        )
 
     def teardown_class(cls):
         TestOperate.client_no_typechecks.close()
@@ -100,7 +102,12 @@ class TestOperate(object):
         keys.append(key)
 
         key = ("test", "demo", "existing_key")
-        rec = {"dict": {"a": 1}, "bytearray": bytearray("abc", "utf-8"), "float": 3.4, "list": ["a"]}
+        rec = {
+            "dict": {"a": 1},
+            "bytearray": bytearray("abc", "utf-8"),
+            "float": 3.4,
+            "list": ["a"],
+        }
         as_connection.put(key, rec)
 
         keys.append(key)
@@ -128,22 +135,35 @@ class TestOperate(object):
         [
             (
                 ("test", "demo", 1),
-                [operations.prepend("name", "ram"), operations.increment("age", 3), operations.read("name")],
+                [
+                    operations.prepend("name", "ram"),
+                    operations.increment("age", 3),
+                    operations.read("name"),
+                ],
                 {"name": "ramname1"},
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
-                [operations.write("write_bin", {"no": 89.8}), operations.read("write_bin")],
+                [
+                    operations.write("write_bin", {"no": 89.8}),
+                    operations.read("write_bin"),
+                ],
                 {"write_bin": {"no": 89.8}},
             ),
             (
                 ("test", "demo", 1),  # write positive
-                [operations.write("write_bin", {"no": 89}), operations.read("write_bin")],
+                [
+                    operations.write("write_bin", {"no": 89}),
+                    operations.read("write_bin"),
+                ],
                 {"write_bin": {"no": 89}},
             ),
             (
                 ("test", "demo", 1),  # write_tuple_positive
-                [operations.write("write_bin", ("a", "b", "c")), operations.read("write_bin")],
+                [
+                    operations.write("write_bin", ("a", "b", "c")),
+                    operations.read("write_bin"),
+                ],
                 {"write_bin": ("a", "b", "c")},
             ),
             (
@@ -153,13 +173,22 @@ class TestOperate(object):
             ),
             (
                 ("test", "demo", "bytearray_key"),  # with_operator append_val bytearray
-                [operations.append("bytearray_bin", bytearray("abc", "utf-8")), operations.read("bytearray_bin")],
+                [
+                    operations.append("bytearray_bin", bytearray("abc", "utf-8")),
+                    operations.read("bytearray_bin"),
+                ],
                 {"bytearray_bin": bytearray("asd;as[d'as;dabc", "utf-8")},
             ),
             (
-                ("test", "demo", "bytearray_new"),  # with_operator append_val bytearray_newrecord
+                (
+                    "test",
+                    "demo",
+                    "bytearray_new",
+                ),  # with_operator append_val bytearray_newrecord
                 [
-                    operations.append("bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")),
+                    operations.append(
+                        "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")
+                    ),
                     operations.read("bytearray_bin"),
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
@@ -170,19 +199,35 @@ class TestOperate(object):
                 {"bytes_bin": b"abc"},
             ),
             (
-                ("test", "demo", "bytes_new"),  # with_operator append_val bytes_newrecord
-                [operations.append("bytes_bin", b"asd;as[d'as;d"), operations.read("bytes_bin")],
+                (
+                    "test",
+                    "demo",
+                    "bytes_new",
+                ),  # with_operator append_val bytes_newrecord
+                [
+                    operations.append("bytes_bin", b"asd;as[d'as;d"),
+                    operations.read("bytes_bin"),
+                ],
                 {"bytes_bin": b"asd;as[d'as;d"},
             ),
             (
                 ("test", "demo", "bytearray_key"),  # with_operatorprepend_valbytearray
-                [operations.prepend("bytearray_bin", bytearray("abc", "utf-8")), operations.read("bytearray_bin")],
+                [
+                    operations.prepend("bytearray_bin", bytearray("abc", "utf-8")),
+                    operations.read("bytearray_bin"),
+                ],
                 {"bytearray_bin": bytearray("abcasd;as[d'as;d", "utf-8")},
             ),
             (
-                ("test", "demo", "bytearray_new"),  # with_operatorprepend_valbytearray_newrecord
+                (
+                    "test",
+                    "demo",
+                    "bytearray_new",
+                ),  # with_operatorprepend_valbytearray_newrecord
                 [
-                    operations.prepend("bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")),
+                    operations.prepend(
+                        "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")
+                    ),
                     operations.read("bytearray_bin"),
                 ],
                 {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")},
@@ -193,8 +238,15 @@ class TestOperate(object):
                 {"bytes_bin": b"abc"},
             ),
             (
-                ("test", "demo", "bytes_new"),  # with_operator prepend_val bytes_newrecord
-                [operations.prepend("bytes_bin", b"asd;as[d'as;d"), operations.read("bytes_bin")],
+                (
+                    "test",
+                    "demo",
+                    "bytes_new",
+                ),  # with_operator prepend_val bytes_newrecord
+                [
+                    operations.prepend("bytes_bin", b"asd;as[d'as;d"),
+                    operations.read("bytes_bin"),
+                ],
                 {"bytes_bin": b"asd;as[d'as;d"},
             ),
             (
@@ -266,7 +318,11 @@ class TestOperate(object):
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
 
-        llist = [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [
+            operations.append("name", "aa"),
+            operations.increment("age", 3),
+            operations.read("name"),
+        ]
 
         _, _, bins = self.as_connection.operate(key, llist, {}, policy)
 
@@ -286,7 +342,11 @@ class TestOperate(object):
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
                 },
                 {"gen": 10, "ttl": 1200},
-                [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")],
+                [
+                    operations.append("name", "aa"),
+                    operations.increment("age", 3),
+                    operations.read("name"),
+                ],
             ),
         ],
     )
@@ -309,15 +369,25 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen}
 
-        llist = [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [
+            operations.append("name", "aa"),
+            operations.increment("age", 3),
+            operations.read("name"),
+        ]
         (key, meta, bins) = self.as_connection.operate(key, llist, meta, policy)
 
         assert bins == {"name": "name1aa"}
 
     @pytest.mark.parametrize(
-        "key, llist", [(("test", "demo", 1), [operations.touch(4000)]), (("test", "demo", 1), [operations.touch(4000)])]
+        "key, llist",
+        [
+            (("test", "demo", 1), [operations.touch(4000)]),
+            (("test", "demo", 1), [operations.touch(4000)]),
+        ],
     )
-    def test_pos_operate_touch_operation_with_bin_and_value_combination(self, key, llist):
+    def test_pos_operate_touch_operation_with_bin_and_value_combination(
+        self, key, llist
+    ):
         """
         Invoke operate() with touch value with bin and value combination.
         """
@@ -396,7 +466,11 @@ class TestOperate(object):
         gen = meta["gen"]
         meta = {"gen": gen + 5}
 
-        llist = [operations.append("name", "aa"), operations.increment("age", 3), operations.read("name")]
+        llist = [
+            operations.append("name", "aa"),
+            operations.increment("age", 3),
+            operations.read("name"),
+        ]
         _, _, bins = self.as_connection.operate(key, llist, meta, policy)
 
         assert bins == {"name": "name1aa"}
@@ -497,7 +571,10 @@ class TestOperate(object):
     @pytest.mark.parametrize(
         "key, llist",
         [
-            (("test", "demo", 1), [operations.prepend("age", 4), operations.read("age")]),
+            (
+                ("test", "demo", 1),
+                [operations.prepend("age", 4), operations.read("age")],
+            ),
             (
                 ("test", "demo", "existing_key"),  # Existing list
                 [operations.prepend("list", ["c"]), operations.read("list")],
@@ -516,7 +593,10 @@ class TestOperate(object):
             ),
             (
                 ("test", "demo", "existing_key"),  # Existing Bytearray
-                [operations.increment("bytearray", bytearray("abc", "utf-8")), operations.read("bytearray")],
+                [
+                    operations.increment("bytearray", bytearray("abc", "utf-8")),
+                    operations.read("bytearray"),
+                ],
             ),
         ],
     )
@@ -537,13 +617,19 @@ class TestOperate(object):
         key = ("test", "demo", "geospatial_key")
 
         llist = [
-            operations.increment("geospatial", aerospike.GeoJSON({"type": "Point", "coordinates": [42.34, 58.62]})),
+            operations.increment(
+                "geospatial",
+                aerospike.GeoJSON({"type": "Point", "coordinates": [42.34, 58.62]}),
+            ),
             operations.read("geospatial"),
         ]
 
         _, _, bins = TestOperate.client_no_typechecks.operate(key, llist)
 
-        assert bins["geospatial"].unwrap() == {"coordinates": [42.34, 58.62], "type": "Point"}
+        assert bins["geospatial"].unwrap() == {
+            "coordinates": [42.34, 58.62],
+            "type": "Point",
+        }
         TestOperate.client_no_typechecks.remove(key)
 
     def test_pos_operate_with_bin_length_extra_nostricttypes(self):
@@ -589,7 +675,10 @@ class TestOperate(object):
         "list, result, bin, expected",
         [
             (
-                [list_operations.list_append("int_bin", 7), list_operations.list_get("int_bin", 4)],
+                [
+                    list_operations.list_append("int_bin", 7),
+                    list_operations.list_get("int_bin", 4),
+                ],
                 {"int_bin": 7},
                 "int_bin",
                 [1, 2, 3, 4, 7],
@@ -604,7 +693,10 @@ class TestOperate(object):
                 [1, 2, 3, 4, 7, 9],
             ),
             (
-                [list_operations.list_insert("int_bin", 2, 7), list_operations.list_pop("int_bin", 2)],
+                [
+                    list_operations.list_insert("int_bin", 2, 7),
+                    list_operations.list_pop("int_bin", 2),
+                ],
                 {"int_bin": 7},
                 "int_bin",
                 [1, 2, 3, 4],
@@ -619,20 +711,36 @@ class TestOperate(object):
                 [1, 2, 3, 4],
             ),
             (
-                [list_operations.list_set("int_bin", 2, 18), list_operations.list_get("int_bin", 2)],
+                [
+                    list_operations.list_set("int_bin", 2, 18),
+                    list_operations.list_get("int_bin", 2),
+                ],
                 {"int_bin": 18},
                 "int_bin",
                 [1, 2, 18, 4],
             ),
             (
-                [list_operations.list_set("int_bin", 6, 10), list_operations.list_get("int_bin", 6)],
+                [
+                    list_operations.list_set("int_bin", 6, 10),
+                    list_operations.list_get("int_bin", 6),
+                ],
                 {"int_bin": 10},
                 "int_bin",
-                [1, 2, 3, 4, None, None, 10],  # Inserting outside of the range adds nils in between
+                [
+                    1,
+                    2,
+                    3,
+                    4,
+                    None,
+                    None,
+                    10,
+                ],  # Inserting outside of the range adds nils in between
             ),
         ],
     )
-    def test_pos_operate_with_list_addition_operations(self, list, result, bin, expected):
+    def test_pos_operate_with_list_addition_operations(
+        self, list, result, bin, expected
+    ):
         """
         Invoke operate() with list addition operations
         """
@@ -744,14 +852,19 @@ class TestOperate(object):
         "list, result, bin, expected",
         [
             (
-                [list_operations.list_append("string_bin", {"new_val": 1}), list_operations.list_get("string_bin", 4)],
+                [
+                    list_operations.list_append("string_bin", {"new_val": 1}),
+                    list_operations.list_get("string_bin", 4),
+                ],
                 {"string_bin": {"new_val": 1}},
                 "string_bin",
                 ["a", "b", "c", "d", {"new_val": 1}],
             ),
             (
                 [
-                    list_operations.list_append_items("string_bin", [["z", "x"], ("y", "w")]),
+                    list_operations.list_append_items(
+                        "string_bin", [["z", "x"], ("y", "w")]
+                    ),
                     list_operations.list_get_range("string_bin", 3, 3),
                 ],
                 {"string_bin": ["d", ["z", "x"], ("y", "w")]},
@@ -759,14 +872,19 @@ class TestOperate(object):
                 ["a", "b", "c", "d", ["z", "x"], ("y", "w")],
             ),
             (
-                [list_operations.list_insert("string_bin", 2, True), list_operations.list_pop("string_bin", 2)],
+                [
+                    list_operations.list_insert("string_bin", 2, True),
+                    list_operations.list_pop("string_bin", 2),
+                ],
                 {"string_bin": True},
                 "string_bin",
                 ["a", "b", "c", "d"],
             ),
             (
                 [
-                    list_operations.list_insert_items("string_bin", 2, [bytearray("abc", "utf-8"), "xyz"]),
+                    list_operations.list_insert_items(
+                        "string_bin", 2, [bytearray("abc", "utf-8"), "xyz"]
+                    ),
                     list_operations.list_pop_range("string_bin", 2, 2),
                 ],
                 {"string_bin": [bytearray(b"abc"), "xyz"]},
@@ -775,7 +893,9 @@ class TestOperate(object):
             ),
         ],
     )
-    def test_pos_operate_with_list_operations_different_datatypes(self, list, result, bin, expected):
+    def test_pos_operate_with_list_operations_different_datatypes(
+        self, list, result, bin, expected
+    ):
         """
         Invoke operate() with list operations using different datatypes
         """
@@ -841,8 +961,18 @@ class TestOperate(object):
         "list",
         [
             ([list_operations.list_get("int_bin", 7)]),
-            ([list_operations.list_clear("int_bin"), list_operations.list_pop("int_bin", 2)]),
-            ([list_operations.list_clear("int_bin"), list_operations.list_remove("int_bin", 2)]),
+            (
+                [
+                    list_operations.list_clear("int_bin"),
+                    list_operations.list_pop("int_bin", 2),
+                ]
+            ),
+            (
+                [
+                    list_operations.list_clear("int_bin"),
+                    list_operations.list_remove("int_bin", 2),
+                ]
+            ),
         ],
     )
     def test_neg_operate_list_invalid_requests(self, list):

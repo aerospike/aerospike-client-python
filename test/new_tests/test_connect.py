@@ -124,7 +124,9 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() is None
 
-    @pytest.mark.skip(reason=("This raises an error," + " but it isn't clear whether it should"))
+    @pytest.mark.skip(
+        reason=("This raises an error," + " but it isn't clear whether it should")
+    )
     def test_connect_positive_cluster_name(self):
         """
         Invoke connect() giving a cluster name
@@ -181,7 +183,12 @@ class TestConnect(object):
             ({"": [("127.0.0.1", 3000)]}, e.ParamError, -2, "Hosts must be a list"),
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             ({"hosts": [("127.0.0.1", 2000)]}, e.ClientError, -10, "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            (
+                {"hosts": [("127.0.0.1", "3000")]},
+                e.ClientError,
+                -10,
+                "Failed to connect",
+            ),
         ],
         ids=[
             "config not dict",

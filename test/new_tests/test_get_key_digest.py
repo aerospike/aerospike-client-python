@@ -86,7 +86,11 @@ class TestGetKeyDigest(object):
 
     @pytest.mark.parametrize(
         "namespace, set, primary_key",
-        [("test", "demo", [1, 2, 3]), ("test", "demo", {"a": 1, "b": 2}), ("test", "demo", None)],
+        [
+            ("test", "demo", [1, 2, 3]),
+            ("test", "demo", {"a": 1, "b": 2}),
+            ("test", "demo", None),
+        ],
         ids=("list key", "map key", "None key"),
     )
     def test_get_key_digest_with_invalid_key_type(self, namespace, set, primary_key):

@@ -33,7 +33,13 @@ class TestSelectMany(object):
 
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"title": "Mr.", "name": "name%s" % (str(i)), "age": i, "addr": "Minisota", "country": "USA"}
+            rec = {
+                "title": "Mr.",
+                "name": "name%s" % (str(i)),
+                "age": i,
+                "addr": "Minisota",
+                "country": "USA",
+            }
             as_connection.put(key, rec)
             self.keys.append(key)
         key = ("test", "demo", "float_value")
@@ -92,7 +98,9 @@ class TestSelectMany(object):
             #  Verify that only bins specified in filter bins are present
             assert set(bins) <= set(filter_bins)
 
-    @pytest.mark.parametrize("policy", [{"timeout": 50}, None], ids=["valid timeout", "None policy"])
+    @pytest.mark.parametrize(
+        "policy", [{"timeout": 50}, None], ids=["valid timeout", "None policy"]
+    )
     def test_select_many_with_valid_policy_parameters(self, policy):
 
         filter_bins = ["title", "name", "float_value"]
@@ -100,7 +108,9 @@ class TestSelectMany(object):
 
         assert isinstance(records, list)
         assert len(records) == len(self.keys)
-        assert Counter([get_primary_key(record) for record in records]) == Counter([key[2] for key in self.keys])
+        assert Counter([get_primary_key(record) for record in records]) == Counter(
+            [key[2] for key in self.keys]
+        )
         for record in records:
             bins = record[2].keys()
             assert set(bins) <= set(filter_bins)
@@ -114,7 +124,9 @@ class TestSelectMany(object):
         temp_keys.append(("test", "demo", "non-existent"))
 
         filter_bins = ["title", "name", "addr"]
-        records = self.as_connection.select_many(temp_keys, filter_bins, {"timeout": 1000})
+        records = self.as_connection.select_many(
+            temp_keys, filter_bins, {"timeout": 1000}
+        )
 
         record_counter = Counter([get_primary_key(record) for record in records])
         assert isinstance(records, list)
@@ -237,7 +249,9 @@ class TestSelectMany(object):
         # check that the primary keys in the returned records match the
         # expected ones, and occur once each
         return_record_counter = Counter([get_primary_key(record) for record in records])
-        assert return_record_counter == Counter(default_primary_keys + added_primary_keys)
+        assert return_record_counter == Counter(
+            default_primary_keys + added_primary_keys
+        )
         for record in records:
             if get_primary_key(record) == "some_key":
                 assert record[2] is None
@@ -331,7 +345,9 @@ class TestSelectMany(object):
 
         with pytest.raises(e.ParamError):
             self.as_connection.select_many(
-                [("test", "demo", 1), ("test", "demo", 2), None], ["title"], {"use_batch_direct": True}
+                [("test", "demo", 1), ("test", "demo", 2), None],
+                ["title"],
+                {"use_batch_direct": True},
             )
 
     # Tests for invalid argument types

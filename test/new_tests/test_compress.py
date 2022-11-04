@@ -17,7 +17,8 @@ class TestCompress:
     config = TestBaseClass.get_connection_config()
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.enterprise_in_use(), reason="No enterprise hosts, maybe cluster is not enterprise."
+        not TestBaseClass.enterprise_in_use(),
+        reason="No enterprise hosts, maybe cluster is not enterprise.",
     )
 
     @pytest.fixture(autouse=True)
@@ -71,7 +72,9 @@ class TestCompress:
 
         assert isinstance(records, list)
         assert len(records) == 6
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4, "float_value"])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, "float_value"]
+        )
         assert records[5][2] == {"float_value": 4.3}
 
     def test_operate_with_compress_policy(self):
@@ -99,7 +102,9 @@ class TestCompress:
             "test",
             "demo",
             1,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_read_with_compress_policy(self, put_data):
@@ -120,7 +125,9 @@ class TestCompress:
             "test",
             "demo",
             1,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_scan_with_compress_policy(self):

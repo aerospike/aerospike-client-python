@@ -24,7 +24,9 @@ class TestGetRegistered(object):
         """
         Invoke udf_get() with correct parameters
         """
-        udf_contents = self.as_connection.udf_get(self.loaded_udf_name, self.udf_language)
+        udf_contents = self.as_connection.udf_get(
+            self.loaded_udf_name, self.udf_language
+        )
 
         # Check for udf file contents
         assert udf_contents == self.loaded_udf_content
@@ -47,7 +49,9 @@ class TestGetRegistered(object):
         Invoke udf_get() with correct policy
         """
         policy = {"timeout": 5000}
-        udf_contents = self.as_connection.udf_get(self.loaded_udf_name, self.udf_language, policy)
+        udf_contents = self.as_connection.udf_get(
+            self.loaded_udf_name, self.udf_language, policy
+        )
 
         # Check for udf file contents
         assert udf_contents == self.loaded_udf_content
@@ -68,7 +72,9 @@ class TestGetRegistered(object):
         invalid_policy = {"timeout": 0.5}
 
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.udf_get(self.loaded_udf_name, self.udf_language, invalid_policy)
+            self.as_connection.udf_get(
+                self.loaded_udf_name, self.udf_language, invalid_policy
+            )
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
@@ -104,7 +110,9 @@ class TestGetRegistered(object):
 
         # Check for status or empty udf contents
         with pytest.raises(TypeError):
-            self.as_connection.udf_get(self.loaded_udf_name, self.udf_language, policy, "")
+            self.as_connection.udf_get(
+                self.loaded_udf_name, self.udf_language, policy, ""
+            )
 
     @pytest.mark.parametrize("policy", ("", (), [], False, 1))
     def test_udf_get_policy_is_wrong_type(self, policy):
@@ -125,7 +133,10 @@ class TestGetRegistered(object):
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
-    @pytest.mark.parametrize("udf_module", ([], {}, (), 1, None, ("module",), bytearray("bin_lua.lua", "utf-8")))
+    @pytest.mark.parametrize(
+        "udf_module",
+        ([], {}, (), 1, None, ("module",), bytearray("bin_lua.lua", "utf-8")),
+    )
     def test_invalid_module_arg_types(self, udf_module):
         with pytest.raises(e.ClientError):
             self.as_connection.udf_get(udf_module, 0)

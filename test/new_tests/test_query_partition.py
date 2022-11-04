@@ -41,7 +41,9 @@ class TestQueryPartition(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, connection_with_config_funcs):
         if self.server_version < [6, 0]:
-            pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
+            pytest.mark.xfail(
+                reason="Servers older than 6.0 do not support partition queries."
+            )
             pytest.xfail()
         as_connection = connection_with_config_funcs
 
@@ -58,7 +60,9 @@ class TestQueryPartition(TestBaseClass):
         for i in range(1, 100000):
             put = 0
             key = (self.test_ns, self.test_set, str(i))
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+            rec_partition = as_connection.get_key_partition_id(
+                self.test_ns, self.test_set, str(i)
+            )
 
             if rec_partition == 1000:
                 self.partition_1000_count += 1
@@ -89,7 +93,9 @@ class TestQueryPartition(TestBaseClass):
             for i in range(1, 100000):
                 put = 0
                 key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+                rec_partition = as_connection.get_key_partition_id(
+                    self.test_ns, self.test_set, str(i)
+                )
 
                 if rec_partition == 1000:
                     self.partition_1000_count += 1
@@ -154,7 +160,11 @@ class TestQueryPartition(TestBaseClass):
 
         records = []
         partition_filter = {"begin": 1000, "count": 1}
-        policy = {"max_retries": 100, "partition_filter": partition_filter, "short_query": True}
+        policy = {
+            "max_retries": 100,
+            "partition_filter": partition_filter,
+            "short_query": True,
+        }
 
         def callback(part_id, input_tuple):
             _, _, record = input_tuple
@@ -175,11 +185,21 @@ class TestQueryPartition(TestBaseClass):
         partition_filter = {"begin": 1000, "count": 4}
 
         expr = exp.Eq(
-            exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, "partition", exp.MapBin("m")),
+            exp.MapGetByKey(
+                None,
+                aerospike.MAP_RETURN_VALUE,
+                exp.ResultType.INTEGER,
+                "partition",
+                exp.MapBin("m"),
+            ),
             1002,
         )
 
-        policy = {"max_retries": 100, "expressions": expr.compile(), "partition_filter": partition_filter}
+        policy = {
+            "max_retries": 100,
+            "expressions": expr.compile(),
+            "partition_filter": partition_filter,
+        }
 
         def callback(part_id, input_tuple):
             _, _, record = input_tuple
@@ -200,11 +220,21 @@ class TestQueryPartition(TestBaseClass):
         partition_filter = {"begin": 1000, "count": 1}
 
         expr = exp.Eq(
-            exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, "partition", exp.MapBin("m")),
+            exp.MapGetByKey(
+                None,
+                aerospike.MAP_RETURN_VALUE,
+                exp.ResultType.INTEGER,
+                "partition",
+                exp.MapBin("m"),
+            ),
             1002,
         )
 
-        policy = {"max_retries": 100, "expressions": expr.compile(), "partition_filter": partition_filter}
+        policy = {
+            "max_retries": 100,
+            "expressions": expr.compile(),
+            "partition_filter": partition_filter,
+        }
 
         def callback(part_id, input_tuple):
             _, _, record = input_tuple
@@ -242,7 +272,9 @@ class TestQueryPartition(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        query_obj.foreach(callback, {"timeout": 1001, "partition_filter": {"begin": 1000, "count": 1}})
+        query_obj.foreach(
+            callback, {"timeout": 1001, "partition_filter": {"begin": 1000, "count": 1}}
+        )
 
         assert len(records) == self.partition_1000_count
 
@@ -297,7 +329,10 @@ class TestQueryPartition(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        query_obj.foreach(callback, {"socket_timeout": 9876, "partition_filter": {"begin": 1000, "count": 1}})
+        query_obj.foreach(
+            callback,
+            {"socket_timeout": 9876, "partition_filter": {"begin": 1000, "count": 1}},
+        )
 
         assert len(records) == self.partition_1000_count
 
@@ -316,7 +351,9 @@ class TestQueryPartition(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        query_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 1}})
+        query_obj.foreach(
+            callback, {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 1}}
+        )
         assert len(records) == 10
 
     def test_query_partition_with_results_method(self):
@@ -357,12 +394,19 @@ class TestQueryPartition(TestBaseClass):
         query_obj2 = self.as_connection.query(self.test_ns, self.test_set)
 
         policy = {
-            "partition_filter": {"begin": 1001, "count": 2, "partition_status": partition_status},
+            "partition_filter": {
+                "begin": 1001,
+                "count": 2,
+                "partition_status": partition_status,
+            },
         }
 
         query_obj2.foreach(resume_callback, policy)
 
-        assert records + resumed_records == self.partition_1001_count + self.partition_1002_count
+        assert (
+            records + resumed_records
+            == self.partition_1001_count + self.partition_1002_count
+        )
 
     def test_resume_query_results(self):
 
@@ -388,7 +432,11 @@ class TestQueryPartition(TestBaseClass):
         query_obj2 = self.as_connection.query(self.test_ns, self.test_set)
 
         policy = {
-            "partition_filter": {"begin": 1001, "count": 1, "partition_status": partition_status},
+            "partition_filter": {
+                "begin": 1001,
+                "count": 1,
+                "partition_status": partition_status,
+            },
         }
 
         results = query_obj2.results(policy)
@@ -408,7 +456,9 @@ class TestQueryPartition(TestBaseClass):
             records.append(record)
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(
+                callback, {"partition_filter": {"begin": 1001, "count": 1}}
+            )
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
@@ -419,7 +469,10 @@ class TestQueryPartition(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(
+                callback,
+                {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}},
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -431,7 +484,9 @@ class TestQueryPartition(TestBaseClass):
             query_obj.foreach(5, {"partition_filter": {"begin": 1001, "count": 1}})
 
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT  # TODO this should be an err param
+        assert (
+            err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        )  # TODO this should be an err param
 
     def test_query_partition_with_callback_wrong_number_of_args(self):
         def callback(input_tuple):
@@ -440,7 +495,9 @@ class TestQueryPartition(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(
+                callback, {"partition_filter": {"begin": 1001, "count": 1}}
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -518,12 +575,20 @@ class TestQueryPartition(TestBaseClass):
                 {
                     "done": False,
                     "retry": True,
-                    1001: (1001, True, False, bytearray(b"\xe9\xe31\x01sS\xedafw\x00W\xcdM\x80\xd0L\xee\\d"), 0),
+                    1001: (
+                        1001,
+                        True,
+                        False,
+                        bytearray(b"\xe9\xe31\x01sS\xedafw\x00W\xcdM\x80\xd0L\xee\\d"),
+                        0,
+                    ),
                     1002: (
                         1002,
                         "bad_init",
                         False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
+                        bytearray(
+                            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                        ),
                         0,
                     ),
                 },
@@ -538,7 +603,9 @@ class TestQueryPartition(TestBaseClass):
                         1002,
                         False,
                         "bad_done",
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
+                        bytearray(
+                            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                        ),
                         0,
                     ),
                 },
@@ -546,7 +613,11 @@ class TestQueryPartition(TestBaseClass):
                 "invalid retry for part_id: 1002",
             ),
             (
-                {"done": False, "retry": True, 1003: (1003, False, False, "bad_digest", 0)},
+                {
+                    "done": False,
+                    "retry": True,
+                    1003: (1003, False, False, "bad_digest", 0),
+                },
                 e.ParamError,
                 "invalid digest value for part_id: 1003",
             ),
@@ -558,7 +629,9 @@ class TestQueryPartition(TestBaseClass):
                         1004,
                         False,
                         False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
+                        bytearray(
+                            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                        ),
                         "bad_bval",
                     ),
                 },
@@ -573,7 +646,9 @@ class TestQueryPartition(TestBaseClass):
                         1004,
                         False,
                         False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
+                        bytearray(
+                            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                        ),
                         0,
                     ),
                 },
@@ -588,7 +663,9 @@ class TestQueryPartition(TestBaseClass):
                         1004,
                         False,
                         False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
+                        bytearray(
+                            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                        ),
                         0,
                     ),
                 },
@@ -602,7 +679,9 @@ class TestQueryPartition(TestBaseClass):
                         1004,
                         False,
                         False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
+                        bytearray(
+                            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                        ),
                         0,
                     ),
                 },
@@ -616,7 +695,9 @@ class TestQueryPartition(TestBaseClass):
                         1004,
                         False,
                         False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
+                        bytearray(
+                            b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
+                        ),
                         0,
                     ),
                 },
@@ -627,7 +708,14 @@ class TestQueryPartition(TestBaseClass):
     )
     def test_query_partition_with_bad_status(self, p_stats, expected, msg):
         records = []
-        policy = {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 5, "partition_status": p_stats}}
+        policy = {
+            "timeout": 1000,
+            "partition_filter": {
+                "begin": 1000,
+                "count": 5,
+                "partition_status": p_stats,
+            },
+        }
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         def callback(part_id, input_tuple):

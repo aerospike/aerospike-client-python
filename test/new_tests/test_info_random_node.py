@@ -150,7 +150,9 @@ class TestInfoRandomNodeIncorrectUsage(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.info_random_node("bins", policy, "")
 
-        assert "info_random_node() takes at most 2 arguments (3 given)" in str(typeError.value)
+        assert "info_random_node() takes at most 2 arguments (3 given)" in str(
+            typeError.value
+        )
 
     @pytest.mark.parametrize("command", (None, 5, ["info"], {}, False))
     def test_info_random_node_for_invalid_command_type(self, command):

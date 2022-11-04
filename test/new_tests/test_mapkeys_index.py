@@ -51,7 +51,13 @@ class TestMapKeysIndex(object):
         policy = {}
         with pytest.raises(TypeError):
             self.as_connection.index_map_keys_create(
-                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy, 1
+                "test",
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                policy,
+                1,
             )
 
     def test_mapkeysindex_with_correct_parameters(self):
@@ -61,7 +67,12 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -75,7 +86,12 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_numeric_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -89,7 +105,12 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_numeric_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "string_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -103,7 +124,12 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_numeric_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_STRING, "test_numeric_map_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_STRING,
+            "test_numeric_map_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -126,7 +152,9 @@ class TestMapKeysIndex(object):
         policy = {}
 
         with pytest.raises(e.InvalidRequest) as err_info:
-            self.as_connection.index_map_keys_create(ns, test_set, test_bin, aerospike.INDEX_STRING, index_name, policy)
+            self.as_connection.index_map_keys_create(
+                ns, test_set, test_bin, aerospike.INDEX_STRING, index_name, policy
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
@@ -138,7 +166,12 @@ class TestMapKeysIndex(object):
         policy = {}
         with pytest.raises(e.InvalidRequest) as err_info:
             self.as_connection.index_map_keys_create(
-                "test1", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+                "test1",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_map_index",
+                policy,
             )
 
         err_code = err_info.value.code
@@ -151,7 +184,12 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_numeric_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo1", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo1",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -165,7 +203,12 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "string_map1", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            "demo",
+            "string_map1",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -175,17 +218,52 @@ class TestMapKeysIndex(object):
     @pytest.mark.parametrize(
         "ns, test_set, test_bin, index_type, index_name, policy",
         (
-            (None, "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", {}),
-            (1, "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", {}),
-            ("test", 1, "string_map", aerospike.INDEX_STRING, "test_string_map_index", {}),
+            (
+                None,
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                {},
+            ),
+            (
+                1,
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                {},
+            ),
+            (
+                "test",
+                1,
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                {},
+            ),
             ("test", "demo", None, aerospike.INDEX_STRING, "test_string_map_index", {}),
             ("test", "demo", "string_map", None, "test_string_map_index", {}),
             ("test", "demo", "string_map", (), "test_string_map_index", {}),
             ("test", "demo", "string_map", "numeric", "test_string_map_index", {}),
             ("test", "demo", "string_map", aerospike.INDEX_STRING, None, {}),
             ("test", "demo", "string_map", aerospike.INDEX_STRING, 15, {}),
-            ("test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", 1),
-            ("test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", {"timeout": 0.5}),
+            (
+                "test",
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                1,
+            ),
+            (
+                "test",
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                {"timeout": 0.5},
+            ),
         ),
         ids=(
             "Namespace is None",
@@ -201,13 +279,17 @@ class TestMapKeysIndex(object):
             "Invalid timeout policy",
         ),
     )
-    def test_mapkeysindex_invalid_params(self, ns, test_set, test_bin, index_type, index_name, policy):
+    def test_mapkeysindex_invalid_params(
+        self, ns, test_set, test_bin, index_type, index_name, policy
+    ):
         """
         Test with various conditions raising paramerrors
         """
 
         with pytest.raises(e.ParamError):
-            self.as_connection.index_map_keys_create(ns, test_set, test_bin, index_type, index_name, policy)
+            self.as_connection.index_map_keys_create(
+                ns, test_set, test_bin, index_type, index_name, policy
+            )
             self.as_connection.index_remove(ns, index_name)
             ensure_dropped_index(self.as_connection, ns, index_name)
 
@@ -218,7 +300,12 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", None, "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            None,
+            "string_map",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -233,13 +320,23 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "test_numeric_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
         assert response_code == AerospikeStatus.AEROSPIKE_OK
 
         try:
             response_code = self.as_connection.index_map_keys_create(
-                "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+                "test",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_map_index",
+                policy,
             )
         except e.IndexFoundError:
             assert self.server_version < [6, 1]
@@ -255,14 +352,24 @@ class TestMapKeysIndex(object):
         # Create the index the first time
         ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            "test",
+            "demo",
+            "string_map",
+            aerospike.INDEX_STRING,
+            "test_string_map_index",
+            policy,
         )
         assert response_code == AerospikeStatus.AEROSPIKE_OK
 
         # Create a different index with the same name
         with pytest.raises(e.IndexFoundError):
             response_code = self.as_connection.index_map_keys_create(
-                "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_string_map_index", policy
+                "test",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_NUMERIC,
+                "test_string_map_index",
+                policy,
             )
 
         # Cleanup the index
@@ -287,7 +394,12 @@ class TestMapKeysIndex(object):
         try:
             for index_name in index_names:
                 response_code = self.as_connection.index_map_keys_create(
-                    "test", "demo", "string_map", aerospike.INDEX_STRING, index_name, policy
+                    "test",
+                    "demo",
+                    "string_map",
+                    aerospike.INDEX_STRING,
+                    index_name,
+                    policy,
                 )
                 assert response_code == AerospikeStatus.AEROSPIKE_OK
         except e.IndexFoundError:
@@ -307,7 +419,12 @@ class TestMapKeysIndex(object):
         policy = {"timeout": 1000}
         ensure_dropped_index(self.as_connection, "test", "test_numeric_map_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "test_numeric_map_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -321,7 +438,12 @@ class TestMapKeysIndex(object):
         policy = {}
         ensure_dropped_index(self.as_connection, "test", "uni_age_index")
         response_code = self.as_connection.index_map_keys_create(
-            "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "uni_age_index", policy
+            "test",
+            "demo",
+            "numeric_map",
+            aerospike.INDEX_NUMERIC,
+            "uni_age_index",
+            policy,
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
@@ -338,7 +460,12 @@ class TestMapKeysIndex(object):
 
         with pytest.raises(e.ClusterError) as err_info:
             client1.index_map_keys_create(
-                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+                "test",
+                "demo",
+                "string_map",
+                aerospike.INDEX_STRING,
+                "test_string_map_index",
+                policy,
             )
 
         err_code = err_info.value.code

@@ -14,7 +14,8 @@ class TestCreateRole(object):
     config = TestBaseClass.get_connection_config()
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may be not secured cluster.",
     )
 
     def setup_method(self, method):
@@ -22,7 +23,9 @@ class TestCreateRole(object):
         Setup method
         """
         config = self.config
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
         try:
             self.client.admin_drop_user("testcreaterole")
             time.sleep(2)
@@ -66,7 +69,9 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 1000}
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}],
+            {"timeout": 1000},
         )
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -78,7 +83,9 @@ class TestCreateRole(object):
         }
 
         try:
-            status = self.client.admin_create_user("testcreaterole", "createrole", ["usr-sys-admin-test"])
+            status = self.client.admin_create_user(
+                "testcreaterole", "createrole", ["usr-sys-admin-test"]
+            )
         except e.QuotasNotEnabled:
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
@@ -94,16 +101,43 @@ class TestCreateRole(object):
     @pytest.mark.parametrize(
         "priv_name, privs",
         [
-            ("PRIV_USER_ADMIN", [{"code": aerospike.PRIV_USER_ADMIN, "ns": "", "set": ""}]),
-            ("PRIV_SYS_ADMIN", [{"code": aerospike.PRIV_SYS_ADMIN, "ns": "", "set": ""}]),
-            ("PRIV_DATA_ADMIN", [{"code": aerospike.PRIV_DATA_ADMIN, "ns": "", "set": ""}]),
+            (
+                "PRIV_USER_ADMIN",
+                [{"code": aerospike.PRIV_USER_ADMIN, "ns": "", "set": ""}],
+            ),
+            (
+                "PRIV_SYS_ADMIN",
+                [{"code": aerospike.PRIV_SYS_ADMIN, "ns": "", "set": ""}],
+            ),
+            (
+                "PRIV_DATA_ADMIN",
+                [{"code": aerospike.PRIV_DATA_ADMIN, "ns": "", "set": ""}],
+            ),
             ("PRIV_READ", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]),
-            ("PRIV_WRITE", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]),
-            ("PRIV_READ_WRITE", [{"code": aerospike.PRIV_READ_WRITE, "ns": "test", "set": "demo"}]),
-            ("PRIV_READ_WRITE_UDF", [{"code": aerospike.PRIV_READ_WRITE_UDF, "ns": "test", "set": "demo"}]),
-            ("PRIV_TRUNCATE", [{"code": aerospike.PRIV_TRUNCATE, "ns": "test", "set": "demo"}]),
-            ("PRIV_UDF_ADMIN", [{"code": aerospike.PRIV_UDF_ADMIN, "ns": "", "set": ""}]),
-            ("PRIV_SINDEX_ADMIN", [{"code": aerospike.PRIV_SINDEX_ADMIN, "ns": "", "set": ""}]),
+            (
+                "PRIV_WRITE",
+                [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}],
+            ),
+            (
+                "PRIV_READ_WRITE",
+                [{"code": aerospike.PRIV_READ_WRITE, "ns": "test", "set": "demo"}],
+            ),
+            (
+                "PRIV_READ_WRITE_UDF",
+                [{"code": aerospike.PRIV_READ_WRITE_UDF, "ns": "test", "set": "demo"}],
+            ),
+            (
+                "PRIV_TRUNCATE",
+                [{"code": aerospike.PRIV_TRUNCATE, "ns": "test", "set": "demo"}],
+            ),
+            (
+                "PRIV_UDF_ADMIN",
+                [{"code": aerospike.PRIV_UDF_ADMIN, "ns": "", "set": ""}],
+            ),
+            (
+                "PRIV_SINDEX_ADMIN",
+                [{"code": aerospike.PRIV_SINDEX_ADMIN, "ns": "", "set": ""}],
+            ),
         ],
     )
     def test_create_role_all_privs_positive(self, priv_name, privs):
@@ -124,10 +158,17 @@ class TestCreateRole(object):
         self.client.admin_create_role(role_name, privs, {"timeout": 1000})
         time.sleep(1)
         roles = self.client.admin_get_role(role_name)
-        assert roles == {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0}
+        assert roles == {
+            "privileges": privs,
+            "whitelist": [],
+            "read_quota": 0,
+            "write_quota": 0,
+        }
 
         try:
-            status = self.client.admin_create_user("testcreaterole", "createrole", [role_name])
+            status = self.client.admin_create_user(
+                "testcreaterole", "createrole", [role_name]
+            )
         except e.QuotasNotEnabled:
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
@@ -155,7 +196,9 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}], {"timeout": 1000}
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}],
+            {"timeout": 1000},
         )
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -167,7 +210,9 @@ class TestCreateRole(object):
         }
 
         try:
-            status = self.client.admin_create_user("testcreaterole", "createrole", ["usr-sys-admin-test"])
+            status = self.client.admin_create_user(
+                "testcreaterole", "createrole", ["usr-sys-admin-test"]
+            )
         except e.QuotasNotEnabled:
             pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
             pytest.skip()
@@ -194,13 +239,17 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
         )
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
 
         assert roles == {
-            "privileges": [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}],
+            "privileges": [
+                {"code": 0, "ns": "", "set": ""},
+                {"code": 1, "ns": "", "set": ""},
+            ],
             "whitelist": [],
             "read_quota": 0,
             "write_quota": 0,
@@ -224,7 +273,10 @@ class TestCreateRole(object):
         try:
             self.client.admin_create_role(
                 "usr-sys-admin-test",
-                [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
+                [
+                    {"code": aerospike.PRIV_USER_ADMIN},
+                    {"code": aerospike.PRIV_SYS_ADMIN},
+                ],
                 whitelist=["127.0.0.1", "10.1.2.0/24"],
                 read_quota=20,
                 write_quota=30,
@@ -299,11 +351,16 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+            "usr-sys-admin-test",
+            [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}],
         )
         try:
             self.client.admin_create_role(
-                "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+                "usr-sys-admin-test",
+                [
+                    {"code": aerospike.PRIV_USER_ADMIN},
+                    {"code": aerospike.PRIV_SYS_ADMIN},
+                ],
             )
 
         except e.RoleExistsError as exception:
@@ -326,7 +383,9 @@ class TestCreateRole(object):
         except Exception:
             pass  # EAFP
         status = self.client.admin_create_role(
-            role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 1000}
+            role_name,
+            [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}],
+            {"timeout": 1000},
         )
 
         assert status == 0
@@ -342,7 +401,9 @@ class TestCreateRole(object):
             "write_quota": 0,
         }
 
-        status = self.client.admin_create_user("testcreaterole", "createrole", [role_name])
+        status = self.client.admin_create_user(
+            "testcreaterole", "createrole", [role_name]
+        )
 
         assert status == 0
         time.sleep(1)
@@ -368,7 +429,9 @@ class TestCreateRole(object):
 
         try:
             self.client.admin_create_role(
-                role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 1000}
+                role_name,
+                [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}],
+                {"timeout": 1000},
             )
 
         except e.InvalidRole as exception:

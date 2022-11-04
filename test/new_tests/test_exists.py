@@ -47,9 +47,21 @@ class TestExists:
         "key, record, policy",
         [
             (("test", "demo", "p_None"), {"name": "John"}, None),
-            (("test", "demo", "p_Replica"), {"name": "Michel"}, {"total_timeout": 1000}),
-            (("test", "demo", "p_consistency_level"), {"name": "Michel"}, {"total_timeout": 1000}),
-            (("test", "demo", "p_consistency_level"), {"name": "Michel"}, {"total_timeout": 1000}),
+            (
+                ("test", "demo", "p_Replica"),
+                {"name": "Michel"},
+                {"total_timeout": 1000},
+            ),
+            (
+                ("test", "demo", "p_consistency_level"),
+                {"name": "Michel"},
+                {"total_timeout": 1000},
+            ),
+            (
+                ("test", "demo", "p_consistency_level"),
+                {"name": "Michel"},
+                {"total_timeout": 1000},
+            ),
         ],
     )
     def test_pos_exists_with_key_and_policy1(self, key, record, policy, put_data):
@@ -85,7 +97,11 @@ class TestExists:
             (("namespace", "demo", 1), e.ClientError, -1),  # non-existent Namespace
             # None set in key tuple.
             (("test", None, 2), e.RecordNotFound, 2),
-            (("test", "demo", "Non_existing_key"), e.RecordNotFound, 2),  # Non_existing_key
+            (
+                ("test", "demo", "Non_existing_key"),
+                e.RecordNotFound,
+                2,
+            ),  # Non_existing_key
         ],
     )
     def test_neg_exists_with_non_existent_data(self, key, ex, ex_code):
@@ -120,7 +136,12 @@ class TestExists:
     @pytest.mark.parametrize(
         "key, record, meta, policy",
         [
-            (("test", "demo", 20), {"name": "John"}, {"gen": 3, "ttl": 1}, {"total_timeout": 2}),
+            (
+                ("test", "demo", 20),
+                {"name": "John"},
+                {"gen": 3, "ttl": 1},
+                {"total_timeout": 2},
+            ),
         ],
     )
     def test_neg_exists_with_low_timeout(self, key, record, meta, policy, put_data):
@@ -151,10 +172,18 @@ class TestExists:
                 -2,
                 "timeout is invalid",
             ),
-            (("test", "demo", "policy_is_string"), {"Name": "Jeff"}, "policy_str", -2, "policy must be a dict"),
+            (
+                ("test", "demo", "policy_is_string"),
+                {"Name": "Jeff"},
+                "policy_str",
+                -2,
+                "policy must be a dict",
+            ),
         ],
     )
-    def test_neg_exists_with_invalid_meta(self, key, record, policy, ex_code, ex_msg, put_data):
+    def test_neg_exists_with_invalid_meta(
+        self, key, record, policy, ex_code, ex_msg, put_data
+    ):
         """
         Invoke exists() with a key and timeout as string.
         """

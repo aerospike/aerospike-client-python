@@ -52,7 +52,9 @@ class TestClose:
         if TestClose.user is None and TestClose.password is None:
             self.client = aerospike.client(config).connect()
         else:
-            self.client = aerospike.client(config).connect(TestClose.user, TestClose.password)
+            self.client = aerospike.client(config).connect(
+                TestClose.user, TestClose.password
+            )
 
         assert self.client.is_connected()
         self.client.close()

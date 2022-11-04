@@ -68,7 +68,8 @@ class TestInfoSingleNode(object):
             pass
 
         self.as_connection.info_single_node(
-            "sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string", self.host_name
+            "sindex-create:ns=test;set=demo;indexname=names_test_index;indexdata=names,string",
+            self.host_name,
         )
         time.sleep(2)
 
@@ -133,7 +134,9 @@ class TestInfoSingleNodeIncorrectUsage(object):
         Test info for incorrect command.
         """
         with pytest.raises(e.ClientError):
-            self.as_connection.info_single_node("abcd", self.connection_config["hosts"][0])
+            self.as_connection.info_single_node(
+                "abcd", self.connection_config["hosts"][0]
+            )
 
     def test_info_single_node_positive_without_connection(self):
         """
@@ -155,7 +158,9 @@ class TestInfoSingleNodeIncorrectUsage(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.info_single_node("bins", host, policy, "")
 
-        assert "info_single_node() takes at most 3 arguments (4 given)" in str(typeError.value)
+        assert "info_single_node() takes at most 3 arguments (4 given)" in str(
+            typeError.value
+        )
 
     def test_info_single_node_positive_with_incorrect_host(self):
         """
@@ -171,7 +176,9 @@ class TestInfoSingleNodeIncorrectUsage(object):
         Test info for None command.
         """
         with pytest.raises(e.ParamError):
-            self.as_connection.info_single_node(command, self.connection_config["hosts"][0][:2])
+            self.as_connection.info_single_node(
+                command, self.connection_config["hosts"][0][:2]
+            )
 
     @pytest.mark.parametrize("hostname", (None, 5, ["localhost"], {}, 3000.0))
     def test_info_single_node_for_invalid_hostname_type(self, hostname):

@@ -10,7 +10,11 @@ class TestListClear(object):
         keys = []
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "contact_no": [i, i + 1], "city": ["Pune", "Dehli"]}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "contact_no": [i, i + 1],
+                "city": ["Pune", "Dehli"],
+            }
             as_connection.put(key, rec)
             keys.append(key)
 
@@ -85,7 +89,9 @@ class TestListClear(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
         try:
             self.as_connection.list_clear(key, bin)
         except e.BinIncompatibleType as exception:
@@ -100,7 +106,9 @@ class TestListClear(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_clear(key, "contact_no", {}, policy, "")
 
-        assert "list_clear() takes at most 4 arguments (5 given)" in str(typeError.value)
+        assert "list_clear() takes at most 4 arguments (5 given)" in str(
+            typeError.value
+        )
 
     def test_neg_list_clear_policy_is_string(self):
         """

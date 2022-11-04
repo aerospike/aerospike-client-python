@@ -50,7 +50,9 @@ class BitResize(_BaseExpr):
 
     _op = aerospike.OP_BIT_RESIZE
 
-    def __init__(self, policy: "TypePolicy", byte_size: int, flags: int, bin: "TypeBinName"):
+    def __init__(
+        self, policy: "TypePolicy", byte_size: int, flags: int, bin: "TypeBinName"
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             byte_size (int): Number of bytes the resulting blob should occupy.
@@ -75,7 +77,9 @@ class BitResize(_BaseExpr):
                 else {_Keys.VALUE_KEY: 0},
             ),
             _GenericExpr(
-                _ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: flags} if flags is not None else {_Keys.VALUE_KEY: 0}
+                _ExprOp._AS_EXP_BIT_FLAGS,
+                0,
+                {_Keys.VALUE_KEY: flags} if flags is not None else {_Keys.VALUE_KEY: 0},
             ),
             bin if isinstance(bin, _BaseExpr) else BlobBin(bin),
         )
@@ -86,7 +90,13 @@ class BitInsert(_BaseExpr):
 
     _op = aerospike.OP_BIT_INSERT
 
-    def __init__(self, policy: "TypePolicy", byte_offset: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        policy: "TypePolicy",
+        byte_offset: int,
+        value: "TypeBitValue",
+        bin: "TypeBinName",
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             byte_offset (int): Integer byte index of where to insert the value.
@@ -120,7 +130,9 @@ class BitRemove(_BaseExpr):
 
     _op = aerospike.OP_BIT_REMOVE
 
-    def __init__(self, policy: "TypePolicy", byte_offset: int, byte_size: int, bin: "TypeBinName"):
+    def __init__(
+        self, policy: "TypePolicy", byte_offset: int, byte_size: int, bin: "TypeBinName"
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             byte_offset (int): Byte index of where to start removing from.
@@ -158,7 +170,14 @@ class BitSet(_BaseExpr):
 
     _op = aerospike.OP_BIT_SET
 
-    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        value: "TypeBitValue",
+        bin: "TypeBinName",
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start overwriting.
@@ -194,7 +213,14 @@ class BitOr(_BaseExpr):
 
     _op = aerospike.OP_BIT_OR
 
-    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        value: "TypeBitValue",
+        bin: "TypeBinName",
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -237,7 +263,14 @@ class BitXor(_BaseExpr):
 
     _op = aerospike.OP_BIT_XOR
 
-    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        value: "TypeBitValue",
+        bin: "TypeBinName",
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -273,7 +306,14 @@ class BitAnd(_BaseExpr):
 
     _op = aerospike.OP_BIT_AND
 
-    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: "TypeBitValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        value: "TypeBitValue",
+        bin: "TypeBinName",
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -317,7 +357,9 @@ class BitNot(_BaseExpr):
 
     _op = aerospike.OP_BIT_NOT
 
-    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, bin: "TypeBinName"):
+    def __init__(
+        self, policy: "TypePolicy", bit_offset: int, bit_size: int, bin: "TypeBinName"
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -351,7 +393,14 @@ class BitLeftShift(_BaseExpr):
 
     _op = aerospike.OP_BIT_LSHIFT
 
-    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, shift: int, bin: "TypeBinName"):
+    def __init__(
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        shift: int,
+        bin: "TypeBinName",
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -387,7 +436,14 @@ class BitRightShift(_BaseExpr):
 
     _op = aerospike.OP_BIT_RSHIFT
 
-    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, shift: int, bin: "TypeBinName"):
+    def __init__(
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        shift: int,
+        bin: "TypeBinName",
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start operation.
@@ -432,7 +488,13 @@ class BitAdd(_BaseExpr):
     _op = aerospike.OP_BIT_ADD
 
     def __init__(
-        self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, action: int, bin: "TypeBinName"
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        value: int,
+        action: int,
+        bin: "TypeBinName",
     ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
@@ -469,7 +531,11 @@ class BitAdd(_BaseExpr):
                 else {_Keys.VALUE_KEY: 0},
             ),
             _GenericExpr(
-                _ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: action} if action is not None else {_Keys.VALUE_KEY: 0}
+                _ExprOp._AS_EXP_BIT_FLAGS,
+                0,
+                {_Keys.VALUE_KEY: action}
+                if action is not None
+                else {_Keys.VALUE_KEY: 0},
             ),
             bin if isinstance(bin, _BaseExpr) else BlobBin(bin),
         )
@@ -483,7 +549,13 @@ class BitSubtract(_BaseExpr):
     _op = aerospike.OP_BIT_SUBTRACT
 
     def __init__(
-        self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, action: int, bin: "TypeBinName"
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        value: int,
+        action: int,
+        bin: "TypeBinName",
     ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
@@ -513,7 +585,11 @@ class BitSubtract(_BaseExpr):
                 else {_Keys.VALUE_KEY: 0},
             ),
             _GenericExpr(
-                _ExprOp._AS_EXP_BIT_FLAGS, 0, {_Keys.VALUE_KEY: action} if action is not None else {_Keys.VALUE_KEY: 0}
+                _ExprOp._AS_EXP_BIT_FLAGS,
+                0,
+                {_Keys.VALUE_KEY: action}
+                if action is not None
+                else {_Keys.VALUE_KEY: 0},
             ),
             bin if isinstance(bin, _BaseExpr) else BlobBin(bin),
         )
@@ -526,7 +602,14 @@ class BitSetInt(_BaseExpr):
 
     _op = aerospike.OP_BIT_SET_INT
 
-    def __init__(self, policy: "TypePolicy", bit_offset: int, bit_size: int, value: int, bin: "TypeBinName"):
+    def __init__(
+        self,
+        policy: "TypePolicy",
+        bit_offset: int,
+        bit_size: int,
+        value: int,
+        bin: "TypeBinName",
+    ):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             bit_offset (int): Bit index of where to start writing.
@@ -581,7 +664,11 @@ class BitGet(_BaseExpr):
             # Get 2 from bin "c".
             expr = exp.BitGet(8, 8, exp.BlobBin("c")).compile()
         """
-        self._children = (bit_offset, bit_size, bin if isinstance(bin, _BaseExpr) else BlobBin(bin))
+        self._children = (
+            bit_offset,
+            bit_size,
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin),
+        )
 
 
 class BitCount(_BaseExpr):
@@ -607,7 +694,11 @@ class BitCount(_BaseExpr):
             #                   12345678 90123456 78901234 (bit count = 24)
             # Number of 1's = 6
         """
-        self._children = (bit_offset, bit_size, bin if isinstance(bin, _BaseExpr) else BlobBin(bin))
+        self._children = (
+            bit_offset,
+            bit_size,
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin),
+        )
 
 
 class BitLeftScan(_BaseExpr):
@@ -630,7 +721,12 @@ class BitLeftScan(_BaseExpr):
             # Scan the first byte of bin "c" for the first bit set to 1. (should get 6)
             expr = exp.BitLeftScan(0, 8, True, exp.BlobBin("c")).compile()
         """
-        self._children = (bit_offset, bit_size, value, bin if isinstance(bin, _BaseExpr) else BlobBin(bin))
+        self._children = (
+            bit_offset,
+            bit_size,
+            value,
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin),
+        )
 
 
 class BitRightScan(_BaseExpr):
@@ -657,7 +753,12 @@ class BitRightScan(_BaseExpr):
             #                                     01234567 (local offset)
             # 1 found at local offset 0
         """
-        self._children = (bit_offset, bit_size, value, bin if isinstance(bin, _BaseExpr) else BlobBin(bin))
+        self._children = (
+            bit_offset,
+            bit_size,
+            value,
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin),
+        )
 
 
 class BitGetInt(_BaseExpr):
@@ -680,4 +781,9 @@ class BitGetInt(_BaseExpr):
             # Get 2 as an integer from bin "c".
             expr = exp.BitGetInt(8, 8, True, exp.BlobBin("c")).compile()
         """
-        self._children = (bit_offset, bit_size, 1 if sign else 0, bin if isinstance(bin, _BaseExpr) else BlobBin(bin))
+        self._children = (
+            bit_offset,
+            bit_size,
+            1 if sign else 0,
+            bin if isinstance(bin, _BaseExpr) else BlobBin(bin),
+        )

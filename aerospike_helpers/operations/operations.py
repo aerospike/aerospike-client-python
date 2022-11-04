@@ -125,6 +125,9 @@ def touch(ttl: int = None):
     """
     op_dict = {"op": aerospike.OPERATOR_TOUCH}
     if ttl:
-        warnings.warn("TTL should be specified in the meta dictionary for operate", DeprecationWarning)
+        warnings.warn(
+            "TTL should be specified in the meta dictionary for operate",
+            DeprecationWarning,
+        )
         op_dict["val"] = ttl
     return op_dict

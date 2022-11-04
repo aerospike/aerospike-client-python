@@ -129,7 +129,9 @@ class TestApply(TestBaseClass):
         ),
         ids=["string", "None", "Integer", "list", "dict"],
     )
-    def test_apply_causing_list_append_with_correct_params(self, func_args, test_bin, expected):
+    def test_apply_causing_list_append_with_correct_params(
+        self, func_args, test_bin, expected
+    ):
 
         key = ("test", "demo", 1)
         retval = self.as_connection.apply(key, "sample", "list_append", func_args)
@@ -152,7 +154,11 @@ class TestApply(TestBaseClass):
 
         key = ("test", "demo", 1)
         retval = self.as_connection.apply(
-            key, "sample", "list_append", func_args, policy={"expressions": expressions.compile()}
+            key,
+            "sample",
+            "list_append",
+            func_args,
+            policy={"expressions": expressions.compile()},
         )
 
         _, _, bins = self.as_connection.get(key)
@@ -181,7 +187,9 @@ class TestApply(TestBaseClass):
         Invoke apply() with map
         """
         key = ("test", "demo", 1)
-        retval = self.as_connection.apply(key, "test_record_udf", "map_iterate", ["basic_map", 555])
+        retval = self.as_connection.apply(
+            key, "test_record_udf", "map_iterate", ["basic_map", 555]
+        )
         assert retval is None
         # Since this udf changes all of the record values to be 555,
         # all of the values in the 'basic_map' should be 555
@@ -208,7 +216,9 @@ class TestApply(TestBaseClass):
         """
         policy = {"total_timeout": 1000}
         key = ("test", "demo", 1)
-        retval = self.as_connection.apply(key, "sample", "list_append", ["name", "car"], policy)
+        retval = self.as_connection.apply(
+            key, "sample", "list_append", ["name", "car"], policy
+        )
         (key, _, bins) = self.as_connection.get(key)
         assert retval == 0
         assert bins["name"] == ["name1", "car"]
@@ -218,7 +228,9 @@ class TestApply(TestBaseClass):
         Invoke apply() with integer
         """
         key = ("test", "demo", 1)
-        retval = self.as_connection.apply(key, "test_record_udf", "bin_udf_operation_integer", ["age", 2, 20])
+        retval = self.as_connection.apply(
+            key, "test_record_udf", "bin_udf_operation_integer", ["age", 2, 20]
+        )
 
         assert retval == 23
         (key, _, bins) = self.as_connection.get(key)
@@ -229,7 +241,9 @@ class TestApply(TestBaseClass):
         Invoke apply() with string
         """
         key = ("test", "demo", 1)
-        retval = self.as_connection.apply(key, "test_record_udf", "bin_udf_operation_string", ["addr", " world"])
+        retval = self.as_connection.apply(
+            key, "test_record_udf", "bin_udf_operation_string", ["addr", " world"]
+        )
 
         assert retval == "name1 world"
         (key, _, bins) = self.as_connection.get(key)
@@ -240,7 +254,9 @@ class TestApply(TestBaseClass):
         Invoke apply() with record
         """
         key = ("test", "demo", 1)
-        retval = self.as_connection.apply(key, "test_record_udf", "udf_returns_record", [])
+        retval = self.as_connection.apply(
+            key, "test_record_udf", "udf_returns_record", []
+        )
 
         # This function returns a record which gets mapped to a python dict
         assert retval is not None
@@ -251,7 +267,9 @@ class TestApply(TestBaseClass):
         Invoke apply() with a bytearray as a argument
         """
         key = ("test", "demo", "apply_insert")
-        self.as_connection.apply(key, "udf_basic_ops", "create_record", [bytearray("asd;as[d'as;d", "utf-8")])
+        self.as_connection.apply(
+            key, "udf_basic_ops", "create_record", [bytearray("asd;as[d'as;d", "utf-8")]
+        )
         (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {"bin": bytearray(b"asd;as[d'as;d")}
@@ -264,7 +282,9 @@ class TestApply(TestBaseClass):
         Should not raise an error
         """
         key = ("test", "demo", 1)
-        retval = self.as_connection.apply(key, "sample", "list_append", ["name", "car", 1])
+        retval = self.as_connection.apply(
+            key, "sample", "list_append", ["name", "car", 1]
+        )
         assert retval == 0
         (key, _, bins) = self.as_connection.get(key)
         assert bins["name"] == ["name1", "car"]
@@ -275,7 +295,9 @@ class TestApply(TestBaseClass):
         to a lua function. Should not raise an error
         """
         key = ("test", "demo", 1)
-        retval = self.as_connection.apply(key, "sample", "list_append_extra", ["name", "car"])
+        retval = self.as_connection.apply(
+            key, "sample", "list_append_extra", ["name", "car"]
+        )
         assert retval == 0
         (key, _, bins) = self.as_connection.get(key)
         assert bins["name"] == ["name1", "car"]
@@ -313,7 +335,12 @@ class TestApply(TestBaseClass):
         key = ("test", "demo", 1)
 
         with pytest.raises(e.UDFError) as err_info:
-            self.as_connection.apply(key, "test_record_udf", "bin_udf_operation_integer", ["age", "not an", "integer"])
+            self.as_connection.apply(
+                key,
+                "test_record_udf",
+                "bin_udf_operation_integer",
+                ["age", "not an", "integer"],
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_UDF
@@ -344,7 +371,9 @@ class TestApply(TestBaseClass):
         policy = {"total_timeout": 0.1}
         key = ("test", "demo", 1)
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.apply(key, "sample", "list_append", ["name", "car"], policy)
+            self.as_connection.apply(
+                key, "sample", "list_append", ["name", "car"], policy
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -356,7 +385,9 @@ class TestApply(TestBaseClass):
         policy = {"total_timeout": 1000}
         key = ("test", "demo", 1)
         with pytest.raises(TypeError) as typeError:
-            self.as_connection.apply(key, "sample", "list_append", ["name", "car"], policy, "")
+            self.as_connection.apply(
+                key, "sample", "list_append", ["name", "car"], policy, ""
+            )
 
         assert "apply() takes at most 5 arguments (6 given)" in str(typeError.value)
 
@@ -368,7 +399,12 @@ class TestApply(TestBaseClass):
             ("wrong_module_name", "list_append", ["name", "car"]),
             ("sample", "list_prepend", ["name", "car"]),
         ),
-        ids=["incorrect argument type", "empty module and function", "non existent module", "non existent function"],
+        ids=[
+            "incorrect argument type",
+            "empty module and function",
+            "non existent module",
+            "non existent function",
+        ],
     )
     def test_udf_error_causing_args(self, module, function, arguments):
         key = ("test", "demo", 1)

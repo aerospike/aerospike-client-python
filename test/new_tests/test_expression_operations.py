@@ -5,7 +5,17 @@ import pytest
 
 import aerospike
 
-from aerospike_helpers.expressions import Add, Cond, Def, GE, IntBin, LT, Let, Unknown, Var
+from aerospike_helpers.expressions import (
+    Add,
+    Cond,
+    Def,
+    GE,
+    IntBin,
+    LT,
+    Let,
+    Unknown,
+    Var,
+)
 from aerospike_helpers.operations import expression_operations as expressions
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
@@ -15,7 +25,9 @@ class TestExpressionsOperations(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support arithmetic expressions.")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support arithmetic expressions."
+            )
             pytest.xfail()
 
         self.test_ns = "test"
@@ -62,7 +74,10 @@ class TestExpressionsOperations(TestBaseClass):
                 {"test_name": 100},
             ),
             (
-                Let(Def("bal", IntBin("balance")), Cond(GE(Var("bal"), 50), Add(Var("bal"), 50), Unknown())),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(GE(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ),
                 aerospike.EXP_READ_DEFAULT,
                 "test_name2",
                 {"test_name2": 150},
@@ -82,14 +97,20 @@ class TestExpressionsOperations(TestBaseClass):
         "expr, flags, name, expected",
         [
             (
-                Let(Def("bal", IntBin("balance")), Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown())).compile(),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ).compile(),
                 aerospike.EXP_READ_DEFAULT,
                 "test_name3",
                 e.OpNotApplicable,  # Because Unknown will be returned.
             ),
             ("bad_expr", aerospike.EXP_READ_DEFAULT, "test_name3", e.ParamError),
             (
-                Let(Def("bal", IntBin("balance")), Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown())).compile(),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ).compile(),
                 "bad_flags",
                 "test_name3",
                 e.ParamError,
@@ -108,15 +129,26 @@ class TestExpressionsOperations(TestBaseClass):
     @pytest.mark.parametrize(
         "expr, flags, bin, expected",
         [
-            (Let(Def("bal", IntBin("balance")), Var("bal")), aerospike.EXP_WRITE_DEFAULT, "balance", 100),
             (
-                Let(Def("bal", IntBin("balance")), Cond(GE(Var("bal"), 50), Add(Var("bal"), 50), Unknown())),
+                Let(Def("bal", IntBin("balance")), Var("bal")),
+                aerospike.EXP_WRITE_DEFAULT,
+                "balance",
+                100,
+            ),
+            (
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(GE(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ),
                 aerospike.EXP_WRITE_CREATE_ONLY | aerospike.EXP_WRITE_POLICY_NO_FAIL,
                 "balance",
                 100,
             ),
             (
-                Let(Def("bal", IntBin("balance")), Cond(GE(Var("bal"), 50), Add(Var("bal"), 50), Unknown())),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(GE(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ),
                 aerospike.EXP_READ_DEFAULT,
                 "balance",
                 150,
@@ -138,19 +170,28 @@ class TestExpressionsOperations(TestBaseClass):
         [
             ("bad_expr", aerospike.EXP_WRITE_DEFAULT, "balance", e.ParamError),
             (
-                Let(Def("bal", IntBin("balance")), Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown())).compile(),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ).compile(),
                 "bad_flags",
                 "balance",
                 e.ParamError,
             ),
             (
-                Let(Def("bal", IntBin("balance")), Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown())).compile(),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ).compile(),
                 aerospike.EXP_WRITE_CREATE_ONLY,
                 "balance",
                 e.BinExistsError,
             ),
             (
-                Let(Def("bal", IntBin("balance")), Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown())).compile(),
+                Let(
+                    Def("bal", IntBin("balance")),
+                    Cond(LT(Var("bal"), 50), Add(Var("bal"), 50), Unknown()),
+                ).compile(),
                 aerospike.EXP_WRITE_DEFAULT,
                 "balance",
                 e.OpNotApplicable,

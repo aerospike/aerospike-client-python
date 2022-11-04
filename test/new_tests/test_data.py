@@ -26,10 +26,16 @@ pos_data = [
     (("test", "demo", "list_key"), {"names": [1.5, 2.565, 3.676, 4, 5.89]}),
     (("test", "demo", "list_key"), {"names": ["John", "Marlen", 1024]}),
     (("test", "demo", "list_key_unicode"), {"a": ["aa", "bb", 1, "bb", "aa"]}),
-    (("test", "demo", "objects"), {"objects": [pickle.dumps(SomeClass()), pickle.dumps(SomeClass())]}),
+    (
+        ("test", "demo", "objects"),
+        {"objects": [pickle.dumps(SomeClass()), pickle.dumps(SomeClass())]},
+    ),
     # Map Data
     (("test", "demo", "map_key"), {"names": {"name": "John", "age": 24}}),
-    (("test", "demo", "map_key_float"), {"double_map": {"1": 3.141, "2": 4.123, "3": 6.285}}),
+    (
+        ("test", "demo", "map_key_float"),
+        {"double_map": {"1": 3.141, "2": 4.123, "3": 6.285}},
+    ),
     (("test", "demo", "map_key_unicode"), {"a": {"aa": "11"}, "b": {"bb": "22"}}),
     #        (('test', 'demo', 1),
     #            {'odict': OrderedDict(sorted({'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}.items(),
@@ -38,7 +44,10 @@ pos_data = [
     (("test", "demo", "tuple_key"), {"tuple_seq": tuple("abc")}),
     # Set Data
     (("test", "demo", "set_key"), {"set_data": set([1, 2])}),
-    (("test", "demo", "fset_key"), {"fset_data": frozenset(["Frankfurt", "Basel", "Freiburg"])}),
+    (
+        ("test", "demo", "fset_key"),
+        {"fset_data": frozenset(["Frankfurt", "Basel", "Freiburg"])},
+    ),
     # Hybrid
     (
         ("test", "demo", "multiple_bins"),
@@ -53,7 +62,10 @@ pos_data = [
         ("test", "demo", "list_map_key"),
         {
             "names": ["John", "Marlen", "Steve"],
-            "names_and_age": [{"name": "John", "age": 24}, {"name": "Marlen", "age": 25}],
+            "names_and_age": [
+                {"name": "John", "age": 24},
+                {"name": "Marlen", "age": 25},
+            ],
         },
     ),
     (("test", "demo", "map_tuple_key"), {"seq": {"bb": tuple("abc")}}),
@@ -74,5 +86,9 @@ key_neg = [
     (("test", {}, 1), -2, "set must be a string"),
     (("test", (), 1), -2, "set must be a string"),
     (("test", "demo", None), -2, "either key or digest is required"),
-    (("test", "demo"), -2, "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)"),
+    (
+        ("test", "demo"),
+        -2,
+        "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)",
+    ),
 ]

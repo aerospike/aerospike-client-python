@@ -46,7 +46,9 @@ import aerospike
 _NUM_RECORDS = 8
 
 
-def verify_multiple_expression_avenues(client, test_ns, test_set, expr, op_bin, expected):
+def verify_multiple_expression_avenues(
+    client, test_ns, test_set, expr, op_bin, expected
+):
     keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
 
     # operate
@@ -65,7 +67,9 @@ def verify_multiple_expression_avenues(client, test_ns, test_set, expr, op_bin, 
     res = []
     for key in keys:
         try:
-            res.append(client.operate_ordered(key, ops, policy={"expressions": expr})[2])
+            res.append(
+                client.operate_ordered(key, ops, policy={"expressions": expr})[2]
+            )
         except e.FilteredOut:
             pass
 
@@ -135,10 +139,14 @@ class TestExpressions(TestBaseClass):
             self.as_connection.put(key, rec)
 
         self.as_connection.put(
-            ("test", "demo", _NUM_RECORDS), {"extra": "record"}, policy={"key": aerospike.POLICY_KEY_SEND}
+            ("test", "demo", _NUM_RECORDS),
+            {"extra": "record"},
+            policy={"key": aerospike.POLICY_KEY_SEND},
         )
         self.as_connection.put(
-            ("test", "demo", "k_string"), {"test": "data"}, policy={"key": aerospike.POLICY_KEY_SEND}
+            ("test", "demo", "k_string"),
+            {"test": "data"},
+            policy={"key": aerospike.POLICY_KEY_SEND},
         )
         self.as_connection.put(
             ("test", "demo", bytearray("b_string", "utf-8")),
@@ -160,17 +168,23 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.xfail(reason="Will fail on storage engine device.")
     def test_device_size_pos(self):
         expr = Eq(DeviceSize(), 0)
-        record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
+        record = self.as_connection.get(
+            ("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()}
+        )
         assert record[2]["extra"] == "record"
 
     def test_TTL_pos(self):
         expr = NE(TTL(), 0)
-        record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
+        record = self.as_connection.get(
+            ("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()}
+        )
         assert record[2]["extra"] == "record"
 
     def test_void_time_pos(self):
         expr = NE(VoidTime(), 0)
-        record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
+        record = self.as_connection.get(
+            ("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()}
+        )
         assert record[2]["extra"] == "record"
 
     def test_remove_with_expressions_neg(self):
@@ -178,29 +192,37 @@ class TestExpressions(TestBaseClass):
 
         expr = Eq(KeyInt(), 26)
         with pytest.raises(e.FilteredOut):
-            self.as_connection.remove(("test", "demo", 25), policy={"expressions": expr.compile()})
+            self.as_connection.remove(
+                ("test", "demo", 25), policy={"expressions": expr.compile()}
+            )
 
     def test_scan_with_results_method_and_expressions(self):
         ns = "test"
         st = "demo"
 
         expr = Eq(KeyInt(), _NUM_RECORDS)
-        record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
+        record = self.as_connection.get(
+            ("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()}
+        )
         assert record[2]["extra"] == "record"
 
         expr = Eq(KeyStr(), "k_string")
-        record = self.as_connection.get(("test", "demo", "k_string"), policy={"expressions": expr.compile()})
+        record = self.as_connection.get(
+            ("test", "demo", "k_string"), policy={"expressions": expr.compile()}
+        )
         assert record[2]["test"] == "data"
 
         expr = Eq(KeyBlob(), bytearray("b_string", "utf-8"))
         record = self.as_connection.get(
-            ("test", "demo", bytearray("b_string", "utf-8")), policy={"expressions": expr.compile()}
+            ("test", "demo", bytearray("b_string", "utf-8")),
+            policy={"expressions": expr.compile()},
         )
         assert record[2]["test"] == "b_data"
 
         expr = KeyExists()
         record = self.as_connection.get(
-            ("test", "demo", bytearray("b_string", "utf-8")), policy={"expressions": expr.compile()}
+            ("test", "demo", bytearray("b_string", "utf-8")),
+            policy={"expressions": expr.compile()},
         )
         assert record[2]["test"] == "b_data"
 
@@ -230,7 +252,9 @@ class TestExpressions(TestBaseClass):
         Invoke BinType() on various kinds of bins.
         """
         expr = Eq(BinType(bin), expected_bin_type).compile()
-        verify_multiple_expression_avenues(self.as_connection, self.test_ns, self.test_set, expr, bin, _NUM_RECORDS)
+        verify_multiple_expression_avenues(
+            self.as_connection, self.test_ns, self.test_set, expr, bin, _NUM_RECORDS
+        )
 
     def test_nested_logic_pos(self):
         """
@@ -238,97 +262,152 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = Or(
-            Or(Eq(ListBin("ilist_bin"), [1, 2, 7]), Eq(ListBin("ilist_bin"), [1, 2, 6])),
+            Or(
+                Eq(ListBin("ilist_bin"), [1, 2, 7]), Eq(ListBin("ilist_bin"), [1, 2, 6])
+            ),
             And(LT(IntBin("age"), 22), GT(IntBin("age"), -1)),
             And(
-                Or(Eq(ListBin("ilist_bin"), [1, 2, 7]), Eq(ListBin("ilist_bin"), [1, 2, 6])),
+                Or(
+                    Eq(ListBin("ilist_bin"), [1, 2, 7]),
+                    Eq(ListBin("ilist_bin"), [1, 2, 6]),
+                ),
                 And(LT(IntBin("age"), 22), GT(IntBin("age"), -1)),
             ),
         ).compile()
         verify_multiple_expression_avenues(
-            self.as_connection, self.test_ns, self.test_set, expr, "ilist_bin", _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr,
+            "ilist_bin",
+            _NUM_RECORDS,
         )
 
     def test_bool_bin_true(self):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = aerospike.AS_BOOL
-        test_client = aerospike.client(config).connect(config["user"], config["password"])
+        test_client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
 
         expr = BoolBin("t")
-        ops = [operations.write("t", True), expressions.expression_read("test", expr.compile())]
+        ops = [
+            operations.write("t", True),
+            expressions.expression_read("test", expr.compile()),
+        ]
         _, _, res = test_client.operate(("test", "demo", _NUM_RECORDS - 1), ops)
         test_client.close()
         assert res["test"]
 
     def test_bool_bin_false(self):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = aerospike.AS_BOOL
-        test_client = aerospike.client(config).connect(config["user"], config["password"])
+        test_client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
 
         expr = Not(BoolBin("t"))
-        ops = [operations.write("t", True), expressions.expression_read("test", expr.compile())]
+        ops = [
+            operations.write("t", True),
+            expressions.expression_read("test", expr.compile()),
+        ]
         _, _, res = test_client.operate(("test", "demo", _NUM_RECORDS - 1), ops)
         test_client.close()
         assert not res["test"]
 
     def test_exclusive_pos(self):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
-        expr = Exclusive(GT(IntBin("age"), _NUM_RECORDS // 2), GT(IntBin("age"), _NUM_RECORDS - 1))
-        record = self.as_connection.get(("test", "demo", _NUM_RECORDS - 2), policy={"expressions": expr.compile()})
+        expr = Exclusive(
+            GT(IntBin("age"), _NUM_RECORDS // 2), GT(IntBin("age"), _NUM_RECORDS - 1)
+        )
+        record = self.as_connection.get(
+            ("test", "demo", _NUM_RECORDS - 2), policy={"expressions": expr.compile()}
+        )
         assert record[2]["age"] == _NUM_RECORDS - 2
 
     def test_exclusive_neg(self):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
-        expr = Exclusive(GT(IntBin("age"), _NUM_RECORDS // 2), GT(IntBin("age"), _NUM_RECORDS // 2))
+        expr = Exclusive(
+            GT(IntBin("age"), _NUM_RECORDS // 2), GT(IntBin("age"), _NUM_RECORDS // 2)
+        )
         with pytest.raises(e.FilteredOut):
-            self.as_connection.get(("test", "demo", _NUM_RECORDS - 2), policy={"expressions": expr.compile()})
+            self.as_connection.get(
+                ("test", "demo", _NUM_RECORDS - 2),
+                policy={"expressions": expr.compile()},
+            )
 
     def test_let_def_var_pos(self):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
         expr = Let(Def("a", IntBin("age")), Cond(LT(Var("a"), 50), True, Unknown()))
-        record = self.as_connection.get(("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()})
+        record = self.as_connection.get(
+            ("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()}
+        )
         assert record[2]["age"] == _NUM_RECORDS - 1
 
     def test_let_def_var_neg(self):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
         expr = Let(Def("a", IntBin("age")), Cond(LT(Var("a"), 0), True, Unknown()))
         with pytest.raises(e.FilteredOut):
-            self.as_connection.get(("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()})
+            self.as_connection.get(
+                ("test", "demo", _NUM_RECORDS - 1),
+                policy={"expressions": expr.compile()},
+            )
 
     def test_cond_pos(self):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
         expr = Cond(GE(IntBin("age"), 2), True, Unknown())
-        record = self.as_connection.get(("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()})
+        record = self.as_connection.get(
+            ("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()}
+        )
         assert record[2]["age"] == _NUM_RECORDS - 1
 
     def test_cond_neg(self):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
         expr = Cond(GT(IntBin("age"), _NUM_RECORDS), True, Unknown())
         with pytest.raises(e.FilteredOut):
-            self.as_connection.get(("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()})
+            self.as_connection.get(
+                ("test", "demo", _NUM_RECORDS - 1),
+                policy={"expressions": expr.compile()},
+            )

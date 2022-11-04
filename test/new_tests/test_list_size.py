@@ -12,7 +12,11 @@ class TestListSize(object):
         keys = []
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "contact_no": [i, i + 1], "city": ["Pune", "Dehli"]}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "contact_no": [i, i + 1],
+                "city": ["Pune", "Dehli"],
+            }
             self.as_connection.put(key, rec)
             keys.append(key)
 
@@ -82,7 +86,11 @@ class TestListSize(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = (
+            "test",
+            "demo",
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com",
+        )
         try:
             self.as_connection.list_size(key, "contact_no")
         except e.RecordNotFound as exception:
@@ -97,7 +105,9 @@ class TestListSize(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
         try:
             self.as_connection.list_size(key, bin)
         except e.RecordNotFound as exception:

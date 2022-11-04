@@ -106,7 +106,9 @@ MH_BIT_COUNT_KEY = "mh_bit_count"
 VALUE_LIST_KEY = "value_list"
 
 
-def hll_add(bin_name: str, values, index_bit_count=None, mh_bit_count=None, policy=None):
+def hll_add(
+    bin_name: str, values, index_bit_count=None, mh_bit_count=None, policy=None
+):
     """Creates a hll_add operation.
 
     Server will add the values to the hll bin.
@@ -168,7 +170,11 @@ def hll_fold(bin_name: str, index_bit_count):
         bin_name (str): The name of the bin to be operated on.
         index_bit_count: number of index bits. Must be between 4 and 16 inclusive.
     """
-    op_dict = {OP_KEY: aerospike.OP_HLL_FOLD, BIN_KEY: bin_name, INDEX_BIT_COUNT_KEY: index_bit_count}
+    op_dict = {
+        OP_KEY: aerospike.OP_HLL_FOLD,
+        BIN_KEY: bin_name,
+        INDEX_BIT_COUNT_KEY: index_bit_count,
+    }
 
     return op_dict
 
@@ -202,7 +208,11 @@ def hll_get_intersect_count(bin_name: str, hll_list):
         bin_name (str): The name of the bin to be operated on.
         hll_list (list): The HLLs to be intersected.
     """
-    op_dict = {OP_KEY: aerospike.OP_HLL_GET_INTERSECT_COUNT, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
+    op_dict = {
+        OP_KEY: aerospike.OP_HLL_GET_INTERSECT_COUNT,
+        BIN_KEY: bin_name,
+        VALUE_LIST_KEY: hll_list,
+    }
 
     return op_dict
 
@@ -219,7 +229,11 @@ def hll_get_similarity(bin_name: str, hll_list):
         bin_name (str): The name of the bin to be operated on.
         hll_list (list): The HLLs used for similarity estimation.
     """
-    op_dict = {OP_KEY: aerospike.OP_HLL_GET_SIMILARITY, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
+    op_dict = {
+        OP_KEY: aerospike.OP_HLL_GET_SIMILARITY,
+        BIN_KEY: bin_name,
+        VALUE_LIST_KEY: hll_list,
+    }
 
     return op_dict
 
@@ -236,7 +250,11 @@ def hll_get_union(bin_name: str, hll_list):
         bin_name (str): The name of the bin to be operated on.
         hll_list (list): The HLLs to be unioned.
     """
-    op_dict = {OP_KEY: aerospike.OP_HLL_GET_UNION, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
+    op_dict = {
+        OP_KEY: aerospike.OP_HLL_GET_UNION,
+        BIN_KEY: bin_name,
+        VALUE_LIST_KEY: hll_list,
+    }
 
     return op_dict
 
@@ -253,7 +271,11 @@ def hll_get_union_count(bin_name: str, hll_list):
         bin_name (str): The name of the bin to be operated on.
         hll_list (list): The HLLs to be unioned.
     """
-    op_dict = {OP_KEY: aerospike.OP_HLL_GET_UNION_COUNT, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
+    op_dict = {
+        OP_KEY: aerospike.OP_HLL_GET_UNION_COUNT,
+        BIN_KEY: bin_name,
+        VALUE_LIST_KEY: hll_list,
+    }
 
     return op_dict
 
@@ -320,7 +342,11 @@ def hll_set_union(bin_name: str, hll_list, policy=None):
         hll_list (list): The HLLs who's union will be set.
         policy (dict): An optional dictionary of :ref:`HyperLogLog policies <aerospike_hll_policies>`.
     """
-    op_dict = {OP_KEY: aerospike.OP_HLL_SET_UNION, BIN_KEY: bin_name, VALUE_LIST_KEY: hll_list}
+    op_dict = {
+        OP_KEY: aerospike.OP_HLL_SET_UNION,
+        BIN_KEY: bin_name,
+        VALUE_LIST_KEY: hll_list,
+    }
 
     if policy:
         op_dict[HLL_POLICY_KEY] = policy

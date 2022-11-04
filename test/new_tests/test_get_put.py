@@ -85,11 +85,23 @@ class TestGetPut:
     @pytest.mark.parametrize(
         "_input, _record, _policy, _expected",
         [
-            (("test", "demo", 3), {"name": "name%s" % (str(3)), "age": 3}, aerospike.POLICY_KEY_DIGEST, None),
-            (("test", "demo", 3), {"name": "name%s" % (str(3)), "age": 3}, aerospike.POLICY_KEY_SEND, 3),
+            (
+                ("test", "demo", 3),
+                {"name": "name%s" % (str(3)), "age": 3},
+                aerospike.POLICY_KEY_DIGEST,
+                None,
+            ),
+            (
+                ("test", "demo", 3),
+                {"name": "name%s" % (str(3)), "age": 3},
+                aerospike.POLICY_KEY_SEND,
+                3,
+            ),
         ],
     )
-    def test_pos_get_with_policy_key_digest(self, _input, _record, _policy, _expected, put_data):
+    def test_pos_get_with_policy_key_digest(
+        self, _input, _record, _policy, _expected, put_data
+    ):
         """
         Invoke get() for a record with POLICY_KEY_DIGEST
         """
@@ -118,7 +130,9 @@ class TestGetPut:
             "test",
             "demo",
             1,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_get_initkey_with_client_policy_send(self, put_data):
@@ -139,11 +153,16 @@ class TestGetPut:
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
         config = self.connection_config.copy()
-        config["policies"] = {"read": {"total_timeout": 10000}, "key": aerospike.POLICY_KEY_SEND}
+        config["policies"] = {
+            "read": {"total_timeout": 10000},
+            "key": aerospike.POLICY_KEY_SEND,
+        }
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -155,7 +174,12 @@ class TestGetPut:
             put_data(client, key, rec)
             key, _, bins = client.get(key)
             assert bins == {"name": "john", "age": 2}
-            assert key == ("test", "demo", 2, bytearray(b"\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p"))
+            assert key == (
+                "test",
+                "demo",
+                2,
+                bytearray(b"\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p"),
+            )
 
     # Negative get tests
     def test_neg_get_with_no_parameter(self):
@@ -456,9 +480,24 @@ class TestGetPut:
     @pytest.mark.parametrize(
         "key, record, meta, policy",
         [
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": 25000}, {"timeout": 1000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": 3, "ttl": True}, {"timeout": 1000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": True}, {"timeout": 1000}),
+            (
+                ("test", "demo", 1),
+                {"name": "john"},
+                {"gen": True, "ttl": 25000},
+                {"timeout": 1000},
+            ),
+            (
+                ("test", "demo", 1),
+                {"name": "john"},
+                {"gen": 3, "ttl": True},
+                {"timeout": 1000},
+            ),
+            (
+                ("test", "demo", 1),
+                {"name": "john"},
+                {"gen": True, "ttl": True},
+                {"timeout": 1000},
+            ),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
@@ -544,7 +583,12 @@ class TestGetPut:
     @pytest.mark.parametrize(
         "key, ex_code, ex_msg, record",
         [
-            (("test", "demo", None), -2, "either key or digest is required", {"name": "John"}),
+            (
+                ("test", "demo", None),
+                -2,
+                "either key or digest is required",
+                {"name": "John"},
+            ),
         ],
     )
     def test_neg_put_with_invalid_record(self, key, ex_code, ex_msg, record):
@@ -559,7 +603,11 @@ class TestGetPut:
         "key, record, exception_code",
         [
             # Non-existing NS & Set
-            (("demo", "test", 1), {"a": ["!@#!#$%#", bytearray("ASD@#$AR#$@#ERQ#", "utf-8")]}, 20),
+            (
+                ("demo", "test", 1),
+                {"a": ["!@#!#$%#", bytearray("ASD@#$AR#$@#ERQ#", "utf-8")]},
+                20,
+            ),
             # Non-existing Namespace
             (("test1", "demo", 1), {"i": "asdadasd"}, 20),
         ],
@@ -806,7 +854,9 @@ class TestGetPut:
             ),
         ],
     )
-    def test_neg_put_with_invalid_metadata(self, key, record, meta, policy, ex_code, ex_msg, put_data):
+    def test_neg_put_with_invalid_metadata(
+        self, key, record, meta, policy, ex_code, ex_msg, put_data
+    ):
         """
         Invoke put() for a record with generation as string
         """

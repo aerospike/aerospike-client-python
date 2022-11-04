@@ -289,9 +289,24 @@ class TestPut:
     @pytest.mark.parametrize(
         "key, record, meta, policy",
         [
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": 25000}, {"timeout": 1000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": 3, "ttl": True}, {"timeout": 1000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": True}, {"timeout": 1000}),
+            (
+                ("test", "demo", 1),
+                {"name": "john"},
+                {"gen": True, "ttl": 25000},
+                {"timeout": 1000},
+            ),
+            (
+                ("test", "demo", 1),
+                {"name": "john"},
+                {"gen": 3, "ttl": True},
+                {"timeout": 1000},
+            ),
+            (
+                ("test", "demo", 1),
+                {"name": "john"},
+                {"gen": True, "ttl": True},
+                {"timeout": 1000},
+            ),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
@@ -306,7 +321,9 @@ class TestPut:
             ),
         ],
     )
-    async def test_pos_put_with_metadata_bool(self, key, record, meta, policy, put_data):
+    async def test_pos_put_with_metadata_bool(
+        self, key, record, meta, policy, put_data
+    ):
         """
         Invoke put() for a record with generation as boolean.
         """
@@ -336,7 +353,9 @@ class TestPut:
         aerospike.set_serializer(serialize_function)
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+            assert 0 == await io.put(
+                self.as_connection, key, rec, meta, policy, serialize
+            )
 
         await asyncio.gather(async_io(key, rec, {}, {}, aerospike.SERIALIZER_USER))
 
@@ -392,7 +411,12 @@ class TestPut:
     @pytest.mark.parametrize(
         "key, ex_code, ex_msg, record",
         [
-            (("test", "demo", None), -2, "either key or digest is required", {"name": "John"}),
+            (
+                ("test", "demo", None),
+                -2,
+                "either key or digest is required",
+                {"name": "John"},
+            ),
         ],
     )
     async def test_neg_put_with_invalid_record(self, key, ex_code, ex_msg, record):
@@ -411,7 +435,11 @@ class TestPut:
         "key, record, exception_code",
         [
             # Non-existing NS & Set
-            (("demo", "test", 1), {"a": ["!@#!#$%#", bytearray("ASD@#$AR#$@#ERQ#", "utf-8")]}, 20),
+            (
+                ("demo", "test", 1),
+                {"a": ["!@#!#$%#", bytearray("ASD@#$AR#$@#ERQ#", "utf-8")]},
+                20,
+            ),
             # Non-existing Namespace
             (("test1", "demo", 1), {"i": "asdadasd"}, 20),
         ],
@@ -439,7 +467,9 @@ class TestPut:
         policy = {}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+            assert 0 == await io.put(
+                self.as_connection, key, rec, meta, policy, serialize
+            )
 
         await asyncio.gather(async_io(key, rec, meta, policy))
 
@@ -473,7 +503,9 @@ class TestPut:
         policy = {"timeout": 1000}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+            assert 0 == await io.put(
+                self.as_connection, key, rec, meta, policy, serialize
+            )
 
         await asyncio.gather(async_io(key, rec, meta, policy))
 
@@ -512,7 +544,9 @@ class TestPut:
         }
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+            assert 0 == await io.put(
+                self.as_connection, key, rec, meta, policy, serialize
+            )
 
         await asyncio.gather(async_io(key, rec, meta, policy))
 
@@ -554,7 +588,9 @@ class TestPut:
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
             with pytest.raises(e.RecordNotFound):
-                assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+                assert 0 == await io.put(
+                    self.as_connection, key, rec, meta, policy, serialize
+                )
 
         await asyncio.gather(async_io(key, rec, meta, policy))
 
@@ -593,7 +629,9 @@ class TestPut:
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
             try:
-                assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+                assert 0 == await io.put(
+                    self.as_connection, key, rec, meta, policy, serialize
+                )
             except e.RecordNotFound as exception:
                 assert exception.code == 2
                 assert exception.msg == "AEROSPIKE_ERR_RECORD_NOT_FOUND"
@@ -612,7 +650,9 @@ class TestPut:
         policy = {"timeout": 1000}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+            assert 0 == await io.put(
+                self.as_connection, key, rec, meta, policy, serialize
+            )
 
         await asyncio.gather(async_io(key, rec, meta, policy))
 
@@ -626,7 +666,9 @@ class TestPut:
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
             try:
-                assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+                assert 0 == await io.put(
+                    self.as_connection, key, rec, meta, policy, serialize
+                )
             except e.RecordGenerationError as exception:
                 assert exception.code == 3
                 assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
@@ -710,7 +752,9 @@ class TestPut:
             ),
         ],
     )
-    def test_neg_put_with_invalid_metadata(self, key, record, meta, policy, ex_code, ex_msg, put_data):
+    def test_neg_put_with_invalid_metadata(
+        self, key, record, meta, policy, ex_code, ex_msg, put_data
+    ):
         """
         Invoke put() for a record with generation as string
         """
@@ -747,7 +791,9 @@ class TestPut:
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
             try:
-                assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+                assert 0 == await io.put(
+                    self.as_connection, key, rec, meta, policy, serialize
+                )
             except e.ParamError as exception:
                 assert exception.code == -2
                 assert exception.msg == "integer value exceeds sys.maxsize"
@@ -767,6 +813,8 @@ class TestPut:
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
             with pytest.raises(e.ParamError):
-                assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
+                assert 0 == await io.put(
+                    self.as_connection, key, rec, meta, policy, serialize
+                )
 
         await asyncio.gather(async_io(key, bins))

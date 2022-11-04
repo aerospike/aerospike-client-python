@@ -27,7 +27,9 @@ _put_results = {}
 _put_cqd = 0
 
 
-async def _io_get_put(client, op=0, key=None, record=None, meta=None, policy=None, serialize=None):
+async def _io_get_put(
+    client, op=0, key=None, record=None, meta=None, policy=None, serialize=None
+):
     global _get_cqd, _put_cqd
     index = None
 

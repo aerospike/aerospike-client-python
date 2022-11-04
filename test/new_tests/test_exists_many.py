@@ -70,7 +70,9 @@ class TestExistsMany:
 
         assert isinstance(records, list)
         assert len(records) == rec_length + 1
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4, "some_key"])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, "some_key"]
+        )
         for x in records:
             if x[0][2] == "some_key":
                 assert x[1] is None
@@ -132,7 +134,9 @@ class TestExistsMany:
 
         assert isinstance(records, list)
         assert len(records) == 11
-        assert Counter([x[0][2] for x in records]) == Counter([0, 1, 2, 3, 4, "some_key", 15, 16, 17, 18, 19])
+        assert Counter([x[0][2] for x in records]) == Counter(
+            [0, 1, 2, 3, 4, "some_key", 15, 16, 17, 18, 19]
+        )
         for x in records:
             if x[0][2] == "some_key":
                 assert x[1] is None
@@ -175,7 +179,9 @@ class TestExistsMany:
     def test_neg_exists_many_with_an_invalid_key_in_list(self):
 
         with pytest.raises(e.ParamError):
-            self.as_connection.exists_many([("test", "demo", 1), ("test", "demo", 2), 5])
+            self.as_connection.exists_many(
+                [("test", "demo", 1), ("test", "demo", 2), 5]
+            )
 
     def test_neg_exists_many_with_invalid_key(self):
 
@@ -236,7 +242,10 @@ class TestExistsMany:
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)"
+            assert (
+                exception.msg
+                == "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)"
+            )
 
         for key in keys:
             self.as_connection.remove(key)

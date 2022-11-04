@@ -21,7 +21,9 @@ class TestScanPagination(TestBaseClass):
 
         for i in range(1, 100000):
             put = 0
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+            rec_partition = as_connection.get_key_partition_id(
+                self.test_ns, self.test_set, str(i)
+            )
 
             if rec_partition == 1000:
                 self.partition_1000_count += 1
@@ -46,7 +48,9 @@ class TestScanPagination(TestBaseClass):
                     "ns": self.test_ns,
                     "set": self.test_set,
                     "key": str(i),
-                    "digest": as_connection.get_key_digest(self.test_ns, self.test_set, str(i)),
+                    "digest": as_connection.get_key_digest(
+                        self.test_ns, self.test_set, str(i)
+                    ),
                 }
                 as_connection.put(key, rec)
         # print(f"{self.partition_1000_count} records are put in partition 1000, \
@@ -58,7 +62,9 @@ class TestScanPagination(TestBaseClass):
             for i in range(1, 100000):
                 put = 0
                 key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+                rec_partition = as_connection.get_key_partition_id(
+                    self.test_ns, self.test_set, str(i)
+                )
 
                 if rec_partition == 1000:
                     self.partition_1000_count += 1
@@ -91,7 +97,11 @@ class TestScanPagination(TestBaseClass):
             + self.partition_1003_count
         )
         partition_filter = {"begin": 1000, "count": 4}
-        policy = {"max_records": scan_page_size[0], "partition_filter": partition_filter, "records_per_second": 4000}
+        policy = {
+            "max_records": scan_page_size[0],
+            "partition_filter": partition_filter,
+            "records_per_second": 4000,
+        }
 
         def callback(part_id, input_tuple):
             if input_tuple is None:
@@ -113,7 +123,9 @@ class TestScanPagination(TestBaseClass):
                 break
 
         assert len(records) == (
-            (scan_page_size[0] * scan_pages[0]) if (scan_page_size[0] * scan_pages[0]) < max_records else max_records
+            (scan_page_size[0] * scan_pages[0])
+            if (scan_page_size[0] * scan_pages[0]) < max_records
+            else max_records
         )
 
     def test_scan_pagination_with_existent_ns_and_none_set(self):
@@ -142,7 +154,9 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"timeout": 1001, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback, {"timeout": 1001, "partition_filter": {"begin": 1000, "count": 1}}
+        )
 
         assert len(records) == self.partition_1000_count
 
@@ -161,7 +175,13 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"max_records": max_records, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback,
+            {
+                "max_records": max_records,
+                "partition_filter": {"begin": 1000, "count": 1},
+            },
+        )
         assert len(records) == self.partition_1000_count
 
     @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
@@ -183,7 +203,13 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"max_records": max_records, "partition_filter": {"begin": 1000, "count": 4}})
+        scan_obj.foreach(
+            callback,
+            {
+                "max_records": max_records,
+                "partition_filter": {"begin": 1000, "count": 4},
+            },
+        )
         assert len(records) == max_records
 
     def test_scan_pagination_with_socket_timeout_policy(self):
@@ -197,7 +223,10 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"socket_timeout": 9876, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback,
+            {"socket_timeout": 9876, "partition_filter": {"begin": 1000, "count": 1}},
+        )
 
         assert len(records) == self.partition_1000_count
 
@@ -212,7 +241,10 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"records_per_second": 10, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback,
+            {"records_per_second": 10, "partition_filter": {"begin": 1000, "count": 1}},
+        )
         assert len(records) == self.partition_1000_count
 
     def test_scan_pagination_with_callback_returning_false(self):
@@ -231,7 +263,9 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(
+            callback, {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 1}}
+        )
         assert len(records) == 10
 
     def test_scan_pagination_with_results_method(self):
@@ -297,7 +331,9 @@ class TestScanPagination(TestBaseClass):
             records.append(record)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+            scan_obj.foreach(
+                callback, {"partition_filter": {"begin": 1001, "count": 1}}
+            )
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
@@ -313,7 +349,10 @@ class TestScanPagination(TestBaseClass):
         scan_obj.paginate()
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}})
+            scan_obj.foreach(
+                callback,
+                {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}},
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -337,7 +376,9 @@ class TestScanPagination(TestBaseClass):
         scan_obj.paginate()
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+            scan_obj.foreach(
+                callback, {"partition_filter": {"begin": 1001, "count": 1}}
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT

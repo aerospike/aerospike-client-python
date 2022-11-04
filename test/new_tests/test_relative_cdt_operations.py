@@ -36,7 +36,10 @@ class TestNewRelativeListOperations(object):
         self.as_connection.put(self.test_key, {self.test_bin: self.test_list})
 
         # Make sure the list is ordered, in order to get expected return order.
-        ops = [list_operations.list_sort("list", 0), list_operations.list_set_order("list", aerospike.LIST_ORDERED)]
+        ops = [
+            list_operations.list_sort("list", 0),
+            list_operations.list_set_order("list", aerospike.LIST_ORDERED),
+        ]
         self.as_connection.operate(self.test_key, ops)
         self.keys.append(self.test_key)
 
@@ -58,15 +61,23 @@ class TestNewRelativeListOperations(object):
             (150, 0, None, []),
         ),
     )
-    def test_list_get_by_value_rank_range_relative(self, value, offset, count, expected):
+    def test_list_get_by_value_rank_range_relative(
+        self, value, offset, count, expected
+    ):
         """
         Without a return type this should return the value
         """
         operation = list_operations.list_get_by_value_rank_range_relative(
-            self.test_bin, value, offset, return_type=aerospike.LIST_RETURN_VALUE, count=count
+            self.test_bin,
+            value,
+            offset,
+            return_type=aerospike.LIST_RETURN_VALUE,
+            count=count,
         )
 
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == expected
 
@@ -80,15 +91,23 @@ class TestNewRelativeListOperations(object):
             (150, 0, None, []),
         ),
     )
-    def test_list_remove_by_value_rank_range_relative(self, value, offset, count, expected):
+    def test_list_remove_by_value_rank_range_relative(
+        self, value, offset, count, expected
+    ):
         """
         Without a return type this should return the value
         """
         operation = list_operations.list_remove_by_value_rank_range_relative(
-            self.test_bin, value, offset, return_type=aerospike.LIST_RETURN_VALUE, count=count
+            self.test_bin,
+            value,
+            offset,
+            return_type=aerospike.LIST_RETURN_VALUE,
+            count=count,
         )
 
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == expected
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -120,7 +139,9 @@ class TestNewRelativeListOperations(object):
             self.test_bin, 5, 0, return_type=return_type, count=1
         )
 
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == [expected]
 
     def test_list_remove_by_value_rank_range_relative_ret_none(self):
@@ -142,7 +163,9 @@ class TestNewRelativeListOperations(object):
             self.test_bin, 5, 0, return_type=aerospike.LIST_RETURN_COUNT, count=1
         )
 
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == 1
 
     @pytest.mark.parametrize(
@@ -154,12 +177,18 @@ class TestNewRelativeListOperations(object):
             (5, 0, 1.5, e.ParamError),
         ),
     )
-    def test_list_remove_by_value_rank_invalid_params(self, value, offset, count, expected_err):
+    def test_list_remove_by_value_rank_invalid_params(
+        self, value, offset, count, expected_err
+    ):
         """
         Without a return type this should return the value
         """
         operation = list_operations.list_remove_by_value_rank_range_relative(
-            self.test_bin, value, offset, return_type=aerospike.LIST_RETURN_VALUE, count=count
+            self.test_bin,
+            value,
+            offset,
+            return_type=aerospike.LIST_RETURN_VALUE,
+            count=count,
         )
 
         with pytest.raises(expected_err):
@@ -174,12 +203,18 @@ class TestNewRelativeListOperations(object):
             (5, 0, 1.5, e.ParamError),
         ),
     )
-    def test_list_get_by_value_rank_invalid_params(self, value, offset, count, expected_err):
+    def test_list_get_by_value_rank_invalid_params(
+        self, value, offset, count, expected_err
+    ):
         """
         Without a return type this should return the value
         """
         operation = list_operations.list_get_by_value_rank_range_relative(
-            self.test_bin, value, offset, return_type=aerospike.LIST_RETURN_VALUE, count=count
+            self.test_bin,
+            value,
+            offset,
+            return_type=aerospike.LIST_RETURN_VALUE,
+            count=count,
         )
 
         with pytest.raises(expected_err):
@@ -197,15 +232,24 @@ class TestNewRelativeListOperations(object):
             (150, 0, None, [1, 3, 5, 7, 9, 11]),
         ),
     )
-    def test_list_get_by_value_rank_range_relative_inverted(self, value, offset, count, expected):
+    def test_list_get_by_value_rank_range_relative_inverted(
+        self, value, offset, count, expected
+    ):
         """
         Without a return type this should return the value
         """
         operation = list_operations.list_get_by_value_rank_range_relative(
-            self.test_bin, value, offset, return_type=aerospike.LIST_RETURN_VALUE, count=count, inverted=True
+            self.test_bin,
+            value,
+            offset,
+            return_type=aerospike.LIST_RETURN_VALUE,
+            count=count,
+            inverted=True,
         )
 
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == expected
 
@@ -219,15 +263,24 @@ class TestNewRelativeListOperations(object):
             (150, 0, None, [1, 3, 5, 7, 9, 11]),
         ),
     )
-    def test_list_remove_by_value_rank_range_relative_inverted(self, value, offset, count, expected):
+    def test_list_remove_by_value_rank_range_relative_inverted(
+        self, value, offset, count, expected
+    ):
         """
         Without a return type this should return the value
         """
         operation = list_operations.list_remove_by_value_rank_range_relative(
-            self.test_bin, value, offset, return_type=aerospike.LIST_RETURN_VALUE, count=count, inverted=True
+            self.test_bin,
+            value,
+            offset,
+            return_type=aerospike.LIST_RETURN_VALUE,
+            count=count,
+            inverted=True,
         )
 
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == expected
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -261,7 +314,10 @@ class TestNewRelativeMapOperations(object):
         self.test_bin = "map"
         self.as_connection.put(self.test_key, {self.test_bin: self.test_map})
 
-        map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
+        map_policy = {
+            "map_write_mode": aerospike.MAP_CREATE_ONLY,
+            "map_order": aerospike.MAP_KEY_ORDERED,
+        }
         operations = [map_ops.map_set_policy(self.test_bin, map_policy)]
         self.as_connection.operate(self.test_key, operations)
         self.keys.append(self.test_key)
@@ -284,9 +340,16 @@ class TestNewRelativeMapOperations(object):
     )
     def test_get_by_value_rank_range_rel(self, value, offset, count, expected):
         operation = map_ops.map_get_by_value_rank_range_relative(
-            self.test_bin, value, offset, return_type=aerospike.MAP_RETURN_KEY, count=count, inverted=False
+            self.test_bin,
+            value,
+            offset,
+            return_type=aerospike.MAP_RETURN_KEY,
+            count=count,
+            inverted=False,
         )
-        res = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        res = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert res == expected
 
@@ -300,9 +363,16 @@ class TestNewRelativeMapOperations(object):
     )
     def test_remove_by_value_rank_range_rel(self, value, offset, count, expected):
         operation = map_ops.map_remove_by_value_rank_range_relative(
-            self.test_bin, value, offset, return_type=aerospike.MAP_RETURN_KEY, count=count, inverted=False
+            self.test_bin,
+            value,
+            offset,
+            return_type=aerospike.MAP_RETURN_KEY,
+            count=count,
+            inverted=False,
         )
-        res = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        res = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert res == expected
         test_map = self.as_connection.get(self.test_key)[2][self.test_bin]
@@ -322,9 +392,16 @@ class TestNewRelativeMapOperations(object):
     )
     def test_get_by_key_index_range_rel(self, key, offset, count, expected):
         operation = map_ops.map_get_by_key_index_range_relative(
-            self.test_bin, key, offset, return_type=aerospike.MAP_RETURN_KEY, count=count, inverted=False
+            self.test_bin,
+            key,
+            offset,
+            return_type=aerospike.MAP_RETURN_KEY,
+            count=count,
+            inverted=False,
         )
-        res = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        res = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert res == expected
 
@@ -338,9 +415,16 @@ class TestNewRelativeMapOperations(object):
     )
     def test_remove_by_key_index_range_rel(self, key, offset, count, expected):
         operation = map_ops.map_remove_by_key_index_range_relative(
-            self.test_bin, key, offset, return_type=aerospike.MAP_RETURN_KEY, count=count, inverted=False
+            self.test_bin,
+            key,
+            offset,
+            return_type=aerospike.MAP_RETURN_KEY,
+            count=count,
+            inverted=False,
         )
-        res = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        res = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert res == expected
         test_map = self.as_connection.get(self.test_key)[2][self.test_bin]
@@ -369,7 +453,9 @@ class TestNewRelativeMapOperations(object):
         operation = map_ops.map_get_by_key_index_range_relative(
             self.test_bin, 5, 0, return_type=return_type, count=1, inverted=False
         )
-        res = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        res = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert res == expected
 
@@ -391,7 +477,12 @@ class TestNewRelativeMapOperations(object):
     )
     def test_remove_by_key_index_range_invalid(self, function, key, offset, count, err):
         operation = function(
-            self.test_bin, key, offset, return_type=aerospike.MAP_RETURN_KEY, count=count, inverted=False
+            self.test_bin,
+            key,
+            offset,
+            return_type=aerospike.MAP_RETURN_KEY,
+            count=count,
+            inverted=False,
         )
 
         with pytest.raises(err):

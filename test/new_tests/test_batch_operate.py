@@ -18,7 +18,9 @@ class TestBatchOperate(TestBaseClass):
         as_connection = connection_with_config_funcs
 
         if self.server_version < [6, 0]:
-            pytest.mark.xfail(reason="Servers older than 6.0 do not support batch operate.")
+            pytest.mark.xfail(
+                reason="Servers older than 6.0 do not support batch operate."
+            )
             pytest.xfail()
 
         self.test_ns = "test"
@@ -89,7 +91,11 @@ class TestBatchOperate(TestBaseClass):
                     "respond_all_keys": False,
                     "expressions": exp.Eq(
                         exp.ListGetByRank(
-                            None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0, exp.ListBin("ilist_bin")
+                            None,
+                            aerospike.LIST_RETURN_VALUE,
+                            exp.ResultType.INTEGER,
+                            0,
+                            exp.ListBin("ilist_bin"),
                         ),
                         0,
                     ).compile(),
@@ -125,7 +131,11 @@ class TestBatchOperate(TestBaseClass):
                     "respond_all_keys": False,
                     "expressions": exp.Eq(
                         exp.ListGetByRank(
-                            None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, 0, exp.ListBin("ilist_bin")
+                            None,
+                            aerospike.LIST_RETURN_VALUE,
+                            exp.ResultType.INTEGER,
+                            0,
+                            exp.ListBin("ilist_bin"),
                         ),
                         1,
                     ).compile(),
@@ -136,19 +146,25 @@ class TestBatchOperate(TestBaseClass):
                     "gen": aerospike.POLICY_GEN_IGNORE,
                     "exists": aerospike.POLICY_EXISTS_UPDATE,
                     "durable_delete": False,
-                    "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),  # this expression takes precedence
+                    "expressions": exp.Eq(
+                        exp.IntBin("count"), 0
+                    ).compile(),  # this expression takes precedence
                 },
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
         ],
     )
-    def test_batch_operate_pos(self, name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec):
+    def test_batch_operate_pos(
+        self, name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec
+    ):
         """
         Test batch_operate positive.
         """
 
-        res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+        res = self.as_connection.batch_operate(
+            keys, ops, policy_batch, policy_batch_write
+        )
 
         for i, batch_rec in enumerate(res.batch_records):
             assert batch_rec.result == exp_res[i]
@@ -176,7 +192,9 @@ class TestBatchOperate(TestBaseClass):
             for key in keys:
                 self.as_connection.put(key, {"count": 0})
 
-            res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+            res = self.as_connection.batch_operate(
+                keys, ops, policy_batch, policy_batch_write
+            )
 
             for i, batch_rec in enumerate(res.batch_records):
                 assert batch_rec.result == AerospikeStatus.AEROSPIKE_OK
@@ -244,13 +262,17 @@ class TestBatchOperate(TestBaseClass):
             ),
         ],
     )
-    def test_batch_operate_neg(self, name, keys, ops, policy_batch, policy_batch_write, exp_res):
+    def test_batch_operate_neg(
+        self, name, keys, ops, policy_batch, policy_batch_write, exp_res
+    ):
         """
         Test batch_operate negative.
         """
 
         with pytest.raises(exp_res):
-            self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+            self.as_connection.batch_operate(
+                keys, ops, policy_batch, policy_batch_write
+            )
 
     def test_batch_operate_neg_connection(self):
         """

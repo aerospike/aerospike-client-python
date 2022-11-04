@@ -49,7 +49,9 @@ class TestBatchWrite(TestBaseClass):
         as_connection = connection_with_config_funcs
 
         if self.server_version < [6, 0]:
-            pytest.mark.xfail(reason="Servers older than 6.0 do not support batch writes.")
+            pytest.mark.xfail(
+                reason="Servers older than 6.0 do not support batch writes."
+            )
             pytest.xfail()
 
         self.test_ns = "test"
@@ -96,7 +98,13 @@ class TestBatchWrite(TestBaseClass):
         [
             (
                 "simple-write",
-                br.BatchRecords([br.Write(("test", "demo", 1), [op.write("new", 10), op.read("new")])]),
+                br.BatchRecords(
+                    [
+                        br.Write(
+                            ("test", "demo", 1), [op.write("new", 10), op.read("new")]
+                        )
+                    ]
+                ),
                 {},
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"new": 10}],
@@ -111,7 +119,12 @@ class TestBatchWrite(TestBaseClass):
                         )
                     ]
                 ),
-                {"total_timeout": 2000, "max_retries": 2, "allow_inline_ssd": True, "respond_all_keys": False},
+                {
+                    "total_timeout": 2000,
+                    "max_retries": 2,
+                    "allow_inline_ssd": True,
+                    "respond_all_keys": False,
+                },
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"new": 10}],
             ),
@@ -153,7 +166,9 @@ class TestBatchWrite(TestBaseClass):
             ),
             (
                 "read-all-bins",
-                br.BatchRecords([br.Read(("test", "demo", 1), ops=None, read_all_bins=True)]),
+                br.BatchRecords(
+                    [br.Read(("test", "demo", 1), ops=None, read_all_bins=True)]
+                ),
                 {},
                 [AerospikeStatus.AEROSPIKE_OK],
                 [
@@ -224,7 +239,9 @@ class TestBatchWrite(TestBaseClass):
                                 "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
                             },
                         ),
-                        br.Write(("test", "demo", 1), [op.write("new", 10), op.read("new")]),
+                        br.Write(
+                            ("test", "demo", 1), [op.write("new", 10), op.read("new")]
+                        ),
                     ]
                 ),
                 {},
@@ -235,11 +252,18 @@ class TestBatchWrite(TestBaseClass):
                 "simple-apply",
                 br.BatchRecords(
                     [
-                        br.Apply(("test", "demo", 1), "sample", "list_append", ["ilist_bin", 200]),
+                        br.Apply(
+                            ("test", "demo", 1),
+                            "sample",
+                            "list_append",
+                            ["ilist_bin", 200],
+                        ),
                         br.Read(
                             ("test", "demo", 1),
                             [
-                                lop.list_get_by_rank("ilist_bin", 0, aerospike.LIST_RETURN_VALUE),
+                                lop.list_get_by_rank(
+                                    "ilist_bin", 0, aerospike.LIST_RETURN_VALUE
+                                ),
                             ],
                         ),
                     ]
@@ -268,7 +292,9 @@ class TestBatchWrite(TestBaseClass):
                         br.Read(
                             ("test", "demo", 1),
                             [
-                                lop.list_get_by_rank("ilist_bin", 0, aerospike.LIST_RETURN_VALUE),
+                                lop.list_get_by_rank(
+                                    "ilist_bin", 0, aerospike.LIST_RETURN_VALUE
+                                ),
                             ],
                         ),
                     ]
@@ -281,10 +307,17 @@ class TestBatchWrite(TestBaseClass):
                 "write-read",
                 br.BatchRecords(
                     [
-                        br.Write(("test", "demo", 1), [op.write("new", 11), op.read("new")]),
+                        br.Write(
+                            ("test", "demo", 1), [op.write("new", 11), op.read("new")]
+                        ),
                         br.Read(
                             ("test", "demo", 1),
-                            [lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE), op.read("balance")],
+                            [
+                                lop.list_get_by_rank(
+                                    "ilist_bin", -1, aerospike.LIST_RETURN_VALUE
+                                ),
+                                op.read("balance"),
+                            ],
                         ),
                     ]
                 ),
@@ -306,18 +339,30 @@ class TestBatchWrite(TestBaseClass):
                             ],
                         ),
                         br.Read(
-                            ("test", "demo", 1), [lop.list_get_by_rank("ilist_bin", -1, aerospike.LIST_RETURN_VALUE)]
+                            ("test", "demo", 1),
+                            [
+                                lop.list_get_by_rank(
+                                    "ilist_bin", -1, aerospike.LIST_RETURN_VALUE
+                                )
+                            ],
                         ),
                         br.Apply(
                             ("test", "demo", 3),
                             "sample",
                             "list_append",
                             ["ilist_bin", 200],
-                            policy={"expressions": exp.Eq(exp.IntBin("count"), 3).compile()},
+                            policy={
+                                "expressions": exp.Eq(exp.IntBin("count"), 3).compile()
+                            },
                         ),
                         br.Read(
                             ("test", "demo", 3),
-                            [lop.list_get_by_rank("ilist_bin", 0, aerospike.LIST_RETURN_VALUE), op.read("balance")],
+                            [
+                                lop.list_get_by_rank(
+                                    "ilist_bin", 0, aerospike.LIST_RETURN_VALUE
+                                ),
+                                op.read("balance"),
+                            ],
                         ),
                     ]
                 ),
@@ -412,7 +457,12 @@ class TestBatchWrite(TestBaseClass):
                 {},
                 e.ParamError,
             ),
-            ("bad-batch-record-ops", br.BatchRecords([br.Read(("test", "demo", 1), {"bad": "ops"})]), {}, e.ParamError),
+            (
+                "bad-batch-record-ops",
+                br.BatchRecords([br.Read(("test", "demo", 1), {"bad": "ops"})]),
+                {},
+                e.ParamError,
+            ),
             (
                 "bad-batch-record-policy",
                 br.BatchRecords(

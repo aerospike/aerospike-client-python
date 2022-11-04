@@ -12,7 +12,11 @@ class TestListPop(object):
         keys = []
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "contact_no": [i, i + 1], "city": ["Pune", "Dehli"]}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "contact_no": [i, i + 1],
+                "city": ["Pune", "Dehli"],
+            }
             self.as_connection.put(key, rec)
             keys.append(key)
         key = ("test", "demo", 2)
@@ -88,7 +92,11 @@ class TestListPop(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = (
+            "test",
+            "demo",
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com",
+        )
 
         with pytest.raises(e.RecordNotFound):
             self.as_connection.list_pop(key, "abc", 0)
@@ -102,7 +110,9 @@ class TestListPop(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
         try:
             self.as_connection.list_pop(key, bin, 0)
 
@@ -185,4 +195,6 @@ class TestListPop(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_pop(key, "contact_no", "Fifth")
-        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(
+            typeError.value
+        )

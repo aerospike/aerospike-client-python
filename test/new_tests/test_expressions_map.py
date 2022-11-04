@@ -123,7 +123,9 @@ def add_ctx_op(ctx_type, value):
     return ctx_func(value)
 
 
-def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
+def verify_multiple_expression_result(
+    client, test_ns, test_set, expr, op_bin, expected
+):
     keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
 
     # batch get
@@ -194,10 +196,18 @@ class TestExpressions(TestBaseClass):
                 "smap_bin": {"b": "b", "d": "d", "f": "f"},
                 "lmap_bin": {1: [1, 2], 2: [1, 3], 3: [1, 4]},
                 "mmap_bin": {1: {1: 2}, 2: {1: 3}, 3: {1: 4}},
-                "bymap_bin": {1: "b".encode("utf8"), 2: "d".encode("utf8"), 3: "f".encode("utf8")},
+                "bymap_bin": {
+                    1: "b".encode("utf8"),
+                    2: "d".encode("utf8"),
+                    3: "f".encode("utf8"),
+                },
                 "bomap_bin": {1: False, 2: False, 3: True},
                 "nmap_bin": {1: None, 2: aerospike.null, 3: aerospike.null},
-                "blmap_bin": {1: TestUsrDefinedClass(1), 2: TestUsrDefinedClass(3), 3: TestUsrDefinedClass(4)},
+                "blmap_bin": {
+                    1: TestUsrDefinedClass(1),
+                    2: TestUsrDefinedClass(3),
+                    3: TestUsrDefinedClass(4),
+                },
                 "fmap_bin": {1.0: 1.0, 2.0: 2.0, 6.0: 6.0},
                 "gmap_bin": {1: GEO_POLY, 2: GEO_POLY1, 3: GEO_POLY2},
             }
@@ -227,7 +237,15 @@ class TestExpressions(TestBaseClass):
             ),
             (
                 "lmap_bin",
-                [ResultType.INTEGER, [1, 4], [1, 3], [1, 5], [[1, 3], [1, 4]], [1, 2], ResultType.LIST],
+                [
+                    ResultType.INTEGER,
+                    [1, 4],
+                    [1, 3],
+                    [1, 5],
+                    [[1, 3], [1, 4]],
+                    [1, 2],
+                    ResultType.LIST,
+                ],
                 [3, 2, 4, [2, 3], 2],
                 [[1, 3], [[1, 3], [1, 4]], [[1, 3], [1, 4]]],
             ),
@@ -239,10 +257,15 @@ class TestExpressions(TestBaseClass):
         """
 
         expr = And(
-            Eq(MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], bin), 2),
+            Eq(
+                MapGetByKey(None, aerospike.MAP_RETURN_RANK, values[0], keys[0], bin), 2
+            ),
             Eq(MapGetByValue(None, aerospike.MAP_RETURN_RANK, values[1], bin), [2]),
             Eq(MapGetByIndex(None, aerospike.MAP_RETURN_RANK, values[0], 1, bin), 1),
-            Eq(MapGetByRank(None, aerospike.MAP_RETURN_VALUE, values[6], 1, bin), expected[0]),
+            Eq(
+                MapGetByRank(None, aerospike.MAP_RETURN_VALUE, values[6], 1, bin),
+                expected[0],
+            ),
             Eq(
                 ListGetByIndexRangeToEnd(
                     None,
@@ -251,7 +274,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByKeyRange(None, aerospike.MAP_RETURN_VALUE, keys[1], keys[2], bin),
+                        MapGetByKeyRange(
+                            None, aerospike.MAP_RETURN_VALUE, keys[1], keys[2], bin
+                        ),
                     ),
                 ),
                 expected[1],
@@ -277,7 +302,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, keys[4], 1, bin),
+                        MapGetByKeyRelIndexRangeToEnd(
+                            None, aerospike.MAP_RETURN_VALUE, keys[4], 1, bin
+                        ),
                     ),
                 ),
                 1,
@@ -290,7 +317,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByKeyRelIndexRange(None, aerospike.MAP_RETURN_VALUE, keys[4], 0, 2, bin),
+                        MapGetByKeyRelIndexRange(
+                            None, aerospike.MAP_RETURN_VALUE, keys[4], 0, 2, bin
+                        ),
                     ),
                 ),
                 2,
@@ -303,7 +332,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByValueRange(None, aerospike.MAP_RETURN_VALUE, values[2], values[3], bin),
+                        MapGetByValueRange(
+                            None, aerospike.MAP_RETURN_VALUE, values[2], values[3], bin
+                        ),
                     ),
                 ),
                 expected[2],
@@ -316,7 +347,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByValueList(None, aerospike.MAP_RETURN_INDEX, values[4], bin),
+                        MapGetByValueList(
+                            None, aerospike.MAP_RETURN_INDEX, values[4], bin
+                        ),
                     ),
                 ),
                 [1, 2],
@@ -329,7 +362,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByValueRelRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, values[5], 1, bin),
+                        MapGetByValueRelRankRangeToEnd(
+                            None, aerospike.MAP_RETURN_VALUE, values[5], 1, bin
+                        ),
                     ),
                 ),
                 2,
@@ -342,7 +377,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByValueRelRankRange(None, aerospike.MAP_RETURN_VALUE, values[5], 0, 2, bin),
+                        MapGetByValueRelRankRange(
+                            None, aerospike.MAP_RETURN_VALUE, values[5], 0, 2, bin
+                        ),
                     ),
                 ),
                 2,
@@ -355,7 +392,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 1, bin),
+                        MapGetByIndexRangeToEnd(
+                            None, aerospike.MAP_RETURN_VALUE, 1, bin
+                        ),
                     ),
                 ),
                 2,
@@ -381,7 +420,9 @@ class TestExpressions(TestBaseClass):
                     ListSort(
                         None,
                         aerospike.LIST_SORT_DEFAULT,
-                        MapGetByRankRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 1, bin),
+                        MapGetByRankRangeToEnd(
+                            None, aerospike.MAP_RETURN_VALUE, 1, bin
+                        ),
                     ),
                 ),
                 2,
@@ -402,7 +443,12 @@ class TestExpressions(TestBaseClass):
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize(
@@ -410,7 +456,15 @@ class TestExpressions(TestBaseClass):
         [
             ("imap_bin", "imap_bin", None, None, 3, 6, [12]),
             ("fmap_bin", "fmap_bin", None, None, 6.0, 6.0, [12.0]),
-            (ListBin("mlist_bin"), "mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6]),
+            (
+                ListBin("mlist_bin"),
+                "mlist_bin",
+                [cdt_ctx.cdt_ctx_list_index(0)],
+                None,
+                1,
+                4,
+                [6],
+            ),
         ],
     )
     def test_map_increment_pos(self, bin, bin_name, ctx, policy, key, value, expected):
@@ -418,10 +472,22 @@ class TestExpressions(TestBaseClass):
         Invoke MapIncrement() on various integer and float bins.
         """
         expr = Eq(
-            MapGetByValue(ctx, aerospike.MAP_RETURN_VALUE, expected[0], MapIncrement(ctx, policy, key, value, bin)),
+            MapGetByValue(
+                ctx,
+                aerospike.MAP_RETURN_VALUE,
+                expected[0],
+                MapIncrement(ctx, policy, key, value, bin),
+            ),
             expected,
         ).compile()
-        verify_multiple_expression_result(self.as_connection, self.test_ns, self.test_set, expr, bin_name, _NUM_RECORDS)
+        verify_multiple_expression_result(
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr,
+            bin_name,
+            _NUM_RECORDS,
+        )
 
     @pytest.mark.parametrize(
         "bin, ctx, policy, values",
@@ -471,12 +537,20 @@ class TestExpressions(TestBaseClass):
 
         expr = And(
             Eq(
-                MapGetByValue(ctx, aerospike.MAP_RETURN_KEY, values[1], MapPut(ctx, policy, values[0], values[1], bin)),
+                MapGetByValue(
+                    ctx,
+                    aerospike.MAP_RETURN_KEY,
+                    values[1],
+                    MapPut(ctx, policy, values[0], values[1], bin),
+                ),
                 [values[0]],
             ),
             Eq(
                 MapGetByValue(
-                    ctx, aerospike.MAP_RETURN_KEY, values[1], MapPutItems(ctx, policy, {values[0]: values[1]}, bin)
+                    ctx,
+                    aerospike.MAP_RETURN_KEY,
+                    values[1],
+                    MapPutItems(ctx, policy, {values[0]: values[1]}, bin),
                 ),
                 [values[0]],
             ),
@@ -484,8 +558,24 @@ class TestExpressions(TestBaseClass):
             #     {1:1}
             # )
             Eq(MapSize(None, MapClear(ctx, bin)), 0),
-            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_COUNT, values[3], MapRemoveByKey(ctx, values[2], bin)), 0),
-            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_COUNT, values[3], MapRemoveByKeyList(ctx, [values[2]], bin)), 0),
+            Eq(
+                MapGetByValue(
+                    ctx,
+                    aerospike.MAP_RETURN_COUNT,
+                    values[3],
+                    MapRemoveByKey(ctx, values[2], bin),
+                ),
+                0,
+            ),
+            Eq(
+                MapGetByValue(
+                    ctx,
+                    aerospike.MAP_RETURN_COUNT,
+                    values[3],
+                    MapRemoveByKeyList(ctx, [values[2]], bin),
+                ),
+                0,
+            ),
             Eq(
                 MapGetByKeyRange(
                     ctx,
@@ -517,9 +607,22 @@ class TestExpressions(TestBaseClass):
                 [values[3]],
             ),
             #
-            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_COUNT, values[3], MapRemoveByValue(ctx, values[3], bin)), 0),
             Eq(
-                MapGetByValue(ctx, aerospike.MAP_RETURN_COUNT, values[3], MapRemoveByValueList(ctx, [values[3]], bin)),
+                MapGetByValue(
+                    ctx,
+                    aerospike.MAP_RETURN_COUNT,
+                    values[3],
+                    MapRemoveByValue(ctx, values[3], bin),
+                ),
+                0,
+            ),
+            Eq(
+                MapGetByValue(
+                    ctx,
+                    aerospike.MAP_RETURN_COUNT,
+                    values[3],
+                    MapRemoveByValueList(ctx, [values[3]], bin),
+                ),
                 0,
             ),
             Eq(
@@ -553,35 +656,72 @@ class TestExpressions(TestBaseClass):
                 [values[3]],
             ),
             #
-            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_VALUE, values[3], MapRemoveByIndex(ctx, 0, bin)), []),
+            Eq(
+                MapGetByValue(
+                    ctx,
+                    aerospike.MAP_RETURN_VALUE,
+                    values[3],
+                    MapRemoveByIndex(ctx, 0, bin),
+                ),
+                [],
+            ),
             Eq(
                 MapGetByKeyRange(
-                    ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], MapRemoveByIndexRange(ctx, 1, 3, bin)
+                    ctx,
+                    aerospike.MAP_RETURN_VALUE,
+                    values[2],
+                    values[0],
+                    MapRemoveByIndexRange(ctx, 1, 3, bin),
                 ),
                 [values[3]],
             ),
             Eq(
                 MapGetByKeyRange(
-                    ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], MapRemoveByIndexRangeToEnd(ctx, 1, bin)
+                    ctx,
+                    aerospike.MAP_RETURN_VALUE,
+                    values[2],
+                    values[0],
+                    MapRemoveByIndexRangeToEnd(ctx, 1, bin),
                 ),
                 [values[3]],
             ),
             #
-            Eq(MapGetByValue(ctx, aerospike.MAP_RETURN_VALUE, values[3], MapRemoveByRank(ctx, 0, bin)), []),
+            Eq(
+                MapGetByValue(
+                    ctx,
+                    aerospike.MAP_RETURN_VALUE,
+                    values[3],
+                    MapRemoveByRank(ctx, 0, bin),
+                ),
+                [],
+            ),
             Eq(
                 MapGetByKeyRange(
-                    ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], MapRemoveByRankRange(ctx, 1, 3, bin)
+                    ctx,
+                    aerospike.MAP_RETURN_VALUE,
+                    values[2],
+                    values[0],
+                    MapRemoveByRankRange(ctx, 1, 3, bin),
                 ),
                 [values[3]],
             ),
             Eq(
                 MapGetByKeyRange(
-                    ctx, aerospike.MAP_RETURN_VALUE, values[2], values[0], MapRemoveByRankRangeToEnd(ctx, 1, bin)
+                    ctx,
+                    aerospike.MAP_RETURN_VALUE,
+                    values[2],
+                    values[0],
+                    MapRemoveByRankRangeToEnd(ctx, 1, bin),
                 ),
                 [values[3]],
             ),
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )

@@ -45,7 +45,9 @@ class TestOrderedDictGetByValue(object):
 
         ops = [
             mop.map_put_items(
-                "map_of_maps", {"key1": my_dict1, "key2": my_dict2, "key3": my_dict2}, map_policy=map_policy
+                "map_of_maps",
+                {"key1": my_dict1, "key2": my_dict2, "key3": my_dict2},
+                map_policy=map_policy,
             ),
             mop.map_set_policy("map_of_maps", map_policy, [mmap_ctx1]),
             mop.map_set_policy("map_of_maps", map_policy, [mmap_ctx2]),
@@ -80,7 +82,9 @@ class TestOrderedDictGetByValue(object):
 
         element = KeyOrderedDict({"f": 6, "e": 5, "d": 4})
 
-        ops = [lop.list_remove_by_value("map_list", element, aerospike.LIST_RETURN_COUNT)]
+        ops = [
+            lop.list_remove_by_value("map_list", element, aerospike.LIST_RETURN_COUNT)
+        ]
         _, _, res = self.as_connection.operate(self.list_key, ops)
 
         assert res == {"map_list": 1}

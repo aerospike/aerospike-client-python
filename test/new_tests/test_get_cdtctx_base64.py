@@ -54,7 +54,9 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 ctx_empty = []
 
-if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+if TestBaseClass.major_ver < 6 or (
+    TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+):
     if pytest.__version__ < "3.0.0":
         pytest.skip("It only applies to >= 6.1 enterprise edition")
     else:
@@ -73,8 +75,12 @@ class TestCDTIndexB64(object):
                 "numeric_list": [1, 2, 3, 4],
                 "string_list": ["a", "b", "c", "d"],
                 "geojson_list": [
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [-122.096449, 37.421868]}),
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [-122.053321, 37.434212]}),
+                    aerospike.GeoJSON(
+                        {"type": "Point", "coordinates": [-122.096449, 37.421868]}
+                    ),
+                    aerospike.GeoJSON(
+                        {"type": "Point", "coordinates": [-122.053321, 37.434212]}
+                    ),
                 ],
                 "numeric_map": {"a": 1, "b": 2, "c": 3},
                 "string_map": {"sa": "a", "sb": "b", "sc": "c"},
@@ -105,8 +111,13 @@ class TestCDTIndexB64(object):
 
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
-        r.append(";indextype=%s" % (cdt_ctx.index_type_string(aerospike.INDEX_TYPE_LIST)))
-        r.append(";indexdata=string_list,%s" % (cdt_ctx.index_datatype_string(aerospike.INDEX_STRING)))
+        r.append(
+            ";indextype=%s" % (cdt_ctx.index_type_string(aerospike.INDEX_TYPE_LIST))
+        )
+        r.append(
+            ";indexdata=string_list,%s"
+            % (cdt_ctx.index_datatype_string(aerospike.INDEX_STRING))
+        )
         r.append(";context=%s" % (bs_b4_cdt))
         req = "".join(r)
 

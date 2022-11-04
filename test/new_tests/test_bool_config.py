@@ -22,7 +22,9 @@ class TestBitwiseOperations(object):
         self.true_bin = "true_bin"
         self.false_bin = "false_bin"
 
-        self.as_connection.put(self.test_key, {self.true_bin: True, self.false_bin: False})
+        self.as_connection.put(
+            self.test_key, {self.true_bin: True, self.false_bin: False}
+        )
         self.keys.append(self.test_key)
 
         yield
@@ -50,7 +52,9 @@ class TestBitwiseOperations(object):
         """
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = send_bool_as
-        test_client = aerospike.client(config).connect(config["user"], config["password"])
+        test_client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
         ops = [
             operation.write("cfg_true", True),
             operation.write("cfg_false", False),
@@ -60,7 +64,9 @@ class TestBitwiseOperations(object):
             test_client.operate(self.test_key, ops)
         except e.InvalidRequest:
             if self.server_version < [5, 6] and send_bool_as == aerospike.AS_BOOL:
-                pytest.mark.xfail(reason="Servers older than 5.6 do not support as_bool")
+                pytest.mark.xfail(
+                    reason="Servers older than 5.6 do not support as_bool"
+                )
                 pytest.xfail()
 
         _, _, bins = self.as_connection.get(self.test_key)

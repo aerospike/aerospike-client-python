@@ -96,7 +96,9 @@ class TestSelect(object):
 
         bins_to_select = ["c", "d"]
         policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND}
-        key, meta, bins = self.as_connection.select(self.test_key, bins_to_select, policy)
+        key, meta, bins = self.as_connection.select(
+            self.test_key, bins_to_select, policy
+        )
 
         # Calculate the key's digest
         key_digest = aerospike.calc_digest(*self.test_key)

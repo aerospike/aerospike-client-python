@@ -48,7 +48,13 @@ class ListAppend(_BaseExpr):
 
     _op = aerospike.OP_LIST_APPEND
 
-    def __init__(self, ctx: "TypeCTX", policy: "TypePolicy", value: "TypeValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        policy: "TypePolicy",
+        value: "TypeValue",
+        bin: "TypeBinName",
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -68,7 +74,9 @@ class ListAppend(_BaseExpr):
         self._children = (
             value,
             _GenericExpr(
-                _ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}
+                _ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD,
+                0,
+                {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {},
             ),
             bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
@@ -86,7 +94,13 @@ class ListAppendItems(_BaseExpr):
 
     _op = aerospike.OP_LIST_APPEND_ITEMS
 
-    def __init__(self, ctx: "TypeCTX", policy: "TypePolicy", value: "TypeValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        policy: "TypePolicy",
+        value: "TypeValue",
+        bin: "TypeBinName",
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -108,7 +122,9 @@ class ListAppendItems(_BaseExpr):
         self._children = (
             value,
             _GenericExpr(
-                _ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}
+                _ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD,
+                0,
+                {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {},
             ),
             bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
@@ -127,7 +143,12 @@ class ListInsert(_BaseExpr):
     _op = aerospike.OP_LIST_INSERT
 
     def __init__(
-        self, ctx: "TypeCTX", policy: "TypePolicy", index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
+        self,
+        ctx: "TypeCTX",
+        policy: "TypePolicy",
+        index: "TypeIndex",
+        value: "TypeValue",
+        bin: "TypeBinName",
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -150,7 +171,9 @@ class ListInsert(_BaseExpr):
             index,
             value,
             _GenericExpr(
-                _ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}
+                _ExprOp._AS_EXP_CODE_CDT_LIST_MOD,
+                0,
+                {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {},
             ),
             bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
@@ -169,7 +192,12 @@ class ListInsertItems(_BaseExpr):
     _op = aerospike.OP_LIST_INSERT_ITEMS
 
     def __init__(
-        self, ctx: "TypeCTX", policy: "TypePolicy", index: "TypeIndex", values: "TypeListValue", bin: "TypeBinName"
+        self,
+        ctx: "TypeCTX",
+        policy: "TypePolicy",
+        index: "TypeIndex",
+        values: "TypeListValue",
+        bin: "TypeBinName",
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -192,7 +220,9 @@ class ListInsertItems(_BaseExpr):
             index,
             values,
             _GenericExpr(
-                _ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}
+                _ExprOp._AS_EXP_CODE_CDT_LIST_MOD,
+                0,
+                {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {},
             ),
             bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
@@ -211,7 +241,12 @@ class ListIncrement(_BaseExpr):
     _op = aerospike.OP_LIST_INCREMENT
 
     def __init__(
-        self, ctx: "TypeCTX", policy: "TypePolicy", index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
+        self,
+        ctx: "TypeCTX",
+        policy: "TypePolicy",
+        index: "TypeIndex",
+        value: "TypeValue",
+        bin: "TypeBinName",
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -241,7 +276,9 @@ class ListIncrement(_BaseExpr):
             index,
             value,
             _GenericExpr(
-                _ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}
+                _ExprOp._AS_EXP_CODE_CDT_LIST_CRMOD,
+                0,
+                {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {},
             ),
             bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
@@ -260,7 +297,12 @@ class ListSet(_BaseExpr):
     _op = aerospike.OP_LIST_SET
 
     def __init__(
-        self, ctx: "TypeCTX", policy: "TypePolicy", index: "TypeIndex", value: "TypeValue", bin: "TypeBinName"
+        self,
+        ctx: "TypeCTX",
+        policy: "TypePolicy",
+        index: "TypeIndex",
+        value: "TypeValue",
+        bin: "TypeBinName",
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -284,7 +326,9 @@ class ListSet(_BaseExpr):
             index,
             value,
             _GenericExpr(
-                _ExprOp._AS_EXP_CODE_CDT_LIST_MOD, 0, {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {}
+                _ExprOp._AS_EXP_CODE_CDT_LIST_MOD,
+                0,
+                {_Keys.LIST_POLICY_KEY: policy} if policy is not None else {},
             ),
             bin if isinstance(bin, _BaseExpr) else ListBin(bin),
         )
@@ -416,7 +460,9 @@ class ListRemoveByValueRange(_BaseExpr):
 
     _op = aerospike.OP_LIST_REMOVE_BY_VALUE_RANGE
 
-    def __init__(self, ctx: "TypeCTX", begin: "TypeValue", end: "TypeValue", bin: "TypeBinName"):
+    def __init__(
+        self, ctx: "TypeCTX", begin: "TypeValue", end: "TypeValue", bin: "TypeBinName"
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -432,7 +478,11 @@ class ListRemoveByValueRange(_BaseExpr):
             # Remove list of items with values >= 3 and < 7 from list bin "a".
             expr = exp.ListRemoveByValueRange(None, 3, 7, exp.ListBin("a")).compile()
         """
-        self._children = (begin, end, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            begin,
+            end,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {}
 
         if ctx is not None:
@@ -444,7 +494,9 @@ class ListRemoveByValueRelRankToEnd(_BaseExpr):
 
     _op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", value: "TypeValue", rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(
+        self, ctx: "TypeCTX", value: "TypeValue", rank: "TypeRank", bin: "TypeBinName"
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -463,7 +515,11 @@ class ListRemoveByValueRelRankToEnd(_BaseExpr):
             # Expected results: [4]
             # All elements starting with and after the rank are removed
         """
-        self._children = (value, rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            value,
+            rank,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {}
 
         if ctx is not None:
@@ -477,7 +533,14 @@ class ListRemoveByValueRelRankRange(_BaseExpr):
 
     _op = aerospike.OP_LIST_REMOVE_BY_REL_RANK_RANGE
 
-    def __init__(self, ctx: "TypeCTX", value: "TypeValue", rank: "TypeRank", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        value: "TypeValue",
+        rank: "TypeRank",
+        count: "TypeCount",
+        bin: "TypeBinName",
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -496,7 +559,12 @@ class ListRemoveByValueRelRankRange(_BaseExpr):
             exp.ListRemoveByValueRelRankRange(None, 4, 1, 2, exp.ListBin("a"))
             # Expected results: [4, 21]
         """
-        self._children = (value, rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            value,
+            rank,
+            count,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {}
 
         if ctx is not None:
@@ -562,7 +630,9 @@ class ListRemoveByIndexRange(_BaseExpr):
 
     _op = aerospike.OP_LIST_REMOVE_BY_INDEX_RANGE
 
-    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self, ctx: "TypeCTX", index: "TypeIndex", count: "TypeCount", bin: "TypeBinName"
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -578,7 +648,11 @@ class ListRemoveByIndexRange(_BaseExpr):
             # Get size of list bin "a" after index 3, 4, and 5 have been removed.
             expr = exp.ListSize(None, exp.ListRemoveByIndexRange(None, 3, 3, exp.ListBin("a"))).compile()
         """
-        self._children = (index, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            index,
+            count,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {}
 
         if ctx is not None:
@@ -646,7 +720,9 @@ class ListRemoveByRankRange(_BaseExpr):
 
     _op = aerospike.OP_LIST_REMOVE_BY_RANK_RANGE
 
-    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self, ctx: "TypeCTX", rank: "TypeRank", count: "TypeCount", bin: "TypeBinName"
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -662,7 +738,11 @@ class ListRemoveByRankRange(_BaseExpr):
             # Remove the 3 smallest items from list bin "a".
             expr = exp.ListRemoveByRankRange(None, 0, 3, exp.ListBin("a")).compile()
         """
-        self._children = (rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            rank,
+            count,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {}
 
         if ctx is not None:
@@ -707,7 +787,9 @@ class ListGetByValue(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_VALUE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeValue", bin: "TypeBinName"):
+    def __init__(
+        self, ctx: "TypeCTX", return_type: int, value: "TypeValue", bin: "TypeBinName"
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -739,7 +821,12 @@ class ListGetByValueRange(_BaseExpr):
     _op = aerospike.OP_LIST_GET_BY_VALUE_RANGE
 
     def __init__(
-        self, ctx: "TypeCTX", return_type: int, value_begin: "TypeValue", value_end: "TypeValue", bin: "TypeBinName"
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value_begin: "TypeValue",
+        value_end: "TypeValue",
+        bin: "TypeBinName",
     ):
         """Create an expression that selects list items identified by value range and returns selected
         data specified by return_type.
@@ -761,7 +848,11 @@ class ListGetByValueRange(_BaseExpr):
             # Get rank of values between 3 (inclusive) and 7 (exclusive) in list bin "a".
             expr = exp.ListGetByValueRange(None, aerospike.LIST_RETURN_RANK, 3, 7, exp.ListBin("a")).compile()
         """
-        self._children = (value_begin, value_end, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            value_begin,
+            value_end,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
@@ -775,7 +866,13 @@ class ListGetByValueList(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_VALUE_LIST
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeListValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value: "TypeListValue",
+        bin: "TypeBinName",
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -806,7 +903,14 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeValue", rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value: "TypeValue",
+        rank: "TypeRank",
+        bin: "TypeBinName",
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -828,7 +932,11 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
             # We only fetch values with rank 1 or more (i.e the rest of the list)
             # Expected results: [6, 12, 21]
         """
-        self._children = (value, rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            value,
+            rank,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
@@ -874,7 +982,12 @@ class ListGetByValueRelRankRange(_BaseExpr):
             # So we only fetch two values starting at rank 1
             # [12, 6]
         """
-        self._children = (value, rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            value,
+            rank,
+            count,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
@@ -915,7 +1028,10 @@ class ListGetByIndex(_BaseExpr):
                 exp.ListBin("a")).compile()
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {_Keys.VALUE_TYPE_KEY: value_type, _Keys.RETURN_TYPE_KEY: return_type}
+        self._fixed = {
+            _Keys.VALUE_TYPE_KEY: value_type,
+            _Keys.RETURN_TYPE_KEY: return_type,
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -928,7 +1044,9 @@ class ListGetByIndexRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, index: "TypeIndex", bin: "TypeBinName"):
+    def __init__(
+        self, ctx: "TypeCTX", return_type: int, index: "TypeIndex", bin: "TypeBinName"
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -959,7 +1077,14 @@ class ListGetByIndexRange(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_INDEX_RANGE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, index: "TypeIndex", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        index: "TypeIndex",
+        count: "TypeCount",
+        bin: "TypeBinName",
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -977,7 +1102,11 @@ class ListGetByIndexRange(_BaseExpr):
             # Get elements at indexes 3, 4, 5, 6 in list bin "a".
             expr = exp.ListGetByIndexRange(None, aerospike.LIST_RETURN_VALUE, 3, 4, exp.ListBin("a")).compile()
         """
-        self._children = (index, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            index,
+            count,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:
@@ -1019,7 +1148,10 @@ class ListGetByRank(_BaseExpr):
                 exp.ListBin("a")).compile()
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {_Keys.VALUE_TYPE_KEY: value_type, _Keys.RETURN_TYPE_KEY: return_type}
+        self._fixed = {
+            _Keys.VALUE_TYPE_KEY: value_type,
+            _Keys.RETURN_TYPE_KEY: return_type,
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1032,7 +1164,9 @@ class ListGetByRankRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(
+        self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", bin: "TypeBinName"
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1063,7 +1197,14 @@ class ListGetByRankRange(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_RANK_RANGE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        rank: "TypeRank",
+        count: "TypeCount",
+        bin: "TypeBinName",
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1081,7 +1222,11 @@ class ListGetByRankRange(_BaseExpr):
             # Get the 3 smallest elements in list bin "a".
             expr = exp.ListGetByRankRange(None, aerospike.LIST_RETURN_VALUE, 0, 3, exp.ListBin("a")).compile()
         """
-        self._children = (rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
+        self._children = (
+            rank,
+            count,
+            bin if isinstance(bin, _BaseExpr) else ListBin(bin),
+        )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
 
         if ctx is not None:

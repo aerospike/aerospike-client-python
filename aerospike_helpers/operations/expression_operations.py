@@ -32,7 +32,9 @@ EXPR_KEY = "expr"
 EXPR_FLAGS_KEY = "expr_flags"
 
 
-def expression_read(bin_name: str, expression: resources._BaseExpr, expression_read_flags: int = 0):
+def expression_read(
+    bin_name: str, expression: resources._BaseExpr, expression_read_flags: int = 0
+):
     """Create an expression read operation dictionary.
 
     Reads and returns the value produced by the evaluated expression.
@@ -74,7 +76,9 @@ def expression_read(bin_name: str, expression: resources._BaseExpr, expression_r
     return op_dict
 
 
-def expression_write(bin_name: str, expression: resources._BaseExpr, expression_write_flags: int = 0):
+def expression_write(
+    bin_name: str, expression: resources._BaseExpr, expression_write_flags: int = 0
+):
     """Create an expression write operation dictionary.
 
     Writes the value produced by the evaluated expression to the supplied bin.

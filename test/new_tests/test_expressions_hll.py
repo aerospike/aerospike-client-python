@@ -30,7 +30,9 @@ import aerospike
 _NUM_RECORDS = 9
 
 
-def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
+def verify_multiple_expression_result(
+    client, test_ns, test_set, expr, op_bin, expected
+):
     keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
 
     # batch get
@@ -54,13 +56,21 @@ class TestExpressions(TestBaseClass):
         self.test_set = "demo"
 
         HLL_ops = [
-            hll_operations.hll_add("hll_bin", ["key%s" % str(i) for i in range(10000)], 15, 49),
-            hll_operations.hll_add("hll_bin2", ["key%s" % str(i) for i in range(5000, 15000)], 15, 49),
-            hll_operations.hll_add("hll_bin3", ["key%s" % str(i) for i in range(20000, 30000)], 15, 49),
+            hll_operations.hll_add(
+                "hll_bin", ["key%s" % str(i) for i in range(10000)], 15, 49
+            ),
+            hll_operations.hll_add(
+                "hll_bin2", ["key%s" % str(i) for i in range(5000, 15000)], 15, 49
+            ),
+            hll_operations.hll_add(
+                "hll_bin3", ["key%s" % str(i) for i in range(20000, 30000)], 15, 49
+            ),
         ]
 
         for i in range(_NUM_RECORDS):
-            _, _, _ = self.as_connection.operate((self.test_ns, self.test_set, i), HLL_ops)
+            _, _, _ = self.as_connection.operate(
+                (self.test_ns, self.test_set, i), HLL_ops
+            )
 
         def teardown():
             for i in range(_NUM_RECORDS):
@@ -84,9 +94,30 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize(
         "policy, listp, index_bc, mh_bc, bin, expected",
         [
-            (None, ["key%s" % str(i) for i in range(11000, 16000)], 15, None, "hll_bin", 15000),
-            (None, ["key%s" % str(i) for i in range(11000, 16000)], None, None, "hll_bin", 15000),
-            (None, ["key%s" % str(i) for i in range(11000, 16000)], 15, 49, "hll_bin", 15000),
+            (
+                None,
+                ["key%s" % str(i) for i in range(11000, 16000)],
+                15,
+                None,
+                "hll_bin",
+                15000,
+            ),
+            (
+                None,
+                ["key%s" % str(i) for i in range(11000, 16000)],
+                None,
+                None,
+                "hll_bin",
+                15000,
+            ),
+            (
+                None,
+                ["key%s" % str(i) for i in range(11000, 16000)],
+                15,
+                49,
+                "hll_bin",
+                15000,
+            ),
             (
                 {"flags": aerospike.HLL_WRITE_NO_FAIL},
                 ["key%s" % str(i) for i in range(11000, 16000)],
@@ -110,7 +141,12 @@ class TestExpressions(TestBaseClass):
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize(
@@ -120,7 +156,10 @@ class TestExpressions(TestBaseClass):
             (None, None, None, "hll_bin", {"hll_bin": [15, 49]}),
             (None, 8, 20, "hll_bin", {"hll_bin": [8, 20]}),
             (
-                {"flags": aerospike.HLL_WRITE_CREATE_ONLY | aerospike.HLL_WRITE_NO_FAIL},
+                {
+                    "flags": aerospike.HLL_WRITE_CREATE_ONLY
+                    | aerospike.HLL_WRITE_NO_FAIL
+                },
                 15,
                 49,
                 "hll_bin",
@@ -134,7 +173,9 @@ class TestExpressions(TestBaseClass):
         """
 
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
         expr = HLLDescribe(HLLInit(policy, index_bc, mh_bc, bin))
@@ -148,7 +189,13 @@ class TestExpressions(TestBaseClass):
         "policy, index_bc, mh_bc, bin, expected",
         [
             # OpNotApplicable because read tries to read failed expression
-            ({"flags": aerospike.HLL_WRITE_CREATE_ONLY}, 8, 20, "hll_bin", e.OpNotApplicable)
+            (
+                {"flags": aerospike.HLL_WRITE_CREATE_ONLY},
+                8,
+                20,
+                "hll_bin",
+                e.OpNotApplicable,
+            )
         ],
     )
     def test_hll_init_neg(self, policy, index_bc, mh_bc, bin, expected):
@@ -157,7 +204,9 @@ class TestExpressions(TestBaseClass):
         """
 
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support 6.0.0 expressions"
+            )
             pytest.xfail()
 
         expr = HLLDescribe(HLLInit(policy, index_bc, mh_bc, bin))
@@ -182,14 +231,23 @@ class TestExpressions(TestBaseClass):
         upper_lim = ceil(expected + self.relative_count_error(10, expected))
         lower_lim = floor(expected - self.relative_count_error(10, expected))
         record = self.as_connection.get(("test", "demo", 0))
-        records = [record[2][hll_bin] for hll_bin in hll_bins] if len(hll_bins) > 1 else record[2][hll_bins[0]]
+        records = (
+            [record[2][hll_bin] for hll_bin in hll_bins]
+            if len(hll_bins) > 1
+            else record[2][hll_bins[0]]
+        )
         expr = And(
             GE(HLLGetCount(HLLGetUnion(records, bin)), lower_lim),
             LE(HLLGetCount(HLLGetUnion(records, bin)), upper_lim),
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize("bin, expected", [("hll_bin", 25000)])
@@ -208,7 +266,12 @@ class TestExpressions(TestBaseClass):
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize("bin, expected", [("hll_bin", 5000)])
@@ -217,8 +280,12 @@ class TestExpressions(TestBaseClass):
         Test the HLLGetIntersectCount expression.
         """
 
-        upper_lim = ceil(expected + self.relative_intersect_error(10, [10000, 10000], 5000))
-        lower_lim = floor(expected - self.relative_intersect_error(10, [10000, 10000], 5000))
+        upper_lim = ceil(
+            expected + self.relative_intersect_error(10, [10000, 10000], 5000)
+        )
+        lower_lim = floor(
+            expected - self.relative_intersect_error(10, [10000, 10000], 5000)
+        )
         record = self.as_connection.get(("test", "demo", 0))
         records = [record[2]["hll_bin2"]]
         expr = And(
@@ -227,7 +294,12 @@ class TestExpressions(TestBaseClass):
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize("bin, expected", [("hll_bin", 0.33)])
@@ -244,7 +316,12 @@ class TestExpressions(TestBaseClass):
         )
 
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize("bin, expected", [("hll_bin", [15, 49])])
@@ -255,7 +332,12 @@ class TestExpressions(TestBaseClass):
 
         expr = Eq(HLLDescribe(bin), expected)
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )
 
     @pytest.mark.parametrize("bin", [("hll_bin")])
@@ -266,5 +348,10 @@ class TestExpressions(TestBaseClass):
 
         expr = Eq(HLLMayContain(["key1", "key2", "key3"], HLLBin(bin)), 1)
         verify_multiple_expression_result(
-            self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
+            self.as_connection,
+            self.test_ns,
+            self.test_set,
+            expr.compile(),
+            bin,
+            _NUM_RECORDS,
         )

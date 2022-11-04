@@ -39,7 +39,10 @@ def maps_have_same_values(map1, map2):
 
 
 def sort_map(client, test_key, test_bin):
-    map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
+    map_policy = {
+        "map_write_mode": aerospike.MAP_CREATE_ONLY,
+        "map_order": aerospike.MAP_KEY_ORDERED,
+    }
     operations = [map_ops.map_set_policy(test_bin, map_policy)]
     client.operate(test_key, operations)
 
@@ -69,10 +72,15 @@ class TestNewListOperationsHelpers(object):
     def test_map_remove_by_key_list(self):
         operations = [
             map_ops.map_remove_by_key_list(
-                self.test_bin, ["a", "b", "c"], return_type=aerospike.MAP_RETURN_VALUE, inverted=True
+                self.test_bin,
+                ["a", "b", "c"],
+                return_type=aerospike.MAP_RETURN_VALUE,
+                inverted=True,
             )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
 
         assert set(ret_vals) == set([self.test_map["e"], self.test_map["d"]])
 
@@ -83,10 +91,16 @@ class TestNewListOperationsHelpers(object):
     def test_map_remove_by_key_range(self):
         operations = [
             map_ops.map_remove_by_key_range(
-                self.test_bin, "a", "d", return_type=aerospike.MAP_RETURN_VALUE, inverted=True
+                self.test_bin,
+                "a",
+                "d",
+                return_type=aerospike.MAP_RETURN_VALUE,
+                inverted=True,
             )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
 
         assert set(ret_vals) == set([self.test_map["e"], self.test_map["d"]])
 
@@ -97,12 +111,17 @@ class TestNewListOperationsHelpers(object):
     def test_map_remove_by_value(self):
         operations = [
             map_ops.map_remove_by_value(
-                self.test_bin, self.test_map["a"], return_type=aerospike.MAP_RETURN_KEY, inverted=True
+                self.test_bin,
+                self.test_map["a"],
+                return_type=aerospike.MAP_RETURN_KEY,
+                inverted=True,
             )
         ]
-        assert set(get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)) == set(
-            ["b", "c", "d", "e"]
-        )
+        assert set(
+            get_map_result_from_operation(
+                self.as_connection, self.test_key, operations, self.test_bin
+            )
+        ) == set(["b", "c", "d", "e"])
 
         res_map = self.as_connection.get(self.test_key)[2][self.test_bin]
         assert "b" not in res_map
@@ -119,7 +138,9 @@ class TestNewListOperationsHelpers(object):
                 inverted=True,
             )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
 
         assert set(ret_vals) == set(["d", "e"])
 
@@ -129,9 +150,13 @@ class TestNewListOperationsHelpers(object):
 
     def test_map_remove_by_value_range(self):
         operations = [
-            map_ops.map_remove_by_value_range(self.test_bin, 1, 4, return_type=aerospike.MAP_RETURN_KEY, inverted=True)
+            map_ops.map_remove_by_value_range(
+                self.test_bin, 1, 4, return_type=aerospike.MAP_RETURN_KEY, inverted=True
+            )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
 
         assert set(ret_vals) == set(["a", "b"])
 
@@ -142,9 +167,13 @@ class TestNewListOperationsHelpers(object):
     def test_map_remove_by_index_range(self):
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [
-            map_ops.map_remove_by_index_range(self.test_bin, 1, 3, return_type=aerospike.MAP_RETURN_KEY, inverted=True)
+            map_ops.map_remove_by_index_range(
+                self.test_bin, 1, 3, return_type=aerospike.MAP_RETURN_KEY, inverted=True
+            )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
         assert ret_vals == ["a", "e"]
         res_map = self.as_connection.get(self.test_key)[2][self.test_bin]
         assert "a" not in res_map
@@ -152,9 +181,13 @@ class TestNewListOperationsHelpers(object):
 
     def test_map_remove_by_rank_range(self):
         operations = [
-            map_ops.map_remove_by_rank_range(self.test_bin, 1, 3, return_type=aerospike.MAP_RETURN_KEY, inverted=True)
+            map_ops.map_remove_by_rank_range(
+                self.test_bin, 1, 3, return_type=aerospike.MAP_RETURN_KEY, inverted=True
+            )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
         assert set(ret_vals) == set(["a", "e"])
         res_map = self.as_connection.get(self.test_key)[2][self.test_bin]
         assert "a" not in res_map
@@ -163,30 +196,48 @@ class TestNewListOperationsHelpers(object):
     def test_map_get_by_key_list(self):
         operations = [
             map_ops.map_get_by_key_list(
-                self.test_bin, ["a", "b", "c"], return_type=aerospike.MAP_RETURN_VALUE, inverted=True
+                self.test_bin,
+                ["a", "b", "c"],
+                return_type=aerospike.MAP_RETURN_VALUE,
+                inverted=True,
             )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
 
         assert set(ret_vals) == set([self.test_map["d"], self.test_map["e"]])
 
     def test_map_get_by_key_range(self):
         operations = [
-            map_ops.map_get_by_key_range(self.test_bin, "a", "d", return_type=aerospike.MAP_RETURN_VALUE, inverted=True)
+            map_ops.map_get_by_key_range(
+                self.test_bin,
+                "a",
+                "d",
+                return_type=aerospike.MAP_RETURN_VALUE,
+                inverted=True,
+            )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
 
         assert set(ret_vals) == set([self.test_map["d"], self.test_map["e"]])
 
     def test_map_get_by_value(self):
         operations = [
             map_ops.map_get_by_value(
-                self.test_bin, self.test_map["a"], return_type=aerospike.MAP_RETURN_KEY, inverted=True
+                self.test_bin,
+                self.test_map["a"],
+                return_type=aerospike.MAP_RETURN_KEY,
+                inverted=True,
             )
         ]
-        assert set(get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)) == set(
-            ["b", "c", "d", "e"]
-        )
+        assert set(
+            get_map_result_from_operation(
+                self.as_connection, self.test_key, operations, self.test_bin
+            )
+        ) == set(["b", "c", "d", "e"])
 
     def test_map_get_by_value_list(self):
         operations = [
@@ -197,30 +248,44 @@ class TestNewListOperationsHelpers(object):
                 inverted=True,
             )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
 
         assert set(ret_vals) == set(["d", "e"])
 
     def test_map_get_by_value_range(self):
         operations = [
-            map_ops.map_get_by_value_range(self.test_bin, 1, 4, return_type=aerospike.MAP_RETURN_KEY, inverted=True)
+            map_ops.map_get_by_value_range(
+                self.test_bin, 1, 4, return_type=aerospike.MAP_RETURN_KEY, inverted=True
+            )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
 
         assert set(ret_vals) == set(["a", "b"])
 
     def test_map_get_by_index_range(self):
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [
-            map_ops.map_get_by_index_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_KEY, inverted=True)
+            map_ops.map_get_by_index_range(
+                self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_KEY, inverted=True
+            )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
         assert set(ret_vals) == set(["a", "d", "e"])
 
     def test_map_get_by_rank_range(self):
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [
-            map_ops.map_get_by_rank_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_KEY, inverted=True)
+            map_ops.map_get_by_rank_range(
+                self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_KEY, inverted=True
+            )
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(
+            self.as_connection, self.test_key, operations, self.test_bin
+        )
         assert set(ret_vals) == set(["a", "b", "e"])

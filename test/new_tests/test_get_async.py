@@ -92,11 +92,23 @@ class TestGet:
     @pytest.mark.parametrize(
         "_input, _record, _policy, _expected",
         [
-            (("test", "demo", 3), {"name": "name%s" % (str(3)), "age": 3}, aerospike.POLICY_KEY_DIGEST, None),
-            (("test", "demo", 3), {"name": "name%s" % (str(3)), "age": 3}, aerospike.POLICY_KEY_SEND, 3),
+            (
+                ("test", "demo", 3),
+                {"name": "name%s" % (str(3)), "age": 3},
+                aerospike.POLICY_KEY_DIGEST,
+                None,
+            ),
+            (
+                ("test", "demo", 3),
+                {"name": "name%s" % (str(3)), "age": 3},
+                aerospike.POLICY_KEY_SEND,
+                3,
+            ),
         ],
     )
-    async def test_pos_get_with_policy_key_digest(self, _input, _record, _policy, _expected, put_data):
+    async def test_pos_get_with_policy_key_digest(
+        self, _input, _record, _policy, _expected, put_data
+    ):
         """
         Invoke get() for a record with POLICY_KEY_DIGEST
         """
@@ -130,7 +142,9 @@ class TestGet:
                 "test",
                 "demo",
                 1,
-                bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+                bytearray(
+                    b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+                ),
             )
 
         await asyncio.gather(async_io(key, policy))
@@ -169,7 +183,9 @@ class TestGet:
         async def async_io(key_input=None, policy_input=None):
             try:
                 key, _ = self.as_connection.exists(key_input)
-                key, _, _ = await io.get(self.as_connection, (key[0], key[1], None, key[2]))
+                key, _, _ = await io.get(
+                    self.as_connection, (key[0], key[1], None, key[2])
+                )
             except e.ParamError as exception:
                 assert exception.code == -2
                 assert exception.msg == "digest is invalid. expected a bytearray"

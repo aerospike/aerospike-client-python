@@ -54,7 +54,11 @@ def map_set_policy(bin_name: str, policy, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_MAP_SET_POLICY, BIN_KEY: bin_name, POLICY_KEY: policy}
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_SET_POLICY,
+        BIN_KEY: bin_name,
+        POLICY_KEY: policy,
+    }
 
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
@@ -80,7 +84,12 @@ def map_put(bin_name: str, key, value, map_policy: dict = None, ctx: list = None
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_MAP_PUT, BIN_KEY: bin_name, KEY_KEY: key, VALUE_KEY: value}
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_PUT,
+        BIN_KEY: bin_name,
+        KEY_KEY: key,
+        VALUE_KEY: value,
+    }
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
@@ -133,7 +142,9 @@ def map_put_items(bin_name: str, item_dict, map_policy: dict = None, ctx: list =
     return op_dict
 
 
-def map_increment(bin_name: str, key, amount, map_policy: dict = None, ctx: list = None):
+def map_increment(
+    bin_name: str, key, amount, map_policy: dict = None, ctx: list = None
+):
     """Creates a map_increment operation.
 
     The operation allows a user to increment the value of a value stored in the map on the server.
@@ -150,7 +161,12 @@ def map_increment(bin_name: str, key, amount, map_policy: dict = None, ctx: list
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_MAP_INCREMENT, BIN_KEY: bin_name, KEY_KEY: key, VALUE_KEY: amount}
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_INCREMENT,
+        BIN_KEY: bin_name,
+        KEY_KEY: key,
+        VALUE_KEY: amount,
+    }
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
@@ -161,7 +177,9 @@ def map_increment(bin_name: str, key, amount, map_policy: dict = None, ctx: list
     return op_dict
 
 
-def map_decrement(bin_name: str, key, amount, map_policy: dict = None, ctx: list = None):
+def map_decrement(
+    bin_name: str, key, amount, map_policy: dict = None, ctx: list = None
+):
     """Creates a map_decrement operation.
 
     The operation allows a user to decrement the value of a value stored in the map on the server.
@@ -178,7 +196,12 @@ def map_decrement(bin_name: str, key, amount, map_policy: dict = None, ctx: list
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_MAP_DECREMENT, BIN_KEY: bin_name, KEY_KEY: key, VALUE_KEY: amount}
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_DECREMENT,
+        BIN_KEY: bin_name,
+        KEY_KEY: key,
+        VALUE_KEY: amount,
+    }
 
     if map_policy is not None:
         op_dict[POLICY_KEY] = map_policy
@@ -247,7 +270,12 @@ def map_remove_by_key(bin_name: str, key, return_type, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY, BIN_KEY: bin_name, KEY_KEY: key, RETURN_TYPE_KEY: return_type}
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_REMOVE_BY_KEY,
+        BIN_KEY: bin_name,
+        KEY_KEY: key,
+        RETURN_TYPE_KEY: return_type,
+    }
 
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
@@ -255,7 +283,9 @@ def map_remove_by_key(bin_name: str, key, return_type, ctx: list = None):
     return op_dict
 
 
-def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
+def map_remove_by_key_list(
+    bin_name: str, key_list, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_remove_by_key operation.
 
     The operation removes items, specified by the keys in key_list from the map stored in the specified bin.
@@ -288,7 +318,12 @@ def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False,
 
 
 def map_remove_by_key_range(
-    bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: list = None
+    bin_name: str,
+    key_range_start,
+    key_range_end,
+    return_type,
+    inverted=False,
+    ctx: list = None,
 ):
     """Creates a map_remove_by_key_range operation.
 
@@ -324,7 +359,9 @@ def map_remove_by_key_range(
     return op_dict
 
 
-def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def map_remove_by_value(
+    bin_name: str, value, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_remove_by_value operation.
 
     The operation removes key value pairs whose value matches the specified value.
@@ -356,7 +393,9 @@ def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: 
     return op_dict
 
 
-def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
+def map_remove_by_value_list(
+    bin_name: str, value_list, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_remove_by_value_list operation.
 
     The operation removes key value pairs whose values are specified in the value_list.
@@ -388,7 +427,9 @@ def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=Fa
     return op_dict
 
 
-def map_remove_by_value_range(bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list = None):
+def map_remove_by_value_range(
+    bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_remove_by_value_range operation.
 
     The operation removes items, with values between value_start(inclusive) and
@@ -452,7 +493,14 @@ def map_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def map_remove_by_index_range(bin_name: str, index_start, remove_amt, return_type, inverted=False, ctx: list = None):
+def map_remove_by_index_range(
+    bin_name: str,
+    index_start,
+    remove_amt,
+    return_type,
+    inverted=False,
+    ctx: list = None,
+):
     """Creates a map_remove_by_index_range operation.
 
     The operation removes remove_amt entries starting at index_start from the map.
@@ -515,7 +563,9 @@ def map_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def map_remove_by_rank_range(bin_name: str, rank_start, remove_amt, return_type, inverted=False, ctx: list = None):
+def map_remove_by_rank_range(
+    bin_name: str, rank_start, remove_amt, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_remove_by_rank_range operation.
 
     The operation removes `remove_amt` items beginning with the item with the specified rank from the map.
@@ -565,7 +615,12 @@ def map_get_by_key(bin_name: str, key, return_type, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_MAP_GET_BY_KEY, BIN_KEY: bin_name, KEY_KEY: key, RETURN_TYPE_KEY: return_type}
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_GET_BY_KEY,
+        BIN_KEY: bin_name,
+        KEY_KEY: key,
+        RETURN_TYPE_KEY: return_type,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -573,7 +628,14 @@ def map_get_by_key(bin_name: str, key, return_type, ctx: list = None):
     return op_dict
 
 
-def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: list = None):
+def map_get_by_key_range(
+    bin_name: str,
+    key_range_start,
+    key_range_end,
+    return_type,
+    inverted=False,
+    ctx: list = None,
+):
     """Creates a map_get_by_key_range operation.
 
     The operation returns items with keys between key_range_start(inclusive) and
@@ -608,7 +670,9 @@ def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_t
     return op_dict
 
 
-def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
+def map_get_by_key_list(
+    bin_name: str, key_list, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_get_by_key_list operation.
 
     The operation returns items, specified by the keys in key_list from the map stored in the specified bin.
@@ -640,7 +704,9 @@ def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ct
     return op_dict
 
 
-def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def map_get_by_value(
+    bin_name: str, value, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_get_by_value operation.
 
     The operation returns entries whose value matches the specified value.
@@ -672,7 +738,9 @@ def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: lis
     return op_dict
 
 
-def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list = None):
+def map_get_by_value_range(
+    bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_get_by_value_range operation.
 
     The operation returns items, with values between value_start(inclusive) and
@@ -707,7 +775,9 @@ def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, i
     return op_dict
 
 
-def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
+def map_get_by_value_list(
+    bin_name: str, key_list, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_get_by_value_list operation.
 
     The operation returns entries whose values are specified in the value_list.
@@ -755,7 +825,12 @@ def map_get_by_index(bin_name: str, index, return_type, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_MAP_GET_BY_INDEX, BIN_KEY: bin_name, INDEX_KEY: index, RETURN_TYPE_KEY: return_type}
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_GET_BY_INDEX,
+        BIN_KEY: bin_name,
+        INDEX_KEY: index,
+        RETURN_TYPE_KEY: return_type,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -763,7 +838,9 @@ def map_get_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def map_get_by_index_range(bin_name: str, index_start, get_amt, return_type, inverted=False, ctx: list = None):
+def map_get_by_index_range(
+    bin_name: str, index_start, get_amt, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_get_by_index_range operation.
 
     The operation returns get_amt entries starting at index_start from the map.
@@ -813,7 +890,12 @@ def map_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
     """
-    op_dict = {OP_KEY: aerospike.OP_MAP_GET_BY_RANK, BIN_KEY: bin_name, INDEX_KEY: rank, RETURN_TYPE_KEY: return_type}
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_GET_BY_RANK,
+        BIN_KEY: bin_name,
+        INDEX_KEY: rank,
+        RETURN_TYPE_KEY: return_type,
+    }
 
     if ctx:
         op_dict[CTX_KEY] = ctx
@@ -821,7 +903,9 @@ def map_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inverted=False, ctx: list = None):
+def map_get_by_rank_range(
+    bin_name: str, rank_start, get_amt, return_type, inverted=False, ctx: list = None
+):
     """Creates a map_get_by_rank_range operation.
 
     The operation returns item within the specified rank range from the map.
@@ -856,7 +940,13 @@ def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inver
 
 
 def map_remove_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str,
+    value,
+    offset,
+    return_type,
+    count=None,
+    inverted=False,
+    ctx: list = None,
 ):
     """Create a map remove by value rank range relative operation
 
@@ -928,7 +1018,13 @@ def map_remove_by_value_rank_range_relative(
 
 
 def map_get_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str,
+    value,
+    offset,
+    return_type,
+    count=None,
+    inverted=False,
+    ctx: list = None,
 ):
     """Create a map remove by value rank range relative operation
 
@@ -985,7 +1081,13 @@ def map_get_by_value_rank_range_relative(
 
 
 def map_remove_by_key_index_range_relative(
-    bin_name: str, key, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str,
+    key,
+    offset,
+    return_type,
+    count=None,
+    inverted=False,
+    ctx: list = None,
 ):
     """Create a map get by value rank range relative operation
 
@@ -1057,7 +1159,13 @@ def map_remove_by_key_index_range_relative(
 
 
 def map_get_by_key_index_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str,
+    value,
+    offset,
+    return_type,
+    count=None,
+    inverted=False,
+    ctx: list = None,
 ):
     """Create a map get by value rank range relative operation
 

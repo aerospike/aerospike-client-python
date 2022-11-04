@@ -10,7 +10,9 @@ class TestQueryPagination(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         if self.server_version < [6, 0]:
-            pytest.mark.xfail(reason="Servers older than 6.0 do not support paginated queries.")
+            pytest.mark.xfail(
+                reason="Servers older than 6.0 do not support paginated queries."
+            )
             pytest.xfail()
         self.test_ns = "test"
         self.test_set = "demo"
@@ -24,7 +26,9 @@ class TestQueryPagination(TestBaseClass):
 
         for i in range(1, 100000):
             put = 0
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+            rec_partition = as_connection.get_key_partition_id(
+                self.test_ns, self.test_set, str(i)
+            )
 
             if rec_partition == 1000:
                 self.partition_1000_count += 1
@@ -49,7 +53,9 @@ class TestQueryPagination(TestBaseClass):
                     "ns": self.test_ns,
                     "set": self.test_set,
                     "key": str(i),
-                    "digest": as_connection.get_key_digest(self.test_ns, self.test_set, str(i)),
+                    "digest": as_connection.get_key_digest(
+                        self.test_ns, self.test_set, str(i)
+                    ),
                 }
                 as_connection.put(key, rec)
 
@@ -57,7 +63,9 @@ class TestQueryPagination(TestBaseClass):
             for i in range(1, 100000):
                 put = 0
                 key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+                rec_partition = as_connection.get_key_partition_id(
+                    self.test_ns, self.test_set, str(i)
+                )
 
                 if rec_partition == 1000:
                     self.partition_1000_count += 1
@@ -90,7 +98,11 @@ class TestQueryPagination(TestBaseClass):
             + self.partition_1003_count
         )
         partition_filter = {"begin": 1000, "count": 4}
-        policy = {"max_records": query_page_size[0], "partition_filter": partition_filter, "records_per_second": 4000}
+        policy = {
+            "max_records": query_page_size[0],
+            "partition_filter": partition_filter,
+            "records_per_second": 4000,
+        }
 
         def callback(part_id, input_tuple):
             if input_tuple is None:
@@ -141,7 +153,10 @@ class TestQueryPagination(TestBaseClass):
             query_obj.foreach(
                 callback,
                 {
-                    "partition_filter": {"begin": 1000, "count": num_populated_partitions},
+                    "partition_filter": {
+                        "begin": 1000,
+                        "count": num_populated_partitions,
+                    },
                     "max_records": all_records / num_populated_partitions,
                 },
             )
@@ -163,7 +178,13 @@ class TestQueryPagination(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
         query_obj.paginate()
 
-        query_obj.foreach(callback, {"max_records": max_records, "partition_filter": {"begin": 1000, "count": 1}})
+        query_obj.foreach(
+            callback,
+            {
+                "max_records": max_records,
+                "partition_filter": {"begin": 1000, "count": 1},
+            },
+        )
         assert len(records) == self.partition_1000_count
 
     def test_query_pagination_with_results_method(self):
@@ -177,7 +198,12 @@ class TestQueryPagination(TestBaseClass):
         max_records = self.partition_1001_count / 2
 
         for i in range(2):
-            records = query_obj.results({"partition_filter": {"begin": 1001, "count": 1}, "max_records": max_records})
+            records = query_obj.results(
+                {
+                    "partition_filter": {"begin": 1001, "count": 1},
+                    "max_records": max_records,
+                }
+            )
 
             all_recs += len(records)
 
@@ -237,7 +263,9 @@ class TestQueryPagination(TestBaseClass):
             records.append(record)
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(
+                callback, {"partition_filter": {"begin": 1001, "count": 1}}
+            )
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
@@ -253,7 +281,10 @@ class TestQueryPagination(TestBaseClass):
         query_obj.paginate()
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(
+                callback,
+                {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}},
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -277,7 +308,9 @@ class TestQueryPagination(TestBaseClass):
         query_obj.paginate()
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(
+                callback, {"partition_filter": {"begin": 1001, "count": 1}}
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT

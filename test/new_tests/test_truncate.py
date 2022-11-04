@@ -123,13 +123,19 @@ class TestTruncate(object):
 
         self._assert_truncation_status(self.truncated_keys, exists=True)
 
-    @pytest.mark.parametrize("namespace, test_set", (("test", "truncate"), ("test", "truncate"), ("test", "truncate")))
+    @pytest.mark.parametrize(
+        "namespace, test_set",
+        (("test", "truncate"), ("test", "truncate"), ("test", "truncate")),
+    )
     def test_whole_set_unicode_truncation(self, namespace, test_set):
         self.as_connection.truncate(namespace, test_set, 0)
 
         self._assert_truncation_status(self.truncated_keys, exists=False)
 
-    @pytest.mark.parametrize("fake_namespace, fake_set", (("fake_namespace", "truncate"), ("test", "fake_set")))
+    @pytest.mark.parametrize(
+        "fake_namespace, fake_set",
+        (("fake_namespace", "truncate"), ("test", "fake_set")),
+    )
     def test_truncate_non_existent_containers(self, fake_namespace, fake_set):
         ret_code = self.as_connection.truncate(fake_namespace, fake_set, 0)
         assert ret_code == 0
@@ -149,7 +155,9 @@ class TestTruncate(object):
         with pytest.raises(e.ParamError):
             self.as_connection.truncate("test", "truncate", invalid_nanos)
 
-    @pytest.mark.parametrize("fake_namespace, fake_set", (("", "truncate"), ("test", "")))
+    @pytest.mark.parametrize(
+        "fake_namespace, fake_set", (("", "truncate"), ("test", ""))
+    )
     def test_truncate_empty_container_names(self, fake_namespace, fake_set):
         with pytest.raises(e.ClientError):
             self.as_connection.truncate(fake_namespace, fake_set, 0)

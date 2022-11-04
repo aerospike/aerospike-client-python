@@ -41,7 +41,9 @@ class TestBaseClass(object):
                 else:
                     TestBaseClass.using_auth = True
         else:
-            TestBaseClass.hostlist = TestBaseClass.parse_hosts(config.get("community-edition", "hosts"))
+            TestBaseClass.hostlist = TestBaseClass.parse_hosts(
+                config.get("community-edition", "hosts")
+            )
 
         return TestBaseClass.hostlist
 
@@ -173,7 +175,9 @@ class TestBaseClass(object):
             build_info = client.info_all("build")
             res = []
             for _, (error, result) in list(build_info.items()):
-                res = None if error is not None else result.strip().strip(";").strip(":")
+                res = (
+                    None if error is not None else result.strip().strip(";").strip(":")
+                )
                 res = None if res is None or len(res) == 0 else res
                 if res is not None:
                     break

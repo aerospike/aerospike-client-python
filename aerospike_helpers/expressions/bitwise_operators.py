@@ -53,7 +53,9 @@ class IntAnd(_BaseExpr):
             # for int bin "a", a & 0xff == 0x11
             expr = exp.Eq(exp.IntAnd(exp.IntBin("a"), 0xff), 0x11).compile()
         """
-        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class IntOr(_BaseExpr):
@@ -76,7 +78,9 @@ class IntOr(_BaseExpr):
             # for int bin "a", a | 0x10 not == 0
             expr = exp.NE(exp.IntOr(IntBin("a"), 0x10), 0).compile()
         """
-        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class IntXOr(_BaseExpr):
@@ -99,7 +103,9 @@ class IntXOr(_BaseExpr):
             # for int bin "a", "b", a ^ b == 16
             expr = exp.Eq(exp.IntXOr(exp.IntBin("a"), exp.IntBin("b")), 16).compile()
         """
-        self._children = exprs + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = exprs + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class IntNot(_BaseExpr):

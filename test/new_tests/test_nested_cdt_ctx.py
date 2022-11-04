@@ -41,7 +41,10 @@ class TestCTXOperations(object):
         """
         self.keys = []
         self.test_key = "test", "demo", "nested_cdt_ops"
-        self.nested_list = [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]
+        self.nested_list = [
+            ["hi", "friend", ["how", "are", ["you"]]],
+            ["hey", ["numbers", [1, 2, 3]], "home boy"],
+        ]
         random.seed(datetime.now())
         self.nested_list_order = [[4, 2, 5], [1, 4, 2, 3], [[2, 2, 2]]]
         self.nested_map = {
@@ -54,7 +57,14 @@ class TestCTXOperations(object):
                 },
                 "hundred": 100,
             },
-            "third": {"one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]}, "two": []},
+            "third": {
+                "one": {
+                    "cat": "dog",
+                    "barn": {"horse": "shoe", "fish": "pond"},
+                    "cage": ["bird"],
+                },
+                "two": [],
+            },
         }
         self.layered_map = {
             "first": {"one": {1: {"g": "layer", "l": "done"}}},
@@ -75,7 +85,11 @@ class TestCTXOperations(object):
         ctx_sort_nested_map1 = [cdt_ctx.cdt_ctx_map_key("first")]
 
         sort_map_ops = [
-            map_operations.map_set_policy("nested_map", {"map_order": aerospike.MAP_KEY_ORDERED}, ctx_sort_nested_map1),
+            map_operations.map_set_policy(
+                "nested_map",
+                {"map_order": aerospike.MAP_KEY_ORDERED},
+                ctx_sort_nested_map1,
+            ),
         ]
 
         self.as_connection.put(
@@ -108,37 +122,55 @@ class TestCTXOperations(object):
                 [list_index],
                 "toast",
                 [1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy", "toast"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy", "toast"],
+                ],
             ),
             (
                 [list_index],
                 "jam",
                 [0],
-                [["hi", "friend", ["how", "are", ["you"]], "jam"], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]], "jam"],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
             (
                 [list_index, list_index, list_index],
                 4,
                 [1, 1, 1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3, 4]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3, 4]], "home boy"],
+                ],
             ),
             (
                 [list_index, list_index],
                 "?",
                 [0, 2],
-                [["hi", "friend", ["how", "are", ["you"], "?"]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"], "?"]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
             (
                 [list_index, list_index, list_rank],
                 "?",
                 [1, 1, -1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3, "?"]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3, "?"]], "home boy"],
+                ],
             ),
             (
                 [list_index, list_value],
                 "?",
                 [1, ["numbers", [1, 2, 3]]],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3], "?"], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3], "?"], "home boy"],
+                ],
             ),
         ],
     )
@@ -157,7 +189,8 @@ class TestCTXOperations(object):
         assert bins[self.nested_list_bin] == expected
 
     @pytest.mark.parametrize(
-        "value, list_indexes, expected", [("toast", [2], e.OpNotApplicable), ("?", "cat", e.ParamError)]
+        "value, list_indexes, expected",
+        [("toast", [2], e.OpNotApplicable), ("?", "cat", e.ParamError)],
     )
     def test_ctx_list_append_negative(self, value, list_indexes, expected):
         """
@@ -179,7 +212,10 @@ class TestCTXOperations(object):
                 [list_rank],
                 ["toast"],
                 [0],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy", "toast"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy", "toast"],
+                ],
             ),
             (
                 [list_index],
@@ -194,13 +230,19 @@ class TestCTXOperations(object):
                 [list_rank, list_index, list_value],
                 [4, 5, 6],
                 [0, 1, [1, 2, 3]],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3, 4, 5, 6]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3, 4, 5, 6]], "home boy"],
+                ],
             ),
             (
                 [list_rank, list_index],
                 ["?", "!"],
                 [1, 2],
-                [["hi", "friend", ["how", "are", ["you"], "?", "!"]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"], "?", "!"]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
@@ -212,7 +254,9 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [list_operations.list_append_items(self.nested_list_bin, values, None, ctx)]
+        ops = [
+            list_operations.list_append_items(self.nested_list_bin, values, None, ctx)
+        ]
 
         self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -220,7 +264,11 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize(
         "values, list_indexes, expected",
-        [(["toast"], [2], e.OpNotApplicable), (["?"], "cat", e.ParamError), ("toast", [2], e.ParamError)],
+        [
+            (["toast"], [2], e.OpNotApplicable),
+            (["?"], "cat", e.ParamError),
+            ("toast", [2], e.ParamError),
+        ],
     )
     def test_ctx_list_append_items_negative(self, values, list_indexes, expected):
         """
@@ -230,7 +278,9 @@ class TestCTXOperations(object):
         for index in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(index))
 
-        ops = [list_operations.list_append_items(self.nested_list_bin, values, None, ctx)]
+        ops = [
+            list_operations.list_append_items(self.nested_list_bin, values, None, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -242,25 +292,37 @@ class TestCTXOperations(object):
                 0,
                 "toast",
                 [1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["toast", "hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["toast", "hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
             (
                 2,
                 "jam",
                 [0],
-                [["hi", "friend", "jam", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", "jam", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
             (
                 1,
                 4,
                 [1, 1, 1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 4, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 4, 2, 3]], "home boy"],
+                ],
             ),
             (
                 2,
                 "?",
                 [0, 2],
-                [["hi", "friend", ["how", "are", "?", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", "?", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
@@ -272,7 +334,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_insert(self.nested_list_bin, index, value, None, ctx)]
+        ops = [
+            list_operations.list_insert(self.nested_list_bin, index, value, None, ctx)
+        ]
 
         self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -293,7 +357,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_insert(self.nested_list_bin, index, value, None, ctx)]
+        ops = [
+            list_operations.list_insert(self.nested_list_bin, index, value, None, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -301,13 +367,32 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "index, value, list_indexes, expected",
         [
-            (0, 2, [1, 1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [3, 2, 3]], "home boy"]]),
-            (0, 0, [1, 1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
+            (
+                0,
+                2,
+                [1, 1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [3, 2, 3]], "home boy"],
+                ],
+            ),
+            (
+                0,
+                0,
+                [1, 1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
+            ),
             (
                 2,
                 300,
                 [1, 1, 1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 303]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 303]], "home boy"],
+                ],
             ),
         ],
     )
@@ -319,7 +404,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_increment(self.nested_list_bin, index, value, None, ctx)]
+        ops = [
+            list_operations.list_increment(
+                self.nested_list_bin, index, value, None, ctx
+            )
+        ]
 
         self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -333,7 +422,9 @@ class TestCTXOperations(object):
             (0, 1, None, [1, 1, 1, 1], e.InvalidRequest),
         ],
     )
-    def test_ctx_list_increment_negative(self, index, value, policy, list_indexes, expected):
+    def test_ctx_list_increment_negative(
+        self, index, value, policy, list_indexes, expected
+    ):
         """
         Invoke list_increment() to increment a value in a list with expected failures.
         """
@@ -341,7 +432,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_increment(self.nested_list_bin, index, value, policy, ctx)]
+        ops = [
+            list_operations.list_increment(
+                self.nested_list_bin, index, value, policy, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -349,10 +444,31 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "index, list_indexes, expected",
         [
-            (0, [1, 1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [2, 3]], "home boy"]]),
-            (2, [1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]]]]),
+            (
+                0,
+                [1, 1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [2, 3]], "home boy"],
+                ],
+            ),
+            (
+                2,
+                [1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]]],
+                ],
+            ),
             (2, [0], [["hi", "friend"], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
-            (1, [0, 2], [["hi", "friend", ["how", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
+            (
+                1,
+                [0, 2],
+                [
+                    ["hi", "friend", ["how", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
+            ),
         ],
     )
     def test_ctx_list_pop(self, index, list_indexes, expected):
@@ -393,10 +509,31 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "index, list_indexes, count, expected",
         [
-            (0, [1, 1, 1], 3, [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", []], "home boy"]]),
-            (2, [1], 1, [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]]]]),
+            (
+                0,
+                [1, 1, 1],
+                3,
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", []], "home boy"],
+                ],
+            ),
+            (
+                2,
+                [1],
+                1,
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]]],
+                ],
+            ),
             (1, [0], 2, [["hi"], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
-            (0, [0, 2], 3, [["hi", "friend", []], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
+            (
+                0,
+                [0, 2],
+                3,
+                [["hi", "friend", []], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+            ),
         ],
     )
     def test_ctx_list_pop_range(self, index, list_indexes, count, expected):
@@ -438,10 +575,38 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "index, list_indexes, expected",
         [
-            (2, [1, 1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2]], "home boy"]]),
-            (1, [0, 2], [["hi", "friend", ["how", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
-            (0, [1], [["hi", "friend", ["how", "are", ["you"]]], [["numbers", [1, 2, 3]], "home boy"]]),
-            (1, [1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers"], "home boy"]]),
+            (
+                2,
+                [1, 1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2]], "home boy"],
+                ],
+            ),
+            (
+                1,
+                [0, 2],
+                [
+                    ["hi", "friend", ["how", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
+            ),
+            (
+                0,
+                [1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    [["numbers", [1, 2, 3]], "home boy"],
+                ],
+            ),
+            (
+                1,
+                [1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers"], "home boy"],
+                ],
+            ),
         ],
     )
     def test_ctx_list_remove(self, index, list_indexes, expected):
@@ -482,10 +647,34 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "count, index, list_indexes, expected",
         [
-            (3, 0, [1, 1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", []], "home boy"]]),
-            (1, 1, [0, 2], [["hi", "friend", ["how", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
+            (
+                3,
+                0,
+                [1, 1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", []], "home boy"],
+                ],
+            ),
+            (
+                1,
+                1,
+                [0, 2],
+                [
+                    ["hi", "friend", ["how", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
+            ),
             (2, 1, [1], [["hi", "friend", ["how", "are", ["you"]]], ["hey"]]),
-            (1, 1, [1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers"], "home boy"]]),
+            (
+                1,
+                1,
+                [1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers"], "home boy"],
+                ],
+            ),
         ],
     )
     def test_ctx_list_remove_range(self, count, index, list_indexes, expected):
@@ -496,7 +685,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_range(self.nested_list_bin, index, count, ctx)]
+        ops = [
+            list_operations.list_remove_range(self.nested_list_bin, index, count, ctx)
+        ]
 
         self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -517,7 +708,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_range(self.nested_list_bin, index, count, ctx)]
+        ops = [
+            list_operations.list_remove_range(self.nested_list_bin, index, count, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -525,10 +718,22 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "list_indexes, expected",
         [
-            ([1, 1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", []], "home boy"]]),
-            ([0, 2], [["hi", "friend", []], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
+            (
+                [1, 1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", []], "home boy"],
+                ],
+            ),
+            (
+                [0, 2],
+                [["hi", "friend", []], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+            ),
             ([1], [["hi", "friend", ["how", "are", ["you"]]], []]),
-            ([1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", [], "home boy"]]),
+            (
+                [1, 1],
+                [["hi", "friend", ["how", "are", ["you"]]], ["hey", [], "home boy"]],
+            ),
         ],
     )
     def test_ctx_list_clear(self, list_indexes, expected):
@@ -572,16 +777,35 @@ class TestCTXOperations(object):
                 0,
                 "toast",
                 [1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["toast", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["toast", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
-            (2, "jam", [0], [["hi", "friend", "jam"], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
+            (
+                2,
+                "jam",
+                [0],
+                [["hi", "friend", "jam"], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+            ),
             (
                 1,
                 "honey",
                 [1, 1, 1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, "honey", 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, "honey", 3]], "home boy"],
+                ],
             ),
-            (2, 6, [0, 2], [["hi", "friend", ["how", "are", 6]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
+            (
+                2,
+                6,
+                [0, 2],
+                [
+                    ["hi", "friend", ["how", "are", 6]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
+            ),
             (
                 5,
                 "toast",
@@ -718,8 +942,24 @@ class TestCTXOperations(object):
         [
             (0, 1, [0], [["hi"], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
             (0, 0, [1], [["hi", "friend", ["how", "are", ["you"]]], []]),
-            (0, 2, [1, 1, 1], [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2]], "home boy"]]),
-            (1, 3, [0, 2], [["hi", "friend", ["are", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]),
+            (
+                0,
+                2,
+                [1, 1, 1],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2]], "home boy"],
+                ],
+            ),
+            (
+                1,
+                3,
+                [0, 2],
+                [
+                    ["hi", "friend", ["are", ["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
+            ),
         ],
     )
     def test_ctx_list_trim(self, index, count, list_indexes, expected):
@@ -814,7 +1054,10 @@ class TestCTXOperations(object):
                 2,
                 False,
                 [1, 1, 1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1]], "home boy"],
+                ],
                 [2, 3],
             ),
             (
@@ -834,13 +1077,24 @@ class TestCTXOperations(object):
                 1,
                 True,
                 [1, 1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers"], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers"], "home boy"],
+                ],
                 [[1, 2, 3]],
             ),
         ],
     )
     def test_ctx_list_remove_by_value_rank_range(
-        self, value, offset, return_type, count, inverted, list_indexes, expected_bin, expected_val
+        self,
+        value,
+        offset,
+        return_type,
+        count,
+        inverted,
+        list_indexes,
+        expected_bin,
+        expected_val,
     ):
         """
         Invoke list_remove_by_value_rank_range() to remove elements in a range by rank relative
@@ -864,7 +1118,15 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "value, offset, return_type, count, inverted, list_indexes, expected",
         [
-            (2, 0, aerospike.LIST_RETURN_VALUE, 2, False, [1, 1, 1, 1], e.InvalidRequest),
+            (
+                2,
+                0,
+                aerospike.LIST_RETURN_VALUE,
+                2,
+                False,
+                [1, 1, 1, 1],
+                e.InvalidRequest,
+            ),
         ],
     )
     def test_ctx_list_remove_by_value_rank_range_negative(
@@ -918,8 +1180,24 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "value, offset, return_type, count, inverted, list_indexes, expected",
         [
-            (2, 0, aerospike.LIST_RETURN_VALUE, 2, False, [1, 1, 1, 6], e.OpNotApplicable),
-            (2, 0, aerospike.LIST_RETURN_VALUE, 2, False, [1, 1, 1, 1], e.BinIncompatibleType),
+            (
+                2,
+                0,
+                aerospike.LIST_RETURN_VALUE,
+                2,
+                False,
+                [1, 1, 1, 6],
+                e.OpNotApplicable,
+            ),
+            (
+                2,
+                0,
+                aerospike.LIST_RETURN_VALUE,
+                2,
+                False,
+                [1, 1, 1, 1],
+                e.BinIncompatibleType,
+            ),
         ],
     )
     def test_ctx_list_get_by_value_rank_range_relative_negative(
@@ -959,7 +1237,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_index(self.nested_list_bin, index, return_type, ctx)]
+        ops = [
+            list_operations.list_get_by_index(
+                self.nested_list_bin, index, return_type, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected
@@ -972,7 +1254,9 @@ class TestCTXOperations(object):
             ("cat", aerospike.LIST_RETURN_VALUE, [1], e.ParamError),
         ],
     )
-    def test_ctx_list_get_by_index_negative(self, index, return_type, list_indexes, expected):
+    def test_ctx_list_get_by_index_negative(
+        self, index, return_type, list_indexes, expected
+    ):
         """
         Invoke list_get_by_index() to get the value at index from a list with expected failures.
         """
@@ -980,7 +1264,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_index(self.nested_list_bin, index, return_type, ctx)]
+        ops = [
+            list_operations.list_get_by_index(
+                self.nested_list_bin, index, return_type, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -995,7 +1283,9 @@ class TestCTXOperations(object):
             (1, aerospike.LIST_RETURN_RANK, 3, False, [0, 2], [0, 2]),
         ],
     )
-    def test_ctx_list_get_by_index_range(self, index, return_type, count, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_index_range(
+        self, index, return_type, count, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_index() to get the values at index for count from a list.
         """
@@ -1003,7 +1293,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_index_range(self.nested_list_bin, index, return_type, count, inverted, ctx)]
+        ops = [
+            list_operations.list_get_by_index_range(
+                self.nested_list_bin, index, return_type, count, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected
@@ -1017,7 +1311,9 @@ class TestCTXOperations(object):
             # (1, aerospike.LIST_RETURN_VALUE, 1, 'dog', [1], e.ParamError), why does this pass with bad bool?
         ],
     )
-    def test_ctx_list_get_by_index_range_negative(self, index, return_type, count, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_index_range_negative(
+        self, index, return_type, count, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_index() to get the values at index for count from a list with expected failures.
         """
@@ -1025,7 +1321,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_index_range(self.nested_list_bin, index, return_type, count, inverted, ctx)]
+        ops = [
+            list_operations.list_get_by_index_range(
+                self.nested_list_bin, index, return_type, count, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1047,7 +1347,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_rank(self.nested_list_bin, rank, return_type, ctx)]
+        ops = [
+            list_operations.list_get_by_rank(
+                self.nested_list_bin, rank, return_type, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected
@@ -1060,7 +1364,9 @@ class TestCTXOperations(object):
             ("cat", aerospike.LIST_RETURN_VALUE, [1], e.ParamError),
         ],
     )
-    def test_ctx_list_get_by_rank_negative(self, rank, return_type, list_indexes, expected):
+    def test_ctx_list_get_by_rank_negative(
+        self, rank, return_type, list_indexes, expected
+    ):
         """
         Invoke list_get_by_rank() to get an entry of the given rank from a list with expected failures.
         """
@@ -1068,7 +1374,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_rank(self.nested_list_bin, rank, return_type, ctx)]
+        ops = [
+            list_operations.list_get_by_rank(
+                self.nested_list_bin, rank, return_type, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1084,7 +1394,9 @@ class TestCTXOperations(object):
             (20, aerospike.LIST_RETURN_VALUE, 3, False, [0], []),
         ],
     )
-    def test_ctx_list_get_by_rank_range(self, rank, return_type, count, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_rank_range(
+        self, rank, return_type, count, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_rank_range() to start getting elements at value for count from a list.
         """
@@ -1092,7 +1404,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_index_range(self.nested_list_bin, rank, return_type, count, inverted, ctx)]
+        ops = [
+            list_operations.list_get_by_index_range(
+                self.nested_list_bin, rank, return_type, count, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected
@@ -1106,7 +1422,9 @@ class TestCTXOperations(object):
             # (1, aerospike.LIST_RETURN_VALUE, 1, 'dog', [1], e.ParamError), why does this pass with bad bool?
         ],
     )
-    def test_ctx_list_get_by_rank_range_negative(self, rank, return_type, count, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_rank_range_negative(
+        self, rank, return_type, count, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_rank_range() to start getting elements at value for count from a list with expected failures.
         """
@@ -1114,7 +1432,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_index_range(self.nested_list_bin, rank, return_type, count, inverted, ctx)]
+        ops = [
+            list_operations.list_get_by_index_range(
+                self.nested_list_bin, rank, return_type, count, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1128,7 +1450,9 @@ class TestCTXOperations(object):
             ("how", aerospike.LIST_RETURN_VALUE, True, [0, 2], ["are", ["you"]]),
         ],
     )
-    def test_ctx_list_get_by_value(self, value, return_type, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_value(
+        self, value, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_value() to get the given value from a list.
         """
@@ -1136,7 +1460,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_value(self.nested_list_bin, value, return_type, inverted, ctx)]
+        ops = [
+            list_operations.list_get_by_value(
+                self.nested_list_bin, value, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected
@@ -1145,11 +1473,19 @@ class TestCTXOperations(object):
         "value, return_type, inverted, list_indexes, expected",
         [
             (1, aerospike.LIST_RETURN_VALUE, False, [2], e.OpNotApplicable),
-            (2, aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.BinIncompatibleType),
+            (
+                2,
+                aerospike.LIST_RETURN_VALUE,
+                False,
+                [1, 1, 1, 1],
+                e.BinIncompatibleType,
+            ),
             (1, "bad_return_type", False, [1], e.ParamError),
         ],
     )
-    def test_ctx_list_get_by_value_negative(self, value, return_type, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_value_negative(
+        self, value, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_value() to get the given value from a list with expected failures.
         """
@@ -1157,7 +1493,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_value(self.nested_list_bin, value, return_type, inverted, ctx)]
+        ops = [
+            list_operations.list_get_by_value(
+                self.nested_list_bin, value, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1167,11 +1507,19 @@ class TestCTXOperations(object):
         [
             ([2, 3], aerospike.LIST_RETURN_COUNT, False, [1, 1, 1], 2),
             ([[1, 2, 3], "numbers"], aerospike.LIST_RETURN_RANK, False, [1, 1], [1, 0]),
-            (["hi", ["how", "are", ["you"]]], aerospike.LIST_RETURN_INDEX, False, [0], [0, 2]),
+            (
+                ["hi", ["how", "are", ["you"]]],
+                aerospike.LIST_RETURN_INDEX,
+                False,
+                [0],
+                [0, 2],
+            ),
             (["how"], aerospike.LIST_RETURN_VALUE, True, [0, 2], ["are", ["you"]]),
         ],
     )
-    def test_ctx_list_get_by_value_list(self, values, return_type, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_value_list(
+        self, values, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_value_list() to get the given values from a list.
         """
@@ -1179,7 +1527,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_value_list(self.nested_list_bin, values, return_type, inverted, ctx)]
+        ops = [
+            list_operations.list_get_by_value_list(
+                self.nested_list_bin, values, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected
@@ -1188,11 +1540,19 @@ class TestCTXOperations(object):
         "values, return_type, inverted, list_indexes, expected",
         [
             ([1], aerospike.LIST_RETURN_VALUE, False, [2], e.OpNotApplicable),
-            ([2], aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.BinIncompatibleType),
+            (
+                [2],
+                aerospike.LIST_RETURN_VALUE,
+                False,
+                [1, 1, 1, 1],
+                e.BinIncompatibleType,
+            ),
             ([1], "bad_return_type", False, [1], e.ParamError),
         ],
     )
-    def test_ctx_list_get_by_value_list_negative(self, values, return_type, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_value_list_negative(
+        self, values, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_value_list() to get the given values from a list with expected failures.
         """
@@ -1200,7 +1560,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_get_by_value_list(self.nested_list_bin, values, return_type, inverted, ctx)]
+        ops = [
+            list_operations.list_get_by_value_list(
+                self.nested_list_bin, values, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1214,7 +1578,9 @@ class TestCTXOperations(object):
             (aerospike.LIST_RETURN_VALUE, "a", "c", True, [0, 2], ["how", ["you"]]),
         ],
     )
-    def test_ctx_list_get_by_value_range(self, return_type, value_begin, value_end, inverted, list_indexes, expected):
+    def test_ctx_list_get_by_value_range(
+        self, return_type, value_begin, value_end, inverted, list_indexes, expected
+    ):
         """
         Invoke list_get_by_value_range() get elements with values between value_begin and value_end
         """
@@ -1235,7 +1601,14 @@ class TestCTXOperations(object):
         "return_type, value_begin, value_end, inverted, list_indexes, expected",
         [
             (aerospike.LIST_RETURN_VALUE, 0, 1, False, [2], e.OpNotApplicable),
-            (aerospike.LIST_RETURN_VALUE, 0, 1, False, [1, 1, 1, 1], e.BinIncompatibleType),
+            (
+                aerospike.LIST_RETURN_VALUE,
+                0,
+                1,
+                False,
+                [1, 1, 1, 1],
+                e.BinIncompatibleType,
+            ),
             ("bad_return_type", 0, 1, False, [1], e.ParamError),
         ],
     )
@@ -1267,32 +1640,46 @@ class TestCTXOperations(object):
                 aerospike.LIST_RETURN_COUNT,
                 [1, 1, 1],
                 1,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [2, 3]], "home boy"],
+                ],
             ),
             (
                 2,
                 aerospike.LIST_RETURN_VALUE,
                 [1, 1, 1],
                 3,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2]], "home boy"],
+                ],
             ),
             (
                 1,
                 aerospike.LIST_RETURN_VALUE,
                 [1, 1],
                 [1, 2, 3],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers"], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers"], "home boy"],
+                ],
             ),
             (
                 2,
                 aerospike.LIST_RETURN_RANK,
                 [0, 2],
                 2,
-                [["hi", "friend", ["how", "are"]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are"]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
-    def test_ctx_list_remove_by_index(self, index, return_type, list_indexes, expected_res, expected_bin):
+    def test_ctx_list_remove_by_index(
+        self, index, return_type, list_indexes, expected_res, expected_bin
+    ):
         """
         Invoke list_remove_by_index() to remove the element at index in a list.
         """
@@ -1300,7 +1687,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_index(self.nested_list_bin, index, return_type, ctx)]
+        ops = [
+            list_operations.list_remove_by_index(
+                self.nested_list_bin, index, return_type, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected_res
@@ -1316,7 +1707,9 @@ class TestCTXOperations(object):
             (0, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], e.InvalidRequest),
         ],
     )
-    def test_ctx_list_remove_by_index_negative(self, index, return_type, list_indexes, expected):
+    def test_ctx_list_remove_by_index_negative(
+        self, index, return_type, list_indexes, expected
+    ):
         """
         Invoke list_remove_by_index() to remove the element at index in a list with expected failures.
         """
@@ -1324,7 +1717,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_index(self.nested_list_bin, index, return_type, ctx)]
+        ops = [
+            list_operations.list_remove_by_index(
+                self.nested_list_bin, index, return_type, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1339,7 +1736,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 1,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [2, 3]], "home boy"],
+                ],
             ),
             (
                 1,
@@ -1348,7 +1748,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 [2, 3],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1]], "home boy"],
+                ],
             ),
             (
                 0,
@@ -1366,12 +1769,22 @@ class TestCTXOperations(object):
                 True,
                 [0, 2],
                 [1, 0],
-                [["hi", "friend", [["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", [["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
     def test_ctx_list_remove_by_index_range(
-        self, index, return_type, count, inverted, list_indexes, expected_res, expected_bin
+        self,
+        index,
+        return_type,
+        count,
+        inverted,
+        list_indexes,
+        expected_res,
+        expected_bin,
     ):
         """
         Invoke Invoke list_remove_by_index_range() to remove elements starting at index for count.
@@ -1381,7 +1794,9 @@ class TestCTXOperations(object):
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
         ops = [
-            list_operations.list_remove_by_index_range(self.nested_list_bin, index, return_type, count, inverted, ctx)
+            list_operations.list_remove_by_index_range(
+                self.nested_list_bin, index, return_type, count, inverted, ctx
+            )
         ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
@@ -1400,7 +1815,9 @@ class TestCTXOperations(object):
             # (4, aerospike.LIST_RETURN_VALUE, 3, False, [1], e.OpNotApplicable), why does this silently fail?
         ],
     )
-    def test_ctx_list_remove_by_index_range_negative(self, index, return_type, count, inverted, list_indexes, expected):
+    def test_ctx_list_remove_by_index_range_negative(
+        self, index, return_type, count, inverted, list_indexes, expected
+    ):
         """
         Invoke Invoke list_remove_by_index_range() to remove elements starting at index for count with expected
         failures.
@@ -1410,7 +1827,9 @@ class TestCTXOperations(object):
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
         ops = [
-            list_operations.list_remove_by_index_range(self.nested_list_bin, index, return_type, count, inverted, ctx)
+            list_operations.list_remove_by_index_range(
+                self.nested_list_bin, index, return_type, count, inverted, ctx
+            )
         ]
 
         with pytest.raises(expected):
@@ -1424,32 +1843,46 @@ class TestCTXOperations(object):
                 aerospike.LIST_RETURN_COUNT,
                 [1, 1, 1],
                 1,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [2, 3]], "home boy"],
+                ],
             ),
             (
                 2,
                 aerospike.LIST_RETURN_VALUE,
                 [1, 1, 1],
                 3,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2]], "home boy"],
+                ],
             ),
             (
                 1,
                 aerospike.LIST_RETURN_VALUE,
                 [1, 1],
                 [1, 2, 3],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers"], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers"], "home boy"],
+                ],
             ),
             (
                 2,
                 aerospike.LIST_RETURN_VALUE,
                 [0, 2],
                 ["you"],
-                [["hi", "friend", ["how", "are"]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are"]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
-    def test_ctx_list_remove_by_rank(self, rank, return_type, list_indexes, expected_res, expected_bin):
+    def test_ctx_list_remove_by_rank(
+        self, rank, return_type, list_indexes, expected_res, expected_bin
+    ):
         """
         Invoke Invoke list_remove_by_rank() to remove the element with the given rank.
         """
@@ -1457,7 +1890,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_rank(self.nested_list_bin, rank, return_type, ctx)]
+        ops = [
+            list_operations.list_remove_by_rank(
+                self.nested_list_bin, rank, return_type, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected_res
@@ -1473,7 +1910,9 @@ class TestCTXOperations(object):
             ("cat", aerospike.LIST_RETURN_VALUE, [1], e.ParamError),
         ],
     )
-    def test_ctx_list_remove_by_rank_negative(self, rank, return_type, list_indexes, expected):
+    def test_ctx_list_remove_by_rank_negative(
+        self, rank, return_type, list_indexes, expected
+    ):
         """
         Invoke Invoke list_remove_by_rank() to remove the element with the given rank with expected failures.
         """
@@ -1481,7 +1920,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_rank(self.nested_list_bin, rank, return_type, ctx)]
+        ops = [
+            list_operations.list_remove_by_rank(
+                self.nested_list_bin, rank, return_type, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1496,7 +1939,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 1,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [2, 3]], "home boy"],
+                ],
             ),
             (
                 1,
@@ -1505,7 +1951,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 [2, 3],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1]], "home boy"],
+                ],
             ),
             (
                 0,
@@ -1514,7 +1963,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1],
                 ["numbers"],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", [[1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", [[1, 2, 3]], "home boy"],
+                ],
             ),
             (
                 2,
@@ -1523,12 +1975,22 @@ class TestCTXOperations(object):
                 True,
                 [0, 2],
                 [0, 1],
-                [["hi", "friend", [["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", [["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
     def test_ctx_list_remove_by_rank_range(
-        self, rank, return_type, count, inverted, list_indexes, expected_res, expected_bin
+        self,
+        rank,
+        return_type,
+        count,
+        inverted,
+        list_indexes,
+        expected_res,
+        expected_bin,
     ):
         """
         Invoke list_remove_by_rank_range() to remove the element with the given rank for count.
@@ -1537,7 +1999,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_rank_range(self.nested_list_bin, rank, return_type, count, inverted, ctx)]
+        ops = [
+            list_operations.list_remove_by_rank_range(
+                self.nested_list_bin, rank, return_type, count, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected_res
@@ -1555,7 +2021,9 @@ class TestCTXOperations(object):
             ("dog", aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1], e.ParamError),
         ],
     )
-    def test_ctx_list_remove_by_rank_range_negative(self, rank, return_type, count, inverted, list_indexes, expected):
+    def test_ctx_list_remove_by_rank_range_negative(
+        self, rank, return_type, count, inverted, list_indexes, expected
+    ):
         """
         Invoke list_remove_by_rank_range() to remove elements starting with rank for count with expected failures.
         """
@@ -1563,7 +2031,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_rank_range(self.nested_list_bin, rank, return_type, count, inverted, ctx)]
+        ops = [
+            list_operations.list_remove_by_rank_range(
+                self.nested_list_bin, rank, return_type, count, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1577,7 +2049,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 1,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [2, 3]], "home boy"],
+                ],
             ),
             (
                 3,
@@ -1585,7 +2060,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 [3],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 2]], "home boy"],
+                ],
             ),
             (
                 [1, 2, 3],
@@ -1593,7 +2071,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1],
                 [1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers"], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers"], "home boy"],
+                ],
             ),
             (
                 ["you"],
@@ -1601,11 +2082,16 @@ class TestCTXOperations(object):
                 True,
                 [0, 2],
                 [0, 1],
-                [["hi", "friend", [["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", [["you"]]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
-    def test_ctx_list_remove_by_value(self, value, return_type, inverted, list_indexes, expected_res, expected_bin):
+    def test_ctx_list_remove_by_value(
+        self, value, return_type, inverted, list_indexes, expected_res, expected_bin
+    ):
         """
         Invoke list_remove_by_value() to remove the element with the given value.
         """
@@ -1613,7 +2099,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_value(self.nested_list_bin, value, return_type, inverted, ctx)]
+        ops = [
+            list_operations.list_remove_by_value(
+                self.nested_list_bin, value, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected_res
@@ -1627,7 +2117,9 @@ class TestCTXOperations(object):
             (1, aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.InvalidRequest),
         ],
     )
-    def test_ctx_list_remove_by_value_negative(self, value, return_type, inverted, list_indexes, expected):
+    def test_ctx_list_remove_by_value_negative(
+        self, value, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke list_remove_by_value() to remove the element with the given value with expected failures.
         """
@@ -1635,7 +2127,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_value(self.nested_list_bin, value, return_type, inverted, ctx)]
+        ops = [
+            list_operations.list_remove_by_value(
+                self.nested_list_bin, value, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1649,7 +2145,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 2,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1]], "home boy"],
+                ],
             ),
             (
                 [[1, 2, 3], "numbers"],
@@ -1673,7 +2172,10 @@ class TestCTXOperations(object):
                 True,
                 [0, 2],
                 ["are", ["you"]],
-                [["hi", "friend", ["how"]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how"]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
@@ -1687,7 +2189,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_value_list(self.nested_list_bin, values, return_type, inverted, ctx)]
+        ops = [
+            list_operations.list_remove_by_value_list(
+                self.nested_list_bin, values, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_list_bin] == expected_res
@@ -1702,7 +2208,9 @@ class TestCTXOperations(object):
             ([1], "bad_return_type", False, [1], e.ParamError),
         ],
     )
-    def test_ctx_list_remove_by_value_list_negative(self, values, return_type, inverted, list_indexes, expected):
+    def test_ctx_list_remove_by_value_list_negative(
+        self, values, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke list_remove_by_value_list() to remove elements with the given values with expected failures.
         """
@@ -1710,7 +2218,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_remove_by_value_list(self.nested_list_bin, values, return_type, inverted, ctx)]
+        ops = [
+            list_operations.list_remove_by_value_list(
+                self.nested_list_bin, values, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1725,7 +2237,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 1,
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [2, 3]], "home boy"],
+                ],
             ),
             (
                 aerospike.LIST_RETURN_RANK,
@@ -1743,7 +2258,10 @@ class TestCTXOperations(object):
                 False,
                 [1, 1, 1],
                 [1],
-                [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["how", "are", ["you"]]],
+                    ["hey", ["numbers", [1, 3]], "home boy"],
+                ],
             ),
             (
                 aerospike.LIST_RETURN_VALUE,
@@ -1752,12 +2270,22 @@ class TestCTXOperations(object):
                 True,
                 [0, 2],
                 ["how", ["you"]],
-                [["hi", "friend", ["are"]], ["hey", ["numbers", [1, 2, 3]], "home boy"]],
+                [
+                    ["hi", "friend", ["are"]],
+                    ["hey", ["numbers", [1, 2, 3]], "home boy"],
+                ],
             ),
         ],
     )
     def test_ctx_list_remove_by_value_range(
-        self, return_type, value_begin, value_end, inverted, list_indexes, expected_res, expected_bin
+        self,
+        return_type,
+        value_begin,
+        value_end,
+        inverted,
+        list_indexes,
+        expected_res,
+        expected_bin,
     ):
         """
         Invoke list_remove_by_value_range() to remove elements between value_begin and value_end.
@@ -1820,7 +2348,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_set_order(self.nested_list_order_bin, list_order, ctx)]
+        ops = [
+            list_operations.list_set_order(self.nested_list_order_bin, list_order, ctx)
+        ]
 
         self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -1841,7 +2371,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_list_index(place))
 
-        ops = [list_operations.list_set_order(self.nested_list_order_bin, list_order, ctx)]
+        ops = [
+            list_operations.list_set_order(self.nested_list_order_bin, list_order, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1850,7 +2382,11 @@ class TestCTXOperations(object):
         "sort_flags, list_indexes, expected",
         [
             (aerospike.LIST_SORT_DEFAULT, [0], [[2, 4, 5], [1, 4, 2, 3], [[2, 2, 2]]]),
-            (aerospike.LIST_SORT_DROP_DUPLICATES, [2, 0], [[4, 2, 5], [1, 4, 2, 3], [[2]]]),
+            (
+                aerospike.LIST_SORT_DROP_DUPLICATES,
+                [2, 0],
+                [[4, 2, 5], [1, 4, 2, 3], [[2]]],
+            ),
             (aerospike.LIST_SORT_DEFAULT, [1], [[4, 2, 5], [1, 2, 3, 4], [[2, 2, 2]]]),
         ],
     )
@@ -1906,7 +2442,9 @@ class TestCTXOperations(object):
             ([map_key], "nested", aerospike.MAP_RETURN_INDEX, ["second"], 1),
         ],
     )
-    def test_ctx_map_get_by_key(self, ctx_types, key, return_type, list_indexes, expected):
+    def test_ctx_map_get_by_key(
+        self, ctx_types, key, return_type, list_indexes, expected
+    ):
         """
         Invoke map_get_by_key() to get the value at key in the map.
         """
@@ -1914,7 +2452,9 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_key(self.nested_map_bin, key, return_type, ctx)]
+        ops = [
+            map_operations.map_get_by_key(self.nested_map_bin, key, return_type, ctx)
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_map_bin] == expected
@@ -1927,7 +2467,9 @@ class TestCTXOperations(object):
             ("greet", aerospike.MAP_RETURN_VALUE, "teddy", e.ParamError),
         ],
     )
-    def test_ctx_map_get_by_key_negative(self, key, return_type, list_indexes, expected):
+    def test_ctx_map_get_by_key_negative(
+        self, key, return_type, list_indexes, expected
+    ):
         """
         Invoke map_get_by_key() to get the value at key in the map with expected failures.
         """
@@ -1935,7 +2477,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_get_by_key(self.nested_map_bin, key, return_type, ctx)]
+        ops = [
+            map_operations.map_get_by_key(self.nested_map_bin, key, return_type, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -1943,14 +2487,45 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, key_start, key_stop, return_type, inverted, list_indexes, expected",
         [
-            ([map_index], 0, 4, aerospike.MAP_RETURN_VALUE, False, [0], ["v1", "v2", "v3"]),
+            (
+                [map_index],
+                0,
+                4,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [0],
+                ["v1", "v2", "v3"],
+            ),
             ([map_index], 7, 9, aerospike.MAP_RETURN_VALUE, False, [2], ["v7", "v8"]),
-            ([map_key, map_key], 11, 12, aerospike.MAP_RETURN_VALUE, False, [3, 10], ["v11"]),
-            ([map_index], 7, 9, aerospike.MAP_RETURN_VALUE, True, [2], ["v9", {11: "v11"}]),
+            (
+                [map_key, map_key],
+                11,
+                12,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [3, 10],
+                ["v11"],
+            ),
+            (
+                [map_index],
+                7,
+                9,
+                aerospike.MAP_RETURN_VALUE,
+                True,
+                [2],
+                ["v9", {11: "v11"}],
+            ),
         ],
     )
     def test_ctx_map_get_by_key_range(
-        self, ctx_types, key_start, key_stop, return_type, inverted, list_indexes, expected
+        self,
+        ctx_types,
+        key_start,
+        key_stop,
+        return_type,
+        inverted,
+        list_indexes,
+        expected,
     ):
         """
         Invoke map_get_by_key_range() to get the values starting at key_start up to key_stop.
@@ -1959,7 +2534,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_key_range(self.num_map_bin, key_start, key_stop, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_key_range(
+                self.num_map_bin, key_start, key_stop, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.num_map_bin] == expected
@@ -1967,12 +2546,35 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, key_start, key_stop, return_type, inverted, list_indexes, expected",
         [
-            ([map_index], 0, 4, aerospike.MAP_RETURN_VALUE, False, [3], e.OpNotApplicable),
-            ([map_key, map_key, map_index], 11, 12, aerospike.MAP_RETURN_VALUE, False, [3, 10, 0], e.OpNotApplicable),
+            (
+                [map_index],
+                0,
+                4,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [3],
+                e.OpNotApplicable,
+            ),
+            (
+                [map_key, map_key, map_index],
+                11,
+                12,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [3, 10, 0],
+                e.OpNotApplicable,
+            ),
         ],
     )
     def test_ctx_map_get_by_key_range_negative(
-        self, ctx_types, key_start, key_stop, return_type, inverted, list_indexes, expected
+        self,
+        ctx_types,
+        key_start,
+        key_stop,
+        return_type,
+        inverted,
+        list_indexes,
+        expected,
     ):
         """
         Invoke map_get_by_key_range() to get the values starting at key_start up to key_stop with expected failures.
@@ -1982,7 +2584,9 @@ class TestCTXOperations(object):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
         ops = [
-            map_operations.map_get_by_key_range(self.nested_map_bin, key_start, key_stop, return_type, inverted, ctx)
+            map_operations.map_get_by_key_range(
+                self.nested_map_bin, key_start, key_stop, return_type, inverted, ctx
+            )
         ]
 
         with pytest.raises(expected):
@@ -1992,8 +2596,22 @@ class TestCTXOperations(object):
         "ctx_types, key, return_type, inverted, list_indexes, expected",
         [
             ([map_index], ["greet"], aerospike.MAP_RETURN_VALUE, False, [0], ["hi"]),
-            ([map_index], ["numbers", 3], aerospike.MAP_RETURN_VALUE, False, [0], ["hello", [3, 1, 2]]),
-            ([map_index], ["nested", "hundred"], aerospike.MAP_RETURN_VALUE, False, [1], [100, {4, 5, 6}]),
+            (
+                [map_index],
+                ["numbers", 3],
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [0],
+                ["hello", [3, 1, 2]],
+            ),
+            (
+                [map_index],
+                ["nested", "hundred"],
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [1],
+                [100, {4, 5, 6}],
+            ),
             ([map_index], ["dog"], aerospike.MAP_RETURN_VALUE, False, [1], []),
             (
                 [map_index, map_index, map_index],
@@ -2006,7 +2624,9 @@ class TestCTXOperations(object):
             ([map_key], ["nested"], aerospike.MAP_RETURN_INDEX, True, ["second"], [0]),
         ],
     )
-    def test_ctx_map_get_by_key_list(self, ctx_types, key, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_key_list(
+        self, ctx_types, key, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_key_list() to get the values at the supplied keys.
         """
@@ -2014,7 +2634,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_key_list(self.nested_map_bin, key, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_key_list(
+                self.nested_map_bin, key, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         res = res[self.nested_map_bin]
@@ -2025,11 +2649,19 @@ class TestCTXOperations(object):
         "key, return_type, inverted, list_indexes, expected",
         [
             (["greet"], aerospike.MAP_RETURN_VALUE, False, [3], e.OpNotApplicable),
-            (["nested"], aerospike.MAP_RETURN_VALUE, False, [1, 0, 0], e.OpNotApplicable),
+            (
+                ["nested"],
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [1, 0, 0],
+                e.OpNotApplicable,
+            ),
             (["greet"], aerospike.MAP_RETURN_VALUE, False, "teddy", e.ParamError),
         ],
     )
-    def test_ctx_map_get_by_key_list_negative(self, key, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_key_list_negative(
+        self, key, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_key_list() to get the values at the supplied keys with expected failures.
         """
@@ -2037,7 +2669,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_get_by_key_list(self.nested_map_bin, key, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_key_list(
+                self.nested_map_bin, key, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2047,10 +2683,18 @@ class TestCTXOperations(object):
         [
             ([map_index], 1, aerospike.MAP_RETURN_VALUE, [2], []),
             ([map_key], 0, aerospike.MAP_RETURN_VALUE, ["first"], "hello"),
-            ([map_index, map_key, map_index], 1, aerospike.MAP_RETURN_VALUE, [2, "one", 0], "shoe"),
+            (
+                [map_index, map_key, map_index],
+                1,
+                aerospike.MAP_RETURN_VALUE,
+                [2, "one", 0],
+                "shoe",
+            ),
         ],
     )
-    def test_ctx_map_get_by_index(self, ctx_types, index, return_type, list_indexes, expected):
+    def test_ctx_map_get_by_index(
+        self, ctx_types, index, return_type, list_indexes, expected
+    ):
         """
         Invoke map_get_by_index() to get the value at index.
         """
@@ -2058,7 +2702,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_index(self.nested_map_bin, index, return_type, ctx)]
+        ops = [
+            map_operations.map_get_by_index(
+                self.nested_map_bin, index, return_type, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_map_bin] == expected
@@ -2072,7 +2720,9 @@ class TestCTXOperations(object):
             (200, aerospike.MAP_RETURN_VALUE, [0], e.OpNotApplicable),
         ],
     )
-    def test_ctx_map_get_by_index_negative(self, index, return_type, list_indexes, expected):
+    def test_ctx_map_get_by_index_negative(
+        self, index, return_type, list_indexes, expected
+    ):
         """
         Invoke map_get_by_index() to get the value at index with expected failures.
         """
@@ -2080,7 +2730,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_get_by_index(self.nested_map_bin, index, return_type, ctx)]
+        ops = [
+            map_operations.map_get_by_index(
+                self.nested_map_bin, index, return_type, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2089,9 +2743,33 @@ class TestCTXOperations(object):
         "ctx_types, index, rmv_count, return_type, inverted, list_indexes, expected",
         [
             ([map_index], 1, 1, aerospike.MAP_RETURN_VALUE, False, [0], ["hi"]),
-            ([map_index], 0, 3, aerospike.MAP_RETURN_VALUE, False, [0], ["hello", "hi", [3, 1, 2]]),
-            ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [1], [100, {4, 5, 6}]),
-            ([map_index, map_index, map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [2, 0, 0], ["pond", "shoe"]),
+            (
+                [map_index],
+                0,
+                3,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [0],
+                ["hello", "hi", [3, 1, 2]],
+            ),
+            (
+                [map_index],
+                0,
+                2,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [1],
+                [100, {4, 5, 6}],
+            ),
+            (
+                [map_index, map_index, map_index],
+                0,
+                2,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [2, 0, 0],
+                ["pond", "shoe"],
+            ),
             ([map_key], 1, 2, aerospike.MAP_RETURN_INDEX, True, ["second"], [0]),
             (
                 [map_rank, map_value],
@@ -2099,7 +2777,14 @@ class TestCTXOperations(object):
                 3,
                 aerospike.MAP_RETURN_INDEX,
                 False,
-                [1, {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]}],
+                [
+                    1,
+                    {
+                        "cat": "dog",
+                        "barn": {"horse": "shoe", "fish": "pond"},
+                        "cage": ["bird"],
+                    },
+                ],
                 [0, 1, 2],
             ),
         ],
@@ -2114,7 +2799,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_index_range(self.nested_map_bin, index, rmv_count, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_index_range(
+                self.nested_map_bin, index, rmv_count, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         res = res[self.nested_map_bin]
@@ -2130,7 +2819,9 @@ class TestCTXOperations(object):
             (1, "bad_rmv_count", aerospike.MAP_RETURN_VALUE, False, [1], e.ParamError),
         ],
     )
-    def test_ctx_map_get_by_index_range_negative(self, index, rmv_count, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_index_range_negative(
+        self, index, rmv_count, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_index_range() to get the value starting at index for rmv_count with expected failures.
         """
@@ -2138,7 +2829,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_get_by_index_range(self.nested_map_bin, index, rmv_count, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_index_range(
+                self.nested_map_bin, index, rmv_count, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2146,8 +2841,22 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, value, return_type, inverted, list_indexes, expected",
         [
-            ([map_index, map_rank, map_key], "done", aerospike.MAP_RETURN_VALUE, False, [0, 0, 1], ["done"]),
-            ([map_index, map_rank, map_index], "bye", aerospike.MAP_RETURN_VALUE, False, [1, 0, 0], ["bye"]),
+            (
+                [map_index, map_rank, map_key],
+                "done",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [0, 0, 1],
+                ["done"],
+            ),
+            (
+                [map_index, map_rank, map_index],
+                "bye",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [1, 0, 0],
+                ["bye"],
+            ),
             (
                 [map_index, map_rank, map_index],
                 {"g": "layer", "l": "done"},
@@ -2158,7 +2867,9 @@ class TestCTXOperations(object):
             ),
         ],
     )
-    def test_ctx_map_get_by_value(self, ctx_types, value, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_value(
+        self, ctx_types, value, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_value() to get the value in the map.
         """
@@ -2166,7 +2877,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_value(self.layered_map_bin, value, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_value(
+                self.layered_map_bin, value, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.layered_map_bin] == expected
@@ -2179,7 +2894,9 @@ class TestCTXOperations(object):
             (0, aerospike.MAP_RETURN_VALUE, False, "teddy", e.ParamError),
         ],
     )
-    def test_ctx_map_get_by_value_negative(self, value, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_value_negative(
+        self, value, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_value() to get the value in the map with expected failures.
         """
@@ -2187,7 +2904,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_get_by_value(self.nested_map_bin, value, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_value(
+                self.nested_map_bin, value, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2195,14 +2916,53 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, value_start, value_end, return_type, inverted, list_indexes, expected",
         [
-            ([map_index], "v1", "v4", aerospike.MAP_RETURN_VALUE, False, [0], ["v1", "v2", "v3"]),
-            ([map_index], "v5", "v9", aerospike.MAP_RETURN_VALUE, False, [2], ["v7", "v8"]),
-            ([map_key, map_key], "v11", "v12", aerospike.MAP_RETURN_VALUE, False, [3, 10], ["v11"]),
-            ([map_index], "v5", "v9", aerospike.MAP_RETURN_VALUE, True, [2], ["v9", {11: "v11"}]),
+            (
+                [map_index],
+                "v1",
+                "v4",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [0],
+                ["v1", "v2", "v3"],
+            ),
+            (
+                [map_index],
+                "v5",
+                "v9",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [2],
+                ["v7", "v8"],
+            ),
+            (
+                [map_key, map_key],
+                "v11",
+                "v12",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [3, 10],
+                ["v11"],
+            ),
+            (
+                [map_index],
+                "v5",
+                "v9",
+                aerospike.MAP_RETURN_VALUE,
+                True,
+                [2],
+                ["v9", {11: "v11"}],
+            ),
         ],
     )
     def test_ctx_map_get_by_value_range(
-        self, ctx_types, value_start, value_end, return_type, inverted, list_indexes, expected
+        self,
+        ctx_types,
+        value_start,
+        value_end,
+        return_type,
+        inverted,
+        list_indexes,
+        expected,
     ):
         """
         Invoke map_get_by_value_range to get the elements between value_start and value_end.
@@ -2212,7 +2972,9 @@ class TestCTXOperations(object):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
         ops = [
-            map_operations.map_get_by_value_range(self.num_map_bin, value_start, value_end, return_type, inverted, ctx)
+            map_operations.map_get_by_value_range(
+                self.num_map_bin, value_start, value_end, return_type, inverted, ctx
+            )
         ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
@@ -2222,8 +2984,22 @@ class TestCTXOperations(object):
         "value_start, value_end, return_type, inverted, list_indexes, expected",
         [
             ("v0", "v4", aerospike.MAP_RETURN_VALUE, False, [3], e.OpNotApplicable),
-            ("v0", "v4", aerospike.MAP_RETURN_VALUE, False, [1, 0, 0], e.OpNotApplicable),
-            ("v0", "v4", aerospike.MAP_RETURN_VALUE, False, "bad_cdt_types", e.ParamError),
+            (
+                "v0",
+                "v4",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [1, 0, 0],
+                e.OpNotApplicable,
+            ),
+            (
+                "v0",
+                "v4",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                "bad_cdt_types",
+                e.ParamError,
+            ),
         ],
     )
     def test_ctx_map_get_by_value_range_negative(
@@ -2248,7 +3024,14 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, values, return_type, inverted, list_indexes, expected",
         [
-            ([map_index], ["hi", "hello"], aerospike.MAP_RETURN_VALUE, False, [0], ["hello", "hi"]),
+            (
+                [map_index],
+                ["hi", "hello"],
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [0],
+                ["hello", "hi"],
+            ),
             ([map_index], ["hello"], aerospike.MAP_RETURN_VALUE, False, [0], ["hello"]),
             (
                 [map_value],
@@ -2278,7 +3061,9 @@ class TestCTXOperations(object):
             ),
         ],
     )
-    def test_ctx_map_get_by_value_list(self, ctx_types, values, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_value_list(
+        self, ctx_types, values, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_value_list to get the provided values from a map.
         """
@@ -2286,7 +3071,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_value_list(self.nested_map_bin, values, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_value_list(
+                self.nested_map_bin, values, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         res = res[self.nested_map_bin]
@@ -2301,7 +3090,9 @@ class TestCTXOperations(object):
             ("greet", aerospike.MAP_RETURN_VALUE, False, "teddy", e.ParamError),
         ],
     )
-    def test_ctx_map_get_by_value_list_negative(self, values, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_value_list_negative(
+        self, values, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_value_list to get the provided values from a map with expected failures.
         """
@@ -2309,7 +3100,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_get_by_value_list(self.nested_map_bin, values, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_value_list(
+                self.nested_map_bin, values, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2320,11 +3115,19 @@ class TestCTXOperations(object):
             ([map_index], 1, aerospike.MAP_RETURN_VALUE, [0], "hi"),
             ([map_index], 0, aerospike.MAP_RETURN_VALUE, [0], "hello"),
             ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {4, 5, 6}),
-            ([map_index, map_index, map_index], 0, aerospike.MAP_RETURN_VALUE, [2, 0, 0], "pond"),
+            (
+                [map_index, map_index, map_index],
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                [2, 0, 0],
+                "pond",
+            ),
             ([map_key], 1, aerospike.MAP_RETURN_INDEX, ["second"], 1),
         ],
     )
-    def test_ctx_map_get_by_rank(self, ctx_types, rank, return_type, list_indexes, expected):
+    def test_ctx_map_get_by_rank(
+        self, ctx_types, rank, return_type, list_indexes, expected
+    ):
         """
         Invoke map_get_by_rank to get the entry with the given rank.
         """
@@ -2332,7 +3135,9 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_rank(self.nested_map_bin, rank, return_type, ctx)]
+        ops = [
+            map_operations.map_get_by_rank(self.nested_map_bin, rank, return_type, ctx)
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_map_bin] == expected
@@ -2346,7 +3151,9 @@ class TestCTXOperations(object):
             (6, aerospike.MAP_RETURN_VALUE, [1], e.OpNotApplicable),
         ],
     )
-    def test_ctx_map_get_by_rank_negative(self, rank, return_type, list_indexes, expected):
+    def test_ctx_map_get_by_rank_negative(
+        self, rank, return_type, list_indexes, expected
+    ):
         """
         Invoke map_get_by_rank to get the entry with the given rank with expected failures.
         """
@@ -2354,7 +3161,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_rank(place))
 
-        ops = [map_operations.map_get_by_rank(self.nested_map_bin, rank, return_type, ctx)]
+        ops = [
+            map_operations.map_get_by_rank(self.nested_map_bin, rank, return_type, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2362,13 +3171,39 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, rank, rmv_count, return_type, inverted, list_indexes, expected",
         [
-            ([map_index], 0, 4, aerospike.MAP_RETURN_VALUE, False, [0], ["v1", "v2", "v3"]),
+            (
+                [map_index],
+                0,
+                4,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [0],
+                ["v1", "v2", "v3"],
+            ),
             ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [2], ["v7", "v8"]),
-            ([map_key, map_key], 0, 1, aerospike.MAP_RETURN_VALUE, False, [3, 10], ["v11"]),
-            ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, True, [2], ["v9", {11: "v11"}]),
+            (
+                [map_key, map_key],
+                0,
+                1,
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [3, 10],
+                ["v11"],
+            ),
+            (
+                [map_index],
+                0,
+                2,
+                aerospike.MAP_RETURN_VALUE,
+                True,
+                [2],
+                ["v9", {11: "v11"}],
+            ),
         ],
     )
-    def test_ctx_map_get_by_rank_range(self, ctx_types, rank, rmv_count, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_rank_range(
+        self, ctx_types, rank, rmv_count, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_rank_range to get values starting at rank for rmv_count.
         """
@@ -2376,7 +3211,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_get_by_rank_range(self.num_map_bin, rank, rmv_count, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_rank_range(
+                self.num_map_bin, rank, rmv_count, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.num_map_bin] == expected
@@ -2391,7 +3230,9 @@ class TestCTXOperations(object):
             (["bad_rank"], 1, aerospike.MAP_RETURN_VALUE, False, [1], e.ParamError),
         ],
     )
-    def test_ctx_map_get_by_rank_range_negative(self, rank, rmv_count, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_get_by_rank_range_negative(
+        self, rank, rmv_count, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_get_by_rank_range to get values starting at rank for rmv_count with expected failures.
         """
@@ -2399,7 +3240,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_rank(place))
 
-        ops = [map_operations.map_get_by_rank_range(self.nested_map_bin, rank, rmv_count, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_get_by_rank_range(
+                self.nested_map_bin, rank, rmv_count, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2425,7 +3270,9 @@ class TestCTXOperations(object):
 
         ops = [
             map_operations.map_set_policy(self.nested_map_bin, policy, ctx),
-            map_operations.map_get_by_key(self.nested_map_bin, "first", aerospike.MAP_RETURN_VALUE),
+            map_operations.map_get_by_key(
+                self.nested_map_bin, "first", aerospike.MAP_RETURN_VALUE
+            ),
         ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
@@ -2442,7 +3289,9 @@ class TestCTXOperations(object):
             (0, "bad_policy", [0], e.ParamError),
         ],
     )
-    def test_ctx_map_set_policy_negative(self, ctx_types, policy, map_indexes, expected):
+    def test_ctx_map_set_policy_negative(
+        self, ctx_types, policy, map_indexes, expected
+    ):
         """
         Invoke map_set_policy() to apply a map policy to a nested map with expected failures.
         """
@@ -2496,7 +3345,9 @@ class TestCTXOperations(object):
             ),
         ],
     )
-    def test_ctx_map_put(self, ctx_types, key, value, map_policy, map_indexes, expected_val, expected_bin):
+    def test_ctx_map_put(
+        self, ctx_types, key, value, map_policy, map_indexes, expected_val, expected_bin
+    ):
         """
         Invoke map_put() to place a value at key in a nested map.
         """
@@ -2504,7 +3355,9 @@ class TestCTXOperations(object):
         for x in range(0, len(map_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], map_indexes[x]))
 
-        ops = [map_operations.map_put(self.layered_map_bin, key, value, map_policy, ctx)]
+        ops = [
+            map_operations.map_put(self.layered_map_bin, key, value, map_policy, ctx)
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.layered_map_bin] == expected_val
@@ -2525,7 +3378,9 @@ class TestCTXOperations(object):
             ),
         ],
     )
-    def test_ctx_map_put_negative(self, ctx_types, key, value, map_policy, map_indexes, expected):
+    def test_ctx_map_put_negative(
+        self, ctx_types, key, value, map_policy, map_indexes, expected
+    ):
         """
         Invoke map_put() to place a value at key in a nested map with expected failures.
         """
@@ -2533,7 +3388,9 @@ class TestCTXOperations(object):
         for x in range(0, len(map_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], map_indexes[x]))
 
-        ops = [map_operations.map_put(self.layered_map_bin, key, value, map_policy, ctx)]
+        ops = [
+            map_operations.map_put(self.layered_map_bin, key, value, map_policy, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2559,7 +3416,9 @@ class TestCTXOperations(object):
                 [1, 0, 2],
                 4,
                 {
-                    "second": {"two": {2: {3: 4, "here": "place", "l": "bye", "g": "layer"}}},
+                    "second": {
+                        "two": {2: {3: 4, "here": "place", "l": "bye", "g": "layer"}}
+                    },
                     "first": {"one": {1: {"l": "done", "g": "layer"}}},
                 },
             ),
@@ -2570,13 +3429,17 @@ class TestCTXOperations(object):
                 [1, 0],
                 3,
                 {
-                    "second": {"two": {2: {"l": "bye", "g": "layer"}, "here": "place", 1: 2}},
+                    "second": {
+                        "two": {2: {"l": "bye", "g": "layer"}, "here": "place", 1: 2}
+                    },
                     "first": {"one": {1: {"l": "done", "g": "layer"}}},
                 },
             ),
         ],
     )
-    def test_ctx_map_put_items(self, ctx_types, values, map_policy, map_indexes, expected_val, expected_bin):
+    def test_ctx_map_put_items(
+        self, ctx_types, values, map_policy, map_indexes, expected_val, expected_bin
+    ):
         """
         Invoke map_put_items on nested maps
         """
@@ -2584,7 +3447,9 @@ class TestCTXOperations(object):
         for x in range(0, len(map_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], map_indexes[x]))
 
-        ops = [map_operations.map_put_items(self.layered_map_bin, values, map_policy, ctx)]
+        ops = [
+            map_operations.map_put_items(self.layered_map_bin, values, map_policy, ctx)
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.layered_map_bin] == expected_val
@@ -2594,7 +3459,13 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, values, map_policy, map_indexes, expected",
         [
-            ([map_index, map_rank, map_key], {3: 4}, None, [0, 0, 3], e.OpNotApplicable),
+            (
+                [map_index, map_rank, map_key],
+                {3: 4},
+                None,
+                [0, 0, 3],
+                e.OpNotApplicable,
+            ),
             (
                 [map_index],
                 {3: 4},
@@ -2604,7 +3475,9 @@ class TestCTXOperations(object):
             ),
         ],
     )
-    def test_ctx_map_put_items_negative(self, ctx_types, values, map_policy, map_indexes, expected):
+    def test_ctx_map_put_items_negative(
+        self, ctx_types, values, map_policy, map_indexes, expected
+    ):
         """
         Invoke map_put on nested maps with expected failure
         """
@@ -2612,7 +3485,9 @@ class TestCTXOperations(object):
         for x in range(0, len(map_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], map_indexes[x]))
 
-        ops = [map_operations.map_put_items(self.layered_map_bin, values, map_policy, ctx)]
+        ops = [
+            map_operations.map_put_items(self.layered_map_bin, values, map_policy, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2655,7 +3530,9 @@ class TestCTXOperations(object):
             ),
         ],
     )
-    def test_ctx_map_increment(self, ctx_types, key, amount, map_policy, map_indexes, expected_bin):
+    def test_ctx_map_increment(
+        self, ctx_types, key, amount, map_policy, map_indexes, expected_bin
+    ):
         """
         Invoke map_increment to increment an element in a nested map.
         """
@@ -2663,7 +3540,11 @@ class TestCTXOperations(object):
         for x in range(0, len(map_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], map_indexes[x]))
 
-        ops = [map_operations.map_increment(self.layered_map_bin, key, amount, map_policy, ctx)]
+        ops = [
+            map_operations.map_increment(
+                self.layered_map_bin, key, amount, map_policy, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -2672,7 +3553,14 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, key, amount, map_policy, map_indexes, expected",
         [
-            ([map_index, map_rank, map_key], "l", 27, None, [0, 0, 1], e.InvalidRequest),
+            (
+                [map_index, map_rank, map_key],
+                "l",
+                27,
+                None,
+                [0, 0, 1],
+                e.InvalidRequest,
+            ),
             ([map_key], "one", 27, None, ["first"], e.InvalidRequest),
             (
                 [map_key],
@@ -2684,7 +3572,9 @@ class TestCTXOperations(object):
             ),  # why does this fail?
         ],
     )
-    def test_ctx_map_increment_negative(self, ctx_types, key, amount, map_policy, map_indexes, expected):
+    def test_ctx_map_increment_negative(
+        self, ctx_types, key, amount, map_policy, map_indexes, expected
+    ):
         """
         Invoke map_increment on nested maps with expected failure.
         """
@@ -2695,7 +3585,11 @@ class TestCTXOperations(object):
         for x in range(0, len(map_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], map_indexes[x]))
 
-        ops = [map_operations.map_increment(self.layered_map_bin, key, amount, map_policy, ctx)]
+        ops = [
+            map_operations.map_increment(
+                self.layered_map_bin, key, amount, map_policy, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2720,7 +3614,11 @@ class TestCTXOperations(object):
                         "hundred": 73,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -2742,7 +3640,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond", "new": -10}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond", "new": -10},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -2764,14 +3666,21 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"], 2: -50},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                            2: -50,
+                        },
                         "two": [],
                     },
                 },
             ),
         ],
     )
-    def test_ctx_map_decrement(self, ctx_types, key, amount, map_policy, map_indexes, expected_bin):
+    def test_ctx_map_decrement(
+        self, ctx_types, key, amount, map_policy, map_indexes, expected_bin
+    ):
         """
         Invoke map_decrement to decrement an element in a nested map.
         """
@@ -2779,7 +3688,11 @@ class TestCTXOperations(object):
         for x in range(0, len(map_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], map_indexes[x]))
 
-        ops = [map_operations.map_decrement(self.nested_map_bin, key, amount, map_policy, ctx)]
+        ops = [
+            map_operations.map_decrement(
+                self.nested_map_bin, key, amount, map_policy, ctx
+            )
+        ]
 
         _, _, _ = self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -2788,7 +3701,14 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, key, amount, map_policy, map_indexes, expected",
         [
-            ([map_index, map_rank, map_key], "l", 27, None, [0, 0, 1], e.InvalidRequest),
+            (
+                [map_index, map_rank, map_key],
+                "l",
+                27,
+                None,
+                [0, 0, 1],
+                e.InvalidRequest,
+            ),
             ([map_key], "one", 27, None, ["first"], e.InvalidRequest),
             (
                 [map_key],
@@ -2800,7 +3720,9 @@ class TestCTXOperations(object):
             ),  # why does this fail?
         ],
     )
-    def test_ctx_map_decrement_negative(self, ctx_types, key, amount, map_policy, map_indexes, expected):
+    def test_ctx_map_decrement_negative(
+        self, ctx_types, key, amount, map_policy, map_indexes, expected
+    ):
         """
         Invoke map_decrement on nested maps with expected failure.
         """
@@ -2811,7 +3733,11 @@ class TestCTXOperations(object):
         for x in range(0, len(map_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], map_indexes[x]))
 
-        ops = [map_operations.map_decrement(self.layered_map_bin, key, amount, map_policy, ctx)]
+        ops = [
+            map_operations.map_decrement(
+                self.layered_map_bin, key, amount, map_policy, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -2841,8 +3767,16 @@ class TestCTXOperations(object):
         "ctx_types, map_indexes, expected",
         [
             ([map_index], [3], e.OpNotApplicable),
-            ([map_index, map_rank, map_value], [0, 0, {"dog": "cat"}], e.OpNotApplicable),
-            ([map_index, map_index, map_index, map_index], [1, 0, 0, 0], e.InvalidRequest),
+            (
+                [map_index, map_rank, map_value],
+                [0, 0, {"dog": "cat"}],
+                e.OpNotApplicable,
+            ),
+            (
+                [map_index, map_index, map_index, map_index],
+                [1, 0, 0, 0],
+                e.InvalidRequest,
+            ),
         ],
     )
     def test_ctx_map_size_negative(self, ctx_types, map_indexes, expected):
@@ -2868,7 +3802,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -2902,7 +3840,10 @@ class TestCTXOperations(object):
                         },
                         "hundred": 100,
                     },
-                    "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {"cat": "dog", "barn": {}, "cage": ["bird"]},
+                        "two": [],
+                    },
                 },
             ),
         ],
@@ -2926,7 +3867,11 @@ class TestCTXOperations(object):
         [
             ([map_index], [3], e.OpNotApplicable),
             ([map_index, map_key], [2, "bad_val"], e.OpNotApplicable),
-            ([map_index, map_key, map_value], [2, "one", {"horse": "shoe", "fish": "john"}], e.OpNotApplicable),
+            (
+                [map_index, map_key, map_value],
+                [2, "one", {"horse": "shoe", "fish": "john"}],
+                e.OpNotApplicable,
+            ),
         ],
     )
     def test_ctx_map_clear_negative(self, ctx_types, map_indexes, expected):
@@ -2962,7 +3907,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -2984,7 +3933,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -2999,7 +3952,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3021,7 +3978,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3042,7 +4003,14 @@ class TestCTXOperations(object):
                         },
                         "hundred": 100,
                     },
-                    "third": {"one": {"cat": "dog", "barn": {"horse": "shoe"}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe"},
+                            "cage": ["bird"],
+                        },
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -3055,14 +4023,20 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
             ),
         ],
     )
-    def test_ctx_map_remove_by_key(self, ctx_types, key, return_type, list_indexes, expected_val, expected_bin):
+    def test_ctx_map_remove_by_key(
+        self, ctx_types, key, return_type, list_indexes, expected_val, expected_bin
+    ):
         """
         Invoke map_remove_by_key() to remove an element at key.
         """
@@ -3070,7 +4044,9 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_remove_by_key(self.nested_map_bin, key, return_type, ctx)]
+        ops = [
+            map_operations.map_remove_by_key(self.nested_map_bin, key, return_type, ctx)
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_map_bin] == expected_val
@@ -3085,7 +4061,9 @@ class TestCTXOperations(object):
             ("greet", aerospike.MAP_RETURN_VALUE, "teddy", e.ParamError),
         ],
     )
-    def test_ctx_map_remove_by_key_negative(self, key, return_type, list_indexes, expected):
+    def test_ctx_map_remove_by_key_negative(
+        self, key, return_type, list_indexes, expected
+    ):
         """
         Invoke map_remove_by_key() with expected failures.
         """
@@ -3093,7 +4071,9 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_remove_by_key(self.nested_map_bin, key, return_type, ctx)]
+        ops = [
+            map_operations.map_remove_by_key(self.nested_map_bin, key, return_type, ctx)
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -3119,7 +4099,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3144,7 +4128,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3160,7 +4148,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3183,7 +4175,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3205,7 +4201,10 @@ class TestCTXOperations(object):
                         },
                         "hundred": 100,
                     },
-                    "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {"cat": "dog", "barn": {}, "cage": ["bird"]},
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -3225,7 +4224,11 @@ class TestCTXOperations(object):
                         }
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3233,7 +4236,14 @@ class TestCTXOperations(object):
         ],
     )
     def test_ctx_map_remove_by_key_list(
-        self, ctx_types, key, return_type, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        key,
+        return_type,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_key_list() to remove the elements at the provided keys.
@@ -3242,7 +4252,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_remove_by_key_list(self.nested_map_bin, key, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_remove_by_key_list(
+                self.nested_map_bin, key, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         res = res[self.nested_map_bin]
@@ -3255,11 +4269,19 @@ class TestCTXOperations(object):
         "key, return_type, inverted, list_indexes, expected",
         [
             (["greet"], aerospike.MAP_RETURN_VALUE, False, [3], e.OpNotApplicable),
-            (["nested"], aerospike.MAP_RETURN_VALUE, False, [1, 0, 0], e.OpNotApplicable),
+            (
+                ["nested"],
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [1, 0, 0],
+                e.OpNotApplicable,
+            ),
             (["greet"], aerospike.MAP_RETURN_VALUE, False, "teddy", e.ParamError),
         ],
     )
-    def test_ctx_map_remove_key_list_negative(self, key, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_remove_key_list_negative(
+        self, key, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_remove_key_list_negative() with expected failures.
         """
@@ -3267,7 +4289,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_remove_by_key_list(self.nested_map_bin, key, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_remove_by_key_list(
+                self.nested_map_bin, key, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -3283,7 +4309,11 @@ class TestCTXOperations(object):
                 False,
                 [0],
                 ["v1", "v2", "v3"],
-                {1: {}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {7: "v7", 8: "v8", 9: "v9", 10: {11: "v11"}}},
+                {
+                    1: {},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {7: "v7", 8: "v8", 9: "v9", 10: {11: "v11"}},
+                },
             ),
             (
                 [map_index],
@@ -3293,7 +4323,11 @@ class TestCTXOperations(object):
                 False,
                 [2],
                 ["v7", "v8"],
-                {1: {1: "v1", 2: "v2", 3: "v3"}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {9: "v9", 10: {11: "v11"}}},
+                {
+                    1: {1: "v1", 2: "v2", 3: "v3"},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {9: "v9", 10: {11: "v11"}},
+                },
             ),
             (
                 [map_key, map_key],
@@ -3317,12 +4351,24 @@ class TestCTXOperations(object):
                 True,
                 [2],
                 ["v9", {11: "v11"}],
-                {1: {1: "v1", 2: "v2", 3: "v3"}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {7: "v7", 8: "v8"}},
+                {
+                    1: {1: "v1", 2: "v2", 3: "v3"},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {7: "v7", 8: "v8"},
+                },
             ),
         ],
     )
     def test_ctx_map_remove_by_key_range(
-        self, ctx_types, key_start, key_end, return_type, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        key_start,
+        key_end,
+        return_type,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_key_range() to remove elements between key_start and key_end.
@@ -3331,7 +4377,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_remove_by_key_range(self.num_map_bin, key_start, key_end, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_remove_by_key_range(
+                self.num_map_bin, key_start, key_end, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         _, _, bins = self.as_connection.get(self.test_key)
@@ -3357,7 +4407,9 @@ class TestCTXOperations(object):
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
         ops = [
-            map_operations.map_remove_by_key_range(self.nested_map_bin, key_start, key_end, return_type, inverted, ctx)
+            map_operations.map_remove_by_key_range(
+                self.nested_map_bin, key_start, key_end, return_type, inverted, ctx
+            )
         ]
 
         with pytest.raises(expected):
@@ -3384,7 +4436,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3407,7 +4463,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3423,7 +4483,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3446,7 +4510,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3468,7 +4536,14 @@ class TestCTXOperations(object):
                         },
                         "hundred": 100,
                     },
-                    "third": {"one": {"cat": "dog", "barn": {"fish": "pond"}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"fish": "pond"},
+                            "cage": ["bird"],
+                        },
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -3482,7 +4557,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"nested": {4, 5, 6}},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3490,7 +4569,14 @@ class TestCTXOperations(object):
         ],
     )
     def test_ctx_map_remove_by_value(
-        self, ctx_types, value, return_type, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        value,
+        return_type,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_value to remove the element with the given value.
@@ -3499,7 +4585,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_remove_by_value(self.nested_map_bin, value, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_remove_by_value(
+                self.nested_map_bin, value, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_map_bin] == expected_val
@@ -3514,7 +4604,9 @@ class TestCTXOperations(object):
             ("greet", aerospike.MAP_RETURN_VALUE, False, "teddy", e.ParamError),
         ],
     )
-    def test_ctx_map_remove_by_value_negative(self, value, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_remove_by_value_negative(
+        self, value, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_remove_by_value() with expected failures.
         """
@@ -3522,7 +4614,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_remove_by_value(self.nested_map_bin, value, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_remove_by_value(
+                self.nested_map_bin, value, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -3548,7 +4644,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3571,7 +4671,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3596,7 +4700,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3619,7 +4727,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3647,7 +4759,14 @@ class TestCTXOperations(object):
         ],
     )
     def test_ctx_map_remove_by_value_list(
-        self, ctx_types, values, return_type, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        values,
+        return_type,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_value_list() to remove elements with the given values.
@@ -3656,7 +4775,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_remove_by_value_list(self.nested_map_bin, values, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_remove_by_value_list(
+                self.nested_map_bin, values, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         res = res[self.nested_map_bin]
@@ -3672,7 +4795,9 @@ class TestCTXOperations(object):
             ("greet", aerospike.MAP_RETURN_VALUE, False, "teddy", e.ParamError),
         ],
     )
-    def test_ctx_map_remove_by_value_list_negative(self, values, return_type, inverted, list_indexes, expected):
+    def test_ctx_map_remove_by_value_list_negative(
+        self, values, return_type, inverted, list_indexes, expected
+    ):
         """
         Invoke map_remove_by_value_list() with expected failures.
         """
@@ -3680,7 +4805,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_remove_by_value_list(self.nested_map_bin, values, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_remove_by_value_list(
+                self.nested_map_bin, values, return_type, inverted, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -3696,7 +4825,11 @@ class TestCTXOperations(object):
                 False,
                 [0],
                 ["v1", "v2", "v3"],
-                {1: {}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {7: "v7", 8: "v8", 9: "v9", 10: {11: "v11"}}},
+                {
+                    1: {},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {7: "v7", 8: "v8", 9: "v9", 10: {11: "v11"}},
+                },
             ),
             (
                 [map_index],
@@ -3706,7 +4839,11 @@ class TestCTXOperations(object):
                 False,
                 [2],
                 ["v7", "v8"],
-                {1: {1: "v1", 2: "v2", 3: "v3"}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {9: "v9", 10: {11: "v11"}}},
+                {
+                    1: {1: "v1", 2: "v2", 3: "v3"},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {9: "v9", 10: {11: "v11"}},
+                },
             ),
             (
                 [map_key, map_key],
@@ -3730,12 +4867,24 @@ class TestCTXOperations(object):
                 True,
                 [2],
                 ["v9", {11: "v11"}],
-                {1: {1: "v1", 2: "v2", 3: "v3"}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {7: "v7", 8: "v8"}},
+                {
+                    1: {1: "v1", 2: "v2", 3: "v3"},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {7: "v7", 8: "v8"},
+                },
             ),
         ],
     )
     def test_ctx_map_remove_by_value_range(
-        self, ctx_types, value_start, value_end, return_type, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        value_start,
+        value_end,
+        return_type,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_value_range to remove elements with values between value_start and value_end.
@@ -3759,8 +4908,22 @@ class TestCTXOperations(object):
         "value_start, value_end, return_type, inverted, list_indexes, expected",
         [
             ("v0", "v4", aerospike.MAP_RETURN_VALUE, False, [3], e.OpNotApplicable),
-            ("v0", "v4", aerospike.MAP_RETURN_VALUE, False, [1, 0, 0], e.OpNotApplicable),
-            ("v0", "v4", aerospike.MAP_RETURN_VALUE, False, "bad_cdt_types", e.ParamError),
+            (
+                "v0",
+                "v4",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [1, 0, 0],
+                e.OpNotApplicable,
+            ),
+            (
+                "v0",
+                "v4",
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                "bad_cdt_types",
+                e.ParamError,
+            ),
         ],
     )
     def test_ctx_map_remove_by_value_range_negative(
@@ -3802,7 +4965,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3824,7 +4991,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3839,7 +5010,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3860,7 +5035,14 @@ class TestCTXOperations(object):
                         },
                         "hundred": 100,
                     },
-                    "third": {"one": {"cat": "dog", "barn": {"horse": "shoe"}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe"},
+                            "cage": ["bird"],
+                        },
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -3873,14 +5055,20 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
             ),
         ],
     )
-    def test_ctx_map_remove_by_index(self, ctx_types, index, return_type, list_indexes, expected_val, expected_bin):
+    def test_ctx_map_remove_by_index(
+        self, ctx_types, index, return_type, list_indexes, expected_val, expected_bin
+    ):
         """
         Invoke map_remove_by_index() to remove the element at index.
         """
@@ -3888,7 +5076,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_remove_by_index(self.nested_map_bin, index, return_type, ctx)]
+        ops = [
+            map_operations.map_remove_by_index(
+                self.nested_map_bin, index, return_type, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_map_bin] == expected_val
@@ -3904,7 +5096,9 @@ class TestCTXOperations(object):
             (6, aerospike.MAP_RETURN_VALUE, [1], e.OpNotApplicable),
         ],
     )
-    def test_ctx_map_remove_by_index_negative(self, index, return_type, list_indexes, expected):
+    def test_ctx_map_remove_by_index_negative(
+        self, index, return_type, list_indexes, expected
+    ):
         """
         Invoke map_remove_by_index() with expected failures.
         """
@@ -3912,7 +5106,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
-        ops = [map_operations.map_remove_by_index(self.nested_map_bin, index, return_type, ctx)]
+        ops = [
+            map_operations.map_remove_by_index(
+                self.nested_map_bin, index, return_type, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -3939,7 +5137,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3963,7 +5165,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -3980,7 +5186,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4003,7 +5213,10 @@ class TestCTXOperations(object):
                         },
                         "hundred": 100,
                     },
-                    "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {"cat": "dog", "barn": {}, "cage": ["bird"]},
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -4018,7 +5231,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"nested": {4, 5, 6}},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4029,7 +5246,14 @@ class TestCTXOperations(object):
                 3,
                 aerospike.MAP_RETURN_INDEX,
                 False,
-                ["third", {"cat": "dog", "barn": {"fish": "pond", "horse": "shoe"}, "cage": ["bird"]}],
+                [
+                    "third",
+                    {
+                        "cat": "dog",
+                        "barn": {"fish": "pond", "horse": "shoe"},
+                        "cage": ["bird"],
+                    },
+                ],
                 [0, 1, 2],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
@@ -4047,7 +5271,15 @@ class TestCTXOperations(object):
         ],
     )
     def test_ctx_map_remove_by_index_range(
-        self, ctx_types, index, rmv_count, return_type, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        index,
+        rmv_count,
+        return_type,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_index_range() to remove elements starting at index for rmv_count.
@@ -4057,7 +5289,9 @@ class TestCTXOperations(object):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
         ops = [
-            map_operations.map_remove_by_index_range(self.nested_map_bin, index, rmv_count, return_type, inverted, ctx)
+            map_operations.map_remove_by_index_range(
+                self.nested_map_bin, index, rmv_count, return_type, inverted, ctx
+            )
         ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
@@ -4086,7 +5320,9 @@ class TestCTXOperations(object):
             ctx.append(cdt_ctx.cdt_ctx_map_index(place))
 
         ops = [
-            map_operations.map_remove_by_index_range(self.nested_map_bin, index, rmv_count, return_type, inverted, ctx)
+            map_operations.map_remove_by_index_range(
+                self.nested_map_bin, index, rmv_count, return_type, inverted, ctx
+            )
         ]
 
         with pytest.raises(expected):
@@ -4112,7 +5348,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4134,7 +5374,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4149,7 +5393,11 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4170,7 +5418,14 @@ class TestCTXOperations(object):
                         },
                         "hundred": 100,
                     },
-                    "third": {"one": {"cat": "dog", "barn": {"horse": "shoe"}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe"},
+                            "cage": ["bird"],
+                        },
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -4183,14 +5438,20 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
             ),
         ],
     )
-    def test_ctx_map_remove_by_rank(self, ctx_types, rank, return_type, list_indexes, expected_val, expected_bin):
+    def test_ctx_map_remove_by_rank(
+        self, ctx_types, rank, return_type, list_indexes, expected_val, expected_bin
+    ):
         """
         Invoke map_remove_by_rank() to remove the element with the given rank.
         """
@@ -4198,7 +5459,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_remove_by_rank(self.nested_map_bin, rank, return_type, ctx)]
+        ops = [
+            map_operations.map_remove_by_rank(
+                self.nested_map_bin, rank, return_type, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.nested_map_bin] == expected_val
@@ -4214,7 +5479,9 @@ class TestCTXOperations(object):
             (6, aerospike.MAP_RETURN_VALUE, [1], e.OpNotApplicable),
         ],
     )
-    def test_ctx_map_remove_by_rank_negative(self, rank, return_type, list_indexes, expected):
+    def test_ctx_map_remove_by_rank_negative(
+        self, rank, return_type, list_indexes, expected
+    ):
         """
         Invoke map_remove_by_rank() with expected failures.
         """
@@ -4222,7 +5489,11 @@ class TestCTXOperations(object):
         for place in list_indexes:
             ctx.append(cdt_ctx.cdt_ctx_map_rank(place))
 
-        ops = [map_operations.map_remove_by_rank(self.nested_map_bin, rank, return_type, ctx)]
+        ops = [
+            map_operations.map_remove_by_rank(
+                self.nested_map_bin, rank, return_type, ctx
+            )
+        ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
@@ -4238,7 +5509,11 @@ class TestCTXOperations(object):
                 False,
                 [0],
                 ["v1", "v2", "v3"],
-                {1: {}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {7: "v7", 8: "v8", 9: "v9", 10: {11: "v11"}}},
+                {
+                    1: {},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {7: "v7", 8: "v8", 9: "v9", 10: {11: "v11"}},
+                },
             ),
             (
                 [map_index],
@@ -4248,7 +5523,11 @@ class TestCTXOperations(object):
                 False,
                 [2],
                 ["v7", "v8"],
-                {1: {1: "v1", 2: "v2", 3: "v3"}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {9: "v9", 10: {11: "v11"}}},
+                {
+                    1: {1: "v1", 2: "v2", 3: "v3"},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {9: "v9", 10: {11: "v11"}},
+                },
             ),
             (
                 [map_key, map_key],
@@ -4272,12 +5551,24 @@ class TestCTXOperations(object):
                 True,
                 [2],
                 ["v9", {11: "v11"}],
-                {1: {1: "v1", 2: "v2", 3: "v3"}, 2: {4: "v4", 5: "v5", 6: "v6"}, 3: {7: "v7", 8: "v8"}},
+                {
+                    1: {1: "v1", 2: "v2", 3: "v3"},
+                    2: {4: "v4", 5: "v5", 6: "v6"},
+                    3: {7: "v7", 8: "v8"},
+                },
             ),
         ],
     )
     def test_ctx_map_remove_by_rank_range(
-        self, ctx_types, rank, rmv_count, return_type, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        rank,
+        rmv_count,
+        return_type,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_rank_range() to remove the elements starting with the given rank for rmv_count.
@@ -4286,7 +5577,11 @@ class TestCTXOperations(object):
         for x in range(0, len(list_indexes)):
             ctx.append(add_ctx_op(ctx_types[x], list_indexes[x]))
 
-        ops = [map_operations.map_remove_by_rank_range(self.num_map_bin, rank, rmv_count, return_type, inverted, ctx)]
+        ops = [
+            map_operations.map_remove_by_rank_range(
+                self.num_map_bin, rank, rmv_count, return_type, inverted, ctx
+            )
+        ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
         assert res[self.num_map_bin] == expected_val
@@ -4314,7 +5609,9 @@ class TestCTXOperations(object):
             ctx.append(cdt_ctx.cdt_ctx_map_rank(place))
 
         ops = [
-            map_operations.map_remove_by_rank_range(self.nested_map_bin, rank, rmv_count, return_type, inverted, ctx)
+            map_operations.map_remove_by_rank_range(
+                self.nested_map_bin, rank, rmv_count, return_type, inverted, ctx
+            )
         ]
 
         with pytest.raises(expected):
@@ -4343,7 +5640,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4368,7 +5669,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4385,7 +5690,10 @@ class TestCTXOperations(object):
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"nested": {4, 5, 6}, "hundred": 100},
-                    "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {"cat": "dog", "barn": {}, "cage": ["bird"]},
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -4400,13 +5708,25 @@ class TestCTXOperations(object):
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"nested": {4, 5, 6}, "hundred": 100},
-                    "third": {"one": {"barn": {"horse": "shoe", "fish": "pond"}}, "two": []},
+                    "third": {
+                        "one": {"barn": {"horse": "shoe", "fish": "pond"}},
+                        "two": [],
+                    },
                 },
             ),
         ],
     )
     def test_ctx_map_remove_by_value_rank_range_relative(
-        self, ctx_types, value, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        value,
+        offset,
+        return_type,
+        count,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_value_rank_range_relative() to remove elements starting with value for count by relative
@@ -4430,10 +5750,34 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "value, offset, return_type, count, inverted, list_indexes, expected",
         [
-            ("greet", "bad_offset", aerospike.MAP_RETURN_VALUE, 1, False, [3], e.ParamError),
+            (
+                "greet",
+                "bad_offset",
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [3],
+                e.ParamError,
+            ),
             ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [3], e.OpNotApplicable),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, "bad_count", False, [3], e.ParamError),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [0, 0, 0, 0], e.OpNotApplicable),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                "bad_count",
+                False,
+                [3],
+                e.ParamError,
+            ),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [0, 0, 0, 0],
+                e.OpNotApplicable,
+            ),
         ],
     )
     def test_ctx_map_remove_by_value_rank_range_relative_negative(
@@ -4459,7 +5803,16 @@ class TestCTXOperations(object):
         "ctx_types, value, offset, return_type, count, inverted, list_indexes, expected",
         [
             ([map_index], "hi", 0, aerospike.MAP_RETURN_VALUE, 1, False, [0], ["hi"]),
-            ([map_index], "hi", 1, aerospike.MAP_RETURN_VALUE, 3, True, [0], ["hello", "hi"]),
+            (
+                [map_index],
+                "hi",
+                1,
+                aerospike.MAP_RETURN_VALUE,
+                3,
+                True,
+                [0],
+                ["hello", "hi"],
+            ),
             (
                 [map_key, map_index, map_value],
                 "horse",
@@ -4483,7 +5836,15 @@ class TestCTXOperations(object):
         ],
     )
     def test_ctx_map_get_by_value_rank_range_relative(
-        self, ctx_types, value, offset, return_type, count, inverted, list_indexes, expected
+        self,
+        ctx_types,
+        value,
+        offset,
+        return_type,
+        count,
+        inverted,
+        list_indexes,
+        expected,
     ):
         """
         Invoke map_get_by_value_rank_range_relative() to get elements starting with value for count by relative rank.
@@ -4504,10 +5865,34 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "value, offset, return_type, count, inverted, list_indexes, expected",
         [
-            ("greet", "bad_offset", aerospike.MAP_RETURN_VALUE, 1, False, [3], e.ParamError),
+            (
+                "greet",
+                "bad_offset",
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [3],
+                e.ParamError,
+            ),
             ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [3], e.OpNotApplicable),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, "bad_count", False, [3], e.ParamError),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [0, 0, 0, 0], e.OpNotApplicable),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                "bad_count",
+                False,
+                [3],
+                e.ParamError,
+            ),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [0, 0, 0, 0],
+                e.OpNotApplicable,
+            ),
         ],
     )
     def test_ctx_map_get_by_value_rank_range_relative_negative(
@@ -4552,7 +5937,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4577,7 +5966,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4594,7 +5987,10 @@ class TestCTXOperations(object):
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"nested": {4, 5, 6}, "hundred": 100},
-                    "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {"cat": "dog", "barn": {}, "cage": ["bird"]},
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -4609,13 +6005,28 @@ class TestCTXOperations(object):
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"nested": {4, 5, 6}, "hundred": 100},
-                    "third": {"one": {"barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
+                        "two": [],
+                    },
                 },
             ),
         ],
     )
     def test_ctx_map_remove_by_key_index_range_relative(
-        self, ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        key,
+        offset,
+        return_type,
+        count,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_key_index_range_relative() to remove elements starting with value for count by relative
@@ -4641,10 +6052,34 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "key, offset, return_type, count, inverted, list_indexes, expected",
         [
-            ("greet", "bad_offset", aerospike.MAP_RETURN_VALUE, 1, False, [3], e.ParamError),
+            (
+                "greet",
+                "bad_offset",
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [3],
+                e.ParamError,
+            ),
             ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [3], e.OpNotApplicable),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, "bad_count", False, [3], e.ParamError),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [0, 0, 0, 0], e.OpNotApplicable),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                "bad_count",
+                False,
+                [3],
+                e.ParamError,
+            ),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [0, 0, 0, 0],
+                e.OpNotApplicable,
+            ),
         ],
     )
     def test_ctx_map_remove_by_key_index_range_relative_negative1(
@@ -4690,7 +6125,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4715,7 +6154,11 @@ class TestCTXOperations(object):
                         "hundred": 100,
                     },
                     "third": {
-                        "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
+                        "one": {
+                            "cat": "dog",
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
                         "two": [],
                     },
                 },
@@ -4732,7 +6175,10 @@ class TestCTXOperations(object):
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"nested": {4, 5, 6}, "hundred": 100},
-                    "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {"cat": "dog", "barn": {}, "cage": ["bird"]},
+                        "two": [],
+                    },
                 },
             ),
             (
@@ -4747,13 +6193,28 @@ class TestCTXOperations(object):
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"nested": {4, 5, 6}, "hundred": 100},
-                    "third": {"one": {"barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]}, "two": []},
+                    "third": {
+                        "one": {
+                            "barn": {"horse": "shoe", "fish": "pond"},
+                            "cage": ["bird"],
+                        },
+                        "two": [],
+                    },
                 },
             ),
         ],
     )
     def test_ctx_map_remove_by_key_index_range_relative1(
-        self, ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin
+        self,
+        ctx_types,
+        key,
+        offset,
+        return_type,
+        count,
+        inverted,
+        list_indexes,
+        expected_val,
+        expected_bin,
     ):
         """
         Invoke map_remove_by_key_index_range_relative() to remove elements starting at key for count by relative index.
@@ -4776,10 +6237,34 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "key, offset, return_type, count, inverted, list_indexes, expected",
         [
-            ("greet", "bad_offset", aerospike.MAP_RETURN_VALUE, 1, False, [3], e.ParamError),
+            (
+                "greet",
+                "bad_offset",
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [3],
+                e.ParamError,
+            ),
             ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [3], e.OpNotApplicable),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, "bad_count", False, [3], e.ParamError),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [0, 0, 0, 0], e.OpNotApplicable),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                "bad_count",
+                False,
+                [3],
+                e.ParamError,
+            ),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [0, 0, 0, 0],
+                e.OpNotApplicable,
+            ),
         ],
     )
     def test_ctx_map_remove_by_key_index_range_relative_negative(
@@ -4804,8 +6289,26 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "ctx_types, key, offset, return_type, count, inverted, list_indexes, expected",
         [
-            ([map_index], "greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [0], ["hi"]),
-            ([map_index], "greet", 1, aerospike.MAP_RETURN_VALUE, 3, True, [0], ["hello", "hi"]),
+            (
+                [map_index],
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [0],
+                ["hi"],
+            ),
+            (
+                [map_index],
+                "greet",
+                1,
+                aerospike.MAP_RETURN_VALUE,
+                3,
+                True,
+                [0],
+                ["hello", "hi"],
+            ),
             (
                 [map_key, map_index, map_value],
                 "fish",
@@ -4816,11 +6319,28 @@ class TestCTXOperations(object):
                 ["third", 0, {"horse": "shoe", "fish": "pond"}],
                 ["pond", "shoe"],
             ),
-            ([map_key, map_rank], "barn", 0, aerospike.MAP_RETURN_VALUE, 2, True, ["third", 1], ["dog"]),
+            (
+                [map_key, map_rank],
+                "barn",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                2,
+                True,
+                ["third", 1],
+                ["dog"],
+            ),
         ],
     )
     def test_ctx_map_get_by_key_index_range_relative(
-        self, ctx_types, key, offset, return_type, count, inverted, list_indexes, expected
+        self,
+        ctx_types,
+        key,
+        offset,
+        return_type,
+        count,
+        inverted,
+        list_indexes,
+        expected,
     ):
         """
         Invoke map_get_by_key_index_range_relative() to get the element at key for count by relative index.
@@ -4841,10 +6361,34 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "key, offset, return_type, count, inverted, list_indexes, expected",
         [
-            ("greet", "bad_offset", aerospike.MAP_RETURN_VALUE, 1, False, [3], e.ParamError),
+            (
+                "greet",
+                "bad_offset",
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [3],
+                e.ParamError,
+            ),
             ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [3], e.OpNotApplicable),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, "bad_count", False, [3], e.ParamError),
-            ("greet", 0, aerospike.MAP_RETURN_VALUE, 1, False, [0, 0, 0, 0], e.OpNotApplicable),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                "bad_count",
+                False,
+                [3],
+                e.ParamError,
+            ),
+            (
+                "greet",
+                0,
+                aerospike.MAP_RETURN_VALUE,
+                1,
+                False,
+                [0, 0, 0, 0],
+                e.OpNotApplicable,
+            ),
         ],
     )
     def test_ctx_map_get_by_key_index_range_relative_negative(
@@ -4872,7 +6416,11 @@ class TestCTXOperations(object):
         """
         ctx = [cdt_ctx.cdt_ctx_map_key(1)]
 
-        ops = [map_operations.map_get_by_key(self.nested_map_bin, "greet", aerospike.MAP_RETURN_VALUE, ctx[0])]
+        ops = [
+            map_operations.map_get_by_key(
+                self.nested_map_bin, "greet", aerospike.MAP_RETURN_VALUE, ctx[0]
+            )
+        ]
 
         for i in range(10):
             with pytest.raises(e.ParamError):
@@ -4887,7 +6435,9 @@ class TestCTXOperations(object):
 
         ops = [
             map_operations.map_put(self.nested_map_bin, "key1", val, None, ctx),
-            map_operations.map_get_by_key(self.nested_map_bin, key, aerospike.MAP_RETURN_VALUE),
+            map_operations.map_get_by_key(
+                self.nested_map_bin, key, aerospike.MAP_RETURN_VALUE
+            ),
         ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
@@ -4895,7 +6445,10 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize(
         "key, val, flags, expected",
-        [("new_key", "val1", ["bad_order"], e.ParamError), ("new_key", "val1", None, e.ParamError)],
+        [
+            ("new_key", "val1", ["bad_order"], e.ParamError),
+            ("new_key", "val1", None, e.ParamError),
+        ],
     )
     def test_cdt_ctx_map_key_create_neg(self, key, val, flags, expected):
         """
@@ -4905,13 +6458,17 @@ class TestCTXOperations(object):
 
         ops = [
             map_operations.map_put(self.nested_map_bin, "key1", val, None, ctx),
-            map_operations.map_get_by_key(self.nested_map_bin, key, aerospike.MAP_RETURN_VALUE),
+            map_operations.map_get_by_key(
+                self.nested_map_bin, key, aerospike.MAP_RETURN_VALUE
+            ),
         ]
 
         with pytest.raises(expected):
             self.as_connection.operate(self.test_key, ops)
 
-    @pytest.mark.parametrize("index, val, pad", [(10, "val1", True), (2, "val1", False)])
+    @pytest.mark.parametrize(
+        "index, val, pad", [(10, "val1", True), (2, "val1", False)]
+    )
     def test_cdt_ctx_list_index_create_pos(self, index, val, pad):
         """
         Test the list_index_create cdt_ctx type.
@@ -4920,7 +6477,9 @@ class TestCTXOperations(object):
 
         ops = [
             list_operations.list_append(self.nested_list_bin, "val1", None, ctx),
-            list_operations.list_get_by_index(self.nested_list_bin, index, aerospike.LIST_RETURN_VALUE),
+            list_operations.list_get_by_index(
+                self.nested_list_bin, index, aerospike.LIST_RETURN_VALUE
+            ),
         ]
 
         _, _, res = self.as_connection.operate(self.test_key, ops)
@@ -4943,7 +6502,9 @@ class TestCTXOperations(object):
 
         ops = [
             list_operations.list_append(self.nested_list_bin, "val1", None, ctx),
-            list_operations.list_get_by_index(self.nested_list_bin, index, aerospike.LIST_RETURN_VALUE),
+            list_operations.list_get_by_index(
+                self.nested_list_bin, index, aerospike.LIST_RETURN_VALUE
+            ),
         ]
 
         with pytest.raises(expected):

@@ -7,7 +7,9 @@ from .test_base_class import TestBaseClass
 
 Server61 = True
 
-if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+if TestBaseClass.major_ver < 6 or (
+    TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+):
     if pytest.__version__ < "3.0.0":
         Server61 = False
     else:
@@ -56,7 +58,9 @@ class TestNewListOperations(object):
             "index": index,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == expected
 
@@ -74,8 +78,15 @@ class TestNewListOperations(object):
         """
         Without a return type this should return the value
         """
-        operation = {"op": aerospike.OP_LIST_GET_BY_INDEX, "bin": "list", "index": 2, "return_type": return_type}
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        operation = {
+            "op": aerospike.OP_LIST_GET_BY_INDEX,
+            "bin": "list",
+            "index": 2,
+            "return_type": return_type,
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == expected
 
@@ -89,7 +100,9 @@ class TestNewListOperations(object):
             "count": count,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == expected
 
     def test_get_by_index_range_no_count(self):
@@ -99,7 +112,9 @@ class TestNewListOperations(object):
             "index": 2,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == self.test_list[2:]
 
     def test_get_by_index_range_inverted(self):
@@ -114,7 +129,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == expected
 
     @pytest.mark.parametrize("rank, expected", ((0, 5), (-1, 10)))
@@ -128,7 +145,9 @@ class TestNewListOperations(object):
             "rank": rank,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == expected
 
@@ -146,8 +165,15 @@ class TestNewListOperations(object):
         """
         Without a return type this should return the value
         """
-        operation = {"op": aerospike.OP_LIST_GET_BY_RANK, "bin": "list", "rank": 0, "return_type": return_type}
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        operation = {
+            "op": aerospike.OP_LIST_GET_BY_RANK,
+            "bin": "list",
+            "rank": 0,
+            "return_type": return_type,
+        }
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == expected
 
@@ -161,7 +187,9 @@ class TestNewListOperations(object):
             "count": count,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert set(result) == set(expected)
 
     def test_get_by_rank_range_no_count(self):
@@ -171,7 +199,9 @@ class TestNewListOperations(object):
             "rank": 2,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == sorted(self.test_list)[2:]
 
     def test_get_by_rank_range_inverted(self):
@@ -187,7 +217,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert set(result) == set(expected)
 
     def test_get_by_value_no_duplicates(self):
@@ -200,7 +232,9 @@ class TestNewListOperations(object):
             "val": 7,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == [0]
 
     def test_get_by_value_no_duplicates_inverted(self):
@@ -214,7 +248,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         # Every value except for 7
         assert result == [6, 5, 8, 9, 10]
@@ -236,7 +272,9 @@ class TestNewListOperations(object):
             "val": 0,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, dup_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, dup_key, operation, self.test_bin
+        )
         assert result == [0, 2, 4]
 
     def test_get_by_value_list(self):
@@ -247,7 +285,9 @@ class TestNewListOperations(object):
             "value_list": values,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == [0, 2, 4]
 
     def test_get_by_value_list_inverted(self):
@@ -259,7 +299,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert set(result) == set([6, 8, 10])
 
     def test_get_by_value_range(self):
@@ -270,7 +312,9 @@ class TestNewListOperations(object):
             "value_end": 8,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert len(result) == 3 and set(result) == set([0, 1, 2])
 
     def test_get_by_value_range_inverted(self):
@@ -282,7 +326,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert len(result) == 4 and set(result) == set([5, 8, 9, 10])
 
     def test_get_exists_by_index_range_no_count(self):
@@ -294,7 +340,9 @@ class TestNewListOperations(object):
             "index": 2,
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result is True
 
     def test_get_exists_by_index_range_inverted(self):
@@ -311,7 +359,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_EXISTS,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == expected
 
     def test_get_exists_by_rank_range_no_count(self):
@@ -323,7 +373,9 @@ class TestNewListOperations(object):
             "rank": 2,
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result is True
 
     def test_get_exists_by_value_no_duplicates(self):
@@ -338,7 +390,9 @@ class TestNewListOperations(object):
             "val": 7,
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result is True
 
     def test_get_exists_by_value_with_duplicates(self):
@@ -360,7 +414,9 @@ class TestNewListOperations(object):
             "val": 0,
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
-        result = get_list_result_from_operation(self.as_connection, dup_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, dup_key, operation, self.test_bin
+        )
         assert result is True
 
     def test_get_exists_by_value_list(self):
@@ -373,7 +429,9 @@ class TestNewListOperations(object):
             "value_list": values,
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result is True
 
     def test_get_exists_by_value_list_inverted(self):
@@ -387,7 +445,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_EXISTS,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result is True
 
     def test_get_exists_by_value_range(self):
@@ -400,7 +460,9 @@ class TestNewListOperations(object):
             "value_end": 8,
             "return_type": aerospike.LIST_RETURN_EXISTS,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result is True
 
     #  REMOVE Family of operations
@@ -414,7 +476,9 @@ class TestNewListOperations(object):
             "index": 2,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == 5
         _, _, bins = self.as_connection.get(self.test_key)
@@ -431,7 +495,9 @@ class TestNewListOperations(object):
             "count": 2,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == [5, 8]
         _, _, bins = self.as_connection.get(self.test_key)
@@ -449,7 +515,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert set(result) == set([7, 6, 9, 10])
         _, _, bins = self.as_connection.get(self.test_key)
@@ -465,7 +533,9 @@ class TestNewListOperations(object):
             "rank": 2,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == 7
         _, _, bins = self.as_connection.get(self.test_key)
@@ -482,7 +552,9 @@ class TestNewListOperations(object):
             "count": 3,
             "return_type": aerospike.LIST_RETURN_VALUE,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert result == [7, 6, 5]
         _, _, bins = self.as_connection.get(self.test_key)
@@ -500,7 +572,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
 
         assert set(result) == set([8, 9, 10])
         _, _, bins = self.as_connection.get(self.test_key)
@@ -516,7 +590,9 @@ class TestNewListOperations(object):
             "val": 7,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == [0]
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == self.test_list[1:]
@@ -532,7 +608,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == [6, 5, 8, 9, 10]
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == self.test_list[0:1]
@@ -554,7 +632,9 @@ class TestNewListOperations(object):
             "val": 0,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, dup_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, dup_key, operation, self.test_bin
+        )
         assert result == [0, 2, 4]
 
         _, _, bins = self.as_connection.get(dup_key)
@@ -568,7 +648,9 @@ class TestNewListOperations(object):
             "value_list": values,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert result == [0, 2, 4]
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -583,7 +665,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert set(result) == set([6, 8, 10])
 
         _, _, bins = self.as_connection.get(self.test_key)
@@ -597,7 +681,9 @@ class TestNewListOperations(object):
             "value_end": 8,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert len(result) == 3 and set(result) == set([0, 1, 2])
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == [8, 9, 10]
@@ -611,7 +697,9 @@ class TestNewListOperations(object):
             "return_type": aerospike.LIST_RETURN_VALUE,
             "inverted": True,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert len(result) == 4 and set(result) == set([5, 8, 9, 10])
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == [7, 6]
@@ -623,7 +711,9 @@ class TestNewListOperations(object):
             "value_end": 8,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert len(result) == 3 and set(result) == set([0, 1, 2])
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == [8, 9, 10]
@@ -635,13 +725,19 @@ class TestNewListOperations(object):
             "value_begin": 7,
             "return_type": aerospike.LIST_RETURN_INDEX,
         }
-        result = get_list_result_from_operation(self.as_connection, self.test_key, operation, self.test_bin)
+        result = get_list_result_from_operation(
+            self.as_connection, self.test_key, operation, self.test_bin
+        )
         assert len(result) == 4 and set(result) == set([0, 3, 4, 5])
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == [6, 5]
 
     def test_list_set_order(self):
-        operation = {"op": aerospike.OP_LIST_SET_ORDER, "list_order": aerospike.LIST_ORDERED, "bin": self.test_bin}
+        operation = {
+            "op": aerospike.OP_LIST_SET_ORDER,
+            "list_order": aerospike.LIST_ORDERED,
+            "bin": self.test_bin,
+        }
         self.as_connection.operate(self.test_key, [operation])
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins[self.test_bin] == sorted(self.test_list)

@@ -8,7 +8,9 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         if self.server_version < [6, 0]:
-            pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
+            pytest.mark.xfail(
+                reason="Servers older than 6.0 do not support partition queries."
+            )
             pytest.xfail()
 
         self.test_ns = "test"
@@ -24,7 +26,9 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         for i in range(1, 100000):
             put = 0
             key = (self.test_ns, self.test_set, str(i))
-            rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+            rec_partition = as_connection.get_key_partition_id(
+                self.test_ns, self.test_set, str(i)
+            )
 
             if rec_partition == 1000:
                 self.partition_1000_count += 1
@@ -51,7 +55,9 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
             for i in range(1, 100000):
                 put = 0
                 key = ("test", "demo", str(i))
-                rec_partition = as_connection.get_key_partition_id(self.test_ns, self.test_set, str(i))
+                rec_partition = as_connection.get_key_partition_id(
+                    self.test_ns, self.test_set, str(i)
+                )
 
                 if rec_partition == 1000:
                     self.partition_1000_count += 1
@@ -104,7 +110,11 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         query_obj2 = self.as_connection.query(self.test_ns, self.test_set)
 
         policy = {
-            "partition_filter": {"begin": 1001, "count": 1, "partition_status": partition_status},
+            "partition_filter": {
+                "begin": 1001,
+                "count": 1,
+                "partition_status": partition_status,
+            },
         }
 
         query_obj2.foreach(resume_callback, policy)

@@ -87,7 +87,9 @@ class TestAppend(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_append_with_policy_key_digest(self):
@@ -98,7 +100,11 @@ class TestAppend(object):
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"total_timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {
+            "total_timeout": 1000,
+            "key": aerospike.POLICY_KEY_DIGEST,
+            "retry": aerospike.POLICY_RETRY_NONE,
+        }
         self.as_connection.append(key, "name", "str", {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -130,7 +136,9 @@ class TestAppend(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_append_with_policy_key_gen_EQ_positive(self):
@@ -158,7 +166,9 @@ class TestAppend(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_append_with_policy_key_gen_GT_positive(self):
@@ -185,7 +195,9 @@ class TestAppend(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_append_with_nonexistent_key(self):
@@ -260,7 +272,9 @@ class TestAppend(object):
         Invoke append() with bytearray value with a new record(non-existing)
         """
         key = ("test", "demo", "bytearray_new")
-        self.as_connection.append(key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
+        self.as_connection.append(
+            key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")
+        )
 
         (key, _, bins) = self.as_connection.get(key)
 
@@ -328,7 +342,9 @@ class TestAppend(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_neg_append_with_policy_key_gen_EQ_not_equal(self):
@@ -360,13 +376,23 @@ class TestAppend(object):
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     @pytest.mark.parametrize(
         "key, bin, value, meta, policy, ex_code, ex_msg",
         [
-            (("test", "demo", 1), "name", 2, {}, {}, -2, "Cannot concatenate 'str' and 'non-str' objects"),
+            (
+                ("test", "demo", 1),
+                "name",
+                2,
+                {},
+                {},
+                -2,
+                "Cannot concatenate 'str' and 'non-str' objects",
+            ),
             (("test", "demo", 1), "name", "pqr", {}, "", -2, "policy must be a dict"),
             (
                 ("test", "demo", 1),
@@ -391,10 +417,20 @@ class TestAppend(object):
                 -2,
                 "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)",
             ),
-            (("test", "demo", 1), "name", "str", {}, {"total_timeout": 0.5}, -2, "total_timeout is invalid"),
+            (
+                ("test", "demo", 1),
+                "name",
+                "str",
+                {},
+                {"total_timeout": 0.5},
+                -2,
+                "total_timeout is invalid",
+            ),
         ],
     )
-    def test_neg_append_params_of_incorrect_types(self, key, bin, value, meta, policy, ex_code, ex_msg):
+    def test_neg_append_params_of_incorrect_types(
+        self, key, bin, value, meta, policy, ex_code, ex_msg
+    ):
         """
         Invoke append() parameters of incorrect datatypes
         """
@@ -414,7 +450,10 @@ class TestAppend(object):
 
     @pytest.mark.parametrize(
         "key, bin, ex_code, ex_msg",
-        [(None, "name", -2, "key is invalid"), (("test", "demo", 1), None, -2, "Bin name should be of type string")],
+        [
+            (None, "name", -2, "key is invalid"),
+            (("test", "demo", 1), None, -2, "Bin name should be of type string"),
+        ],
     )
     def test_neg_append_parameters_as_none(self, key, bin, ex_code, ex_msg):
         """

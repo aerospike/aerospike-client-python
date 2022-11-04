@@ -62,7 +62,9 @@ class Add(_BaseExpr):
             expr = exp.Eq(exp.IntBin("a") + exp.IntBin("b"), 11).compile()
 
         """
-        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Sub(_BaseExpr):
@@ -94,7 +96,9 @@ class Sub(_BaseExpr):
             # Using operator overloading.
             expr = exp.Eq(exp.IntBin("a") - exp.IntBin("b"), 11).compile()
         """
-        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Mul(_BaseExpr):
@@ -125,7 +129,9 @@ class Mul(_BaseExpr):
             # Using operator overloading.
             expr = exp.GE(exp.IntBin("a") * exp.IntBin("b"), 11).compile()
         """
-        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Div(_BaseExpr):
@@ -161,7 +167,9 @@ class Div(_BaseExpr):
             # Float bin "a" // "b" // "c" >= 11.0
             expr = exp.GE(exp.FloatBin("a") // exp.FloatBin("b") // exp.FloatBin("c"), 11.0).compile()
         """
-        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Pow(_BaseExpr):
@@ -409,7 +417,9 @@ class Min(_BaseExpr):
             # for integer bins a, b, c, min(a, b, c) > 0
             expr = exp.GT(exp.Min(exp.IntBin("a"), exp.IntBin("b"), exp.IntBin("c")), 0).compile()
         """
-        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )
 
 
 class Max(_BaseExpr):
@@ -433,4 +443,6 @@ class Max(_BaseExpr):
             # for integer bins a, b, c, max(a, b, c) > 100
             expr = exp.GT(exp.Max(exp.IntBin("a"), exp.IntBin("b"), exp.IntBin("c")), 100).compile()
         """
-        self._children = args + (_GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),)
+        self._children = args + (
+            _GenericExpr(_ExprOp._AS_EXP_CODE_END_OF_VA_ARGS, 0, {}),
+        )

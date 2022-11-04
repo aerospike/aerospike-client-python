@@ -75,10 +75,24 @@ class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
     # required setup and teardown
-    connection_setup_functions = (add_test_udf, add_test_parameter_udf, add_indexes_to_client, create_records)
-    connection_teardown_functions = (drop_test_udf, drop_test_parameter_udf, remove_indexes_from_client, drop_records)
+    connection_setup_functions = (
+        add_test_udf,
+        add_test_parameter_udf,
+        add_indexes_to_client,
+        create_records,
+    )
+    connection_teardown_functions = (
+        drop_test_udf,
+        drop_test_parameter_udf,
+        remove_indexes_from_client,
+        drop_records,
+    )
     age_range_pred = p.between("age", 0, 4)  # Predicate for ages between [0,5)
-    no_set_key = ("test", None, "no_set")  # Key for item stored in a namespace but not in a set
+    no_set_key = (
+        "test",
+        None,
+        "no_set",
+    )  # Key for item stored in a namespace but not in a set
 
     @pytest.fixture(autouse=True)
     def setup(self, request, connection_with_config_funcs):
@@ -99,7 +113,12 @@ class TestQueryApply(object):
         It should apply the proper UDF, and
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2]
+            "test",
+            "demo",
+            self.age_range_pred,
+            "query_apply",
+            "mark_as_applied",
+            ["name", 2],
         )
 
         self._wait_for_query_complete(query_id)
@@ -112,7 +131,13 @@ class TestQueryApply(object):
         """
         policy = {"total_timeout": 0}
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
+            "test",
+            "demo",
+            self.age_range_pred,
+            "query_apply",
+            "mark_as_applied",
+            ["name", 2],
+            policy,
         )
 
         self._wait_for_query_complete(query_id)
@@ -127,7 +152,13 @@ class TestQueryApply(object):
 
         policy = {"total_timeout": 0, "expressions": expr.compile()}
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
+            "test",
+            "demo",
+            self.age_range_pred,
+            "query_apply",
+            "mark_as_applied",
+            ["name", 2],
+            policy,
         )
 
         self._wait_for_query_complete(query_id)
@@ -154,7 +185,13 @@ class TestQueryApply(object):
         policy = {"total_timeout": 0, "expressions": expr}
         with pytest.raises(e.ParamError):
             self.as_connection.query_apply(
-                "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
+                "test",
+                "demo",
+                self.age_range_pred,
+                "query_apply",
+                "mark_as_applied",
+                ["name", 2],
+                policy,
             )
 
     def test_query_apply_with_set_argument_as_none(self):
@@ -164,7 +201,13 @@ class TestQueryApply(object):
         """
         policy = {"total_timeout": 0}
         query_id = self.as_connection.query_apply(
-            "test", None, self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
+            "test",
+            None,
+            self.age_range_pred,
+            "query_apply",
+            "mark_as_applied",
+            ["name", 2],
+            policy,
         )
 
         self._wait_for_query_complete(query_id)
@@ -178,7 +221,13 @@ class TestQueryApply(object):
 
         with pytest.raises(e.ParamError):
             self.as_connection.query_apply(
-                "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
+                "test",
+                "demo",
+                self.age_range_pred,
+                "query_apply",
+                "mark_as_applied",
+                ["name", 2],
+                policy,
             )
 
     def test_query_apply_with_nonexistent_set(self):
@@ -187,7 +236,12 @@ class TestQueryApply(object):
         """
         with pytest.raises(e.NamespaceNotFound):
             self.as_connection.query_apply(
-                "test1", "demo1", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2]
+                "test1",
+                "demo1",
+                self.age_range_pred,
+                "query_apply",
+                "mark_as_applied",
+                ["name", 2],
             )
 
     def test_query_apply_with_incorrect_module_name(self):
@@ -197,7 +251,12 @@ class TestQueryApply(object):
         not call a function
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "query_apply_incorrect", "mark_as_applied", ["name", 2]
+            "test",
+            "demo",
+            self.age_range_pred,
+            "query_apply_incorrect",
+            "mark_as_applied",
+            ["name", 2],
         )
 
         self._wait_for_query_complete(query_id)
@@ -209,7 +268,12 @@ class TestQueryApply(object):
         does not invoke a different function
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "query_apply", "mytransform_incorrect", ["name", 2]
+            "test",
+            "demo",
+            self.age_range_pred,
+            "query_apply",
+            "mytransform_incorrect",
+            ["name", 2],
         )
 
         self._wait_for_query_complete(query_id)
@@ -221,7 +285,12 @@ class TestQueryApply(object):
         """
         with pytest.raises(TypeError):
             self.as_connection.query_apply(
-                None, None, self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2]
+                None,
+                None,
+                self.age_range_pred,
+                "query_apply",
+                "mark_as_applied",
+                ["name", 2],
             )
 
     def test_query_apply_with_module_argument_value_is_none(self):
@@ -230,7 +299,9 @@ class TestQueryApply(object):
         """
 
         with pytest.raises(e.ParamError):
-            self.as_connection.query_apply("test", "demo", self.age_range_pred, None, None, ["name", 2])
+            self.as_connection.query_apply(
+                "test", "demo", self.age_range_pred, None, None, ["name", 2]
+            )
 
     def test_query_apply_with_too_many_arguments(self):
         """
@@ -239,7 +310,14 @@ class TestQueryApply(object):
         policy = {"timeout": 1000}
         with pytest.raises(TypeError):
             self.as_connection.query_apply(
-                "test", "demo", self.age_range_pred, "query_apply", "mytransform_incorrect", ["name", 2], policy, ""
+                "test",
+                "demo",
+                self.age_range_pred,
+                "query_apply",
+                "mytransform_incorrect",
+                ["name", 2],
+                policy,
+                "",
             )
 
     def test_query_apply_with_udf_arguments_as_string(self):
@@ -247,14 +325,28 @@ class TestQueryApply(object):
         Invoke query_apply() with arguments as string
         """
         with pytest.raises(e.ParamError):
-            self.as_connection.query_apply("test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", "")
+            self.as_connection.query_apply(
+                "test",
+                "demo",
+                self.age_range_pred,
+                "query_apply",
+                "mark_as_applied",
+                "",
+            )
 
     def test_query_apply_with_udf_argument_as_none(self):
         """
         Invoke query_apply() with arguments as None
         """
         with pytest.raises(e.ParamError):
-            self.as_connection.query_apply("test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", None)
+            self.as_connection.query_apply(
+                "test",
+                "demo",
+                self.age_range_pred,
+                "query_apply",
+                "mark_as_applied",
+                None,
+            )
 
     def test_query_apply_with_extra_parameter_to_lua_function(self):
         """
@@ -263,7 +355,12 @@ class TestQueryApply(object):
         not cause the function to fail
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2, 3]
+            "test",
+            "demo",
+            self.age_range_pred,
+            "query_apply",
+            "mark_as_applied",
+            ["name", 2, 3],
         )
 
         # time.sleep(2)
@@ -277,7 +374,12 @@ class TestQueryApply(object):
         to a lua function does not cause an error
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied_three_arg", ["name", 2]
+            "test",
+            "demo",
+            self.age_range_pred,
+            "query_apply",
+            "mark_as_applied_three_arg",
+            ["name", 2],
         )
 
         # time.sleep(2)
@@ -290,7 +392,12 @@ class TestQueryApply(object):
         Invoke query_apply() with unicode udf
         """
         query_id = self.as_connection.query_apply(
-            "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2]
+            "test",
+            "demo",
+            self.age_range_pred,
+            "query_apply",
+            "mark_as_applied",
+            ["name", 2],
         )
 
         self._wait_for_query_complete(query_id)
@@ -304,7 +411,14 @@ class TestQueryApply(object):
         client1 = aerospike.client(config)
 
         with pytest.raises(e.ClusterError) as err_info:
-            client1.query_apply("test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2])
+            client1.query_apply(
+                "test",
+                "demo",
+                self.age_range_pred,
+                "query_apply",
+                "mark_as_applied",
+                ["name", 2],
+            )
 
         err_code = err_info.value.code
 
@@ -324,7 +438,9 @@ class TestQueryApply(object):
     def test_invalid_predicate_tuple(self, predicate):
 
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.query_apply("test", "demo", predicate, "query_apply", "mark_as_applied", ["name", 2])
+            self.as_connection.query_apply(
+                "test", "demo", predicate, "query_apply", "mark_as_applied", ["name", 2]
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
@@ -357,7 +473,14 @@ class TestQueryApply(object):
                 "query_params",
                 [
                     ["job_type", "job_type", 18],
-                    ["id", ["john", {"id", "args", "kwargs", "john"}, ["john", {"mary": 39}]]],
+                    [
+                        "id",
+                        [
+                            "john",
+                            {"id", "args", "kwargs", "john"},
+                            ["john", {"mary": 39}],
+                        ],
+                    ],
                     [],
                 ],
             )
@@ -373,7 +496,19 @@ class TestQueryApply(object):
                 "query_params",
                 [
                     ["job_type", "job_type", 18],
-                    ["id", ["john", ["john", {"mary": 39, "ken": {"lary", "quinton", "julie", "mark"}}]]],
+                    [
+                        "id",
+                        [
+                            "john",
+                            [
+                                "john",
+                                {
+                                    "mary": 39,
+                                    "ken": {"lary", "quinton", "julie", "mark"},
+                                },
+                            ],
+                        ],
+                    ],
                     [],
                 ],
             )
@@ -392,7 +527,11 @@ class TestQueryApply(object):
             self.as_connection.query("test", "demo",).apply(
                 "query_apply_parameters",
                 "query_params",
-                [["job_type", "job_type", 18], ["id", ["john", ("id", "args"), ["john", {"mary": 39}]]], []],
+                [
+                    ["job_type", "job_type", 18],
+                    ["id", ["john", ("id", "args"), ["john", {"mary": 39}]]],
+                    [],
+                ],
             )
 
         err_text = err_info.value.msg
@@ -477,7 +616,9 @@ class TestQueryApply(object):
         for i in range(1, 10):
             key = ("test", "demo", i)
             _, _, bins = self.as_connection.get(key)
-            if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            if TestBaseClass.major_ver < 6 or (
+                TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+            ):
                 assert bins["name"] != "aerospike"
             else:
                 assert bins["name"] == "aerospike" or bins["name"] == str(i)
@@ -497,13 +638,17 @@ class TestQueryApply(object):
         for i in range(1, 10):
             key = ("test", "demo", i)
             _, _, bins = self.as_connection.get(key)
-            if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            if TestBaseClass.major_ver < 6 or (
+                TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+            ):
                 assert bins["name"] != "aerospike"
             else:
                 assert bins["name"] == str(i)
 
         _, _, bins = self.as_connection.get(self.no_set_key)
-        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+        if TestBaseClass.major_ver < 6 or (
+            TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+        ):
             assert bins["name"] != "aerospike"
         else:
             assert bins["name"] == "no_set_name"

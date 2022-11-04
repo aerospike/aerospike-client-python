@@ -35,49 +35,77 @@ def add_geo_indexes(connection):
         pass
 
     try:
-        connection.index_geo2dsphere_create("test", "demo", "loc_polygon", "loc_polygon_index")
+        connection.index_geo2dsphere_create(
+            "test", "demo", "loc_polygon", "loc_polygon_index"
+        )
     except (e.IndexFoundError):
         pass
 
     try:
-        connection.index_geo2dsphere_create("test", "demo", "loc_circle", "loc_circle_index")
+        connection.index_geo2dsphere_create(
+            "test", "demo", "loc_circle", "loc_circle_index"
+        )
     except (e.IndexFoundError):
         pass
 
     try:
-        connection.index_list_create("test", "demo", "geo_list", aerospike.INDEX_GEO2DSPHERE, "geo_list_index")
+        connection.index_list_create(
+            "test", "demo", "geo_list", aerospike.INDEX_GEO2DSPHERE, "geo_list_index"
+        )
     except (e.IndexFoundError):
         pass
 
     try:
         connection.index_map_keys_create(
-            "test", "demo", "geo_map_keys", aerospike.INDEX_GEO2DSPHERE, "geo_map_key_index"
+            "test",
+            "demo",
+            "geo_map_keys",
+            aerospike.INDEX_GEO2DSPHERE,
+            "geo_map_key_index",
         )
     except (e.IndexFoundError):
         pass
 
     try:
         connection.index_map_values_create(
-            "test", "demo", "geo_map_vals", aerospike.INDEX_GEO2DSPHERE, "geo_map_val_index"
+            "test",
+            "demo",
+            "geo_map_vals",
+            aerospike.INDEX_GEO2DSPHERE,
+            "geo_map_val_index",
         )
     except (e.IndexFoundError):
         pass
 
     try:
-        connection.index_list_create("test", "demo", "geo_loc_list", aerospike.INDEX_GEO2DSPHERE, "geo_loc_list_index")
+        connection.index_list_create(
+            "test",
+            "demo",
+            "geo_loc_list",
+            aerospike.INDEX_GEO2DSPHERE,
+            "geo_loc_list_index",
+        )
     except (e.IndexFoundError):
         pass
 
     try:
         connection.index_map_keys_create(
-            "test", "demo", "geo_loc_mk", aerospike.INDEX_GEO2DSPHERE, "geo_loc_map_key_index"
+            "test",
+            "demo",
+            "geo_loc_mk",
+            aerospike.INDEX_GEO2DSPHERE,
+            "geo_loc_map_key_index",
         )
     except (e.IndexFoundError):
         pass
 
     try:
         connection.index_map_values_create(
-            "test", "demo", "geo_loc_mv", aerospike.INDEX_GEO2DSPHERE, "geo_loc_map_val_index"
+            "test",
+            "demo",
+            "geo_loc_mv",
+            aerospike.INDEX_GEO2DSPHERE,
+            "geo_loc_map_val_index",
         )
     except (e.IndexFoundError):
         pass
@@ -90,13 +118,21 @@ def add_geo_data(connection):
         lng = 1220 - (2 * i)
         lat = 375 + (2 * i)
         key = ("test", "demo", i)
-        s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(pre, (lng // 10), (lng % 10), (lat // 10), (lat % 10), suf)
+        s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(
+            pre, (lng // 10), (lng % 10), (lat // 10), (lat % 10), suf
+        )
         geo_object = aerospike.geojson(s)
         geo_list = [geo_object]
         geo_map_key = {geo_object: i}
         geo_map_val = {i: geo_object}
         connection.put(
-            key, {"loc": geo_object, "geo_list": geo_list, "geo_map_keys": geo_map_key, "geo_map_vals": geo_map_val}
+            key,
+            {
+                "loc": geo_object,
+                "geo_list": geo_list,
+                "geo_map_keys": geo_map_key,
+                "geo_map_vals": geo_map_val,
+            },
         )
 
     key = ("test", "demo", "polygon")
@@ -232,7 +268,9 @@ class TestGeospatial(object):
         self.keys = []
         if not self.skip_old_server:
             key = ("test", "demo", "circle")
-            geo_circle = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-122.0, 37.0], 250.2]})
+            geo_circle = aerospike.GeoJSON(
+                {"type": "AeroCircle", "coordinates": [[-122.0, 37.0], 250.2]}
+            )
             as_connection.put(key, {"loc_circle": geo_circle})
             self.keys.append(key)
 
@@ -247,8 +285,12 @@ class TestGeospatial(object):
         Perform a get and put with multiple bins including geospatial bin
         """
         key = ("test", "demo", "single_geo_put")
-        geo_object_single = aerospike.GeoJSON({"type": "Point", "coordinates": [42.34, 58.62]})
-        geo_object_dict = aerospike.GeoJSON({"type": "Point", "coordinates": [56.34, 69.62]})
+        geo_object_single = aerospike.GeoJSON(
+            {"type": "Point", "coordinates": [42.34, 58.62]}
+        )
+        geo_object_dict = aerospike.GeoJSON(
+            {"type": "Point", "coordinates": [56.34, 69.62]}
+        )
 
         self.as_connection.put(
             key,
@@ -266,7 +308,11 @@ class TestGeospatial(object):
             "loc": {"coordinates": [42.34, 58.62], "type": "Point"},
             "int_bin": 2,
             "string_bin": "str",
-            "dict_bin": {"a": 1, "b": 2, "geo": {"coordinates": [56.34, 69.62], "type": "Point"}},
+            "dict_bin": {
+                "a": 1,
+                "b": 2,
+                "geo": {"coordinates": [56.34, 69.62], "type": "Point"},
+            },
         }
         for b in bins:
             assert b in expected
@@ -355,13 +401,17 @@ class TestGeospatial(object):
             lng = 1220 - (2 * i)
             lat = 375 + (2 * i)
             key = ("test", None, i)
-            s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(pre, (lng // 10), (lng % 10), (lat // 10), (lat % 10), suf)
+            s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(
+                pre, (lng // 10), (lng % 10), (lat // 10), (lat % 10), suf
+            )
             geo_object = aerospike.geojson(s)
             self.as_connection.put(key, {"loc": geo_object})
             keys.append(key)
 
         try:
-            self.as_connection.index_geo2dsphere_create("test", None, "loc", "loc_index_no_set")
+            self.as_connection.index_geo2dsphere_create(
+                "test", None, "loc", "loc_index_no_set"
+            )
         except (e.IndexFoundError):
             pass
 
@@ -398,15 +448,22 @@ class TestGeospatial(object):
         for key in keys:
             self.as_connection.remove(key)
 
-        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+        if TestBaseClass.major_ver < 6 or (
+            TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+        ):
             assert len(records) == 2
         else:
             assert len(records) == 5
 
-        expected = [{"coordinates": [-121.8, 37.7], "type": "Point"}, {"coordinates": [-121.6, 37.9], "type": "Point"}]
+        expected = [
+            {"coordinates": [-121.8, 37.7], "type": "Point"},
+            {"coordinates": [-121.6, 37.9], "type": "Point"},
+        ]
 
         for r in records:
-            if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            if TestBaseClass.major_ver < 6 or (
+                TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0
+            ):
                 assert r["loc"].unwrap() in expected
             else:
                 expected = [
@@ -426,7 +483,9 @@ class TestGeospatial(object):
         records = []
         query = self.as_connection.query("test", "demo")
 
-        geo_object2 = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-122.0, 37.5], 250.2]})
+        geo_object2 = aerospike.GeoJSON(
+            {"type": "AeroCircle", "coordinates": [[-122.0, 37.5], 250.2]}
+        )
 
         query.where(p.geo_within_geojson_region("loc", geo_object2.dumps()))
 
@@ -469,17 +528,26 @@ class TestGeospatial(object):
         Perform an operate operation with geospatial bin
         """
 
-        geo_object_operate = aerospike.GeoJSON({"type": "Point", "coordinates": [43.45, 56.75]})
+        geo_object_operate = aerospike.GeoJSON(
+            {"type": "Point", "coordinates": [43.45, 56.75]}
+        )
         key = ("test", "demo", "single_geo_operate")
         llist = [
-            {"op": aerospike.OPERATOR_WRITE, "bin": "write_bin", "val": {"no": geo_object_operate}},
+            {
+                "op": aerospike.OPERATOR_WRITE,
+                "bin": "write_bin",
+                "val": {"no": geo_object_operate},
+            },
             {"op": aerospike.OPERATOR_READ, "bin": "write_bin"},
         ]
 
         key, _, bins = self.as_connection.operate(key, llist)
         self.keys.append(key)
         assert type(bins["write_bin"]["no"]) == aerospike.GeoJSON
-        assert bins["write_bin"]["no"].unwrap() == {"coordinates": [43.45, 56.75], "type": "Point"}
+        assert bins["write_bin"]["no"].unwrap() == {
+            "coordinates": [43.45, 56.75],
+            "type": "Point",
+        }
 
     def test_geospatial_wrap_positive(self):
         """
@@ -515,7 +583,15 @@ class TestGeospatial(object):
         )
 
         assert geo_object.unwrap() == {
-            "coordinates": [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08], [-122.5, 38.08], [-122.5, 37.0]]],
+            "coordinates": [
+                [
+                    [-122.5, 37.0],
+                    [-121.0, 37.0],
+                    [-121.0, 38.08],
+                    [-122.5, 38.08],
+                    [-122.5, 37.0],
+                ]
+            ],
             "type": "Polygon",
         }
 
@@ -541,7 +617,15 @@ class TestGeospatial(object):
         )
 
         assert geo_object_wrap.unwrap() == {
-            "coordinates": [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08], [-122.5, 38.08], [-122.5, 37.0]]],
+            "coordinates": [
+                [
+                    [-122.5, 37.0],
+                    [-121.0, 37.0],
+                    [-121.0, 38.08],
+                    [-122.5, 38.08],
+                    [-122.5, 37.0],
+                ]
+            ],
             "type": "Polygon",
         }
 
@@ -576,7 +660,15 @@ class TestGeospatial(object):
         )
 
         assert geo_object.unwrap() == {
-            "coordinates": [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08], [-122.5, 38.08], [-122.5, 37.0]]],
+            "coordinates": [
+                [
+                    [-122.5, 37.0],
+                    [-121.0, 37.0],
+                    [-121.0, 38.08],
+                    [-122.5, 38.08],
+                    [-122.5, 37.0],
+                ]
+            ],
             "type": "Polygon",
         }
 
@@ -593,7 +685,15 @@ class TestGeospatial(object):
         )
 
         assert geo_object_loads.unwrap() == {
-            "coordinates": [[[-122.5, 37.0], [-121.0, 37.0], [-121.0, 38.08], [-122.5, 38.08], [-122.5, 37.0]]],
+            "coordinates": [
+                [
+                    [-122.5, 37.0],
+                    [-121.0, 37.0],
+                    [-121.0, 38.08],
+                    [-122.5, 38.08],
+                    [-122.5, 37.0],
+                ]
+            ],
             "type": "Polygon",
         }
 
@@ -660,8 +760,12 @@ class TestGeospatial(object):
         """
 
         key = ("test", "demo", "single_geo_put")
-        geo_object_single = aerospike.geodata({"type": "Point", "coordinates": [42.34, 58.62]})
-        geo_object_dict = aerospike.geodata({"type": "Point", "coordinates": [56.34, 69.62]})
+        geo_object_single = aerospike.geodata(
+            {"type": "Point", "coordinates": [42.34, 58.62]}
+        )
+        geo_object_dict = aerospike.geodata(
+            {"type": "Point", "coordinates": [56.34, 69.62]}
+        )
 
         self.as_connection.put(
             key,
@@ -679,7 +783,11 @@ class TestGeospatial(object):
             "loc": {"coordinates": [42.34, 58.62], "type": "Point"},
             "int_bin": 2,
             "string_bin": "str",
-            "dict_bin": {"a": 1, "b": 2, "geo": {"coordinates": [56.34, 69.62], "type": "Point"}},
+            "dict_bin": {
+                "a": 1,
+                "b": 2,
+                "geo": {"coordinates": [56.34, 69.62], "type": "Point"},
+            },
         }
         for b in bins:
             assert b in expected
@@ -693,8 +801,12 @@ class TestGeospatial(object):
         """
 
         key = ("test", "demo", "single_geo_put")
-        geo_object_single = aerospike.geojson('{"type": "Point", "coordinates": [42.34, 58.62] }')
-        geo_object_dict = aerospike.geojson('{"type": "Point", "coordinates": [56.34, 69.62] }')
+        geo_object_single = aerospike.geojson(
+            '{"type": "Point", "coordinates": [42.34, 58.62] }'
+        )
+        geo_object_dict = aerospike.geojson(
+            '{"type": "Point", "coordinates": [56.34, 69.62] }'
+        )
 
         self.as_connection.put(
             key,
@@ -712,7 +824,11 @@ class TestGeospatial(object):
             "loc": {"coordinates": [42.34, 58.62], "type": "Point"},
             "int_bin": 2,
             "string_bin": "str",
-            "dict_bin": {"a": 1, "b": 2, "geo": {"coordinates": [56.34, 69.62], "type": "Point"}},
+            "dict_bin": {
+                "a": 1,
+                "b": 2,
+                "geo": {"coordinates": [56.34, 69.62], "type": "Point"},
+            },
         }
         for b in bins:
             assert b in expected
@@ -798,7 +914,9 @@ class TestGeospatial(object):
         except Exception:
             pass
 
-        status = self.as_connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index")
+        status = self.as_connection.index_geo2dsphere_create(
+            "test", "demo", "loc", "loc_index"
+        )
 
         assert status == 0
 
@@ -812,7 +930,9 @@ class TestGeospatial(object):
         except Exception:
             pass
 
-        status = self.as_connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index", {"timeout": 2000})
+        status = self.as_connection.index_geo2dsphere_create(
+            "test", "demo", "loc", "loc_index", {"timeout": 2000}
+        )
 
         assert status == 0
 
@@ -823,7 +943,9 @@ class TestGeospatial(object):
         records = []
         query = self.as_connection.query("test", "demo")
 
-        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates": [-121.700000, 37.200000]})
+        geo_object2 = aerospike.GeoJSON(
+            {"type": "Point", "coordinates": [-121.700000, 37.200000]}
+        )
 
         query.where(p.geo_contains_geojson_point("loc_polygon", geo_object2.dumps()))
 
@@ -859,7 +981,9 @@ class TestGeospatial(object):
         records = []
         query = self.as_connection.query("test", "demo")
 
-        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates": [-123.700000, 37.200000]})
+        geo_object2 = aerospike.GeoJSON(
+            {"type": "Point", "coordinates": [-123.700000, 37.200000]}
+        )
 
         query.where(p.geo_contains_geojson_point("loc_polygon", geo_object2.dumps()))
 
@@ -881,7 +1005,9 @@ class TestGeospatial(object):
         records = []
         query = self.as_connection.query("test", "demo")
 
-        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates": [-122.000000, 37.000000]})
+        geo_object2 = aerospike.GeoJSON(
+            {"type": "Point", "coordinates": [-122.000000, 37.000000]}
+        )
 
         query.where(p.geo_contains_geojson_point("loc_circle", geo_object2.dumps()))
 
@@ -931,7 +1057,9 @@ class TestGeospatial(object):
         records = []
         query = self.as_connection.query("test", "demo")
 
-        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates": [-122.0, 48.0]})
+        geo_object2 = aerospike.GeoJSON(
+            {"type": "Point", "coordinates": [-122.0, 48.0]}
+        )
 
         query.where(p.geo_contains_geojson_point("loc_circle", geo_object2.dumps()))
 
@@ -1063,7 +1191,9 @@ class TestGeospatial(object):
                 ]
             ],
         ]
-        geo_object = aerospike.GeoJSON({"type": "MultiPolygon", "coordinates": polygons})
+        geo_object = aerospike.GeoJSON(
+            {"type": "MultiPolygon", "coordinates": polygons}
+        )
 
         key = ("test", "demo", "multipoly")
         self.as_connection.put(key, {"multi": geo_object})
@@ -1180,14 +1310,22 @@ class TestGeospatial(object):
         set_name = "a" * 100
 
         with pytest.raises(e.InvalidRequest) as err_info:
-            self.as_connection.index_geo2dsphere_create("test", set_name, "loc", "loc_index_creation_should_fail")
+            self.as_connection.index_geo2dsphere_create(
+                "test", set_name, "loc", "loc_index_creation_should_fail"
+            )
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.skip(reason="These raise system errors")
     @pytest.mark.parametrize(
-        "method", ["geo_within_geojson_region", "geo_contains_geojson_point", "geo_within_radius", "geo_contains_point"]
+        "method",
+        [
+            "geo_within_geojson_region",
+            "geo_contains_geojson_point",
+            "geo_within_radius",
+            "geo_contains_point",
+        ],
     )
     def test_call_geo_predicates_with_wrong_args(self, method):
         query = self.as_connection.query("test", "demo")

@@ -69,7 +69,9 @@ class HLLInit(_BaseExpr):
         self._children = (
             -1 if index_bit_count is None else index_bit_count,
             -1 if mh_bit_count is None else mh_bit_count,
-            policy["flags"] if policy is not None and "flags" in policy else aerospike.HLL_WRITE_DEFAULT,
+            policy["flags"]
+            if policy is not None and "flags" in policy
+            else aerospike.HLL_WRITE_DEFAULT,
             bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )
 
@@ -107,7 +109,9 @@ class HLLAdd(_BaseExpr):
             list,
             -1 if index_bit_count is None else index_bit_count,
             -1 if mh_bit_count is None else mh_bit_count,
-            policy["flags"] if policy is not None and "flags" in policy else aerospike.HLL_WRITE_DEFAULT,
+            policy["flags"]
+            if policy is not None and "flags" in policy
+            else aerospike.HLL_WRITE_DEFAULT,
             bin if isinstance(bin, _BaseExpr) else HLLBin(bin),
         )
 

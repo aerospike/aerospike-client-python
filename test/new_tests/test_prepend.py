@@ -54,7 +54,11 @@ class TestPrepend:
         Invoke prepend() with correct policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL}
+        policy = {
+            "timeout": 1000,
+            "key": aerospike.POLICY_KEY_SEND,
+            "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
+        }
 
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
@@ -82,7 +86,9 @@ class TestPrepend:
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_prepend_with_policy_key_gen_EQ_ignore(self):
@@ -107,7 +113,9 @@ class TestPrepend:
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_prepend_with_policy_key_gen_EQ_positive(self):
@@ -134,7 +142,9 @@ class TestPrepend:
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_prepend_with_policy_key_gen_GT_positive(self):
@@ -161,7 +171,9 @@ class TestPrepend:
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_pos_prepend_with_policy_key_digest(self):
@@ -172,7 +184,11 @@ class TestPrepend:
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {
+            "timeout": 1000,
+            "key": aerospike.POLICY_KEY_DIGEST,
+            "retry": aerospike.POLICY_RETRY_NONE,
+        }
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -184,7 +200,10 @@ class TestPrepend:
 
     @pytest.mark.parametrize(
         "key, bin, value, expected",
-        [(("test", "demo", 1), "name", "age", "agename1"), (("test", "demo", 1), "add", "address", "address")],
+        [
+            (("test", "demo", 1), "name", "age", "agename1"),
+            (("test", "demo", 1), "add", "address", "address"),
+        ],
     )
     def test_pos_prepend_unicode_parameters(self, key, bin, value, expected):
         """
@@ -246,7 +265,9 @@ class TestPrepend:
         Invoke prepend() with bytearray value with a new record(non-existing)
         """
         key = ("test", "demo", "bytearray_new")
-        self.as_connection.prepend(key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8"))
+        self.as_connection.prepend(
+            key, "bytearray_bin", bytearray("asd;as[d'as;d", "utf-8")
+        )
 
         (key, _, bins) = self.as_connection.get(key)
 
@@ -316,7 +337,9 @@ class TestPrepend:
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_neg_prepend_with_policy_key_gen_GT_lesser(self):
@@ -348,7 +371,9 @@ class TestPrepend:
             "test",
             "demo",
             None,
-            bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
+            bytearray(
+                b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"
+            ),
         )
 
     def test_neg_prepend_with_incorrect_policy(self):
@@ -367,12 +392,30 @@ class TestPrepend:
     @pytest.mark.parametrize(
         "key, bin, value, meta, policy, ex_code, ex_msg",
         [
-            (("test", "demo", 1), "name", 2, {}, {}, -2, "Cannot concatenate 'str' and 'non-str' objects"),
+            (
+                ("test", "demo", 1),
+                "name",
+                2,
+                {},
+                {},
+                -2,
+                "Cannot concatenate 'str' and 'non-str' objects",
+            ),
             (("test", "demo", 1), "name", "abc", {}, "", -2, "policy must be a dict"),
-            (("test", "demo", 1), 1, "ABC", {}, {"timeout": 1000}, -2, "Bin name should be of type string"),
+            (
+                ("test", "demo", 1),
+                1,
+                "ABC",
+                {},
+                {"timeout": 1000},
+                -2,
+                "Bin name should be of type string",
+            ),
         ],
     )
-    def test_neg_prepend_parameters_incorrect_datatypes(self, key, bin, value, meta, policy, ex_code, ex_msg):
+    def test_neg_prepend_parameters_incorrect_datatypes(
+        self, key, bin, value, meta, policy, ex_code, ex_msg
+    ):
         """
         Invoke prepend() with parameters of incorrect datatypes
         """
@@ -453,7 +496,9 @@ class TestPrepend:
             ),
         ],
     )
-    def test_neg_prepend_invalid_key_combinations(self, key, bin, value, meta, policy, ex_code, ex_msg):
+    def test_neg_prepend_invalid_key_combinations(
+        self, key, bin, value, meta, policy, ex_code, ex_msg
+    ):
         """
         Invoke prepend() with invalid key combinations
         """

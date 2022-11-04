@@ -65,7 +65,9 @@ class TestBatchApply(TestBaseClass):
         as_connection = connection_with_config_funcs
 
         if self.server_version < [6, 0]:
-            pytest.mark.xfail(reason="Servers older than 6.0 do not support batch apply.")
+            pytest.mark.xfail(
+                reason="Servers older than 6.0 do not support batch apply."
+            )
             pytest.xfail()
 
         self.test_ns = "test"
@@ -108,7 +110,11 @@ class TestBatchApply(TestBaseClass):
                 ["name", 1],
                 None,
                 None,
-                [AerospikeStatus.AEROSPIKE_OK, AerospikeStatus.AEROSPIKE_OK, AerospikeStatus.AEROSPIKE_OK],
+                [
+                    AerospikeStatus.AEROSPIKE_OK,
+                    AerospikeStatus.AEROSPIKE_OK,
+                    AerospikeStatus.AEROSPIKE_OK,
+                ],
                 [{"SUCCESS": 0}, {"SUCCESS": 0}, {"SUCCESS": 0}],
                 [
                     ["name0", 1],
@@ -156,7 +162,11 @@ class TestBatchApply(TestBaseClass):
                     "respond_all_keys": False,
                     "expressions": exp.Eq(
                         exp.ListGetByRank(
-                            None, aerospike.LIST_RETURN_VALUE, exp.ResultType.STRING, 0, exp.ListBin("name")
+                            None,
+                            aerospike.LIST_RETURN_VALUE,
+                            exp.ResultType.STRING,
+                            0,
+                            exp.ListBin("name"),
                         ),
                         "name0",
                     ).compile(),
@@ -206,7 +216,9 @@ class TestBatchApply(TestBaseClass):
         Test batch_apply positive.
         """
 
-        res = self.as_connection.batch_apply(keys, module, function, args, policy_batch, policy_batch_apply)
+        res = self.as_connection.batch_apply(
+            keys, module, function, args, policy_batch, policy_batch_apply
+        )
 
         for i, batch_rec in enumerate(res.batch_records):
             assert batch_rec.result == exp_res[i]
@@ -234,7 +246,9 @@ class TestBatchApply(TestBaseClass):
             for i, key in enumerate(keys):
                 self.as_connection.put(key, {"name": ["name" + str(i)]})
 
-            res = self.as_connection.batch_apply(keys, module, func, args, policy_batch, policy_batch_apply)
+            res = self.as_connection.batch_apply(
+                keys, module, func, args, policy_batch, policy_batch_apply
+            )
 
             for i, batch_rec in enumerate(res.batch_records):
                 assert batch_rec.result == AerospikeStatus.AEROSPIKE_OK
@@ -268,7 +282,16 @@ class TestBatchApply(TestBaseClass):
                 {},
                 e.ParamError,
             ),
-            ("bad-module", [("test", "demo", 1)], {"bad": "mod"}, "list_append", ["name", 1], {}, {}, e.ParamError),
+            (
+                "bad-module",
+                [("test", "demo", 1)],
+                {"bad": "mod"},
+                "list_append",
+                ["name", 1],
+                {},
+                {},
+                e.ParamError,
+            ),
             # ( NOTE These aren't raised but should be reflected in BatchRecords.result
             #     "non-existent-module",
             #     [
@@ -281,7 +304,16 @@ class TestBatchApply(TestBaseClass):
             #     {},
             #     e.AerospikeError
             # ),
-            ("bad-func", [("test", "demo", 1)], "sample", {"bad": "func"}, ["name", 1], {}, {}, e.ParamError),
+            (
+                "bad-func",
+                [("test", "demo", 1)],
+                "sample",
+                {"bad": "func"},
+                ["name", 1],
+                {},
+                {},
+                e.ParamError,
+            ),
             # (
             #     "non-existent-func",
             #     [
@@ -294,7 +326,16 @@ class TestBatchApply(TestBaseClass):
             #     {},
             #     e.AerospikeError
             # ),
-            ("bad-args", [("test", "demo", 1)], "sample", "list_append", {"bad": "args"}, {}, {}, e.ParamError),
+            (
+                "bad-args",
+                [("test", "demo", 1)],
+                "sample",
+                "list_append",
+                {"bad": "args"},
+                {},
+                {},
+                e.ParamError,
+            ),
             (
                 "bad-batch-policy",
                 [("test", "demo", 1)],
@@ -317,13 +358,25 @@ class TestBatchApply(TestBaseClass):
             ),
         ],
     )
-    def test_batch_apply_neg(self, name, keys, module, function, args, policy_batch, policy_batch_apply, exp_res):
+    def test_batch_apply_neg(
+        self,
+        name,
+        keys,
+        module,
+        function,
+        args,
+        policy_batch,
+        policy_batch_apply,
+        exp_res,
+    ):
         """
         Test batch_apply negative.
         """
 
         with pytest.raises(exp_res):
-            self.as_connection.batch_apply(keys, module, function, args, policy_batch, policy_batch_apply)
+            self.as_connection.batch_apply(
+                keys, module, function, args, policy_batch, policy_batch_apply
+            )
 
     def test_batch_apply_neg_connection(self):
         """

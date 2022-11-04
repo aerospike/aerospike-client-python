@@ -29,9 +29,13 @@ if test_memleak == 1:
 
     START = "START"
     END = "END"
-    ConsumedRamLogEntry = namedtuple("ConsumedRamLogEntry", ("nodeid", "on", "consumed_ram"))
+    ConsumedRamLogEntry = namedtuple(
+        "ConsumedRamLogEntry", ("nodeid", "on", "consumed_ram")
+    )
     consumed_ram_log = []
-    ConsumedTracemallocLogEntry = namedtuple("ConsumedTracemallocLogEntry", ("nodeid", "on", "consumed_tracemalloc"))
+    ConsumedTracemallocLogEntry = namedtuple(
+        "ConsumedTracemallocLogEntry", ("nodeid", "on", "consumed_tracemalloc")
+    )
     consumed_tracemalloc_log = []
 
     tracemalloc.start(10)
@@ -39,29 +43,40 @@ if test_memleak == 1:
     snapshot2 = []
 
     @pytest.hookimpl(hookwrapper=True)
-    def pytest_terminal_summary(terminalreporter):  # type: (TerminalReporter) -> generator # noqa: F821
+    def pytest_terminal_summary(
+        terminalreporter,
+    ):  # type: (TerminalReporter) -> generator # noqa: F821
         yield
 
         # you can do here anything - I just print report info
         print("*" * 8 + "HERE CUSTOM LOGIC" + "*" * 8)
 
-        for failed in terminalreporter.stats.get("failed", []):  # type: TestReport # noqa: F821
+        for failed in terminalreporter.stats.get(
+            "failed", []
+        ):  # type: TestReport # noqa: F821
             print("failed! node_id:%s, duration: %s" % (failed.nodeid, failed.duration))
 
-        for passed in terminalreporter.stats.get("passed", []):  # type: TestReport # noqa: F821
+        for passed in terminalreporter.stats.get(
+            "passed", []
+        ):  # type: TestReport # noqa: F821
             print(
-                "passed! node_id:%s, duration: %s, details: %s" % (passed.nodeid, passed.duration, str(passed.longrepr))
+                "passed! node_id:%s, duration: %s, details: %s"
+                % (passed.nodeid, passed.duration, str(passed.longrepr))
             )
 
         grouped = groupby(consumed_ram_log, lambda entry: entry.nodeid)
         for nodeid, (start_entry, end_entry) in grouped:
             leaked = end_entry.consumed_ram - start_entry.consumed_ram
             if leaked > LEAK_LIMIT:
-                terminalreporter.write("LEAKED {}KB in {}\n".format(leaked / 1024, nodeid))
+                terminalreporter.write(
+                    "LEAKED {}KB in {}\n".format(leaked / 1024, nodeid)
+                )
 
         tmgrouped = groupby(consumed_tracemalloc_log, lambda entry: entry.nodeid)
         for nodeid, (start_entry, end_entry) in tmgrouped:
-            stats = end_entry.consumed_tracemalloc.compare_to(start_entry.consumed_tracemalloc, "lineno")
+            stats = end_entry.consumed_tracemalloc.compare_to(
+                start_entry.consumed_tracemalloc, "lineno"
+            )
             print(f"{nodeid}:")
             for stat in stats[:3]:
                 print(stat)
@@ -72,7 +87,9 @@ if test_memleak == 1:
         log_entry = ConsumedRamLogEntry(item.nodeid, START, get_consumed_ram())
         consumed_ram_log.append(log_entry)
 
-        tmlog_entry = ConsumedTracemallocLogEntry(item.nodeid, START, tracemalloc.take_snapshot())
+        tmlog_entry = ConsumedTracemallocLogEntry(
+            item.nodeid, START, tracemalloc.take_snapshot()
+        )
         consumed_tracemalloc_log.append(tmlog_entry)
 
     def pytest_runtest_teardown(item):
@@ -80,7 +97,9 @@ if test_memleak == 1:
         log_entry = ConsumedRamLogEntry(item.nodeid, END, get_consumed_ram())
         consumed_ram_log.append(log_entry)
 
-        tmlog_entry = ConsumedTracemallocLogEntry(item.nodeid, END, tracemalloc.take_snapshot())
+        tmlog_entry = ConsumedTracemallocLogEntry(
+            item.nodeid, END, tracemalloc.take_snapshot()
+        )
         consumed_tracemalloc_log.append(tmlog_entry)
 
 
@@ -169,7 +188,9 @@ def as_connection(request):
                 versionlist = version_str.split(".")
                 request.cls.string_server_version = version_str
                 request.cls.server_version = [int(n) for n in versionlist[:2]]
-                if (int(versionlist[0]) > 3) or (int(versionlist[0]) == 3 and int(versionlist[1]) >= 7):
+                if (int(versionlist[0]) > 3) or (
+                    int(versionlist[0]) == 3 and int(versionlist[1]) >= 7
+                ):
                     request.cls.skip_old_server = False
                 TestBaseClass.major_ver = int(versionlist[0])
                 TestBaseClass.minor_ver = int(versionlist[1])

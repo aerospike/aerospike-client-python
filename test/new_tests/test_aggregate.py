@@ -38,7 +38,12 @@ class TestAggregate(object):
         as_connection = connection_with_config_funcs
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "test_age": i, "no": i}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "addr": "name%s" % (str(i)),
+                "test_age": i,
+                "no": i,
+            }
             as_connection.put(key, rec)
 
         def teardown():

@@ -50,7 +50,9 @@ class TestScanApply(object):
         Invoke scan_apply() with correct parameters.
         The UDF should only apply to records in the ns and set.
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ["age", 2]
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -67,7 +69,9 @@ class TestScanApply(object):
         Invoke scan_apply() with correct policy
         """
         policy = {"timeout": 1000, "socket_timeout": 9876}
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], policy)
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ["age", 2], policy
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -87,7 +91,9 @@ class TestScanApply(object):
         )
 
         policy = {"timeout": 1000, "expressions": expr.compile()}
-        scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
+        scan_id = self.as_connection.scan_apply(
+            "test", None, "bin_lua", "mytransform", ["age", 2], policy
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -107,7 +113,9 @@ class TestScanApply(object):
 
         policy = {"timeout": 1000, "expressions": expr.compile()}
         with pytest.raises(e.InvalidRequest):
-            self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
+            self.as_connection.scan_apply(
+                "test", None, "bin_lua", "mytransform", ["age", 2], policy
+            )
 
     def test_scan_apply_with_none_set(self):
         """
@@ -115,7 +123,9 @@ class TestScanApply(object):
         It should invoke the function on all records in the NS
         """
         policy = {"timeout": 1000}
-        scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
+        scan_id = self.as_connection.scan_apply(
+            "test", None, "bin_lua", "mytransform", ["age", 2], policy
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -132,10 +142,14 @@ class TestScanApply(object):
         Invoke scan_apply() with set argument as None
         It should invoke the function on all records in NS that match the expressions
         """
-        expr = exp.And(exp.Eq(exp.StrBin("name"), "name2"), exp.NE(exp.IntBin("age"), 3))
+        expr = exp.And(
+            exp.Eq(exp.StrBin("name"), "name2"), exp.NE(exp.IntBin("age"), 3)
+        )
 
         policy = {"timeout": 1000, "expressions": expr.compile()}
-        scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
+        scan_id = self.as_connection.scan_apply(
+            "test", None, "bin_lua", "mytransform", ["age", 2], policy
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -154,7 +168,9 @@ class TestScanApply(object):
         """
         Invoke scan_apply() and pass 3 args to a function expecting 2
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2, 3])
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ["age", 2, 3]
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -167,7 +183,9 @@ class TestScanApply(object):
         """
         Invoke scan_apply() and pass 2 arguments to a function expecting 3
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransformextra", ["age", 2])
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransformextra", ["age", 2]
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -181,7 +199,9 @@ class TestScanApply(object):
         Invoke scan_apply() and pass 2 arguments to a function
         expecting 1
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransformless", ["age", 2])
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransformless", ["age", 2]
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -195,7 +215,9 @@ class TestScanApply(object):
         Test that it is valid to call the function without
         a list of arguments for the UDF
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransformless")
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransformless"
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -210,7 +232,9 @@ class TestScanApply(object):
         """
         policy = {"timeout": 1000}
         options = {"concurrent": False}
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], policy, options)
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ["age", 2], policy, options
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -223,7 +247,9 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with unicode udf
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ["age", 2]
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -236,7 +262,9 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with incorrect module name
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua_incorrect", "mytransform", ["age", 2])
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua_incorrect", "mytransform", ["age", 2]
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -249,7 +277,9 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with incorrect function name
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform_incorrect", ["age", 2])
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransform_incorrect", ["age", 2]
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -262,7 +292,9 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with arguments as None
         """
-        scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", None)
+        scan_id = self.as_connection.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", None
+        )
 
         wait_for_job_completion(self.as_connection, scan_id)
 
@@ -278,7 +310,9 @@ class TestScanApply(object):
         Invoke scan_apply() with ns and set as None
         """
         with pytest.raises(TypeError) as typeError:
-            self.as_connection.scan_apply(None, None, "bin_lua", "mytransform", ["age", 2])
+            self.as_connection.scan_apply(
+                None, None, "bin_lua", "mytransform", ["age", 2]
+            )
 
         assert "scan_apply() argument 1 must be str" in str(typeError.value)
 
@@ -287,7 +321,9 @@ class TestScanApply(object):
         Invoke scan_apply() set as an int
         """
         with pytest.raises(e.ParamError):
-            self.as_connection.scan_apply("test", 5, "bin_lua", "mytransform", ["age", 2])
+            self.as_connection.scan_apply(
+                "test", 5, "bin_lua", "mytransform", ["age", 2]
+            )
 
     def test_scan_apply_with_module_function_none(self):
         """
@@ -308,7 +344,13 @@ class TestScanApply(object):
         options = {"concurrent": 5}
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.scan_apply(
-                "test", "demo", "bin_lua", "mytransform_incorrect", ["age", 2], policy, options
+                "test",
+                "demo",
+                "bin_lua",
+                "mytransform_incorrect",
+                ["age", 2],
+                policy,
+                options,
             )
 
         err_code = err_info.value.code
@@ -322,10 +364,19 @@ class TestScanApply(object):
         options = {"concurrent": False}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.scan_apply(
-                "test", "demo", "bin_lua", "mytransform_incorrect", ["age", 2], policy, options, ""
+                "test",
+                "demo",
+                "bin_lua",
+                "mytransform_incorrect",
+                ["age", 2],
+                policy,
+                options,
+                "",
             )
 
-        assert "scan_apply() takes at most 7 arguments (8 given)" in str(typeError.value)
+        assert "scan_apply() takes at most 7 arguments (8 given)" in str(
+            typeError.value
+        )
 
     def test_scan_apply_with_argument_is_string(self):
         """
@@ -357,14 +408,18 @@ class TestScanApply(object):
         policy = {"timeout": 0.5}
 
         with pytest.raises(e.ParamError):
-            self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], policy)
+            self.as_connection.scan_apply(
+                "test", "demo", "bin_lua", "mytransform", ["age", 2], policy
+            )
 
     def test_scan_apply_with_non_existent_ns(self):
         """
         Invoke scan_apply() with a namespace name which does not exist
         """
         with pytest.raises(e.NamespaceNotFound):
-            self.as_connection.scan_apply("fake_not_real_ns", None, "bin_lua", "mytransform", ["age", 2])
+            self.as_connection.scan_apply(
+                "fake_not_real_ns", None, "bin_lua", "mytransform", ["age", 2]
+            )
 
     def test_scan_apply_with_non_string_module(self):
         """
@@ -386,7 +441,9 @@ class TestScanApply(object):
         This should not raise an error, and not apply the
         UDF to any records
         """
-        self.as_connection.scan_apply("test", "FakeNOTREALSET", "bin_lua", "mytransform", ["age", 2])
+        self.as_connection.scan_apply(
+            "test", "FakeNOTREALSET", "bin_lua", "mytransform", ["age", 2]
+        )
 
         # Since a set was specified, and it does not exist,
         # The transformation should not have run on any records

@@ -11,7 +11,8 @@ import aerospike
 class TestQueryUser(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may be not secured cluster.",
     )
 
     def setup_method(self, method):
@@ -20,7 +21,9 @@ class TestQueryUser(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestQueryUser.Me = self
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(
+            config["user"], config["password"]
+        )
         try:
             self.client.admin_drop_user("example-test")
             time.sleep(1)
@@ -146,7 +149,9 @@ class TestQueryUser(TestBaseClass):
         with pytest.raises(TypeError) as typeError:
             self.client.admin_query_user("foo", policy, "")
 
-        assert "admin_query_user() takes at most 2 arguments (3 given)" in str(typeError.value)
+        assert "admin_query_user() takes at most 2 arguments (3 given)" in str(
+            typeError.value
+        )
 
     def test_query_user_with_policy_as_string(self):
         """

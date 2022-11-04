@@ -25,7 +25,9 @@ class TestExpressionsBitOps(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         if self.server_version < [5, 6]:
-            pytest.mark.xfail(reason="Servers older than 5.6 do not support bitwise operator expressions.")
+            pytest.mark.xfail(
+                reason="Servers older than 5.6 do not support bitwise operator expressions."
+            )
             pytest.xfail()
 
         self.test_ns = "test"
@@ -70,7 +72,10 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize(
         "bin, val, check, expected",
-        [(IntBin("10bin"), [0xFF00], 0xAAF0, e.FilteredOut), (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest)],
+        [
+            (IntBin("10bin"), [0xFF00], 0xAAF0, e.FilteredOut),
+            (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest),
+        ],
     )
     def test_int_and_neg(self, bin, val, expected, check):
         """
@@ -98,7 +103,10 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize(
         "bin, val, check, expected",
-        [(IntBin("10bin"), [0xFF00], 0xAAF0, e.FilteredOut), (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest)],
+        [
+            (IntBin("10bin"), [0xFF00], 0xAAF0, e.FilteredOut),
+            (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest),
+        ],
     )
     def test_int_or_neg(self, bin, val, expected, check):
         """
@@ -126,7 +134,10 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize(
         "bin, val, check, expected",
-        [(IntBin("10bin"), [0xFF00], 0xAAF0, e.FilteredOut), (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest)],
+        [
+            (IntBin("10bin"), [0xFF00], 0xAAF0, e.FilteredOut),
+            (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest),
+        ],
     )
     def test_int_xor_neg(self, bin, val, expected, check):
         """
@@ -153,7 +164,11 @@ class TestExpressionsBitOps(TestBaseClass):
         self.verify_expression(expr, self.rec)
 
     @pytest.mark.parametrize(
-        "bin, check, expected", [(IntBin("10bin"), 0xAAF0, e.FilteredOut), ("bad_arg", 0x0000, e.InvalidRequest)]
+        "bin, check, expected",
+        [
+            (IntBin("10bin"), 0xAAF0, e.FilteredOut),
+            ("bad_arg", 0x0000, e.InvalidRequest),
+        ],
     )
     def test_int_not_neg(self, bin, expected, check):
         """
@@ -278,7 +293,8 @@ class TestExpressionsBitOps(TestBaseClass):
         self.verify_expression(expr, self.rec)
 
     @pytest.mark.parametrize(
-        "bin, check, expected", [(IntBin("10bin"), 10, e.FilteredOut), ("bad_arg", 0, e.InvalidRequest)]
+        "bin, check, expected",
+        [(IntBin("10bin"), 10, e.FilteredOut), ("bad_arg", 0, e.InvalidRequest)],
     )
     def test_int_count_neg(self, bin, expected, check):
         """
@@ -306,7 +322,10 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize(
         "bin, val, check, expected",
-        [(IntBin("0bin"), [True], 0, e.FilteredOut), (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest)],
+        [
+            (IntBin("0bin"), [True], 0, e.FilteredOut),
+            (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest),
+        ],
     )
     def test_int_left_scan_neg(self, bin, val, expected, check):
         """
@@ -334,7 +353,10 @@ class TestExpressionsBitOps(TestBaseClass):
 
     @pytest.mark.parametrize(
         "bin, val, check, expected",
-        [(IntBin("0bin"), [True], 0, e.FilteredOut), (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest)],
+        [
+            (IntBin("0bin"), [True], 0, e.FilteredOut),
+            (IntBin("1bin"), ["bad_arg"], 0x0000, e.InvalidRequest),
+        ],
     )
     def test_int_right_scan_neg(self, bin, val, expected, check):
         """

@@ -12,11 +12,17 @@ class TestListInsertItems(object):
         keys = []
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "age": [i, i + 1], "city": ["Pune", "Dehli"]}
+            rec = {
+                "name": "name%s" % (str(i)),
+                "age": [i, i + 1],
+                "city": ["Pune", "Dehli"],
+            }
             self.as_connection.put(key, rec)
             keys.append(key)
         key = ("test", "demo", "bytearray_key")
-        self.as_connection.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")})
+        self.as_connection.put(
+            key, {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")}
+        )
         keys.append(key)
 
         def teardown():
@@ -39,7 +45,11 @@ class TestListInsertItems(object):
                 "age",
                 0,
                 [500, 1500, 3000],
-                {"age": [500, 1500, 3000, 1, 2], "name": "name1", "city": ["Pune", "Dehli"]},
+                {
+                    "age": [500, 1500, 3000, 1, 2],
+                    "name": "name1",
+                    "city": ["Pune", "Dehli"],
+                },
             ),
             (
                 ("test", "demo", 1),  # list of string
@@ -53,14 +63,22 @@ class TestListInsertItems(object):
                 "city",
                 3,
                 ["Mumbai"],
-                {"age": [1, 2], "city": ["Pune", "Dehli", None, "Mumbai"], "name": "name1"},
+                {
+                    "age": [1, 2],
+                    "city": ["Pune", "Dehli", None, "Mumbai"],
+                    "name": "name1",
+                },
             ),
             (
                 ("test", "demo", 2),  # list of float
                 "age",
                 7,
                 [85.12],
-                {"age": [2, 3, None, None, None, None, None, 85.12], "city": ["Pune", "Dehli"], "name": "name2"},
+                {
+                    "age": [2, 3, None, None, None, None, None, 85.12],
+                    "city": ["Pune", "Dehli"],
+                    "name": "name2",
+                },
             ),
             (
                 ("test", "demo", 3),  # list of map
@@ -74,7 +92,11 @@ class TestListInsertItems(object):
                 "age",
                 2,
                 [555, bytearray("asd;as[d'as;d", "utf-8")],
-                {"age": [1, 2, 555, bytearray(b"asd;as[d'as;d")], "city": ["Pune", "Dehli"], "name": "name1"},
+                {
+                    "age": [1, 2, 555, bytearray(b"asd;as[d'as;d")],
+                    "city": ["Pune", "Dehli"],
+                    "name": "name1",
+                },
             ),
         ],
     )
@@ -102,7 +124,11 @@ class TestListInsertItems(object):
 
         (key, _, bins) = self.as_connection.get(key)
 
-        assert bins == {"age": [2, 3, None, None, None, 45, 50, 80], "city": ["Pune", "Dehli"], "name": "name2"}
+        assert bins == {
+            "age": [2, 3, None, None, None, 45, 50, 80],
+            "city": ["Pune", "Dehli"],
+            "name": "name2",
+        }
 
     def test_pos_list_insert_items_boolean(self):
         """
@@ -126,7 +152,11 @@ class TestListInsertItems(object):
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = (
+            "test",
+            "demo",
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com",
+        )
         status = self.as_connection.list_insert_items(key, "abc", 2, [122, 878])
         assert status == 0
 
@@ -146,7 +176,9 @@ class TestListInsertItems(object):
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = (
+            "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        )
 
         status = self.as_connection.list_insert_items(key, bin, 1, [585, 789])
         assert status == 0
@@ -154,7 +186,12 @@ class TestListInsertItems(object):
         (key, _, bins) = self.as_connection.get(key)
 
         assert status == 0
-        assert bins == {"age": [1, 2], "name": "name1", "city": ["Pune", "Dehli"], bin: [None, 585, 789]}
+        assert bins == {
+            "age": [1, 2],
+            "name": "name1",
+            "city": ["Pune", "Dehli"],
+            bin: [None, 585, 789],
+        }
 
     # Negative Tests
     def test_neg_list_insert_items_with_no_parameters(self):
@@ -187,7 +224,9 @@ class TestListInsertItems(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_insert_items(key, "age", 3, [999], {}, policy, "")
 
-        assert "list_insert_items() takes at most 6 arguments (7 given)" in str(typeError.value)
+        assert "list_insert_items() takes at most 6 arguments (7 given)" in str(
+            typeError.value
+        )
 
     def test_neg_ist_insert_items_policy_is_string(self):
         """
@@ -257,4 +296,6 @@ class TestListInsertItems(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_insert_items(key, "age", "Fifth", [False])
-        assert "an integer is required" or "cannot be interpreted as an integer" in str(typeError.value)
+        assert "an integer is required" or "cannot be interpreted as an integer" in str(
+            typeError.value
+        )

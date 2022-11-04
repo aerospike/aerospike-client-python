@@ -45,7 +45,9 @@ class TestGetExpressionBase64(object):
                 ListGetByValueRelRankRange(
                     None,
                     aerospike.LIST_RETURN_COUNT,
-                    ListGetByIndex(None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, bin),
+                    ListGetByIndex(
+                        None, aerospike.LIST_RETURN_VALUE, ResultType.INTEGER, 0, bin
+                    ),
                     1,
                     3,
                     bin,
@@ -66,7 +68,9 @@ class TestGetExpressionBase64(object):
                     None,
                     aerospike.LIST_RETURN_COUNT,
                     [2, 6],
-                    ListGetByValueRelRankRangeToEnd(None, aerospike.LIST_RETURN_VALUE, 1, 1, bin),
+                    ListGetByValueRelRankRangeToEnd(
+                        None, aerospike.LIST_RETURN_VALUE, 1, 1, bin
+                    ),
                 ),
                 2,
             ),
@@ -95,7 +99,12 @@ class TestGetExpressionBase64(object):
                 ),
                 1,
             ),
-            Eq(ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin), 2),
+            Eq(
+                ListGetByRankRange(
+                    None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin
+                ),
+                2,
+            ),
         ).compile()
 
         b64 = self.as_connection.get_expression_base64(expr)
