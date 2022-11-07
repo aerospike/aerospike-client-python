@@ -1,9 +1,16 @@
 # -*- coding: utf-8 -*-
 import pytest
+import sys
 from .as_status_codes import AerospikeStatus
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-import aerospike
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
 
 
 class TestScanInfo(object):
@@ -17,17 +24,19 @@ class TestScanInfo(object):
         Setup method.
         """
         for i in range(15):
-            key = ("test", "demo", i)
-            rec = {"age": i}
+            key = ('test', 'demo', i)
+            rec = {'age': i}
             connection_with_udf.put(key, rec)
-        self.job_id = connection_with_udf.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])
+        policy = {}
+        self.job_id = connection_with_udf.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ['age', 2])
 
         def teardown():
             """
             Teardown method.
             """
             for i in range(15):
-                key = ("test", "demo", i)
+                key = ('test', 'demo', i)
                 connection_with_udf.remove(key)
 
         request.addfinalizer(teardown)
@@ -38,29 +47,35 @@ class TestScanInfo(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.job_info()
-        assert "argument 'job_id' (pos 1)" in str(typeError.value)
+        assert "argument 'job_id' (pos 1)" in str(
+            typeError.value)
 
     @pytest.mark.xfail(reason="This test fails if job_info() finishes in < 1ms")
     def test_job_info_with_small_timeout(self, connection_with_udf):
         """
         Invoke job_info() with correct policy and an expected timeout
         """
-        policy = {"timeout": 1}
+        policy = {'timeout': 1}
 
-        self.job_id = connection_with_udf.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], block=False)
+        self.job_id = connection_with_udf.scan_apply(
+            "test", "demo", "bin_lua", "mytransform", ['age', 2], block=False)
 
         with pytest.raises(e.TimeoutError):
-            self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN, policy)
+            job_info = self.as_connection.job_info(
+                self.job_id, aerospike.JOB_SCAN, policy)
 
     def test_job_info_with_correct_parameters(self):
         """
         Invoke job_info() with correct parameters
         """
         job_info = self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN)
-        valid_statuses = (aerospike.JOB_STATUS_COMPLETED, aerospike.JOB_STATUS_INPROGRESS)
-        assert job_info["status"] in valid_statuses
+        valid_statuses = (
+            aerospike.JOB_STATUS_COMPLETED,
+            aerospike.JOB_STATUS_INPROGRESS
+        )
+        assert job_info['status'] in valid_statuses
 
-        expected_fields = ("status", "progress_pct", "records_read")
+        expected_fields = ('status', 'progress_pct', 'records_read')
         # Make sure that the fields we are expected are in the returned
         # dict
         for field in expected_fields:
@@ -70,20 +85,25 @@ class TestScanInfo(object):
         """
         Invoke job_info() with correct policy
         """
-        policy = {"timeout": 1000}
-        job_info = self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN, policy)
+        policy = {'timeout': 1000}
+        job_info = self.as_connection.job_info(
+            self.job_id, aerospike.JOB_SCAN, policy)
 
-        valid_statuses = (aerospike.JOB_STATUS_COMPLETED, aerospike.JOB_STATUS_INPROGRESS)
-        assert job_info["status"] in valid_statuses
+        valid_statuses = (
+            aerospike.JOB_STATUS_COMPLETED,
+            aerospike.JOB_STATUS_INPROGRESS
+        )
+        assert job_info['status'] in valid_statuses
 
     def test_job_info_with_incorrect_policy(self):
         """
         Invoke job_info() with incorrect policy
         """
 
-        policy = {"timeout": 0.5}
+        policy = {'timeout': 0.5}
         with pytest.raises(e.ParamError) as err_info:
-            self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN, policy)
+            self.as_connection.job_info(
+                self.job_id, aerospike.JOB_SCAN, policy)
 
         assert err_info.value.code == -2
         assert err_info.value.msg == "timeout is invalid"
@@ -93,18 +113,20 @@ class TestScanInfo(object):
         Invoke job_info() with scan id incorrect,
         this should not raise an error
         """
-        response = self.as_connection.job_info(self.job_id + 2, aerospike.JOB_SCAN)
+        response = self.as_connection.job_info(
+            self.job_id + 2, aerospike.JOB_SCAN)
 
-        assert response["status"] == aerospike.JOB_STATUS_COMPLETED
+        assert response['status'] == aerospike.JOB_STATUS_COMPLETED
 
     def test_job_info_with_largeid(self):
         """
         Invoke job_info() with a large scan id,
         this should not raise an error
         """
-        response = self.as_connection.job_info(13287138843617152748, aerospike.JOB_SCAN)
+        response = self.as_connection.job_info(
+            13287138843617152748, aerospike.JOB_SCAN)
 
-        assert response["status"] == aerospike.JOB_STATUS_COMPLETED
+        assert response['status'] == aerospike.JOB_STATUS_COMPLETED
 
     def test_job_info_with_scanid_string(self):
         """
@@ -113,19 +135,15 @@ class TestScanInfo(object):
 
         with pytest.raises(TypeError) as typeError:
             self.as_connection.job_info("string")
-        assert any(
-            [
-                "job_info() argument 1 must be int" in str(typeError.value),
-                "job_info() argument 1 must be an int" in str(typeError.value),
-            ]
-        )
+        assert(any(["job_info() argument 1 must be int" in str(typeError.value),
+         "job_info() argument 1 must be an int" in str(typeError.value)]))
 
     def test_job_info_with_correct_parameters_without_connection(self):
         """
         Invoke job_info() with correct parameters without connection
         """
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = {'hosts': [('127.0.0.1', 3000)]}
         client1 = aerospike.client(config)
 
         with pytest.raises(e.ClusterError) as err_info:
@@ -138,12 +156,17 @@ class TestScanInfo(object):
         Invoke job_info() with the scan module out of the expected range
         """
         with pytest.raises(e.ParamError):
-            self.as_connection.job_info(self.job_id, "not query nor scan")
+            response = self.as_connection.job_info(
+                self.job_id, "not query nor scan")
 
-    @pytest.mark.parametrize("module", (None, 1.5, {}, [], 0))
+    @pytest.mark.parametrize(
+        "module",
+        (None, 1.5, {}, [], 0)
+    )
     def test_job_info_with_module_wrong_type(self, module):
         """
         Invoke job_info() with the scan module argument of the wrong type
         """
         with pytest.raises(TypeError):
-            self.as_connection.job_info(self.job_id, module)
+            response = self.as_connection.job_info(
+                self.job_id, module)

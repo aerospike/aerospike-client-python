@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+import sys
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-import aerospike
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
 
 
 class TestQueryUserInfo(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may not be secured cluster."
-    )
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may not be secured cluster.")
 
     def setup_method(self, method):
         """
@@ -20,7 +26,7 @@ class TestQueryUserInfo(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestQueryUserInfo.Me = self
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
         try:
             self.client.admin_drop_user("example-test")
             time.sleep(1)
@@ -64,7 +70,7 @@ class TestQueryUserInfo(TestBaseClass):
 
         time.sleep(2)
         user_details = self.client.admin_query_user_info(user)
-        assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
+        assert user_details.get("roles") == ['read', 'read-write', 'sys-admin']
 
     def test_query_user_info_with_invalid_timeout_policy_value(self):
 
@@ -80,17 +86,17 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_proper_timeout_policy_value(self):
 
-        policy = {"timeout": 30}
+        policy = {'timeout': 30}
         user = "example-test"
 
         time.sleep(2)
         user_details = self.client.admin_query_user_info(user, policy)
 
-        assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
+        assert user_details.get("roles") == ['read', 'read-write', 'sys-admin']
 
     def test_query_user_info_with_none_username(self):
 
-        policy = {"timeout": 30}
+        policy = {'timeout': 30}
         user = None
 
         try:
@@ -140,17 +146,18 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_extra_argument(self):
         """
-        Invoke query_user() with extra argument.
+            Invoke query_user() with extra argument.
         """
-        policy = {"timeout": 1000}
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             self.client.admin_query_user_info("foo", policy, "")
 
-        assert "admin_query_user_info() takes at most 2 arguments (3 given)" in str(typeError.value)
+        assert "admin_query_user_info() takes at most 2 arguments (3 given)" in str(
+            typeError.value)
 
     def test_query_user_info_with_policy_as_string(self):
         """
-        Invoke query_user() with policy as string
+            Invoke query_user() with policy as string
         """
         policy = ""
         try:

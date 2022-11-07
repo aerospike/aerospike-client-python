@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+import sys
 import json
 from contextlib import contextmanager
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-
-import aerospike
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
 
 
 @contextmanager
@@ -27,15 +32,16 @@ def open_as_connection(config):
 # adds cls.connection_config to this class
 @pytest.mark.usefixtures("connection_config")
 class TestConnect(object):
+
     def test_version(self):
         """
-        Check for aerospike vrsion
+            Check for aerospike vrsion
         """
         assert aerospike.__version__ is not None
 
     def test_connect_positive(self):
         """
-        Invoke connect() with positive parameters.
+            Invoke connect() with positive parameters.
         """
         config = self.connection_config.copy()
 
@@ -45,11 +51,11 @@ class TestConnect(object):
 
     def test_connect_positive_with_policy(self):
         """
-        Invoke connect() with positive parameters and policy.
+            Invoke connect() with positive parameters and policy.
         """
 
         config = self.connection_config.copy()
-        config["policies"] = {"read": {"total_timeout": 10000}}
+        config['policies'] = {'read': {'total_timeout': 10000}}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -58,7 +64,7 @@ class TestConnect(object):
     @pytest.mark.skip(reason="This doesn't actually use multiple hosts")
     def test_connect_positive_with_multiple_hosts(self):
         """
-        Invoke connect() with multiple hosts.
+            Invoke connect() with multiple hosts.
         """
         config = self.connection_config.copy()
         with open_as_connection(config) as client:
@@ -67,34 +73,39 @@ class TestConnect(object):
 
     def test_connect_positive_unicode_hosts(self):
         """
-        Invoke connect() with unicode hosts.
+            Invoke connect() with unicode hosts.
         """
 
         #  Convert to and from json, to force unicode
         #  This works in py 2.7 and 3.5
-        uni = json.dumps(self.connection_config["hosts"][0])
+        uni = json.dumps(self.connection_config['hosts'][0])
         hostlist = json.loads(uni)
-        config = {"hosts": [tuple(hostlist)]}
+        config = {
+            'hosts': [tuple(hostlist)]
+        }
         with open_as_connection(config) as client:
             assert client is not None
             assert client.is_connected()
 
-    @pytest.mark.skipif(TestBaseClass.tls_in_use(), reason="no default port for tls")
+    @pytest.mark.skipif(TestBaseClass.tls_in_use(),
+                      reason="no default port for tls")
     def test_connect_hosts_missing_port(self):
         """
-        Invoke connect() with missing port in config dict.
+            Invoke connect() with missing port in config dict.
         """
-        config = {"hosts": [("127.0.0.1")]}
+        config = {
+            'hosts': [('127.0.0.1')]
+        }
 
         with open_as_connection(config) as client:
             assert client.is_connected()
 
     def test_connect_positive_shm_key(self):
         """
-        Invoke connect() with shm_key specified
+            Invoke connect() with shm_key specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {"shm_key": 3}
+        config['shm'] = {'shm_key': 3}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -103,10 +114,10 @@ class TestConnect(object):
 
     def test_connect_positive_shm_key_default(self):
         """
-        Invoke connect() with shm enabled but shm_key not specified
+            Invoke connect() with shm enabled but shm_key not specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {"shm_max_nodes": 5}
+        config['shm'] = {'shm_max_nodes': 5}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -115,7 +126,7 @@ class TestConnect(object):
 
     def test_connect_positive_shm_not_enabled(self):
         """
-        Invoke connect() with shm not anabled
+            Invoke connect() with shm not anabled
         """
         config = self.connection_config.copy()
 
@@ -124,13 +135,14 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() is None
 
-    @pytest.mark.skip(reason=("This raises an error," + " but it isn't clear whether it should"))
+    @pytest.mark.skip(reason=("This raises an error," +
+                              " but it isn't clear whether it should"))
     def test_connect_positive_cluster_name(self):
         """
-        Invoke connect() giving a cluster name
+            Invoke connect() giving a cluster name
         """
         config = self.connection_config.copy()
-        config["cluster_name"] = "test-cluster"
+        config['cluster_name'] = 'test-cluster'
 
         with pytest.raises(e.ClientError) as err_info:
             self.client = aerospike.client(config).connect()
@@ -139,7 +151,7 @@ class TestConnect(object):
 
     def test_connect_positive_reconnect(self):
         """
-        Connect/Close/Connect to client
+            Connect/Close/Connect to client
         """
         config = self.connection_config.copy()
 
@@ -156,7 +168,7 @@ class TestConnect(object):
 
     def test_connect_on_connected_client(self):
         """
-        Invoke connect on a client that is already connected.
+            Invoke connect on a client that is already connected.
         """
         config = self.connection_config.copy()
 
@@ -178,10 +190,14 @@ class TestConnect(object):
         [
             (1, e.ParamError, -2, "Config must be a dict"),
             ({}, e.ParamError, -2, "Hosts must be a list"),
-            ({"": [("127.0.0.1", 3000)]}, e.ParamError, -2, "Hosts must be a list"),
-            ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
-            ({"hosts": [("127.0.0.1", 2000)]}, e.ClientError, -10, "Failed to connect"),
-            ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
+            ({'': [('127.0.0.1', 3000)]},
+             e.ParamError, -2, "Hosts must be a list"),
+            ({'hosts': [3000]}, e.ParamError, -2, "Invalid host"),
+
+            ({'hosts': [('127.0.0.1', 2000)]}, e.ClientError, -10,
+             "Failed to connect"),
+            ({'hosts': [('127.0.0.1', '3000')]}, e.ClientError, -10,
+             "Failed to connect")
         ],
         ids=[
             "config not dict",
@@ -189,8 +205,8 @@ class TestConnect(object):
             "config missing hosts key",
             "hosts missing address",
             "hosts port is incorrect",
-            "hosts port is string",
-        ],
+            "hosts port is string"
+        ]
     )
     def test_connect_invalid_configs(self, config, err, err_code, err_msg):
         with pytest.raises(err) as err_info:

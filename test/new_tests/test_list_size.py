@@ -1,18 +1,28 @@
 # -*- coding: utf-8 -*-
 import pytest
+import sys
 import random
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-import aerospike
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
 
 
 class TestListSize(object):
+
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         keys = []
         for i in range(5):
-            key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "contact_no": [i, i + 1], "city": ["Pune", "Dehli"]}
+            key = ('test', 'demo', i)
+            rec = {'name': 'name%s' %
+                   (str(i)), 'contact_no': [i, i + 1],
+                   'city': ['Pune', 'Dehli']}
             self.as_connection.put(key, rec)
             keys.append(key)
 
@@ -32,9 +42,9 @@ class TestListSize(object):
         """
         Invoke list_size() with correct parameters
         """
-        key = ("test", "demo", 1)
+        key = ('test', 'demo', 1)
 
-        count = self.as_connection.list_size(key, "contact_no")
+        count = self.as_connection.list_size(key, 'contact_no')
 
         assert 2 == count
 
@@ -42,11 +52,11 @@ class TestListSize(object):
         """
         Invoke list_size() count list elements with correct policy
         """
-        key = ("test", "demo", 2)
+        key = ('test', 'demo', 2)
         policy = {
-            "timeout": 1000,
-            "retry": aerospike.POLICY_RETRY_ONCE,
-            "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+            'timeout': 1000,
+            'retry': aerospike.POLICY_RETRY_ONCE,
+            'commit_level': aerospike.POLICY_COMMIT_LEVEL_MASTER
         }
         count = self.as_connection.list_size(key, "contact_no", {}, policy)
 
@@ -59,14 +69,17 @@ class TestListSize(object):
         """
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_size()
-        assert "argument 'key' (pos 1)" in str(typeError.value)
+        assert "argument 'key' (pos 1)" in str(
+            typeError.value)
 
     def test_neg_list_size_with_incorrect_policy(self):
         """
         Invoke list_size() with incorrect policy
         """
-        key = ("test", "demo", 1)
-        policy = {"timeout": 0.5}
+        key = ('test', 'demo', 1)
+        policy = {
+            'timeout': 0.5
+        }
         try:
             self.as_connection.list_size(key, "contact_no", {}, policy)
 
@@ -78,11 +91,13 @@ class TestListSize(object):
         """
         Invoke list_size() with non-existent key
         """
-        charSet = "abcdefghijklmnopqrstuvwxyz1234567890"
+        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
         minLength = 5
         maxLength = 30
         length = random.randint(minLength, maxLength)
-        key = ("test", "demo", "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com")
+        key = ('test', 'demo', ''.join(map(lambda unused:
+                                           random.choice(charSet),
+                                           range(length))) + ".com")
         try:
             self.as_connection.list_size(key, "contact_no")
         except e.RecordNotFound as exception:
@@ -92,12 +107,13 @@ class TestListSize(object):
         """
         Invoke list_size() with non-existent bin
         """
-        key = ("test", "demo", 1)
-        charSet = "abcdefghijklmnopqrstuvwxyz1234567890"
+        key = ('test', 'demo', 1)
+        charSet = 'abcdefghijklmnopqrstuvwxyz1234567890'
         minLength = 5
         maxLength = 10
         length = random.randint(minLength, maxLength)
-        bin = "".join(map(lambda unused: random.choice(charSet), range(length))) + ".com"
+        bin = ''.join(map(lambda unused:
+                          random.choice(charSet), range(length))) + ".com"
         try:
             self.as_connection.list_size(key, bin)
         except e.RecordNotFound as exception:
@@ -107,18 +123,19 @@ class TestListSize(object):
         """
         Invoke list_size() with extra parameter.
         """
-        key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        key = ('test', 'demo', 1)
+        policy = {'timeout': 1000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_size(key, "contact_no", {}, policy, "")
 
-        assert "list_size() takes at most 4 arguments (5 given)" in str(typeError.value)
+        assert "list_size() takes at most 4 arguments (5 given)" in str(
+            typeError.value)
 
     def test_neg_list_size_policy_is_string(self):
         """
         Invoke list_size() with policy is string
         """
-        key = ("test", "demo", 1)
+        key = ('test', 'demo', 1)
         try:
             self.as_connection.list_size(key, "contact_no", {}, "")
 
@@ -141,7 +158,7 @@ class TestListSize(object):
         """
         Invoke list_size() with bin is none
         """
-        key = ("test", "demo", 1)
+        key = ('test', 'demo', 1)
         try:
             self.as_connection.list_size(key, None)
 
@@ -153,7 +170,7 @@ class TestListSize(object):
         """
         Invoke list_size() with metadata input is of type integer
         """
-        key = ("test", "demo", 1)
+        key = ('test', 'demo', 1)
         try:
             self.as_connection.list_size(key, "contact_no", 888)
 

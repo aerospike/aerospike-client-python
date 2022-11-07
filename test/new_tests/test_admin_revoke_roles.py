@@ -1,18 +1,24 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+import sys
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-import aerospike
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
 
 
 class TestRevokeRoles(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    )
+        not TestBaseClass.auth_in_use(),
+        reason="No user specified, may be not secured cluster.")
 
     def setup_method(self, method):
         """
@@ -20,7 +26,7 @@ class TestRevokeRoles(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestRevokeRoles.Me = self
-        self.client = aerospike.client(config).connect(config["user"], config["password"])
+        self.client = aerospike.client(config).connect(config['user'], config['password'])
         try:
             self.client.admin_drop_user("example-test")
             time.sleep(1)
@@ -70,7 +76,7 @@ class TestRevokeRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user(user, policy)
 
-        assert user_details == ["read-write"]
+        assert user_details == ['read-write']
 
     def test_revoke_all_roles_with_proper_parameters(self):
 
@@ -91,7 +97,7 @@ class TestRevokeRoles(TestBaseClass):
 
         policy = {"timeout": 0.1}
         user = "example-test"
-        roles = ["sys-admin"]
+        roles = ['sys-admin']
 
         try:
             self.client.admin_revoke_roles(user, roles, policy)
@@ -102,7 +108,7 @@ class TestRevokeRoles(TestBaseClass):
 
     def test_revoke_roles_with_proper_timeout_policy_value(self):
 
-        policy = {"timeout": 50}
+        policy = {'timeout': 50}
         user = "example-test"
         roles = ["read-write", "sys-admin"]
 
@@ -114,11 +120,11 @@ class TestRevokeRoles(TestBaseClass):
 
         user_details = self.client.admin_query_user(user)
 
-        assert user_details == ["read"]
+        assert user_details == ['read']
 
     def test_revoke_roles_with_none_username(self):
 
-        policy = {"timeout": 50}
+        policy = {'timeout': 50}
         user = None
         roles = ["sys-admin"]
 

@@ -1,7 +1,19 @@
 # -*- coding: utf-8 -*-
-from aerospike_helpers.batch import records as br
-from .test_base_class import TestBaseClass
 
+import sys
+
+import pytest
+
+aerospike = pytest.importorskip("aerospike")
+try:
+    import aerospike
+except:
+    print("Please install aerospike python client.")
+    sys.exit(1)
+
+from aerospike_helpers.batch import records as br
+from aerospike_helpers.operations import operations as op
+from .test_base_class import TestBaseClass
 
 class TestBatchRecords(TestBaseClass):
     def test_batch_read_all_bins_pos(self):
@@ -9,7 +21,11 @@ class TestBatchRecords(TestBaseClass):
         Test that batch Reads will allow read_all_bins with no ops
         """
 
-        b = br.Read(("test", "demo", 1), ops=None, read_all_bins=True)
+        b = br.Read(
+            ("test", "demo", 1),
+            ops = None,
+            read_all_bins=True
+        )
 
         assert b.read_all_bins
 
@@ -18,7 +34,10 @@ class TestBatchRecords(TestBaseClass):
         Test that batch Reads will always use a new batch_records list.
         """
 
-        b = br.Read(("test", "demo", 1), ops=None)
+        b = br.Read(
+            ("test", "demo", 1),
+            ops = None
+        )
 
         bwr = br.BatchRecords()
 
