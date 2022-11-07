@@ -29,66 +29,66 @@
 #include "query.h"
 
 PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
-                                           PyObject *kwds)
+										   PyObject *kwds)
 {
-    PyObject *py_policy = NULL;
+	PyObject *py_policy = NULL;
 
-    as_policy_write write_policy;
-    as_policy_write *write_policy_p = NULL;
+	as_policy_write write_policy;
+	as_policy_write *write_policy_p = NULL;
 
-    uint64_t query_id = 0;
+	uint64_t query_id = 0;
 
-    static char *kwlist[] = {"policy", NULL};
+	static char *kwlist[] = {"policy", NULL};
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp *exp_list_p = NULL;
 
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:execute_background", kwlist,
-                                    &py_policy) == false) {
-        return NULL;
-    }
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:execute_background", kwlist,
+									&py_policy) == false) {
+		return NULL;
+	}
 
-    as_error err;
-    as_error_init(&err);
+	as_error err;
+	as_error_init(&err);
 
-    if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-    if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
+	if (!self || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
+	if (!self->client->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
-    if (pyobject_to_policy_write(self->client, &err, py_policy, &write_policy,
-                                 &write_policy_p,
-                                 &self->client->as->config.policies.write,
-                                 &exp_list, &exp_list_p) != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (pyobject_to_policy_write(self->client, &err, py_policy, &write_policy,
+								 &write_policy_p,
+								 &self->client->as->config.policies.write,
+								 &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_query_background(self->client->as, &err, write_policy_p,
-                               &self->query, &query_id);
-    Py_END_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_query_background(self->client->as, &err, write_policy_p,
+							   &self->query, &query_id);
+	Py_END_ALLOW_THREADS
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-        ;
-    }
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);
+		;
+	}
 
-    if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+	if (err.code != AEROSPIKE_OK) {
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 
-    return PyLong_FromUnsignedLongLong(query_id);
+	return PyLong_FromUnsignedLongLong(query_id);
 }

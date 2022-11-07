@@ -44,9 +44,9 @@
  *******************************************************************************************************
  */
 AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
-                                    PyObject *kwds)
+									PyObject *kwds)
 {
-    return AerospikeScan_New(self, args, kwds);
+	return AerospikeScan_New(self, args, kwds);
 }
 
 /**
@@ -64,200 +64,200 @@ AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
  * @py_options                  The optional scan options to set.
  */
 static PyObject *AerospikeClient_ScanApply_Invoke(
-    AerospikeClient *self, char *namespace_p, PyObject *py_set,
-    PyObject *py_module, PyObject *py_function, PyObject *py_args,
-    PyObject *py_policy, PyObject *py_options, bool block)
+	AerospikeClient *self, char *namespace_p, PyObject *py_set,
+	PyObject *py_module, PyObject *py_function, PyObject *py_args,
+	PyObject *py_policy, PyObject *py_options, bool block)
 {
-    as_list *arglist = NULL;
-    as_policy_scan scan_policy;
-    as_policy_scan *scan_policy_p = NULL;
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
-    as_error err;
-    as_scan scan;
-    uint64_t scan_id = 0;
-    bool is_scan_init = false;
+	as_list *arglist = NULL;
+	as_policy_scan scan_policy;
+	as_policy_scan *scan_policy_p = NULL;
+	as_policy_info info_policy;
+	as_policy_info *info_policy_p = NULL;
+	as_error err;
+	as_scan scan;
+	uint64_t scan_id = 0;
+	bool is_scan_init = false;
 
-    PyObject *py_ustr1 = NULL;
-    PyObject *py_ustr2 = NULL;
-    PyObject *py_ustr3 = NULL;
+	PyObject *py_ustr1 = NULL;
+	PyObject *py_ustr2 = NULL;
+	PyObject *py_ustr3 = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp *exp_list_p = NULL;
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
+	as_static_pool static_pool;
+	memset(&static_pool, 0, sizeof(static_pool));
 
-    // Initialize error
-    as_error_init(&err);
+	// Initialize error
+	as_error_init(&err);
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
-    self->is_client_put_serializer = false;
+	self->is_client_put_serializer = false;
 
-    if (!(namespace_p) || !(py_set) || !(py_module) || !(py_function)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Parameter should not be null");
-        goto CLEANUP;
-    }
+	if (!(namespace_p) || !(py_set) || !(py_module) || !(py_function)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"Parameter should not be null");
+		goto CLEANUP;
+	}
 
-    if (py_args && !PyList_Check(py_args) && (Py_None != py_args)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Arguments should be a list");
-        goto CLEANUP;
-    }
+	if (py_args && !PyList_Check(py_args) && (Py_None != py_args)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"Arguments should be a list");
+		goto CLEANUP;
+	}
 
-    char *set_p = NULL;
-    if (PyUnicode_Check(py_set)) {
-        py_ustr1 = PyUnicode_AsUTF8String(py_set);
-        set_p = PyBytes_AsString(py_ustr1);
-    }
-    else if (PyString_Check(py_set)) {
-        set_p = PyString_AsString(py_set);
-    }
-    else if (Py_None != py_set) {
-        // Scan whole namespace if set is 'None' else error
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
-        goto CLEANUP;
-    }
+	char *set_p = NULL;
+	if (PyUnicode_Check(py_set)) {
+		py_ustr1 = PyUnicode_AsUTF8String(py_set);
+		set_p = PyBytes_AsString(py_ustr1);
+	}
+	else if (PyString_Check(py_set)) {
+		set_p = PyString_AsString(py_set);
+	}
+	else if (Py_None != py_set) {
+		// Scan whole namespace if set is 'None' else error
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
+		goto CLEANUP;
+	}
 
-    as_scan_init(&scan, namespace_p, set_p);
-    is_scan_init = true;
+	as_scan_init(&scan, namespace_p, set_p);
+	is_scan_init = true;
 
-    if (py_policy) {
-        pyobject_to_policy_scan(self, &err, py_policy, &scan_policy,
-                                &scan_policy_p, &self->as->config.policies.scan,
-                                &exp_list, &exp_list_p);
+	if (py_policy) {
+		pyobject_to_policy_scan(self, &err, py_policy, &scan_policy,
+								&scan_policy_p, &self->as->config.policies.scan,
+								&exp_list, &exp_list_p);
 
-        if (err.code != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
-    }
+		if (err.code != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+	}
 
-    if (py_options && PyDict_Check(py_options)) {
-        set_scan_options(&err, &scan, py_options);
-    }
+	if (py_options && PyDict_Check(py_options)) {
+		set_scan_options(&err, &scan, py_options);
+	}
 
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    char *module_p = NULL;
-    if (PyUnicode_Check(py_module)) {
-        py_ustr2 = PyUnicode_AsUTF8String(py_module);
-        module_p = PyBytes_AsString(py_ustr2);
-    }
-    else if (PyString_Check(py_module)) {
-        module_p = PyString_AsString(py_module);
-    }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Module name should be string");
-        goto CLEANUP;
-    }
+	char *module_p = NULL;
+	if (PyUnicode_Check(py_module)) {
+		py_ustr2 = PyUnicode_AsUTF8String(py_module);
+		module_p = PyBytes_AsString(py_ustr2);
+	}
+	else if (PyString_Check(py_module)) {
+		module_p = PyString_AsString(py_module);
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"Module name should be string");
+		goto CLEANUP;
+	}
 
-    char *function_p = NULL;
-    if (PyUnicode_Check(py_function)) {
-        py_ustr3 = PyUnicode_AsUTF8String(py_function);
-        function_p = PyBytes_AsString(py_ustr3);
-    }
-    else if (PyString_Check(py_function)) {
-        function_p = PyString_AsString(py_function);
-    }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Function name should be string");
-        goto CLEANUP;
-    }
+	char *function_p = NULL;
+	if (PyUnicode_Check(py_function)) {
+		py_ustr3 = PyUnicode_AsUTF8String(py_function);
+		function_p = PyBytes_AsString(py_ustr3);
+	}
+	else if (PyString_Check(py_function)) {
+		function_p = PyString_AsString(py_function);
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"Function name should be string");
+		goto CLEANUP;
+	}
 
-    if (py_args && (Py_None != py_args)) {
-        pyobject_to_list(self, &err, py_args, &arglist, &static_pool,
-                         SERIALIZER_PYTHON);
-        if (err.code != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
-    }
+	if (py_args && (Py_None != py_args)) {
+		pyobject_to_list(self, &err, py_args, &arglist, &static_pool,
+						 SERIALIZER_PYTHON);
+		if (err.code != AEROSPIKE_OK) {
+			goto CLEANUP;
+		}
+	}
 
-    if (!as_scan_apply_each(&scan, module_p, function_p, arglist)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Unable to apply UDF on the scan");
-        goto CLEANUP;
-    }
+	if (!as_scan_apply_each(&scan, module_p, function_p, arglist)) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM,
+						"Unable to apply UDF on the scan");
+		goto CLEANUP;
+	}
 
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
-    Py_END_ALLOW_THREADS
-    arglist = NULL;
-    if (err.code == AEROSPIKE_OK) {
-        if (block) {
-            if (py_policy) {
-                pyobject_to_policy_info(&err, py_policy, &info_policy,
-                                        &info_policy_p,
-                                        &self->as->config.policies.info);
-                if (err.code != AEROSPIKE_OK) {
-                    goto CLEANUP;
-                }
-            }
-            Py_BEGIN_ALLOW_THREADS
-            aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
-            Py_END_ALLOW_THREADS
-            if (err.code != AEROSPIKE_OK) {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                "Unable to perform scan_wait on the scan");
-            }
-        }
-    }
-    else {
-        goto CLEANUP;
-    }
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_scan_background(self->as, &err, scan_policy_p, &scan, &scan_id);
+	Py_END_ALLOW_THREADS
+	arglist = NULL;
+	if (err.code == AEROSPIKE_OK) {
+		if (block) {
+			if (py_policy) {
+				pyobject_to_policy_info(&err, py_policy, &info_policy,
+										&info_policy_p,
+										&self->as->config.policies.info);
+				if (err.code != AEROSPIKE_OK) {
+					goto CLEANUP;
+				}
+			}
+			Py_BEGIN_ALLOW_THREADS
+			aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
+			Py_END_ALLOW_THREADS
+			if (err.code != AEROSPIKE_OK) {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM,
+								"Unable to perform scan_wait on the scan");
+			}
+		}
+	}
+	else {
+		goto CLEANUP;
+	}
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-        ;
-    }
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);
+		;
+	}
 
-    if (py_ustr1) {
-        Py_DECREF(py_ustr1);
-    }
+	if (py_ustr1) {
+		Py_DECREF(py_ustr1);
+	}
 
-    if (py_ustr2) {
-        Py_DECREF(py_ustr2);
-    }
+	if (py_ustr2) {
+		Py_DECREF(py_ustr2);
+	}
 
-    if (py_ustr3) {
-        Py_DECREF(py_ustr3);
-    }
+	if (py_ustr3) {
+		Py_DECREF(py_ustr3);
+	}
 
-    if (arglist) {
-        as_list_destroy(arglist);
-    }
+	if (arglist) {
+		as_list_destroy(arglist);
+	}
 
-    if (is_scan_init) {
-        as_scan_destroy(&scan);
-    }
+	if (is_scan_init) {
+		as_scan_destroy(&scan);
+	}
 
-    if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+	if (err.code != AEROSPIKE_OK) {
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 
-    return PyLong_FromLong(scan_id);
+	return PyLong_FromLong(scan_id);
 }
 
 /**
@@ -273,33 +273,33 @@ CLEANUP:
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_ScanApply(AerospikeClient *self, PyObject *args,
-                                    PyObject *kwds)
+									PyObject *kwds)
 {
-    // Python Function Arguments
-    PyObject *py_args = NULL;
-    PyObject *py_policy = NULL;
-    PyObject *py_options = NULL;
+	// Python Function Arguments
+	PyObject *py_args = NULL;
+	PyObject *py_policy = NULL;
+	PyObject *py_options = NULL;
 
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"ns",   "set",    "module",  "function",
-                             "args", "policy", "options", NULL};
-    char *namespace = NULL;
-    PyObject *py_set = NULL;
-    PyObject *py_module = NULL;
-    PyObject *py_function = NULL;
+	// Python Function Keyword Arguments
+	static char *kwlist[] = {"ns",	 "set",	   "module",  "function",
+							 "args", "policy", "options", NULL};
+	char *namespace = NULL;
+	PyObject *py_set = NULL;
+	PyObject *py_module = NULL;
+	PyObject *py_function = NULL;
 
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "sOOO|OOO:scan_apply", kwlist,
-                                    &namespace, &py_set, &py_module,
-                                    &py_function, &py_args, &py_policy,
-                                    &py_options) == false) {
-        return NULL;
-    }
+	// Python Function Argument Parsing
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "sOOO|OOO:scan_apply", kwlist,
+									&namespace, &py_set, &py_module,
+									&py_function, &py_args, &py_policy,
+									&py_options) == false) {
+		return NULL;
+	}
 
-    // Invoke Operation
-    return AerospikeClient_ScanApply_Invoke(self, namespace, py_set, py_module,
-                                            py_function, py_args, py_policy,
-                                            py_options, true);
+	// Invoke Operation
+	return AerospikeClient_ScanApply_Invoke(self, namespace, py_set, py_module,
+											py_function, py_args, py_policy,
+											py_options, true);
 }
 
 /**
@@ -316,80 +316,80 @@ PyObject *AerospikeClient_ScanApply(AerospikeClient *self, PyObject *args,
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_ScanInfo(AerospikeClient *self, PyObject *args,
-                                   PyObject *kwds)
+								   PyObject *kwds)
 {
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
+	// Initialize error
+	as_error err;
+	as_error_init(&err);
 
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *retObj = PyDict_New();
+	// Python Function Arguments
+	PyObject *py_policy = NULL;
+	PyObject *retObj = PyDict_New();
 
-    long lscanId = 0;
+	long lscanId = 0;
 
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
-    as_scan_info scan_info;
+	as_policy_info info_policy;
+	as_policy_info *info_policy_p = NULL;
+	as_scan_info scan_info;
 
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"scanid", "policy", NULL};
+	// Python Function Keyword Arguments
+	static char *kwlist[] = {"scanid", "policy", NULL};
 
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "l|O:scan_info", kwlist,
-                                    &lscanId, &py_policy) == false) {
-        return NULL;
-    }
+	// Python Function Argument Parsing
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "l|O:scan_info", kwlist,
+									&lscanId, &py_policy) == false) {
+		return NULL;
+	}
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
-    // Convert python object to policy_info
-    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	// Convert python object to policy_info
+	pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+							&self->as->config.policies.info);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_scan_info(self->as, &err, info_policy_p, lscanId, &scan_info);
-    Py_END_ALLOW_THREADS
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_scan_info(self->as, &err, info_policy_p, lscanId, &scan_info);
+	Py_END_ALLOW_THREADS
 
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    if (retObj) {
-        PyObject *py_longobject = NULL;
-        py_longobject = PyLong_FromLong(scan_info.progress_pct);
-        PyDict_SetItemString(retObj, PROGRESS_PCT, py_longobject);
-        Py_DECREF(py_longobject);
-        py_longobject = PyLong_FromLong(scan_info.records_scanned);
-        PyDict_SetItemString(retObj, RECORDS_SCANNED, py_longobject);
-        Py_DECREF(py_longobject);
-        py_longobject = PyLong_FromLong(scan_info.status);
-        PyDict_SetItemString(retObj, STATUS, py_longobject);
-        Py_DECREF(py_longobject);
-    }
+	if (retObj) {
+		PyObject *py_longobject = NULL;
+		py_longobject = PyLong_FromLong(scan_info.progress_pct);
+		PyDict_SetItemString(retObj, PROGRESS_PCT, py_longobject);
+		Py_DECREF(py_longobject);
+		py_longobject = PyLong_FromLong(scan_info.records_scanned);
+		PyDict_SetItemString(retObj, RECORDS_SCANNED, py_longobject);
+		Py_DECREF(py_longobject);
+		py_longobject = PyLong_FromLong(scan_info.status);
+		PyDict_SetItemString(retObj, STATUS, py_longobject);
+		Py_DECREF(py_longobject);
+	}
 
 CLEANUP:
 
-    if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+	if (err.code != AEROSPIKE_OK) {
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 
-    return retObj;
+	return retObj;
 }

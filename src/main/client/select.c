@@ -40,166 +40,166 @@
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
-                                        PyObject *py_bins, PyObject *py_policy)
+										PyObject *py_bins, PyObject *py_policy)
 {
-    // Python Return Value
-    PyObject *py_rec = NULL;
-    PyObject *py_ustr = NULL;
+	// Python Return Value
+	PyObject *py_rec = NULL;
+	PyObject *py_ustr = NULL;
 
-    // Aerospike Client Arguments
-    as_error err;
-    as_policy_read read_policy;
-    as_policy_read *read_policy_p = NULL;
-    as_key key;
-    as_record *rec = NULL;
-    // It's only safe to free the record if this succeeded.
-    bool select_succeeded = false;
-    char **bins = NULL;
+	// Aerospike Client Arguments
+	as_error err;
+	as_policy_read read_policy;
+	as_policy_read *read_policy_p = NULL;
+	as_key key;
+	as_record *rec = NULL;
+	// It's only safe to free the record if this succeeded.
+	bool select_succeeded = false;
+	char **bins = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
+	// For converting expressions.
+	as_exp exp_list;
+	as_exp *exp_list_p = NULL;
 
-    // Initialisation flags
-    bool key_initialised = false;
+	// Initialisation flags
+	bool key_initialised = false;
 
-    // Initialize error
-    as_error_init(&err);
+	// Initialize error
+	as_error_init(&err);
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
+	if (!self || !self->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+		goto CLEANUP;
+	}
 
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
+	if (!self->is_conn_16) {
+		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+						"No connection to aerospike cluster");
+		goto CLEANUP;
+	}
 
-    // Convert python key object to as_key
-    pyobject_to_key(&err, py_key, &key);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-    // key is initialised successfully
-    key_initialised = true;
+	// Convert python key object to as_key
+	pyobject_to_key(&err, py_key, &key);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
+	// key is initialised successfully
+	key_initialised = true;
 
-    // Convert python bins list to char ** bins
-    if (py_bins && PyList_Check(py_bins)) {
-        Py_ssize_t size = PyList_Size(py_bins);
-        bins = (char **)alloca(sizeof(char *) * (size + 1));
-        for (int i = 0; i < size; i++) {
-            PyObject *py_val = PyList_GetItem(py_bins, i);
-            bins[i] = (char *)alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
-            if (PyString_Check(py_val)) {
-                strncpy(bins[i], PyString_AsString(py_val),
-                        AS_BIN_NAME_MAX_LEN);
-                bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
-            }
-            else if (PyUnicode_Check(py_val)) {
-                py_ustr = PyUnicode_AsUTF8String(py_val);
-                strncpy(bins[i], PyString_AsString(py_val),
-                        AS_BIN_NAME_MAX_LEN);
-                Py_CLEAR(py_ustr);
-                bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
-            }
-            else {
-                // Bin name wasn't a string raise error and exit
-                as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                "Bin name must be a string");
-                goto CLEANUP;
-            }
-        }
-        bins[size] = NULL;
-    }
-    else if (py_bins && PyTuple_Check(py_bins)) {
-        Py_ssize_t size = PyTuple_Size(py_bins);
-        bins = (char **)alloca(sizeof(char *) * (size + 1));
-        for (int i = 0; i < size; i++) {
-            PyObject *py_val = PyTuple_GetItem(py_bins, i);
-            bins[i] = (char *)alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
-            if (PyUnicode_Check(py_val)) {
-                py_ustr = PyUnicode_AsUTF8String(py_val);
-                strncpy(bins[i], PyBytes_AsString(py_ustr),
-                        AS_BIN_NAME_MAX_LEN);
-                Py_CLEAR(py_ustr);
-                bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
-            }
-            else if (PyString_Check(py_val)) {
-                strncpy(bins[i], PyString_AsString(py_val),
-                        AS_BIN_NAME_MAX_LEN);
-                bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
-            }
-            else {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM, "not string type");
-                goto CLEANUP;
-            }
-        }
-        bins[size] = NULL;
-    }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "not a list or tuple");
-        goto CLEANUP;
-    }
+	// Convert python bins list to char ** bins
+	if (py_bins && PyList_Check(py_bins)) {
+		Py_ssize_t size = PyList_Size(py_bins);
+		bins = (char **)alloca(sizeof(char *) * (size + 1));
+		for (int i = 0; i < size; i++) {
+			PyObject *py_val = PyList_GetItem(py_bins, i);
+			bins[i] = (char *)alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
+			if (PyString_Check(py_val)) {
+				strncpy(bins[i], PyString_AsString(py_val),
+						AS_BIN_NAME_MAX_LEN);
+				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			}
+			else if (PyUnicode_Check(py_val)) {
+				py_ustr = PyUnicode_AsUTF8String(py_val);
+				strncpy(bins[i], PyString_AsString(py_val),
+						AS_BIN_NAME_MAX_LEN);
+				Py_CLEAR(py_ustr);
+				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			}
+			else {
+				// Bin name wasn't a string raise error and exit
+				as_error_update(&err, AEROSPIKE_ERR_PARAM,
+								"Bin name must be a string");
+				goto CLEANUP;
+			}
+		}
+		bins[size] = NULL;
+	}
+	else if (py_bins && PyTuple_Check(py_bins)) {
+		Py_ssize_t size = PyTuple_Size(py_bins);
+		bins = (char **)alloca(sizeof(char *) * (size + 1));
+		for (int i = 0; i < size; i++) {
+			PyObject *py_val = PyTuple_GetItem(py_bins, i);
+			bins[i] = (char *)alloca(sizeof(char) * AS_BIN_NAME_MAX_SIZE);
+			if (PyUnicode_Check(py_val)) {
+				py_ustr = PyUnicode_AsUTF8String(py_val);
+				strncpy(bins[i], PyBytes_AsString(py_ustr),
+						AS_BIN_NAME_MAX_LEN);
+				Py_CLEAR(py_ustr);
+				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			}
+			else if (PyString_Check(py_val)) {
+				strncpy(bins[i], PyString_AsString(py_val),
+						AS_BIN_NAME_MAX_LEN);
+				bins[i][AS_BIN_NAME_MAX_LEN] = '\0';
+			}
+			else {
+				as_error_update(&err, AEROSPIKE_ERR_PARAM, "not string type");
+				goto CLEANUP;
+			}
+		}
+		bins[size] = NULL;
+	}
+	else {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "not a list or tuple");
+		goto CLEANUP;
+	}
 
-    // Convert python policy object to as_policy_exists
-    pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-                            &self->as->config.policies.read, &exp_list,
-                            &exp_list_p);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
+	// Convert python policy object to as_policy_exists
+	pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
+							&self->as->config.policies.read, &exp_list,
+							&exp_list_p);
+	if (err.code != AEROSPIKE_OK) {
+		goto CLEANUP;
+	}
 
-    // Invoke operation
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_key_select(self->as, &err, read_policy_p, &key,
-                         (const char **)bins, &rec);
-    Py_END_ALLOW_THREADS
+	// Invoke operation
+	Py_BEGIN_ALLOW_THREADS
+	aerospike_key_select(self->as, &err, read_policy_p, &key,
+						 (const char **)bins, &rec);
+	Py_END_ALLOW_THREADS
 
-    if (err.code == AEROSPIKE_OK) {
-        select_succeeded = true;
-        record_to_pyobject(self, &err, rec, &key, &py_rec);
-    }
-    else {
-        as_error_update(&err, err.code, NULL);
-    }
+	if (err.code == AEROSPIKE_OK) {
+		select_succeeded = true;
+		record_to_pyobject(self, &err, rec, &key, &py_rec);
+	}
+	else {
+		as_error_update(&err, err.code, NULL);
+	}
 
 CLEANUP:
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-        ;
-    }
+	if (exp_list_p) {
+		as_exp_destroy(exp_list_p);
+		;
+	}
 
-    if (py_ustr) {
-        Py_DECREF(py_ustr);
-    }
+	if (py_ustr) {
+		Py_DECREF(py_ustr);
+	}
 
-    if (key_initialised == true) {
-        // Destroy the key if it is initialised successfully.
-        as_key_destroy(&key);
-    }
+	if (key_initialised == true) {
+		// Destroy the key if it is initialised successfully.
+		as_key_destroy(&key);
+	}
 
-    if (rec && select_succeeded) {
-        as_record_destroy(rec);
-    }
+	if (rec && select_succeeded) {
+		as_record_destroy(rec);
+	}
 
-    if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+	if (err.code != AEROSPIKE_OK) {
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		if (PyObject_HasAttrString(exception_type, "key")) {
+			PyObject_SetAttrString(exception_type, "key", py_key);
+		}
+		if (PyObject_HasAttrString(exception_type, "bin")) {
+			PyObject_SetAttrString(exception_type, "bin", Py_None);
+		}
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 
-    return py_rec;
+	return py_rec;
 }
 
 /**
@@ -216,22 +216,22 @@ CLEANUP:
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_Select(AerospikeClient *self, PyObject *args,
-                                 PyObject *kwds)
+								 PyObject *kwds)
 {
-    // Python Function Arguments
-    PyObject *py_key = NULL;
-    PyObject *py_bins = NULL;
-    PyObject *py_policy = NULL;
+	// Python Function Arguments
+	PyObject *py_key = NULL;
+	PyObject *py_bins = NULL;
+	PyObject *py_policy = NULL;
 
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"key", "bins", "policy", NULL};
+	// Python Function Keyword Arguments
+	static char *kwlist[] = {"key", "bins", "policy", NULL};
 
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:select", kwlist, &py_key,
-                                    &py_bins, &py_policy) == false) {
-        return NULL;
-    }
+	// Python Function Argument Parsing
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:select", kwlist, &py_key,
+									&py_bins, &py_policy) == false) {
+		return NULL;
+	}
 
-    // Invoke Operation
-    return AerospikeClient_Select_Invoke(self, py_key, py_bins, py_policy);
+	// Invoke Operation
+	return AerospikeClient_Select_Invoke(self, py_key, py_bins, py_policy);
 }

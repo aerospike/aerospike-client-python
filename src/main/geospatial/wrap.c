@@ -27,43 +27,43 @@
 #include "policy.h"
 
 PyObject *AerospikeGeospatial_Wrap(AerospikeGeospatial *self, PyObject *args,
-                                   PyObject *kwds)
+								   PyObject *kwds)
 {
 
-    // Python function arguments
-    PyObject *py_geodata = NULL;
-    // Python function keyword arguments
-    static char *kwlist[] = {"geodata", NULL};
+	// Python function arguments
+	PyObject *py_geodata = NULL;
+	// Python function keyword arguments
+	static char *kwlist[] = {"geodata", NULL};
 
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O:wrap", kwlist,
-                                    &py_geodata) == false) {
-        return NULL;
-    }
+	if (PyArg_ParseTupleAndKeywords(args, kwds, "O:wrap", kwlist,
+									&py_geodata) == false) {
+		return NULL;
+	}
 
-    // Aerospike error object
-    as_error err;
-    // Initialize error object
-    as_error_init(&err);
+	// Aerospike error object
+	as_error err;
+	// Initialize error object
+	as_error_init(&err);
 
-    if (!self) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
-        goto CLEANUP;
-    }
+	if (!self) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial object");
+		goto CLEANUP;
+	}
 
-    store_geodata(self, &err, py_geodata);
+	store_geodata(self, &err, py_geodata);
 
 CLEANUP:
 
-    // If an error occurred, tell Python.
-    if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+	// If an error occurred, tell Python.
+	if (err.code != AEROSPIKE_OK) {
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 
-    Py_INCREF(self->geo_data);
-    return PyLong_FromLong(0);
+	Py_INCREF(self->geo_data);
+	return PyLong_FromLong(0);
 }

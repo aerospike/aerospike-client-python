@@ -25,29 +25,29 @@
 
 PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self)
 {
-    PyObject *py_parts = NULL;
-    const as_partitions_status *all_parts = NULL;
-    as_error err;
-    as_error_init(&err);
+	PyObject *py_parts = NULL;
+	const as_partitions_status *all_parts = NULL;
+	as_error err;
+	as_error_init(&err);
 
-    if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object.");
-        goto CLEANUP;
-    }
+	if (!self || !self->client->as) {
+		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object.");
+		goto CLEANUP;
+	}
 
-    all_parts = self->query.parts_all;
+	all_parts = self->query.parts_all;
 
-    as_partitions_status_to_pyobject(&err, all_parts, &py_parts);
+	as_partitions_status_to_pyobject(&err, all_parts, &py_parts);
 
 CLEANUP:
-    if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+	if (err.code != AEROSPIKE_OK) {
+		PyObject *py_err = NULL;
+		error_to_pyobject(&err, &py_err);
+		PyObject *exception_type = raise_exception(&err);
+		PyErr_SetObject(exception_type, py_err);
+		Py_DECREF(py_err);
+		return NULL;
+	}
 
-    return py_parts;
+	return py_parts;
 }

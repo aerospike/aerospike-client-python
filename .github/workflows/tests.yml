@@ -33,11 +33,6 @@ jobs:
       run: |
         # Ignore E203 to be compatible with black
         flake8 --max-line-length=120 --count --extend-ignore=E203 aerospike_helpers/
-    - name: clang-format Check
-      uses: jidicula/clang-format-action@v4.9.0
-      with:
-        check-path: 'src'
-        clang-format-version: 14
     - name: Build documentation
       run: |
         cd doc/

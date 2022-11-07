@@ -156,7 +156,7 @@ StatementMacros:
   - Py_END_ALLOW_THREADS
 TabWidth:        4
 UseCRLF:         false
-UseTab:          Never
+UseTab:          Always
 WhitespaceSensitiveMacros:
   - STRINGIZE
   - PP_STRINGIZE
