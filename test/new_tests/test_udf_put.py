@@ -4,6 +4,7 @@ import pytest
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("as_connection")

@@ -8,7 +8,6 @@ try:
 except ImportError:
     from counter26 import Counter
 
-import aerospike
 from aerospike import exception as e
 
 

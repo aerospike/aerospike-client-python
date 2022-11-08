@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+from aerospike import exception as e
 
 
 @pytest.mark.usefixtures("as_connection", "connection_config")

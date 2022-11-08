@@ -4,9 +4,6 @@ import pytest
 
 from aerospike import exception as e
 
-import aerospike
-
-
 @pytest.mark.xfail(reason="Method is deprecated")
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfo(object):

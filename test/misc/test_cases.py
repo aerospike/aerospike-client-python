@@ -1142,8 +1142,8 @@ def test_create_user(aeros, namespace, setname):
     policy = {"timeout": 1000}
     user = "generic_client"
     password = "generic_client"
-    # roles = ["data-admin", "user-admin", "sys-admin", 
-    # "read-write", "read-write-udf", "quota-4k-2k-role", 
+    # roles = ["data-admin", "user-admin", "sys-admin",
+    # "read-write", "read-write-udf", "quota-4k-2k-role",
     # "sindex-admin", "truncate"]
     roles = ["data-admin", "user-admin", "sys-admin", "read-write", "read-write-udf", "sindex-admin", "truncate"]
 
