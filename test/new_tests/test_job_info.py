@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-from .as_status_codes import AerospikeStatus
-from aerospike import exception as e
-
-import aerospike
-
 
 class TestScanInfo(object):
 

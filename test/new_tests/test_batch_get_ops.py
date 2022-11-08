@@ -139,13 +139,13 @@ class TestBatchExpressionsOperations(TestBaseClass):
         non_existent_key = ("test", "demo", "batch-ops-non_existent_key")
         rec = self.as_connection.batch_get_ops([key1, key2, non_existent_key], ops, policy)
 
-        print("\nThe record from batch_get_ops")
-        pp.pprint(rec)
+        # print("\nThe record from batch_get_ops")
+        # pp.pprint(rec)
 
         assert rec[0][-1] is not None
         assert rec[1][-1] is not None
         assert rec[2][-2] == e.RecordNotFound
-        assert rec[2][-1] == None
+        assert rec[2][-1] is None
 
         # rec = self.as_connection.select_many([non_existent_key], ['name'])
         # print("\nFor comparison, here's batch-read (select_many) is an array of records")

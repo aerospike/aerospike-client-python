@@ -6,8 +6,6 @@ from distutils.version import LooseVersion
 import pytest
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
-import aerospike
-from aerospike import exception as e
 
 
 def is_greater_451(version_str):

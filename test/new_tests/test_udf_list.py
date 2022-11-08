@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
-from aerospike import exception as e
 from .test_base_class import TestBaseClass
-
-import aerospike
-
 
 class TestUdfList(object):
     def setup_class(cls):

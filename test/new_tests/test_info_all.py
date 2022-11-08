@@ -2,10 +2,6 @@
 
 import pytest
 
-from aerospike import exception as e
-
-import aerospike
-
 
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfo(object):

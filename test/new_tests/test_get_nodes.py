@@ -1,10 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 from .test_base_class import TestBaseClass
-from aerospike import exception as e
-
-import aerospike
-
 
 @pytest.mark.xfail(TestBaseClass.tls_in_use(), reason="get_nodes may fail when using TLS")
 @pytest.mark.usefixtures("as_connection")

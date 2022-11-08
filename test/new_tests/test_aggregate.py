@@ -1,10 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-from aerospike import exception as e
-from aerospike import predicates as p
-
-import aerospike
-
 
 def add_stream_udf(client):
     client.udf_put("stream_example.lua", 0)

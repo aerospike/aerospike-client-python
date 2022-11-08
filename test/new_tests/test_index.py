@@ -3,10 +3,6 @@
 import pytest
 from .as_status_codes import AerospikeStatus
 from .index_helpers import ensure_dropped_index
-from aerospike import exception as e
-
-import aerospike
-
 
 class TestIndex(object):
     @pytest.fixture(autouse=True)

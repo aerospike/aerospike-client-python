@@ -3,10 +3,6 @@ import pytest
 import time
 
 from .test_base_class import TestBaseClass
-from aerospike import exception as e
-
-import aerospike
-
 
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
 @pytest.mark.usefixtures("as_connection", "connection_config")
