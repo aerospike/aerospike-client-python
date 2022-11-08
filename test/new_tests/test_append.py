@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
@@ -422,6 +423,21 @@ class TestAppend(object):
         """
         with pytest.raises(e.ParamError):
             self.as_connection.append(key, bin, "str")
+
+    def test_neg_append_with_correct_parameters_without_connection(self):
+        """
+        Invoke append() with correct parameters without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+        key = ("test", "demo", 1)
+
+        try:
+            client1.append(key, "name", "str")
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_append_with_low_timeout(self):
         """

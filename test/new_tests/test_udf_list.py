@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
-from .test_base_class import TestBaseClass
 from aerospike import exception as e
+from .test_base_class import TestBaseClass
+
+import aerospike
 
 
 class TestUdfList(object):
@@ -101,3 +103,21 @@ class TestUdfList(object):
         """
         with pytest.raises(e.ParamError):
             self.client.udf_list(policy)
+
+    def test_udf_list_with_proper_parameters_without_connection(self):
+        """
+        Test to verify error raised by trying to call udf_list without
+        first calling connect
+        """
+        config = TestBaseClass.get_connection_config()
+
+        client1 = aerospike.client(config)
+        client1.close()
+
+        policy = {"timeout": 0}
+
+        with pytest.raises(e.ClusterError) as cluster_error:
+            client1.udf_list(policy)
+
+        assert cluster_error.value.code == 11
+        assert cluster_error.value.msg == "No connection to aerospike cluster"

@@ -658,6 +658,26 @@ class TestOperateOrdered(object):
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 
+    def test_neg_operate_ordered_without_connection(self):
+        """
+        Invoke operate_ordered() with correct parameters without connection
+        """
+        key = ("test", "demo", 1)
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+        llist = [
+            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+            {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
+            {"op": aerospike.OPERATOR_READ, "bin": "name"},
+        ]
+
+        try:
+            key, _, _ = client1.operate_ordered(key, llist)
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
+
     def test_neg_operate_ordered_prepend_set_to_aerospike_null(self):
         """
         Invoke operate_ordered() with prepend command bin set to aerospike_null

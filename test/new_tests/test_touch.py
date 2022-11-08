@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
@@ -255,6 +256,21 @@ class TestTouch(object):
             self.as_connection.touch(key, 120, {}, "")
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_PARAM
+
+    def test_touch_with_correct_paramters_without_connection(self):
+        """
+        Invoke touch() with correct parameters without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+        key = ("test", "demo", 1)
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.touch(key, 120)
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     def test_touch_withttlvalue_greaterthan_maxsize(self):
         """

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 
@@ -341,6 +342,23 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert retobj == 0
         self.as_connection.index_remove("test", "test_numeric_list_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_numeric_list_index")
+
+    def test_neg_listindex_with_correct_parameters_no_connection(self):
+        """
+        Invoke index_list_create() with correct arguments no connection
+        """
+        policy = {}
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        try:
+            client1.index_list_create(
+                "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+            )
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_listindex_with_no_paramters(self):
         """

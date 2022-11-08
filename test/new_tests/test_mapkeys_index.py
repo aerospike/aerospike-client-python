@@ -2,6 +2,7 @@
 
 import pytest
 from .as_status_codes import AerospikeStatus
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 
@@ -327,3 +328,20 @@ class TestMapKeysIndex(object):
         assert response_code == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "uni_age_index", policy)
         ensure_dropped_index(self.as_connection, "test", "uni_age_index")
+
+    def test_mapkeysindex_with_correct_parameters_no_connection(self):
+        """
+        Invoke index_map_keys_create() with correct arguments no connection
+        """
+        policy = {}
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.index_map_keys_create(
+                "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
+            )
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR

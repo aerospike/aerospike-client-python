@@ -176,6 +176,18 @@ class TestSelect(object):
 
         assert "argument 'key' (pos 1)" in str(typeError.value)
 
+    def test_select_with_key_and_bins_without_connection(self):
+
+        bins_to_select = ["a"]
+        config = self.connection_config
+        disconnected_client = aerospike.client(config)
+        disconnected_client.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            disconnected_client.select(self.test_key, bins_to_select)
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+
     def test_select_with_invalid_keys(self, invalid_key):
         """
         Verify that different types of invalid keys will

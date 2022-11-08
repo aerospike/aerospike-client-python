@@ -1194,7 +1194,7 @@ def get_aerospike():
     # tls_name = 'bob-cluster-a'
     tls_name = "172.31.1.163"
 
-    endpoints = [("172.31.1.163", 3000)]
+    endpoints = [("172.28.0.1", 3000)]
 
     hosts = [(address[0], address[1], tls_name) for address in endpoints]
 

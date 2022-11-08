@@ -4,6 +4,7 @@ import pytest
 
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
+import aerospike
 from aerospike_helpers import expressions as exp
 from aerospike import exception as e
 
@@ -289,6 +290,22 @@ class TestApply(TestBaseClass):
 
         assert bins["name"] == ["name1", "car"]
         assert retval == 0
+
+    def test_apply_with_correct_parameters_without_connection(self):
+        """
+        Invoke apply() with correct arguments without connection
+        """
+        key = ("test", "demo", 1)
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.apply(key, "sample", "list_append", ["name", "car"])
+
+        err_code = err_info.value.code
+
+        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     def test_apply_with_arg_causing_error(self):
         """

@@ -3,6 +3,7 @@
 import pytest
 from .test_base_class import TestBaseClass
 import aerospike
+from aerospike import exception as e
 
 
 class TestClose:
@@ -20,6 +21,20 @@ class TestClose:
         self.client = TestBaseClass.get_new_connection()
         self.closeobject = self.client.close()
         assert self.closeobject is None
+
+    def test_pos_close_without_connection(self):
+        """
+        Invoke close() without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        self.client = aerospike.client(config)
+        self.client.close()
+
+        try:
+            self.closeobject = self.client.close()
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_close(self):
         """

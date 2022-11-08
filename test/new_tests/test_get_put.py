@@ -235,6 +235,18 @@ class TestGetPut:
         except e.RecordNotFound as exception:
             assert exception.code == 2
 
+    def test_neg_get_with_only_key_no_connection(self):
+        """
+        Invoke get() with a key and not policy's dict no connection
+        """
+        key = ("test", "demo", 1)
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError):
+            key, _, _ = client1.get(key)
+
     # Put Tests
     def test_pos_put_with_policy_exists_create_or_replace(self):
         """
@@ -725,6 +737,23 @@ class TestGetPut:
         (key, meta, bins) = self.as_connection.get(key)
         assert {"name": "John"} == bins
         self.as_connection.remove(key)
+
+    def test_neg_put_with_string_record_without_connection(self):
+        """
+        Invoke put() for a record with string data without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        key = ("test", "demo", 1)
+
+        bins = {"name": "John"}
+
+        try:
+            client1.put(key, bins)
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     @pytest.mark.parametrize(
         "key, record, meta, policy, ex_code, ex_msg",

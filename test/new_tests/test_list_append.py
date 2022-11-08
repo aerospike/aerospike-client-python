@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 import random
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
@@ -216,3 +217,11 @@ class TestListAppend(object):
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Metadata should be of type dictionary"
+
+    def test_list_append_with_no_connection(self):
+        config = TestBaseClass.get_connection_config()
+        client = aerospike.client(config)
+        client.close()
+        k = ("test", "demo", "no_con")
+        with pytest.raises(e.ClusterError):
+            client.list_append(k, "bob", "item")

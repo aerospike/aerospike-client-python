@@ -697,6 +697,30 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         self.as_connection.index_remove("test", "test_numeric_list_cdt_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_numeric_list_cdt_index")
 
+    def test_neg_cdtindex_with_correct_parameters_no_connection(self):
+        """
+        Invoke index_cdt_create() with correct arguments no connection
+        """
+        policy = {}
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        try:
+            client1.index_cdt_create(
+                "test",
+                "demo",
+                "string_list",
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_STRING,
+                "test_string_list_cdt_index",
+                {"ctx": ctx_list_index},
+                policy,
+            )
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
+
     def test_neg_cdtindex_with_no_paramters(self):
         """
         Invoke index_cdt_create() without any mandatory parameters.

@@ -437,6 +437,19 @@ class TestOperate(object):
 
         self.as_connection.remove(key)
 
+    def test_pos_operate_with_correct_paramters_without_connection(self):
+        """
+        Invoke operate() with correct parameters without connection
+        """
+        key = ("test", "demo", 1)
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+        llist = [operations.touch()]
+
+        with pytest.raises(e.ClusterError):
+            client1.operate(key, llist)
+
     def test_pos_operate_write_set_to_aerospike_null(self):
         """
         Invoke operate() with write command with bin set to aerospike_null
