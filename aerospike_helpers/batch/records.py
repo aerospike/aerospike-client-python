@@ -17,6 +17,7 @@
 import typing as ty
 
 TypeOps = ty.List[ty.Dict]
+TypeOp = ty.Dict
 TypeBatchPolicyWrite = ty.Union[ty.Dict, None]
 TypeBatchPolicyRemove = ty.Union[ty.Dict, None]
 TypeBatchPolicyApply = ty.Union[ty.Dict, None]
@@ -73,11 +74,7 @@ class Write(BatchRecord):
     """
 
     def __init__(
-        self,
-        key: tuple,
-        ops: "TypeOps",
-        meta: "TypeOps" = None,
-        policy: "TypeBatchPolicyWrite" = None
+        self, key: tuple, ops: "TypeOps", meta: "TypeOp" = None, policy: "TypeBatchPolicyWrite" = None
     ) -> None:
         """
         Example::
@@ -129,7 +126,7 @@ class Read(BatchRecord):
         key: tuple,
         ops: ty.Union[TypeOps, None],
         read_all_bins: bool = False,
-        meta: "TypeOps" = None,
+        meta: "TypeOp" = None,
         policy: "TypeBatchPolicyRead" = None,
     ) -> None:
         """
