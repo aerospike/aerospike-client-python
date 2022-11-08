@@ -437,7 +437,6 @@ class TestOperate(object):
 
         self.as_connection.remove(key)
 
-
     def test_pos_operate_write_set_to_aerospike_null(self):
         """
         Invoke operate() with write command with bin set to aerospike_null

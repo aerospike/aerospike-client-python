@@ -146,7 +146,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
         assert rec[1][-1] is not None
         assert rec[2][-2] == e.RecordNotFound
         assert rec[2][-1] == None
-        
+
         # rec = self.as_connection.select_many([non_existent_key], ['name'])
         # print("\nFor comparison, here's batch-read (select_many) is an array of records")
         # pp.pprint(rec)
@@ -161,4 +161,3 @@ class TestBatchExpressionsOperations(TestBaseClass):
 
         self.as_connection.remove(key1)
         self.as_connection.remove(key2)
-

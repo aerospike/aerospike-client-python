@@ -75,12 +75,10 @@ class TestQueryApply(object):
 
     # These functions will run once for this test class, and do all of the
     # required setup and teardown
-    connection_setup_functions = (add_test_udf, add_test_parameter_udf,
-     add_indexes_to_client, create_records)
-    connection_teardown_functions = (drop_test_udf, drop_test_parameter_udf,
-     remove_indexes_from_client, drop_records)
-    age_range_pred = p.between('age', 0, 4)  # Predicate for ages between [0,5)
-    no_set_key = ('test', None, "no_set")  # Key for item stored in a namespace but not in a set
+    connection_setup_functions = (add_test_udf, add_test_parameter_udf, add_indexes_to_client, create_records)
+    connection_teardown_functions = (drop_test_udf, drop_test_parameter_udf, remove_indexes_from_client, drop_records)
+    age_range_pred = p.between("age", 0, 4)  # Predicate for ages between [0,5)
+    no_set_key = ("test", None, "no_set")  # Key for item stored in a namespace but not in a set
 
     @pytest.fixture(autouse=True)
     def setup(self, request, connection_with_config_funcs):

@@ -11,7 +11,8 @@ except ImportError:
 import aerospike
 from aerospike import exception as e
 
-class TestGetMany():
+
+class TestGetMany:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         self.keys = []
