@@ -70,7 +70,7 @@
         key_created = true;                                                    \
     }                                                                          \
     if (py_meta) {                                                             \
-        if (check_for_meta(py_meta, &ops, &err) != AEROSPIKE_OK) {             \
+        if (check_and_set_meta(py_meta, &ops, &err) != AEROSPIKE_OK) {         \
             goto CLEANUP;                                                      \
         }                                                                      \
     }                                                                          \

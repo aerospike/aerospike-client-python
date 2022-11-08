@@ -279,7 +279,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             garb->ops_to_free = ops;
 
             if (py_meta) {
-                if (check_for_meta(py_meta, ops, err) != AEROSPIKE_OK) {
+                if (check_and_set_meta(py_meta, ops, err) != AEROSPIKE_OK) {
                     goto CLEANUP0;
                 }
             }
@@ -457,9 +457,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
     // populate results
     as_vector *res_list = &batch_records.list;
-    // if (py_batch_records_size == 0) {
-    //     printf("aerospike_batch_write failed with no result");
-    // }
 
     for (Py_ssize_t i = 0; i < py_batch_records_size; i++) {
         PyObject *py_batch_record = PyList_GetItem(py_batch_records, i);
@@ -505,17 +502,12 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                                        Py_None);
             }
         }
-        // else {
-        //     printf("aerospike_batch_write record:%d failed:%d", i, *result_code );
-        // }
     }
 
     goto CLEANUP3;
 
 CLEANUP0:
-    if (py_meta) {
-        Py_XDECREF(py_meta);
-    }
+    Py_XDECREF(py_meta);
     Py_XDECREF(py_ops_list);
 CLEANUP1:
     Py_XDECREF(py_batch_type);

@@ -148,7 +148,7 @@ AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self, as_error *err,
     memset(&static_pool, 0, sizeof(static_pool));
 
     if (py_meta) {
-        if (check_for_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
+        if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
