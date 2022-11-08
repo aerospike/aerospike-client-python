@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 import pytest
-
 from aerospike import exception as e
+
+import aerospike
 
 
 @pytest.mark.xfail(reason="Method is deprecated")
@@ -84,6 +85,19 @@ class TestInfo(object):
             self.as_connection.info()
 
         assert "argument 'command' (pos 1)" in str(err_info.value)
+
+    def test_info_positive_for_sets_without_connection(self):
+        """
+        Test info positive for sets without connection
+        """
+        client1 = aerospike.client(self.connection_config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.info("sets", self.connection_config["hosts"])
+
+        assert err_info.value.code == 11
+        assert err_info.value.msg == "No connection to aerospike cluster"
 
     @pytest.mark.parametrize(
         "host_arg",

@@ -290,6 +290,19 @@ class TestSelectMany(object):
 
         assert "argument 'keys' (pos 1)" in str(typeError.value)
 
+    def test_select_many_with_proper_parameters_without_connection(self):
+
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        filter_bins = ["title", "name"]
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.select_many(self.keys, filter_bins, {"timeout": 20})
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+
     def test_select_many_with_invalid_keys(self, invalid_key):
         # invalid_key will be an invalid key_tuple, so we wrap
         # it with a valid key in a list

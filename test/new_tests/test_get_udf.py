@@ -2,6 +2,7 @@
 import pytest
 
 from .as_status_codes import AerospikeStatus
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
@@ -134,3 +135,18 @@ class TestGetRegistered(object):
     def test_invalid_language_arg_types(self, ltype):
         with pytest.raises(TypeError):
             self.as_connection.udf_get(self.loaded_udf_name, ltype)
+
+    def test_udf_get_with_correct_paramters_without_connection(self):
+        """
+        Invoke udf_get() with correct parameters without connection
+        """
+        policy = {"timeout": 5000}
+
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.udf_get(self.loaded_udf_name, self.udf_language, policy)
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR

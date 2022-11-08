@@ -6,6 +6,8 @@ from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
+import aerospike
+
 
 @pytest.mark.usefixtures("as_connection")
 class TestUdfPut(TestBaseClass):
@@ -120,6 +122,22 @@ class TestUdfPut(TestBaseClass):
         udf_type = 0
         with pytest.raises(e.ParamError):
             self.as_connection.udf_put(filename, udf_type, policy)
+
+    def test_udf_put_with_proper_parameters_without_connection(self):
+
+        policy = {}
+        filename = self.udf_name
+        udf_type = 0
+
+        config = TestBaseClass.get_connection_config()
+
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.udf_put(filename, udf_type, policy)
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     def test_udf_put_with_invalid_timeout_policy_value(self):
         """

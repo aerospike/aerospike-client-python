@@ -6,6 +6,8 @@ from distutils.version import LooseVersion
 import pytest
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
+from .test_base_class import TestBaseClass
+import aerospike
 from aerospike import exception as e
 
 
@@ -142,6 +144,23 @@ class TestIncorrectCallsToUDFRemove(object):
         setup the class attribute indicating the udf to load
         """
         cls.udf_to_load = "example.lua"
+
+    def test_udf_remove_with_proper_parameters_without_connection(self):
+        """
+        Test to verify that attempting to remove a UDF before connection
+        raises an error
+        """
+        config = TestBaseClass.get_connection_config()
+
+        client1 = aerospike.client(config)
+        client1.close()
+        policy = {"timeout": 100}
+        module = "example.lua"
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.udf_remove(module, policy)
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     def test_udf_remove_with_non_existent_module(self):
         """

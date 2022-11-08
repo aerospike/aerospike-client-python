@@ -5,6 +5,8 @@ import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
+import aerospike
+
 
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
 @pytest.mark.usefixtures("as_connection", "connection_config")
@@ -127,6 +129,18 @@ class TestInfoRandomNodeIncorrectUsage(object):
         """
         with pytest.raises(e.ClientError):
             self.as_connection.info_random_node("abcd")
+
+    def test_info_random_node_positive_without_connection(self):
+        """
+        Test info with correct arguments without connection.
+        """
+        client1 = aerospike.client(self.connection_config)
+        client1.close()
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.info_random_node("bins")
+
+        assert err_info.value.code == 11
+        assert err_info.value.msg == "No connection to aerospike cluster."
 
     def test_info_random_node_positive_with_extra_parameters(self):
         """

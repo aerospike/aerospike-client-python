@@ -3,6 +3,7 @@
 import pytest
 from .test_data import key_neg
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
@@ -299,6 +300,20 @@ class TestRemove:
             self.as_connection.remove(key)
             (code, _, _, _) = exception.value
             assert code == ex_code
+
+    def test_neg_remove_with_correct_parameters_without_connection(self):
+        """
+        Invoke remove() with correct arguments without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+        key = ("test", "demo", 1)
+
+        with pytest.raises(e.ClusterError) as exception:
+            client1.remove(key)
+            (code, _, _, _) = exception.value
+            assert code == 11
 
     def test_neg_remove_with_no_parameters(self):
         """

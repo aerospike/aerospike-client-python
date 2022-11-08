@@ -3,6 +3,9 @@
 import pytest
 import time
 from . import test_data
+
+from .test_base_class import TestBaseClass
+import aerospike
 from aerospike import exception as e
 
 
@@ -100,6 +103,21 @@ class TestExists:
             """
         except ex as exception:
             assert exception.code == ex_code
+
+    def test_neg_exists_with_only_key_without_connection(self):
+        """
+        Invoke exists() with a key and not policy's dict and no connection
+        """
+        key = ("test", "demo", 1)
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        try:
+            key, _ = client1.exists(key)
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     @pytest.mark.parametrize(
         "key, record, meta, policy",

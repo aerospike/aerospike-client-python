@@ -3,6 +3,7 @@ import pytest
 import sys
 
 from .as_status_codes import AerospikeStatus
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
@@ -336,6 +337,22 @@ class TestIncrement(object):
         (key, _, bins) = self.as_connection.get(key)
 
         assert bins == {"age": 11, "name": "name1"}
+
+    def test_increment_with_correct_parameters_without_connection(self):
+        """
+        Invoke increment() with correct parameters without connection
+        """
+        key = ("test", "demo", 1)
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.increment(key, "age", 5)
+
+        err_code = err_info.value.code
+
+        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     @pytest.mark.skip(reason="This raises a system error." + " Something else should be raised")
     def test_increment_with_integer_greaterthan_maxsize(self):

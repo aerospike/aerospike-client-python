@@ -958,6 +958,27 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_query_with_correct_parameters_without_connection(self):
+        """
+        Invoke query() with correct arguments without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            query = client1.query("test", "demo")
+            query.select("name", "test_age")
+            query.where(p.equals("test_age", 1))
+
+            def callback(input_tuple):
+                pass
+
+            query.foreach(callback)
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
+
     @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_no_args(self):
         """ """

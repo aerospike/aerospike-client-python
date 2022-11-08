@@ -453,3 +453,16 @@ class TestBatchWrite(TestBaseClass):
 
         with pytest.raises(exp_res):
             self.as_connection.batch_write(batch_records, policy)
+
+    def test_batch_write_neg_connection(self):
+        """
+        Test batch_write negative with bad connection.
+        """
+
+        batch_records = []
+
+        exp_res = e.ClientError
+
+        with pytest.raises(exp_res):
+            bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
+            bad_client.batch_write(batch_records)

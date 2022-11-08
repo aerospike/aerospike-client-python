@@ -251,3 +251,17 @@ class TestBatchOperate(TestBaseClass):
 
         with pytest.raises(exp_res):
             self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+
+    def test_batch_operate_neg_connection(self):
+        """
+        Test batch_operate negative with bad connection.
+        """
+
+        keys = []
+        ops = ["doesn't_matter"]
+
+        exp_res = e.ClientError
+
+        with pytest.raises(exp_res):
+            bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
+            bad_client.batch_operate(keys, ops)

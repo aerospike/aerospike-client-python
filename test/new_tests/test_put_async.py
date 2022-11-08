@@ -11,6 +11,7 @@ from . import test_data
 
 # from collections import OrderedDict
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.awaitable import io
@@ -636,6 +637,27 @@ class TestPut:
         (key, meta, bins) = self.as_connection.get(key)
         assert {"name": "John"} == bins
         self.as_connection.remove(key)
+
+    @pytest.mark.asyncio
+    async def test_neg_put_with_string_record_without_connection(self):
+        """
+        Invoke put() for a record with string data without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        key = ("test", "demo", 1)
+
+        bins = {"name": "John"}
+
+        async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
+            try:
+                assert 0 == await io.put(client1, key, rec, meta, policy, serialize)
+            except e.ClusterError as exception:
+                assert exception.code == 11
+
+        await asyncio.gather(async_io(key, bins))
 
     @pytest.mark.parametrize(
         "key, record, meta, policy, ex_code, ex_msg",

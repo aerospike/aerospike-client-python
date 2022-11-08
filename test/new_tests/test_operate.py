@@ -525,6 +525,26 @@ class TestOperate(object):
 
         assert bins == {"my_age": 5, "age": 1, "name": "name1"}
 
+    def test_pos_operate_with_correct_paramters_without_connection(self):
+        """
+        Invoke operate() with correct parameters without connection
+        """
+        key = ("test", "demo", 1)
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+        llist = [
+            {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
+            {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
+            {"op": aerospike.OPERATOR_READ, "bin": "name"},
+        ]
+
+        try:
+            key, _, _ = client1.operate(key, llist)
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
+
     def test_pos_operate_write_set_to_aerospike_null(self):
         """
         Invoke operate() with write command with bin set to aerospike_null

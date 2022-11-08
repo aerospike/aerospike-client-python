@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
@@ -477,3 +478,18 @@ class TestPrepend:
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Cannot concatenate 'str' and 'non-str' objects"
+
+    def test_neg_prepend_with_correct_parameters_without_connection(self):
+        """
+        Invoke prepend() with correct parameters without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+        key = ("test", "demo", 1)
+
+        try:
+            client1.prepend(key, "name", "str")
+
+        except e.ClusterError as exception:
+            assert exception.code == 11

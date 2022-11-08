@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
 import pytest
+from .as_status_codes import AerospikeStatus
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
+
 import aerospike
 
 
@@ -117,6 +120,20 @@ class TestScanInfo(object):
                 "job_info() argument 1 must be an int" in str(typeError.value),
             ]
         )
+
+    def test_job_info_with_correct_parameters_without_connection(self):
+        """
+        Invoke job_info() with correct parameters without connection
+        """
+
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.job_info(self.job_id, aerospike.JOB_SCAN)
+
+        assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     def test_job_info_with_constant_out_of_valid_values(self):
         """

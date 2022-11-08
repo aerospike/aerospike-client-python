@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
@@ -245,6 +246,22 @@ class TestRemovebin(object):
         except e.ParamError as exception:
             assert exception.code == ex_code
             assert exception.msg == ex_msg
+
+    def test_neg_remove_bin_with_correct_parameters_without_connection(self):
+        """
+        Invoke remove_bin() with correct parameters without connection
+        """
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        key = ("test", "demo", 1)
+
+        try:
+            client1.remove_bin(key, ["age"])
+
+        except e.ClusterError as exception:
+            assert exception.code == 11
 
     def test_neg_remove_bin_with_incorrect_meta(self):
         """

@@ -27,7 +27,6 @@ class TestIsConnected(object):
     def test_is_connected_before_connect(self):
         """
         Client call itself establishes connection.
-        Connect/Close are deprecated and it is no-op to client
         """
         client = aerospike.client(self.config)
         assert client.is_connected() is True

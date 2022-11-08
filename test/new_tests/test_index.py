@@ -3,7 +3,10 @@
 import pytest
 from .as_status_codes import AerospikeStatus
 from .index_helpers import ensure_dropped_index
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
+
+import aerospike
 
 
 class TestIndex(object):
@@ -433,6 +436,19 @@ class TestIndex(object):
         assert retobj == AerospikeStatus.AEROSPIKE_OK
         self.as_connection.index_remove("test", "uni_age_index", policy)
         ensure_dropped_index(self.as_connection, "test", "uni_age_index")
+
+    def test_createindex_with_correct_parameters_without_connection(self):
+        # Invoke createindex() with correct arguments without connection
+        policy = {}
+        config = TestBaseClass.get_connection_config()
+        client1 = aerospike.client(config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError) as err_info:
+            client1.index_integer_create("test", "demo", "age", "age_index", policy)
+
+        err_code = err_info.value.code
+        assert err_code is AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
     def test_index_remove_no_args(self):
 

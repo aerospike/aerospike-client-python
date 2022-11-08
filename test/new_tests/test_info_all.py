@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+
 from aerospike import exception as e
+
+import aerospike
 
 
 @pytest.mark.usefixtures("as_connection", "connection_config")
@@ -80,6 +83,16 @@ class TestInfo(object):
 
         with pytest.raises(TypeError):
             self.as_connection.info_all()
+
+    def test_info_all_without_connection(self):
+        """
+        Test info positive for sets without connection
+        """
+        client1 = aerospike.client(self.connection_config)
+        client1.close()
+
+        with pytest.raises(e.ClusterError):
+            client1.info_all("sets")
 
     def test_info_all_with_invalid_policy_type(self):
         """
