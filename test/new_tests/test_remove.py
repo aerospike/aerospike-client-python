@@ -3,6 +3,7 @@
 import pytest
 from .test_data import key_neg
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
@@ -304,8 +305,9 @@ class TestRemove:
         """
         Invoke remove() with correct arguments without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
         key = ("test", "demo", 1)
 
         with pytest.raises(e.ClusterError) as exception:

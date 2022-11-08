@@ -211,8 +211,10 @@ class TestGetMany:
             key, _, _ = self.as_connection.get(key)
 
     def test_neg_get_many_with_proper_parameters_without_connection(self):
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
+
         with pytest.raises(e.ClusterError):
             client1.get_many(self.keys, {"total_timeout": 20})
 

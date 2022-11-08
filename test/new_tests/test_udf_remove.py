@@ -6,6 +6,7 @@ from distutils.version import LooseVersion
 import pytest
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
@@ -149,9 +150,10 @@ class TestIncorrectCallsToUDFRemove(object):
         Test to verify that attempting to remove a UDF before connection
         raises an error
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
 
         client1 = aerospike.client(config)
+        client1.close()
         policy = {"timeout": 100}
         module = "example.lua"
 

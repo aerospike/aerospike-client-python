@@ -702,8 +702,9 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke index_cdt_create() with correct arguments no connection
         """
         policy = {}
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         try:
             client1.index_cdt_create(

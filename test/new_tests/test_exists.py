@@ -4,6 +4,7 @@ import pytest
 import time
 from . import test_data
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
@@ -108,8 +109,9 @@ class TestExists:
         Invoke exists() with a key and not policy's dict and no connection
         """
         key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         try:
             key, _ = client1.exists(key)

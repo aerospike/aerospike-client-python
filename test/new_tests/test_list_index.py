@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 
@@ -347,8 +348,9 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         Invoke index_list_create() with correct arguments no connection
         """
         policy = {}
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         try:
             client1.index_list_create(

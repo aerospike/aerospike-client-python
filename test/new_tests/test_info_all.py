@@ -89,6 +89,7 @@ class TestInfo(object):
         Test info positive for sets without connection
         """
         client1 = aerospike.client(self.connection_config)
+        client1.close()
 
         with pytest.raises(e.ClusterError):
             client1.info_all("sets")

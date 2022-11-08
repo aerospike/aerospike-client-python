@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
@@ -34,8 +35,9 @@ class TestGetNodeNames(object):
         Test that an attempt to call get_node_names before a connection
         is established will raise the expected error
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         unconnected_client = aerospike.client(config)
+        unconnected_client.close()
 
         try:
             unconnected_client.get_node_names()

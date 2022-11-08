@@ -240,8 +240,9 @@ class TestGetPut:
         Invoke get() with a key and not policy's dict no connection
         """
         key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         with pytest.raises(e.ClusterError):
             key, _, _ = client1.get(key)
@@ -741,8 +742,9 @@ class TestGetPut:
         """
         Invoke put() for a record with string data without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         key = ("test", "demo", 1)
 

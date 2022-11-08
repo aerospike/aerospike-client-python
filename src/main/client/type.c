@@ -1399,7 +1399,20 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             PyObject_IsTrue(py_fail_if_not_connected);
     }
 
+    PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
+    PyObject *py_user_pwd = PyDict_GetItemString(py_config, "password");
+    if (py_user_name && PyString_Check(py_user_name) && py_user_pwd &&
+        PyString_Check(py_user_pwd)) {
+        char *username = PyString_AsString(py_user_name);
+        char *password = PyString_AsString(py_user_pwd);
+        as_config_set_user(&config, username, password);
+    }
+
     self->as = aerospike_new(&config);
+
+    if (AerospikeClientConnect(self) == NULL) {
+        return -1;
+    }
 
     return 0;
 
@@ -1660,8 +1673,6 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
     switch (return_code) {
     // 0 Is success
     case 0: {
-        // Initialize connection flag
-        self->is_conn_16 = false;
         return self;
     }
     case -1: {

@@ -69,6 +69,7 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
 
         r = (as_batch_read *)&results[i];
         py_key = PyList_GetItem(data->py_keys, i);
+        // key_to_pyobject(&err, &r->key, &py_key);
         rec = &r->record;
 
         as_error_init(&err);

@@ -962,8 +962,9 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with correct arguments without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         with pytest.raises(e.ClusterError) as err_info:
             query = client1.query("test", "demo")

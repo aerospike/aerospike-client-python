@@ -11,6 +11,7 @@ from . import test_data
 
 # from collections import OrderedDict
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.awaitable import io
@@ -246,8 +247,9 @@ class TestGet:
         Invoke get() with a key and not policy's dict no connection
         """
         key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         async def async_io(key_input=None, policy_input=None):
             with pytest.raises(e.ClusterError):

@@ -8,6 +8,7 @@ try:
 except ImportError:
     from counter26 import Counter
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
@@ -26,7 +27,7 @@ class TestExistsMany:
         assert isinstance(records, list)
         assert len(records) == rec_length
 
-    def test_pos_exists_many_with_proper_parameters_without_connection(self, put_data):
+    def test_pos_exists_many_with_proper_parameters(self, put_data):
         self.keys = []
         rec_length = 5
         for i in range(rec_length):
@@ -203,8 +204,9 @@ class TestExistsMany:
             put_data(self.as_connection, key, record)
             self.keys.append(key)
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         try:
             client1.exists_many(self.keys, {"total_timeout": 20})

@@ -139,7 +139,7 @@ class TestConnect(object):
 
     def test_connect_positive_reconnect(self):
         """
-        Connect/Close/Connect to client
+        Client call itself establishes connection.
         """
         config = self.connection_config.copy()
 
@@ -171,6 +171,7 @@ class TestConnect(object):
     def test_connect_with_extra_args(self):
         with pytest.raises(TypeError):
             client = aerospike.client(self.connection_config)
+            client.close()
             client.connect("username", "password", "extra arg")
 
     @pytest.mark.parametrize(
