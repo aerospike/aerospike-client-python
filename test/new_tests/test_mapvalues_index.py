@@ -2,7 +2,10 @@
 
 import pytest
 from .as_status_codes import AerospikeStatus
+from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
+
+import aerospike
 
 
 def add_maps_to_client(client):
@@ -177,7 +180,7 @@ class TestMapValuesIndex(object):
             try:
                 self.as_connection.index_remove("test", "test_string_map_index")
                 ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
-            except:
+            except Exception:
                 pass
 
         err_code = err_info.value.code

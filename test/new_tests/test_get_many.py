@@ -7,6 +7,8 @@ try:
     from collections import Counter
 except ImportError:
     from counter26 import Counter
+from aerospike import exception as e
+
 
 class TestGetMany:
     @pytest.fixture(autouse=True)

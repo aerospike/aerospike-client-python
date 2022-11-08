@@ -3,6 +3,7 @@ import pytest
 import time
 
 from .test_base_class import TestBaseClass
+from aerospike import exception as e
 
 
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
