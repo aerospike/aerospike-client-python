@@ -51,50 +51,51 @@ typedef struct {
 static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
                                   void *udata)
 {
-	// Extract callback user-data
-	LocalData *data = (LocalData *)udata;
-	as_batch_read *r = NULL;
+    // Extract callback user-data
+    LocalData *data = (LocalData *)udata;
+    as_batch_read *r = NULL;
 
-	// Lock Python State
-	PyGILState_STATE gstate;
-	gstate = PyGILState_Ensure();
+    // Lock Python State
+    PyGILState_STATE gstate;
+    gstate = PyGILState_Ensure();
 
-	for (uint32_t i = 0; i < n; i++) {
-		PyObject *py_key = NULL;
-		PyObject *py_rec = NULL;
-		PyObject *py_rec_meta = NULL;
-		PyObject *py_rec_bins = NULL;
-		as_record *rec = NULL;
-		as_error err;
+    for (uint32_t i = 0; i < n; i++) {
+        PyObject *py_key = NULL;
+        PyObject *py_rec = NULL;
+        PyObject *py_rec_meta = NULL;
+        PyObject *py_rec_bins = NULL;
+        as_record *rec = NULL;
+        as_error err;
 
-		r = (as_batch_read *)&results[i];
-		py_key = PyList_GetItem(data->py_keys, i);
-		// key_to_pyobject(&err, &r->key, &py_key);
-		rec = &r->record;
+        r = (as_batch_read *)&results[i];
+        py_key = PyList_GetItem(data->py_keys, i);
+        // key_to_pyobject(&err, &r->key, &py_key);
+        rec = &r->record;
 
-		as_error_init(&err);
-		err.code = r->result;
+        as_error_init(&err);
+        err.code = r->result;
 
-		if (err.code == AEROSPIKE_OK) {
-			metadata_to_pyobject(&err, rec, &py_rec_meta);
-			bins_to_pyobject(data->client, &err, rec, &py_rec_bins, false);
-		} else {
-			py_rec_meta = raise_exception(&err);
-			Py_INCREF(Py_None);
-			py_rec_bins = Py_None;
-		}
+        if (err.code == AEROSPIKE_OK) {
+            metadata_to_pyobject(&err, rec, &py_rec_meta);
+            bins_to_pyobject(data->client, &err, rec, &py_rec_bins, false);
+        }
+        else {
+            py_rec_meta = raise_exception(&err);
+            Py_INCREF(Py_None);
+            py_rec_bins = Py_None;
+        }
 
-		py_rec = PyTuple_New(3);
-		PyTuple_SetItem(py_rec, 0, py_key);
-		PyTuple_SetItem(py_rec, 1, py_rec_meta);
-		PyTuple_SetItem(py_rec, 2, py_rec_bins);
+        py_rec = PyTuple_New(3);
+        PyTuple_SetItem(py_rec, 0, py_key);
+        PyTuple_SetItem(py_rec, 1, py_rec_meta);
+        PyTuple_SetItem(py_rec, 2, py_rec_bins);
 
-		PyList_Append(data->py_results, py_rec);
-	}
+        PyList_Append(data->py_results, py_rec);
+    }
 
-	PyGILState_Release(gstate);
+    PyGILState_Release(gstate);
 
-	return true;
+    return true;
 }
 
 /**
