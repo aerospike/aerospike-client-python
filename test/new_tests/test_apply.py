@@ -4,9 +4,7 @@ import pytest
 
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
-import aerospike
 from aerospike_helpers import expressions as exp
-from aerospike import exception as e
 
 
 """

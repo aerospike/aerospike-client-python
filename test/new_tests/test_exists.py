@@ -4,9 +4,6 @@ import pytest
 import time
 from . import test_data
 
-import aerospike
-from aerospike import exception as e
-
 
 class SomeClass(object):
     pass

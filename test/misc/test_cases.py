@@ -1142,16 +1142,18 @@ def test_create_user(aeros, namespace, setname):
     policy = {"timeout": 1000}
     user = "generic_client"
     password = "generic_client"
-    # roles = ["data-admin", "user-admin", "sys-admin", "read-write", "read-write-udf", "quota-4k-2k-role", "sindex-admin", "truncate"]
+    # roles = ["data-admin", "user-admin", "sys-admin", 
+    # "read-write", "read-write-udf", "quota-4k-2k-role", 
+    # "sindex-admin", "truncate"]
     roles = ["data-admin", "user-admin", "sys-admin", "read-write", "read-write-udf", "sindex-admin", "truncate"]
 
-    client = aeros.connect("admin", "admin")
+    aeros.connect("admin", "admin")
 
-    usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
+    # usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
     try:
         aeros.admin_drop_role("quota-4k-2k-role")
         time.sleep(2)
-    except:
+    except Exception:
         pass
     # aeros.admin_create_role(
     #        "quota-4k-2k-role", usr_sys_admin_privs, read_quota=40000, write_quota=20000)
@@ -1160,32 +1162,32 @@ def test_create_user(aeros, namespace, setname):
     try:
         aeros.admin_drop_user(user, policy)
         time.sleep(2)
-    except:
+    except Exception:
         pass
 
-    status = aeros.admin_create_user(user, password, roles, policy)
+    aeros.admin_create_user(user, password, roles, policy)
 
 
-def test_large_put(aeros, namespace, setname):
+# def test_large_put(aeros, namespace, setname):
 
-    client = aeros.connect("generic_client", "generic_client")
+#     client = aeros.connect("generic_client", "generic_client")
 
-    # Records are addressable via a tuple of (namespace, set, primary key)
-    key = (namespace, setname, "send-key-test")
+#     # Records are addressable via a tuple of (namespace, set, primary key)
+#     key = (namespace, setname, "send-key-test")
 
-    f = open("/home/randersen/NYTZ131.json")
-    data = json.load(f)
-    f.close()
+#     f = open("/home/randersen/NYTZ131.json")
+#     data = json.load(f)
+#     f.close()
 
-    # Test to make sure the doc was properly loaded
-    print(data["TimeZoneName"])
+#     # Test to make sure the doc was properly loaded
+#     print(data["TimeZoneName"])
 
-    key = (namespace, setname, "America/New_York")
+#     key = (namespace, setname, "America/New_York")
 
-    try:
-        client.put(key, {"tzzone": data})
-    except Exception as e:
-        print(e)
+#     try:
+#         client.put(key, {"tzzone": data})
+#     except Exception as e:
+#         print(e)
 
 
 def get_aerospike():

@@ -2,10 +2,7 @@
 
 import pytest
 from .as_status_codes import AerospikeStatus
-from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
-
-import aerospike
 
 
 def add_maps_to_client(client):
