@@ -337,8 +337,7 @@ class TestIncrement(object):
 
         assert bins == {"age": 11, "name": "name1"}
 
-    @pytest.mark.skip(reason="This raises a system error." +
-                             " Something else should be raised")
+    @pytest.mark.skip(reason="This raises a system error." + " Something else should be raised")
     def test_increment_with_integer_greaterthan_maxsize(self):
         """
         Invoke increment() with integer greater then(2^63 - 1)

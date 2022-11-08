@@ -139,8 +139,7 @@ class TestConnect(object):
 
     def test_connect_positive_reconnect(self):
         """
-         Client call itself establishes connection.
-         Connect/Close are deprecated and it is no-op to client
+        Client call itself establishes connection.
         """
         config = self.connection_config.copy()
 

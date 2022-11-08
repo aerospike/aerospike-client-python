@@ -5,8 +5,7 @@ import aerospike
 from aerospike import exception as e
 
 
-class TestPrepend():
-
+class TestPrepend:
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
         """

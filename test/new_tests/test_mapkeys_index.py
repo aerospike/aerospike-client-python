@@ -325,5 +325,5 @@ class TestMapKeysIndex(object):
         )
 
         assert response_code == AerospikeStatus.AEROSPIKE_OK
-        self.as_connection.index_remove('test', u'uni_age_index', policy)
-        ensure_dropped_index(self.as_connection, 'test', u'uni_age_index')
+        self.as_connection.index_remove("test", "uni_age_index", policy)
+        ensure_dropped_index(self.as_connection, "test", "uni_age_index")

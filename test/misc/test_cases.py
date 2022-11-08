@@ -117,7 +117,7 @@ def gccallback(phase, info):
 
 
 def connect_to_cluster(aeros):
-    client = aeros.connect('admin', 'admin')
+    client = aeros.connect("admin", "admin")
     client.close()
     # gc.collect()
 
@@ -1137,18 +1137,17 @@ def test_send_key(aeros, namespace, setname):
 
     client.close()
 
+
 def test_create_user(aeros, namespace, setname):
     policy = {"timeout": 1000}
     user = "generic_client"
     password = "generic_client"
-    #roles = ["data-admin", "user-admin", "sys-admin", "read-write", "read-write-udf", "quota-4k-2k-role", "sindex-admin", "truncate"]
+    # roles = ["data-admin", "user-admin", "sys-admin", "read-write", "read-write-udf", "quota-4k-2k-role", "sindex-admin", "truncate"]
     roles = ["data-admin", "user-admin", "sys-admin", "read-write", "read-write-udf", "sindex-admin", "truncate"]
 
-    client = aeros.connect('admin', 'admin')
-    
-    usr_sys_admin_privs = [
-            {"code": aerospike.PRIV_USER_ADMIN},
-            {"code": aerospike.PRIV_SYS_ADMIN}]
+    client = aeros.connect("admin", "admin")
+
+    usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
     try:
         aeros.admin_drop_role("quota-4k-2k-role")
         time.sleep(2)
@@ -1159,40 +1158,41 @@ def test_create_user(aeros, namespace, setname):
     # time.sleep(1)
 
     try:
-       aeros.admin_drop_user(user, policy)
-       time.sleep(2)
+        aeros.admin_drop_user(user, policy)
+        time.sleep(2)
     except:
-       pass
+        pass
 
     status = aeros.admin_create_user(user, password, roles, policy)
 
+
 def test_large_put(aeros, namespace, setname):
 
-    client = aeros.connect('generic_client', 'generic_client')
+    client = aeros.connect("generic_client", "generic_client")
 
     # Records are addressable via a tuple of (namespace, set, primary key)
-    key = (namespace, setname, 'send-key-test')
+    key = (namespace, setname, "send-key-test")
 
-    f = open('/home/randersen/NYTZ131.json')
+    f = open("/home/randersen/NYTZ131.json")
     data = json.load(f)
     f.close()
-    
-    #Test to make sure the doc was properly loaded
+
+    # Test to make sure the doc was properly loaded
     print(data["TimeZoneName"])
-    
+
     key = (namespace, setname, "America/New_York")
-    
+
     try:
         client.put(key, {"tzzone": data})
     except Exception as e:
         print(e)
 
+
 def get_aerospike():
     # tls_name = 'bob-cluster-a'
-    tls_name = '172.31.1.163'
+    tls_name = "172.31.1.163"
 
-    endpoints = [
-        ('172.31.1.163', 3000)]
+    endpoints = [("172.31.1.163", 3000)]
 
     hosts = [(address[0], address[1], tls_name) for address in endpoints]
 
@@ -1208,8 +1208,8 @@ def get_aerospike():
         #     'keyfile': "/Users/ramarajpandian/code/src/aerospike/enterprise/as-dev-infra/certs/Client-Chainless/key.pem",  # noqa: E501
         #     'for_login_only': True,
         # }
-        'user':"admin",
-        'password':"admin"
+        "user": "admin",
+        "password": "admin",
     }
     # Optionally set policies for various method types
     write_policies = {"total_timeout": 2000, "max_retries": 0, "key": aerospike.POLICY_KEY_SEND}
