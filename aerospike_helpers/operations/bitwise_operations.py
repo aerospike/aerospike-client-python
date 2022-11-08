@@ -81,7 +81,7 @@ Example::
     from aerospike import exception as e
     from aerospike_helpers.operations import bitwise_operations
 
-    config = self.connection_config.copy()
+    config = {'hosts': [('127.0.0.1', 3000)]}
     client = aerospike.client(config).connect()
 
     key = ('test', 'demo', 'bit_example')
