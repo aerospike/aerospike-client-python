@@ -109,9 +109,10 @@ class TestUdfList(object):
         Test to verify error raised by trying to call udf_list without
         first calling connect
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
 
         client1 = aerospike.client(config)
+        client1.close()
 
         policy = {"timeout": 0}
 

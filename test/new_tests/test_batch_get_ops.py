@@ -137,10 +137,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
 
         ops = [mh.map_get_by_rank_range("scores", -3, 3, aerospike.MAP_RETURN_KEY_VALUE)]
         non_existent_key = ("test", "demo", "batch-ops-non_existent_key")
-        rec = self.as_connection.batch_get_ops([key1, key2, non_existent_key], ops, policy=policy)
-
-        self.as_connection.remove(key1)
-        self.as_connection.remove(key2)
+        rec = self.as_connection.batch_get_ops([key1, key2, non_existent_key], ops, policy)
 
         # print("\nThe record from batch_get_ops")
         # pp.pprint(rec)
@@ -150,10 +147,17 @@ class TestBatchExpressionsOperations(TestBaseClass):
         assert rec[2][-2] == e.RecordNotFound
         assert rec[2][-1] is None
 
-        # print("\nThe record coming from opreate")
-        # rec = self.as_connection.operate(key1, ops, policy=policy)
+        # rec = self.as_connection.select_many([non_existent_key], ['name'])
+        # print("\nFor comparison, here's batch-read (select_many) is an array of records")
         # pp.pprint(rec)
 
         # rec = self.as_connection.get_many([key1, key2, non_existent_key], policy)
         # print("\nFor comparison, here's batch-read (get_many) is an array of records")
         # pp.pprint(rec)
+
+        # print("\nThe record coming from opreate")
+        # rec = self.as_connection.operate(key1, ops, policy=policy)
+        # pp.pprint(rec)
+
+        self.as_connection.remove(key1)
+        self.as_connection.remove(key2)

@@ -56,7 +56,7 @@ Connection
 
     .. method:: connect([username, password])
 
-        Connect to the cluster. The optional *username* and *password* only
+        If there is currently no connection to the cluster, connect to it. The optional *username* and *password* only
         apply when connecting to the Enterprise Edition of Aerospike.
 
         :param str username: a defined user with roles in the cluster. See :meth:`admin_create_user`.
@@ -85,6 +85,8 @@ Connection
 
         Close all connections to the cluster. It is recommended to explicitly \
         call this method when the program is done communicating with the cluster.
+
+        You may call :meth:`~aerospike.Client.connect` again after closing the connection.
 
 Record Operations
 -----------------

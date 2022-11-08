@@ -26,8 +26,9 @@ class TestClose:
         """
         Invoke close() without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config)
+        self.client.close()
 
         try:
             self.closeobject = self.client.close()
@@ -48,6 +49,9 @@ class TestClose:
         assert "has no attribute" in str(attributeError.value)
 
     def test_close_twice_in_a_row(self):
+        """
+        Client call itself establishes connection.
+        """
         config = TestBaseClass.get_connection_config()
         if TestClose.user is None and TestClose.password is None:
             self.client = aerospike.client(config).connect()

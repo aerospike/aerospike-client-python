@@ -530,8 +530,9 @@ class TestOperate(object):
         Invoke operate() with correct parameters without connection
         """
         key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},

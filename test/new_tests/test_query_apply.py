@@ -300,8 +300,9 @@ class TestQueryApply(object):
         """
         Invoke query_apply() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         with pytest.raises(e.ClusterError) as err_info:
             client1.query_apply("test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2])

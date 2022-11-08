@@ -296,8 +296,9 @@ class TestApply(TestBaseClass):
         Invoke apply() with correct arguments without connection
         """
         key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         with pytest.raises(e.ClusterError) as err_info:
             client1.apply(key, "sample", "list_append", ["name", "car"])

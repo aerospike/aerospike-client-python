@@ -3,6 +3,7 @@ import pytest
 import sys
 
 from .as_status_codes import AerospikeStatus
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
@@ -342,8 +343,9 @@ class TestIncrement(object):
         Invoke increment() with correct parameters without connection
         """
         key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         with pytest.raises(e.ClusterError) as err_info:
             client1.increment(key, "age", 5)

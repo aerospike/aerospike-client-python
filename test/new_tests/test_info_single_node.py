@@ -140,6 +140,7 @@ class TestInfoSingleNodeIncorrectUsage(object):
         Test info with correct arguments without connection.
         """
         client1 = aerospike.client(self.connection_config)
+        client1.close()
         with pytest.raises(e.ClusterError) as err_info:
             client1.info_single_node("bins", self.connection_config["hosts"][0][:2])
 

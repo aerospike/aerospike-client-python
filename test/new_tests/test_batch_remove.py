@@ -194,9 +194,8 @@ class TestBatchRemove(TestBaseClass):
 
         keys = []
 
-        exp_res = e.ClusterError
-
-        bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
+        exp_res = e.ClientError
 
         with pytest.raises(exp_res):
+            bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
             bad_client.batch_remove(keys)

@@ -292,8 +292,9 @@ class TestSelectMany(object):
 
     def test_select_many_with_proper_parameters_without_connection(self):
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         filter_bins = ["title", "name"]
 

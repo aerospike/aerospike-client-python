@@ -2,6 +2,7 @@
 import pytest
 from aerospike import exception as e
 from aerospike import predicates as p
+from .test_base_class import TestBaseClass
 
 import aerospike
 
@@ -265,8 +266,9 @@ class TestAggregate(object):
         """
         Invoke aggregate() with correct arguments without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         try:
             query = client1.query("test", "demo")

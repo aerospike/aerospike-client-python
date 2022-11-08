@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from .as_status_codes import AerospikeStatus
 
@@ -260,8 +261,9 @@ class TestTouch(object):
         """
         Invoke touch() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
         key = ("test", "demo", 1)
 
         with pytest.raises(e.ClusterError) as err_info:

@@ -41,8 +41,9 @@ class TestGetNodes(object):
         Test that an attempt to call get_nodes before a connection
         is established will raise the expected error
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         unconnected_client = aerospike.client(config)
+        unconnected_client.close()
 
         try:
             unconnected_client.get_nodes()

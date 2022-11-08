@@ -3,6 +3,7 @@ import pytest
 import time
 from .as_status_codes import AerospikeStatus
 from aerospike_helpers import expressions as exp
+from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
@@ -341,8 +342,9 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
 
         with pytest.raises(e.ClusterError) as err_info:
             client1.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2])

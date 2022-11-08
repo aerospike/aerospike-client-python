@@ -129,9 +129,10 @@ class TestUdfPut(TestBaseClass):
         filename = self.udf_name
         udf_type = 0
 
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
 
         client1 = aerospike.client(config)
+        client1.close()
 
         with pytest.raises(e.ClusterError) as err_info:
             client1.udf_put(filename, udf_type, policy)

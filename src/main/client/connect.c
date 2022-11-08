@@ -30,36 +30,18 @@
  * Establishes a connection to the Aerospike DB instance.
  *
  * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
  *
  * Returns an instance of aerospike.Client, Which can be used later to do usual
  * database operations.
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
-                                  PyObject *kwds)
+PyObject *AerospikeClientConnect(AerospikeClient *self)
 {
     as_error err;
     as_error_init(&err);
     char *alias_to_search = NULL;
     bool free_alias_to_search = false;
-    PyObject *py_username = NULL;
-    PyObject *py_password = NULL;
-
-    if (PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) ==
-        false) {
-        return NULL;
-    }
-
-    if (py_username && PyString_Check(py_username) && py_password &&
-        PyString_Check(py_password)) {
-        char *username = PyString_AsString(py_username);
-        char *password = PyString_AsString(py_password);
-        as_config_set_user(&self->as->config, username, password);
-    }
 
     if (!self || !self->as || !self->as->config.hosts ||
         !self->as->config.hosts->size) {
@@ -166,6 +148,48 @@ CLEANUP:
     self->has_connected = true;
     Py_INCREF(self);
     return (PyObject *)self;
+}
+
+/**
+ *******************************************************************************************************
+ * Establishes a connection to the Aerospike DB instance.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an instance of aerospike.Client, Which can be used later to do usual
+ * database operations.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
+                                  PyObject *kwds)
+{
+    as_error err;
+    as_error_init(&err);
+    PyObject *py_username = NULL;
+    PyObject *py_password = NULL;
+
+    if (self->as && aerospike_cluster_is_connected(self->as)) {
+        Py_INCREF(self);
+        return (PyObject *)self;
+    }
+
+    if (PyArg_ParseTuple(args, "|OO:connect", &py_username, &py_password) ==
+        false) {
+        return NULL;
+    }
+
+    if (py_username && PyString_Check(py_username) && py_password &&
+        PyString_Check(py_password)) {
+        char *username = PyString_AsString(py_username);
+        char *password = PyString_AsString(py_password);
+        as_config_set_user(&self->as->config, username, password);
+    }
+
+    return AerospikeClientConnect(self);
 }
 
 /**

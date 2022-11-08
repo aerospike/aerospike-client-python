@@ -442,8 +442,9 @@ class TestOperate(object):
         Invoke operate() with correct parameters without connection
         """
         key = ("test", "demo", 1)
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
         llist = [operations.touch()]
 
         with pytest.raises(e.ClusterError):

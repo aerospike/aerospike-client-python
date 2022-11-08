@@ -181,6 +181,7 @@ class TestSelect(object):
         bins_to_select = ["a"]
         config = self.connection_config
         disconnected_client = aerospike.client(config)
+        disconnected_client.close()
 
         with pytest.raises(e.ClusterError) as err_info:
             disconnected_client.select(self.test_key, bins_to_select)

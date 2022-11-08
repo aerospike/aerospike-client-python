@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import pytest
 
+from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
@@ -482,8 +483,9 @@ class TestPrepend:
         """
         Invoke prepend() with correct parameters without connection
         """
-        config = {"hosts": [("127.0.0.1", 3000)]}
+        config = TestBaseClass.get_connection_config()
         client1 = aerospike.client(config)
+        client1.close()
         key = ("test", "demo", 1)
 
         try:
