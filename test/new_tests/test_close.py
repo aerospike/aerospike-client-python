@@ -15,8 +15,6 @@ except:
 
 
 class TestClose():
-
-class TestClose:
     def setup_class(cls):
         config = TestBaseClass.get_connection_config()
         TestClose.hostlist = config["hosts"]
