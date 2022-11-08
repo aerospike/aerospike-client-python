@@ -27,7 +27,7 @@ class TestExistsMany:
         assert isinstance(records, list)
         assert len(records) == rec_length
 
-    def test_pos_exists_many_with_proper_parameters_without_connection(self, put_data):
+    def test_pos_exists_many_with_proper_parameters(self, put_data):
         self.keys = []
         rec_length = 5
         for i in range(rec_length):
