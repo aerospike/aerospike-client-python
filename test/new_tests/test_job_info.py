@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 import pytest
 from aerospike import exception as e
-
 import aerospike
+
 
 class TestScanInfo(object):
 
