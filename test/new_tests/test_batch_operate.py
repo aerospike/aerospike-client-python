@@ -83,7 +83,6 @@ class TestBatchOperate(TestBaseClass):
                 [("test", "demo", 0)],
                 [op.write("count", 7), op.read("count")],
                 {
-                    "total_timeout": 2000,
                     "max_retries": 2,
                     "allow_inline_ssd": True,
                     "respond_all_keys": False,
@@ -119,7 +118,6 @@ class TestBatchOperate(TestBaseClass):
                 [("test", "demo", 0)],
                 [op.write("count", 7), op.read("count")],
                 {
-                    "total_timeout": 2000,
                     "max_retries": 2,
                     "allow_inline_ssd": True,
                     "respond_all_keys": False,

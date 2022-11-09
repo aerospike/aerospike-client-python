@@ -150,7 +150,6 @@ class TestBatchApply(TestBaseClass):
                 "bool_check",
                 [],
                 {
-                    "total_timeout": 2000,
                     "max_retries": 2,
                     "allow_inline_ssd": True,
                     "respond_all_keys": False,
