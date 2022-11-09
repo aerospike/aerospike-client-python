@@ -143,7 +143,7 @@ class TestGetPut:
         )
 
         config = self.connection_config.copy()
-        config["policies"] = {"read": {"total_timeout": 10000}, "key": aerospike.POLICY_KEY_SEND}
+        config["policies"] = {"key": aerospike.POLICY_KEY_SEND}
 
         with open_as_connection(config) as client:
             assert client is not None
@@ -258,10 +258,8 @@ class TestGetPut:
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -455,30 +453,28 @@ class TestGetPut:
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
-        "key, record, meta, policy",
+        "key, record, meta",
         [
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": 25000}, {"timeout": 1000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": 3, "ttl": True}, {"timeout": 1000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": True}, {"timeout": 1000}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": 25000}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": 3, "ttl": True}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": True}),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": True, "ttl": aerospike.TTL_NAMESPACE_DEFAULT},
-                {"timeout": 1000},
             ),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": True, "ttl": aerospike.TTL_NEVER_EXPIRE},
-                {"timeout": 1000},
             ),
         ],
     )
-    def test_pos_put_with_metadata_bool(self, key, record, meta, policy, put_data):
+    def test_pos_put_with_metadata_bool(self, key, record, meta, put_data):
         """
         Invoke put() for a record with generation as boolean.
         """
-        put_data(self.as_connection, key, record, meta, policy)
+        put_data(self.as_connection, key, record, meta)
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == record
@@ -606,14 +602,13 @@ class TestGetPut:
 
         rec = {"name": "John"}
         meta = {"gen": 10, "ttl": 25000}
-        policy = {"timeout": 1000}
-        assert 0 == self.as_connection.put(key, rec, meta, policy)
+        assert 0 == self.as_connection.put(key, rec, meta)
 
         (key, meta, bins) = self.as_connection.get(key)
 
         assert {"name": "John"} == bins
         rec = {"name": "Smith"}
-        policy = {"timeout": 1000, "gen": aerospike.POLICY_GEN_EQ}
+        policy = {"gen": aerospike.POLICY_GEN_EQ}
         meta = {"gen": 4}
 
         with pytest.raises(e.RecordGenerationError):
