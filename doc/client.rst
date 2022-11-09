@@ -320,7 +320,7 @@ Batch Operations
     In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
     and each batch record contains the result of that transaction.
 
-    .. method:: batch_write(batch_records: BatchRecords, [policy: dict]) -> BatchRecords
+    .. method:: batch_write(batch_records: BatchRecords, [policy_batch: dict]) -> BatchRecords
 
         Write/read multiple records for specified batch keys in one batch call.
 
@@ -328,7 +328,7 @@ Batch Operations
         The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
         :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
-        :param dict policy: aerospike batch policy :ref:`aerospike_batch_policies`.
+        :param dict policy_batch: aerospike batch policy :ref:`aerospike_batch_policies`.
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
