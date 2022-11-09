@@ -216,5 +216,16 @@ class TestBaseClass(object):
         config["policies"] = policies_conf
         config["user"] = TestBaseClass.user
         config["password"] = TestBaseClass.password
-        # print(config)
+
+        # Disable total_timeout
+        # Have to set for every operation policy since
+        # total_timeout at the root level is deprecated
+        policy_names = ("read", "write", "apply", "operate", "remove", "query", "scan", "batch")
+        for policy_name in policy_names:
+            config[policy_name] = {}
+            config[policy_name]["total_timeout"] = 0
+
+        # Must hear back from server after a certain number of seconds
+        config["max_socket_idle"] = 60
+
         return config
