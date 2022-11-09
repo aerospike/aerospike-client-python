@@ -151,7 +151,7 @@ class Read(BatchRecord):
                 op.read(bin_name)
             ]
 
-            meta={"read_mode_ap": aerospike.POLICY_READ_MODE_AP_ALL}
+            meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE}
             br = Read(key, ops, meta=meta)
         """
         super().__init__(key)
