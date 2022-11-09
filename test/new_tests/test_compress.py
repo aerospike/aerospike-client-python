@@ -80,9 +80,7 @@ class TestCompress:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
-            "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
             "compress": True,
         }
 

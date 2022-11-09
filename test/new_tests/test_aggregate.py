@@ -122,7 +122,7 @@ class TestAggregate(object):
         """
         Invoke aggregate() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"max_retries": 5}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.between("test_age", 1, 5))
