@@ -98,26 +98,21 @@ jobs:
         cd doc/
         sphinx-build -b spelling . spelling -W --keep-going
 
-  # tests:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-  #   - name: Set up Aerospike Database
-  #     uses: reugn/github-action-aerospike@dev
-  #     with:
-  #       port: 3000
-  #   - uses: actions/setup-python@v2
-  #     with:
-  #       python-version: '3.9'
-  #       architecture: 'x64'
-  #   - name: Build documentation
-  #     run: |
-  #       cd doc/
-  #       sphinx-build -b spelling . spelling -W --keep-going
-  #       sphinx-build -b html . htmldir -W
-  #   - name: Run tests
-  #     run: |
-  #       cd test
-  #       python -m pytest ./new_tests
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        architecture: 'x64'
+    - name: Run tests
+      run: |
+        cd test/
+        python -m pytest ./new_tests
