@@ -2282,8 +2282,7 @@ CLEANUP:
  * Returns: error code.
  *******************************************************************************************************
  */
-as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
-                             as_error *err)
+as_status check_for_meta(PyObject *py_meta, as_operations *ops, as_error *err)
 {
     as_error_reset(err);
     if (py_meta && PyDict_Check(py_meta)) {

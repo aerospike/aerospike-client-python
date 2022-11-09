@@ -38,7 +38,6 @@
 #define FIELD_NAME_BATCH_HASWRITE "_has_write"
 #define FIELD_NAME_BATCH_KEY "key"
 #define FIELD_NAME_BATCH_OPS "ops"
-#define FIELD_NAME_BATCH_META "meta"
 #define FIELD_NAME_BATCH_RESULT "result"
 #define FIELD_NAME_BATCH_RECORD "record"
 #define FIELD_NAME_BATCH_POLICY "policy"
@@ -183,8 +182,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
                                    PyObject *py_bin, char **bin);
 
-as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
-                             as_error *err);
+as_status check_for_meta(PyObject *py_meta, as_operations *ops, as_error *err);
 
 as_status as_batch_read_results_to_pyobject(as_error *err,
                                             AerospikeClient *client,
