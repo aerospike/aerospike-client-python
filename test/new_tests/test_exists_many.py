@@ -35,7 +35,7 @@ class TestExistsMany:
             record = {"name": "name%s" % (str(i)), "age": i}
             put_data(self.as_connection, key, record)
             self.keys.append(key)
-        records = self.as_connection.exists_many(self.keys, {"total_timeout": 1200})
+        records = self.as_connection.exists_many(self.keys, {"max_retries": 1})
 
         assert isinstance(records, list)
         assert len(records) == rec_length
@@ -143,8 +143,7 @@ class TestExistsMany:
         key = ("test", "demo", 20)
         rec = {"name": "John"}
         meta = {"gen": 3, "ttl": 1}
-        policy = {"total_timeout": 1000}
-        put_data(self.as_connection, key, rec, meta, policy)
+        put_data(self.as_connection, key, rec, meta)
         keys.append(key)
         time.sleep(2)
         records = self.as_connection.exists_many(keys)

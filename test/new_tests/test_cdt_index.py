@@ -439,7 +439,7 @@ class TestCDTIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 10000}
         retobj = self.as_connection.index_cdt_create(
             "test",
             "demo",
@@ -459,7 +459,7 @@ class TestCDTIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 10000}
         retobj = self.as_connection.index_cdt_create(
             "test",
             "demo",

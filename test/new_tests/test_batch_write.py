@@ -111,7 +111,7 @@ class TestBatchWrite(TestBaseClass):
                         )
                     ]
                 ),
-                {"total_timeout": 2000, "max_retries": 2, "allow_inline_ssd": True, "respond_all_keys": False},
+                {"max_retries": 2, "allow_inline_ssd": True, "respond_all_keys": False},
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"new": 10}],
             ),

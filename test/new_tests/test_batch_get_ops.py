@@ -86,9 +86,9 @@ class TestBatchExpressionsOperations(TestBaseClass):
         Test expression read operation with correct parameters.
         """
         ops = [expressions.expression_read(name, expr.compile(), flags)]
-        policy = {"timeout": 1001}
+        meta = {"gen": 1}
 
-        res = self.as_connection.batch_get_ops(self.keys, ops, policy)
+        res = self.as_connection.batch_get_ops(self.keys, ops, meta)
         """
         res are in the format of (status-tuple, ((meta-dict, result-dict), status-tuple, exception), ...)
         """
