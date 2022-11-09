@@ -68,6 +68,7 @@ class Write(BatchRecord):
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
                 on the record at key.
+            meta (dict): the metadata to set for the operations in this BatchRecord
             policy (:ref:`aerospike_batch_write_policies`, optional): An optional dictionary of batch write policy
                 flags.
     """
@@ -79,8 +80,9 @@ class Write(BatchRecord):
         Example::
 
             # Create a batch Write to increment bin "a" by 10 and read the result from the record.
+            import aerospike
             import aerospike_helpers.operations as op
-
+            from aerospike_helpers.batch.records import Write
 
             bin_name = "a"
 
@@ -94,7 +96,8 @@ class Write(BatchRecord):
                 op.read(bin_name)
             ]
 
-            bw = Write(key, ops)
+            meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE}
+            bw = Write(key, ops, meta=meta)
         """
         super().__init__(key)
         self.ops = ops
@@ -116,6 +119,7 @@ class Read(BatchRecord):
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
                 the record at key.
+            meta (dict): the metadata to set for the operations in this BatchRecord
             read_all_bins (bool, optional): An optional bool, if True, read all bins in the record.
             policy (:ref:`aerospike_batch_read_policies`, optional): An optional dictionary of batch read policy flags.
     """
@@ -132,8 +136,9 @@ class Read(BatchRecord):
         Example::
 
             # Create a batch Read to read bin "a" from the record.
+            import aerospike
             import aerospike_helpers.operations as op
-
+            from aerospike_helpers.batch.records import Read
 
             bin_name = "a"
 
@@ -146,7 +151,8 @@ class Read(BatchRecord):
                 op.read(bin_name)
             ]
 
-            br = Read(key, ops)
+            meta={"read_mode_ap": aerospike.POLICY_READ_MODE_AP_ALL}
+            br = Read(key, ops, meta=meta)
         """
         super().__init__(key)
         self.ops = ops
