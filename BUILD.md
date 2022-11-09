@@ -1,10 +1,5 @@
 # Manually Building the Python Client for Aerospike
 
-The Python client for Aerospike works with Python 3.6, 3.7, 3.8, 3.9 running on
-**64-bit** macOS 10.15+ and Linux.
-Python 3.6 hits [End of Life](https://endoflife.date/python) on December 23rd,
-2021, and is now deprecated.
-
 First clone this repository to get the necessary files.
 
 `git clone --recurse-submodules ...`
