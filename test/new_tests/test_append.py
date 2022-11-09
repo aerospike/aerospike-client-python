@@ -58,8 +58,6 @@ class TestAppend(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
         self.as_connection.append(key, "name", "str", {}, policy)
@@ -74,10 +72,7 @@ class TestAppend(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
-            "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
         }
         self.as_connection.append(key, "name", "str", {}, policy)
 
@@ -99,7 +94,7 @@ class TestAppend(object):
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"total_timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST}
         self.as_connection.append(key, "name", "str", {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -115,9 +110,6 @@ class TestAppend(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
-            "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
 
@@ -140,9 +132,6 @@ class TestAppend(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
-            "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -168,9 +157,6 @@ class TestAppend(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
-            "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -234,10 +220,7 @@ class TestAppend(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "gen": 5,
-            "total_timeout": 300,
-            "retry": aerospike.POLICY_RETRY_ONCE,
-            "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+            "total_timeout": 10000,
         }
         self.as_connection.append(key, "name", "str", {}, policy)
 
@@ -308,9 +291,6 @@ class TestAppend(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
-            "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -338,9 +318,6 @@ class TestAppend(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
-            "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -374,12 +351,7 @@ class TestAppend(object):
                 3,
                 "str",
                 {},
-                {
-                    "gen": 5,
-                    "total_timeout": 3000,
-                    "retry": aerospike.POLICY_RETRY_ONCE,
-                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
-                },
+                {},
                 -2,
                 "Bin name should be of type string",
             ),
@@ -460,9 +432,5 @@ class TestAppend(object):
         Invoke append() with non existent ns
         """
         key = ("test1", "demo", "name")
-        policy = {
-            "gen": 5,
-            "total_timeout": 300,
-        }
         with pytest.raises(e.ClientError):
-            self.as_connection.append(key, "name", "str", {}, policy)
+            self.as_connection.append(key, "name", "str", {})
