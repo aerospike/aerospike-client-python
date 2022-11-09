@@ -33,7 +33,7 @@ class TestExists:
         key = ("test", "demo", 1)
         record = {"Name": "Jeff"}
         policy = {
-            "timeout": 1000,
+            "max_retries": 1,
         }
 
         put_data(self.as_connection, key, record)
@@ -48,9 +48,9 @@ class TestExists:
         "key, record, policy",
         [
             (("test", "demo", "p_None"), {"name": "John"}, None),
-            (("test", "demo", "p_Replica"), {"name": "Michel"}, {"total_timeout": 1000}),
-            (("test", "demo", "p_consistency_level"), {"name": "Michel"}, {"total_timeout": 1000}),
-            (("test", "demo", "p_consistency_level"), {"name": "Michel"}, {"total_timeout": 1000}),
+            (("test", "demo", "p_Replica"), {"name": "Michel"}, {"max_retries": 1}),
+            (("test", "demo", "p_consistency_level"), {"name": "Michel"}, {"max_retries": 1}),
+            (("test", "demo", "p_consistency_level"), {"name": "Michel"}, {"max_retries": 1}),
         ],
     )
     def test_pos_exists_with_key_and_policy1(self, key, record, policy, put_data):
@@ -69,8 +69,7 @@ class TestExists:
         key = ("test", "demo", 30)
         rec = {"name": "John"}
         meta = {"gen": 3, "ttl": 1}
-        policy = {"total_timeout": 1000}
-        put_data(self.as_connection, key, rec, meta, policy)
+        put_data(self.as_connection, key, rec, meta)
         time.sleep(2)
 
         key, meta = self.as_connection.exists(key)

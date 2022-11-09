@@ -812,7 +812,7 @@ class TestGeospatial(object):
         except Exception:
             pass
 
-        status = self.as_connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index", {"timeout": 2000})
+        status = self.as_connection.index_geo2dsphere_create("test", "demo", "loc", "loc_index", {"timeout": 180000})
 
         assert status == 0
 

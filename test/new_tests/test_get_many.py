@@ -48,7 +48,7 @@ class TestGetMany:
         """
         Proper call to the method
         """
-        records = self.as_connection.get_many(self.keys, {"total_timeout": 30})
+        records = self.as_connection.get_many(self.keys, {"max_retries": 1})
 
         assert isinstance(records, list)
         assert len(records) == 6
@@ -216,7 +216,7 @@ class TestGetMany:
         client1.close()
 
         with pytest.raises(e.ClusterError):
-            client1.get_many(self.keys, {"total_timeout": 20})
+            client1.get_many(self.keys, {"max_retries": 20})
 
     def test_neg_prepend_Invalid_Key_without_set_name(self):
         """
