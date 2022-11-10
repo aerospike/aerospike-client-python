@@ -32,7 +32,7 @@ jobs:
         check-path: 'src'
         clang-format-version: 14
 
-  build-and-install:
+  build-install-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -53,14 +53,15 @@ jobs:
     - name: Build client
       run: python3 -m build
 
-    - name: Check installing the client
+    - name: Install client
       run: pip install .
 
-    - name: Cache build artifacts
-      uses: actions/cache@v3
-      with:
-        # Build distributions location
-        path: dist/
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
 
   build-docs:
     runs-on: ubuntu-latest
@@ -94,25 +95,5 @@ jobs:
       # TODO: find way to split up dependencies
       run: python -m pip install -r doc/requirements.txt
     - name: Check spelling
-      run: |
-        cd doc/
-        sphinx-build -b spelling . spelling -W --keep-going
-
-  tests:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-        architecture: 'x64'
-    - name: Run tests
-      run: |
-        cd test/
-        python -m pytest ./new_tests
+      run: sphinx-build -b spelling . spelling -W --keep-going
+      working-directory: doc
