@@ -1,4 +1,4 @@
-name: Pytest Tests
+name: PR pre-merge tests
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -9,48 +9,84 @@ on:
   pull_request:
     branches: ["stage"]
   workflow_dispatch:
+
 jobs:
-  tests:
+  lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
     - uses: actions/setup-python@v2
       with:
         python-version: '3.9'
         architecture: 'x64'
-    - name: Install development dependencies
-      run: |
-        sudo apt-get install libssl-dev
-        sudo apt-get install python3-dev
-        python -m pip install -r doc/requirements.txt -r test/requirements.txt flake8
+    - name: Install linting dependencies
+      run: python -m pip install flake8
     - name: Lint Python code
-      run: |
-        # Ignore E203 to be compatible with black
-        flake8 --max-line-length=120 --count --extend-ignore=E203 aerospike_helpers/ test/
-    - name: clang-format Check
+      run: python -m flake8
+    - name: Lint C wrapper code
       uses: jidicula/clang-format-action@v4.9.0
       with:
         check-path: 'src'
         clang-format-version: 14
-    - name: Build documentation
-      run: |
-        cd doc/
-        sphinx-build -b spelling . spelling -W --keep-going
-        sphinx-build -b html . htmldir -W
+
+  build-install-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py-version: [3.7, 3.8, 3.9]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.py-version }}
+        architecture: 'x64'
+
+    - run: sudo apt update
+    - name: Install build dependencies (apt packages)
+      run: sudo apt install python3-dev libssl-dev -y
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
+
     - name: Build client
-      run: |
-        python3 -m pip install build
-        python3 -m build
+      run: python3 -m build
+
     - name: Install client
-      run: |
-        pip install .
+      run: pip install .
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
     - name: Run tests
-      run: |
-        cd test
-        python -m pytest ./new_tests
+      run: python -m pytest ./new_tests
+      working-directory: test
+
+  spellcheck-docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        architecture: 'x64'
+    - name: Install dependencies for checking spelling in docs
+      # TODO: find way to split up dependencies
+      run: python -m pip install -r doc/requirements.txt
+    - name: Check spelling
+      run: sphinx-build -b spelling . spelling -W --keep-going
+      working-directory: doc

@@ -1,0 +1,7 @@
+[flake8]
+max-line-length = 120
+# For black compatibility:
+extend-ignore = E203
+filename =
+    ./aerospike_helpers/**/*.py,
+    ./test/**/*.py
