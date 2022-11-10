@@ -62,6 +62,15 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
     - name: Run tests
       run: python -m pytest ./new_tests
       working-directory: test
