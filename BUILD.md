@@ -143,7 +143,7 @@ pip install flake8
 
 The command is:
 ```
-flake8 --max-line-length=120 --extend-ignore=E203 aerospike_helpers/
+python3 -m flake8
 ```
 
 All C source code must be formatted with `clang-format`:
