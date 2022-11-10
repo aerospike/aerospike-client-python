@@ -77,7 +77,7 @@ jobs:
 
   build-and-preview-docs:
     permissions:
-      contents: write
+      pull-requests: write
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -94,10 +94,9 @@ jobs:
       run: python -m sphinx -b html . htmldir/
       working-directory: doc
     - name: Deploy preview of docs
-      uses: peaceiris/actions-gh-pages@v3
+      uses: readthedocs/actions/preview@v1
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./doc/htmldir
+        project-slug: "aerospike-python-client"
 
   spellcheck-docs:
     runs-on: ubuntu-latest
