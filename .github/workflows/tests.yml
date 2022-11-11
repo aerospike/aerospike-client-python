@@ -212,4 +212,4 @@ jobs:
         export STATIC_SSL=1
         python3 -m build
     - name: Install client
-        python3 -m pip install .
+      run: python3 -m pip install .
