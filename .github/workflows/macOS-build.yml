@@ -4,39 +4,30 @@ on:
   push:
     branches: [ "master", "stage" ]
   pull_request:
-    branches: [ "stage" ]
+    branches: [ "master", "stage" ]
 
 jobs:
   build:
-    runs-on: macos-12
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.6", "3.7", "3.8", "3.9"]
+        os: [macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
       with:
         submodules: recursive
-    - name: Set up Python 3
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
-        python-version: "3.9"
+        python-version: ${{ matrix.python-version }}
     - name: Build
       run: |
         export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
         export CPATH="/usr/local/opt/openssl@1.1/include/"
         export STATIC_SSL=1
+
         python3 setup.py build --force
         python3 setup.py install --force
-    - name: Cache Vagrant boxes
-      id: cache-vagrant-boxes
-      uses: actions/cache@v3
-      with:
-        path: ~/vagrant.d/boxes
-        key: vagrant-boxes
-    - name: Create VM using Vagrant box and run Aerospike server
-      run: |
-        vagrant up
-        # Wait for server to start
-        sleep 3
-    - name: Run tests
-      run: |
-        cd test/
-        python3 -m pip install -r requirements.txt
-        python3 -m pytest new_tests/
