@@ -12,6 +12,7 @@ on:
 
 jobs:
   lint:
+    name: Lint the C wrapper and Python code
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -31,7 +32,33 @@ jobs:
         check-path: 'src'
         clang-format-version: 14
 
-  build-install-test:
+  ubuntu-build-install-sdist:
+    name: Build and install sdist on Ubuntu
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+        architecture: 'x64'
+
+    - run: sudo apt update
+    - name: Install build dependencies (apt packages)
+      run: sudo apt install python3-dev libssl-dev -y
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
+
+    - name: Build source distribution
+      run: python3 -m build --sdist
+
+    - name: Install source distribution
+      run: python3 -m pip install dist/*
+
+  ubuntu-build-install-wheel:
+    name: Build, install, test wheel distribution on Ubuntu
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -52,10 +79,10 @@ jobs:
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install build
 
-    - name: Build client
+    - name: Build wheel distribution
       run: python3 -m build
 
-    - name: Install client
+    - name: Install wheel distribution
       run: pip install .
 
     - name: Install test dependencies
@@ -75,6 +102,7 @@ jobs:
       working-directory: test
 
   spellcheck-docs:
+    name: Spellcheck documentation
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
