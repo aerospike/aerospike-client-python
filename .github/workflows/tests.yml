@@ -57,6 +57,9 @@ jobs:
     - name: Install source distribution
       run: python3 -m pip install dist/*
 
+    - name: Test source distribution
+      run: python3 -c "import aerospike"
+
   ubuntu-build-install-wheel:
     name: Build, install, test wheel distribution on Ubuntu
     runs-on: ubuntu-latest
