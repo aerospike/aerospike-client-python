@@ -213,3 +213,8 @@ jobs:
         python3 -m build
     - name: Install client
       run: python3 -m pip install .
+    - name: Save macOS wheel
+      uses: actions/upload-artifact@v3
+      with:
+        name: macos-wheel
+        path: dist/*.whl
