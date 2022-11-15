@@ -227,8 +227,8 @@ jobs:
         os: [macos-11, macos-12]
         # Python versions to build wheels on
         python: [
-          "cp37"
-          "cp38"
+          "cp37",
+          "cp38",
           "cp39"
         ]
 
