@@ -246,7 +246,7 @@ jobs:
         CIBW_BEFORE_ALL_MACOS: >
           git clone https://github.com/jasonacox/Build-OpenSSL-cURL &&
           cd Build-OpenSSL-cURL/ &&
-          ./build.sh -o 1.1.1q -a 11.0.0
+          ./build.sh -o 1.1.1q -a 11.0.0 || cat /tmp/openssl*.log
           # openssl_install_path=$(brew --prefix openssl@1.1) &&
           # export SSL_LIB_PATH="${openssl_install_path}/lib/" &&
           # export CPATH="${openssl_install_path}/include/" &&
