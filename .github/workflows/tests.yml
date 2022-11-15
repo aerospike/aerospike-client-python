@@ -240,6 +240,13 @@ jobs:
       with:
         submodules: recursive
 
+    - run: |
+        brew install tree &&
+        git clone https://github.com/passepartoutvpn/openssl-apple &&
+        cd openssl-apple &&
+        ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" &&
+        tree
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
       env:
@@ -247,10 +254,10 @@ jobs:
         CIBW_BUILD_FRONTEND: build
         # Set env variables before building
         CIBW_BEFORE_ALL_MACOS: >
-          git clone https://github.com/passepartoutvpn/openssl-apple &&
-          cd openssl-apple &&
-          ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" &&
-          ls
+          # git clone https://github.com/passepartoutvpn/openssl-apple &&
+          # cd openssl-apple &&
+          # ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" &&
+          # ls
           # openssl_install_path=$(brew --prefix openssl@1.1) &&
           # export SSL_LIB_PATH="${openssl_install_path}/lib/" &&
           # export CPATH="${openssl_install_path}/include/" &&
