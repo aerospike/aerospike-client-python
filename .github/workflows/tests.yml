@@ -227,7 +227,6 @@ jobs:
         os: [macos-11, macos-12]
         # Python versions to build wheels on
         python: [
-          "cp37",
           "cp38",
           "cp39"
         ]
@@ -247,5 +246,5 @@ jobs:
           export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
           export CPATH="/usr/local/opt/openssl@1.1/include/"
           export STATIC_SSL=1
-        CIBW_ARCHS: "x86_64 arm64"
+        CIBW_ARCHS: "arm64"
         CIBW_TEST_COMMAND: python -c "import aerospike"
