@@ -245,6 +245,7 @@ jobs:
         # Set env variables before building
         CIBW_BEFORE_ALL_MACOS: >
           git clone https://github.com/passepartoutvpn/openssl-apple &&
+          cd openssl-apple &&
           ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64"
           # openssl_install_path=$(brew --prefix openssl@1.1) &&
           # export SSL_LIB_PATH="${openssl_install_path}/lib/" &&
