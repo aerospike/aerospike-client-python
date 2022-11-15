@@ -249,6 +249,7 @@ jobs:
         CIBW_BEFORE_ALL_MACOS: >
           git clone https://github.com/passepartoutvpn/openssl-apple &&
           cd openssl-apple &&
+          ./create-openssl-framework.sh static
           ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=12.3 &&
           openssl_built_path="$(pwd)/bin/MacOSX12.0-arm64.sdk" &&
           export SSL_LIB_PATH="${openssl_built_path}/lib/" &&
