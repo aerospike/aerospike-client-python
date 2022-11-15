@@ -207,8 +207,9 @@ jobs:
     - name: Build client
       # TODO: use brew command to get path instead
       run: |
-        export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
-        export CPATH="/usr/local/opt/openssl@1.1/include/"
+        openssl_install_path=$(brew --prefix openssl@1.1)
+        export SSL_LIB_PATH="${openssl_install_path}/lib/"
+        export CPATH="${openssl_install_path}/include/"
         export STATIC_SSL=1
         python3 -m build
     - name: Install client
@@ -243,8 +244,9 @@ jobs:
         CIBW_BUILD_FRONTEND: build
         # Set env variables before building
         CIBW_BEFORE_ALL_MACOS: >
-          export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
-          export CPATH="/usr/local/opt/openssl@1.1/include/"
+          openssl_install_path=$(brew --prefix openssl@1.1) &&
+          export SSL_LIB_PATH="${openssl_install_path}/lib/" &&
+          export CPATH="${openssl_install_path}/include/" &&
           export STATIC_SSL=1
         CIBW_ARCHS: "arm64"
         CIBW_TEST_COMMAND: python -c "import aerospike"
