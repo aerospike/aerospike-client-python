@@ -187,7 +187,7 @@ jobs:
       run: sphinx-build -b spelling . spelling -W --keep-going
       working-directory: doc
 
-  macOS-build:
+  macOS-x86:
     strategy:
       fail-fast: false
       matrix:
@@ -218,3 +218,34 @@ jobs:
       with:
         name: macos-wheel
         path: dist/*.whl
+
+  macOS-m1:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-11, macos-12]
+        # Python versions to build wheels on
+        python: [
+          "cp37"
+          "cp38"
+          "cp39"
+        ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python }}-macosx_arm64
+        CIBW_BUILD_FRONTEND: build
+        # Set env variables before building
+        CIBW_BEFORE_ALL_MACOS: >
+          export SSL_LIB_PATH="/usr/local/opt/openssl@1.1/lib/"
+          export CPATH="/usr/local/opt/openssl@1.1/include/"
+          export STATIC_SSL=1
+        CIBW_ARCHS: "x86_64 arm64"
+        CIBW_TEST_COMMAND: python -c "import aerospike"
