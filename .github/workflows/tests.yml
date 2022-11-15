@@ -244,9 +244,12 @@ jobs:
         CIBW_BUILD_FRONTEND: build
         # Set env variables before building
         CIBW_BEFORE_ALL_MACOS: >
-          openssl_install_path=$(brew --prefix openssl@1.1) &&
-          export SSL_LIB_PATH="${openssl_install_path}/lib/" &&
-          export CPATH="${openssl_install_path}/include/" &&
-          export STATIC_SSL=1
+          git clone https://github.com/jasonacox/Build-OpenSSL-cURL &&
+          cd Build-OpenSSL-cURL/ &&
+          ./build.sh -o 1.1.1q -a 11.0.0
+          # openssl_install_path=$(brew --prefix openssl@1.1) &&
+          # export SSL_LIB_PATH="${openssl_install_path}/lib/" &&
+          # export CPATH="${openssl_install_path}/include/" &&
+          # export STATIC_SSL=1
         CIBW_ARCHS: "arm64"
         CIBW_TEST_COMMAND: python -c "import aerospike"
