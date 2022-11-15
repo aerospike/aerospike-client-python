@@ -250,7 +250,7 @@ jobs:
           git clone https://github.com/passepartoutvpn/openssl-apple &&
           cd openssl-apple &&
           ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=12.0 &&
-          openssl_built_path="$(pwd)/bin/MacOSX12.0-arm64.sdk"
+          openssl_built_path="$(pwd)/bin/MacOSX12.0-arm64.sdk" || cat ./bin/MacOSX12.0-arm64.sdk/build-openssl-1.1.1q.log &&
           export SSL_LIB_PATH="${openssl_built_path}/lib/" &&
           export CPATH="${openssl_built_path}/include/" &&
           export STATIC_SSL=1
