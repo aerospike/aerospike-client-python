@@ -187,73 +187,73 @@ jobs:
   #     run: sphinx-build -b spelling . spelling -W --keep-going
   #     working-directory: doc
 
-  # macOS-x86:
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       python-version: ["3.7", "3.8", "3.9"]
-  #       os: [macos-11, macos-12]
-  #   runs-on: ${{ matrix.os }}
-  #   steps:
-  #   - uses: actions/checkout@v3
-  #     with:
-  #       submodules: recursive
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v3
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-  #   - name: Install build dependencies
-  #     run: python3 -m pip install build
-  #   - name: Build client
-  #     # TODO: use brew command to get path instead
-  #     run: |
-  #       openssl_install_path=$(brew --prefix openssl@1.1)
-  #       export SSL_LIB_PATH="${openssl_install_path}/lib/"
-  #       export CPATH="${openssl_install_path}/include/"
-  #       export STATIC_SSL=1
-  #       python3 -m build
-  #   - name: Install client
-  #     run: python3 -m pip install .
-  #   - name: Save macOS wheel
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: macos-wheel
-  #       path: dist/*.whl
-
-  macOS-m1:
-    runs-on: ${{ matrix.os }}
+  macOS-x86:
     strategy:
       fail-fast: false
       matrix:
-        os: [
-          # macos-11,
-          macos-12
-        ]
-        # Python versions to build wheels on
-        python: [
-          # "cp38",
-          "cp39"
-        ]
-
+        python-version: ["3.7", "3.8", "3.9"]
+        os: [macos-10.15, macos-11, macos-12]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install build dependencies
+      run: python3 -m pip install build
+    - name: Build client
+      # TODO: use brew command to get path instead
+      run: |
+        openssl_install_path=$(brew --prefix openssl@1.1)
+        export SSL_LIB_PATH="${openssl_install_path}/lib/"
+        export CPATH="${openssl_install_path}/include/"
+        export STATIC_SSL=1
+        python3 -m build
+    - name: Install client
+      run: python3 -m pip install .
+    - name: Save macOS wheel
+      uses: actions/upload-artifact@v3
+      with:
+        name: macos-wheel
+        path: dist/*.whl
 
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
-      env:
-        CIBW_BUILD: ${{ matrix.python }}-macosx_arm64
-        CIBW_BUILD_FRONTEND: build
-        # Set env variables before building
-        CIBW_BEFORE_ALL_MACOS: >
-          git clone https://github.com/passepartoutvpn/openssl-apple &&
-          cd openssl-apple &&
-          export CONFIG_OPTIONS="no-shared" &&
-          ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=12.3 &&
-          openssl_built_path="$(pwd)/bin/MacOSX12.0-arm64.sdk" &&
-          export SSL_LIB_PATH="${openssl_built_path}/lib/" &&
-          export CPATH="${openssl_built_path}/include/" &&
-          export STATIC_SSL=1
-        CIBW_ARCHS: "arm64"
-        CIBW_TEST_COMMAND: python -c "import aerospike"
+  # macOS-m1:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       os: [
+  #         # macos-11,
+  #         macos-12
+  #       ]
+  #       # Python versions to build wheels on
+  #       python: [
+  #         # "cp38",
+  #         "cp39"
+  #       ]
+
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       submodules: recursive
+
+  #   - name: Build wheel
+  #     uses: pypa/cibuildwheel@v2.11.2
+  #     env:
+  #       CIBW_BUILD: ${{ matrix.python }}-macosx_arm64
+  #       CIBW_BUILD_FRONTEND: build
+  #       # Set env variables before building
+  #       CIBW_BEFORE_ALL_MACOS: >
+  #         git clone https://github.com/passepartoutvpn/openssl-apple &&
+  #         cd openssl-apple &&
+  #         export CONFIG_OPTIONS="no-shared" &&
+  #         ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=12.3 &&
+  #         openssl_built_path="$(pwd)/bin/MacOSX12.0-arm64.sdk" &&
+  #         export SSL_LIB_PATH="${openssl_built_path}/lib/" &&
+  #         export CPATH="${openssl_built_path}/include/" &&
+  #         export STATIC_SSL=1
+  #       CIBW_ARCHS: "arm64"
+  #       CIBW_TEST_COMMAND: python -c "import aerospike"
