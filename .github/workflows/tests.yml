@@ -233,6 +233,7 @@ jobs:
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
+      if: ${{ always() }}
       with:
         name: ${{ matrix.os }}-${{ matrix.python-version[0] }}-wheel
         path: wheelhouse/*.whl
