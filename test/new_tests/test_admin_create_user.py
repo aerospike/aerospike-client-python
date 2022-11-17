@@ -323,7 +323,10 @@ class TestCreateUser(object):
         non_admin_client = None
 
         try:
-            non_admin_client = aerospike.client(config).connect("non_admin_test", "non_admin_test")
+            # Close and reconnect with non_admin_test user
+            non_admin_client = aerospike.client(config)
+            non_admin_client.close()
+            non_admin_client.connect("non_admin_test", "non_admin_test")
             status = non_admin_client.admin_create_user("user78", password, roles, policy)
 
             if non_admin_client:
