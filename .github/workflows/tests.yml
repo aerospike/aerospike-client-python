@@ -220,5 +220,5 @@ jobs:
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
-        name: macos-wheel
+        name: ${{ matrix.os }}-${{ matrix.python-version[0] }}-wheel
         path: wheelhouse/*.whl
