@@ -260,7 +260,7 @@ class TestBatchOperate(TestBaseClass):
         keys = []
         ops = ["doesn't_matter"]
 
-        exp_res = e.ClientError
+        exp_res = e.TimeoutError
 
         with pytest.raises(exp_res):
             bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
