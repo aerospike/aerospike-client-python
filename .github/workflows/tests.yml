@@ -223,6 +223,9 @@ jobs:
     - name: Wait for Aerospike server to start
       run: sleep 3
 
+    - name: Install aerospike outside venv for testing
+      run: python3 -m pip install wheelhouse/*.whl
+
     - name: Install test dependencies
       run: python3 -m pip install -r requirements.txt
       working-directory: test
