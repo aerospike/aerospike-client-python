@@ -221,4 +221,4 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         name: macos-wheel
-        path: dist/*.whl
+        path: wheelhouse/*.whl
