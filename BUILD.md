@@ -76,6 +76,11 @@ Install `clang-format` for formatting the C source code:
 sudo apt install clang-format
 ```
 
+Then install the pip packages for development:
+```
+pip install -r requirements.txt
+```
+
 ## Build
 
     export STATIC_SSL=1
@@ -83,7 +88,6 @@ sudo apt install clang-format
     export SSL_LIB_PATH=/usr/local/Cellar/openssl@1.1/1.1.1l/lib/
     export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
 
-    pip install build
     python3 -m build
 
 ### Troubleshooting macOS
@@ -136,12 +140,7 @@ Simply call `python` with the path to the example
 
 ### Codestyle
 
-All code in `aerospike_helpers` must pass a lint test using `flake8`:
-```
-pip install flake8
-```
-
-The command is:
+All Python code must pass a lint test using `flake8`:
 ```
 python3 -m flake8
 ```
