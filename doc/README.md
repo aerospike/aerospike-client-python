@@ -13,7 +13,7 @@ documentation from the _rst_ pages in this directory.
 ## Install Sphinx
 
 ```bash
-pip install Sphinx
+pip install -r requirements.txt
 ```
 
 ## Building the Documentation
@@ -29,3 +29,9 @@ Then open the index.html page in a browser:
 ```
 cd htmldir && open index.html
 ```
+
+Spelling check:
+```bash
+sphinx-build -b spelling . spelling
+```
+

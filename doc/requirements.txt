@@ -1,2 +1,4 @@
 # sphinx version requirement for readthedocs.
 sphinx>=3.2.1
+sphinx-rtd-theme==1.0.0
+sphinxcontrib-spelling==7.6.0

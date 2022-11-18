@@ -19,52 +19,52 @@
 #include <aerospike/as_info.h>
 
 as_status send_info_to_tls_host(aerospike *as, as_error *err,
-								const as_policy_info *info_policy,
-								const char *hostname, uint16_t port,
-								const char *tls_name, const char *request,
-								char **response)
+                                const as_policy_info *info_policy,
+                                const char *hostname, uint16_t port,
+                                const char *tls_name, const char *request,
+                                char **response)
 {
 
-	as_status status = AEROSPIKE_OK;
-	as_cluster *cluster = as->cluster;
-	as_address_iterator iter;
+    as_status status = AEROSPIKE_OK;
+    as_cluster *cluster = as->cluster;
+    as_address_iterator iter;
 
-	if (!cluster) {
-		return as_error_update(err, AEROSPIKE_ERR_CLUSTER, "Invalid cluster");
-	}
+    if (!cluster) {
+        return as_error_update(err, AEROSPIKE_ERR_CLUSTER, "Invalid cluster");
+    }
 
-	as_lookup_host(&iter, err, hostname, port);
+    as_lookup_host(&iter, err, hostname, port);
 
-	if (err->code != AEROSPIKE_OK) {
-		return err->code;
-	}
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
+    }
 
-	struct sockaddr *addr;
-	status = AEROSPIKE_ERR_CLUSTER;
-	bool loop = true;
+    struct sockaddr *addr;
+    status = AEROSPIKE_ERR_CLUSTER;
+    bool loop = true;
 
-	if (!info_policy) {
-		info_policy = &as->config.policies.info;
-	}
-	uint64_t deadline = as_socket_deadline(info_policy->timeout);
+    if (!info_policy) {
+        info_policy = &as->config.policies.info;
+    }
+    uint64_t deadline = as_socket_deadline(info_policy->timeout);
 
-	while (loop && as_lookup_next(&iter, &addr)) {
-		status = as_info_command_host(cluster, err, addr, (char *)request,
-									  info_policy->send_as_is, deadline,
-									  response, tls_name);
+    while (loop && as_lookup_next(&iter, &addr)) {
+        status = as_info_command_host(cluster, err, addr, (char *)request,
+                                      info_policy->send_as_is, deadline,
+                                      response, tls_name);
 
-		switch (status) {
-		case AEROSPIKE_OK:
-		case AEROSPIKE_ERR_TIMEOUT:
-		case AEROSPIKE_ERR_INDEX_FOUND:
-		case AEROSPIKE_ERR_INDEX_NOT_FOUND:
-			loop = false;
-			break;
+        switch (status) {
+        case AEROSPIKE_OK:
+        case AEROSPIKE_ERR_TIMEOUT:
+        case AEROSPIKE_ERR_INDEX_FOUND:
+        case AEROSPIKE_ERR_INDEX_NOT_FOUND:
+            loop = false;
+            break;
 
-		default:
-			break;
-		}
-	}
-	as_lookup_end(&iter);
-	return status;
+        default:
+            break;
+        }
+    }
+    as_lookup_end(&iter);
+    return status;
 }

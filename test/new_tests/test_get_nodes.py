@@ -1,15 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
-import sys
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
+
 
 @pytest.mark.xfail(TestBaseClass.tls_in_use(), reason="get_nodes may fail when using TLS")
 @pytest.mark.usefixtures("as_connection")
@@ -46,12 +41,13 @@ class TestGetNodes(object):
         Test that an attempt to call get_nodes before a connection
         is established will raise the expected error
         """
-        config = {'hosts': [('127.0.0.1', 3000)]}
+        config = TestBaseClass.get_connection_config()
         unconnected_client = aerospike.client(config)
+        unconnected_client.close()
 
         try:
             unconnected_client.get_nodes()
 
         except e.ClusterError as exception:
             assert exception.code == 11
-            assert exception.msg == 'No connection to aerospike cluster'
+            assert exception.msg == "No connection to aerospike cluster"

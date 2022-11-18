@@ -17,7 +17,7 @@
 
 #include <aerospike/aerospike.h>
 as_status send_info_to_tls_host(aerospike *as, as_error *err,
-								const as_policy_info *info_policy,
-								const char *hostname, uint16_t port,
-								const char *tls_name, const char *request,
-								char **response);
+                                const as_policy_info *info_policy,
+                                const char *hostname, uint16_t port,
+                                const char *tls_name, const char *request,
+                                char **response);

@@ -68,7 +68,7 @@ Client Errors
 
 .. py:exception:: ClientError
 
-    Exception class for client-side errors, often due to mis-configuration or misuse of the API methods.
+    Exception class for client-side errors, often due to misconfiguration or misuse of the API methods.
     
 .. py:exception:: InvalidHostError
 

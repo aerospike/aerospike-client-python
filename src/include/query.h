@@ -31,7 +31,7 @@
 PyTypeObject *AerospikeQuery_Ready(void);
 
 AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 /*******************************************************************************
  * OPERATIONS
@@ -50,14 +50,14 @@ AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
  *
  */
 AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
-									  PyObject *kwds);
+                                      PyObject *kwds);
 
 /**
  * Add a list of write operations to the query.
  *
  */
 AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
-									   PyObject *kwds);
+                                       PyObject *kwds);
 
 /**
  * Add a where predicate to the query.
@@ -80,7 +80,7 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args);
  *
  */
 AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /**
  * Execute the query and call the callback for each result returned.
@@ -92,7 +92,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
  *
  */
 PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 
 /**
  * Execute the query and return a generator.
@@ -102,14 +102,14 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
  *
  */
 PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 
 /**
  * Execute a UDF in the background. Returns the query id to allow status of the query to be monitored.
  * */
 
 PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
-										   PyObject *kwds);
+                                           PyObject *kwds);
 
 /**
  * Set pagination filter to receive records in bunch (max_records or page_size).

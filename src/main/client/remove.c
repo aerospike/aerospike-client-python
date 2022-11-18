@@ -41,116 +41,116 @@
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
-										PyObject *py_meta, PyObject *py_policy)
+                                        PyObject *py_meta, PyObject *py_policy)
 {
 
-	// Aerospike Client Arguments
-	as_error err;
-	as_policy_remove remove_policy;
-	as_policy_remove *remove_policy_p = NULL;
-	as_key key;
+    // Aerospike Client Arguments
+    as_error err;
+    as_policy_remove remove_policy;
+    as_policy_remove *remove_policy_p = NULL;
+    as_key key;
 
-	// For converting expressions.
-	as_exp exp_list;
-	as_exp *exp_list_p = NULL;
+    // For converting expressions.
+    as_exp exp_list;
+    as_exp *exp_list_p = NULL;
 
-	// Initialisation flags
-	bool key_initialised = false;
+    // Initialisation flags
+    bool key_initialised = false;
 
-	// Initialize error
-	as_error_init(&err);
+    // Initialize error
+    as_error_init(&err);
 
-	if (!self || !self->as) {
-		as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-		goto CLEANUP;
-	}
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
 
-	if (!self->is_conn_16) {
-		as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-						"No connection to aerospike cluster");
-		goto CLEANUP;
-	}
+    if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
 
-	// Convert python key object to as_key
-	pyobject_to_key(&err, py_key, &key);
-	if (err.code != AEROSPIKE_OK) {
-		goto CLEANUP;
-	}
-	// Key is initialised successfully
-	key_initialised = true;
+    // Convert python key object to as_key
+    pyobject_to_key(&err, py_key, &key);
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+    // Key is initialised successfully
+    key_initialised = true;
 
-	// Convert python policy object to as_policy_exists
-	if (py_policy) {
-		pyobject_to_policy_remove(
-			self, &err, py_policy, &remove_policy, &remove_policy_p,
-			&self->as->config.policies.remove, &exp_list, &exp_list_p);
-		if (err.code != AEROSPIKE_OK) {
-			goto CLEANUP;
-		}
-		else {
-			if (py_meta && PyDict_Check(py_meta)) {
-				PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
+    // Convert python policy object to as_policy_exists
+    if (py_policy) {
+        pyobject_to_policy_remove(
+            self, &err, py_policy, &remove_policy, &remove_policy_p,
+            &self->as->config.policies.remove, &exp_list, &exp_list_p);
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+        else {
+            if (py_meta && PyDict_Check(py_meta)) {
+                PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
 
-				if (py_gen) {
-					if (PyInt_Check(py_gen)) {
-						remove_policy_p->generation =
-							(uint16_t)PyInt_AsLong(py_gen);
-					}
-					else if (PyLong_Check(py_gen)) {
-						remove_policy_p->generation =
-							(uint16_t)PyLong_AsLongLong(py_gen);
-						if ((uint16_t)-1 == remove_policy_p->generation &&
-							PyErr_Occurred()) {
-							as_error_update(
-								&err, AEROSPIKE_ERR_PARAM,
-								"integer value for gen exceeds sys.maxsize");
-							goto CLEANUP;
-						}
-					}
-					else {
-						as_error_update(&err, AEROSPIKE_ERR_PARAM,
-										"Generation should be an int or long");
-					}
-				}
-			}
-		}
-	}
+                if (py_gen) {
+                    if (PyInt_Check(py_gen)) {
+                        remove_policy_p->generation =
+                            (uint16_t)PyInt_AsLong(py_gen);
+                    }
+                    else if (PyLong_Check(py_gen)) {
+                        remove_policy_p->generation =
+                            (uint16_t)PyLong_AsLongLong(py_gen);
+                        if ((uint16_t)-1 == remove_policy_p->generation &&
+                            PyErr_Occurred()) {
+                            as_error_update(
+                                &err, AEROSPIKE_ERR_PARAM,
+                                "integer value for gen exceeds sys.maxsize");
+                            goto CLEANUP;
+                        }
+                    }
+                    else {
+                        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                                        "Generation should be an int or long");
+                    }
+                }
+            }
+        }
+    }
 
-	// Invoke operation
-	Py_BEGIN_ALLOW_THREADS
-	aerospike_key_remove(self->as, &err, remove_policy_p, &key);
-	Py_END_ALLOW_THREADS
-	if (err.code != AEROSPIKE_OK) {
-		as_error_update(&err, err.code, NULL);
-	}
+    // Invoke operation
+    Py_BEGIN_ALLOW_THREADS
+    aerospike_key_remove(self->as, &err, remove_policy_p, &key);
+    Py_END_ALLOW_THREADS
+    if (err.code != AEROSPIKE_OK) {
+        as_error_update(&err, err.code, NULL);
+    }
 
 CLEANUP:
 
-	if (exp_list_p) {
-		as_exp_destroy(exp_list_p);
-	}
+    if (exp_list_p) {
+        as_exp_destroy(exp_list_p);
+    }
 
-	if (key_initialised == true) {
-		// Destroy the key if it is initialised successfully.
-		as_key_destroy(&key);
-	}
+    if (key_initialised == true) {
+        // Destroy the key if it is initialised successfully.
+        as_key_destroy(&key);
+    }
 
-	if (err.code != AEROSPIKE_OK) {
-		PyObject *py_err = NULL;
-		error_to_pyobject(&err, &py_err);
-		PyObject *exception_type = raise_exception(&err);
-		if (PyObject_HasAttrString(exception_type, "key")) {
-			PyObject_SetAttrString(exception_type, "key", py_key);
-		}
-		if (PyObject_HasAttrString(exception_type, "bin")) {
-			PyObject_SetAttrString(exception_type, "bin", Py_None);
-		}
-		PyErr_SetObject(exception_type, py_err);
-		Py_DECREF(py_err);
-		return NULL;
-	}
+    if (err.code != AEROSPIKE_OK) {
+        PyObject *py_err = NULL;
+        error_to_pyobject(&err, &py_err);
+        PyObject *exception_type = raise_exception(&err);
+        if (PyObject_HasAttrString(exception_type, "key")) {
+            PyObject_SetAttrString(exception_type, "key", py_key);
+        }
+        if (PyObject_HasAttrString(exception_type, "bin")) {
+            PyObject_SetAttrString(exception_type, "bin", Py_None);
+        }
+        PyErr_SetObject(exception_type, py_err);
+        Py_DECREF(py_err);
+        return NULL;
+    }
 
-	return PyLong_FromLong(0);
+    return PyLong_FromLong(0);
 }
 
 /**
@@ -167,22 +167,22 @@ CLEANUP:
  *******************************************************************************************************
  */
 PyObject *AerospikeClient_Remove(AerospikeClient *self, PyObject *args,
-								 PyObject *kwds)
+                                 PyObject *kwds)
 {
-	// Python Function Arguments
-	PyObject *py_key = NULL;
-	PyObject *py_policy = NULL;
-	PyObject *py_meta = NULL;
+    // Python Function Arguments
+    PyObject *py_key = NULL;
+    PyObject *py_policy = NULL;
+    PyObject *py_meta = NULL;
 
-	// Python Function Keyword Arguments
-	static char *kwlist[] = {"key", "meta", "policy", NULL};
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"key", "meta", "policy", NULL};
 
-	// Python Function Argument Parsing
-	if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist, &py_key,
-									&py_meta, &py_policy) == false) {
-		return NULL;
-	}
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:remove", kwlist, &py_key,
+                                    &py_meta, &py_policy) == false) {
+        return NULL;
+    }
 
-	// Invoke Operation
-	return AerospikeClient_Remove_Invoke(self, py_key, py_meta, py_policy);
+    // Invoke Operation
+    return AerospikeClient_Remove_Invoke(self, py_key, py_meta, py_policy);
 }

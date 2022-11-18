@@ -31,7 +31,7 @@
 PyTypeObject *AerospikeScan_Ready(void);
 
 AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 
 /*******************************************************************************
  * OPERATIONS
@@ -50,7 +50,7 @@ AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
  *
  */
 AerospikeScan *AerospikeScan_Select(AerospikeScan *self, PyObject *args,
-									PyObject *kwds);
+                                    PyObject *kwds);
 
 /**
  * Apply the specified udf on the records scanned.
@@ -70,7 +70,7 @@ AerospikeScan *AerospikeScan_Select(AerospikeScan *self, PyObject *args,
  *
  */
 PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
-								PyObject *kwds);
+                                PyObject *kwds);
 
 /**
  * Execute the scan and return a generator.
@@ -80,7 +80,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
  *
  */
 PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
-								PyObject *kwds);
+                                PyObject *kwds);
 
 /**
  * Execute the scan in the background.
@@ -89,7 +89,7 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
  *
  */
 PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
-										  PyObject *kwds);
+                                          PyObject *kwds);
 
 /**
  * Apply the specified udf on the results of the scan.
@@ -98,14 +98,14 @@ PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
  *
  */
 AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
-								   PyObject *kwds);
+                                   PyObject *kwds);
 
 /**
  * Add an ops list to the scan.
  *
  */
 AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
-									 PyObject *kwds);
+                                     PyObject *kwds);
 
 /**
  * Set pagination filter to receive records in bunch (max_records or page_size).
@@ -114,7 +114,7 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
  *
  */
 PyObject *AerospikeScan_Paginate(AerospikeScan *self, PyObject *args,
-								 PyObject *kwds);
+                                 PyObject *kwds);
 
 /**
  * Gets the status of scan.
@@ -123,7 +123,7 @@ PyObject *AerospikeScan_Paginate(AerospikeScan *self, PyObject *args,
  *
  */
 PyObject *AerospikeScan_Is_Done(AerospikeScan *self, PyObject *args,
-								PyObject *kwds);
+                                PyObject *kwds);
 
 /**
  * Gets the complete partition status of the scan.

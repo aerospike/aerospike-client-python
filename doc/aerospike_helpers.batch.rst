@@ -3,8 +3,8 @@
 aerospike\_helpers\.batch package
 =================================
 
-aerospike\_helpers\.batch\.records\ module
-------------------------------------------
+aerospike\_helpers\.batch\.records module
+-----------------------------------------
 
 Classes for the use with client batch APIs :meth:`~Client.batch_write`, :meth:`~Client.batch_operate`, :meth:`~Client.batch_apply`, :meth:`~Client.batch_remove`.
 

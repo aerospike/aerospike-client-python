@@ -1,20 +1,11 @@
 # -*- coding: utf-8 -*-
 
-import pytest
-import sys
 from .test_base_class import TestBaseClass
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-    from aerospike import exception as e
-except:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
 
 
 class TestIsConnected(object):
-
     def setup_class(cls):
         """
         Setup the config which is used in the tests
@@ -35,10 +26,10 @@ class TestIsConnected(object):
 
     def test_is_connected_before_connect(self):
         """
-        Test that is_connected returns false before a connection is established
+        Client call itself establishes connection.
         """
         client = aerospike.client(self.config)
-        assert client.is_connected() is False
+        assert client.is_connected() is True
 
     def test_pos_is_connected(self):
         """
@@ -60,8 +51,8 @@ class TestIsConnected(object):
 
     def test_is_connected_after_close(self):
         """
-        Test that is_connected returns False after a successful calls to
-        connect() and close()
+        Client call itself establishes connection.
+        Connect/Close are deprecated and it is no-op to client
         """
         self._connect()
         assert self.client.is_connected() is True

@@ -1,23 +1,17 @@
 # -*- coding: utf-8 -*-
 import pytest
-import sys
 
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
-aerospike = pytest.importorskip("aerospike")
-try:
-    import aerospike
-except:
-    print("Please install aerospike python client.")
-    sys.exit(1)
+import aerospike
+
 
 class TestLog(object):
-
     def teardown_class(cls):
-        '''
+        """
         Set the class level logger to a no-op to ensure no problems later
-        '''
+        """
         aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
         aerospike.set_log_handler(None)
 
@@ -44,8 +38,7 @@ class TestLog(object):
         assert response == 0
         client.close()
 
-    @pytest.mark.parametrize("level",
-                             [None, [], {}, 1.5, 'serious'])
+    @pytest.mark.parametrize("level", [None, [], {}, 1.5, "serious"])
     def test_set_log_level_with_invalid_type(self, level):
         """
         Test set_log_level with non int subtypes

@@ -1,61 +1,92 @@
-name: Pytest Tests
+name: PR pre-merge tests
+
+# Trigger test workflow whenever:
+# 1. A pull request is updated (e.g with new commits)
+# 2. Commits are pushed directly to the stage or master branch
 on:
   push:
+    branches: ["stage", "master"]
+  pull_request:
+    branches: ["stage"]
+  workflow_dispatch:
+
 jobs:
-  tests:
+  lint:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
-        # config-file: 'test/test-instance-data/aerospike.conf'
-        # feature-key-file: 'test/test-instance-data/features.conf'
     - uses: actions/setup-python@v2
       with:
         python-version: '3.9'
         architecture: 'x64'
-    - name: Print Python debug info
-      run: python --version
-    - name: Setup test config file
-      run: |
-        sudo apt-get install jq
-        cd test
-        CID=$(docker ps -a | grep 'aerospike-server' | awk 'NF>1{print $NF}')
-        echo $CID
-        CIP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $CID)
-        echo $CIP
-        python - <<EOF
-        import configparser
-        config = configparser.ConfigParser(delimiters=(":"))
-        config["enterprise-edition"] = {"hosts": "", "user": "", "password": ""}
-        config["community-edition"] = {"hosts": "$CIP" + ":3000"}
-        with open("config.conf", "w") as conf:
-            config.write(conf)
-        EOF
-        cat ./config.conf
-        cd ..
-    - name: Print Docker debug info
-      run: |
-        docker inspect gha_aerospike
-        docker ps
-        docker ps -a
-        docker logs --tail all gha_aerospike
-    - name: Install dependencies
-      run: |
-        sudo apt-get install libssl-dev
-        sudo apt-get install python3-dev
-        python -m pip install pytest
+    - name: Install linting dependencies
+      run: python -m pip install flake8
+    - name: Lint Python code
+      run: python -m flake8
+    - name: Lint C wrapper code
+      uses: jidicula/clang-format-action@v4.9.0
+      with:
+        check-path: 'src'
+        clang-format-version: 14
+
+  build-install-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py-version: [3.7, 3.8, 3.9]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.py-version }}
+        architecture: 'x64'
+
+    - run: sudo apt update
+    - name: Install build dependencies (apt packages)
+      run: sudo apt install python3-dev libssl-dev -y
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
+
     - name: Build client
-      run: |
-        python setup.py build --force
+      run: python3 -m build
+
     - name: Install client
-      run: |
-        python setup.py install --force
-    - name: Run tests 
-      run: |
-        cd test
-        python -m pytest ./new_tests
+      run: pip install .
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
+
+  spellcheck-docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        architecture: 'x64'
+    - name: Install dependencies for checking spelling in docs
+      # TODO: find way to split up dependencies
+      run: python -m pip install -r doc/requirements.txt
+    - name: Check spelling
+      run: sphinx-build -b spelling . spelling -W --keep-going
+      working-directory: doc

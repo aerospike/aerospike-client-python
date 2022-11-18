@@ -1,9 +1,9 @@
 # Error Codes and messages for various exceptions
 
-'''
+"""
 Creates Classes so that we can access them like: cls.err_type.err_code
 Roughly maps to: exception_types.h
-'''
+"""
 
 
 class AerospikeStatus(object):

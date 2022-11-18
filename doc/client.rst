@@ -56,7 +56,7 @@ Connection
 
     .. method:: connect([username, password])
 
-        Connect to the cluster. The optional *username* and *password* only
+        If there is currently no connection to the cluster, connect to it. The optional *username* and *password* only
         apply when connecting to the Enterprise Edition of Aerospike.
 
         :param str username: a defined user with roles in the cluster. See :meth:`admin_create_user`.
@@ -85,6 +85,8 @@ Connection
 
         Close all connections to the cluster. It is recommended to explicitly \
         call this method when the program is done communicating with the cluster.
+
+        You may call :meth:`~aerospike.Client.connect` again after closing the connection.
 
 Record Operations
 -----------------
@@ -318,7 +320,7 @@ Batch Operations
     In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
     and each batch record contains the result of that transaction.
 
-    .. method:: batch_write(batch_records: BatchRecords, [policy: dict]) -> BatchRecords
+    .. method:: batch_write(batch_records: BatchRecords, [policy_batch: dict]) -> BatchRecords
 
         Write/read multiple records for specified batch keys in one batch call.
 
@@ -326,7 +328,7 @@ Batch Operations
         The resulting status and operated bins are set in ``batch_records.results`` and ``batch_records.record``.
 
         :param BatchRecords batch_records: A :class:`BatchRecords` object used to specify the operations to carry out.
-        :param dict policy: aerospike batch policy :ref:`aerospike_batch_policies`.
+        :param dict policy_batch: aerospike batch policy :ref:`aerospike_batch_policies`.
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
@@ -701,6 +703,7 @@ User Defined Functions
 
         :param int job_id: the job ID returned by :meth:`scan_apply` or :meth:`query_apply`.
         :param module: one of :ref:`aerospike_job_constants`.
+        :param policy: optional :ref:`aerospike_info_policies`.
         :returns: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -2454,7 +2457,7 @@ Partition Objects
         * ``"digest"``: :class:`bytearray` represents the digest of the record being queried.
         
             Should be 20 characters long.
-        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record recieved by a partition query.
+        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
 
     Default: ``{}`` (All partitions will be queried).
 
