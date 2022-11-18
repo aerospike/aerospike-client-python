@@ -272,7 +272,7 @@ jobs:
           git clone https://github.com/passepartoutvpn/openssl-apple &&
           cd openssl-apple &&
           export CONFIG_OPTIONS="no-shared" &&
-          ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=12.3 &&
+          ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=12.3
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(pwd)/bin/MacOSX12.0-arm64.sdk/lib/" CPATH="$(pwd)/bin/MacOSX12.0-arm64.sdk/include/" STATIC_SSL=1
         CIBW_ARCHS: "arm64"
         CIBW_TEST_COMMAND: python -c "import aerospike"
