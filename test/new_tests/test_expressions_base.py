@@ -223,6 +223,7 @@ class TestExpressions(TestBaseClass):
             ("ilist_bin", aerospike.AS_BYTES_LIST),
             ("age", aerospike.AS_BYTES_INTEGER),
             ("imap_bin", aerospike.AS_BYTES_MAP),
+            ("t", aerospike.AS_BYTES_BOOL)
         ],
     )
     def test_bin_type_pos(self, bin, expected_bin_type):
