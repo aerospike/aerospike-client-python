@@ -19,7 +19,7 @@ batchRecords = br.BatchRecords(
         br.Remove(
             key = keyTuples[0],
         ),
-        # Modify Daniel's ID and balance 
+        # Modify Daniel's ID and balance
         br.Write(
             key = keyTuples[1],
             ops = [

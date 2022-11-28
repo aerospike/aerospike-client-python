@@ -407,7 +407,7 @@ Methods
             A scan instance must have had .paginate() called on it in order retrieve its
             partition status. If .paginate() was not called, the scan instance will not save partition status.
 
-        :return: a :class:`tuple` of form (id: :class:`int`, init: class`bool`, done: class`bool`, digest: :class:`bytearray`).
+        :return: a :class:`tuple` of form (id: :class:`int`, init: :class:`bool`, done: :class:`bool`, digest: :class:`bytearray`).
             See :ref:`aerospike_partition_objects` for more information.
 
         .. code-block:: python
@@ -488,7 +488,7 @@ Policies
                if the client timed out previous transaction attempts. It's important to use a distinct write policy for non-idempotent writes which sets max_retries = `0`;
 
         * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
             |
             | Default: ``0``
         * **socket_timeout** :class:`int`
@@ -573,8 +573,8 @@ Options
         * **priority**
             | Deprecated in 6.0.0. Scan priority will be removed in a coming release.
             | Scan priority has been replaced by the records_per_second policy see :ref:`aerospike_scan_policies`.
-        * **nobins** :class:`bool` 
-            | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. 
+        * **nobins** :class:`bool`
+            | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`.
             |
             | Default ``False``.
         * **concurrent** :class:`bool`

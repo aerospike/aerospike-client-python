@@ -1300,15 +1300,15 @@ Flags used by :class:`~aerospike_helpers.operations.expression_operations.expres
 
 .. data:: EXP_WRITE_UPDATE_ONLY
 
-	If bin exists, the bin will be overwritten.
-	If bin does not exist, the operation will be denied.
-	If bin does not exist, fail with BinNotFound
-	when EXP_WRITE_POLICY_NO_FAIL is not set.
+    If bin exists, the bin will be overwritten.
+    If bin does not exist, the operation will be denied.
+    If bin does not exist, fail with BinNotFound
+    when EXP_WRITE_POLICY_NO_FAIL is not set.
 
 .. data:: EXP_WRITE_ALLOW_DELETE
 
-	If expression results in nil value, then delete the bin. Otherwise, return
-	OpNotApplicable when EXP_WRITE_POLICY_NO_FAIL is not set.
+    If expression results in nil value, then delete the bin. Otherwise, return
+    OpNotApplicable when EXP_WRITE_POLICY_NO_FAIL is not set.
 
 .. data:: EXP_WRITE_POLICY_NO_FAIL
 

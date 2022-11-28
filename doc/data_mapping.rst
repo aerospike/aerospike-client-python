@@ -33,7 +33,7 @@ Python specific bytes may not be readable by Aerospike Clients for other languag
     It configures how the client writes Python booleans and allows for opting into using the new boolean type.
     It is important to consider how other clients connected to the Aerospike database write booleans in order to maintain cross client compatibility.
     For example, if there is a client that reads and writes booleans as integers, then another Python client working with the same data should do the same thing.
-    
+
     ``send_bool_as`` can be set so the client writes Python booleans as ``AS_BYTES_PYTHON``, integers, or the new server boolean type.
 
     All versions before ``6.x`` wrote Python booleans as ``AS_BYTES_PYTHON``.
