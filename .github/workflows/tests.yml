@@ -56,7 +56,7 @@ jobs:
       run: python3 -m build
 
     - name: Install client
-      run: pip install .
+      run: pip install dist/*.whl
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt

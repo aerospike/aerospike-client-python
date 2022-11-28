@@ -85,7 +85,6 @@ python3 setup.py clean
 Sometimes the C client will not rebuild if you switch branches and update the C client submodule, and you will end up
 using the wrong version of the C client. This can causes strange issues when building or testing the Python client.
 
-### macOS
 For macOS, you must set these environment variables to statically link openssl when building the wheel:
 ```
 export STATIC_SSL=1
@@ -115,9 +114,9 @@ error similar to: `error: could not create '/usr/local/aerospike/lua': Permissio
 
 ## Install
 
-Once the client is built:
+Once the client is built, install the wheel:
 
-    pip install .
+    pip install wheel/<wheel-filename>
 
 ### Troubleshooting macOS
 
