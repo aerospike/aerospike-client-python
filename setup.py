@@ -160,15 +160,16 @@ if EVENT_LIB is not None:
 class CClientBuild(build):
 
     def run(self):
-        # run original c-extension clean task
-        # clean.run(self)
-        cmd = [
-            'make',
-            'clean'
-        ]
-        def clean():
-            call(cmd, cwd=CCLIENT_PATH)
-        self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
+        if self.force == 1:
+            # run original c-extension clean task
+            # clean.run(self)
+            cmd = [
+                'make',
+                'clean'
+            ]
+            def clean():
+                call(cmd, cwd=CCLIENT_PATH)
+            self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
         os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
         os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
