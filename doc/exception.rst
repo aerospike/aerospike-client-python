@@ -61,7 +61,7 @@ Base Class
     ``i`` is the index of the attribute in the order they appear above. \
     For example, run ``exc.args[4]`` to get the ``in_doubt`` flag.
 
-    Inherits from :py:exc:`exceptions.Exception`. 
+    Inherits from :py:exc:`exceptions.Exception`.
 
 Client Errors
 -------------
@@ -69,7 +69,7 @@ Client Errors
 .. py:exception:: ClientError
 
     Exception class for client-side errors, often due to misconfiguration or misuse of the API methods.
-    
+
 .. py:exception:: InvalidHostError
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
@@ -90,7 +90,7 @@ Server Errors
 .. py:exception:: InvalidRequest
 
     Protocol-level error.
-    
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: OpNotApplicable
@@ -115,13 +115,13 @@ Server Errors
 .. py:exception:: AlwaysForbidden
 
     Operation not allowed in current configuration.
-    
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: UnsupportedFeature
 
     Encountered an unimplemented server feature.
-    
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: DeviceOverload
@@ -133,13 +133,13 @@ Server Errors
 .. py:exception:: NamespaceNotFound
 
     Namespace in request not found on server.
-    
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: ForbiddenError
 
     Operation not allowed at this time.
-    
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: ElementExistsError
@@ -160,7 +160,7 @@ Record Errors
 .. py:exception:: RecordError
 
     The parent class for record and bin exceptions exceptions associated with read and write operations.
-    
+
     .. py:attribute:: key
 
         The key identifying the record.
@@ -181,7 +181,7 @@ Record Errors
 
     Record does not exist in database. May be returned by either a read or a \
     write with the policy :py:data:`aerospike.POLICY_EXISTS_UPDATE`.
-    
+
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: RecordGenerationError
@@ -193,7 +193,7 @@ Record Errors
 .. py:exception:: RecordExistsError
 
     Record already exists. May be returned by a write with policy :py:data:`aerospike.POLICY_EXISTS_CREATE`.
-    
+
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: RecordBusy
@@ -268,7 +268,7 @@ Query Errors
 .. py:exception:: QueryError
 
     Exception class for query errors.
-    
+
     Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
 
 .. py:exception:: QueryQueueFull
