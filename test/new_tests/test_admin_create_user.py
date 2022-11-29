@@ -12,7 +12,7 @@ import aerospike
 class TestCreateUser(object):
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
+        not TestBaseClass.using_auth, reason="No user specified, may be not secured cluster."
     )
 
     def setup_method(self, method):
