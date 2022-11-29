@@ -159,16 +159,13 @@ class TestBaseClass(object):
         Merge the add_config dict with that in the default configuration
         and return a newly connected client
         """
-        add_config = add_config if add_config else {}
+        if add_config is None:
+            add_config = {}
+
         config = TestBaseClass.get_connection_config()
-        for key in add_config:
-            config[key] = add_config[key]
+        config.update(add_config)
 
         client = aerospike.client(config)
-        if config["user"] is None and config["password"] is None:
-            client.connect()
-        else:
-            client.connect(config["user"], config["password"])
 
         if client is not None:
             build_info = client.info_all("build")
