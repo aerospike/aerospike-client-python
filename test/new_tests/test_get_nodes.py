@@ -6,7 +6,7 @@ from aerospike import exception as e
 import aerospike
 
 
-@pytest.mark.xfail(TestBaseClass.tls_in_use(), reason="get_nodes may fail when using TLS")
+@pytest.mark.xfail(TestBaseClass.using_tls, reason="get_nodes may fail when using TLS")
 @pytest.mark.usefixtures("as_connection")
 class TestGetNodes(object):
     """

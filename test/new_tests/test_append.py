@@ -11,37 +11,40 @@ import aerospike
 class TestAppend(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
-        """
-        Setup Method
-        """
-        for i in range(5):
-            key = ("test", "demo", i)
+        # Inserts records each with a name and age
+        RECORD_COUNT = 5
+        NAMESPACE = "test"
+        SET = "demo"
+        PRIMARY_KEY_BYTES = "bytes_key"
+        PRIMARY_KEY_BYTEARRAY = "bytearray_key"
+
+        # Keep track of keys to remove records when tearing down the test
+        # Example: {name: name1, age: 1}
+        inserted_record_keys = []
+        for i in range(RECORD_COUNT):
+            key = (NAMESPACE, SET, i)
             rec = {"name": "name%s" % (str(i)), "age": i}
             as_connection.put(key, rec)
 
-        key = ("test", "demo", "bytearray_key")
-        as_connection.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")})
+            inserted_record_keys.append(key)
 
-        key = ("test", "demo", "bytes_key")
+        # Insert a bytearray and bytes records
+        key = (NAMESPACE, SET, PRIMARY_KEY_BYTEARRAY)
+        as_connection.put(key, {"bytearray_bin": bytearray("asd;as[d'as;d", "utf-8")})
+        inserted_record_keys.append(key)
+
+        key = (NAMESPACE, SET, PRIMARY_KEY_BYTES)
         as_connection.put(key, {"bytes_bin": b""})
+        inserted_record_keys.append(key)
 
         def teardown():
-            """
-            Teardown Method
-            """
-            for i in range(5):
-                key = ("test", "demo", i)
+            # Remove all inserted records
+            for key in inserted_record_keys:
                 as_connection.remove(key)
-
-            key = ("test", "demo", "bytearray_key")
-            as_connection.remove(key)
-
-            key = ("test", "demo", "bytes_key")
-            as_connection.remove(key)
 
         request.addfinalizer(teardown)
 
-    def test_pos_append_with_correct_paramters(self):
+    def test_append_with_correct_parameters(self):
         """
         Invoke append() with correct parameters
         """
@@ -50,9 +53,10 @@ class TestAppend(object):
 
         (key, _, bins) = self.as_connection.get(key)
 
+        # name1 + str
         assert bins == {"age": 1, "name": "name1str"}
 
-    def test_pos_append_with_correct_policies(self):
+    def test_append_with_correct_policies(self):
         """
         Invoke append() with correct policies
         """
@@ -68,7 +72,7 @@ class TestAppend(object):
 
         assert bins == {"age": 1, "name": "name1str"}
 
-    def test_pos_append_with_policy_key_send(self):
+    def test_append_with_policy_key_send(self):
         """
         Invoke append() with policy key send
         """
@@ -91,7 +95,7 @@ class TestAppend(object):
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 
-    def test_pos_append_with_policy_key_digest(self):
+    def test_append_with_policy_key_digest(self):
         """
         Invoke append() with policy key digest
         """
@@ -109,7 +113,7 @@ class TestAppend(object):
 
         self.as_connection.remove(key)
 
-    def test_pos_append_with_policy_key_gen_EQ_ignore(self):
+    def test_append_with_policy_key_gen_EQ_ignore(self):
         """
         Invoke append() with gen eq positive ignore
         """
@@ -134,7 +138,7 @@ class TestAppend(object):
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 
-    def test_pos_append_with_policy_key_gen_EQ_positive(self):
+    def test_append_with_policy_key_gen_EQ_positive(self):
         """
         Invoke append() with gen eq positive
         """
@@ -162,7 +166,7 @@ class TestAppend(object):
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 
-    def test_pos_append_with_policy_key_gen_GT_positive(self):
+    def test_append_with_policy_key_gen_GT_positive(self):
         """
         Invoke append() with gen GT positive
         """
@@ -189,7 +193,7 @@ class TestAppend(object):
             bytearray(b"\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8"),
         )
 
-    def test_pos_append_with_nonexistent_key(self):
+    def test_append_with_nonexistent_key(self):
         """
         Invoke append() with non-existent key
         """
@@ -199,7 +203,7 @@ class TestAppend(object):
         assert status == 0
         self.as_connection.remove(key)
 
-    def test_pos_append_with_nonexistent_bin(self):
+    def test_append_with_nonexistent_bin(self):
         """
         Invoke append() with non-existent bin
         """
@@ -208,7 +212,7 @@ class TestAppend(object):
 
         assert status == 0
 
-    def test_pos_append_unicode_value(self):
+    def test_append_unicode_value(self):
         """
         Invoke append() with unicode string
         """
@@ -218,7 +222,7 @@ class TestAppend(object):
         key, _, bins = self.as_connection.get(key)
         assert bins["name"] == "name1address"
 
-    def test_pos_append_unicode_bin_name(self):
+    def test_append_unicode_bin_name(self):
         """
         Invoke append() with unicode string
         """
@@ -228,7 +232,7 @@ class TestAppend(object):
         key, _, bins = self.as_connection.get(key)
         assert bins["add"] == "address"
 
-    def test_pos_append_with_correct_timeout_policy(self):
+    def test_append_with_correct_timeout_policy(self):
         """
         Invoke append() with correct policy
         """
@@ -245,7 +249,7 @@ class TestAppend(object):
 
         assert bins == {"age": 1, "name": "name1str"}
 
-    def test_pos_append_with_bytearray(self):
+    def test_append_with_bytearray(self):
         """
         Invoke append() with bytearray value
         """
@@ -256,7 +260,7 @@ class TestAppend(object):
 
         assert bins == {"bytearray_bin": bytearray("asd;as[d'as;dabc", "utf-8")}
 
-    def test_pos_append_with_bytearray_new_key(self):
+    def test_append_with_bytearray_new_key(self):
         """
         Invoke append() with bytearray value with a new record(non-existing)
         """
@@ -269,7 +273,7 @@ class TestAppend(object):
 
         self.as_connection.remove(key)
 
-    def test_pos_append_with_bytes(self):
+    def test_append_with_bytes(self):
         """
         Invoke append() with bytes value
         """
@@ -280,7 +284,7 @@ class TestAppend(object):
 
         assert bins == {"bytes_bin": b"a"}
 
-    def test_pos_append_with_bytes_new_key(self):
+    def test_append_with_bytes_new_key(self):
         """
         Invoke append() with bytes value with a new record(non-existing)
         """

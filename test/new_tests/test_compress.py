@@ -17,7 +17,7 @@ class TestCompress:
     config = TestBaseClass.get_connection_config()
 
     pytestmark = pytest.mark.skipif(
-        not TestBaseClass.enterprise_in_use(), reason="No enterprise hosts, maybe cluster is not enterprise."
+        not TestBaseClass.using_enterprise, reason="No enterprise hosts, maybe cluster is not enterprise."
     )
 
     @pytest.fixture(autouse=True)

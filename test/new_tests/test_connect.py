@@ -79,7 +79,7 @@ class TestConnect(object):
             assert client is not None
             assert client.is_connected()
 
-    @pytest.mark.skipif(TestBaseClass.tls_in_use(), reason="no default port for tls")
+    @pytest.mark.skipif(TestBaseClass.using_tls, reason="no default port for tls")
     def test_connect_hosts_missing_port(self):
         """
         Invoke connect() with missing port in config dict.

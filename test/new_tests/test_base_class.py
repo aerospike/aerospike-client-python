@@ -25,7 +25,7 @@ class TestBaseClass(object):
         if config.has_option("enterprise-edition", "hosts"):
             hosts_str = config.get("enterprise-edition", "hosts")
             if hosts_str != "None":
-                TestBaseClass.hostlist = TestBaseClass.parse_hosts(hosts_str)
+                TestBaseClass.hostlist = TestBaseClass.parse_hosts_option_value(hosts_str)
                 if TestBaseClass.hostlist:
                     TestBaseClass.using_enterprise = True
         if len(TestBaseClass.hostlist) > 0:
@@ -41,7 +41,7 @@ class TestBaseClass(object):
                 else:
                     TestBaseClass.using_auth = True
         else:
-            TestBaseClass.hostlist = TestBaseClass.parse_hosts(config.get("community-edition", "hosts"))
+            TestBaseClass.hostlist = TestBaseClass.parse_hosts_option_value(config.get("community-edition", "hosts"))
 
         return TestBaseClass.hostlist
 
@@ -127,7 +127,8 @@ class TestBaseClass(object):
         return policies_dict
 
     @staticmethod
-    def parse_hosts(host_str):
+    def parse_hosts_option_value(host_str):
+        # Get list of host tuples from option-value pair "hosts" in config.conf
         hosts = []
         host_str = host_str.strip()
 
@@ -158,16 +159,13 @@ class TestBaseClass(object):
         Merge the add_config dict with that in the default configuration
         and return a newly connected client
         """
-        add_config = add_config if add_config else {}
+        if add_config is None:
+            add_config = {}
+
         config = TestBaseClass.get_connection_config()
-        for key in add_config:
-            config[key] = add_config[key]
+        config.update(add_config)
 
         client = aerospike.client(config)
-        if config["user"] is None and config["password"] is None:
-            client.connect()
-        else:
-            client.connect(config["user"], config["password"])
 
         if client is not None:
             build_info = client.info_all("build")
@@ -185,36 +183,11 @@ class TestBaseClass(object):
         return client
 
     @staticmethod
-    def tls_in_use():
-        if TestBaseClass.using_tls:
-            return True
-        else:
-            return True
-
-    @staticmethod
-    def auth_in_use():
-        if TestBaseClass.using_auth:
-            return True
-        else:
-            return False
-
-    @staticmethod
-    def enterprise_in_use():
-        if TestBaseClass.using_enterprise:
-            return True
-        else:
-            return False
-
-    @staticmethod
     def get_connection_config():
         config = {}
-        hosts_conf = TestBaseClass.get_hosts()
-        tls_conf = TestBaseClass.get_tls_info()
-        policies_conf = TestBaseClass.get_policies_info()
-        config["hosts"] = hosts_conf
-        config["tls"] = tls_conf
-        config["policies"] = policies_conf
+        config["hosts"] = TestBaseClass.get_hosts()
+        config["tls"] = TestBaseClass.get_tls_info()
+        config["policies"] = TestBaseClass.get_policies_info()
         config["user"] = TestBaseClass.user
         config["password"] = TestBaseClass.password
-        # print(config)
         return config
