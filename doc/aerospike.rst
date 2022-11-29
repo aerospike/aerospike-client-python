@@ -661,7 +661,8 @@ Policy Options
 Commit Level Policy Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Specifies the number of replicas required to be successfully committed before returning success in a write operation to provide the desired consistency guarantee.
+Specifies the number of replicas required to be successfully committed before returning success in a write operation to
+provide the desired consistency guarantee.
 
 .. data:: POLICY_COMMIT_LEVEL_ALL
 

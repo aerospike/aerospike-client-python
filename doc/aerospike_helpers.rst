@@ -4,7 +4,8 @@
 :mod:`aerospike\_helpers` --- Aerospike Helper Package for bin operations (list, map, bit, etc.)
 ************************************************************************************************
 
-This package contains helpers to be used by the operate and operate_ordered methods for bin operations. (list, map, bitwise, etc.)
+This package contains helpers to be used by the operate and operate_ordered methods for bin operations.
+(list, map, bitwise, etc.)
 
 .. automodule:: aerospike_helpers
     :members:

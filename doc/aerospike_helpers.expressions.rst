@@ -90,7 +90,8 @@ When the following documentation says an expression returns a **list expression*
 it means that the expression returns a list during evaluation on the server side.
 
 Expressions used with :meth:`~aerospike_helpers.operations.expression_operations.expression_read`
-or :meth:`~aerospike_helpers.operations.expression_operations.expression_write` do send their return values to the client or write them to the server.
+or :meth:`~aerospike_helpers.operations.expression_operations.expression_write` do send their return values to the
+client or write them to the server.
 These expressions are called **operation expressions**.
 
 When these docs say that an expression parameter requires an integer or **integer expression**,
