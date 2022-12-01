@@ -148,25 +148,21 @@ with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
-# if EVENT_LIB is None or EVENT_LIB == "":
-#     EVENT_LIB = "libevent"
-
-if EVENT_LIB is not None:
-    if EVENT_LIB == "libuv":
-        extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
-        library_dirs.append('/usr/local/lib/')
-        libraries.append('uv')
-    elif EVENT_LIB == "libevent":
-        extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
-        library_dirs.append('/usr/local/lib/')
-        libraries.append('event_core')
-        libraries.append('event_pthreads')
-    elif EVENT_LIB == "libev":
-        extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
-        library_dirs.append('/usr/local/lib/')
-        libraries.append('ev')
-    else:
-        print("Building aerospike with no-async support\n")
+if EVENT_LIB == "libuv":
+    extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
+    library_dirs.append('/usr/local/lib/')
+    libraries.append('uv')
+elif EVENT_LIB == "libevent":
+    extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
+    library_dirs.append('/usr/local/lib/')
+    libraries.append('event_core')
+    libraries.append('event_pthreads')
+elif EVENT_LIB == "libev":
+    extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
+    library_dirs.append('/usr/local/lib/')
+    libraries.append('ev')
+else:
+    print("Building aerospike with no-async support\n")
 
 
 class CClientBuild(build):
