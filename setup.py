@@ -40,7 +40,7 @@ PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
-STATIC_SSL = os.getenv('STATIC_SSL')
+
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 EVENT_LIB = os.getenv('EVENT_LIB')
 
@@ -76,12 +76,9 @@ if machine == 'x86_64':
 extra_objects = []
 extra_link_args = []
 library_dirs = [
-    '/usr/local/opt/openssl/lib',
     '/usr/local/lib'
 ]
 libraries = [
-    'ssl',
-    'crypto',
     'pthread',
     'm',
     'z'
@@ -91,13 +88,17 @@ libraries = [
 # STATIC SSL LINKING BUILD SETTINGS
 ################################################################################
 
+STATIC_SSL = os.getenv('STATIC_SSL')
+
 if STATIC_SSL:
+    # Statically link openssl
     extra_objects.append(SSL_LIB_PATH + 'libssl.a')
     extra_objects.append(SSL_LIB_PATH + 'libcrypto.a')
-
-    libraries.remove('ssl')
-    libraries.remove('crypto')
-    library_dirs.remove('/usr/local/opt/openssl/lib')
+else:
+    # Dynamically link openssl
+    libraries.append('ssl')
+    libraries.append('crypto')
+    library_dirs.append('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
