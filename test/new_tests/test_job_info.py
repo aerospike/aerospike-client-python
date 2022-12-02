@@ -17,6 +17,11 @@ class TestScanInfo(object):
         """
         Setup method.
         """
+        # Skip all the tests for job_info if the server doesn't support it
+        # This check happens here because the server version is only accessible through the fixture
+        if self.server_version >= [6, 3]:
+            pytest.skip("job_info() is no longer supported for server versions 6.3 or higher", allow_module_level=True)
+
         for i in range(15):
             key = ("test", "demo", i)
             rec = {"age": i}
