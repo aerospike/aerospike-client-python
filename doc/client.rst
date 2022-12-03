@@ -287,7 +287,7 @@ Batch Operations
         .. include:: examples/select_many.py
             :code: python
 
-    .. method:: batch_get_ops(keys, ops, meta, policy: dict) -> [ (key, meta, bins)]
+    .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
 
         Batch-read multiple records, and return them as a :class:`list`.
         

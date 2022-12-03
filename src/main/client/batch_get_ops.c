@@ -107,14 +107,13 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
  *                              with the encountered error if any.
  * @param py_keys                   The list containing keys.
  * @param py_ops               The list containing op, bin and value.
- * @param py_meta               The metadata for the operation.
  * @param py_policy      		Python dict used to populate the operate_policy or map_policy.
  *******************************************************************************************************
  */
 static PyObject *
 AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self, as_error *err,
                                     PyObject *py_keys, PyObject *py_ops,
-                                    PyObject *py_meta, PyObject *py_policy)
+                                    PyObject *py_policy)
 {
     long operation;
     long return_type = -1;
@@ -146,12 +145,6 @@ AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self, as_error *err,
 
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
-
-    if (py_meta) {
-        if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
-    }
 
     for (int i = 0; i < ops_size; i++) {
         PyObject *py_val = PyList_GetItem(py_ops, i);
@@ -240,7 +233,6 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
 {
     as_error err;
     PyObject *py_policy = NULL;
-    PyObject *py_meta = NULL;
     PyObject *py_keys = NULL;
     PyObject *py_ops = NULL;
     PyObject *py_results = NULL;
@@ -248,10 +240,9 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
     as_error_init(&err);
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"keys", "list", "meta", "policy", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:batch_getops", kwlist,
-                                    &py_keys, &py_ops, &py_meta,
-                                    &py_policy) == false) {
+    static char *kwlist[] = {"keys", "list", "policy", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:batch_getops", kwlist,
+                                    &py_keys, &py_ops, &py_policy) == false) {
         return NULL;
     }
 
@@ -262,7 +253,7 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
     }
 
     py_results = AerospikeClient_Batch_GetOps_Invoke(
-        self, &err, py_keys, py_ops, py_meta, py_policy);
+        self, &err, py_keys, py_ops, py_policy);
 
     if (py_results == NULL) {
         PyObject *py_err = NULL;
