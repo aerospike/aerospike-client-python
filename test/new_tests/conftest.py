@@ -5,7 +5,7 @@ import sys
 from distutils.version import LooseVersion
 
 import pytest
-from _pytest.terminal import TerminalReporter
+from _pytest.terminal import TerminalReporter  # noqa: F401
 from collections import namedtuple
 from itertools import groupby
 import tracemalloc

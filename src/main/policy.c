@@ -455,6 +455,7 @@ static AerospikeConstants aerospike_constants[] = {
     {AS_BYTES_RUBY, "AS_BYTES_RUBY"},
     {AS_BYTES_PHP, "AS_BYTES_PHP"},
     {AS_BYTES_ERLANG, "AS_BYTES_ERLANG"},
+    {AS_BYTES_BOOL, "AS_BYTES_BOOL"},
     {AS_BYTES_HLL, "AS_BYTES_HLL"},
     {AS_BYTES_MAP, "AS_BYTES_MAP"},
     {AS_BYTES_LIST, "AS_BYTES_LIST"},

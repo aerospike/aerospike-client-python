@@ -332,3 +332,29 @@ class TestExpressions(TestBaseClass):
         expr = Cond(GT(IntBin("age"), _NUM_RECORDS), True, Unknown())
         with pytest.raises(e.FilteredOut):
             self.as_connection.get(("test", "demo", _NUM_RECORDS - 1), policy={"expressions": expr.compile()})
+
+    def test_bintype_as_bool(self):
+        if self.server_version < [5, 6]:
+            pytest.mark.xfail(reason="Servers older than 5.6 do not support 6.0.0 expressions")
+            pytest.xfail()
+
+        # Configure client to encode and send booleans as the server boolean type
+        config = TestBaseClass.get_connection_config()
+        config["send_bool_as"] = aerospike.AS_BOOL
+        test_client = aerospike.client(config).connect(config["user"], config["password"])
+
+        # Override record 0's "t" bin to be a server bool instead of a python bool
+        key = ("test", "demo", 0)
+        bins = {"t": True}
+        test_client.put(key, bins)
+
+        # Check that record 0 has a server boolean bin named "t"
+        expr = Eq(BinType("t"), aerospike.AS_BYTES_BOOL).compile()
+        records = test_client.get_many([key], {"expressions": expr})
+
+        # bins would be None if the record was filtered out by the expression
+        record = records[0]
+        bins = record[2]
+        assert bins
+
+        test_client.close()
