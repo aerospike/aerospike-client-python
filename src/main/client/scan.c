@@ -211,13 +211,9 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
             Py_BEGIN_ALLOW_THREADS
             aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
             Py_END_ALLOW_THREADS
-            if (err.code != AEROSPIKE_OK) {
-                as_error_update(&err, err.code, err.message);
-            }
+            // We don't need to jump to the cleanup section to handle the code
+            // since it's already directly below this block
         }
-    }
-    else {
-        goto CLEANUP;
     }
 
 CLEANUP:
