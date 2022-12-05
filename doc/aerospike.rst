@@ -1381,6 +1381,10 @@ Bin Types
 
     (int): 12
 
+.. data:: AS_BYTES_BOOL
+
+    (int): 17
+
 .. data:: AS_BYTES_HLL
 
     (int): 18
