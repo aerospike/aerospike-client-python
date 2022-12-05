@@ -2006,6 +2006,23 @@ Batch Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
+        * **respond_all_keys** :class:`bool`
+            Should all batch keys be attempted regardless of errors. This field is used on both the client and server.
+            The client handles node specific errors and the server handles key specific errors.
+
+            If ``True``, every batch key is attempted regardless of previous key specific errors.
+            Node specific errors such as timeouts stop keys to that node, but keys directed at other nodes will continue
+            to be processed.
+
+            If ``False``, the server will stop the batch to its node on most key specific errors. The exceptions are
+            ``AEROSPIKE_ERR_RECORD_NOT_FOUND`` and ``AEROSPIKE_FILTERED_OUT`` which never stop the batch. The client
+            will stop the entire batch on node specific errors for sync commands that are run in sequence
+            (``concurrent`` == false).
+            The client will not stop the entire batch for async commands or sync commands run in parallel.
+
+            Server versions < 6.0 do not support this field and treat this value as false for key specific errors.
+
+            Default: ``True``
 
 .. _aerospike_batch_write_policies:
 
