@@ -61,16 +61,23 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
+    - name: Create config folder to store configs in
+      run: mkdir configs
+
     - name: Get features.conf to enable enterprise edition tests
       env:
         FEATURES_CONF: ${{ secrets.FEATURES_CONF }}
-      run: echo $FEATURES_CONF > ./features.conf
+      run: echo $FEATURES_CONF > ./configs/features.conf
+
+    - name: Get aerospike.conf
+      run: wget https://github.com/aerospike/aerospike-server/blob/master/as/etc/aerospike.conf -O ./configs/aerospike.conf
 
     - name: Set up Aerospike Database
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
-        feature-key-file: ./features.conf
+        config-file: 'configs/aerospike.conf'
+        feature-key-file: 'configs/features.conf'
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
