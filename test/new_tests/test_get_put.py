@@ -270,7 +270,6 @@ class TestGetPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -291,7 +290,6 @@ class TestGetPut:
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -313,7 +311,6 @@ class TestGetPut:
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -329,7 +326,6 @@ class TestGetPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -350,7 +346,6 @@ class TestGetPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
@@ -363,7 +358,7 @@ class TestGetPut:
 
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
-        policy = {"total_timeout": 1000, "exists": aerospike.POLICY_EXISTS_REPLACE}
+        policy = {"exists": aerospike.POLICY_EXISTS_REPLACE}
         assert 0 == self.as_connection.put(key, rec, meta, policy)
 
         (key, meta, bins) = self.as_connection.get(key)
@@ -380,7 +375,6 @@ class TestGetPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
@@ -393,7 +387,7 @@ class TestGetPut:
 
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
-        policy = {"total_timeout": 1000, "exists": aerospike.POLICY_EXISTS_UPDATE}
+        policy = {"exists": aerospike.POLICY_EXISTS_UPDATE}
         assert 0 == self.as_connection.put(key, rec, meta, policy)
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -628,7 +622,6 @@ class TestGetPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
@@ -640,7 +633,7 @@ class TestGetPut:
         assert {"name": "John"} == bins
 
         rec = {"name": "Smith"}
-        policy = {"timeout": 1000, "exists": aerospike.POLICY_EXISTS_CREATE}
+        policy = {"exists": aerospike.POLICY_EXISTS_CREATE}
         meta = {"gen": 2}
 
         with pytest.raises(e.RecordExistsError):
@@ -660,7 +653,6 @@ class TestGetPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -677,7 +669,7 @@ class TestGetPut:
 
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
-        policy = {"timeout": 1000, "exists": aerospike.POLICY_EXISTS_REPLACE}
+        policy = {"exists": aerospike.POLICY_EXISTS_REPLACE}
 
         with pytest.raises(e.RecordNotFound):
             self.as_connection.put(key, rec, meta, policy)
@@ -711,15 +703,14 @@ class TestGetPut:
 
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
-        policy = {"timeout": 1000}
-        assert 0 == self.as_connection.put(key, rec, meta, policy)
+        assert 0 == self.as_connection.put(key, rec, meta)
 
         (key, meta, bins) = self.as_connection.get(key)
 
         assert {"name": "John"} == bins
         gen = meta["gen"]
         rec = {"name": "Smith"}
-        policy = {"timeout": 1000, "gen": aerospike.POLICY_GEN_GT}
+        policy = {"gen": aerospike.POLICY_GEN_GT}
         meta = {"gen": gen}
 
         try:
@@ -757,7 +748,7 @@ class TestGetPut:
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": "wrong", "ttl": 25000},
-                {"total_timeout": 1000},  # Gen as string
+                None,
                 -2,
                 "Generation should be an int or long",
             ),
@@ -765,7 +756,7 @@ class TestGetPut:
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": 3, "ttl": "25000"},
-                {"total_timeout": 1000},  # ttl as string
+                None,
                 -2,
                 "TTL should be an int or long",
             ),
@@ -773,7 +764,7 @@ class TestGetPut:
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": 3, "ttl": 25000},
-                {"total_timeout": "1000"},  # Timeout as string
+                {"total_timeout": 0.5},
                 -2,
                 "timeout is invalid",
             ),
@@ -789,7 +780,7 @@ class TestGetPut:
                 ("test", "demo", 1),
                 {"i": 13},  # Meta as string
                 "OK",
-                {"total_timeout": 1000},
+                None,
                 -2,
                 "meta must be a dict",
             ),
@@ -797,7 +788,7 @@ class TestGetPut:
                 ("test", "demo", 1),
                 {"i": 13},  # Meta as string
                 1234,
-                {"total_timeout": 1000},
+                None,
                 -2,
                 "meta must be a dict",
             ),

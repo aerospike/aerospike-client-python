@@ -315,7 +315,7 @@ class TestMapBasics(object):
         self.as_connection.map_clear(key, binname)
         assert values == [5, 6]
 
-    @pytest.mark.parametrize("policy, meta", [(None, None), ({"total_timeout": 10000}, {"ttl": -1})])
+    @pytest.mark.parametrize("policy, meta", [(None, None), ({"total_timeout": 180000}, {"ttl": -1})])
     def test_map_get_by_value_list(self, policy, meta):
         key = ("test", "map_test", 1)
         binname = "my_map"
@@ -337,13 +337,13 @@ class TestMapBasics(object):
         map_entry = {"a": 1, "b": 2, "c": 3, "d": 4, "e": 1}
         self.as_connection.put(key, {binname: map_entry})
         fetched_keys = self.as_connection.map_get_by_value_list(
-            key, binname, [7, 8, 9], aerospike.MAP_RETURN_KEY, policy={"total_timeout": 10000}, meta={"ttl": -1}
+            key, binname, [7, 8, 9], aerospike.MAP_RETURN_KEY, policy={"total_timeout": 180000}, meta={"ttl": -1}
         )
 
         assert fetched_keys == []
         self.as_connection.map_clear(key, binname)
 
-    @pytest.mark.parametrize("policy, meta", [(None, None), ({"total_timeout": 10000}, {"ttl": -1})])
+    @pytest.mark.parametrize("policy, meta", [(None, None), ({"total_timeout": 180000}, {"ttl": -1})])
     def test_map_get_by_key_list(self, policy, meta):
         key = ("test", "map_test", 1)
         binname = "my_map"

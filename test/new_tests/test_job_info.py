@@ -71,7 +71,7 @@ class TestScanInfo(object):
         """
         Invoke job_info() with correct policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         job_info = self.as_connection.job_info(self.job_id, aerospike.JOB_SCAN, policy)
 
         valid_statuses = (aerospike.JOB_STATUS_COMPLETED, aerospike.JOB_STATUS_INPROGRESS)

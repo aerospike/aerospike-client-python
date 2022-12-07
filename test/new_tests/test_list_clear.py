@@ -96,7 +96,7 @@ class TestListClear(object):
         Invoke list_clear() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_clear(key, "contact_no", {}, policy, "")
 
