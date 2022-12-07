@@ -216,15 +216,15 @@ jobs:
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
         CIBW_TEST_COMMAND: >
-          cd {project}
+          cd {project} &&
           # Start up Aerospike server in VM
-          vagrant up
+          vagrant up &&
           # Wait for server to start
-          sleep 3
-          cd test/
+          sleep 3 &&
+          cd test/ &&
           # Install test dependencies
-          python3 -m pip install -r requirements.txt
-          python3 -m pytest new_tests/
+          python -m pip install -r requirements.txt &&
+          python -m pytest new_tests/
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
