@@ -215,24 +215,7 @@ jobs:
         CIBW_BUILD_FRONTEND: build
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
-        CIBW_TEST_COMMAND: python -c "import aerospike"
-
-    - name: Create VM using Vagrant box and run Aerospike server
-      run: vagrant up
-
-    - name: Wait for Aerospike server to start
-      run: sleep 3
-
-    - name: Install aerospike outside venv for testing
-      run: python3 -m pip install wheelhouse/*.whl
-
-    - name: Install test dependencies
-      run: python3 -m pip install -r requirements.txt
-      working-directory: test
-
-    - name: Run tests
-      run: python3 -m pytest new_tests/
-      working-directory: test
+        CIBW_TEST_COMMAND: "sh ./test.sh"
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
