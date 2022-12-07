@@ -220,7 +220,9 @@ jobs:
           sleep 3 &&
           pip install -r test/requirements.txt
 
-        CIBW_TEST_COMMAND: python -m pytest {project}/test/new_tests/
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/
+          python -m pytest new_tests/
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
