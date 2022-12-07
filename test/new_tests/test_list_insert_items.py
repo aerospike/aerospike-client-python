@@ -94,7 +94,7 @@ class TestListInsertItems(object):
         """
         key = ("test", "demo", 2)
         policy = {
-            "timeout": 1000,
+            "timeout": 180000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -183,7 +183,7 @@ class TestListInsertItems(object):
         Invoke list_insert_items() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_insert_items(key, "age", 3, [999], {}, policy, "")
 

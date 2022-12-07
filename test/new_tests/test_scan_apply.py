@@ -67,7 +67,7 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with correct policy
         """
-        policy = {"timeout": 1000, "socket_timeout": 9876}
+        policy = {"socket_timeout": 180000}
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], policy)
 
         wait_for_job_completion(self.as_connection, scan_id)
@@ -87,7 +87,7 @@ class TestScanApply(object):
             exp.NE(exp.IntBin("age"), 3),
         )
 
-        policy = {"timeout": 1000, "expressions": expr.compile()}
+        policy = {"timeout": 180000, "expressions": expr.compile()}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
         wait_for_job_completion(self.as_connection, scan_id)
@@ -106,7 +106,7 @@ class TestScanApply(object):
         """
         expr = exp.Eq(exp.StrBin("name"), 4)
 
-        policy = {"timeout": 1000, "expressions": expr.compile()}
+        policy = {"timeout": 180000, "expressions": expr.compile()}
         with pytest.raises(e.InvalidRequest):
             self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
@@ -115,7 +115,7 @@ class TestScanApply(object):
         Invoke scan_apply() with set argument as None
         It should invoke the function on all records in the NS
         """
-        policy = {"timeout": 1000}
+        policy = {}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
         wait_for_job_completion(self.as_connection, scan_id)
@@ -135,7 +135,7 @@ class TestScanApply(object):
         """
         expr = exp.And(exp.Eq(exp.StrBin("name"), "name2"), exp.NE(exp.IntBin("age"), 3))
 
-        policy = {"timeout": 1000, "expressions": expr.compile()}
+        policy = {"expressions": expr.compile()}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
         wait_for_job_completion(self.as_connection, scan_id)
@@ -209,7 +209,7 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with options positive
         """
-        policy = {"timeout": 1000}
+        policy = {}
         options = {"concurrent": False}
         scan_id = self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], policy, options)
 
@@ -305,7 +305,7 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with concurrent int
         """
-        policy = {"timeout": 1000}
+        policy = {}
         options = {"concurrent": 5}
         with pytest.raises(e.ParamError) as err_info:
             self.as_connection.scan_apply(
@@ -319,7 +319,7 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with extra argument
         """
-        policy = {"timeout": 1000}
+        policy = {}
         options = {"concurrent": False}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.scan_apply(

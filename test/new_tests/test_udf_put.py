@@ -52,7 +52,7 @@ class TestUdfPut(TestBaseClass):
         to the server
         """
 
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         filename = self.udf_name
         udf_type = 0
 
@@ -180,7 +180,7 @@ class TestUdfPut(TestBaseClass):
         """
         Test to verify that an invalid udf_type causes an error
         """
-        policy = {"timeout": 0}
+        policy = {"timeout": 180000}
         filename = self.udf_name
         udf_type = 1
 

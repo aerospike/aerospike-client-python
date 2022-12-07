@@ -34,7 +34,7 @@ class TestUdfRemove(object):
             process to complete
             """
             udf_name = TestUdfRemove.udf_name
-            udf_list = as_connection.udf_list({"timeout": 100})
+            udf_list = as_connection.udf_list({"timeout": 180000})
 
             for udf in udf_list:
                 if udf["name"] == udf_name:
@@ -60,7 +60,7 @@ class TestUdfRemove(object):
         assert status == AerospikeStatus.AEROSPIKE_OK
 
         wait_for_udf_removal(self.as_connection, module)
-        udf_list = self.as_connection.udf_list({"timeout": 100})
+        udf_list = self.as_connection.udf_list({"timeout": 180000})
 
         present = False
         for udf in udf_list:
@@ -90,7 +90,7 @@ class TestUdfRemove(object):
         Verify that udf_remove with a correct timeout policy argument
         functions.
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         module = "example.lua"
 
         status = self.as_connection.udf_remove(module, policy)
@@ -100,7 +100,7 @@ class TestUdfRemove(object):
         #  Wait for the removal to take place
         wait_for_udf_removal(self.as_connection, module)
 
-        udf_list = self.as_connection.udf_list({"timeout": 0})
+        udf_list = self.as_connection.udf_list({"timeout": 180000})
 
         present = False
         for udf in udf_list:
@@ -113,7 +113,7 @@ class TestUdfRemove(object):
         """
         Test to ensure that unicode filenames may be used to remove UDFs
         """
-        policy = {"timeout": 100}
+        policy = {}
         module = "example.lua"
         status = self.as_connection.udf_remove(module, policy)
 
@@ -122,7 +122,7 @@ class TestUdfRemove(object):
         #  Wait for the removal to take place
         wait_for_udf_removal(self.as_connection, module)
 
-        udf_list = self.as_connection.udf_list({"timeout": 100})
+        udf_list = self.as_connection.udf_list({})
 
         present = False
         for udf in udf_list:
@@ -154,7 +154,7 @@ class TestIncorrectCallsToUDFRemove(object):
 
         client1 = aerospike.client(config)
         client1.close()
-        policy = {"timeout": 100}
+        policy = {}
         module = "example.lua"
 
         with pytest.raises(e.ClusterError) as err_info:

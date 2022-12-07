@@ -204,7 +204,7 @@ class TestIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         retobj = self.as_connection.index_integer_create("test", "demo", "age", "age_index", policy)
 
         ensure_dropped_index(self.as_connection, "test", "age_index")
@@ -372,7 +372,7 @@ class TestIndex(object):
         """
         Invoke create string index() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -403,7 +403,7 @@ class TestIndex(object):
         """
         Invoke drop valid index() policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         self.as_connection.index_integer_create("test", "demo", "age", "age_index", policy)
         retobj = self.as_connection.index_remove("test", "age_index", policy)
         ensure_dropped_index(self.as_connection, "test", "age_index")

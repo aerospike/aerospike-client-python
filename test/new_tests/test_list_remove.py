@@ -49,7 +49,7 @@ class TestListRemove(object):
         """
         key = ("test", "demo", 2)
         policy = {
-            "timeout": 1000,
+            "timeout": 180000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -118,7 +118,7 @@ class TestListRemove(object):
         Invoke list_remove() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_remove(key, "contact_no", 1, {}, policy, "")
 
