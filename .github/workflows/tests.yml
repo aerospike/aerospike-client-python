@@ -218,7 +218,7 @@ jobs:
         CIBW_BEFORE_TEST: >
           vagrant up &&
           sleep 3 &&
-          pip install -r test/requirements.txt &&
+          pip install -r test/requirements.txt
 
         CIBW_TEST_COMMAND: python -m pytest {project}/test/new_tests/
 
