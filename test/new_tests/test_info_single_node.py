@@ -83,7 +83,7 @@ class TestInfoSingleNode(object):
         if self.pytest_skip:
             pytest.xfail()
         host = self.host_name
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         response = self.as_connection.info_single_node("bins", host, policy)
 
         assert "names" in response
@@ -105,7 +105,7 @@ class TestInfoSingleNode(object):
         """
         if self.pytest_skip:
             pytest.xfail()
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         host = self.host_name
         response = self.as_connection.info_single_node("logs", host, policy)
 
@@ -152,7 +152,7 @@ class TestInfoSingleNodeIncorrectUsage(object):
         Test info with extra parameters.
         """
         host = self.connection_config["hosts"][0]
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.info_single_node("bins", host, policy, "")
 

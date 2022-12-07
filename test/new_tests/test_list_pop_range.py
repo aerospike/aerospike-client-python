@@ -53,7 +53,7 @@ class TestListPopRange(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
+            "timeout": 180000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -120,7 +120,7 @@ class TestListPopRange(object):
         Invoke list_pop_range() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_pop_range(key, "contact_no", 1, 1, {}, policy, "")
 

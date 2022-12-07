@@ -322,7 +322,7 @@ class TestQueryApply(object):
         test_bin = "t5"
         query = self.as_connection.query(TEST_NS, TEST_SET)
         query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        res = query.execute_background({"socket_timeout": 10000})
+        res = query.execute_background({"socket_timeout": 180000})
         assert isinstance(res, (int, long))
 
     def test_background_execute_with_policy_kwarg(self, clean_test_background):

@@ -234,7 +234,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
+            "timeout": 180000,
             "key": aerospike.POLICY_KEY_SEND,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -266,7 +266,7 @@ class TestOperate(object):
             "name": "name%s" % (str(1)),
             "age": 1,
         }
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST}
         self.as_connection.put(key, rec)
 
         llist = [
@@ -287,7 +287,6 @@ class TestOperate(object):
             (
                 ("test", "demo", 1),
                 {
-                    "timeout": 1000,
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_IGNORE,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
@@ -321,7 +320,7 @@ class TestOperate(object):
         Invoke operate() with gen EQ positive.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_EQ}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_EQ}
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
         meta = {"gen": gen, "ttl": 1200}
@@ -367,7 +366,7 @@ class TestOperate(object):
         Invoke operate() with gen not equal.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_EQ}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_EQ}
 
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
@@ -397,7 +396,7 @@ class TestOperate(object):
         Invoke operate() with gen GT lesser.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
         meta = {"gen": gen, "ttl": 1200}
@@ -449,7 +448,7 @@ class TestOperate(object):
         Invoke operate() with gen GT positive.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
         meta = {"gen": gen + 5, "ttl": 1200}
@@ -1154,7 +1153,7 @@ class TestOperate(object):
         Invoke operate() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate(key, llist, {}, policy, "")
@@ -1189,7 +1188,7 @@ class TestOperate(object):
         [
             (
                 ("test", "demo", 1),
-                {"timeout": 1000},
+                {},
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "name"},
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
@@ -1198,7 +1197,7 @@ class TestOperate(object):
             ),
             (
                 ("test", "demo", 1),
-                {"timeout": 1000},
+                {},
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": 3, "aa": 89},
                 ],
@@ -1207,7 +1206,6 @@ class TestOperate(object):
             (
                 ("test", "demo", 1),  # with_incr_value_string
                 {
-                    "timeout": 1000,
                     "key": aerospike.POLICY_KEY_SEND,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                 },
@@ -1269,7 +1267,7 @@ class TestOperate(object):
         Invoke operate() on same bin
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 5000}
+        policy = {}
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
             {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},

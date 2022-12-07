@@ -33,7 +33,7 @@ class TestRemovebin(object):
         """
         key = ("test", "demo", 1)
         record = {"Name": "Herry", "age": 60}
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         put_data(self.as_connection, key, record)
         self.as_connection.remove_bin(key, ["age"], {}, policy)
 
@@ -50,7 +50,6 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
 
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
@@ -71,7 +70,6 @@ class TestRemovebin(object):
         record = {"Company": "Apple", "years": 30, "address": "202, sillicon Vally"}
         put_data(self.as_connection, key, record)
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -102,7 +100,7 @@ class TestRemovebin(object):
         record = {"age": 1, "name": "name1"}
 
         put_data(self.as_connection, key, record)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST}
         self.as_connection.remove_bin(key, ["age"], {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -124,7 +122,7 @@ class TestRemovebin(object):
         rec = {"name": "single"}
         self.as_connection.put(key, rec)
 
-        policy = {"timeout": 1000}
+        policy = {}
         self.as_connection.remove_bin(key, ["name"], {}, policy)
 
         try:
@@ -175,7 +173,6 @@ class TestRemovebin(object):
                 ("test", "demo", "p_commit_level_all"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "timeout": 1000,
                     "retry": aerospike.POLICY_RETRY_ONCE,
                     "key": aerospike.POLICY_KEY_SEND,
                     "commit": aerospike.POLICY_COMMIT_LEVEL_ALL,
@@ -186,7 +183,6 @@ class TestRemovebin(object):
                 ("test", "demo", "p_commit_level_master"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "timeout": 1000,
                     "retry": aerospike.POLICY_RETRY_ONCE,
                     "key": aerospike.POLICY_KEY_SEND,
                     "commit": aerospike.POLICY_COMMIT_LEVEL_MASTER,
@@ -197,7 +193,6 @@ class TestRemovebin(object):
                 ("test", "demo", "p_gen_GT"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "timeout": 1000,
                     "retry": aerospike.POLICY_RETRY_ONCE,
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_GT,
@@ -269,7 +264,6 @@ class TestRemovebin(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
@@ -310,7 +304,6 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
 
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -343,7 +336,6 @@ class TestRemovebin(object):
         record = {"Name": "John", "age": 30, "address": "202, washingtoon"}
         put_data(self.as_connection, key, record)
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
@@ -404,7 +396,7 @@ class TestRemovebin(object):
         Invoke remove_bin() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove_bin(key, ["age"], {}, policy, "")
 

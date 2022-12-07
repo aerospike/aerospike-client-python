@@ -305,7 +305,7 @@ class TestMapKeysIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         ensure_dropped_index(self.as_connection, "test", "test_numeric_map_index")
         response_code = self.as_connection.index_map_keys_create(
             "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
