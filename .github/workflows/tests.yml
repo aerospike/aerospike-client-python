@@ -188,7 +188,6 @@ jobs:
   #     working-directory: doc
 
   macOS-x86:
-    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -243,6 +242,7 @@ jobs:
         path: wheelhouse/*.whl
 
   macOS-m1:
+    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
