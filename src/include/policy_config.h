@@ -48,3 +48,4 @@ as_status set_scan_policy(as_policy_scan *scan_policy, PyObject *py_policy);
 as_status set_operate_policy(as_policy_operate *operate_policy,
                              PyObject *py_policy);
 as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy);
+as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy);
