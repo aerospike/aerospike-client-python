@@ -35,7 +35,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: [3.7, 3.8, 3.9]
+        py-version: [
+          3.7,
+          # 3.8,
+          # 3.9
+        ]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -61,16 +65,25 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
+    - name: Install crudini to manipulate config.conf
+      run: pip install crudini
+
+    - name: Add enterprise edition config to config.conf
+      run: |
+        crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
+        crudini --set config.conf enterprise-edition user superuser
+        crudini --set config.conf enterprise-edition password superuser
+
     - name: Create config folder to store configs in
       run: mkdir configs
 
     - name: Get features.conf to enable enterprise edition tests
       env:
         FEATURES_CONF: ${{ secrets.FEATURES_CONF }}
-      run: echo $FEATURES_CONF > ./configs/features.conf
+      run: echo -e "$FEATURES_CONF" > ./configs/features.conf
 
     - name: Get aerospike.conf
-      run: wget https://github.com/aerospike/aerospike-server/blob/master/as/etc/aerospike.conf -O ./configs/aerospike.conf
+      run: wget https://raw.githubusercontent.com/aerospike/aerospike-server/master/as/etc/aerospike.conf -O ./configs/aerospike.conf
 
     - name: Set up Aerospike Database
       uses: reugn/github-action-aerospike@dev
