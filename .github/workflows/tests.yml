@@ -101,6 +101,9 @@ jobs:
     - name: Start server
       run: sudo systemctl start aerospike
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     - name: Wait for the database to start
       run: |
         wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
