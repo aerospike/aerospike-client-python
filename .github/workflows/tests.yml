@@ -50,17 +50,17 @@ jobs:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
 
-    - run: sudo apt update
-    - name: Install build dependencies (apt packages)
-      run: sudo apt install python3-dev libssl-dev -y
-    - name: Install build dependencies (pip packages)
-      run: python3 -m pip install build
+    # - run: sudo apt update
+    # - name: Install build dependencies (apt packages)
+    #   run: sudo apt install python3-dev libssl-dev -y
+    # - name: Install build dependencies (pip packages)
+    #   run: python3 -m pip install build
 
-    - name: Build client
-      run: python3 -m build
+    # - name: Build client
+    #   run: python3 -m build
 
     - name: Install client
-      run: pip install .
+      run: pip install aerospike
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
@@ -73,28 +73,46 @@ jobs:
         crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
         crudini --set config.conf enterprise-edition user superuser
         crudini --set config.conf enterprise-edition password superuser
+      working-directory: test
 
-    - name: Create config folder to store configs in
-      run: mkdir configs
+    # - name: Add features.conf location to aerospike.conf
+    #   # Add feature-key-file path to first occurrence of service stanza
+    #   run: sed -i "0,/service {/s//service {\n\tfeature-key-file \/etc\/aerospike\/features.conf/" ./aerospike.conf
+    #   working-directory: /opt/aerospike/etc/
 
-    - name: Get features.conf to enable enterprise edition tests
-      env:
-        FEATURES_CONF: ${{ secrets.FEATURES_CONF }}
-      run: echo -e "$FEATURES_CONF" > ./configs/features.conf
+    # - name: Get features.conf to enable enterprise edition tests
+    #   env:
+    #     FEATURES_CONF: ${{ secrets.FEATURES_CONF }}
+    #   run: |
+    #     echo -e "$FEATURES_CONF" > /opt/aerospike/etc/features.conf
 
-    - name: Get aerospike.conf
-      run: wget https://raw.githubusercontent.com/aerospike/aerospike-server/master/as/etc/aerospike.conf -O ./configs/aerospike.conf
+    - name: Install enterprise edition server
+      # run: docker run -d -v /opt/aerospike/etc/:/opt/aerospike/etc/ --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise --config-file=/opt/aerospike/etc/aerospike.conf
+      run: |
+        wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-enterprise/6.2.0/aerospike-server-enterprise_6.2.0.2_tools-8.0.3_ubuntu20.04_x86_64.tgz
+        tar -xvf aerospike.tgz
+        cd aerospike-server-enterprise_*
+        sudo ./asinstall
 
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
-        config-file: 'configs/aerospike.conf'
-        feature-key-file: 'configs/features.conf'
+    - name: Enable security features using aerospike.conf
+      # Security stanza
+      run: sudo echo -e "\n\nsecurity{\n\n}\n" >> /etc/aerospike/aerospike.conf
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
+    - name: Start server
+      run: sudo systemctl start aerospike
+
+    # - name: Wait for the database to start
+    #   run: |
+    #     wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
+    #     chmod u+x ./wait-for
+    #     ./wait-for 127.0.0.1:3000
+    #     ./wait-for 127.0.0.1:3001
+    #     ./wait-for 127.0.0.1:3002
+    #   env:
+    #     WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
+
+    - name: Create user in database for tests
+      run: asadm --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
 
     - name: Run tests
       run: python -m pytest ./new_tests
