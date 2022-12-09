@@ -94,7 +94,7 @@ jobs:
 
     - name: Enable security features using aerospike.conf
       # Security stanza
-      run: echo -e "\n\nsecurity {\n\n}\n" | sudo tee -a /etc/aerospike/aerospike.conf
+      run: echo -e "\n\nsecurity {\n\n}\n" >> ./configs/aerospike.conf
 
     - name: Install enterprise edition server
       run: docker run -d -v $(pwd)/configs/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise asd --config-file /etc/aerospike/aerospike.conf
