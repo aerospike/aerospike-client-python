@@ -101,15 +101,15 @@ jobs:
     - name: Start server
       run: sudo systemctl start aerospike
 
-    # - name: Wait for the database to start
-    #   run: |
-    #     wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
-    #     chmod u+x ./wait-for
-    #     ./wait-for 127.0.0.1:3000
-    #     ./wait-for 127.0.0.1:3001
-    #     ./wait-for 127.0.0.1:3002
-    #   env:
-    #     WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
+    - name: Wait for the database to start
+      run: |
+        wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
+        chmod u+x ./wait-for
+        ./wait-for 127.0.0.1:3000
+        # ./wait-for 127.0.0.1:3001
+        # ./wait-for 127.0.0.1:3002
+      env:
+        WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
 
     - name: Create user in database for tests
       run: asadm --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
