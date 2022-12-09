@@ -96,7 +96,7 @@ jobs:
 
     - name: Enable security features using aerospike.conf
       # Security stanza
-      run: sudo echo -e "\n\nsecurity{\n\n}\n" >> /etc/aerospike/aerospike.conf
+      run: echo -e "\n\nsecurity{\n\n}\n" | sudo tee -a /etc/aerospike/aerospike.conf
 
     - name: Start server
       run: sudo systemctl start aerospike
