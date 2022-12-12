@@ -78,20 +78,17 @@ sudo apt install clang-format
 
 ## Build
 
+    export STATIC_SSL=1
+    # substitute the paths to your OpenSSL 1.1 library
+    export SSL_LIB_PATH=/usr/local/Cellar/openssl@1.1/1.1.1l/lib/
+    export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
+
 Before building the wheel, it is recommended to manually clean the C client build:
 ```
 python3 setup.py clean
 ```
 Sometimes the C client will not rebuild if you switch branches and update the C client submodule, and you will end up
 using the wrong version of the C client. This can causes strange issues when building or testing the Python client.
-
-For macOS, you must set these environment variables to statically link openssl when building the wheel:
-```
-export STATIC_SSL=1
-openssl_path=$(brew --prefix openssl@1.1)
-export SSL_LIB_PATH=$openssl_path/lib/
-export CPATH=$openssl_path/include/
-```
 
 Then build the source distribution and wheel:
 ```
@@ -114,9 +111,9 @@ error similar to: `error: could not create '/usr/local/aerospike/lua': Permissio
 
 ## Install
 
-Once the client is built, install the wheel:
+Once the client is built:
 
-    pip install wheel/<wheel-filename>
+    pip install .
 
 ### Troubleshooting macOS
 
