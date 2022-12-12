@@ -1989,6 +1989,15 @@ Batch Policies
             | Allow batch to be processed immediately in the server's receiving thread when the server deems it to be appropriate.  If `False`, the batch will always be processed in separate transaction threads.  This field is only relevant for the new batch index protocol. 
             | 
             | Default ``True``
+        * **allow_inline_ssd** (:class:`bool`)
+            Allow batch to be processed immediately in the server's receiving thread for SSD namespaces.
+            If false, the batch will always be processed in separate service threads. Server versions < 6.0 ignore this field.
+
+            Inline processing can introduce the possibility of unfairness because the server can process the entire
+            batch before moving onto the next command.
+
+            Default: ``False``
+
         * **send_set_name** (:class:`bool`) 
             |
             |   .. deprecated:: in client version 7.0.0, the client ignores this policy and always sends set name to the server.
