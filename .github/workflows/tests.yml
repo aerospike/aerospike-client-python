@@ -31,8 +31,11 @@ jobs:
         check-path: 'src'
         clang-format-version: 14
 
-  build-install-test-ee:
+  build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py-version: [3.7, 3.8, 3.9]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -40,7 +43,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: ${{ matrix.py-version }}
         architecture: 'x64'
 
     - run: sudo apt update
@@ -52,8 +55,69 @@ jobs:
     - name: Build client
       run: python3 -m build
 
+    - name: Send wheel to test jobs
+      uses: actions/upload-artifact@v3
+      with:
+        name: wheel-${{ matrix.py-version }}
+        path: ./dist/*.whl
+
+  test-ce:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py-version: [3.7, 3.8, 3.9]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-3.7
+
     - name: Install client
-      run: pip install .
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
+
+  test-ee:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-3.7
+
+    - name: Install client
+      run: pip install *.whl
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
@@ -103,49 +167,6 @@ jobs:
       run: |
         docker container logs aerospike
         cat ./configs/aerospike.conf
-
-  build-install-test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        py-version: [3.7, 3.8, 3.9]
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.py-version }}
-        architecture: 'x64'
-
-    - run: sudo apt update
-    - name: Install build dependencies (apt packages)
-      run: sudo apt install python3-dev libssl-dev -y
-    - name: Install build dependencies (pip packages)
-      run: python3 -m pip install build
-
-    - name: Build client
-      run: python3 -m build
-
-    - name: Install client
-      run: pip install .
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
-    - name: Run tests
-      run: python -m pytest ./new_tests
-      working-directory: test
 
   spellcheck-docs:
     runs-on: ubuntu-latest
