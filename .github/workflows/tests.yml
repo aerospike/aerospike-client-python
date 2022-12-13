@@ -161,7 +161,7 @@ jobs:
       run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
 
     - name: Run tests
-      run: python -m pytest ./new_tests
+      run: python -m pytest ./new_tests/test_admin_*.py
       working-directory: test
 
     - name: Show logs if failed
