@@ -120,7 +120,7 @@ jobs:
     - name: Install enterprise edition server
       run: |
         # docker run -d --name aerospike -p 3000-3002:3000-3002 --mount type=bind,src=$(pwd)/configs,dst=/opt/aerospike/etc aerospike/aerospike-server-enterprise asd --config-file /opt/aerospike/etc/aerospike.conf
-        docker run  -tid -v $(pwd)/configs:/etc/aerospike -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /etc/aerospike/aerospike.conf
+        docker run  -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /opt/aerospike/etc/aerospike.conf
         sleep 5
 
     #   run: |
