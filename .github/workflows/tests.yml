@@ -78,18 +78,19 @@ jobs:
     - name: Create config folder to store configs in
       run: mkdir configs
 
-    - name: Wait for the database to start
-      run: |
-        wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
-        chmod u+x ./wait-for
-        # ./wait-for ${{ env.ipAddress }}
-      env:
-        WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
+    # - name: Wait for the database to start
+    #   run: |
+    #     wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
+    #     chmod u+x ./wait-for
+    #     # ./wait-for ${{ env.ipAddress }}
+    #   env:
+    #     WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
 
     - name: Get default aerospike.conf and features.conf from Docker server EE container
       run: |
         docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise
-        ./wait-for 127.0.0.1:3000
+        # ./wait-for 127.0.0.1:3000
+        sleep 3
         docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
         # docker cp aerospike:/etc/aerospike/features.conf ./configs/features.conf
         docker container stop aerospike
@@ -120,7 +121,7 @@ jobs:
       run: |
         # docker run -d --name aerospike -p 3000-3002:3000-3002 --mount type=bind,src=$(pwd)/configs,dst=/opt/aerospike/etc aerospike/aerospike-server-enterprise asd --config-file /opt/aerospike/etc/aerospike.conf
         docker run  -tid -v $(pwd)/configs:/etc/aerospike -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /etc/aerospike/aerospike.conf
-        ./wait-for 127.0.0.1:3000
+        sleep 3
 
     #   run: |
     #     wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-enterprise/6.2.0/aerospike-server-enterprise_6.2.0.2_tools-8.0.3_ubuntu20.04_x86_64.tgz
