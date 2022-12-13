@@ -111,7 +111,9 @@ jobs:
 
     - name: Enable security features using aerospike.conf
       # Security stanza
-      run: echo -e "security {\n\n}\n" >> ./aerospike.conf
+      run: |
+        echo -e "security {\n\n}\n" >> ./aerospike.conf
+        cat ./aerospike.conf
       working-directory: ./configs
 
     - name: Install enterprise edition server
@@ -153,7 +155,8 @@ jobs:
 
     - name: Show logs if failed
       if: ${{ failure() }}
-      run: docker container logs aerospike
+      run: |
+        docker container logs aerospike
 
   spellcheck-docs:
     runs-on: ubuntu-latest
