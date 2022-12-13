@@ -53,7 +53,7 @@ jobs:
       run: python3 -m build
 
     - name: Install client
-      run: pip install aerospike
+      run: pip install .
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
