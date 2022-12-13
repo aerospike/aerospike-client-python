@@ -121,6 +121,9 @@ jobs:
     #     ipAddress=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike)
     #     echo "ipAddress=$ipAddress" >> $GITHUB_ENV
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     - name: Wait for the database to start
       run: |
         wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
