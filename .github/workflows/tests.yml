@@ -41,14 +41,14 @@ jobs:
           # 3.9
         ]
     steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
+    # - uses: actions/checkout@v2
+    #   with:
+    #     submodules: recursive
 
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.py-version }}
-        architecture: 'x64'
+    # - uses: actions/setup-python@v2
+    #   with:
+    #     python-version: ${{ matrix.py-version }}
+    #     architecture: 'x64'
 
     # - run: sudo apt update
     # - name: Install build dependencies (apt packages)
@@ -59,36 +59,48 @@ jobs:
     # - name: Build client
     #   run: python3 -m build
 
-    - name: Install client
-      run: pip install aerospike
+    # - name: Install client
+    #   run: pip install aerospike
 
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+    # - name: Install test dependencies
+    #   run: pip install -r test/requirements.txt
 
-    - name: Install crudini to manipulate config.conf
-      run: pip install crudini
+    # - name: Install crudini to manipulate config.conf
+    #   run: pip install crudini
 
-    - name: Add enterprise edition config to config.conf
-      run: |
-        crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-        crudini --set config.conf enterprise-edition user superuser
-        crudini --set config.conf enterprise-edition password superuser
-      working-directory: test
+    # - name: Add enterprise edition config to config.conf
+    #   run: |
+    #     crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
+    #     crudini --set config.conf enterprise-edition user superuser
+    #     crudini --set config.conf enterprise-edition password superuser
+    #   working-directory: test
 
     - name: Create config folder to store configs in
       run: mkdir configs
 
-    - name: Get default aerospike.conf from Docker server EE container
+    - name: Wait for the database to start
+      run: |
+        wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
+        chmod u+x ./wait-for
+        # ./wait-for ${{ env.ipAddress }}
+      env:
+        WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
+
+    - name: Get default aerospike.conf and features.conf from Docker server EE container
       run: |
         docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise
-        docker cp aerospike:/etc/aerospike/aerospike.conf aerospike.conf
+        ./wait-for 127.0.0.1:3000
+        docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
+        # docker cp aerospike:/etc/aerospike/features.conf ./configs/features.conf
         docker container stop aerospike
         docker container rm aerospike
-      working-directory: ./configs
 
-    # - name: Add features.conf location to aerospike.conf
-    #   # Add feature-key-file path to first occurrence of service stanza
-    #   run: sed -i "0,/service {/s//service {\n\tfeature-key-file \/etc\/aerospike\/features.conf/" ./aerospike.conf
+    # - name: Update features.conf location in aerospike.conf
+    #   run: sed -i "s/\/etc\/aerospike\/features.conf/\/opt\/aerospike\/etc\/features.conf/" ./aerospike.conf
+    #   working-directory: ./configs
+
+    # - name: Enable logging
+    #   run: sed -i "s/file \/dev\/null/console/" ./aerospike.conf
     #   working-directory: ./configs
 
     # - name: Get features.conf to enable enterprise edition tests
@@ -103,7 +115,9 @@ jobs:
       working-directory: ./configs
 
     - name: Install enterprise edition server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 --mount type=bind,src=$(pwd)/configs,dst=/opt/aerospike/etc aerospike/aerospike-server-enterprise asd --config-file /opt/aerospike/etc/aerospike.conf
+      run: |
+        docker run -d --name aerospike -p 3000-3002:3000-3002 --mount type=bind,src=$(pwd)/configs,dst=/opt/aerospike/etc aerospike/aerospike-server-enterprise asd --config-file /opt/aerospike/etc/aerospike.conf
+        ./wait-for 127.0.0.1:3000
 
     #   run: |
     #     wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-enterprise/6.2.0/aerospike-server-enterprise_6.2.0.2_tools-8.0.3_ubuntu20.04_x86_64.tgz
@@ -121,17 +135,9 @@ jobs:
     #     ipAddress=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike)
     #     echo "ipAddress=$ipAddress" >> $GITHUB_ENV
 
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
 
-    - name: Wait for the database to start
-      run: |
-        wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
-        chmod u+x ./wait-for
-        # ./wait-for ${{ env.ipAddress }}
-        ./wait-for 127.0.0.1:3000
-      env:
-        WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
 
     # - name: Setup tmate session
     #   uses: mxschmitt/action-tmate@v3
@@ -140,9 +146,9 @@ jobs:
       # Use default admin user to create another user for testing
       run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
 
-    - name: Run tests
-      run: python -m pytest ./new_tests
-      working-directory: test
+    # - name: Run tests
+    #   run: python -m pytest ./new_tests
+    #   working-directory: test
 
   spellcheck-docs:
     runs-on: ubuntu-latest
