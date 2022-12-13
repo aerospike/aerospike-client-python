@@ -116,7 +116,8 @@ jobs:
 
     - name: Install enterprise edition server
       run: |
-        docker run -d --name aerospike -p 3000-3002:3000-3002 --mount type=bind,src=$(pwd)/configs,dst=/opt/aerospike/etc aerospike/aerospike-server-enterprise asd --config-file /opt/aerospike/etc/aerospike.conf
+        # docker run -d --name aerospike -p 3000-3002:3000-3002 --mount type=bind,src=$(pwd)/configs,dst=/opt/aerospike/etc aerospike/aerospike-server-enterprise asd --config-file /opt/aerospike/etc/aerospike.conf
+        docker run  -tid -v $(pwd)/configs:/etc/aerospike -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /etc/aerospike/aerospike.conf
         ./wait-for 127.0.0.1:3000
 
     #   run: |
@@ -149,6 +150,10 @@ jobs:
     # - name: Run tests
     #   run: python -m pytest ./new_tests
     #   working-directory: test
+
+    - name: Show logs if failed
+      if: ${{ failure() }}
+      run: docker container logs aerospike
 
   spellcheck-docs:
     runs-on: ubuntu-latest
