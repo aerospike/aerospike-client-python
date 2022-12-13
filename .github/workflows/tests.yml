@@ -103,7 +103,6 @@ jobs:
 
     - name: Run tests
       run: |
-        cd asdfadsf
         python -m pytest ./new_tests
       working-directory: test
 
