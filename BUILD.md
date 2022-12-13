@@ -83,8 +83,18 @@ sudo apt install clang-format
     export SSL_LIB_PATH=/usr/local/Cellar/openssl@1.1/1.1.1l/lib/
     export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
 
-    pip install build
-    python3 -m build
+Before building the wheel, it is recommended to manually clean the C client build:
+```
+python3 setup.py clean
+```
+Sometimes the C client will not rebuild if you switch branches and update the C client submodule, and you will end up
+using the wrong version of the C client. This can causes strange issues when building or testing the Python client.
+
+Then build the source distribution and wheel:
+```
+pip install build
+python3 -m build
+```
 
 ### Troubleshooting macOS
 
