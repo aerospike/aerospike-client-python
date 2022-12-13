@@ -32,7 +32,7 @@ jobs:
         clang-format-version: 14
 
   build-install-test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         py-version: [
@@ -78,8 +78,13 @@ jobs:
     - name: Create config folder to store configs in
       run: mkdir configs
 
-    - name: Get aerospike.conf
-      run: wget https://raw.githubusercontent.com/aerospike/aerospike-server/master/as/etc/aerospike.conf -O ./configs/aerospike.conf
+    - name: Get default aerospike.conf from Docker server EE container
+      run: |
+        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise
+        docker cp aerospike:/etc/aerospike/aerospike.conf aerospike.conf
+        docker container stop aerospike
+        docker container rm aerospike
+      working-directory: ./configs
 
     # - name: Add features.conf location to aerospike.conf
     #   # Add feature-key-file path to first occurrence of service stanza
@@ -94,10 +99,12 @@ jobs:
 
     - name: Enable security features using aerospike.conf
       # Security stanza
-      run: echo -e "\n\nsecurity {\n\n}\n" >> ./configs/aerospike.conf
+      run: echo -e "security {\n\n}\n" >> ./aerospike.conf
+      working-directory: ./configs
 
     - name: Install enterprise edition server
-      run: docker run -d -v $(pwd)/configs/aerospike.conf:/etc/aerospike/aerospike.conf --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise asd --config-file /etc/aerospike/aerospike.conf
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 --mount type=bind,src=$(pwd)/configs,dst=/opt/aerospike/etc aerospike/aerospike-server-enterprise asd --config-file /opt/aerospike/etc/aerospike.conf
+
     #   run: |
     #     wget -O aerospike.tgz https://download.aerospike.com/artifacts/aerospike-server-enterprise/6.2.0/aerospike-server-enterprise_6.2.0.2_tools-8.0.3_ubuntu20.04_x86_64.tgz
     #     tar -xvf aerospike.tgz
@@ -107,18 +114,24 @@ jobs:
     # - name: Start server
     #   run: sudo systemctl start aerospike
 
+    # Get ip address to test this workflow on act
+    # In act the server runs on another container instead of inside the host container
+    # - name: Save Docker container ip address of server
+    #   run: |
+    #     ipAddress=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike)
+    #     echo "ipAddress=$ipAddress" >> $GITHUB_ENV
+
     - name: Wait for the database to start
       run: |
         wget https://raw.githubusercontent.com/eficode/wait-for/$WAIT_FOR_VERSION/wait-for
         chmod u+x ./wait-for
+        # ./wait-for ${{ env.ipAddress }}
         ./wait-for 127.0.0.1:3000
-        # ./wait-for 127.0.0.1:3001
-        # ./wait-for 127.0.0.1:3002
       env:
         WAIT_FOR_VERSION: 4df3f9262d84cab0039c07bf861045fbb3c20ab7 # v2.2.3
 
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
 
     - name: Create user in database for tests
       # Use default admin user to create another user for testing
