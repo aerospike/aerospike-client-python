@@ -31,15 +31,8 @@ jobs:
         check-path: 'src'
         clang-format-version: 14
 
-  build-install-test:
+  build-install-test-ee:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        py-version: [
-          3.7,
-          # 3.8,
-          # 3.9
-        ]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -47,17 +40,17 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.py-version }}
+        python-version: 3.7
         architecture: 'x64'
 
-    # - run: sudo apt update
-    # - name: Install build dependencies (apt packages)
-    #   run: sudo apt install python3-dev libssl-dev -y
-    # - name: Install build dependencies (pip packages)
-    #   run: python3 -m pip install build
+    - run: sudo apt update
+    - name: Install build dependencies (apt packages)
+      run: sudo apt install python3-dev libssl-dev -y
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
 
-    # - name: Build client
-    #   run: python3 -m build
+    - name: Build client
+      run: python3 -m build
 
     - name: Install client
       run: pip install aerospike
@@ -92,7 +85,7 @@ jobs:
       working-directory: ./configs
 
     - name: Run enterprise edition server
-      run: docker run  -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /opt/aerospike/etc/aerospike.conf
+      run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /opt/aerospike/etc/aerospike.conf
 
     - name: Wait for server to start
       run: sleep 5
@@ -102,8 +95,7 @@ jobs:
       run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
 
     - name: Run tests
-      run: |
-        python -m pytest ./new_tests
+      run: python -m pytest ./new_tests
       working-directory: test
 
     - name: Show logs if failed
@@ -111,6 +103,49 @@ jobs:
       run: |
         docker container logs aerospike
         cat ./configs/aerospike.conf
+
+  build-install-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py-version: [3.7, 3.8, 3.9]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.py-version }}
+        architecture: 'x64'
+
+    - run: sudo apt update
+    - name: Install build dependencies (apt packages)
+      run: sudo apt install python3-dev libssl-dev -y
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
+
+    - name: Build client
+      run: python3 -m build
+
+    - name: Install client
+      run: pip install .
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
 
   spellcheck-docs:
     runs-on: ubuntu-latest
