@@ -567,7 +567,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             See :ref:`Data_Mapping` for more information.
 
-            Default: :data:`aerospike.PY_BYTES`
+            Default: :data:`aerospike.AS_BOOL`
         * **serialization** (:class:`tuple`)
             An optional instance-level `tuple` of ``(serializer, deserializer)``.
 

@@ -905,7 +905,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->has_connected = false;
     self->use_shared_connection = false;
     self->as = NULL;
-    self->send_bool_as = SEND_BOOL_AS_PY_BYTES;
+    self->send_bool_as = SEND_BOOL_AS_AS_BOOL;
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist,
                                     &py_config) == false) {
