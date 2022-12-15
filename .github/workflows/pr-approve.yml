@@ -1,0 +1,133 @@
+name: Run QE tests
+
+# When someone approves a PR:
+# 1. Build source and binary distributions
+# 2. Send the source and binary distributions to QE build system
+# The QE tests must pass before allowing this PR to be merged into stage
+on:
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  manylinux_arm64:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python versions to build wheels on
+        python: [
+          "cp37",
+          "cp38",
+          "cp39"
+        ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Set up QEMU for cross compiling arm64
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: all
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python }}-manylinux_aarch64
+        CIBW_BUILD_FRONTEND: build
+        # TODO: remove unneeded dependencies
+        # TODO: yum update?
+        CIBW_BEFORE_ALL_LINUX: >
+          yum install openssl-devel -y &&
+          yum install python-devel -y &&
+          yum install python-setuptools -y
+        CIBW_ARCHS: "aarch64"
+        # TODO: support integration tests for ARM wheels
+        CIBW_TEST_COMMAND: python -c "import aerospike"
+
+    - name: Upload wheels to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+        # Artifact name, not the file name
+        name: manylinux-aarch64-${{ matrix.python[0] }}
+
+  manylinux_x86_64:
+    if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python versions to build wheels on
+        python: [
+          ["cp37", 3.7],
+          ["cp38", 3.8],
+          ["cp39", 3.9]
+        ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python[0] }}-manylinux_x86_64
+        CIBW_BUILD_FRONTEND: build
+        # TODO: remove unneeded dependencies
+        # TODO: yum update?
+        CIBW_BEFORE_ALL_LINUX: >
+          yum install openssl-devel -y &&
+          yum install python-devel -y &&
+          yum install python-setuptools -y
+        CIBW_ARCHS: "x86_64"
+
+    # Test wheels
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python[1] }}
+        architecture: 'x64'
+
+    - name: Install manylinux wheel
+      run: pip install ./wheelhouse/*
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
+
+    - name: Upload wheels to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+        # Artifact name, not the file name
+        name: manylinux-x86_64-${{ matrix.python[0] }}
+
+  send-to-qe:
+    needs: [manylinux_x86_64, manylinux_arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - run: echo "Upload to QE"
+      # - uses: shallwefootball/s3-upload-action@master
+      #   with:
+      #     aws_key_id: ${{ secrets.AWS_KEY_ID }}
+      #     aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+      #     aws_bucket: ${{ secrets.AWS_BUCKET }}
+      #     # Send all distributions to QE build system
+      #     source_dir: './wheelhouse'
