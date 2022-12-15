@@ -10,7 +10,7 @@ on:
 
 jobs:
   manylinux_arm64:
-    if: github.event.review.state == 'approved'
+    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -18,8 +18,8 @@ jobs:
         # Python versions to build wheels on
         python: [
           "cp37",
-          "cp38",
-          "cp39"
+          # "cp38",
+          # "cp39"
         ]
 
     steps:
@@ -31,6 +31,20 @@ jobs:
       uses: docker/setup-qemu-action@v2
       with:
         platforms: all
+
+    - name: Set up Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Wait for server to start
+      run: sleep 5
+
+    - name: Set config.conf to use Docker IP address of Aerospike server
+      # config.conf should be copied into the cibuildwheel Docker container
+      run: |
+        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
+        pip install crudini
+        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+      working-directory: test
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
@@ -44,8 +58,10 @@ jobs:
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "aarch64"
-        # TODO: support integration tests for ARM wheels
-        CIBW_TEST_COMMAND: python -c "import aerospike"
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          pip install -r requirements.txt &&
+          python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
