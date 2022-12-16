@@ -225,7 +225,9 @@ class TestBaseClass(object):
         policy_names = ("read", "write", "apply", "operate", "remove", "query", "scan", "batch")
         for policy_name in policy_names:
             config["policies"][policy_name] = {}
-            config["policies"][policy_name]["total_timeout"] = 0
+            # 3 minutes
+            # Override server's total (transaction) timeout
+            config["policies"][policy_name]["total_timeout"] = 180000
 
         # Must hear back from server after a certain number of seconds
         config["max_socket_idle"] = 60
