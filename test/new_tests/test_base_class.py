@@ -228,8 +228,8 @@ class TestBaseClass(object):
             # 3 minutes
             # Override server's total (transaction) timeout
             config["policies"][policy_name]["total_timeout"] = 180000
-
-        # Must hear back from server after a certain number of seconds
-        config["max_socket_idle"] = 60
+            # Must hear back from server after a certain number of seconds
+            config["policies"][policy_name]["socket_timeout"] = 180000
+        # config["max_socket_idle"] = 60
 
         return config
