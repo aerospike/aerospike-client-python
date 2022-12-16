@@ -224,7 +224,6 @@ class TestBaseClass(object):
         # total_timeout at the root level is deprecated
         policy_names = ("read", "write", "apply", "operate", "remove", "query", "scan", "batch")
         for policy_name in policy_names:
-            config["policies"] = {}
             config["policies"][policy_name] = {}
             config["policies"][policy_name]["total_timeout"] = 0
 
