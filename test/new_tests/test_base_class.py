@@ -232,4 +232,7 @@ class TestBaseClass(object):
             config["policies"][policy_name]["socket_timeout"] = 180000
         # config["max_socket_idle"] = 60
 
+        config["policies"]["info"] = {}
+        config["policies"]["info"]["timeout"] = 180000
+
         return config
