@@ -72,7 +72,7 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python[0] }}
 
   manylinux_x86_64:
-    if: github.event.review.state == 'approved'
+    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
