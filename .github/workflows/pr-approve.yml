@@ -68,7 +68,7 @@ jobs:
       with:
         path: ./wheelhouse/*.whl
         # Artifact name, not the file name
-        name: manylinux-aarch64-${{ matrix.python[0] }}
+        name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
     if: github.event.review.state == 'approved'
