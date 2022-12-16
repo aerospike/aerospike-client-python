@@ -43,7 +43,7 @@ jobs:
       run: |
         export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
         pip install crudini
-        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+        crudini --set config.conf community-edition hosts ${SERVER_DOCKER_IP}:3000
       working-directory: test
 
     - name: Build wheel
@@ -71,6 +71,7 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python[0] }}
 
   manylinux_x86_64:
+    if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -98,7 +99,7 @@ jobs:
       run: |
         export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
         pip install crudini
-        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+        crudini --set config.conf community-edition hosts ${SERVER_DOCKER_IP}:3000
       working-directory: test
 
     - name: Build wheel
