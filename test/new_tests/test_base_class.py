@@ -218,15 +218,15 @@ class TestBaseClass(object):
         config["password"] = TestBaseClass.password
 
         # Disable total_timeout and timeout
-        config["timeout"] = 0
-        config["total_timeout"] = 0
+        # config["timeout"] = 0
+        # config["total_timeout"] = 0
         # Also have to set for every operation policy since
         # total_timeout at the root level is deprecated
         policy_names = ("read", "write", "apply", "operate", "remove", "query", "scan", "batch")
         for policy_name in policy_names:
-            config[policy_name] = {}
-            config[policy_name]["timeout"] = 0
-            config[policy_name]["total_timeout"] = 0
+            config["policies"] = {}
+            config["policies"][policy_name] = {}
+            config["policies"][policy_name]["total_timeout"] = 0
 
         # Must hear back from server after a certain number of seconds
         config["max_socket_idle"] = 60
