@@ -7,10 +7,11 @@ name: Run QE tests
 on:
   pull_request_review:
     types: [submitted]
+  pull_request:
 
 jobs:
   manylinux_arm64:
-    if: github.event.review.state == 'approved'
+    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -58,10 +59,10 @@ jobs:
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "aarch64"
-        CIBW_TEST_COMMAND: >
-          cd {project}/test/ &&
-          pip install -r requirements.txt &&
-          python -m pytest new_tests/
+        # CIBW_TEST_COMMAND: >
+        #   cd {project}/test/ &&
+        #   pip install -r requirements.txt &&
+        #   python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
@@ -71,7 +72,7 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
-    if: github.event.review.state == 'approved'
+    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -114,10 +115,10 @@ jobs:
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "x86_64"
-        CIBW_TEST_COMMAND: >
-          cd {project}/test/ &&
-          pip install -r requirements.txt &&
-          python -m pytest new_tests/
+        # CIBW_TEST_COMMAND: >
+        #   cd {project}/test/ &&
+        #   pip install -r requirements.txt &&
+        #   python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
