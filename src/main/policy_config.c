@@ -482,7 +482,8 @@ as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy)
         return AEROSPIKE_ERR_PARAM;
     }
 
-    status = set_optional_uint32_property((uint32_t *)&info_policy->timeout, py_policy, "timeout");
+    status = set_optional_uint32_property((uint32_t *)&info_policy->timeout,
+                                          py_policy, "timeout");
     if (status != AEROSPIKE_OK) {
         return status;
     }
