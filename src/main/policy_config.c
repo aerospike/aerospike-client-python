@@ -88,6 +88,12 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
         return set_policy_status;
     }
 
+    PyObject *info_policy = PyDict_GetItemString(py_policies, "info");
+    set_policy_status = set_info_policy(&config->policies.info, info_policy);
+    if (set_policy_status != AEROSPIKE_OK) {
+        return set_policy_status;
+    }
+
     return AEROSPIKE_OK;
 }
 
@@ -458,6 +464,26 @@ as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy)
 
     status = set_optional_sc_read_mode(&batch_policy->read_mode_sc, py_policy,
                                        "read_mode_sc");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    return AEROSPIKE_OK;
+}
+
+as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy)
+{
+    as_status status = AEROSPIKE_OK;
+    if (!py_policy) {
+        return AEROSPIKE_OK;
+    }
+
+    if (!PyDict_Check(py_policy)) {
+        return AEROSPIKE_ERR_PARAM;
+    }
+
+    status = set_optional_uint32_property((uint32_t *)&info_policy->timeout,
+                                          py_policy, "timeout");
     if (status != AEROSPIKE_OK) {
         return status;
     }

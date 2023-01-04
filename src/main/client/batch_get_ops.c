@@ -110,10 +110,11 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
  * @param py_policy      		Python dict used to populate the operate_policy or map_policy.
  *******************************************************************************************************
  */
-static PyObject *
-AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self, as_error *err,
-                                    PyObject *py_keys, PyObject *py_ops,
-                                    PyObject *py_policy)
+static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_keys,
+                                                     PyObject *py_ops,
+                                                     PyObject *py_policy)
 {
     long operation;
     long return_type = -1;
@@ -252,8 +253,8 @@ PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
                         "batch_getops keys/ops should be of type list");
     }
 
-    py_results = AerospikeClient_Batch_GetOps_Invoke(
-        self, &err, py_keys, py_ops, py_policy);
+    py_results = AerospikeClient_Batch_GetOps_Invoke(self, &err, py_keys,
+                                                     py_ops, py_policy);
 
     if (py_results == NULL) {
         PyObject *py_err = NULL;
