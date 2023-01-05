@@ -200,10 +200,10 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
         // Don't need to copy lua script to user path if it already exists there
         bool same_lua_script_at_user_path = false;
         if (access(copy_filepath, F_OK) == 0){
-            struct stat *original_fstat, *copied_fstat;
-            fstat(filename, original_fstat);
-            fstat(copy_filepath, copied_fstat);
-            if(original_fstat->st_ino == copied_fstat->st_ino){
+            struct stat original_fstat, copied_fstat;
+            fstat(filename, &original_fstat);
+            fstat(copy_filepath, &copied_fstat);
+            if(original_fstat.st_ino == copied_fstat.st_ino){
                 same_lua_script_at_user_path = true;
             }
         }
