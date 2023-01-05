@@ -5,9 +5,10 @@ name: Run QE tests
 # 2. Send the source and binary distributions to QE build system
 # The QE tests must pass before allowing this PR to be merged into stage
 on:
-  pull_request_review:
-    types: [submitted]
-  pull_request:
+  # pull_request_review:
+  #   types: [submitted]
+  # pull_request:
+  workflow_dispatch:
 
 jobs:
   manylinux_arm64:
