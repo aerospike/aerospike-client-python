@@ -197,18 +197,35 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     uint8_t *buff = bytes;
 
     if (access(self->as->config.lua.user_path, W_OK) == 0) {
+        // Don't need to copy lua script to user path if it already exists there
+        bool same_lua_script_at_user_path = false;
+        if (access(copy_filepath, F_OK) == 0){
+            struct stat *original_fstat, *copied_fstat;
+            fstat(filename, original_fstat);
+            fstat(copy_filepath, copied_fstat);
+            if(original_fstat->st_ino == copied_fstat->st_ino){
+                same_lua_script_at_user_path = true;
+            }
+        }
 
-        copy_file_p = fopen(copy_filepath, "w+");
-        if (copy_file_p) {
-            int read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-            if (read && fwrite(buff, 1, read, copy_file_p)) {
-                while (read) {
-                    size += read;
-                    buff += read;
-                    read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-                    if (!fwrite(buff, 1, read, copy_file_p)) {
-                        break;
+        if(!same_lua_script_at_user_path){
+            copy_file_p = fopen(copy_filepath, "w+");
+            if (copy_file_p) {
+                int read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+                if (read && fwrite(buff, 1, read, copy_file_p)) {
+                    while (read) {
+                        size += read;
+                        buff += read;
+                        read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
+                        if (!fwrite(buff, 1, read, copy_file_p)) {
+                            break;
+                        }
                     }
+                }
+                else {
+                    as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Write of lua file to user path failed");
+                    goto CLEANUP;
                 }
             }
             else {
@@ -216,11 +233,6 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
                                 "Write of lua file to user path failed");
                 goto CLEANUP;
             }
-        }
-        else {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Write of lua file to user path failed");
-            goto CLEANUP;
         }
     }
     else {
