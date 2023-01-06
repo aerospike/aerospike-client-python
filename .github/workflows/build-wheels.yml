@@ -21,7 +21,8 @@ jobs:
         python: [
           "cp37",
           "cp38",
-          "cp39"
+          "cp39",
+          "cp310"
         ]
 
     steps:
@@ -80,9 +81,10 @@ jobs:
       matrix:
         # Python versions to build wheels on
         python: [
-          ["cp37", 3.7],
-          ["cp38", 3.8],
-          ["cp39", 3.9]
+          ["cp37", "3.7"],
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+          ["cp310", "3.10"]
         ]
 
     steps:
@@ -128,8 +130,88 @@ jobs:
         # Artifact name, not the file name
         name: manylinux-x86_64-${{ matrix.python[0] }}
 
+  macOS-x86:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [
+          ["cp37", "3.7"],
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+          ["cp310", "3.10"],
+        ]
+        os: [macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Set up Python ${{ matrix.python-version[1] }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version[1] }}
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_x86_64
+        CIBW_BUILD_FRONTEND: build
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        CIBW_ARCHS: "x86_64"
+        # CIBW_BEFORE_TEST: >
+        #   vagrant up &&
+        #   sleep 3 &&
+        #   pip install -r test/requirements.txt
+        # CIBW_TEST_COMMAND: >
+        #   cd {project}/test/ &&
+        #   python -m pytest new_tests/
+
+    - name: Save macOS wheel
+      uses: actions/upload-artifact@v3
+      if: ${{ always() }}
+      with:
+        name: ${{ matrix.os }}-${{ matrix.python-version[0] }}-wheel
+        path: wheelhouse/*.whl
+
+  macOS-m1:
+    if: ${{ false }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [
+          macos-11,
+        ]
+        # Python versions to build wheels on
+        python: [
+          "cp38",
+          "cp39"
+        ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python }}-macosx_arm64
+        CIBW_BUILD_FRONTEND: build
+        # Set env variables before building
+        CIBW_BEFORE_ALL_MACOS: >
+          git clone https://github.com/passepartoutvpn/openssl-apple &&
+          cd openssl-apple &&
+          export CONFIG_OPTIONS="no-shared" &&
+          ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=$(xcrun --show-sdk-version) ||
+          cat "./bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/build-openssl-1.1.1q.log"
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/lib/" CPATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/include/" STATIC_SSL=1
+        CIBW_ARCHS: "arm64"
+        CIBW_TEST_COMMAND: python -c "import aerospike"
+
   send-to-qe:
-    needs: [manylinux_x86_64, manylinux_arm64]
+    needs: [manylinux_x86_64, manylinux_arm64, macOS-x86]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master

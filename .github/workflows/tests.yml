@@ -11,258 +11,178 @@ on:
   workflow_dispatch:
 
 jobs:
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-  #   - uses: actions/setup-python@v2
-  #     with:
-  #       python-version: '3.9'
-  #       architecture: 'x64'
-  #   - name: Install linting dependencies
-  #     run: python -m pip install flake8
-  #   - name: Lint Python code
-  #     run: python -m flake8
-  #   - name: Lint C wrapper code
-  #     uses: jidicula/clang-format-action@v4.9.0
-  #     with:
-  #       check-path: 'src'
-  #       clang-format-version: 14
-
-  # build:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       py-version: ["3.7", "3.8", "3.9", "3.10"]
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-
-  #   - uses: actions/setup-python@v2
-  #     with:
-  #       python-version: ${{ matrix.py-version }}
-  #       architecture: 'x64'
-
-  #   - run: sudo apt update
-  #   - name: Install build dependencies (apt packages)
-  #     run: sudo apt install python3-dev libssl-dev -y
-  #   - name: Install build dependencies (pip packages)
-  #     run: python3 -m pip install build
-
-  #   - name: Build client
-  #     run: python3 -m build
-
-  #   - name: Send wheel to test jobs
-  #     uses: actions/upload-artifact@v3
-  #     with:
-  #       name: wheel-${{ matrix.py-version }}
-  #       path: ./dist/*.whl
-
-  # test-ce:
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   strategy:
-  #     matrix:
-  #       py-version: [3.7, 3.8, 3.9]
-
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-
-  #   - uses: actions/setup-python@v2
-  #     with:
-  #       python-version: ${{ matrix.py-version }}
-  #       architecture: 'x64'
-
-  #   - uses: actions/download-artifact@v3
-  #     with:
-  #       name: wheel-${{ matrix.py-version }}
-
-  #   - name: Install client
-  #     run: pip install *.whl
-
-  #   - name: Install test dependencies
-  #     run: pip install -r test/requirements.txt
-
-  #   - name: Set up Aerospike Database
-  #     uses: reugn/github-action-aerospike@dev
-  #     with:
-  #       port: 3000
-
-  #   - name: Wait for database to be ready
-  #     # Should be ready after 3 seconds
-  #     run: sleep 3
-
-  #   - name: Run tests
-  #     run: python -m pytest ./new_tests
-  #     working-directory: test
-
-  # test-ee:
-  #   runs-on: ubuntu-latest
-  #   needs: build
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-
-  #   - uses: actions/setup-python@v2
-  #     with:
-  #       python-version: 3.7
-  #       architecture: 'x64'
-
-  #   - uses: actions/download-artifact@v3
-  #     with:
-  #       name: wheel-3.7
-
-  #   - name: Install client
-  #     run: pip install *.whl
-
-  #   - name: Install test dependencies
-  #     run: pip install -r test/requirements.txt
-
-  #   - name: Install crudini to manipulate config.conf
-  #     run: pip install crudini
-
-  #   - name: Add enterprise edition config to config.conf
-  #     run: |
-  #       crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-  #       crudini --set config.conf enterprise-edition user superuser
-  #       crudini --set config.conf enterprise-edition password superuser
-  #     working-directory: test
-
-  #   - name: Create config folder to store configs in
-  #     run: mkdir configs
-
-  #   - name: Get default aerospike.conf from Docker server EE container
-  #     run: |
-  #       docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise
-  #       sleep 5
-  #       docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
-  #       docker container stop aerospike
-  #       docker container rm aerospike
-
-  #   - name: Enable security features using aerospike.conf
-  #     # Security stanza
-  #     run: echo -e "security {\n\n}\n" >> ./aerospike.conf
-  #     working-directory: ./configs
-
-  #   - name: Run enterprise edition server
-  #     run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /opt/aerospike/etc/aerospike.conf
-
-  #   - name: Wait for server to start
-  #     run: sleep 5
-
-  #   - name: Create user in database for tests
-  #     # Use default admin user to create another user for testing
-  #     run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
-
-  #   - name: Run tests
-  #     run: python -m pytest ./new_tests/test_admin_*.py
-  #     working-directory: test
-
-  #   - name: Show logs if failed
-  #     if: ${{ failure() }}
-  #     run: |
-  #       docker container logs aerospike
-  #       cat ./configs/aerospike.conf
-
-  # spellcheck-docs:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #     with:
-  #       submodules: recursive
-  #   - uses: actions/setup-python@v2
-  #     with:
-  #       python-version: '3.9'
-  #       architecture: 'x64'
-  #   - name: Install dependencies for checking spelling in docs
-  #     # TODO: find way to split up dependencies
-  #     run: python -m pip install -r doc/requirements.txt
-  #   - name: Check spelling
-  #     run: sphinx-build -b spelling . spelling -W --keep-going
-  #     working-directory: doc
-
-  macOS-x86:
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [
-          ["cp37", "3.7"],
-          ["cp38", "3.8"],
-          ["cp39", "3.9"]
-        ]
-        os: [macos-12]
-    runs-on: ${{ matrix.os }}
+  lint:
+    runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        architecture: 'x64'
+    - name: Install linting dependencies
+      run: python -m pip install flake8
+    - name: Lint Python code
+      run: python -m flake8
+    - name: Lint C wrapper code
+      uses: jidicula/clang-format-action@v4.9.0
+      with:
+        check-path: 'src'
+        clang-format-version: 14
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        py-version: ["3.7", "3.8", "3.9", "3.10"]
+    steps:
+    - uses: actions/checkout@v2
       with:
         submodules: recursive
 
-    - name: Set up Python ${{ matrix.python-version[1] }}
-      uses: actions/setup-python@v3
+    - uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version[1] }}
+        python-version: ${{ matrix.py-version }}
+        architecture: 'x64'
 
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
-      env:
-        CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_x86_64
-        CIBW_BUILD_FRONTEND: build
-        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
-        CIBW_ARCHS: "x86_64"
-        # CIBW_BEFORE_TEST: >
-        #   vagrant up &&
-        #   sleep 3 &&
-        #   pip install -r test/requirements.txt
-        # CIBW_TEST_COMMAND: >
-        #   cd {project}/test/ &&
-        #   python -m pytest new_tests/
+    - run: sudo apt update
+    - name: Install build dependencies (apt packages)
+      run: sudo apt install python3-dev libssl-dev -y
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
 
-    - name: Save macOS wheel
+    - name: Build client
+      run: python3 -m build
+
+    - name: Send wheel to test jobs
       uses: actions/upload-artifact@v3
-      if: ${{ always() }}
       with:
-        name: ${{ matrix.os }}-${{ matrix.python-version[0] }}-wheel
-        path: wheelhouse/*.whl
+        name: wheel-${{ matrix.py-version }}
+        path: ./dist/*.whl
 
-  macOS-m1:
-    if: ${{ false }}
-    runs-on: ${{ matrix.os }}
+  test-ce:
+    runs-on: ubuntu-latest
+    needs: build
     strategy:
-      fail-fast: false
       matrix:
-        os: [
-          macos-11,
-          macos-12
-        ]
-        # Python versions to build wheels on
-        python: [
-          "cp38",
-          "cp39"
-        ]
+        py-version: [3.7, 3.8, 3.9]
 
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
 
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
-      env:
-        CIBW_BUILD: ${{ matrix.python }}-macosx_arm64
-        CIBW_BUILD_FRONTEND: build
-        # Set env variables before building
-        CIBW_BEFORE_ALL_MACOS: >
-          git clone https://github.com/passepartoutvpn/openssl-apple &&
-          cd openssl-apple &&
-          export CONFIG_OPTIONS="no-shared" &&
-          ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=$(xcrun --show-sdk-version) ||
-          cat "./bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/build-openssl-1.1.1q.log"
-        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/lib/" CPATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/include/" STATIC_SSL=1
-        CIBW_ARCHS: "arm64"
-        CIBW_TEST_COMMAND: python -c "import aerospike"
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.py-version }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ matrix.py-version }}
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
+
+  test-ee:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.7
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-3.7
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Install crudini to manipulate config.conf
+      run: pip install crudini
+
+    - name: Add enterprise edition config to config.conf
+      run: |
+        crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
+        crudini --set config.conf enterprise-edition user superuser
+        crudini --set config.conf enterprise-edition password superuser
+      working-directory: test
+
+    - name: Create config folder to store configs in
+      run: mkdir configs
+
+    - name: Get default aerospike.conf from Docker server EE container
+      run: |
+        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise
+        sleep 5
+        docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
+        docker container stop aerospike
+        docker container rm aerospike
+
+    - name: Enable security features using aerospike.conf
+      # Security stanza
+      run: echo -e "security {\n\n}\n" >> ./aerospike.conf
+      working-directory: ./configs
+
+    - name: Run enterprise edition server
+      run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /opt/aerospike/etc/aerospike.conf
+
+    - name: Wait for server to start
+      run: sleep 5
+
+    - name: Create user in database for tests
+      # Use default admin user to create another user for testing
+      run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
+
+    - name: Run tests
+      run: python -m pytest ./new_tests/test_admin_*.py
+      working-directory: test
+
+    - name: Show logs if failed
+      if: ${{ failure() }}
+      run: |
+        docker container logs aerospike
+        cat ./configs/aerospike.conf
+
+  spellcheck-docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        architecture: 'x64'
+    - name: Install dependencies for checking spelling in docs
+      # TODO: find way to split up dependencies
+      run: python -m pip install -r doc/requirements.txt
+    - name: Check spelling
+      run: sphinx-build -b spelling . spelling -W --keep-going
+      working-directory: doc
