@@ -250,7 +250,7 @@ jobs:
       - name: Connect to Aerospike VPN
         uses: "kota65535/github-openvpn-connect-action@v2"
         with:
-          config_file: "./github/workflows/aerospike.ovpn"
+          config_file: ".github/workflows/aerospike.ovpn"
           username: ${{ secrets.VPN_USERNAME }}
           password: ${{ secrets.VPN_PASSWORD }}
 
