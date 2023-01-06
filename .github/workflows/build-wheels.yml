@@ -1,17 +1,11 @@
 name: Build wheels
 
-# When someone approves a PR:
-# 1. Build source and binary distributions
-# 2. Send the source and binary distributions to QE build system
-# The QE tests must pass before allowing this PR to be merged into stage
+# Builds wheels and sends to QE and Aerospike artifactory
 on:
-  # pull_request_review:
-  #   types: [submitted]
   workflow_dispatch:
 
 jobs:
   manylinux_arm64:
-    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -53,17 +47,15 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.python }}-manylinux_aarch64
         CIBW_BUILD_FRONTEND: build
-        # TODO: remove unneeded dependencies
-        # TODO: yum update?
         CIBW_BEFORE_ALL_LINUX: >
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "aarch64"
-        # CIBW_TEST_COMMAND: >
-        #   cd {project}/test/ &&
-        #   pip install -r requirements.txt &&
-        #   python -m pytest new_tests/
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          pip install -r requirements.txt &&
+          python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
@@ -73,7 +65,6 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
-    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -110,17 +101,15 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.python[0] }}-manylinux_x86_64
         CIBW_BUILD_FRONTEND: build
-        # TODO: remove unneeded dependencies
-        # TODO: yum update?
         CIBW_BEFORE_ALL_LINUX: >
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "x86_64"
-        # CIBW_TEST_COMMAND: >
-        #   cd {project}/test/ &&
-        #   pip install -r requirements.txt &&
-        #   python -m pytest new_tests/
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          pip install -r requirements.txt &&
+          python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
@@ -158,13 +147,13 @@ jobs:
         CIBW_BUILD_FRONTEND: build
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
-        # CIBW_BEFORE_TEST: >
-        #   vagrant up &&
-        #   sleep 3 &&
-        #   pip install -r test/requirements.txt
-        # CIBW_TEST_COMMAND: >
-        #   cd {project}/test/ &&
-        #   python -m pytest new_tests/
+        CIBW_BEFORE_TEST: >
+          vagrant up &&
+          sleep 3 &&
+          pip install -r test/requirements.txt
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          python -m pytest new_tests/
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
@@ -180,7 +169,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [
-          macos-11,
+          macos-latest,
         ]
         # Python versions to build wheels on
         python: [
