@@ -1,4 +1,4 @@
-name: Run QE tests
+name: Build wheels
 
 # When someone approves a PR:
 # 1. Build source and binary distributions
