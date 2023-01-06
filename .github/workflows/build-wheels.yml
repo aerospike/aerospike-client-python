@@ -240,7 +240,7 @@ jobs:
         id: sub
         with:
           _input-file: ".github/workflows/aerospike.ovpn"
-          _format-key: '${{ key }}'
+          _format-key: '%%key%%'
           VPN_URL: ${{ secrets.VPN_URL }}
           CA_CERT: ${{ secrets.CA_CERT }}
           CERT: ${{ secrets.CERT }}
