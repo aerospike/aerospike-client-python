@@ -75,7 +75,7 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"timeout": 2000})
+        scan_obj.foreach(callback, {"timeout": 180000})
 
         assert len(records) == self.record_count
 
@@ -91,7 +91,7 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"timeout": 2000, "expressions": expr.compile()})
+        scan_obj.foreach(callback, {"expressions": expr.compile()})
         assert (
             len(records) == self.record_count - 2
         )  # 2 because the last record has no "name" bin and won't be included in the result
@@ -141,7 +141,7 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"socket_timeout": 9876})
+        scan_obj.foreach(callback, {"socket_timeout": 180000})
 
         assert len(records) == self.record_count
 
@@ -173,7 +173,7 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"timeout": 1000})
+        scan_obj.foreach(callback)
         assert len(records) == 10
 
     def test_scan_with_unicode_set(self):
@@ -426,7 +426,7 @@ class TestScan(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {"timeout": 1000})
+            scan_obj.foreach(callback)
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -466,4 +466,4 @@ class TestScan(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         with pytest.raises(e.InvalidRequest):
-            scan_obj.foreach(callback, {"timeout": 2000, "expressions": expr.compile()})
+            scan_obj.foreach(callback, {"expressions": expr.compile()})

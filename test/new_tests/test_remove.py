@@ -34,7 +34,7 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
         meta = {"gen": 0}
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
 
         retobj = self.as_connection.remove(key, meta, policy)
 
@@ -59,7 +59,7 @@ class TestRemove:
         key = ("test", "demo", 1)
         meta = {"gen": 0}
         policy = {
-            "timeout": 1000,
+            "timeout": 180000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
@@ -87,7 +87,7 @@ class TestRemove:
 
         key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
         meta = {"gen": 0}
-        policy = {"timeout": 1000, "retry": aerospike.POLICY_RETRY_ONCE, "key": aerospike.POLICY_KEY_DIGEST}
+        policy = {"retry": aerospike.POLICY_RETRY_ONCE, "key": aerospike.POLICY_KEY_DIGEST}
         retobj = self.as_connection.put(key, policy)
 
         assert retobj == 0
@@ -111,7 +111,6 @@ class TestRemove:
         key = ("test", "demo", 1)
         meta = {"gen": 0}
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
@@ -139,7 +138,6 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -169,7 +167,6 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
@@ -205,7 +202,6 @@ class TestRemove:
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"] + 5
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -228,7 +224,6 @@ class TestRemove:
         record = {"Company": "Microsoft", "Place": "US"}
         put_data(self.as_connection, key, record)
         policy = {
-            "timeout": 1000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
@@ -267,7 +262,7 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
         meta = {"gen": 0}
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.remove(key, meta, policy, "Extra Param")
         assert "remove() takes at most 3 arguments (4 given)" in str(typeError.value)

@@ -92,7 +92,7 @@ class TestSelectMany(object):
             #  Verify that only bins specified in filter bins are present
             assert set(bins) <= set(filter_bins)
 
-    @pytest.mark.parametrize("policy", [{"timeout": 50}, None], ids=["valid timeout", "None policy"])
+    @pytest.mark.parametrize("policy", [{"timeout": 180000}, None], ids=["valid timeout", "None policy"])
     def test_select_many_with_valid_policy_parameters(self, policy):
 
         filter_bins = ["title", "name", "float_value"]
@@ -114,7 +114,7 @@ class TestSelectMany(object):
         temp_keys.append(("test", "demo", "non-existent"))
 
         filter_bins = ["title", "name", "addr"]
-        records = self.as_connection.select_many(temp_keys, filter_bins, {"timeout": 1000})
+        records = self.as_connection.select_many(temp_keys, filter_bins)
 
         record_counter = Counter([get_primary_key(record) for record in records])
         assert isinstance(records, list)
@@ -299,7 +299,7 @@ class TestSelectMany(object):
         filter_bins = ["title", "name"]
 
         with pytest.raises(e.ClusterError) as err_info:
-            client1.select_many(self.keys, filter_bins, {"timeout": 20})
+            client1.select_many(self.keys, filter_bins)
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 

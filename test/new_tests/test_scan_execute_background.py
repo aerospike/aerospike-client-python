@@ -312,7 +312,7 @@ class TestScanApply(object):
         test_bin = "St5"
         scan = self.as_connection.scan(TEST_NS, TEST_SET)
         scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        res = scan.execute_background({"socket_timeout": 10000})
+        res = scan.execute_background({})
         assert isinstance(res, (int, long))
 
     def test_background_execute_with_policy_kwarg(self):

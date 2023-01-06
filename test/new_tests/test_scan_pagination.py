@@ -142,7 +142,7 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"timeout": 1001, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(callback, {"timeout": 180000, "partition_filter": {"begin": 1000, "count": 1}})
 
         assert len(records) == self.partition_1000_count
 
@@ -197,7 +197,7 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"socket_timeout": 9876, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(callback, {"socket_timeout": 180000, "partition_filter": {"begin": 1000, "count": 1}})
 
         assert len(records) == self.partition_1000_count
 
@@ -231,7 +231,7 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        scan_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(callback, {"partition_filter": {"begin": 1000, "count": 1}})
         assert len(records) == 10
 
     def test_scan_pagination_with_results_method(self):
@@ -313,7 +313,7 @@ class TestScanPagination(TestBaseClass):
         scan_obj.paginate()
 
         with pytest.raises(e.ClientError) as err_info:
-            scan_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}})
+            scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT

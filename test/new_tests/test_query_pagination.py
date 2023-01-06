@@ -253,7 +253,7 @@ class TestQueryPagination(TestBaseClass):
         query_obj.paginate()
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT

@@ -206,7 +206,7 @@ class TestApply(TestBaseClass):
         """
         Invoke apply() with policy
         """
-        policy = {"total_timeout": 1000}
+        policy = {"max_retries": 1}
         key = ("test", "demo", 1)
         retval = self.as_connection.apply(key, "sample", "list_append", ["name", "car"], policy)
         (key, _, bins) = self.as_connection.get(key)

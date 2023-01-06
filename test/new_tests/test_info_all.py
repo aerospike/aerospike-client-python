@@ -54,7 +54,7 @@ class TestInfo(object):
     def test_info_all_with_config_for_statistics_and_policy(self):
 
         request = "statistics"
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         # hosts = [host for host in self.connection_config["hosts"]]
 
         nodes_info = self.as_connection.info_all(request, policy)

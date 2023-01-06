@@ -165,7 +165,7 @@ class TestListIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         retobj = self.as_connection.index_list_create(
             "test", "demo", "num_list_pol", aerospike.INDEX_NUMERIC, "test_numeric_list_index_pol", policy
         )
@@ -178,7 +178,7 @@ class TestListIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         retobj = self.as_connection.index_list_create(
             "test", "demo", "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
         )

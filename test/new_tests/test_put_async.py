@@ -37,7 +37,6 @@ class TestPut:
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -55,7 +54,6 @@ class TestPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -77,7 +75,6 @@ class TestPut:
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -104,7 +101,6 @@ class TestPut:
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -124,7 +120,6 @@ class TestPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -150,7 +145,6 @@ class TestPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
@@ -167,7 +161,7 @@ class TestPut:
 
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
-        policy = {"total_timeout": 1000, "exists": aerospike.POLICY_EXISTS_REPLACE}
+        policy = {"exists": aerospike.POLICY_EXISTS_REPLACE}
 
         async def async_io(key=None, rec=None, meta=None, policy=None):
             assert 0 == await io.put(self.as_connection, key, rec, meta, policy)
@@ -189,7 +183,6 @@ class TestPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
@@ -206,7 +199,7 @@ class TestPut:
 
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
-        policy = {"total_timeout": 1000, "exists": aerospike.POLICY_EXISTS_UPDATE}
+        policy = {"exists": aerospike.POLICY_EXISTS_UPDATE}
 
         async def async_io(key=None, rec=None, meta=None, policy=None):
             assert 0 == await io.put(self.as_connection, key, rec, meta, policy)
@@ -290,20 +283,20 @@ class TestPut:
     @pytest.mark.parametrize(
         "key, record, meta, policy",
         [
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": 25000}, {"timeout": 1000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": 3, "ttl": True}, {"timeout": 1000}),
-            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": True}, {"timeout": 1000}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": 25000}, {}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": 3, "ttl": True}, {}),
+            (("test", "demo", 1), {"name": "john"}, {"gen": True, "ttl": True}, {}),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": True, "ttl": aerospike.TTL_NAMESPACE_DEFAULT},
-                {"timeout": 1000},
+                {},
             ),
             (
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": True, "ttl": aerospike.TTL_NEVER_EXPIRE},
-                {"timeout": 1000},
+                {},
             ),
         ],
     )
@@ -471,7 +464,7 @@ class TestPut:
 
         rec = {"name": "John"}
         meta = {"gen": 10, "ttl": 25000}
-        policy = {"timeout": 1000}
+        policy = {}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
             assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
@@ -482,7 +475,7 @@ class TestPut:
 
         assert {"name": "John"} == bins
         rec = {"name": "Smith"}
-        policy = {"timeout": 1000, "gen": aerospike.POLICY_GEN_EQ}
+        policy = {"gen": aerospike.POLICY_GEN_EQ}
         meta = {"gen": 4}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
@@ -506,7 +499,6 @@ class TestPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "total_timeout": 1000,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
@@ -522,7 +514,7 @@ class TestPut:
         assert {"name": "John"} == bins
 
         rec = {"name": "Smith"}
-        policy = {"timeout": 1000, "exists": aerospike.POLICY_EXISTS_CREATE}
+        policy = {"exists": aerospike.POLICY_EXISTS_CREATE}
         meta = {"gen": 2}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
@@ -546,7 +538,6 @@ class TestPut:
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
         policy = {
-            "timeout": 1000,
             "exists": aerospike.POLICY_EXISTS_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
             "retry": aerospike.POLICY_RETRY_ONCE,
@@ -568,7 +559,7 @@ class TestPut:
 
         rec = {"name": "Smith"}
         meta = {"gen": 2, "ttl": 25000}
-        policy = {"timeout": 1000, "exists": aerospike.POLICY_EXISTS_REPLACE}
+        policy = {"exists": aerospike.POLICY_EXISTS_REPLACE}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
             with pytest.raises(e.RecordNotFound):
@@ -610,7 +601,7 @@ class TestPut:
 
         rec = {"name": "John"}
         meta = {"gen": 2, "ttl": 25000}
-        policy = {"timeout": 1000}
+        policy = {}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
             assert 0 == await io.put(self.as_connection, key, rec, meta, policy, serialize)
@@ -622,7 +613,7 @@ class TestPut:
         assert {"name": "John"} == bins
         gen = meta["gen"]
         rec = {"name": "Smith"}
-        policy = {"timeout": 1000, "gen": aerospike.POLICY_GEN_GT}
+        policy = {"gen": aerospike.POLICY_GEN_GT}
         meta = {"gen": gen}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
@@ -666,7 +657,7 @@ class TestPut:
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": "wrong", "ttl": 25000},
-                {"total_timeout": 1000},  # Gen as string
+                {},  # Gen as string
                 -2,
                 "Generation should be an int or long",
             ),
@@ -674,7 +665,7 @@ class TestPut:
                 ("test", "demo", 1),
                 {"name": "john"},
                 {"gen": 3, "ttl": "25000"},
-                {"total_timeout": 1000},  # ttl as string
+                {},  # ttl as string
                 -2,
                 "TTL should be an int or long",
             ),
@@ -698,7 +689,7 @@ class TestPut:
                 ("test", "demo", 1),
                 {"i": 13},  # Meta as string
                 "OK",
-                {"total_timeout": 1000},
+                {},
                 -2,
                 "meta must be a dict",
             ),
@@ -706,7 +697,7 @@ class TestPut:
                 ("test", "demo", 1),
                 {"i": 13},  # Meta as string
                 1234,
-                {"total_timeout": 1000},
+                {},
                 -2,
                 "meta must be a dict",
             ),

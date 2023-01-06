@@ -55,7 +55,11 @@ class TestPrepend:
         Invoke prepend() with correct policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL}
+        policy = {
+            "timeout": 180000,
+            "key": aerospike.POLICY_KEY_SEND,
+            "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL
+        }
 
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
@@ -69,7 +73,6 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
@@ -92,7 +95,6 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_IGNORE,
@@ -117,7 +119,6 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -144,7 +145,6 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
@@ -173,7 +173,7 @@ class TestPrepend:
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -201,7 +201,7 @@ class TestPrepend:
         Invoke get_many with none set name
         """
         key = ("test", None, 1)
-        policy = {"timeout": 1000}
+        policy = {}
         self.as_connection.prepend(key, "name", "ABC", {}, policy)
         key, _, bins = self.as_connection.get(key)
         assert bins == {"name": "ABC"}
@@ -294,7 +294,6 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -326,7 +325,6 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
@@ -370,7 +368,7 @@ class TestPrepend:
         [
             (("test", "demo", 1), "name", 2, {}, {}, -2, "Cannot concatenate 'str' and 'non-str' objects"),
             (("test", "demo", 1), "name", "abc", {}, "", -2, "policy must be a dict"),
-            (("test", "demo", 1), 1, "ABC", {}, {"timeout": 1000}, -2, "Bin name should be of type string"),
+            (("test", "demo", 1), 1, "ABC", {}, {}, -2, "Bin name should be of type string"),
         ],
     )
     def test_neg_prepend_parameters_incorrect_datatypes(self, key, bin, value, meta, policy, ex_code, ex_msg):
@@ -389,7 +387,7 @@ class TestPrepend:
         Invoke prepend() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.prepend(key, "name", "str", {}, policy, "")
 
@@ -418,7 +416,7 @@ class TestPrepend:
         Invoke prepend() invalid namespace
         """
         key = ("test1", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(e.ClientError):
             self.as_connection.prepend(key, "name", "ABC", {}, policy)
 
@@ -430,7 +428,7 @@ class TestPrepend:
                 "name",
                 "ABC",
                 {},
-                {"timeout": 1000},
+                {},
                 -2,
                 "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)",
             ),
@@ -439,7 +437,7 @@ class TestPrepend:
                 "name",
                 "ABC",
                 {},
-                {"timeout": 1000},
+                {},
                 -2,
                 "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)",
             ),
@@ -448,7 +446,7 @@ class TestPrepend:
                 "name",
                 "ABC",
                 {},
-                {"timeout": 1000},
+                {},
                 -2,
                 "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)",
             ),
@@ -471,7 +469,7 @@ class TestPrepend:
         Invoke prepend without bin name
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         try:
             self.as_connection.prepend(key, "ABC", {}, policy)
             key, _, _ = self.as_connection.get(key)

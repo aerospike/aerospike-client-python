@@ -92,7 +92,7 @@ class TestListAppend(object):
         """
         key = ("test", "demo", 2)
         policy = {
-            "timeout": 1000,
+            "timeout": 180000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }

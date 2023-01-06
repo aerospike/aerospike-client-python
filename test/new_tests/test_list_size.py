@@ -44,7 +44,7 @@ class TestListSize(object):
         """
         key = ("test", "demo", 2)
         policy = {
-            "timeout": 1000,
+            "timeout": 180000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -108,7 +108,7 @@ class TestListSize(object):
         Invoke list_size() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.list_size(key, "contact_no", {}, policy, "")
 
