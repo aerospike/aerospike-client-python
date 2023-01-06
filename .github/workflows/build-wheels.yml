@@ -200,7 +200,7 @@ jobs:
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}-arm64-${{ matrix.python-version[0] }}-wheel
+        name: ${{ matrix.os }}-arm64-${{ matrix.python }}-wheel
         path: wheelhouse/*.whl
     # TODO: create Terraform deployment and send to there
 
