@@ -1,18 +1,11 @@
-name: Run QE tests
+name: Build wheels
 
-# When someone approves a PR:
-# 1. Build source and binary distributions
-# 2. Send the source and binary distributions to QE build system
-# The QE tests must pass before allowing this PR to be merged into stage
+# Builds wheels and sends to QE and Aerospike artifactory
 on:
-  # pull_request_review:
-  #   types: [submitted]
-  # pull_request:
   workflow_dispatch:
 
 jobs:
   manylinux_arm64:
-    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -21,7 +14,8 @@ jobs:
         python: [
           "cp37",
           "cp38",
-          "cp39"
+          "cp39",
+          "cp310"
         ]
 
     steps:
@@ -53,17 +47,15 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.python }}-manylinux_aarch64
         CIBW_BUILD_FRONTEND: build
-        # TODO: remove unneeded dependencies
-        # TODO: yum update?
         CIBW_BEFORE_ALL_LINUX: >
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "aarch64"
-        # CIBW_TEST_COMMAND: >
-        #   cd {project}/test/ &&
-        #   pip install -r requirements.txt &&
-        #   python -m pytest new_tests/
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          pip install -r requirements.txt &&
+          python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
@@ -73,16 +65,16 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
-    # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         # Python versions to build wheels on
         python: [
-          ["cp37", 3.7],
-          ["cp38", 3.8],
-          ["cp39", 3.9]
+          ["cp37", "3.7"],
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+          ["cp310", "3.10"]
         ]
 
     steps:
@@ -109,17 +101,15 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.python[0] }}-manylinux_x86_64
         CIBW_BUILD_FRONTEND: build
-        # TODO: remove unneeded dependencies
-        # TODO: yum update?
         CIBW_BEFORE_ALL_LINUX: >
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "x86_64"
-        # CIBW_TEST_COMMAND: >
-        #   cd {project}/test/ &&
-        #   pip install -r requirements.txt &&
-        #   python -m pytest new_tests/
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          pip install -r requirements.txt &&
+          python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
@@ -127,6 +117,92 @@ jobs:
         path: ./wheelhouse/*.whl
         # Artifact name, not the file name
         name: manylinux-x86_64-${{ matrix.python[0] }}
+
+  macOS-x86:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [
+          ["cp37", "3.7"],
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+          ["cp310", "3.10"],
+        ]
+        os: [macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Set up Python ${{ matrix.python-version[1] }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version[1] }}
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_x86_64
+        CIBW_BUILD_FRONTEND: build
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        CIBW_ARCHS: "x86_64"
+        CIBW_BEFORE_TEST: >
+          vagrant up &&
+          sleep 3 &&
+          pip install -r test/requirements.txt
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          python -m pytest new_tests/
+
+    - name: Save macOS wheel
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-x86_64-${{ matrix.python-version[0] }}-wheel
+        path: wheelhouse/*.whl
+
+  macOS-m1:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [
+          macos-latest,
+        ]
+        # Python versions to build wheels on
+        python: [
+          "cp38",
+          "cp39",
+          "cp310"
+        ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python }}-macosx_arm64
+        CIBW_BUILD_FRONTEND: build
+        # Set env variables before building
+        CIBW_BEFORE_ALL_MACOS: >
+          git clone https://github.com/passepartoutvpn/openssl-apple &&
+          cd openssl-apple &&
+          export CONFIG_OPTIONS="no-shared" &&
+          ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=$(xcrun --show-sdk-version) ||
+          cat "./bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/build-openssl-1.1.1q.log"
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/lib/" CPATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/include/" STATIC_SSL=1
+        CIBW_ARCHS: "arm64"
+        # CIBW_TEST_COMMAND: python -c "import aerospike"
+
+    - name: Save macOS wheel
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-arm64-${{ matrix.python }}-wheel
+        path: wheelhouse/*.whl
+    # TODO: create Terraform deployment and send to there
 
   send-to-qe:
     needs: [manylinux_x86_64, manylinux_arm64]
