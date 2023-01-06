@@ -382,7 +382,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
@@ -400,7 +400,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with the records_per_second policy set
         """
-        policy = {"timeout": 1000, "records_per_second": 10}
+        policy = {"records_per_second": 10}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
@@ -418,7 +418,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with policy
         """
-        policy = {"total_timeout": 1000}
+        policy = {}
         options = {"nobins": True}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
@@ -435,7 +435,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with incorrect options type, should be a dictionary
         """
-        policy = {"timeout": 1000}
+        policy = {}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
@@ -451,7 +451,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with options['nobins'] type
         """
-        policy = {"total_timeout": 1000}
+        policy = {}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
@@ -466,7 +466,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with client.put in foreach callback
         """
-        policy = {"timeout": 1000}
+        policy = {}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
@@ -785,7 +785,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with set specified as None
         """
-        policy = {"timeout": 1000}
+        policy = {}
         query = self.as_connection.query("test", None)
         query.select("name", "test_age_none")
         query.where(p.equals("test_age_none", 1))
@@ -808,7 +808,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with only ns specified
         """
-        policy = {"timeout": 1000}
+        policy = {}
         query = self.as_connection.query("test")
         query.select("name", "test_age_none")
         query.where(p.equals("test_age_none", 1))

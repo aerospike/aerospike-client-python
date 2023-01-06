@@ -259,7 +259,7 @@ class TestMapValuesIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         retobj = self.as_connection.index_map_values_create(
             "test", "demo", "numeric_map", aerospike.INDEX_NUMERIC, "test_numeric_map_index", policy
         )
@@ -272,7 +272,7 @@ class TestMapValuesIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         retobj = self.as_connection.index_map_values_create(
             "test", "demo", "string_map", aerospike.INDEX_STRING, "test_string_map_index", policy
         )

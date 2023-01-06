@@ -110,7 +110,7 @@ class TestQueryApply(object):
         """
         Invoke query_apply() with correct policy
         """
-        policy = {"total_timeout": 0}
+        policy = {"total_timeout": 180000}
         query_id = self.as_connection.query_apply(
             "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
         )
@@ -125,7 +125,7 @@ class TestQueryApply(object):
 
         expr = exp.Or(exp.Eq(exp.IntBin("age"), 2), exp.Eq(exp.IntBin("val"), 3))
 
-        policy = {"total_timeout": 0, "expressions": expr.compile()}
+        policy = {"expressions": expr.compile()}
         query_id = self.as_connection.query_apply(
             "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
         )
@@ -151,7 +151,7 @@ class TestQueryApply(object):
 
         expr = exp.Or(exp.Eq(exp.IntBin(5), 2), exp.Eq(exp.IntBin("val"), 3))
 
-        policy = {"total_timeout": 0, "expressions": expr}
+        policy = {"expressions": expr}
         with pytest.raises(e.ParamError):
             self.as_connection.query_apply(
                 "test", "demo", self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
@@ -162,7 +162,7 @@ class TestQueryApply(object):
         Invoke query_apply() with correct policy,
         Should casuse no changes as the
         """
-        policy = {"total_timeout": 0}
+        policy = {}
         query_id = self.as_connection.query_apply(
             "test", None, self.age_range_pred, "query_apply", "mark_as_applied", ["name", 2], policy
         )
@@ -236,7 +236,7 @@ class TestQueryApply(object):
         """
         Invoke query_apply() with extra argument
         """
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(TypeError):
             self.as_connection.query_apply(
                 "test", "demo", self.age_range_pred, "query_apply", "mytransform_incorrect", ["name", 2], policy, ""

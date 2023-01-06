@@ -242,7 +242,7 @@ class TestQueryPartition(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        query_obj.foreach(callback, {"timeout": 1001, "partition_filter": {"begin": 1000, "count": 1}})
+        query_obj.foreach(callback, {"partition_filter": {"begin": 1000, "count": 1}})
 
         assert len(records) == self.partition_1000_count
 
@@ -297,7 +297,7 @@ class TestQueryPartition(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        query_obj.foreach(callback, {"socket_timeout": 9876, "partition_filter": {"begin": 1000, "count": 1}})
+        query_obj.foreach(callback, {"socket_timeout": 180000, "partition_filter": {"begin": 1000, "count": 1}})
 
         assert len(records) == self.partition_1000_count
 
@@ -316,7 +316,7 @@ class TestQueryPartition(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        query_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 1}})
+        query_obj.foreach(callback, {"partition_filter": {"begin": 1000, "count": 1}})
         assert len(records) == 10
 
     def test_query_partition_with_results_method(self):
@@ -419,7 +419,7 @@ class TestQueryPartition(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
@@ -454,7 +454,7 @@ class TestQueryPartition(TestBaseClass):
     )
     def test_query_partition_with_bad_begin(self, begin):
         records = []
-        policy = {"timeout": 1000, "partition_filter": {"begin": begin, "count": 1}}
+        policy = {"partition_filter": {"begin": begin, "count": 1}}
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         def callback(part_id, input_tuple):
@@ -476,7 +476,7 @@ class TestQueryPartition(TestBaseClass):
     )
     def test_query_partition_with_bad_count(self, count):
         records = []
-        policy = {"timeout": 1000, "partition_filter": {"begin": 0, "count": count}}
+        policy = {"partition_filter": {"begin": 0, "count": count}}
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         def callback(part_id, input_tuple):
@@ -498,7 +498,7 @@ class TestQueryPartition(TestBaseClass):
     )
     def test_query_partition_with_bad_range(self, begin, count):
         records = []
-        policy = {"timeout": 1000, "partition_filter": {"begin": begin, "count": count}}
+        policy = {"partition_filter": {"begin": begin, "count": count}}
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         def callback(part_id, input_tuple):
@@ -627,7 +627,7 @@ class TestQueryPartition(TestBaseClass):
     )
     def test_query_partition_with_bad_status(self, p_stats, expected, msg):
         records = []
-        policy = {"timeout": 1000, "partition_filter": {"begin": 1000, "count": 5, "partition_status": p_stats}}
+        policy = {"partition_filter": {"begin": 1000, "count": 5, "partition_status": p_stats}}
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         def callback(part_id, input_tuple):

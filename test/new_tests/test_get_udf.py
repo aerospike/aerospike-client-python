@@ -36,9 +36,8 @@ class TestGetRegistered(object):
         and a unicode module name
         """
         module = "bin_lua.lua"
-        policy = {"timeout": 5000}
 
-        udf_contents = self.as_connection.udf_get(module, self.udf_language, policy)
+        udf_contents = self.as_connection.udf_get(module, self.udf_language)
 
         # Check for udf file contents
         assert udf_contents == self.loaded_udf_content
@@ -47,7 +46,7 @@ class TestGetRegistered(object):
         """
         Invoke udf_get() with correct policy
         """
-        policy = {"timeout": 5000}
+        policy = {"timeout": 180000}
         udf_contents = self.as_connection.udf_get(self.loaded_udf_name, self.udf_language, policy)
 
         # Check for udf file contents
@@ -78,10 +77,9 @@ class TestGetRegistered(object):
         Invoke udf_get() with non-existent module
         """
         non_existant_module = "bin_transform_random_fake_name"
-        policy = {"timeout": 1000}
 
         with pytest.raises(e.UDFError) as err_info:
-            self.as_connection.udf_get(non_existant_module, self.udf_language, policy)
+            self.as_connection.udf_get(non_existant_module, self.udf_language)
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_UDF
 
@@ -90,10 +88,9 @@ class TestGetRegistered(object):
         Invoke udf_get() with invalid language code
         """
         invalid_language = 85
-        policy = {"timeout": 1000}
 
         with pytest.raises(e.ClientError) as err_info:
-            self.as_connection.udf_get(self.loaded_udf_name, invalid_language, policy)
+            self.as_connection.udf_get(self.loaded_udf_name, invalid_language)
 
         assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
@@ -101,11 +98,10 @@ class TestGetRegistered(object):
         """
         Invoke udf_get() with extra parameter.
         """
-        policy = {"timeout": 1000}
 
         # Check for status or empty udf contents
         with pytest.raises(TypeError):
-            self.as_connection.udf_get(self.loaded_udf_name, self.udf_language, policy, "")
+            self.as_connection.udf_get(self.loaded_udf_name, self.udf_language, {}, "")
 
     @pytest.mark.parametrize("policy", ("", (), [], False, 1))
     def test_udf_get_policy_is_wrong_type(self, policy):

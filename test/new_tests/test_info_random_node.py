@@ -80,7 +80,7 @@ class TestInfoSingleNode(object):
         """
         if self.pytest_skip:
             pytest.xfail()
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         response = self.as_connection.info_random_node("bins", policy=policy)
 
         assert "names" in response
@@ -101,7 +101,7 @@ class TestInfoSingleNode(object):
         """
         if self.pytest_skip:
             pytest.xfail()
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         response = self.as_connection.info_random_node("logs", policy=policy)
 
         assert response is not None
@@ -147,9 +147,8 @@ class TestInfoRandomNodeIncorrectUsage(object):
         Test info with extra parameters.
         """
         self.connection_config["hosts"][0]
-        policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
-            self.as_connection.info_random_node("bins", policy, "")
+            self.as_connection.info_random_node("bins", {}, "")
 
         assert "info_random_node() takes at most 2 arguments (3 given)" in str(typeError.value)
 

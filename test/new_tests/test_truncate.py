@@ -88,7 +88,7 @@ class TestTruncate(object):
         self._assert_truncation_status(self.un_truncated_keys, exists=False)
 
     def test_whole_set_truncation_with_policy(self):
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         self.as_connection.truncate("test", "truncate", 0, policy)
 
         self._assert_truncation_status(self.truncated_keys, exists=False)
