@@ -263,7 +263,7 @@ jobs:
       - name: Upload artifacts to Aerospike artifactory
         uses: appleboy/ssh-action@v0.1.6
         with:
-          host: ${{ secrets.ARTIFACTORY_HOST }}
+          host: ${{ secrets.ARTIFACTORY_HOST_IP }}
           username: ${{ secrets.ARTIFACTORY_USERNAME }}
           password: ''
           key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
