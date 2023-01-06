@@ -3,6 +3,7 @@ name: Build wheels
 # Builds wheels and sends to QE and Aerospike artifactory
 on:
   workflow_dispatch:
+  pull_request:
 
 jobs:
   manylinux_arm64:
