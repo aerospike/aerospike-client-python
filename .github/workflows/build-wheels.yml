@@ -239,18 +239,18 @@ jobs:
       - uses: bluwy/substitute-string-action@v1
         id: sub
         with:
-          _input-file: .github/workflows/aerospike.ovpn
+          _input-file: ".github/workflows/aerospike.ovpn"
           VPN_URL: ${{ secrets.VPN_URL }}
           CA_CERT: ${{ secrets.CA_CERT }}
           CERT: ${{ secrets.CERT }}
           PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
           OPENVPN_STATIC_KEY: ${{ secrets.OPENVPN_STATIC_KEY }}
-          _output-file: .github/workflows/aerospike.vpn
+          _output-file: ".github/workflows/aerospike.vpn"
 
       - name: Connect to Aerospike VPN
         uses: "kota65535/github-openvpn-connect-action@v2"
         with:
-          config_file: ./github/workflows/aerospike.ovpn
+          config_file: "./github/workflows/aerospike.ovpn"
           username: ${{ secrets.VPN_USERNAME }}
           password: ${{ secrets.VPN_PASSWORD }}
 
