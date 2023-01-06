@@ -236,6 +236,11 @@ jobs:
           submodules: recursive
 
       # Store sensitive data in openvpn config template
+      - name: Install OpenVPN
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
+
       - uses: bluwy/substitute-string-action@v1
         id: sub
         with:
