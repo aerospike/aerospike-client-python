@@ -172,7 +172,8 @@ jobs:
         # Python versions to build wheels on
         python: [
           "cp38",
-          "cp39"
+          "cp39",
+          "cp310"
         ]
 
     steps:
