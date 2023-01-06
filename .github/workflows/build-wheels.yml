@@ -7,7 +7,6 @@ on:
 
 jobs:
   manylinux_arm64:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -68,7 +67,6 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -124,7 +122,6 @@ jobs:
         name: manylinux-x86_64-${{ matrix.python[0] }}
 
   macOS-x86:
-    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -169,7 +166,6 @@ jobs:
         path: wheelhouse/*.whl
 
   macOS-m1:
-    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -228,12 +224,15 @@ jobs:
       #     source_dir: './wheelhouse'
 
   send-to-artifactory:
-    # needs: [manylinux_x86_64, manylinux_arm64]
+    needs: [manylinux_x86_64, manylinux_arm64, macOS-x86, macOS-m1]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
 
       # Store sensitive data in openvpn config template
       - name: Install OpenVPN
@@ -261,10 +260,20 @@ jobs:
           password: ${{ secrets.VPN_PASSWORD }}
 
       - name: Upload artifacts to Aerospike artifactory
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.ARTIFACTORY_HOST_IP }}
+          username: ${{ secrets.ARTIFACTORY_USERNAME }}
+          password: ''
+          key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
+          source: "wheelhouse/*"
+          target: "/var/www/artifacts/development/aerospike-client-python/"
+
+      - name: Verify artifacts are uploaded
         uses: appleboy/ssh-action@v0.1.6
         with:
           host: ${{ secrets.ARTIFACTORY_HOST_IP }}
           username: ${{ secrets.ARTIFACTORY_USERNAME }}
           password: ''
           key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
-          script: whoami
+          script: "ls /var/www/artifacts/development/aerospike-client-python/"
