@@ -7,12 +7,12 @@ name: Run QE tests
 on:
   # pull_request_review:
   #   types: [submitted]
-  # pull_request:
+  pull_request:
   workflow_dispatch:
 
 jobs:
   manylinux_arm64:
-    # if: github.event.review.state == 'approved'
+    if: ${{ false() }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -73,6 +73,7 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
+    if: ${{ false() }}
     # if: github.event.review.state == 'approved'
     runs-on: ubuntu-latest
     strategy:
@@ -141,3 +142,41 @@ jobs:
       #     aws_bucket: ${{ secrets.AWS_BUCKET }}
       #     # Send all distributions to QE build system
       #     source_dir: './wheelhouse'
+
+  send-to-artifactory:
+    # needs: [manylinux_x86_64, manylinux_arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      # Store sensitive data in openvpn config template
+      - uses: bluwy/substitute-string-action@v1
+        id: sub
+        with:
+          _input-file: .github/workflows/aerospike.ovpn
+          VPN_URL: ${{ secrets.VPN_URL }}
+          CA_CERT: ${{ secrets.CA_CERT }}
+          CERT: ${{ secrets.CERT }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          OPENVPN_STATIC_KEY: ${{ secrets.OPENVPN_STATIC_KEY }}
+          _output-file: .github/workflows/aerospike.vpn
+
+      - name: Connect to Aerospike VPN
+        uses: "kota65535/github-openvpn-connect-action@v2"
+        with:
+          config_file: ./github/workflows/aerospike.ovpn
+          username: ${{ secrets.VPN_USERNAME }}
+          password: ${{ secrets.VPN_PASSWORD }}
+
+      - name: Get private key to ssh into Aerospike artifactory
+
+      - name: Upload artifacts to Aerospike artifactory
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.ARTIFACTORY_HOST }}
+          username: ${{ secrets.ARTIFACTORY_USERNAME }}
+          password: ''
+          key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
+          script: whoami
