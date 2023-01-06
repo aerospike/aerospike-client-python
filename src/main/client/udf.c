@@ -196,49 +196,44 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
 
     uint8_t *buff = bytes;
 
-    if (access(self->as->config.lua.user_path, W_OK) == 0) {
-        // Don't need to copy lua script to user path if it already exists there
-        bool same_lua_script_at_user_path = false;
-        if (access(copy_filepath, F_OK) == 0){
-            struct stat original_fstat, copied_fstat;
-            stat(filename, &original_fstat);
-            stat(copy_filepath, &copied_fstat);
-            if(original_fstat.st_ino == copied_fstat.st_ino){
-                same_lua_script_at_user_path = true;
-            }
+    // Don't need to copy lua script to user path if it already exists there
+    bool same_lua_script_at_user_path = false;
+    if (access(copy_filepath, F_OK) == 0){
+        struct stat original_fstat, copied_fstat;
+        stat(filename, &original_fstat);
+        stat(copy_filepath, &copied_fstat);
+        if(original_fstat.st_ino == copied_fstat.st_ino){
+            same_lua_script_at_user_path = true;
         }
+    }
 
-        if(!same_lua_script_at_user_path){
-            copy_file_p = fopen(copy_filepath, "w+");
-            if (copy_file_p) {
-                int read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-                if (read && fwrite(buff, 1, read, copy_file_p)) {
-                    while (read) {
-                        size += read;
-                        buff += read;
-                        read = (int)fread(buff, 1, LUA_FILE_BUFFER_FRAME, file_p);
-                        if (!fwrite(buff, 1, read, copy_file_p)) {
-                            break;
-                        }
-                    }
-                }
-                else {
-                    as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                                    "Write of lua file to user path failed");
-                    goto CLEANUP;
-                }
-            }
-            else {
+    if (!same_lua_script_at_user_path){
+        // Copy lua script to user path
+        copy_file_p = fopen(copy_filepath, "w+");
+        if(copy_file_p == NULL){
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "No permissions to write lua file to user path");
+            goto CLEANUP;
+        }
+        while((ch = fgetc(file_p)) != EOF){
+            int retVal = fputc(ch, copy_file_p);
+            if(retVal == EOF){
                 as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                                 "Write of lua file to user path failed");
                 goto CLEANUP;
             }
         }
+        fseek(file_p, 0, SEEK_SET);
     }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "No permissions to write lua file to user path");
-        goto CLEANUP;
+
+    // Copy lua script to buffer so we can send it to server
+    while((ch = fgetc(file_p)) != EOF){
+        int retVal = fputc(ch, copy_file_p);
+        if(retVal == EOF){
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to send lua file to server");
+            goto CLEANUP;
+        }
     }
 
     as_bytes_init_wrap(&content, bytes, size, true);
