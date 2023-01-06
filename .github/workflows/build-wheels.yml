@@ -1,0 +1,143 @@
+name: Run QE tests
+
+# When someone approves a PR:
+# 1. Build source and binary distributions
+# 2. Send the source and binary distributions to QE build system
+# The QE tests must pass before allowing this PR to be merged into stage
+on:
+  # pull_request_review:
+  #   types: [submitted]
+  # pull_request:
+  workflow_dispatch:
+
+jobs:
+  manylinux_arm64:
+    # if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python versions to build wheels on
+        python: [
+          "cp37",
+          "cp38",
+          "cp39"
+        ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Set up QEMU for cross compiling arm64
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: all
+
+    - name: Set up Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Wait for server to start
+      run: sleep 5
+
+    - name: Set config.conf to use Docker IP address of Aerospike server
+      # config.conf should be copied into the cibuildwheel Docker container
+      run: |
+        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
+        pip install crudini
+        crudini --set config.conf community-edition hosts ${SERVER_DOCKER_IP}:3000
+      working-directory: test
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python }}-manylinux_aarch64
+        CIBW_BUILD_FRONTEND: build
+        # TODO: remove unneeded dependencies
+        # TODO: yum update?
+        CIBW_BEFORE_ALL_LINUX: >
+          yum install openssl-devel -y &&
+          yum install python-devel -y &&
+          yum install python-setuptools -y
+        CIBW_ARCHS: "aarch64"
+        # CIBW_TEST_COMMAND: >
+        #   cd {project}/test/ &&
+        #   pip install -r requirements.txt &&
+        #   python -m pytest new_tests/
+
+    - name: Upload wheels to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+        # Artifact name, not the file name
+        name: manylinux-aarch64-${{ matrix.python }}
+
+  manylinux_x86_64:
+    # if: github.event.review.state == 'approved'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python versions to build wheels on
+        python: [
+          ["cp37", 3.7],
+          ["cp38", 3.8],
+          ["cp39", 3.9]
+        ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Set up Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Wait for server to start
+      run: sleep 5
+
+    - name: Set config.conf to use Docker IP address of Aerospike server
+      # config.conf should be copied into the cibuildwheel Docker container
+      run: |
+        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
+        pip install crudini
+        crudini --set config.conf community-edition hosts ${SERVER_DOCKER_IP}:3000
+      working-directory: test
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python[0] }}-manylinux_x86_64
+        CIBW_BUILD_FRONTEND: build
+        # TODO: remove unneeded dependencies
+        # TODO: yum update?
+        CIBW_BEFORE_ALL_LINUX: >
+          yum install openssl-devel -y &&
+          yum install python-devel -y &&
+          yum install python-setuptools -y
+        CIBW_ARCHS: "x86_64"
+        # CIBW_TEST_COMMAND: >
+        #   cd {project}/test/ &&
+        #   pip install -r requirements.txt &&
+        #   python -m pytest new_tests/
+
+    - name: Upload wheels to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+        # Artifact name, not the file name
+        name: manylinux-x86_64-${{ matrix.python[0] }}
+
+  send-to-qe:
+    needs: [manylinux_x86_64, manylinux_arm64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - run: echo "Upload to QE"
+      # - uses: shallwefootball/s3-upload-action@master
+      #   with:
+      #     aws_key_id: ${{ secrets.AWS_KEY_ID }}
+      #     aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+      #     aws_bucket: ${{ secrets.AWS_BUCKET }}
+      #     # Send all distributions to QE build system
+      #     source_dir: './wheelhouse'
