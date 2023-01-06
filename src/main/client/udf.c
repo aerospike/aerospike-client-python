@@ -215,6 +215,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
                             "No permissions to write lua file to user path");
             goto CLEANUP;
         }
+
+        char ch;
         while((ch = fgetc(file_p)) != EOF){
             int retVal = fputc(ch, copy_file_p);
             if(retVal == EOF){
@@ -227,13 +229,11 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     }
 
     // Copy lua script to buffer so we can send it to server
-    while((ch = fgetc(file_p)) != EOF){
-        int retVal = fputc(ch, copy_file_p);
-        if(retVal == EOF){
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to send lua file to server");
-            goto CLEANUP;
-        }
+    int numBytesRead = fread(buff, 1, fileSize, file_p);
+    if(numBytesRead != fileSize){
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to send lua file to server");
+        goto CLEANUP;
     }
 
     as_bytes_init_wrap(&content, bytes, size, true);
