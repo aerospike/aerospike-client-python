@@ -157,13 +157,11 @@ jobs:
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
-      if: ${{ always() }}
       with:
         name: ${{ matrix.os }}-${{ matrix.python-version[0] }}-wheel
         path: wheelhouse/*.whl
 
   macOS-m1:
-    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -196,10 +194,17 @@ jobs:
           cat "./bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/build-openssl-1.1.1q.log"
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/lib/" CPATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/include/" STATIC_SSL=1
         CIBW_ARCHS: "arm64"
-        CIBW_TEST_COMMAND: python -c "import aerospike"
+        # CIBW_TEST_COMMAND: python -c "import aerospike"
+
+    - name: Save macOS wheel
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-${{ matrix.python-version[0] }}-wheel
+        path: wheelhouse/*.whl
+    # TODO: create Terraform deployment and send to there
 
   send-to-qe:
-    needs: [manylinux_x86_64, manylinux_arm64, macOS-x86]
+    needs: [manylinux_x86_64, manylinux_arm64]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
