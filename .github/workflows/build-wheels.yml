@@ -227,14 +227,16 @@ jobs:
     needs: [manylinux_x86_64, manylinux_arm64, macOS-x86, macOS-m1]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
         with:
           path: wheelhouse/
+
+      - name: Reorganize artifacts
+        # Move wheels from their folders into base folder
+        run: |
+          find wheelhouse/ -type f -exec mv {} . \;
+          rm -r wheelhouse/
 
       # Store sensitive data in openvpn config template
       - name: Install OpenVPN
