@@ -7,7 +7,7 @@ from aerospike_helpers.operations import bitwise_operations
 
 import aerospike
 
-random.seed(datetime.now())
+random.seed()
 
 
 class TestBitwiseOperations(object):
