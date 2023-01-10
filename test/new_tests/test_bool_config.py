@@ -8,7 +8,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 
-random.seed(datetime.now())
+random.seed()
 
 
 class TestBitwiseOperations(object):
