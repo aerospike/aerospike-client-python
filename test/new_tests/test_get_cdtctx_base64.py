@@ -54,16 +54,13 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 ctx_empty = []
 
-if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
-    if pytest.__version__ < "3.0.0":
-        pytest.skip("It only applies to >= 6.1 enterprise edition")
-    else:
-        pytestmark = pytest.mark.skip
-
 
 class TestCDTIndexB64(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            pytest.skip("It only applies to >= 6.1 enterprise edition")
+
         keys = []
         for i in range(5):
             key = ("test", "demo", i)
@@ -101,7 +98,7 @@ class TestCDTIndexB64(object):
         Invoke get_cdtctx_base64() with correct arguments
         """
         policy = {}
-        bs_b4_cdt = self.as_connection.get_cdtctx_base64({"ctx": ctx_list_index})
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64([cdt_ctx.cdt_ctx_list_index(0)])
 
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
@@ -124,7 +121,7 @@ class TestCDTIndexB64(object):
         Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            self.as_connection.get_cdtctx_base64(ctx_list_index)
+            self.as_connection.get_cdtctx_base64({})
         except e.ParamError:
             pass
 
@@ -133,6 +130,6 @@ class TestCDTIndexB64(object):
         Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            self.as_connection.get_cdtctx_base64({"ctx": ctx_empty})
+            self.as_connection.get_cdtctx_base64(ctx_empty)
         except e.ParamError:
             pass

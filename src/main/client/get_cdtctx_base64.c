@@ -59,19 +59,13 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    if (py_cdtctx == NULL || !PyDict_Check(py_cdtctx)) {
+    if (py_cdtctx == NULL || !PyList_Check(py_cdtctx)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "parameter is not dict type");
+                        "parameter is not list type");
         goto CLEANUP;
     }
 
-    PyObject *py_ctx = PyDict_GetItemString(py_cdtctx, CTX_KEY);
-    if (py_ctx == NULL) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "param dict does not contain ctx key");
-        goto CLEANUP;
-    }
-    if (!PyList_Check(py_ctx) || !PyList_Size(py_ctx)) {
+    if (!PyList_Size(py_cdtctx)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "cdt ctx list entries are empty");
         goto CLEANUP;
@@ -80,7 +74,19 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
-    if (get_cdt_ctx(self, &err, &ctx, py_cdtctx, &ctx_in_use, &static_pool,
+    // Convert Python cdt_ctx to C version
+    // Pass in ctx into a dict so we can use helper function
+    PyObject* op_dict = PyDict_New();
+    if (op_dict == NULL) {
+        as_error_update(&err, AEROSPIKE_ERR, "unable to convert Python cdtctx to it's C client counterpart");
+        goto CLEANUP;
+    }
+    int retval = PyDict_SetItemString(op_dict, "ctx", py_cdtctx);
+    if (retval == -1) {
+        as_error_update(&err, AEROSPIKE_ERR, "unable to convert Python cdtctx to it's C client counterpart");
+        goto CLEANUP;
+    }
+    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &static_pool,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
