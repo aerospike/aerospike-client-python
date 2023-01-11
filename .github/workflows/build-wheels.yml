@@ -260,6 +260,8 @@ jobs:
           # with:
           #   path: wheelhouse/
         run: |
+          mkdir wheelhouse/
+          cd wheelhouse/
           mkdir a b c
           touch a/0 b/1 c/2
 
