@@ -47,6 +47,7 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     as_cdt_ctx ctx;
     bool ctx_in_use = false;
 
+    PyObject *op_dict = NULL;
     char *base64 = NULL;
     PyObject *py_response = NULL;
 
@@ -76,7 +77,7 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
 
     // Convert Python cdt_ctx to C version
     // Pass in ctx into a dict so we can use helper function
-    PyObject *op_dict = PyDict_New();
+    op_dict = PyDict_New();
     if (op_dict == NULL) {
         as_error_update(
             &err, AEROSPIKE_ERR,
@@ -126,6 +127,8 @@ CLEANUP:
         Py_DECREF(py_err);
         return NULL;
     }
+
+    Py_XDECREF(op_dict);
 
     return py_response;
 }
