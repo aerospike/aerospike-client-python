@@ -7,6 +7,7 @@ on:
 
 jobs:
   manylinux_arm64:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -67,6 +68,7 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -122,6 +124,7 @@ jobs:
         name: manylinux-x86_64-${{ matrix.python[0] }}
 
   macOS-x86:
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -166,6 +169,7 @@ jobs:
         path: wheelhouse/*.whl
 
   macOS-m1:
+    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -224,60 +228,88 @@ jobs:
       #     source_dir: './wheelhouse'
 
   send-to-artifactory:
-    needs: [manylinux_x86_64, manylinux_arm64, macOS-x86, macOS-m1]
+    # needs: [manylinux_x86_64, manylinux_arm64, macOS-x86, macOS-m1]
     runs-on: ubuntu-latest
     steps:
-      - name: Download all workflow run artifacts
-        uses: actions/download-artifact@v3
+      - uses: actions/checkout@v2
         with:
-          path: wheelhouse/
+          submodules: recursive
 
-      - name: Reorganize artifacts
-        # Move wheels from their folders into base folder
+      # Release candidate tag starts with rc-
+      - name: Get this release number
         run: |
-          find wheelhouse/ -type f -exec mv {} . \;
-          rm -r wheelhouse/
+          lastReleaseTag=$(git tag | grep ^rc | tail -n 1)
+          releaseNumber=-1
+          if [[ $lastReleaseTag == "" ]]; then
+            # Start with release number 1
+            releaseNumber=1
+          else
+            # Get release number from latest tag and increment it
+            releaseNumber=$(cut -b 4- <(echo $lastReleaseTag))
+            releaseNumber=$((releaseNumber + 1))
+          fi
+          echo $releaseNumber >> $GITHUB_ENV
 
-      # Store sensitive data in openvpn config template
-      - name: Install OpenVPN
-        run: |
-          sudo apt update
-          sudo apt install -y openvpn openvpn-systemd-resolved
+    - name: Create release candidate tag
+      run: |
+        git tag rc-${{ env.releaseNumber }}
+        git push --tags
 
-      - uses: bluwy/substitute-string-action@v1
-        id: sub
-        with:
-          _input-file: ".github/workflows/aerospike.ovpn"
-          _format-key: '%%key%%'
-          VPN_URL: ${{ secrets.VPN_URL }}
-          CA_CERT: ${{ secrets.CA_CERT }}
-          CERT: ${{ secrets.CERT }}
-          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-          OPENVPN_STATIC_KEY: ${{ secrets.OPENVPN_STATIC_KEY }}
-          _output-file: ".github/workflows/aerospike.ovpn"
+    - name: Download all workflow run artifacts
+        # uses: actions/download-artifact@v3
+        # with:
+        #   path: wheelhouse/
+      run: |
+        mkdir a b c
+        touch a/0 b/1 c/2
 
-      - name: Connect to Aerospike VPN
-        uses: "kota65535/github-openvpn-connect-action@v2"
-        with:
-          config_file: ".github/workflows/aerospike.ovpn"
-          username: ${{ secrets.VPN_USERNAME }}
-          password: ${{ secrets.VPN_PASSWORD }}
+    - name: Reorganize artifacts
+      # Move wheels from their folders into release candidate folder
+      run: |
+        mkdir rc-${{ env.releaseNumber }}
+        find wheelhouse/ -type f -exec mv {} rc-${{ env.releaseNumber }} \;
+        rm -r wheelhouse/
 
-      - name: Upload artifacts to Aerospike artifactory
-        uses: burnett01/rsync-deployments@5.2.1
-        with:
-          switches: -avzr --delete
-          path: wheelhouse/
-          remote_path: /var/www/artifacts/development/aerospike-client-python/
-          remote_host: ${{ secrets.ARTIFACTORY_HOST_IP }}
-          remote_user: ${{ secrets.ARTIFACTORY_USERNAME }}
-          remote_key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
+    # Store sensitive data in openvpn config template
+    - name: Install OpenVPN
+      run: |
+        sudo apt update
+        sudo apt install -y openvpn openvpn-systemd-resolved
 
-      - name: Verify artifacts are uploaded
-        uses: appleboy/ssh-action@v0.1.6
-        with:
-          host: ${{ secrets.ARTIFACTORY_HOST_IP }}
-          username: ${{ secrets.ARTIFACTORY_USERNAME }}
-          password: ''
-          key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
-          script: "ls /var/www/artifacts/development/aerospike-client-python/"
+    - uses: bluwy/substitute-string-action@v1
+      id: sub
+      with:
+        _input-file: ".github/workflows/aerospike.ovpn"
+        _format-key: '%%key%%'
+        VPN_URL: ${{ secrets.VPN_URL }}
+        CA_CERT: ${{ secrets.CA_CERT }}
+        CERT: ${{ secrets.CERT }}
+        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+        OPENVPN_STATIC_KEY: ${{ secrets.OPENVPN_STATIC_KEY }}
+        _output-file: ".github/workflows/aerospike.ovpn"
+
+    - name: Connect to Aerospike VPN
+      uses: "kota65535/github-openvpn-connect-action@v2"
+      with:
+        config_file: ".github/workflows/aerospike.ovpn"
+        username: ${{ secrets.VPN_USERNAME }}
+        password: ${{ secrets.VPN_PASSWORD }}
+
+    - name: Upload artifacts to Aerospike artifactory
+      uses: burnett01/rsync-deployments@5.2.1
+      with:
+        switches: -avzr --delete
+        path: rc-${{ env.releaseNumber }}
+        remote_path: /var/www/artifacts/development/aerospike-client-python/rc-${{ env.releaseNumber }}
+        remote_host: ${{ secrets.ARTIFACTORY_HOST_IP }}
+        remote_user: ${{ secrets.ARTIFACTORY_USERNAME }}
+        remote_key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
+
+    - name: Verify artifacts are uploaded
+      uses: appleboy/ssh-action@v0.1.6
+      with:
+        host: ${{ secrets.ARTIFACTORY_HOST_IP }}
+        username: ${{ secrets.ARTIFACTORY_USERNAME }}
+        password: ''
+        key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
+        script: "tree /var/www/artifacts/development/aerospike-client-python/"
