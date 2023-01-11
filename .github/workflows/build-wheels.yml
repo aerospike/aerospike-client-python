@@ -248,11 +248,11 @@ jobs:
             releaseNumber=$(cut -b 4- <(echo $lastReleaseTag))
             releaseNumber=$((releaseNumber + 1))
           fi
-          echo $releaseNumber >> $GITHUB_ENV
+          echo "RELEASE_NUMBER=$releaseNumber" >> $GITHUB_ENV
 
       - name: Create release candidate tag
         run: |
-          git tag rc-${{ env.releaseNumber }}
+          git tag rc-${{ env.RELEASE_NUMBER }}
           git push --tags
 
       - name: Download all workflow run artifacts
@@ -266,8 +266,8 @@ jobs:
       - name: Reorganize artifacts
         # Move wheels from their folders into release candidate folder
         run: |
-          mkdir rc-${{ env.releaseNumber }}
-          find wheelhouse/ -type f -exec mv {} rc-${{ env.releaseNumber }} \;
+          mkdir rc-${{ env.RELEASE_NUMBER }}
+          find wheelhouse/ -type f -exec mv {} rc-${{ env.RELEASE_NUMBER }} \;
           rm -r wheelhouse/
 
       # Store sensitive data in openvpn config template
@@ -299,8 +299,8 @@ jobs:
         uses: burnett01/rsync-deployments@5.2.1
         with:
           switches: -avzr --delete
-          path: rc-${{ env.releaseNumber }}
-          remote_path: /var/www/artifacts/development/aerospike-client-python/rc-${{ env.releaseNumber }}
+          path: rc-${{ env.RELEASE_NUMBER }}
+          remote_path: /var/www/artifacts/development/aerospike-client-python/rc-${{ env.RELEASE_NUMBER }}
           remote_host: ${{ secrets.ARTIFACTORY_HOST_IP }}
           remote_user: ${{ secrets.ARTIFACTORY_USERNAME }}
           remote_key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
