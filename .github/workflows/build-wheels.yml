@@ -249,6 +249,7 @@ jobs:
             releaseNumber=$((releaseNumber + 1))
           fi
           echo "RELEASE_NUMBER=$releaseNumber" >> $GITHUB_ENV
+          echo "The release candidate number for this build is $releaseNumber"
 
       - name: Create release candidate tag
         run: |
