@@ -76,14 +76,18 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
 
     // Convert Python cdt_ctx to C version
     // Pass in ctx into a dict so we can use helper function
-    PyObject* op_dict = PyDict_New();
+    PyObject *op_dict = PyDict_New();
     if (op_dict == NULL) {
-        as_error_update(&err, AEROSPIKE_ERR, "unable to convert Python cdtctx to it's C client counterpart");
+        as_error_update(
+            &err, AEROSPIKE_ERR,
+            "unable to convert Python cdtctx to it's C client counterpart");
         goto CLEANUP;
     }
     int retval = PyDict_SetItemString(op_dict, "ctx", py_cdtctx);
     if (retval == -1) {
-        as_error_update(&err, AEROSPIKE_ERR, "unable to convert Python cdtctx to it's C client counterpart");
+        as_error_update(
+            &err, AEROSPIKE_ERR,
+            "unable to convert Python cdtctx to it's C client counterpart");
         goto CLEANUP;
     }
     if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &static_pool,
