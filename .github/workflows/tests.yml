@@ -39,6 +39,8 @@ jobs:
         image: alpine:latest
         run: |
           apk add py3-pip
+          apk add python3-dev
+          apk add zlib-dev
           apk add git
           # C client dependencies
           apk add automake
