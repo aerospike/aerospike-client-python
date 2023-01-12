@@ -34,6 +34,17 @@ jobs:
   alpine:
     runs-on: ubuntu-latest
     steps:
+    - name: Set up Aerospike Database
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      run: sleep 3
+
+    - name: Get server ip
+      run: SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike) >> $GITHUB_ENV
+
     # Use this to get current branch of workflow
     - name: Inject slug/short variables
       uses: rlespinasse/github-slug-action@v4
@@ -43,7 +54,7 @@ jobs:
     - uses: addnab/docker-run-action@v3
       with:
         image: alpine:latest
-        options: -e GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }}
+        options: -e GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }} -e SERVER_IP=${{ env.SERVER_IP }}
         run: |
           apk add py3-pip
           apk add python3-dev
@@ -65,13 +76,17 @@ jobs:
           git checkout $GITHUB_REF_NAME
           git submodule update --recursive
 
-          # python3 -m pip install build
-          # python3 -m build
-          # python3 -m pip install dist/*.whl
-          # cd test/
-          # # requirements.txt is not working atm
-          # python3 -m pip install pytest
-          # python3 -m pytest new_tests/
+          python3 -m pip install build
+          python3 -m build
+          python3 -m pip install dist/*.whl
+          cd test/
+          # requirements.txt is not working atm
+          python3 -m pip install pytest
+
+          # Configure tests
+          sed -i 's/hosts: 127.0.0.1:3000/hosts: ${SERVER_IP}:3000/' config.conf
+
+          python3 -m pytest new_tests/
 
   build:
     runs-on: ubuntu-latest
