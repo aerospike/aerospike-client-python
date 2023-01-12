@@ -55,7 +55,7 @@ jobs:
 
           git clone --recurse-submodules https://github.com/aerospike/aerospike-client-python
           cd aerospike-client-python
-          git checkout ${{ env.GITHUB_REF_NAME }}
+          git checkout $GITHUB_REF_NAME
           git submodule update --recursive
 
           python3 -m pip install build
