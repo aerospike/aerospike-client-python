@@ -74,7 +74,6 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     // Aerospike API Arguments
     char *module = NULL;
     char *function = NULL;
-    as_arraylist *arglist = NULL;
 
     if (PyUnicode_Check(py_module)) {
         py_umodule = PyUnicode_AsUTF8String(py_module);
@@ -104,9 +103,13 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if (py_args && PyList_Check(py_args)) {
-
-        Py_ssize_t size = PyList_Size(py_args);
+    as_arraylist *arglist = NULL;
+    if (py_args) {
+        if(!PyList_Check(py_args)){
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "udf function arguments must be enclosed in a list");
+            goto CLEANUP;
+        }
 
         if (Illegal_UDF_Args_Check(py_args)) {
             as_error_update(
@@ -115,6 +118,8 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
             goto CLEANUP;
         }
 
+        // Convert Python list to C client list
+        Py_ssize_t size = PyList_Size(py_args);
         arglist = as_arraylist_new(size, 0);
         for (int i = 0; i < size; i++) {
             PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
@@ -123,25 +128,20 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
                             SERIALIZER_PYTHON);
             if (err.code != AEROSPIKE_OK) {
                 as_error_update(&err, err.code, NULL);
-                as_arraylist_destroy(arglist);
                 goto CLEANUP;
             }
-            else {
-                as_arraylist_append(arglist, val);
-            }
+            as_arraylist_append(arglist, val);
         }
     }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "udf function arguments must be enclosed in a list");
-        as_arraylist_destroy(arglist);
-        goto CLEANUP;
-    }
+
     Py_BEGIN_ALLOW_THREADS
     as_query_apply(&self->query, module, function, (as_list *)arglist);
     Py_END_ALLOW_THREADS
+
 CLEANUP:
     POOL_DESTROY(&static_pool);
+
+    as_arraylist_destroy(arglist);
 
     if (py_ufunction) {
         Py_DECREF(py_ufunction);
