@@ -34,10 +34,8 @@ jobs:
   alpine:
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Wait for database to be ready
       run: sleep 3
@@ -84,7 +82,7 @@ jobs:
           python3 -m pip install pytest
 
           # Configure tests
-          sed -i 's/hosts: 127.0.0.1:3000/hosts: ${SERVER_IP}:3000/' config.conf
+          sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" config.conf
 
           python3 -m pytest new_tests/
 
