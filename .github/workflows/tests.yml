@@ -41,7 +41,7 @@ jobs:
       run: sleep 3
 
     - name: Get server ip
-      run: SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike) >> $GITHUB_ENV
+      run: echo SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike) >> $GITHUB_ENV
 
     # Use this to get current branch of workflow
     - name: Inject slug/short variables
@@ -85,6 +85,11 @@ jobs:
           sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" config.conf
 
           python3 -m pytest new_tests/
+
+    - name: Cleanup
+      run: |
+        docker container stop aerospike
+        docker container rm aerospike
 
   build:
     runs-on: ubuntu-latest
