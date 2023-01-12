@@ -37,6 +37,7 @@ jobs:
     - uses: addnab/docker-run-action@v3
       with:
         image: alpine:latest
+        options: -e GITHUB_REF_NAME=${{ github.ref_name }}
         run: |
           apk add py3-pip
           apk add python3-dev
@@ -55,8 +56,7 @@ jobs:
 
           git clone --recurse-submodules https://github.com/aerospike/aerospike-client-python
           cd aerospike-client-python/
-          echo ${{ github.ref_name }}
-          git checkout ${{ github.ref_name }}
+          git checkout $GITHUB_REF_NAME
           git submodule update --recursive
 
           # python3 -m pip install build
