@@ -192,8 +192,6 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-    int size = 0;
-
     uint8_t *buff = bytes;
 
     // Don't need to copy lua script to user path if it already exists there
@@ -225,6 +223,7 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
                 goto CLEANUP;
             }
         }
+        // Reset source fd so we can copy lua script to buffer
         fseek(file_p, 0, SEEK_SET);
     }
 
@@ -236,7 +235,7 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-    as_bytes_init_wrap(&content, bytes, size, true);
+    as_bytes_init_wrap(&content, bytes, fileSize, true);
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
