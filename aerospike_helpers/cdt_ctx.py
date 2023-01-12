@@ -81,7 +81,7 @@ Example::
     # Example 3: create a CDT secondary index from a base64 encoded _cdt_ctx with info command
     policy = {}
 
-    bs_b4_cdt = client.get_cdtctx_base64({'ctx':ctx_list_index})
+    bs_b4_cdt = client.get_cdtctx_base64(ctx_list_index)
 
     r = []
     r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")

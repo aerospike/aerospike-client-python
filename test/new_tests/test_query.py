@@ -1053,5 +1053,5 @@ class TestQuery(TestBaseClass):
         assert len(records) == 3
 
     def test_query_with_base64_cdt_ctx(self):
-        bs_b4_cdt = self.as_connection.get_cdtctx_base64({"ctx": ctx_list_index})
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
         assert bs_b4_cdt == "khAA"
