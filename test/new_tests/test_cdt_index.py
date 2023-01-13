@@ -52,16 +52,13 @@ ctx_map_rank.append(add_ctx_op(map_rank, -1))
 ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
-if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
-    if pytest.__version__ < "3.0.0":
-        pytest.skip("It only applies to >= 6.1 enterprise edition")
-    else:
-        pytestmark = pytest.mark.skip
-
 
 class TestCDTIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            pytest.skip("It only applies to >= 6.1 enterprise edition")
+
         keys = []
         for i in range(5):
             key = ("test", "demo", i)

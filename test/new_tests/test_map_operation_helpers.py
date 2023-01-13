@@ -5,14 +5,6 @@ from aerospike import exception as e
 from aerospike_helpers.operations import map_operations as map_ops
 from .test_base_class import TestBaseClass
 
-Server61 = True
-
-if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
-    if pytest.__version__ < "3.0.0":
-        Server61 = False
-    else:
-        Server61 = False
-
 
 def get_map_result_from_operation(client, key, operations, res_bin):
     """
@@ -58,6 +50,10 @@ class TestNewListOperationsHelpers(object):
         """
         Setup Method
         """
+        self.Server61 = True
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            self.Server61 = False
+
         self.keys = []
         # In a CDT, different types are also ordered from each other
         # boolean < integer
@@ -297,7 +293,7 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals == ["f", "e"]
 
     def test_map_get_exists_by_key_list(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [
             map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], return_type=aerospike.MAP_RETURN_EXISTS)
@@ -307,7 +303,7 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals is True
 
     def test_map_get_exists_by_key_range(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [map_ops.map_get_by_key_range(self.test_bin, "a", "d", return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
@@ -315,7 +311,7 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals is True
 
     def test_map_get_exists_by_value(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [
             map_ops.map_get_by_value(self.test_bin, self.test_map["a"], return_type=aerospike.MAP_RETURN_EXISTS)
@@ -323,7 +319,7 @@ class TestNewListOperationsHelpers(object):
         assert get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin) is True
 
     def test_map_get_exists_by_value_list(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [
             map_ops.map_get_by_value_list(
@@ -337,7 +333,7 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals is True
 
     def test_map_get_exists_by_value_range(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [map_ops.map_get_by_value_range(self.test_bin, 1, 4, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
@@ -345,7 +341,7 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals is True
 
     def test_map_get_exists_by_index(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [map_ops.map_get_by_index(self.test_bin, 1, return_type=aerospike.MAP_RETURN_EXISTS)]
@@ -353,7 +349,7 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals is True
 
     def test_map_get_exists_by_index_range(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [map_ops.map_get_by_index_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_EXISTS)]
@@ -361,14 +357,14 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals is True
 
     def test_map_get_exists_by_rank(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [map_ops.map_get_by_rank(self.test_bin, 1, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
         assert ret_vals is True
 
     def test_map_get_exists_by_rank_range(self):
-        if not Server61:
+        if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         sort_map(self.as_connection, self.test_key, self.test_bin)
         operations = [map_ops.map_get_by_rank_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_EXISTS)]
