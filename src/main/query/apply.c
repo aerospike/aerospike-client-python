@@ -104,15 +104,15 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
-    if(py_args){
+    if (py_args) {
         if (PyList_Check(py_args)) {
 
             Py_ssize_t size = PyList_Size(py_args);
 
             if (Illegal_UDF_Args_Check(py_args)) {
-                as_error_update(
-                    &err, AEROSPIKE_ERR_CLIENT,
-                    "udf function argument type must be supported by Aerospike");
+                as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                                "udf function argument type must be supported "
+                                "by Aerospike");
                 goto CLEANUP;
             }
 
@@ -133,8 +133,9 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
             }
         }
         else {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "udf function arguments must be enclosed in a list");
+            as_error_update(
+                &err, AEROSPIKE_ERR_CLIENT,
+                "udf function arguments must be enclosed in a list");
             as_arraylist_destroy(arglist);
             goto CLEANUP;
         }
