@@ -293,6 +293,9 @@ jobs:
           OPENVPN_STATIC_KEY: ${{ secrets.OPENVPN_STATIC_KEY }}
           _output-file: ".github/workflows/aerospike.ovpn"
 
+      - name: Add DNS namespace
+        run: sudo sed -i '0,/nameserver/{s/nameserver/nameserver 8.8.8.8\nnameserver/}' /etc/resolv.conf
+
       - name: Connect to Aerospike VPN
         uses: "kota65535/github-openvpn-connect-action@v2"
         with:
