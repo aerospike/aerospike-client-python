@@ -129,10 +129,12 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
                             SERIALIZER_PYTHON);
             if (err.code != AEROSPIKE_OK) {
                 as_error_update(&err, err.code, NULL);
+                as_arraylist_destroy(arglist);
                 goto CLEANUP;
             }
             as_arraylist_append(arglist, val);
         }
+        as_arraylist_destroy(arglist);
     }
 
     Py_BEGIN_ALLOW_THREADS
@@ -141,8 +143,6 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
 
 CLEANUP:
     POOL_DESTROY(&static_pool);
-
-    as_arraylist_destroy(arglist);
 
     if (py_ufunction) {
         Py_DECREF(py_ufunction);
