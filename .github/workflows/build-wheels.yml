@@ -234,6 +234,8 @@ jobs:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
+          # Use to get all tags
+          fetch-depth: 0
 
       # Release candidate tag starts with rc-
       - name: Get this release number
