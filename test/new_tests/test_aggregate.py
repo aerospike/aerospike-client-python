@@ -23,7 +23,6 @@ def remove_index(client):
     client.index_remove("test", "age_index")
 
 
-@pytest.mark.xfail(reason="file permissions can cause this to fail")
 class TestAggregate(object):
     def setup_class(cls):
         cls.connection_setup_functions = (add_required_index, add_stream_udf)
