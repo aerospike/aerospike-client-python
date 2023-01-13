@@ -23,7 +23,7 @@ def remove_index(client):
     client.index_remove("test", "age_index")
 
 
-@pytest.mark.xfail(reason="file permissions can cause this to fail")
+# @pytest.mark.xfail(reason="file permissions can cause this to fail")
 class TestAggregate(object):
     def setup_class(cls):
         cls.connection_setup_functions = (add_required_index, add_stream_udf)
@@ -292,7 +292,7 @@ class TestAggregate(object):
         """
         policy = {"timeout": 1000}
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(e.ParamError) as paramError:
             query = self.as_connection.query("test", "demo")
             query.select("name", "test_age")
             query.where(p.between("test_age", 1, 5))
@@ -303,7 +303,7 @@ class TestAggregate(object):
 
             query.foreach(user_callback, policy, "")
 
-        assert "foreach() takes at most 2 arguments (3 given)" in str(typeError.value)
+        assert "query options must be a dictionary" in str(paramError.value)
 
     def test_neg_aggregate_with_no_parameters(self):
         """
