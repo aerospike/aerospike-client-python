@@ -58,8 +58,6 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     // Initialize error object
     as_error_init(&err);
 
-    as_arraylist *arglist = NULL;
-
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid query object");
         goto CLEANUP;
@@ -105,6 +103,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
+    as_arraylist *arglist = NULL;
     if (py_args) {
         if(!PyList_Check(py_args)){
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
@@ -140,7 +139,9 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     as_query_apply(&self->query, module, function, (as_list *)arglist);
     Py_END_ALLOW_THREADS
 
-    as_arraylist_destroy(arglist);
+    if(arglist != NULL){
+        as_arraylist_destroy(arglist);
+    }
 
 CLEANUP:
     POOL_DESTROY(&static_pool);
