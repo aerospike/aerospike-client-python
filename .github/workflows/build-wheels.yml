@@ -304,7 +304,7 @@ jobs:
           switches: -avzr --delete
           path: rc-${{ env.RELEASE_NUMBER }}
           remote_path: /var/www/artifacts/development/aerospike-client-python/rc-${{ env.RELEASE_NUMBER }}
-          remote_host: ${{ secrets.ARTIFACTORY_HOST_IP }}
+          remote_host: ${{ secrets.ARTIFACTORY_HOST }}
           remote_user: ${{ secrets.ARTIFACTORY_USERNAME }}
           remote_key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
 
