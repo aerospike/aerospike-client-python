@@ -7,7 +7,6 @@ on:
 
 jobs:
   manylinux_arm64:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -68,7 +67,6 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -124,7 +122,6 @@ jobs:
         name: manylinux-x86_64-${{ matrix.python[0] }}
 
   macOS-x86:
-    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -228,7 +225,11 @@ jobs:
       #     source_dir: './wheelhouse'
 
   send-to-artifactory:
-    # needs: [manylinux_x86_64, manylinux_arm64, macOS-x86, macOS-m1]
+    needs: [
+      manylinux_x86_64,
+      manylinux_arm64,
+      macOS-x86
+    ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -259,14 +260,9 @@ jobs:
           git push --tags
 
       - name: Download all workflow run artifacts
-          # uses: actions/download-artifact@v3
-          # with:
-          #   path: wheelhouse/
-        run: |
-          mkdir wheelhouse/
-          cd wheelhouse/
-          mkdir a b c
-          touch a/0 b/1 c/2
+        uses: actions/download-artifact@v3
+        with:
+          path: wheelhouse/
 
       - name: Reorganize artifacts
         # Move wheels from their folders into release candidate folder
@@ -305,7 +301,7 @@ jobs:
         with:
           switches: -avzr --delete
           path: rc-${{ env.RELEASE_NUMBER }}
-          remote_path: /var/www/artifacts/development/aerospike-client-python/rc-${{ env.RELEASE_NUMBER }}
+          remote_path: /var/www/artifacts/development/aerospike-client-python/
           remote_host: ${{ secrets.ARTIFACTORY_HOST_IP }}
           remote_user: ${{ secrets.ARTIFACTORY_USERNAME }}
           remote_key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
