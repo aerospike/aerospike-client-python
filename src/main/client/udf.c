@@ -243,7 +243,6 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
                       &content);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        // as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
     else {
