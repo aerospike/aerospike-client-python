@@ -238,26 +238,23 @@ jobs:
           # Use to get all tags
           fetch-depth: 0
 
-      # Release candidate tag starts with rc-
+      # Release candidate tag format:
+      # CLIENT-<jira ticket number>-<PR number>
       - name: Get this release number
         run: |
-          lastReleaseTag=$(git tag | grep ^rc | tail -n 1)
-          releaseNumber=-1
-          if [[ $lastReleaseTag == "" ]]; then
-            # Start with release number 1
-            releaseNumber=1
+          # PR title format: [CLIENT-<jira ticket number>] Commit message
+          JIRA_NUMBER=""
+          if [[ ${{ github.event.pull_request.title }} ~= "[(CLIENT-[0-9]+)]" ]]; then
+            JIRA_NUMBER=${BASH_REMATCH[1]}
           else
-            # Get release number from latest tag and increment it
-            releaseNumber=$(cut -b 4- <(echo $lastReleaseTag))
-            releaseNumber=$((releaseNumber + 1))
+            echo "Unable to parse Jira ticket number from PR title"
+            exit 1
           fi
-          echo "RELEASE_NUMBER=$releaseNumber" >> $GITHUB_ENV
-          echo "The release candidate number for this build is $releaseNumber"
 
-      - name: Create release candidate tag
-        run: |
-          git tag rc-${{ env.RELEASE_NUMBER }}
-          git push --tags
+          # Get PR number
+          PR_NUMBER=${{ github.event.pull_request.number }}
+
+          echo BUILD_NAME="${JIRA_NUMBER}-PR-${PR_NUMBER}" >> $GITHUB_ENV
 
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
@@ -267,8 +264,8 @@ jobs:
       - name: Reorganize artifacts
         # Move wheels from their folders into release candidate folder
         run: |
-          mkdir rc-${{ env.RELEASE_NUMBER }}
-          find wheelhouse/ -type f -exec mv {} rc-${{ env.RELEASE_NUMBER }} \;
+          mkdir ${{ env.BUILD_NAME }}
+          find wheelhouse/ -type f -exec mv {} ${{ env.BUILD_NAME }} \;
           rm -r wheelhouse/
 
       # Store sensitive data in openvpn config template
@@ -300,7 +297,7 @@ jobs:
         uses: burnett01/rsync-deployments@5.2.1
         with:
           switches: -avzr --delete
-          path: rc-${{ env.RELEASE_NUMBER }}
+          path: ${{ env.BUILD_NAME }}
           remote_path: /var/www/artifacts/development/aerospike-client-python/
           remote_host: ${{ secrets.ARTIFACTORY_HOST_IP }}
           remote_user: ${{ secrets.ARTIFACTORY_USERNAME }}
