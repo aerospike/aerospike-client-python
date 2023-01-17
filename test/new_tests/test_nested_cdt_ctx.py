@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import random
-from datetime import datetime
 
 import pytest
 import aerospike
@@ -42,7 +41,7 @@ class TestCTXOperations(object):
         self.keys = []
         self.test_key = "test", "demo", "nested_cdt_ops"
         self.nested_list = [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]
-        random.seed(datetime.now())
+        random.seed(0)
         self.nested_list_order = [[4, 2, 5], [1, 4, 2, 3], [[2, 2, 2]]]
         self.nested_map = {
             "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
