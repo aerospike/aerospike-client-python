@@ -7,7 +7,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 
-random.seed(0)
+random.seed()
 
 
 class TestBitwiseOperations(object):
