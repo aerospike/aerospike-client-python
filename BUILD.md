@@ -58,6 +58,27 @@ Dependencies:
  sudo pacman -S binutils gcc
  ```
 
+### Alpine Linux
+
+Dependencies:
+
+```sh
+apk add py3-pip
+apk add python3-dev
+apk add zlib-dev
+apk add git
+# C client dependencies
+apk add automake
+apk add make
+apk add musl-dev
+apk add gcc
+apk add openssl-dev
+apk add lua-dev
+apk add libuv-dev  # (for node.js)
+apk add doxygen  # (for make docs)
+apk add graphviz # (for make docs)
+```
+
 ### macOS
 
 By default macOS will be missing command line tools.

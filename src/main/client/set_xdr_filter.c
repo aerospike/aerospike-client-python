@@ -116,9 +116,9 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
     }
 
     // - 6 for format char
-    uint request_length = strlen(fmt_str) + strlen(data_center_str_p) +
-                          strlen(namespace_str_p) + strlen(base64_filter) + 1 -
-                          6;
+    unsigned int request_length = strlen(fmt_str) + strlen(data_center_str_p) +
+                                  strlen(namespace_str_p) +
+                                  strlen(base64_filter) + 1 - 6;
     request_str_p = cf_malloc(request_length * sizeof(char));
     if (request_str_p == NULL) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
