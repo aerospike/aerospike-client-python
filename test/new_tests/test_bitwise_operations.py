@@ -6,7 +6,7 @@ from aerospike_helpers.operations import bitwise_operations
 
 import aerospike
 
-random.seed()
+random.seed(0)
 
 
 class TestBitwiseOperations(object):
