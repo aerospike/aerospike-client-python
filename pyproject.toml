@@ -1,33 +1,24 @@
-[build-system]
-requires = ["setuptools"]
-build-backend = "setuptools.build_meta"
-
-[project]
+[tool.poetry]
 name = "aerospike"
+version = "9.0.0"
 description = "Aerospike Client Library for Python"
-authors = [
-    {name = "Aerospike, Inc.", email = "info@aerospike.com"}
-]
-readme = "README.rst"
-license = {text = "Apache Software License"}
-keywords = ["aerospike", "nosql", "database"]
-classifiers = [
-    "License :: OSI Approved :: Apache Software License",
-    "Operating System :: POSIX :: Linux",
-    "Operating System :: MacOS :: MacOS X",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: Implementation :: CPython",
-    "Topic :: Database"
-]
-dynamic = ["version"]
+authors = ["Aerospike, Inc. <info@aerospike.com>"]
+license = "Apache Software License"
+readme = "README.md"
 
-[project.urls]
-"Homepage" = "https://aerospike.com"
+[tool.poetry.dependencies]
+python = ">=3.7,<=3.11"
 
-[tool.setuptools]
-zip-safe = false
-include-package-data = true
+[tool.poetry.group.dev.dependencies]
+build = "^0.10.0"
+flake8 = "==5.0.4"
+pytest = "^7.2.1"
+psutil = "^5.9.4"
+pytest-asyncio = "^0.20.3"
+Sphinx = ">=3.2.1"
+sphinx-rtd-theme = "==1.0.0"
+sphinxcontrib-spelling = "==7.6.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
