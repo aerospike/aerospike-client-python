@@ -63,7 +63,7 @@ jobs:
           if [[ $INPUT_RUN_TESTS == "false" ]]; then
             # Skip tests
             exit 0
-          fi
+          fi &&
           cd {project}/test/ &&
           pip install -r requirements.txt &&
           python -m pytest new_tests/
@@ -122,7 +122,7 @@ jobs:
           if [[ $INPUT_RUN_TESTS == "false" ]]; then
             # Skip tests
             exit 0
-          fi
+          fi &&
           cd {project}/test/ &&
           pip install -r requirements.txt &&
           python -m pytest new_tests/
@@ -168,7 +168,7 @@ jobs:
           if [[ $INPUT_RUN_TESTS == "false" ]]; then
             # Skip tests
             exit 0
-          fi
+          fi &&
           vagrant up &&
           sleep 3 &&
           pip install -r test/requirements.txt
