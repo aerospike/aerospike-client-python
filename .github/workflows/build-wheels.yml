@@ -1,13 +1,13 @@
 name: Build wheels
-inputs:
-  run_tests:
-    description: "Run integration tests"
-    required: true
-    default: true
 
 # Builds wheels and sends to QE and Aerospike artifactory
 on:
   workflow_dispatch:
+    inputs:
+      run_tests:
+        description: "Run integration tests"
+        required: true
+        default: true
   pull_request:
 
 jobs:
