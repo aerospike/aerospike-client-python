@@ -1,4 +1,9 @@
 name: Build wheels
+inputs:
+  run_tests:
+    description: "Run integration tests"
+    required: true
+    default: true
 
 # Builds wheels and sends to QE and Aerospike artifactory
 on:
@@ -55,6 +60,10 @@ jobs:
           yum install python-setuptools -y
         CIBW_ARCHS: "aarch64"
         CIBW_TEST_COMMAND: >
+          if [[ $INPUT_RUN_TESTS == "false" ]]; then
+            # Skip tests
+            exit 0
+          fi
           cd {project}/test/ &&
           pip install -r requirements.txt &&
           python -m pytest new_tests/
@@ -110,6 +119,10 @@ jobs:
           yum install python-setuptools -y
         CIBW_ARCHS: "x86_64"
         CIBW_TEST_COMMAND: >
+          if [[ $INPUT_RUN_TESTS == "false" ]]; then
+            # Skip tests
+            exit 0
+          fi
           cd {project}/test/ &&
           pip install -r requirements.txt &&
           python -m pytest new_tests/
@@ -152,6 +165,10 @@ jobs:
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
+          if [[ $INPUT_RUN_TESTS == "false" ]]; then
+            # Skip tests
+            exit 0
+          fi
           vagrant up &&
           sleep 3 &&
           pip install -r test/requirements.txt
