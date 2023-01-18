@@ -17,6 +17,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+
     - uses: actions/setup-python@v2
       with:
         python-version: '3.9'
@@ -66,17 +67,16 @@ jobs:
           git checkout $GITHUB_REF_NAME
           git submodule update --recursive
 
-          python3 -m pip install build
-          python3 -m build
-          python3 -m pip install dist/*.whl
-          cd test/
-          # requirements.txt is not working atm
-          python3 -m pip install pytest
+          # Install Poetry
+          curl -sSL https://install.python-poetry.org | python3 -
 
+          # Build and install
+          poetry install
+
+          cd test/
           # Configure tests
           sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" config.conf
-
-          python3 -m pytest new_tests/
+          poetry run pytest new_tests/
 
     - name: Cleanup
       run: |
@@ -103,11 +103,15 @@ jobs:
     - run: sudo apt update
     - name: Install build dependencies (apt packages)
       run: sudo apt install python3-dev libssl-dev -y
-    - name: Install build dependencies (pip packages)
-      run: python3 -m pip install build
+
+    - name: Install poetry
+      run: curl -sSL https://install.python-poetry.org | python3 -
+
+    - name: Install dependencies
+      run: poetry install
 
     - name: Build client
-      run: python3 -m build
+      run: poetry run build
 
     - name: Send wheel to test jobs
       uses: actions/upload-artifact@v3
@@ -137,11 +141,11 @@ jobs:
       with:
         name: wheel-${{ matrix.py-version }}
 
-    - name: Install client
-      run: pip install *.whl
+    - name: Install poetry
+      run: curl -sSL https://install.python-poetry.org | python3 -
 
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+    - name: Install dependencies
+      run: poetry install
 
     - name: Set up Aerospike Database
       uses: reugn/github-action-aerospike@dev
