@@ -8,6 +8,13 @@ on:
         description: "Run integration tests"
         required: true
         default: true
+      change_type:
+        description: "Major, minor, or patch change"
+        required: true
+        options:
+        - major
+        - minor
+        - patch
   pull_request:
 
 jobs:
@@ -255,23 +262,30 @@ jobs:
           # Use to get all tags
           fetch-depth: 0
 
-      # Release candidate tag format:
-      # CLIENT-<jira ticket number>-<PR number>
-      - name: Get this release number
+      - name: Get build version
         run: |
-          # PR title format: [CLIENT-<jira ticket number>] Commit message
-          JIRA_NUMBER=""
-          if [[ ${{ github.event.pull_request.title }} ~= "[(CLIENT-[0-9]+)]" ]]; then
-            JIRA_NUMBER=${BASH_REMATCH[1]}
+          # 2.0.0-rc.1+build.1
+          highestTag=$(git tag | tail -n 1)
+          releaseCandidateRegex='[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
+          highestTagIsReleaseCandidate=[[ "$highestTag" =~ $releaseCandidateRegex ]]
+          pip install semver
+          if [[ $highestTagIsReleaseCandidate ]]; then
+            # Get theoretical new version from change, ignoring all other changes since last release
+            lastReleaseVersion=$(grep -vE $releaseCandidateRegex)
+            newVersion=$(pysemver bump ${{ github.event.inputs.change_type }} $lastReleaseVersion)
+            # Compare new version with release candidate version
+            result=$(pysemver compare $newVersion $highestTag)
+            if [[ $result < 0 ]]; then
+              # Bump the higher version RC number
+              newVersion=$(pysemver bump prerelease $highestTag)
+            else
+              newVersion=$(pysemver bump prerelease $newVersion)
+            fi
           else
-            echo "Unable to parse Jira ticket number from PR title"
-            exit 1
+            newVersion=$(pysemver bump prerelease $newVersion)
           fi
-
-          # Get PR number
-          PR_NUMBER=${{ github.event.pull_request.number }}
-
-          echo BUILD_NAME="${JIRA_NUMBER}-PR-${PR_NUMBER}" >> $GITHUB_ENV
+          newVersion=$(pysemver bump build $newVersion)
+          git tag $newBuildVersion
 
       - name: Download all workflow run artifacts
         uses: actions/download-artifact@v3
