@@ -125,7 +125,7 @@ jobs:
 
   multinode-tests:
     runs-on: ubuntu-latest
-    # needs: build
+    needs: build
     steps:
     - uses: actions/checkout@v2
       with:
@@ -134,11 +134,12 @@ jobs:
       with:
         python-version: "3.7"
         architecture: 'x64'
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     name: wheel-3.7
-    # - name: Install client
-    #   run: pip install *.whl
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-3.7
+    - run: pip install .
+    - name: Install client
+      run: pip install *.whl
     - name: Download aerolab
       run: wget https://github.com/aerospike/aerolab/releases/download/4.5.0/aerolab-linux-amd64.deb
     - name: Install aerolab
@@ -147,6 +148,11 @@ jobs:
       run: aerolab config backend -t docker
     - name: Create cluster
       run: aerolab cluster create --name=multinodeserver --count=3
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
 
   test-ce:
     runs-on: ubuntu-latest
