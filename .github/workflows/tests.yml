@@ -123,6 +123,31 @@ jobs:
         name: wheel-${{ matrix.py-version }}
         path: ./dist/*.whl
 
+  multinode-tests:
+    runs-on: ubuntu-latest
+    # needs: build
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+        architecture: 'x64'
+    # - uses: actions/download-artifact@v3
+    #   with:
+    #     name: wheel-3.7
+    # - name: Install client
+    #   run: pip install *.whl
+    - name: Download aerolab
+      run: wget https://github.com/aerospike/aerolab/releases/download/4.5.0/aerolab-linux-amd64.deb
+    - name: Install aerolab
+      run: sudo dpkg -i aerolab-linux-amd64.deb
+    - name: Tell aerolab to use Docker
+      run: aerolab config backend -t docker
+    - name: Create cluster
+      run: aerolab cluster create --name=multinodeserver --count=3
+
   test-ce:
     runs-on: ubuntu-latest
     needs: build
