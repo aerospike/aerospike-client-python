@@ -137,7 +137,6 @@ jobs:
     - uses: actions/download-artifact@v3
       with:
         name: wheel-3.7
-    - run: pip install .
     - name: Install client
       run: pip install *.whl
     - name: Download aerolab
@@ -147,12 +146,24 @@ jobs:
     - name: Tell aerolab to use Docker
       run: aerolab config backend -t docker
     - name: Create cluster
-      run: aerolab cluster create --name=multinodeserver --count=3
+      run: aerolab cluster create --count=3
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
+    - name: Install crudini to manipulate config.conf
+      run: pip install crudini
+    - name: Configure tests to use ip of a cluster node
+      run: |
+        ipAddress=$(aerolab cluster list --ip | head -n 1 | awk '{print $4}' | cut -d "=" -f2)
+        crudini --set config.conf enterprise-edition hosts ${ipAddress}:3000
+      working-directory: test
     - name: Run tests
       run: python -m pytest ./new_tests
       working-directory: test
+    - name: Tear down cluster
+      if: always()
+      run: |
+        aerolab cluster stop
+        aerolab cluster destroy
 
   test-ce:
     runs-on: ubuntu-latest
