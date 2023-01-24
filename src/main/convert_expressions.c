@@ -537,22 +537,26 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
             Py_ssize_t index = 0;
             PyObject *key, *value;
             while (PyDict_Next(py_obj, &index, &key, &value)) {
-                as_val* key_as_val;
-                pyobject_to_val(self, err, key, &key_as_val, static_pool, serializer_type);
-                if(err->code != AEROSPIKE_OK){
+                as_val *key_as_val;
+                pyobject_to_val(self, err, key, &key_as_val, static_pool,
+                                serializer_type);
+                if (err->code != AEROSPIKE_OK) {
                     return err->code;
                 }
 
-                as_val* value_as_val;
-                pyobject_to_val(self, err, value, &value_as_val, static_pool, serializer_type);
-                if(err->code != AEROSPIKE_OK){
+                as_val *value_as_val;
+                pyobject_to_val(self, err, value, &value_as_val, static_pool,
+                                serializer_type);
+                if (err->code != AEROSPIKE_OK) {
                     return err->code;
                 }
                 as_orderedmap_set(&ordered_map, key_as_val, value_as_val);
             }
             map = &ordered_map;
-        }else{
-            pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
+        }
+        else {
+            pyobject_to_map(self, err, py_obj, &map, static_pool,
+                            serializer_type);
         }
 
         if (err->code == AEROSPIKE_OK) {
