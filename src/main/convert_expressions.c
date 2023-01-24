@@ -535,6 +535,26 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
             *new_entry = tmp_entry;
         }
     }
+    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.KeyOrderedDict")) {
+        // Get Python dict from KeyOrderedDict
+        PyObject *py_dict = PyObject_GetAttrString(py_obj, "dict");
+
+        // Convert Python dict to C client ordered map
+        as_orderedmap map;
+        Py_ssize_t num_keys =
+            PyDict_Size(py_dict) as_orderedmap_init(&map, num_keys);
+
+        Py_ssize_t index = 0;
+        PyObject *key, *value;
+        while (PyDict_Next(py_dict, &index, &key, &value)) {
+            as_orderedmap_set(&map, key, value);
+        }
+
+        temp_expr->val.val_map_p = map;
+        temp_expr->val_flag = VAL_MAP_P_ACTIVE;
+        as_exp_entry tmp_entry = as_exp_val(map);
+        *new_entry = tmp_entry;
+    }
     else if (Py_None == py_obj) {
         as_exp_entry tmp_entry = as_exp_nil();
         *new_entry = tmp_entry;
