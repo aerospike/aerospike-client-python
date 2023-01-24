@@ -528,34 +528,39 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
     }
     else if (PyDict_Check(py_obj)) {
         as_map *map = NULL;
-        pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
+        if (!strcmp(py_obj->ob_type->tp_name, "aerospike.KeyOrderedDict")) {
+            // Convert Python dict to C client ordered map
+            as_orderedmap ordered_map;
+            Py_ssize_t num_keys = PyDict_Size(py_obj);
+            as_orderedmap_init(&ordered_map, num_keys);
+
+            Py_ssize_t index = 0;
+            PyObject *key, *value;
+            while (PyDict_Next(py_obj, &index, &key, &value)) {
+                as_val* key_as_val;
+                pyobject_to_val(self, err, key, &key_as_val, static_pool, serializer_type);
+                if(err->code != AEROSPIKE_OK){
+                    return err->code;
+                }
+
+                as_val* value_as_val;
+                pyobject_to_val(self, err, value, &value_as_val, static_pool, serializer_type);
+                if(err->code != AEROSPIKE_OK){
+                    return err->code;
+                }
+                as_orderedmap_set(&ordered_map, key_as_val, value_as_val);
+            }
+            map = &ordered_map;
+        }else{
+            pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
+        }
+
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_map_p = map;
             temp_expr->val_flag = VAL_MAP_P_ACTIVE;
             as_exp_entry tmp_entry = as_exp_val(map);
             *new_entry = tmp_entry;
         }
-    }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.KeyOrderedDict")) {
-        // Get Python dict from KeyOrderedDict
-        PyObject *py_dict = PyObject_GetAttrString(py_obj, "dict");
-
-        // Convert Python dict to C client ordered map
-        as_orderedmap map;
-        Py_ssize_t num_keys = PyDict_Size(py_dict);
-		as_orderedmap_init(&map, num_keys);
-
-        Py_ssize_t index = 0;
-        PyObject *key, *value;
-        while (PyDict_Next(py_dict, &index, &key, &value)) {
-            as_orderedmap_set(&map, key, value);
-        }
-		Py_DECREF(py_dict);
-
-        temp_expr->val.val_map_p = (as_map*)(&map);
-        temp_expr->val_flag = VAL_MAP_P_ACTIVE;
-        as_exp_entry tmp_entry = as_exp_val(&map);
-        *new_entry = tmp_entry;
     }
     else if (Py_None == py_obj) {
         as_exp_entry tmp_entry = as_exp_nil();
