@@ -537,6 +537,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
             Py_ssize_t index = 0;
             PyObject *key, *value;
             while (PyDict_Next(py_obj, &index, &key, &value)) {
+                // Convert each Python key and value to as_val objects
                 as_val *key_as_val;
                 pyobject_to_val(self, err, key, &key_as_val, static_pool,
                                 serializer_type);
@@ -550,6 +551,8 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
                 if (err->code != AEROSPIKE_OK) {
                     return err->code;
                 }
+
+                // Then store the as_val objects in the ordered map
                 as_orderedmap_set(&ordered_map, key_as_val, value_as_val);
             }
             map = &ordered_map;
