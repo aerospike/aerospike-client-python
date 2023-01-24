@@ -667,6 +667,11 @@ class TestPredEveryWhere(object):
         with pytest.raises(e.FilteredOut):
             self.as_connection.get(self.keys[0], {"expressions": expr.compile()})
 
+    def test_get_with_keyordered_dict_expression(self):
+        expr = exp.Eq(exp.MapBin("map_bin"), aerospike.KeyOrderedDict({"k1": 1, "k2": 2, "k3": 3, "k4": 4})).compile()
+        policy = {"expressions": expr}
+        self.as_connection.get(self.keys[0], policy)
+
     def test_select_with_expressions(self):
         """
         Call to select with expressions in policy.
