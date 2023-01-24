@@ -147,6 +147,16 @@ jobs:
       run: aerolab config backend -t docker
     - name: Create cluster
       run: aerolab cluster create --count=3
+    - name: Wait for cluster to start
+      run: sleep 5
+    - name: Configure aerospike.conf
+      run: |
+        # Get first node container ID (strip quotes)
+        instanceId=$(aerolab cluster list -j | jq '.[] | select(.NodeNumber=="1") | .InstanceId' | cut -d \" -f2)
+        # Set allow-ttl-without-nsup to true
+        docker exec $instanceId asinfo -v "set-config:context=namespace;id=test;allow-ttl-without-nsup=true"
+        # Set this config for all nodes
+        aerolab files sync --path=/etc/aerospike/aerospike.conf
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
     - name: Install crudini to manipulate config.conf
