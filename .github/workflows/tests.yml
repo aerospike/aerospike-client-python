@@ -146,7 +146,7 @@ jobs:
     - name: Tell aerolab to use Docker
       run: aerolab config backend -t docker
     - name: Run tests
-      run: python3 multinode-test.py
+      run: python3 test/multinode-test.py
 
   test-ce:
     runs-on: ubuntu-latest
