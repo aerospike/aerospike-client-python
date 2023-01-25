@@ -145,6 +145,7 @@ jobs:
       run: sudo dpkg -i aerolab-linux-amd64.deb
     - name: Tell aerolab to use Docker
       run: aerolab config backend -t docker
+    - run: pip install docker
     - name: Run tests
       run: python3 test/multinode-test.py
 
