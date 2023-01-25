@@ -145,35 +145,8 @@ jobs:
       run: sudo dpkg -i aerolab-linux-amd64.deb
     - name: Tell aerolab to use Docker
       run: aerolab config backend -t docker
-    - name: Create cluster
-      run: aerolab cluster create --count=3
-    - name: Wait for cluster to start
-      run: sleep 5
-    - name: Configure aerospike.conf
-      run: |
-        # Get first node container ID (strip quotes)
-        instanceId=$(aerolab cluster list -j | jq '.[] | select(.NodeNumber=="1") | .InstanceId' | cut -d \" -f2)
-        # Set allow-ttl-without-nsup to true
-        docker exec $instanceId asinfo -v "set-config:context=namespace;id=test;allow-ttl-without-nsup=true"
-        # Set this config for all nodes
-        aerolab files sync --path=/etc/aerospike/aerospike.conf
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-    - name: Install crudini to manipulate config.conf
-      run: pip install crudini
-    - name: Configure tests to use ip of a cluster node
-      run: |
-        ipAddress=$(aerolab cluster list --ip | head -n 1 | awk '{print $4}' | cut -d "=" -f2)
-        crudini --set config.conf enterprise-edition hosts ${ipAddress}:3000
-      working-directory: test
     - name: Run tests
-      run: python -m pytest ./new_tests
-      working-directory: test
-    - name: Tear down cluster
-      if: always()
-      run: |
-        aerolab cluster stop
-        aerolab cluster destroy
+      run: python3 multinode-test.py
 
   test-ce:
     runs-on: ubuntu-latest
