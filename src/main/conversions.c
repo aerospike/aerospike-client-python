@@ -753,7 +753,7 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     Py_ssize_t size = PyDict_Size(py_dict);
 
     if (*map == NULL) {
-        *map = (as_map *)as_orderedmap_new((uint32_t)size);
+        *map = (as_map *)as_hashmap_new((uint32_t)size);
     }
 
     while (PyDict_Next(py_dict, &pos, &py_key, &py_val)) {
