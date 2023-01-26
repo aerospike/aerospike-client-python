@@ -23,7 +23,6 @@
 #include <aerospike/as_vector.h>
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_msgpack_ext.h>
-#include <aerospike/as_orderedmap.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -528,40 +527,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
     }
     else if (PyDict_Check(py_obj)) {
         as_map *map = NULL;
-        if (!strcmp(py_obj->ob_type->tp_name, "aerospike.KeyOrderedDict")) {
-            // Convert Python dict to C client ordered map
-            as_orderedmap ordered_map;
-            Py_ssize_t num_keys = PyDict_Size(py_obj);
-            as_orderedmap_init(&ordered_map, num_keys);
-
-            Py_ssize_t index = 0;
-            PyObject *key, *value;
-            while (PyDict_Next(py_obj, &index, &key, &value)) {
-                // Convert each Python key and value to as_val objects
-                as_val *key_as_val;
-                pyobject_to_val(self, err, key, &key_as_val, static_pool,
-                                serializer_type);
-                if (err->code != AEROSPIKE_OK) {
-                    return err->code;
-                }
-
-                as_val *value_as_val;
-                pyobject_to_val(self, err, value, &value_as_val, static_pool,
-                                serializer_type);
-                if (err->code != AEROSPIKE_OK) {
-                    return err->code;
-                }
-
-                // Then store the as_val objects in the ordered map
-                as_orderedmap_set(&ordered_map, key_as_val, value_as_val);
-            }
-            map = &ordered_map;
-        }
-        else {
-            pyobject_to_map(self, err, py_obj, &map, static_pool,
-                            serializer_type);
-        }
-
+        pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_map_p = map;
             temp_expr->val_flag = VAL_MAP_P_ACTIVE;
