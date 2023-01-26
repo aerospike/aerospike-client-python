@@ -527,7 +527,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
     }
     else if (PyDict_Check(py_obj)) {
         as_map *map = NULL;
-        pyobject_to_val(self, err, py_obj, &map, static_pool, serializer_type);
+        pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
         if (err->code == AEROSPIKE_OK) {
             temp_expr->val.val_map_p = map;
             temp_expr->val_flag = VAL_MAP_P_ACTIVE;
