@@ -670,7 +670,7 @@ class TestPredEveryWhere(object):
     def test_get_with_keyordered_dict_expression(self):
         expr = exp.Eq(exp.MapBin("map_bin"), aerospike.KeyOrderedDict({"k1": 1, "k2": 2, "k4": 4, "k3": 3})).compile()
         policy = {"expressions": expr}
-        self.as_connection.get(self.keys[0], policy)
+        self.as_connection.get(self.keys[5], policy)
 
     def test_select_with_expressions(self):
         """
