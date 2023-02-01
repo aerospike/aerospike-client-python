@@ -71,7 +71,7 @@ static PyObject *batch_select_aerospike_batch_read(
     bool batch_initialised = false;
 
     // Convert python keys list to as_key ** and add it to as_batch.keys
-    // keys can be specified in PyList or PyTuple
+    // keys must be specified in a PyList
     if (py_keys && PyList_Check(py_keys)) {
         Py_ssize_t size = PyList_Size(py_keys);
 
@@ -104,42 +104,9 @@ static PyObject *batch_select_aerospike_batch_read(
                 goto CLEANUP;
             }
         }
-    }
-    else if (py_keys && PyTuple_Check(py_keys)) {
-        Py_ssize_t size = PyTuple_Size(py_keys);
-
-        as_batch_read_inita(&records, size);
-        // Batch object initialised
-        batch_initialised = true;
-
-        for (int i = 0; i < size; i++) {
-            PyObject *py_key = PyTuple_GetItem(py_keys, i);
-
-            if (!PyTuple_Check(py_key)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Key should be a tuple.");
-                goto CLEANUP;
-            }
-
-            record = as_batch_read_reserve(&records);
-
-            pyobject_to_key(err, py_key, &record->key);
-            if (bins_size) {
-                record->bin_names = filter_bins;
-                record->n_bin_names = bins_size;
-            }
-            else {
-                record->read_all_bins = true;
-            }
-
-            if (err->code != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-        }
-    }
-    else {
+    } else {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Keys should be specified as a list or tuple.");
+                        "Keys should be specified as a list.");
         goto CLEANUP;
     }
 
