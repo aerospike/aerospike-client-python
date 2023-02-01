@@ -104,7 +104,8 @@ static PyObject *batch_select_aerospike_batch_read(
                 goto CLEANUP;
             }
         }
-    } else {
+    }
+    else {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "Keys should be specified as a list.");
         goto CLEANUP;
