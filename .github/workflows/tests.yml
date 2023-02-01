@@ -152,7 +152,7 @@ jobs:
       run: |
         # Get first node container ID (strip quotes)
         instanceId=$(aerolab cluster list -j | jq '.[] | select(.NodeNumber=="1") | .InstanceId' | cut -d \" -f2)
-        docker exec $instanceId asinfo -v "set-config:context=network;heartbeat.interval=10"
+        docker exec $instanceId asinfo -v "set-config:context=network;heartbeat.interval=50"
         # Set this config for all nodes
         aerolab files sync --path=/etc/aerospike/aerospike.conf
     - name: Run tests
