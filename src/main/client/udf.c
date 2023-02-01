@@ -214,7 +214,7 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
             goto CLEANUP;
         }
 
-        char ch;
+        int ch;
         while ((ch = fgetc(file_p)) != EOF) {
             int retVal = fputc(ch, copy_file_p);
             if (retVal == EOF) {
