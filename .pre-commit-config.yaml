@@ -14,3 +14,8 @@ repos:
     rev: v4.4.0
     hooks:
     -   id: check-yaml
+
+-   repo: https://github.com/PyCQA/doc8
+    rev: v1.1.1
+    hooks:
+    -   id: doc8
