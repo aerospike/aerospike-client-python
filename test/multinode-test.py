@@ -1,18 +1,15 @@
 import subprocess
 import time
-import docker
+import sys
 
+import docker
 import aerospike
 
 if __name__ == "__main__":
-    print("Creating 2 node cluster...")
-    subprocess.run(["aerolab", "cluster", "create", "--count=2"])
-
     try:
         print("Waiting for cluster to start...")
         time.sleep(5)
 
-        # Get IP address of cluster
         client = docker.from_env()
         firstNode = client.containers.get("aerolab-mydc_1")
         serverIp = firstNode.attrs["NetworkSettings"]["IPAddress"]
@@ -41,10 +38,13 @@ if __name__ == "__main__":
         print("Getting record...")
         record = client.get(key)
         print(record)
+        exitCode = 0
     except Exception as e:
         print(e)
+        exitCode = 1
     finally:
         print("Cleaning up test...")
         client.close()
         subprocess.run(["aerolab", "cluster", "stop"])
         subprocess.run(["aerolab", "cluster", "destroy"])
+        sys.exit(exitCode)

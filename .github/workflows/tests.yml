@@ -146,6 +146,15 @@ jobs:
     - name: Tell aerolab to use Docker
       run: aerolab config backend -t docker
     - run: pip install docker
+    - run: aerolab cluster create --count=2
+    - run: sleep 5
+    - name: Configure aerospike.conf
+      run: |
+        # Get first node container ID (strip quotes)
+        instanceId=$(aerolab cluster list -j | jq '.[] | select(.NodeNumber=="1") | .InstanceId' | cut -d \" -f2)
+        docker exec $instanceId asinfo -v "set-config:context=network;heartbeat.interval=10"
+        # Set this config for all nodes
+        aerolab files sync --path=/etc/aerospike/aerospike.conf
     - name: Run tests
       run: python3 test/multinode-test.py
 
