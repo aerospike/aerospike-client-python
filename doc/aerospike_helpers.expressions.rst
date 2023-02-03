@@ -19,7 +19,7 @@ allow for expanded functionality and customizability.
 In the Python client, Aerospike expressions are built using a series of classes that represent
 comparison and logical operators, bins, metadata operations, and bin operations.
 Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean,
-such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`, 
+such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`,
 while passing them other expressions and constants as arguments, and finally calling the :meth:`compile` method.
 
 Example::
@@ -65,7 +65,7 @@ For:
 The filtered out record's ``meta`` and ``bins`` are both set to :py:obj:`None` .
 
 For:
-  
+
   * :meth:`~aerospike.Client.batch_write` (records filtered out by a batch or batch record policy)
   * :meth:`~aerospike.Client.batch_operate` (records filtered out by a batch or batch write policy)
   * :meth:`~aerospike.Client.batch_apply` (records filtered out by a batch or batch apply policy)
@@ -90,7 +90,8 @@ When the following documentation says an expression returns a **list expression*
 it means that the expression returns a list during evaluation on the server side.
 
 Expressions used with :meth:`~aerospike_helpers.operations.expression_operations.expression_read`
-or :meth:`~aerospike_helpers.operations.expression_operations.expression_write` do send their return values to the client or write them to the server.
+or :meth:`~aerospike_helpers.operations.expression_operations.expression_write` do send their return values to the
+client or write them to the server.
 These expressions are called **operation expressions**.
 
 When these docs say that an expression parameter requires an integer or **integer expression**,

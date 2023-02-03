@@ -663,7 +663,8 @@ Policy Options
 Commit Level Policy Options
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Specifies the number of replicas required to be successfully committed before returning success in a write operation to provide the desired consistency guarantee.
+Specifies the number of replicas required to be successfully committed before returning success in a write operation to
+provide the desired consistency guarantee.
 
 .. data:: POLICY_COMMIT_LEVEL_ALL
 
@@ -1302,15 +1303,15 @@ Flags used by :class:`~aerospike_helpers.operations.expression_operations.expres
 
 .. data:: EXP_WRITE_UPDATE_ONLY
 
-	If bin exists, the bin will be overwritten.
-	If bin does not exist, the operation will be denied.
-	If bin does not exist, fail with BinNotFound
-	when EXP_WRITE_POLICY_NO_FAIL is not set.
+    If bin exists, the bin will be overwritten.
+    If bin does not exist, the operation will be denied.
+    If bin does not exist, fail with BinNotFound
+    when EXP_WRITE_POLICY_NO_FAIL is not set.
 
 .. data:: EXP_WRITE_ALLOW_DELETE
 
-	If expression results in nil value, then delete the bin. Otherwise, return
-	OpNotApplicable when EXP_WRITE_POLICY_NO_FAIL is not set.
+    If expression results in nil value, then delete the bin. Otherwise, return
+    OpNotApplicable when EXP_WRITE_POLICY_NO_FAIL is not set.
 
 .. data:: EXP_WRITE_POLICY_NO_FAIL
 
@@ -1541,4 +1542,3 @@ See :ref:`aerospike_operation_helpers.expressions` for more information.
 .. data:: REGEX_NEWLINE
 
     Match-any-character operators don't match a newline.
-
