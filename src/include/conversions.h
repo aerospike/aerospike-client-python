@@ -91,7 +91,8 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
-                          as_static_pool *static_pool, int serializer_type);
+                          as_static_pool *static_pool, int serializer_type,
+                          bool is_pydict_keyordered);
 
 as_status pyobject_to_list(AerospikeClient *self, as_error *err,
                            PyObject *py_list, as_list **list,

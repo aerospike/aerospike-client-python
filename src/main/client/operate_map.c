@@ -273,8 +273,10 @@ PyObject *AerospikeClient_MapPutItems(AerospikeClient *self, PyObject *args,
     POLICY_KEY_META_BIN();
     SETUP_MAP_POLICY();
 
+    // TODO: assume we are taking in an unordered map
+    // but this may cause issues in the future if the python map is key ordered
     if (pyobject_to_map(self, &err, py_items, &put_items, &static_pool,
-                        SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+                        SERIALIZER_PYTHON, false) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
