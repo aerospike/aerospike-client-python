@@ -34,4 +34,3 @@ Spelling check:
 ```bash
 sphinx-build -b spelling . spelling
 ```
-

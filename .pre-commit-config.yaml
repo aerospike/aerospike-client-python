@@ -25,6 +25,7 @@ repos:
         pass_filenames: false
         files: "^(aerospike_helpers|test)/"
         types: ["file", "python"]
+    -   id: end-of-file-fixer
 
 -   repo: https://github.com/PyCQA/doc8
     rev: v1.1.1
