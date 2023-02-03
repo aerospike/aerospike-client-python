@@ -182,6 +182,16 @@ All C source code must be formatted with `clang-format`:
 clang-format -i <filename>
 ```
 
+### Precommit Hooks
+
+All commits must pass precommit hook tests. To install precommit hooks:
+```
+pip install pre-commit
+pre-commit install
+```
+
+See pre-commit's documentation for more usage explanations.
+
 ## License
 
 The Aerospike Python Client is made availabled under the terms of the Apache License, Version 2, as stated in the file `LICENSE`.
