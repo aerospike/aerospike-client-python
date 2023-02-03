@@ -16,4 +16,3 @@ function mytransformless(rec, bin)
     rec['age'] = rec['age'] + offset
     aerospike:update(rec)
 end
-

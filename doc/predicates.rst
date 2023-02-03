@@ -309,4 +309,3 @@ Map and List Predicates
         res = query.results()
         print(res)
         client.close()
-

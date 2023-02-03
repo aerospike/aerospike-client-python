@@ -53,4 +53,3 @@ function group_count(stream, group_by_bin, bin_having, ge_threshold)
     return stream : aggregate(map{}, count_bins(group_by_bin)) : reduce(reduce_groups)
   end
 end
-

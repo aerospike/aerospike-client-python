@@ -15,8 +15,8 @@ to serialize and deserialize the data, storing it in the server as a blob with \
 (`AS_BYTES_PYTHON <https://docs.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
 
 The functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
-allow for user-defined functions to handle serialization, instead. The user provided function will be run instead of cPickle. \
-The serialized data is stored in the server with generic encoding \
+allow for user-defined functions to handle serialization, instead. The user provided function will be run instead of
+cPickle. The serialized data is stored in the server with generic encoding \
 (`AS_BYTES_BLOB <https://docs.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_). \
 This type allows the storage of binary data readable by Aerospike Clients in other languages. \
 The *serialization* config parameter of :func:`aerospike.client` registers an \
@@ -33,7 +33,7 @@ Python specific bytes may not be readable by Aerospike Clients for other languag
     It configures how the client writes Python booleans and allows for opting into using the new boolean type.
     It is important to consider how other clients connected to the Aerospike database write booleans in order to maintain cross client compatibility.
     For example, if there is a client that reads and writes booleans as integers, then another Python client working with the same data should do the same thing.
-    
+
     ``send_bool_as`` can be set so the client writes Python booleans as ``AS_BYTES_PYTHON``, integers, or the new server boolean type.
 
     All versions before ``6.x`` wrote Python booleans as ``AS_BYTES_PYTHON``.
@@ -69,7 +69,8 @@ The following table shows which Python types map directly to Aerospike server ty
     :ref:`KeyOrderedDict <aerospike.KeyOrderedDict>` is a special case. Like :class:`dict`, :class:`~aerospike.KeyOrderedDict` maps to the Aerospike map data type. \
     However, the map will be sorted in key order before being sent to the server (see :ref:`aerospike_map_order`).
 
-It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list as a value.
+It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list
+as a value.
 
 Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. \
 Python specific bytes may not be readable by Aerospike Clients for other languages.
