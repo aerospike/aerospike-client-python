@@ -154,7 +154,11 @@ class TestExpressions(TestBaseClass):
                 ],
                 "slist_bin": ["b", "d", "f"],
                 "llist_bin": [[1, 2], [1, 3], [1, 4]],
-                "mlist_bin": [{1: 2}, {1: 3}, {1: 4}],
+                "mlist_bin": [
+                    aerospike.KeyOrderedDict({1: 2}),
+                    aerospike.KeyOrderedDict({1: 3}),
+                    aerospike.KeyOrderedDict({1: 4})
+                ],
                 "bylist_bin": ["b".encode("utf8"), "d".encode("utf8"), "f".encode("utf8")],
                 "bolist_bin": [False, False, True],
                 "nlist_bin": [None, aerospike.null, aerospike.null],
