@@ -448,7 +448,14 @@ class TestExpressions(TestBaseClass):
                 "mmap_bin",
                 None,
                 {},
-                [7, {1: 8}, 1, {1: 2}, 3, {1: 4}],
+                [
+                    7,
+                    aerospike.KeyOrderedDict({1: 8}),
+                    1,
+                    aerospike.KeyOrderedDict({1: 2}),
+                    3,
+                    aerospike.KeyOrderedDict({1: 4})
+                ],
             ),
             (
                 "bymap_bin",

@@ -638,19 +638,47 @@ class TestExpressions(TestBaseClass):
                 None,
                 {},
                 [
-                    {1: 20},
-                    [{1: 6}, {1: 9}],
-                    {1: 5},
-                    [{1: 24}, {1: 25}],  #
-                    {1: 10},
-                    {1: 2},  #
-                    [{1: 3}, {1: 4}],
-                    {1: 2},  #
-                    {1: 4},
-                    {1: 4},
-                    {1: 3},  #
+                    aerospike.KeyOrderedDict({1: 20}),
+                    [
+                        aerospike.KeyOrderedDict({1: 6}),
+                        aerospike.KeyOrderedDict({1: 9})
+                    ],
+                    aerospike.KeyOrderedDict({1: 5}),
+                    [
+                        aerospike.KeyOrderedDict({1: 24}),
+                        aerospike.KeyOrderedDict({1: 25})
+                    ],  #
+                    aerospike.KeyOrderedDict({1: 10}),
+                    aerospike.KeyOrderedDict({1: 2}),  #
+                    [
+                        aerospike.KeyOrderedDict({1: 3}),
+                        aerospike.KeyOrderedDict({1: 4})
+                    ],
+                    aerospike.KeyOrderedDict({1: 2}),  #
+                    aerospike.KeyOrderedDict({1: 4}),
+                    aerospike.KeyOrderedDict({1: 4}),
+                    aerospike.KeyOrderedDict({1: 3}),  #
                 ],
-                [[{1: 2}, {1: 3}, {1: 4}, {1: 5}, {1: 6}, {1: 9}, {1: 20}], [{1: 10}, {1: 24}, {1: 25}], [{1: 2}], []],
+                [
+                    [
+                        aerospike.KeyOrderedDict({1: 2}),
+                        aerospike.KeyOrderedDict({1: 3}),
+                        aerospike.KeyOrderedDict({1: 4}),
+                        aerospike.KeyOrderedDict({1: 5}),
+                        aerospike.KeyOrderedDict({1: 6}),
+                        aerospike.KeyOrderedDict({1: 9}),
+                        aerospike.KeyOrderedDict({1: 20})
+                    ],
+                    [
+                        aerospike.KeyOrderedDict({1: 10}),
+                        aerospike.KeyOrderedDict({1: 24}),
+                        aerospike.KeyOrderedDict({1: 25})
+                    ],
+                    [
+                        aerospike.KeyOrderedDict({1: 2})
+                    ],
+                    []
+                ],
             ),
             (
                 "bylist_bin",
