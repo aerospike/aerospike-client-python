@@ -741,7 +741,6 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-// is_py_dict_keyordered: should as_map be an ordered map?
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
                           as_static_pool *static_pool, int serializer_type)
