@@ -744,8 +744,7 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
 // is_py_dict_keyordered: should as_map be an ordered map?
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
-                          as_static_pool *static_pool, int serializer_type,
-                          bool is_py_dict_keyordered)
+                          as_static_pool *static_pool, int serializer_type)
 {
     as_error_reset(err);
 
@@ -755,7 +754,15 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     Py_ssize_t size = PyDict_Size(py_dict);
 
     if (*map == NULL) {
-        if (is_py_dict_keyordered) {
+        int is_pydict_keyordered =
+            PyObject_IsInstance(py_dict, AerospikeKeyOrderedDict_Get_Type());
+        if (PyErr_Occurred()) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to check if dictionary is key ordered or not");
+        }
+
+        if (is_pydict_keyordered) {
             *map = (as_map *)as_orderedmap_new((uint32_t)size);
         }
         else {
@@ -898,16 +905,8 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
     }
     else if (PyDict_Check(py_obj)) {
         as_map *map = NULL;
-        pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type,
-                        false);
+        pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
         if (err->code == AEROSPIKE_OK) {
-            // TODO: keeping this if statement block here for now, in case removing it causes breaking changes
-            if (PyObject_IsInstance(py_obj,
-                                    AerospikeKeyOrderedDict_Get_Type())) {
-                // Special case for aerospike.KeyOrderedDict, useful to just in time sort maps for by value operations.
-                map->flags |= AS_MAP_KEY_ORDERED;
-            }
-
             *val = (as_val *)map;
         }
     }
@@ -1134,10 +1133,8 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
             else if (PyDict_Check(value)) {
                 // as_map
                 as_map *map = NULL;
-                // TODO: assume we are taking in an unordered map
-                // but this may cause issues in the future if the python map is key ordered
                 pyobject_to_map(self, err, value, &map, static_pool,
-                                serializer_type, false);
+                                serializer_type);
                 if (err->code != AEROSPIKE_OK) {
                     break;
                 }
@@ -2206,10 +2203,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     }
     else if (PyDict_Check(py_value)) {
         as_map *map = NULL;
-        // TODO: assume we are taking in an unordered map
-        // but this may cause issues in the future if the python map is key ordered
         pyobject_to_map(self, err, py_value, &map, static_pool,
-                        SERIALIZER_PYTHON, false);
+                        SERIALIZER_PYTHON);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)map;
     }
