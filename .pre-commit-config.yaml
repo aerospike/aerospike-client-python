@@ -33,3 +33,8 @@ repos:
     -   id: doc8
         args: ["doc/"]
         pass_filenames: false
+
+-   repo: https://github.com/python-jsonschema/check-jsonschema
+    rev: 0.21.0
+    hooks:
+    -   id: check-github-workflows
