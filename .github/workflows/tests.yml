@@ -110,9 +110,6 @@ jobs:
     - name: Install dependencies
       run: poetry install
 
-    - name: Build client
-      run: poetry run build
-
     - name: Send wheel to test jobs
       uses: actions/upload-artifact@v3
       with:
