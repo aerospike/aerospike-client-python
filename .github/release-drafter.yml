@@ -1,0 +1,18 @@
+categories:
+  - title: Breaking Changes
+    labels:
+      - 'breaking-change'
+  - title: New Features
+    labels:
+      - 'new-feature'
+  - title: Improvements
+    labels:
+      - 'improvement'
+  - title: Bug Fixes
+    labels:
+      - 'bug-fix'
+change-template: '- $TITLE (#$NUMBER)'
+template: |
+  See [Incompatible API Changes](https://developer.aerospike.com/client/python/incompatible) for details.
+
+  $CHANGES
