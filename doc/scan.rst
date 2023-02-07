@@ -47,7 +47,7 @@ Methods
             If you need to use an unsupported type, (e.g. set or tuple) you can use a serializer such as pickle first.
         :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
-        .. seealso:: `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_
+        .. seealso:: `Developing Record UDFs <https://developer.aerospike.com/udf/developing_record_udfs>`_
 
 
     .. method:: add_ops(ops)

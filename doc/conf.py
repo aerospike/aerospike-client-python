@@ -256,3 +256,10 @@ todo_include_todos = True
 # Spelling check
 
 spelling_ignore_pypi_package_names = True
+
+linkcheck_anchors_ignore = [
+    'truncate',
+    'proto-fd-idle-ms',
+    'xdr-set-filter',
+    'records'
+]

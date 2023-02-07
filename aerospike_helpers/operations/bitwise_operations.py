@@ -133,7 +133,7 @@ Example::
 
     client.close()
 
-.. seealso:: `Bits (Data Types) <https://www.aerospike.com/docs/guide/bitwise.html>`_.
+.. seealso:: `Bits (Data Types) <https://docs.aerospike.com/server/guide/data-types/blob#bitwise-operations>`_.
 """
 import aerospike
 

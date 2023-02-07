@@ -23,7 +23,8 @@ in space and speed in dealing with extremely large datasets.
 
     .. note:: HyperLogLog operations require server version >= 4.9.0
 
-    .. seealso:: `HyperLogLog (Data Type) more info. <https://www.aerospike.com/docs/guide/hyperloglog.html>`_.
+    .. seealso:: `HyperLogLog (Data Type) more info. \
+        <https://docs.aerospike.com/server/guide/data-types/hll#operations>`_.
 
 Example::
 

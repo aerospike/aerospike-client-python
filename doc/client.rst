@@ -652,8 +652,8 @@ User Defined Functions
                  :class:`int`, :class:`float`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `Record UDF <http://www.aerospike.com/docs/guide/record_udf.html>`_ \
-          and `Developing Record UDFs <http://www.aerospike.com/docs/udf/developing_record_udfs.html>`_.
+        .. seealso:: `Record UDF <https://docs.aerospike.com/server/guide/record_udf>`_ \
+          and `Developing Record UDFs <https://developer.aerospike.com/udf/developing_record_udfs>`_.
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
@@ -876,7 +876,7 @@ Info Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `xdr-set-filter Info Command Reference <http://www.aerospike.com/docs/reference/info/#xdr-set-filter>`_.
+        .. seealso:: `xdr-set-filter Info Command Reference <https://docs.aerospike.com/reference/info#xdr-set-filter>`_.
 
         .. versionchanged:: 5.0.0
 
@@ -907,7 +907,7 @@ Info Operations
         Remove all records in the namespace / set whose last updated time is older than the given time.
 
         This method is many orders of magnitude faster than deleting records one at a time.
-        See `Truncate command reference <https://www.aerospike.com/docs/reference/info#truncate>`_.
+        See `Truncate command reference <https://docs.aerospike.com/reference/info#truncate>`_.
 
         This asynchronous server call may return before the truncation is complete.  The user can still
         write new records after the server returns because new records will have last update times
@@ -1417,7 +1417,7 @@ Key Tuple
         client.remove(keyTuple)
         client.close()
 
-    .. seealso:: `Data Model: Keys and Digests <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
+    .. seealso:: `Data Model: Keys and Digests <https://docs.aerospike.com/server/architecture/data-model#records>`_.
 
 .. _aerospike_record_tuple:
 
