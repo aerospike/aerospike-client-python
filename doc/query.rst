@@ -38,7 +38,7 @@ See available write operations at :mod:`aerospike_helpers.operations`.
 Query Aggregations
 ------------------
 
-A `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
+A `stream UDF <https://developer.aerospike.com/udf/developing_stream_udfs>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
@@ -235,7 +235,7 @@ Assume this boilerplate code is run before all examples below:
             If you need to use an unsupported type, (e.g. set or tuple) you can use a serializer like pickle first.
         :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
-        .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
+        .. seealso:: `Developing Stream UDFs <https://developer.aerospike.com/udf/developing_stream_udfs>`_
 
         Example: find the first name distribution of users who are 21 or older using \
         a query aggregation:

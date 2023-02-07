@@ -64,7 +64,7 @@ Class                                Description
 In addition, the :ref:`Data_Mapping` page explains how **Python** types map to **Aerospike Server** types.
 
 .. seealso::
-    The `Python Client Manual <http://www.aerospike.com/docs/client/python/>`_
+    The `Python Client Manual <https://developer.aerospike.com/client/python/>`_
     for a quick guide.
 
 Content

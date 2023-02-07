@@ -241,3 +241,17 @@ jobs:
     - name: Check spelling
       run: sphinx-build -b spelling . spelling -W --keep-going
       working-directory: doc
+
+  check-links-docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        architecture: 'x64'
+    - name: Install documentation dependencies
+      run: python -m pip install -r doc/requirements.txt
+    - name: Check spelling
+      run: sphinx-build -b linkcheck . links
+      working-directory: doc

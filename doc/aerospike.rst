@@ -489,7 +489,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default: ``0xA8000000``
 
                 .. seealso::
-                    `Shared Memory <https://www.aerospike.com/docs/client/c/usage/shm.html>`_
+                    `Shared Memory <https://developer.aerospike.com/client/c/shm>`_
 
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process.
@@ -519,7 +519,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **cipher_suite** (:class:`str`)
                 Specifies enabled cipher suites.
 
-                The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/manmaster/apps/ciphers.html .
+                The format is the same as OpenSSL's Cipher List Format documented at https://www.openssl.org/docs/man1.1.1/man1/ciphers.html .
 
                 If not specified, the OpenSSL default cipher suite described in the ciphers documentation will be used. If you are not sure what cipher suite to select, this option is best left unspecified.
             * **keyfile** (:class:`str`)
