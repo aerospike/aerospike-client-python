@@ -93,7 +93,7 @@ static PyObject *batch_get_aerospike_batch_read(as_error *err,
     }
     else {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Keys should be specified as a list or tuple.");
+                        "Keys should be specified as a list.");
         goto CLEANUP;
     }
 
