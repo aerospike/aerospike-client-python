@@ -186,25 +186,16 @@ static PyObject *AerospikeClient_Select_Many_Invoke(AerospikeClient *self,
     if (py_bins && PyList_Check(py_bins)) {
         bins_size = PyList_Size(py_bins);
     }
-    else if (py_bins && PyTuple_Check(py_bins)) {
-        bins_size = PyTuple_Size(py_bins);
-    }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Filter bins should be specified as a list or tuple.");
+                        "Filter bins should be specified as a list.");
         goto CLEANUP;
     }
 
     filter_bins = (char **)malloc(sizeof(char *) * bins_size);
 
     for (i = 0; i < bins_size; i++) {
-        PyObject *py_bin = NULL;
-        if (PyList_Check(py_bins)) {
-            py_bin = PyList_GetItem(py_bins, i);
-        }
-        if (PyTuple_Check(py_bins)) {
-            py_bin = PyTuple_GetItem(py_bins, i);
-        }
+        PyObject *py_bin = PyList_GetItem(py_bins, i);
         if (PyUnicode_Check(py_bin)) {
             // Store the unicode object into a pool
             // It is DECREFed at later stages
