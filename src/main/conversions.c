@@ -2208,12 +2208,21 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         binop_bin->valuep = (as_bin_value *)map;
     }
     else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
-        PyObject *py_data =
-            PyObject_GenericGetAttr(py_value, PyString_FromString("geo_data"));
-        char *geo_value =
-            PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-        as_geojson_init((as_geojson *)&binop_bin->value, geo_value, false);
+        PyObject *geo_data = PyObject_GetAttrString(py_value, "geo_data");
+        PyObject *geo_data_py_str = AerospikeGeospatial_DoDumps(geo_data, err);
+        const char *geo_data_str = PyUnicode_AsUTF8(geo_data_py_str);
+
+        // Make a copy of the encoding since the utf8 encoding points to a buffer in the PyUnicode object
+        // So if we deallocate the PyUnicode object, the buffer will also be deallocated
+        // and then the geojson object will be pointing to invalid memory
+        char* geo_data_str_cpy = strdup(geo_data_str);
+        as_geojson_init((as_geojson *)&binop_bin->value, geo_data_str_cpy,
+                        true);
         binop_bin->valuep = &binop_bin->value;
+
+        // Cleanup
+        Py_XDECREF(geo_data_py_str);
+        Py_XDECREF(geo_data);
     }
     else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
