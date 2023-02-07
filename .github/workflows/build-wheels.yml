@@ -5,6 +5,35 @@ on:
   workflow_dispatch:
 
 jobs:
+  test-sdist:
+    name: Build and install sdist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+        architecture: 'x64'
+
+    - run: sudo apt update
+    - name: Install build dependencies (apt packages)
+      run: sudo apt install python3-dev libssl-dev -y
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
+
+    - name: Build source distribution
+      run: python3 -m build --sdist
+
+    - name: Upload sdist to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./dist/*.tar.gz
+        # Artifact name, not the file name
+        name: sdist
+
   manylinux_arm64:
     runs-on: ubuntu-latest
     strategy:
