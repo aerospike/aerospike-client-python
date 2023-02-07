@@ -1,4 +1,3 @@
-include README.rst
 include LICENSE
 include VERSION
 recursive-include aerospike-client-c *
