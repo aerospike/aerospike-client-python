@@ -115,6 +115,10 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
 
+    if (ctx_in_use) {
+        as_cdt_ctx_destroy(&ctx);
+    }
+
     if (base64 != NULL) {
         cf_free(base64);
     }
