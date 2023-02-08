@@ -1018,13 +1018,8 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     ret_val = as_record_set_bytes(rec, name, bool_bytes);
                     break;
                 case SEND_BOOL_AS_AS_BOOL:;
-                    as_boolean *converted_bool = NULL;
-                    if (py_bool_to_as_bool(err, value, &converted_bool) !=
-                        AEROSPIKE_OK) {
-                        return err->code;
-                    }
-                    ret_val = as_record_set_bool(
-                        rec, name, as_boolean_get(converted_bool));
+                    bool converted_value = (value == Py_True);
+                    ret_val = as_record_set_bool(rec, name, converted_value);
                     break;
                 case SEND_BOOL_AS_INTEGER:;
                     as_integer *converted_integer = NULL;
