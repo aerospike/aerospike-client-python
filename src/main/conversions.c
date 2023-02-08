@@ -959,7 +959,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
     }
     else if (PyDict_Check(py_rec)) {
-        PyObject *key = NULL, *value = NULL, *py_ukey = NULL;
+        PyObject *key = NULL, *value = NULL;
         Py_ssize_t pos = 0;
         Py_ssize_t size = PyDict_Size(py_rec);
         char *name = NULL;
@@ -969,30 +969,21 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
 
         while (PyDict_Next(py_rec, &pos, &key, &value)) {
 
-            if (PyUnicode_Check(key)) {
-                py_ukey = PyUnicode_AsUTF8String(key);
-                if (!py_ukey) {
-                    return as_error_update(
-                        err, AEROSPIKE_ERR_CLIENT,
-                        "Unicode bin name not encoded in utf-8.");
-                }
-                name = PyBytes_AsString(py_ukey);
-            }
-            else if (PyString_Check(key)) {
-                name = PyString_AsString(key);
-            }
-            else {
+            if (!PyUnicode_Check(key)) {
                 return as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
                     "A bin name must be a string or unicode string.");
             }
 
+            name = PyUnicode_AsUTF8(key);
+            if (!name) {
+                return as_error_update(
+                    err, AEROSPIKE_ERR_CLIENT,
+                    "Unable to convert unicode object to C string");
+            }
+
             if (self->strict_types) {
                 if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-                    if (py_ukey) {
-                        Py_DECREF(py_ukey);
-                        py_ukey = NULL;
-                    }
                     return as_error_update(
                         err, AEROSPIKE_ERR_BIN_NAME,
                         "A bin name should not exceed 14 characters limit");
@@ -1154,11 +1145,6 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                         ret_val = as_record_set_bytes(rec, name, bytes);
                     }
                 }
-            }
-
-            if (py_ukey) {
-                Py_DECREF(py_ukey);
-                py_ukey = NULL;
             }
 
             if (self->strict_types) {
