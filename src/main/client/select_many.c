@@ -71,7 +71,7 @@ static PyObject *batch_select_aerospike_batch_read(
     bool batch_initialised = false;
 
     // Convert python keys list to as_key ** and add it to as_batch.keys
-    // keys can be specified in PyList or PyTuple
+    // keys must be specified in a PyList
     if (py_keys && PyList_Check(py_keys)) {
         Py_ssize_t size = PyList_Size(py_keys);
 
@@ -105,41 +105,9 @@ static PyObject *batch_select_aerospike_batch_read(
             }
         }
     }
-    else if (py_keys && PyTuple_Check(py_keys)) {
-        Py_ssize_t size = PyTuple_Size(py_keys);
-
-        as_batch_read_inita(&records, size);
-        // Batch object initialised
-        batch_initialised = true;
-
-        for (int i = 0; i < size; i++) {
-            PyObject *py_key = PyTuple_GetItem(py_keys, i);
-
-            if (!PyTuple_Check(py_key)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Key should be a tuple.");
-                goto CLEANUP;
-            }
-
-            record = as_batch_read_reserve(&records);
-
-            pyobject_to_key(err, py_key, &record->key);
-            if (bins_size) {
-                record->bin_names = filter_bins;
-                record->n_bin_names = bins_size;
-            }
-            else {
-                record->read_all_bins = true;
-            }
-
-            if (err->code != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-        }
-    }
     else {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Keys should be specified as a list or tuple.");
+                        "Keys should be specified as a list.");
         goto CLEANUP;
     }
 
@@ -218,25 +186,16 @@ static PyObject *AerospikeClient_Select_Many_Invoke(AerospikeClient *self,
     if (py_bins && PyList_Check(py_bins)) {
         bins_size = PyList_Size(py_bins);
     }
-    else if (py_bins && PyTuple_Check(py_bins)) {
-        bins_size = PyTuple_Size(py_bins);
-    }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Filter bins should be specified as a list or tuple.");
+                        "Filter bins should be specified as a list.");
         goto CLEANUP;
     }
 
     filter_bins = (char **)malloc(sizeof(char *) * bins_size);
 
     for (i = 0; i < bins_size; i++) {
-        PyObject *py_bin = NULL;
-        if (PyList_Check(py_bins)) {
-            py_bin = PyList_GetItem(py_bins, i);
-        }
-        if (PyTuple_Check(py_bins)) {
-            py_bin = PyTuple_GetItem(py_bins, i);
-        }
+        PyObject *py_bin = PyList_GetItem(py_bins, i);
         if (PyUnicode_Check(py_bin)) {
             // Store the unicode object into a pool
             // It is DECREFed at later stages

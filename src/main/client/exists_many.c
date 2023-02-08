@@ -177,40 +177,9 @@ batch_exists_aerospike_batch_exists(as_error *err, AerospikeClient *self,
             }
         }
     }
-    else if (py_keys && PyTuple_Check(py_keys)) {
-        Py_ssize_t size = PyTuple_Size(py_keys);
-
-        cb_data.py_recs = PyList_New(size);
-        if (!cb_data.py_recs) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Failed to allocate return record");
-            goto CLEANUP;
-        }
-
-        as_batch_init(&batch, size);
-        // Batch object initialised
-        batch_initialised = true;
-        make_batch_safe_to_free(&batch, size);
-
-        for (int i = 0; i < size; i++) {
-            PyObject *py_key = PyTuple_GetItem(py_keys, i);
-
-            if (!PyTuple_Check(py_key)) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Key should be a tuple.");
-                goto CLEANUP;
-            }
-
-            pyobject_to_key(err, py_key, as_batch_keyat(&batch, i));
-
-            if (err->code != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-        }
-    }
     else {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Keys should be specified as a list or tuple.");
+                        "Keys should be specified as a list.");
         goto CLEANUP;
     }
 
