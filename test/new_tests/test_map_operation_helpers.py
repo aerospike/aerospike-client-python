@@ -292,15 +292,25 @@ class TestNewListOperationsHelpers(object):
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
         assert ret_vals == ["f", "e"]
 
-    def test_map_get_exists_by_key_list(self):
+    @pytest.mark.parametrize(
+        "map_return_type, key_list, expected_results",
+        [
+            (aerospike.MAP_RETURN_EXISTS,        ["a", "b", "c"],      True),
+            # Keys are guaranteed to be ordered for an ordered map
+            (aerospike.MAP_RETURN_ORDERED_MAP,   ["d", "c", "b", "a"], {"a": 5, "b": 4, "c": 3, "d": 2}),
+            # The ordering of keys is not guaranteed for an unordered map
+            (aerospike.MAP_RETURN_UNORDERED_MAP, ["d", "c", "b", "a"], {"a": 5, "b": 4, "c": 3, "d": 2})
+        ],
+    )
+    def test_map_get_exists_by_key_list(self, map_return_type, key_list, expected_results):
         if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [
-            map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], return_type=aerospike.MAP_RETURN_EXISTS)
+            map_ops.map_get_by_key_list(self.test_bin, key_list, map_return_type)
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
-        assert ret_vals is True
+        assert ret_vals is expected_results
 
     def test_map_get_exists_by_key_range(self):
         if not self.Server61:
