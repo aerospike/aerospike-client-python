@@ -98,7 +98,7 @@ class TestCDTIndexB64(object):
         Invoke get_cdtctx_base64() with correct arguments
         """
         policy = {}
-        bs_b4_cdt = self.as_connection.get_cdtctx_base64([cdt_ctx.cdt_ctx_list_index(0)])
+        bs_b4_cdt = aerospike.get_cdtctx_base64([cdt_ctx.cdt_ctx_list_index(0)])
 
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
@@ -121,7 +121,7 @@ class TestCDTIndexB64(object):
         Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            self.as_connection.get_cdtctx_base64({})
+            aerospike.get_cdtctx_base64({})
         except e.ParamError:
             pass
 
@@ -130,6 +130,6 @@ class TestCDTIndexB64(object):
         Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            self.as_connection.get_cdtctx_base64(ctx_empty)
+            aerospike.get_cdtctx_base64(ctx_empty)
         except e.ParamError:
             pass

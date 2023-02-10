@@ -55,6 +55,16 @@ PyDoc_STRVAR(init_async_doc,
              "init_async() -> initialize aerospike async eventloop library\n\
 aerospike.init_async()");
 
+PyDoc_STRVAR(get_expression_base64_doc,
+             "get_expression_base64(compiled_expression: list) -> str\n\
+\n\
+Get the base64 representation of a compiled aerospike expression.");
+
+PyDoc_STRVAR(get_cdtctx_base64_doc,
+             "get_cdtctx_base64(compiled_cdtctx: list) -> str\n\
+\n\
+Get the base64 representation of a compiled aerospike CDT ctx.");
+
 static PyMethodDef Aerospike_Methods[] = {
 
     //Serialization
@@ -91,6 +101,15 @@ static PyMethodDef Aerospike_Methods[] = {
     //Is async supported
     {"is_async_supoorted", (PyCFunction)Aerospike_Is_AsyncSupported,
      METH_NOARGS, "check whether async supported or not"},
+
+    // Base64 methods (copied from client)
+    // The client base64 methods are now deprecated
+
+    {"get_expression_base64", (PyCFunction)AerospikeClient_GetExpressionBase64,
+     METH_VARARGS | METH_KEYWORDS, get_expression_base64_doc},
+
+    {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
+     METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
 
     {NULL}};
 

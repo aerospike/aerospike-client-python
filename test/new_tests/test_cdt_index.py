@@ -118,7 +118,7 @@ class TestCDTIndex(object):
         """
         policy = {}
 
-        bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
+        bs_b4_cdt = aerospike.get_cdtctx_base64(ctx_list_index)
 
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")

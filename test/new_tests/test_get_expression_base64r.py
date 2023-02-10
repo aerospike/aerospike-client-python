@@ -35,7 +35,7 @@ class TestGetExpressionBase64(object):
 
     def test_get_expression_base64_pos(self):
         expr = Eq(IntBin("bin1"), 6).compile()
-        b64 = self.as_connection.get_expression_base64(expr)
+        b64 = aerospike.get_expression_base64(expr)
         assert b64 == "kwGTUQKkYmluMQY="
 
     def test_get_expression_base64_large_expression_pos(self):
@@ -98,7 +98,7 @@ class TestGetExpressionBase64(object):
             Eq(ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin), 2),
         ).compile()
 
-        b64 = self.as_connection.get_expression_base64(expr)
+        b64 = aerospike.get_expression_base64(expr)
         expected = (
             "lxCTAZV/AgCVGwWVfwIAkxMHAJNRBKlpbGlzdF9iaW4BA5NRBKlpbGlzdF9iaW4CkwGVfwQAkxYBBpV/BAC"
             "UGQcBB5NRBKlpbGlzdF9iaW6SfpECkwGVfwIAkxcFkn6SAgaVfwQAlBsHAQGTUQSpaWxpc3RfYmluApMBlX8CAJMYBQGVfwQAlBgHAQOTU"
@@ -110,8 +110,8 @@ class TestGetExpressionBase64(object):
 
     def test_get_expression_base64_bad_filter_neg(self):
         with pytest.raises(e.ParamError):
-            self.as_connection.get_expression_base64("bad_filter")
+            aerospike.get_expression_base64("bad_filter")
 
     def test_get_expression_base64_bad_list_filter_neg(self):
         with pytest.raises(e.ParamError):
-            self.as_connection.get_expression_base64(["hi"])
+            aerospike.get_expression_base64(["hi"])

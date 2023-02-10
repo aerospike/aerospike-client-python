@@ -1069,7 +1069,7 @@ Index Operations
         .. include:: examples/get_cdtctx_base64.py
             :code: python
 
-        .. versionchanged:: 7.1.1
+        .. deprecated:: 10.1.0 :class:`aerospike.Query` should be used instead.
 
 
     .. index::
