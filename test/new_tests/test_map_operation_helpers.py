@@ -2,6 +2,7 @@
 import pytest
 import aerospike
 from aerospike import exception as e
+from aerospike import KeyOrderedDict
 from aerospike_helpers.operations import map_operations as map_ops
 from .test_base_class import TestBaseClass
 
@@ -297,7 +298,11 @@ class TestNewListOperationsHelpers(object):
         [
             (aerospike.MAP_RETURN_EXISTS,        ["a", "b", "c"],      True),
             # Keys are guaranteed to be ordered for an ordered map
-            (aerospike.MAP_RETURN_ORDERED_MAP,   ["d", "c", "b", "a"], {"a": 5, "b": 4, "c": 3, "d": 2}),
+            (
+                aerospike.MAP_RETURN_ORDERED_MAP,
+                ["d", "c", "b", "a"],
+                KeyOrderedDict({"a": 5, "b": 4, "c": 3, "d": 2})
+            ),
             # The ordering of keys is not guaranteed for an unordered map
             (aerospike.MAP_RETURN_UNORDERED_MAP, ["d", "c", "b", "a"], {"a": 5, "b": 4, "c": 3, "d": 2})
         ],
