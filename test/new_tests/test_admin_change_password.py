@@ -9,15 +9,13 @@ import aerospike
 
 @pytest.mark.usefixtures("connection_config")
 class TestChangePassword(object):
-
-    pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    )
-
     def setup_method(self, method):
         """
         Setup method
         """
+        if TestBaseClass.auth_in_use() is False:
+            pytest.skip("No user specified, may not be a secured cluster", allow_module_level=True)
+
         config = TestBaseClass.get_connection_config()
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
