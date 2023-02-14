@@ -112,7 +112,7 @@ PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    user = PyString_AsString(py_user);
+    user = (char *)PyUnicode_AsUTF8(py_user);
 
     if (!PyUnicode_Check(py_password)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -120,7 +120,7 @@ PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    password = PyString_AsString(py_password);
+    password = (char *)PyUnicode_AsUTF8(py_password);
 
     // Convert python object to policy_admin
     pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
@@ -217,7 +217,7 @@ PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-    user = PyString_AsString(py_user);
+    user = (char *)PyUnicode_AsUTF8(py_user);
 
     //Invoke operation
     Py_BEGIN_ALLOW_THREADS
@@ -317,7 +317,7 @@ PyObject *AerospikeClient_Admin_Set_Password(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    user = PyString_AsString(py_user);
+    user = (char *)PyUnicode_AsUTF8(py_user);
 
     if (!PyUnicode_Check(py_password)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -325,7 +325,7 @@ PyObject *AerospikeClient_Admin_Set_Password(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    password = PyString_AsString(py_password);
+    password = (char *)PyUnicode_AsUTF8(py_password);
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
@@ -412,7 +412,7 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    user = PyString_AsString(py_user);
+    user = (char *)PyUnicode_AsUTF8(py_user);
 
     if (!PyUnicode_Check(py_password)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -420,7 +420,7 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    password = PyString_AsString(py_password);
+    password = (char *)PyUnicode_AsUTF8(py_password);
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
@@ -530,7 +530,7 @@ PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    user = PyString_AsString(py_user);
+    user = (char *)PyUnicode_AsUTF8(py_user);
 
     // Convert python object to policy_admin
     pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
@@ -643,7 +643,7 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    user = PyString_AsString(py_user);
+    user = (char *)PyUnicode_AsUTF8(py_user);
 
     // Convert python object to policy_admin
     pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
@@ -744,7 +744,7 @@ PyObject *AerospikeClient_Admin_Query_User(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    user_name = PyString_AsString(py_user_name);
+    user_name = (char *)PyUnicode_AsUTF8(py_user_name);
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
@@ -844,7 +844,7 @@ PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    user_name = PyString_AsString(py_user_name);
+    user_name = (char *)PyUnicode_AsUTF8(py_user_name);
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
@@ -1380,7 +1380,7 @@ PyObject *AerospikeClient_Admin_Set_Quotas(AerospikeClient *self,
 
     const char *role = NULL;
     if (PyUnicode_Check(py_role)) {
-        role = PyString_AsString(py_role);
+        role = (char *)PyUnicode_AsUTF8(py_role);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -1483,7 +1483,7 @@ PyObject *AerospikeClient_Admin_Drop_Role(AerospikeClient *self, PyObject *args,
 
     char *role = NULL;
     if (PyUnicode_Check(py_role)) {
-        role = PyString_AsString(py_role);
+        role = (char *)PyUnicode_AsUTF8(py_role);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -1582,7 +1582,7 @@ PyObject *AerospikeClient_Admin_Grant_Privileges(AerospikeClient *self,
 
     char *role = NULL;
     if (PyUnicode_Check(py_role)) {
-        role = PyString_AsString(py_role);
+        role = (char *)PyUnicode_AsUTF8(py_role);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -1692,7 +1692,7 @@ PyObject *AerospikeClient_Admin_Revoke_Privileges(AerospikeClient *self,
 
     char *role = NULL;
     if (PyUnicode_Check(py_role)) {
-        role = PyString_AsString(py_role);
+        role = (char *)PyUnicode_AsUTF8(py_role);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -1782,7 +1782,7 @@ PyObject *AerospikeClient_Admin_Query_Role(AerospikeClient *self,
 
     char *role = NULL;
     if (PyUnicode_Check(py_role)) {
-        role = PyString_AsString(py_role);
+        role = (char *)PyUnicode_AsUTF8(py_role);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -1953,7 +1953,7 @@ PyObject *AerospikeClient_Admin_Get_Role(AerospikeClient *self, PyObject *args,
 
     char *role = NULL;
     if (PyUnicode_Check(py_role)) {
-        role = PyString_AsString(py_role);
+        role = (char *)PyUnicode_AsUTF8(py_role);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,

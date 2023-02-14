@@ -53,8 +53,8 @@
     {                                                                          \
         PyObject *py_field = PyDict_GetItemString(py_policy, #__field);        \
         if (py_field) {                                                        \
-            if (PyInt_Check(py_field)) {                                       \
-                policy->__field = (__type)PyInt_AsLong(py_field);              \
+            if (PyLong_Check(py_field)) {                                      \
+                policy->__field = (__type)PyLong_AsLong(py_field);             \
             }                                                                  \
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
@@ -67,8 +67,8 @@
     {                                                                          \
         PyObject *py_field = PyDict_GetItemString(py_policy, #__field);        \
         if (py_field) {                                                        \
-            if (PyInt_Check(py_field)) {                                       \
-                policy->base.__field = (__type)PyInt_AsLong(py_field);         \
+            if (PyLong_Check(py_field)) {                                      \
+                policy->base.__field = (__type)PyLong_AsLong(py_field);        \
             }                                                                  \
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
@@ -110,8 +110,9 @@
     {                                                                          \
         PyObject *py_field = PyDict_GetItemString(py_policy, "timeout");       \
         if (py_field) {                                                        \
-            if (PyInt_Check(py_field)) {                                       \
-                policy->base.total_timeout = (uint32_t)PyInt_AsLong(py_field); \
+            if (PyLong_Check(py_field)) {                                      \
+                policy->base.total_timeout =                                   \
+                    (uint32_t)PyLong_AsLong(py_field);                         \
             }                                                                  \
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
@@ -124,8 +125,8 @@
     {                                                                          \
         PyObject *py_field = PyDict_GetItemString(py_policy, #__field);        \
         if (py_field) {                                                        \
-            if (PyInt_Check(py_field)) {                                       \
-                __field = PyInt_AsLong(py_field);                              \
+            if (PyLong_Check(py_field)) {                                      \
+                __field = PyLong_AsLong(py_field);                             \
             }                                                                  \
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
@@ -495,8 +496,8 @@ void set_scan_options(as_error *err, as_scan *scan_p, PyObject *py_options)
         Py_ssize_t pos = 0;
         int64_t val = 0;
         while (PyDict_Next(py_options, &pos, &key, &value)) {
-            char *key_name = PyString_AsString(key);
-            if (!PyString_Check(key)) {
+            char *key_name = (char *)PyUnicode_AsUTF8(key);
+            if (!PyUnicode_Check(key)) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "Policy key must be string");
                 break;
@@ -1137,9 +1138,9 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
     PyObject *py_bit_flags =
         PyDict_GetItemString(py_policy, BIT_WRITE_FLAGS_KEY);
     if (py_bit_flags) {
-        if (PyInt_Check(py_bit_flags)) {
+        if (PyLong_Check(py_bit_flags)) {
             as_bit_write_flags bit_write_flags =
-                (as_bit_write_flags)PyInt_AsLong(py_bit_flags);
+                (as_bit_write_flags)PyLong_AsLong(py_bit_flags);
             as_bit_policy_set_write_flags(policy, bit_write_flags);
         }
     }
@@ -1172,8 +1173,8 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
 	otherwise we use py_policy["map_write_mode"]
 	*/
     if (mode_or_flags) {
-        if (PyInt_Check(mode_or_flags)) {
-            map_write_flags = (uint32_t)PyInt_AsLong(mode_or_flags);
+        if (PyLong_Check(mode_or_flags)) {
+            map_write_flags = (uint32_t)PyLong_AsLong(mode_or_flags);
             as_map_policy_set_flags(policy, map_order, map_write_flags);
         }
         else {
@@ -1208,14 +1209,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
 
     py_val = PyDict_GetItemString(py_policy, "list_order");
     if (py_val && py_val != Py_None) {
-        if (PyInt_Check(py_val)) {
-            list_order = (int64_t)PyInt_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Failed to convert list_order");
-            }
-        }
-        else if (PyLong_Check(py_val)) {
+        if (PyLong_Check(py_val)) {
             list_order = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -1230,14 +1224,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
 
     py_val = PyDict_GetItemString(py_policy, "write_flags");
     if (py_val && py_val != Py_None) {
-        if (PyInt_Check(py_val)) {
-            flags = (int64_t)PyInt_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Failed to convert write_flags");
-            }
-        }
-        else if (PyLong_Check(py_val)) {
+        if (PyLong_Check(py_val)) {
             flags = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -1274,14 +1261,7 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
 
     py_val = PyDict_GetItemString(py_policy, "flags");
     if (py_val && py_val != Py_None) {
-        if (PyInt_Check(py_val)) {
-            flags = (int64_t)PyInt_AsLong(py_val);
-            if (PyErr_Occurred()) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Failed to convert flags.");
-            }
-        }
-        else if (PyLong_Check(py_val)) {
+        if (PyLong_Check(py_val)) {
             flags = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,

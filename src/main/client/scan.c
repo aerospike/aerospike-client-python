@@ -122,9 +122,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
         py_ustr1 = PyUnicode_AsUTF8String(py_set);
         set_p = PyBytes_AsString(py_ustr1);
     }
-    else if (PyString_Check(py_set)) {
-        set_p = PyString_AsString(py_set);
-    }
     else if (Py_None != py_set) {
         // Scan whole namespace if set is 'None' else error
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
@@ -157,9 +154,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
         py_ustr2 = PyUnicode_AsUTF8String(py_module);
         module_p = PyBytes_AsString(py_ustr2);
     }
-    else if (PyString_Check(py_module)) {
-        module_p = PyString_AsString(py_module);
-    }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Module name should be string");
@@ -170,9 +164,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (PyUnicode_Check(py_function)) {
         py_ustr3 = PyUnicode_AsUTF8String(py_function);
         function_p = PyBytes_AsString(py_ustr3);
-    }
-    else if (PyString_Check(py_function)) {
-        function_p = PyString_AsString(py_function);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,

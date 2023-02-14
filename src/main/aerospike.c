@@ -150,19 +150,24 @@ static int Aerospike_Clear(PyObject *aerospike)
     return 0;
 }
 
-MOD_INIT(aerospike)
+PyMODINIT_FUNC PyInit_aerospike(void)
 {
 
     const char version[] = "12.0.0";
     // Makes things "thread-safe"
-    PyEval_InitThreads();
+    Py_Initialize();
     int i = 0;
 
-    // aerospike Module
-    PyObject *aerospike;
+    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
+                                           "aerospike",
+                                           "Aerospike Python Client",
+                                           sizeof(struct Aerospike_State),
+                                           Aerospike_Methods,
+                                           NULL,
+                                           NULL,
+                                           Aerospike_Clear};
 
-    MOD_DEF(aerospike, "aerospike", "Aerospike Python Client",
-            sizeof(struct Aerospike_State), Aerospike_Methods, Aerospike_Clear)
+    PyObject *aerospike = PyModule_Create(&moduledef);
 
     // In case adding objects to module fails, we can properly deallocate the module state later
     memset(Aerospike_State(aerospike), NULL, sizeof(struct Aerospike_State));
@@ -271,7 +276,7 @@ MOD_INIT(aerospike)
     }
     Aerospike_State(aerospike)->infinite_object = infinite_object;
 
-    return MOD_SUCCESS_VAL(aerospike);
+    return aerospike;
 
 CLEANUP:
     Aerospike_Clear(aerospike);

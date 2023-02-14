@@ -115,19 +115,7 @@ as_status get_optional_int64_t(as_error *err, const char *key,
         return AEROSPIKE_OK;
     }
 
-    if (PyInt_Check(py_val)) {
-        *i64_valptr = (int64_t)PyInt_AsLong(py_val);
-        if (PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
-                                       key);
-            }
-
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to convert %s", key);
-        }
-    }
-    else if (PyLong_Check(py_val)) {
+    if (PyLong_Check(py_val)) {
         *i64_valptr = (int64_t)PyLong_AsLong(py_val);
         if (PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
