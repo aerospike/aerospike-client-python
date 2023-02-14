@@ -405,6 +405,6 @@ class TestApply(TestBaseClass):
         Invoke apply() with incorrect ns and set
         """
 
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.NamespaceNotFound):
             key = ("test1", "demo", 1)
             self.as_connection.apply(key, "sample", "list_prepend", ["name", "car"])

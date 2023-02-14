@@ -559,7 +559,7 @@ class TestGetPut:
         """
         Invoke put() with non-existent data
         """
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.NamespaceNotFound):
             self.as_connection.put(key, record)
 
     def test_neg_put_with_policy_gen_EQ_less(self):

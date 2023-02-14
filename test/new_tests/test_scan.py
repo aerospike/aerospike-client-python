@@ -387,7 +387,7 @@ class TestScan(TestBaseClass):
             _, _, bins = input_tuple
             records.append(bins)
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             scan_obj.foreach(callback)
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT

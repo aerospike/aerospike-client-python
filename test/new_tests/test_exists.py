@@ -82,7 +82,7 @@ class TestExists:
             (("test", "demo", "non-existent"), e.RecordNotFound, 2),  # non-existent key
             # non-existent set
             (("test", "set", 1), e.RecordNotFound, 2),
-            (("namespace", "demo", 1), e.ClientError, -1),  # non-existent Namespace
+            (("namespace", "demo", 1), e.NamespaceNotFound, -1),  # non-existent Namespace
             # None set in key tuple.
             (("test", None, 2), e.RecordNotFound, 2),
             (("test", "demo", "Non_existing_key"), e.RecordNotFound, 2),  # Non_existing_key

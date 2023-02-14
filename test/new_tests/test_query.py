@@ -925,7 +925,7 @@ class TestQuery(TestBaseClass):
         foreach should raise an error since the ns
         is invalid
         """
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             query = self.as_connection.query("fake_namespace", "demo1")
 
             def callback(input_tuple):

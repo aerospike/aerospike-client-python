@@ -432,5 +432,5 @@ class TestAppend(object):
         Invoke append() with non existent ns
         """
         key = ("test1", "demo", "name")
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.NamespaceNotFound):
             self.as_connection.append(key, "name", "str", {})
