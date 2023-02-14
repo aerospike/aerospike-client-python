@@ -106,7 +106,7 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial *self,
         goto CLEANUP;
     }
 
-    if (PyString_Check(py_geodata)) {
+    if (PyUnicode_Check(py_geodata)) {
         initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
         if (!initresult) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
@@ -154,7 +154,7 @@ AerospikeGeospatial *self;
                         "Unable to call get data in str format");
         goto CLEANUP;
     }
-    char *initresult_str = PyString_AsString(initresult);
+    char *initresult_str = (char *)PyUnicode_AsUTF8(initresult);
     new_repr_str = (char *)malloc(strlen(initresult_str) + 3);
     memset(new_repr_str, '\0', strlen(initresult_str) + 3);
     snprintf(new_repr_str, strlen(initresult_str) + 3, "\'%s\'",
@@ -171,7 +171,7 @@ CLEANUP:
         return NULL;
     }
 
-    py_return = PyString_FromString(new_repr_str);
+    py_return = PyUnicode_FromString(new_repr_str);
     Py_XDECREF(initresult);
     free(new_repr_str);
     return py_return;
@@ -330,7 +330,7 @@ AerospikeGeospatial *Aerospike_Set_Geo_Json(PyObject *parent, PyObject *args,
         return NULL;
     }
 
-    if (PyString_Check(py_geodata)) {
+    if (PyUnicode_Check(py_geodata)) {
         AerospikeGeospatial *self =
             (AerospikeGeospatial *)AerospikeGeospatial_Type.tp_new(
                 &AerospikeGeospatial_Type, args, kwds);

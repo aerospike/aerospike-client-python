@@ -37,11 +37,11 @@ static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    if (PyInt_Check(py_val) || PyLong_Check(py_val)) {
+    if (PyLong_Check(py_val)) {
         return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC,
                              py_bin, py_val);
     }
-    else if (PyString_Check(py_val) || PyUnicode_Check(py_val)) {
+    else if (PyUnicode_Check(py_val)) {
         return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_STRING,
                              py_bin, py_val);
     }
@@ -62,21 +62,18 @@ static PyObject *AerospikePredicates_Contains(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    if (PyInt_Check(py_indextype)) {
-        index_type = PyInt_AsLong(py_indextype);
-    }
-    else if (PyLong_Check(py_indextype)) {
-        index_type = PyLong_AsLongLong(py_indextype);
+    if (PyLong_Check(py_indextype)) {
+        index_type = PyLong_AsLong(py_indextype);
     }
     else {
         goto exit;
     }
 
-    if (PyInt_Check(py_val) || PyLong_Check(py_val)) {
+    if (PyLong_Check(py_val)) {
         return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC,
                              py_bin, py_val, Py_None, index_type);
     }
-    else if (PyString_Check(py_val) || PyUnicode_Check(py_val)) {
+    else if (PyUnicode_Check(py_val)) {
         return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_STRING,
                              py_bin, py_val, Py_None, index_type);
     }
@@ -100,18 +97,14 @@ static PyObject *AerospikePredicates_RangeContains(PyObject *self,
         return NULL;
     }
 
-    if (PyInt_Check(py_indextype)) {
-        index_type = PyInt_AsLong(py_indextype);
-    }
-    else if (PyLong_Check(py_indextype)) {
-        index_type = PyLong_AsLongLong(py_indextype);
+    if (PyLong_Check(py_indextype)) {
+        index_type = PyLong_AsLong(py_indextype);
     }
     else {
         goto exit;
     }
 
-    if ((PyInt_Check(py_min) || PyLong_Check(py_min)) &&
-        (PyInt_Check(py_max) || PyLong_Check(py_max))) {
+    if (PyLong_Check(py_min) && PyLong_Check(py_max)) {
         return Py_BuildValue("iiOOOi", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC,
                              py_bin, py_min, py_max, index_type);
     }
@@ -132,8 +125,7 @@ static PyObject *AerospikePredicates_Between(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    if ((PyInt_Check(py_min) || PyLong_Check(py_min)) &&
-        (PyInt_Check(py_max) || PyLong_Check(py_max))) {
+    if (PyLong_Check(py_min) && PyLong_Check(py_max)) {
         return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC,
                              py_bin, py_min, py_max);
     }
@@ -158,7 +150,7 @@ static PyObject *AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject *self,
         py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
     }
 
-    if (PyString_Check(py_shape) || PyUnicode_Check(py_shape)) {
+    if (PyUnicode_Check(py_shape)) {
         return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE,
                              py_bin, py_shape, Py_None, py_indexType);
     }
@@ -192,14 +184,14 @@ static PyObject *AerospikePredicates_GeoWithin_Radius(PyObject *self,
     }
 
     py_geo_object = PyDict_New();
-    PyObject *py_circle = PyString_FromString("AeroCircle");
+    PyObject *py_circle = PyUnicode_FromString("AeroCircle");
     PyDict_SetItemString(py_geo_object, "type", py_circle);
     Py_DECREF(py_circle);
 
-    if (PyString_Check(py_bin) &&
-        (PyFloat_Check(py_lat) || PyInt_Check(py_lat)) &&
-        (PyFloat_Check(py_long) || PyInt_Check(py_long)) &&
-        (PyFloat_Check(py_radius) || PyInt_Check(py_radius))) {
+    if (PyUnicode_Check(py_bin) &&
+        (PyFloat_Check(py_lat) || PyLong_Check(py_lat)) &&
+        (PyFloat_Check(py_long) || PyLong_Check(py_long)) &&
+        (PyFloat_Check(py_radius) || PyLong_Check(py_radius))) {
 
         PyObject *py_inner_list = Py_BuildValue("[OO]", py_lat, py_long);
 
@@ -272,7 +264,7 @@ static PyObject *AerospikePredicates_GeoContains_GeoJSONPoint(PyObject *self,
         py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
     }
 
-    if (PyString_Check(py_point) || PyUnicode_Check(py_point)) {
+    if (PyUnicode_Check(py_point)) {
         return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE,
                              py_bin, py_point, Py_None, py_indexType);
     }
@@ -305,13 +297,13 @@ static PyObject *AerospikePredicates_GeoContains_Point(PyObject *self,
     }
 
     py_geo_object = PyDict_New();
-    PyObject *py_point = PyString_FromString("Point");
+    PyObject *py_point = PyUnicode_FromString("Point");
     PyDict_SetItemString(py_geo_object, "type", py_point);
     Py_DECREF(py_point);
 
-    if (PyString_Check(py_bin) &&
-        (PyFloat_Check(py_lat) || PyInt_Check(py_lat)) &&
-        (PyFloat_Check(py_long) || PyInt_Check(py_long))) {
+    if (PyUnicode_Check(py_bin) &&
+        (PyFloat_Check(py_lat) || PyLong_Check(py_lat)) &&
+        (PyFloat_Check(py_long) || PyLong_Check(py_long))) {
         py_list = Py_BuildValue("[OO]", py_lat, py_long);
 
         PyDict_SetItemString(py_geo_object, "coordinates", py_list);
@@ -381,9 +373,15 @@ static PyMethodDef AerospikePredicates_Methods[] = {
 
 PyObject *AerospikePredicates_New(void)
 {
-    PyObject *module;
-    MOD_DEF(module, "aerospike.predicates", "Query Predicates", -1,
-            AerospikePredicates_Methods, NULL);
+    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
+                                           "aerospike.predicates",
+                                           "Query Predicates",
+                                           -1,
+                                           AerospikePredicates_Methods,
+                                           NULL,
+                                           NULL,
+                                           NULL};
 
+    PyObject *module = PyModule_Create(&moduledef);
     return module;
 }

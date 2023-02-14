@@ -92,9 +92,9 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
                 PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
 
                 if (py_gen) {
-                    if (PyInt_Check(py_gen)) {
+                    if (PyLong_Check(py_gen)) {
                         remove_policy_p->generation =
-                            (uint16_t)PyInt_AsLong(py_gen);
+                            (uint16_t)PyLong_AsLong(py_gen);
                     }
                     else if (PyLong_Check(py_gen)) {
                         remove_policy_p->generation =

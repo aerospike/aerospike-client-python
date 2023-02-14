@@ -33,11 +33,8 @@
 
 int64_t pyobject_to_int64(PyObject *py_obj)
 {
-    if (PyInt_Check(py_obj)) {
-        return PyInt_AsLong(py_obj);
-    }
-    else if (PyLong_Check(py_obj)) {
-        return PyLong_AsLongLong(py_obj);
+    if (PyLong_Check(py_obj)) {
+        return PyLong_AsLong(py_obj);
     }
     else {
         return 0;
@@ -79,9 +76,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 py_ubin = PyUnicode_AsUTF8String(py_bin);
                 bin = PyBytes_AsString(py_ubin);
             }
-            else if (PyString_Check(py_bin)) {
-                bin = PyString_AsString(py_bin);
-            }
             else if (PyByteArray_Check(py_bin)) {
                 bin = PyByteArray_AsString(py_bin);
             }
@@ -94,9 +88,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 PyObject *py_uval = PyUnicode_AsUTF8String(py_val1);
                 val = strdup(PyBytes_AsString(py_uval));
                 Py_DECREF(py_uval);
-            }
-            else if (PyString_Check(py_val1)) {
-                val = strdup(PyString_AsString(py_val1));
             }
             else {
                 rc = 1;
@@ -134,9 +125,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             if (PyUnicode_Check(py_bin)) {
                 py_ubin = PyUnicode_AsUTF8String(py_bin);
                 bin = PyBytes_AsString(py_ubin);
-            }
-            else if (PyString_Check(py_bin)) {
-                bin = PyString_AsString(py_bin);
             }
             else if (PyByteArray_Check(py_bin)) {
                 bin = PyByteArray_AsString(py_bin);
@@ -193,9 +181,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 py_ubin = PyUnicode_AsUTF8String(py_bin);
                 bin = PyBytes_AsString(py_ubin);
             }
-            else if (PyString_Check(py_bin)) {
-                bin = PyString_AsString(py_bin);
-            }
             else if (PyByteArray_Check(py_bin)) {
                 bin = PyByteArray_AsString(py_bin);
             }
@@ -241,9 +226,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 py_ubin = PyUnicode_AsUTF8String(py_bin);
                 bin = PyBytes_AsString(py_ubin);
             }
-            else if (PyString_Check(py_bin)) {
-                bin = PyString_AsString(py_bin);
-            }
             else if (PyByteArray_Check(py_bin)) {
                 bin = PyByteArray_AsString(py_bin);
             }
@@ -256,9 +238,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 PyObject *py_uval = PyUnicode_AsUTF8String(py_val1);
                 val = strdup(PyBytes_AsString(py_uval));
                 Py_DECREF(py_uval);
-            }
-            else if (PyString_Check(py_val1)) {
-                val = strdup(PyString_AsString(py_val1));
             }
             else {
                 rc = 1;
@@ -334,16 +313,16 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                             "Failed to fetch predicate information");
             goto CLEANUP;
         }
-        if (PyInt_Check(py_op) && PyInt_Check(py_op_data)) {
-            as_predicate_type op = (as_predicate_type)PyInt_AsLong(py_op);
+        if (PyLong_Check(py_op) && PyLong_Check(py_op_data)) {
+            as_predicate_type op = (as_predicate_type)PyLong_AsLong(py_op);
             as_index_datatype op_data =
-                (as_index_datatype)PyInt_AsLong(py_op_data);
+                (as_index_datatype)PyLong_AsLong(py_op_data);
             rc = AerospikeQuery_Where_Add(
                 self, py_arg1, op, op_data,
                 size > 2 ? PyTuple_GetItem(py_arg2, 2) : Py_None,
                 size > 3 ? PyTuple_GetItem(py_arg2, 3) : Py_None,
                 size > 4 ? PyTuple_GetItem(py_arg2, 4) : Py_None,
-                size > 5 ? PyInt_AsLong(PyTuple_GetItem(py_arg2, 5)) : 0);
+                size > 5 ? PyLong_AsLong(PyTuple_GetItem(py_arg2, 5)) : 0);
             /* Failed to add the predicate for some reason */
             if (rc != 0) {
                 as_error_update(&err, AEROSPIKE_ERR_PARAM,

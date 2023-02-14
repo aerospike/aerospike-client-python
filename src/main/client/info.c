@@ -95,10 +95,10 @@ static bool AerospikeClient_Info_each(as_error *err, const as_node *node,
         char *out = strchr(res, '\t');
         if (out) {
             out++;
-            py_out = PyString_FromString(out);
+            py_out = PyUnicode_FromString(out);
         }
         else {
-            py_out = PyString_FromString(res);
+            py_out = PyUnicode_FromString(res);
         }
     }
 
@@ -132,9 +132,6 @@ static bool AerospikeClient_Info_each(as_error *err, const as_node *node,
                         py_ustr = PyUnicode_AsUTF8String(py_addr);
                         host_addr = PyBytes_AsString(py_ustr);
                     }
-                    else if (PyString_Check(py_addr)) {
-                        host_addr = PyString_AsString(py_addr);
-                    }
                     else {
                         as_error_update(&udata_ptr->error, AEROSPIKE_ERR_PARAM,
                                         "Host address is of type incorrect");
@@ -144,10 +141,7 @@ static bool AerospikeClient_Info_each(as_error *err, const as_node *node,
                         PyGILState_Release(gil_state);
                         return false;
                     }
-                    if (PyInt_Check(py_port)) {
-                        port = (uint16_t)PyInt_AsLong(py_port);
-                    }
-                    else if (PyLong_Check(py_port)) {
+                    if (PyLong_Check(py_port)) {
                         port = (uint16_t)PyLong_AsLong(py_port);
                     }
                     else {
@@ -368,9 +362,6 @@ PyObject *AerospikeClient_Info(AerospikeClient *self, PyObject *args,
         py_ustr = PyUnicode_AsUTF8String(py_req);
         req = PyBytes_AsString(py_ustr);
     }
-    else if (PyString_Check(py_req)) {
-        req = PyString_AsString(py_req);
-    }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request must be a string");
         goto CLEANUP;
@@ -484,9 +475,6 @@ static PyObject *AerospikeClient_InfoAll_Invoke(AerospikeClient *self,
         py_ustr = PyUnicode_AsUTF8String(py_request);
         request = PyBytes_AsString(py_ustr);
     }
-    else if (PyString_Check(py_request)) {
-        request = PyString_AsString(py_request);
-    }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Request must be a string");
         goto CLEANUP;
@@ -546,10 +534,10 @@ static PyObject *get_formatted_info_response(const char *response)
         if (formatted_output) {
             /* Advance one character past the '\t' */
             formatted_output++;
-            py_response = PyString_FromString(formatted_output);
+            py_response = PyUnicode_FromString(formatted_output);
         }
         else {
-            py_response = PyString_FromString(response);
+            py_response = PyUnicode_FromString(response);
         }
     }
     else {

@@ -45,16 +45,15 @@ PyObject *AerospikeClient_Get_Key_Digest_Invoke(AerospikeClient *self,
     // Initialised flags
     bool key_initialised = false;
 
-    if (!PyString_Check(py_ns)) {
+    if (!PyUnicode_Check(py_ns)) {
         PyErr_SetString(PyExc_TypeError, "Namespace should be a string");
         return NULL;
     }
-    if (!PyString_Check(py_set) && !PyUnicode_Check(py_set)) {
+    if (!PyUnicode_Check(py_set)) {
         PyErr_SetString(PyExc_TypeError, "Set should be a string or unicode");
         return NULL;
     }
-    if (!PyString_Check(py_key) && !PyUnicode_Check(py_key) &&
-        !PyInt_Check(py_key) && !PyLong_Check(py_key) &&
+    if (!PyUnicode_Check(py_key) && !PyLong_Check(py_key) &&
         !PyByteArray_Check(py_key)) {
         PyErr_SetString(PyExc_TypeError, "Key is invalid");
         return NULL;

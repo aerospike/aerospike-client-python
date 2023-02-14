@@ -120,9 +120,6 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
         py_umodule = PyUnicode_AsUTF8String(py_module);
         module = PyBytes_AsString(py_umodule);
     }
-    else if (PyString_Check(py_module)) {
-        module = PyString_AsString(py_module);
-    }
     else {
         as_error_update(
             &err, AEROSPIKE_ERR_CLIENT,
@@ -133,9 +130,6 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     if (PyUnicode_Check(py_function)) {
         py_ufunction = PyUnicode_AsUTF8String(py_function);
         function = PyBytes_AsString(py_ufunction);
-    }
-    else if (PyString_Check(py_function)) {
-        function = PyString_AsString(py_function);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,

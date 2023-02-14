@@ -90,9 +90,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
             py_ustr = PyUnicode_AsUTF8String(py_val);
             binName = PyBytes_AsString(py_ustr);
         }
-        else if (PyString_Check(py_val)) {
-            binName = PyString_AsString(py_val);
-        }
         else {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Invalid bin name, bin name should be a string or "
@@ -112,11 +109,8 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
 
         if (py_ttl) {
-            if (PyInt_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyInt_AsLong(py_ttl);
-            }
-            else if (PyLong_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyLong_AsLongLong(py_ttl);
+            if (PyLong_Check(py_ttl)) {
+                rec.ttl = (uint32_t)PyLong_AsLong(py_ttl);
                 if ((uint32_t)-1 == rec.ttl && PyErr_Occurred()) {
                     as_error_update(
                         err, AEROSPIKE_ERR_PARAM,
@@ -132,10 +126,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
 
         if (py_gen) {
-            if (PyInt_Check(py_gen)) {
-                rec.gen = (uint16_t)PyInt_AsLong(py_gen);
-            }
-            else if (PyLong_Check(py_gen)) {
+            if (PyLong_Check(py_gen)) {
                 rec.gen = (uint16_t)PyLong_AsLongLong(py_gen);
                 if ((uint16_t)-1 == rec.gen && PyErr_Occurred()) {
                     as_error_update(

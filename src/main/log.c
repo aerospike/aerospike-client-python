@@ -76,12 +76,12 @@ PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
     }
 
     // Type check for incoming parameters
-    if (!PyInt_Check(py_log_level)) {
+    if (!PyLong_Check(py_log_level)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid log level");
         goto CLEANUP;
     }
 
-    long lLogLevel = PyInt_AsLong(py_log_level);
+    long lLogLevel = PyLong_AsLong(py_log_level);
     if (lLogLevel == (uint32_t)-1 && PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -147,11 +147,11 @@ static bool log_cb(as_log_level level, const char *func, const char *file,
     py_arglist = PyTuple_New(5);
 
     // Initialise argument variables
-    PyObject *log_level = PyInt_FromLong((long)level);
-    PyObject *func_name = PyString_FromString(func);
-    PyObject *file_name = PyString_FromString(file);
-    PyObject *line_no = PyInt_FromLong((long)line);
-    PyObject *message = PyString_FromString(msg);
+    PyObject *log_level = PyLong_FromLong((long)level);
+    PyObject *func_name = PyUnicode_FromString(func);
+    PyObject *file_name = PyUnicode_FromString(file);
+    PyObject *line_no = PyLong_FromLong((long)line);
+    PyObject *message = PyUnicode_FromString(msg);
 
     // Set argument list
     PyTuple_SetItem(py_arglist, 0, log_level);

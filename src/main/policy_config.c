@@ -579,8 +579,8 @@ as_status get_uint32_value(PyObject *py_policy_val, uint32_t *return_uint32)
     if (!py_policy_val) {
         return AEROSPIKE_ERR_PARAM;
     }
-    if (PyInt_Check(py_policy_val)) {
-        long int_value = PyInt_AsLong(py_policy_val);
+    if (PyLong_Check(py_policy_val)) {
+        long int_value = PyLong_AsLong(py_policy_val);
 
         if (int_value == -1 && PyErr_Occurred()) {
             PyErr_Clear();
@@ -610,8 +610,8 @@ as_status set_optional_uint32_property(uint32_t *target_ptr,
     if (!py_policy_val) {
         return AEROSPIKE_OK;
     }
-    if (PyInt_Check(py_policy_val)) {
-        long int_value = PyInt_AsLong(py_policy_val);
+    if (PyLong_Check(py_policy_val)) {
+        long int_value = PyLong_AsLong(py_policy_val);
 
         if (int_value == -1 && PyErr_Occurred()) {
             // This wasn't a valid int, or was too large

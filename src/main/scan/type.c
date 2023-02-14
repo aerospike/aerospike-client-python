@@ -134,8 +134,8 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
     char *set = NULL;
     PyObject *py_ustr = NULL;
 
-    if (py_namespace && PyString_Check(py_namespace)) {
-        namespace = PyString_AsString(py_namespace);
+    if (py_namespace && PyUnicode_Check(py_namespace)) {
+        namespace = (char *)PyUnicode_AsUTF8(py_namespace);
     }
     else {
         return -1;
@@ -145,9 +145,6 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
         if (PyUnicode_Check(py_set)) {
             py_ustr = PyUnicode_AsUTF8String(py_set);
             set = PyBytes_AsString(py_ustr);
-        }
-        else if (PyString_Check(py_set)) {
-            set = PyString_AsString(py_set);
         }
         else if (Py_None == py_set) {
             set = NULL;

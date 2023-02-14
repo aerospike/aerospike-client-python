@@ -170,9 +170,9 @@ as_status convert_partition_filter(AerospikeClient *self,
         }
 
         PyObject *value = PyDict_GetItemString(digest, "value");
-        if (value && PyString_Check(value)) {
-            strncpy((char *)filter->digest.value, PyString_AsString(value),
-                    AS_DIGEST_VALUE_SIZE);
+        if (value && PyUnicode_Check(value)) {
+            strncpy((char *)filter->digest.value,
+                    (char *)PyUnicode_AsUTF8(value), AS_DIGEST_VALUE_SIZE);
         }
     }
 

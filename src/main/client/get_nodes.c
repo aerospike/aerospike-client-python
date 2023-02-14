@@ -99,7 +99,7 @@ static PyObject *AerospikeClient_GetNodes_Invoke(AerospikeClient *self)
             get_unbracketed_ip_and_length(hostname, split_point, &real_length);
         Py_ssize_t py_host_length = (Py_ssize_t)real_length;
         py_hostname =
-            PyString_FromStringAndSize(real_hostname_start, py_host_length);
+            PyUnicode_FromStringAndSize(real_hostname_start, py_host_length);
 
         if (!py_hostname) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,

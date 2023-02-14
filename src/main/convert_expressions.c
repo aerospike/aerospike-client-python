@@ -495,11 +495,11 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         *new_entry = tmp_entry;
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
-        PyObject *py_parameter = PyString_FromString("geo_data");
+        PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
         char *geo_value =
-            PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+            (char *)PyUnicode_AsUTF8(AerospikeGeospatial_DoDumps(py_data, err));
         Py_DECREF(py_data);
         as_exp_entry tmp_entry = as_exp_geo(geo_value);
         *new_entry = tmp_entry;
@@ -1555,7 +1555,7 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         }
 
         temp_expr.pytuple = py_expr_tuple;
-        temp_expr.op = PyInt_AsLong(PyTuple_GetItem(py_expr_tuple, 0));
+        temp_expr.op = PyLong_AsLong(PyTuple_GetItem(py_expr_tuple, 0));
         if (temp_expr.op == -1 && PyErr_Occurred()) {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
@@ -1565,7 +1565,7 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
 
         PyObject *rt_tmp = PyTuple_GetItem(py_expr_tuple, 1);
         if (rt_tmp != Py_None) {
-            temp_expr.result_type = PyInt_AsLong(rt_tmp);
+            temp_expr.result_type = PyLong_AsLong(rt_tmp);
             if (temp_expr.result_type == -1 && PyErr_Occurred()) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "Failed to get result_type from expression "
@@ -1649,7 +1649,7 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         }
 
         temp_expr.num_children =
-            PyInt_AsLong(PyTuple_GetItem(py_expr_tuple, 3));
+            PyLong_AsLong(PyTuple_GetItem(py_expr_tuple, 3));
         if (temp_expr.num_children == -1 && PyErr_Occurred()) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "Failed to get num_children from expression tuple, "

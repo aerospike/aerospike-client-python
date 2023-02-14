@@ -170,7 +170,6 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
 {
     PyObject *py_namespace = NULL;
     PyObject *py_set = NULL;
-    PyObject *py_ustr_set = NULL;
 
     as_error err;
     as_error_init(&err);
@@ -188,8 +187,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
     char *namespace = NULL;
     char *set = NULL;
 
-    if (PyString_Check(py_namespace)) {
-        namespace = PyString_AsString(py_namespace);
+    if (PyUnicode_Check(py_namespace)) {
+        namespace = (char *)PyUnicode_AsUTF8(py_namespace);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -198,12 +197,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
     }
 
     if (py_set) {
-        if (PyString_Check(py_set)) {
-            set = PyString_AsString(py_set);
-        }
-        else if (PyUnicode_Check(py_set)) {
-            py_ustr_set = PyUnicode_AsUTF8String(py_set);
-            set = PyBytes_AsString(py_ustr_set);
+        if (PyUnicode_Check(py_set)) {
+            set = (char *)PyUnicode_AsUTF8(py_set);
         }
         else if (py_set != Py_None) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -217,10 +212,6 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
     as_query_init(&self->query, namespace, set);
 
 CLEANUP:
-    if (py_ustr_set) {
-        Py_DECREF(py_ustr_set);
-    }
-
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return -1;

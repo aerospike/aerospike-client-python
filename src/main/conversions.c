@@ -80,7 +80,7 @@ as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
 
     *py_file = PyDict_New();
 
-    PyObject *py_name = PyString_FromString(entry->name);
+    PyObject *py_name = PyUnicode_FromString(entry->name);
     PyDict_SetItemString(*py_file, "name", py_name);
     Py_DECREF(py_name);
 
@@ -89,7 +89,7 @@ as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
     PyDict_SetItemString(*py_file, "hash", py_hash);
     Py_DECREF(py_hash);
 
-    PyObject *py_type = PyInt_FromLong(entry->type);
+    PyObject *py_type = PyLong_FromLong(entry->type);
     PyDict_SetItemString(*py_file, "type", py_type);
     Py_DECREF(py_type);
 
@@ -181,7 +181,7 @@ as_status as_user_array_to_pyobject(as_error *err, as_user **users,
     PyObject *py_users = PyDict_New();
     for (i = 0; i < users_size; i++) {
 
-        PyObject *py_user = PyString_FromString(users[i]->name);
+        PyObject *py_user = PyUnicode_FromString(users[i]->name);
         PyObject *py_roles = PyList_New(0);
         strArray_to_py_list(err, users[i]->roles_size, AS_ROLE_SIZE,
                             users[i]->roles, py_roles);
@@ -254,11 +254,11 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
     for (int i = 0; i < privileges_size; i++) {
         PyObject *py_val = PyList_GetItem(py_privileges, i);
         if (PyDict_Check(py_val)) {
-            PyObject *py_dict_key = PyString_FromString("code");
+            PyObject *py_dict_key = PyUnicode_FromString("code");
             if (PyDict_Contains(py_val, py_dict_key)) {
                 PyObject *py_code = NULL;
                 py_code = PyDict_GetItemString(py_val, "code");
-                privileges[i]->code = PyInt_AsLong(py_code);
+                privileges[i]->code = PyLong_AsLong(py_code);
             }
             else {
                 as_error_update(
@@ -267,19 +267,19 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
                 break;
             }
             Py_DECREF(py_dict_key);
-            py_dict_key = PyString_FromString("ns");
+            py_dict_key = PyUnicode_FromString("ns");
             if (PyDict_Contains(py_val, py_dict_key)) {
                 PyObject *py_ns = PyDict_GetItemString(py_val, "ns");
-                strcpy(privileges[i]->ns, PyString_AsString(py_ns));
+                strcpy(privileges[i]->ns, (char *)PyUnicode_AsUTF8(py_ns));
             }
             else {
                 strcpy(privileges[i]->ns, "");
             }
             Py_DECREF(py_dict_key);
-            py_dict_key = PyString_FromString("set");
+            py_dict_key = PyUnicode_FromString("set");
             if (PyDict_Contains(py_val, py_dict_key)) {
                 PyObject *py_set = PyDict_GetItemString(py_val, "set");
-                strcpy(privileges[i]->set, PyString_AsString(py_set));
+                strcpy(privileges[i]->set, (char *)PyUnicode_AsUTF8(py_set));
             }
             else {
                 strcpy(privileges[i]->set, "");
@@ -299,7 +299,7 @@ as_status as_role_array_to_pyobject_old(as_error *err, as_role **roles,
     PyObject *py_roles = PyDict_New();
     for (i = 0; i < roles_size; i++) {
 
-        PyObject *py_role = PyString_FromString(roles[i]->name);
+        PyObject *py_role = PyUnicode_FromString(roles[i]->name);
         PyObject *py_privileges = PyList_New(0);
 
         as_privilege_to_pyobject(err, roles[i]->privileges, py_privileges,
@@ -635,9 +635,9 @@ as_status as_privilege_to_pyobject(as_error *err, as_privilege privileges[],
     PyObject *py_set = NULL;
     PyObject *py_code = NULL;
     for (int i = 0; i < privilege_size; i++) {
-        py_ns = PyString_FromString(privileges[i].ns);
-        py_set = PyString_FromString(privileges[i].set);
-        py_code = PyInt_FromLong(privileges[i].code);
+        py_ns = PyUnicode_FromString(privileges[i].ns);
+        py_set = PyUnicode_FromString(privileges[i].set);
+        py_code = PyLong_FromLong(privileges[i].code);
 
         PyObject *py_privilege = PyDict_New();
         PyDict_SetItemString(py_privilege, "ns", py_ns);
@@ -673,33 +673,13 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
     for (int i = 0; i < size; i++) {
         PyObject *py_val = PyList_GetItem(py_list, i);
 
-        if (PyString_Check(py_val)) {
-            s = PyString_AsString(py_val);
+        if (PyUnicode_Check(py_val)) {
+            s = (char *)PyUnicode_AsUTF8(py_val);
 
             if (strlen(s) < max_len) {
                 strcpy(arr[i], s);
             }
             else {
-                as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                "String exceeds max length");
-                return err->code;
-            }
-        }
-        else if (PyUnicode_Check(py_val)) {
-            py_u_str = PyUnicode_AsUTF8String(py_val);
-            if (!py_u_str) {
-                as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                "Unable to convert unicode string");
-                return err->code;
-            }
-            s = PyBytes_AsString(py_u_str);
-
-            if (strlen(s) < max_len) {
-                strcpy(arr[i], s);
-                Py_DECREF(py_u_str);
-            }
-            else {
-                Py_DECREF(py_u_str);
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                 "String exceeds max length");
                 return err->code;
@@ -840,8 +820,8 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
                                    "Unknown value for send_bool_as.");
         }
     }
-    else if (PyInt_Check(py_obj)) {
-        int64_t i = (int64_t)PyInt_AsLong(py_obj);
+    else if (PyLong_Check(py_obj)) {
+        int64_t i = (int64_t)PyLong_AsLong(py_obj);
         if (i == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -850,25 +830,11 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         }
         *val = (as_val *)as_integer_new(i);
     }
-    else if (PyLong_Check(py_obj)) {
-        int64_t l = (int64_t)PyLong_AsLongLong(py_obj);
-        if (l == -1 && PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "integer value exceeds sys.maxsize");
-            }
-        }
-        *val = (as_val *)as_integer_new(l);
-    }
     else if (PyUnicode_Check(py_obj)) {
         PyObject *py_ustr = PyUnicode_AsUTF8String(py_obj);
         char *str = PyBytes_AsString(py_ustr);
         *val = (as_val *)as_string_new(strdup(str), true);
         Py_DECREF(py_ustr);
-    }
-    else if (PyString_Check(py_obj)) {
-        char *s = PyString_AsString(py_obj);
-        *val = (as_val *)as_string_new(s, false);
     }
     else if (PyBytes_Check(py_obj)) {
         uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
@@ -876,12 +842,12 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         *val = (as_val *)as_bytes_new_wrap(b, b_len, false);
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
-        PyObject *py_parameter = PyString_FromString("geo_data");
+        PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
 
         PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
-        char *geo_value = PyString_AsString(geospatial_dump);
+        char *geo_value = PyUnicode_AsUTF8(geospatial_dump);
         char *geo_value_cpy = strdup(geo_value);
 
         Py_DECREF(py_data);
@@ -1033,19 +999,8 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                                            "Unknown value for send_bool_as.");
                 }
             }
-            else if (PyInt_Check(value)) {
-                int64_t val = (int64_t)PyInt_AsLong(value);
-                if (val == -1 && PyErr_Occurred()) {
-                    if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                        return as_error_update(
-                            err, AEROSPIKE_ERR_PARAM,
-                            "integer value exceeds sys.maxsize");
-                    }
-                }
-                ret_val = as_record_set_int64(rec, name, val);
-            }
             else if (PyLong_Check(value)) {
-                int64_t val = (int64_t)PyLong_AsLongLong(value);
+                int64_t val = (int64_t)PyLong_AsLong(value);
                 if (val == -1 && PyErr_Occurred()) {
                     if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                         return as_error_update(
@@ -1056,7 +1011,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 ret_val = as_record_set_int64(rec, name, val);
             }
             else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
-                PyObject *py_geo_string = PyString_FromString("geo_data");
+                PyObject *py_geo_string = PyUnicode_FromString("geo_data");
                 PyObject *py_data =
                     PyObject_GenericGetAttr(value, py_geo_string);
                 Py_DECREF(py_geo_string);
@@ -1074,7 +1029,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     geo_value = PyBytes_AsString(py_ustr);
                 }
                 else {
-                    geo_value = PyString_AsString(py_dumps);
+                    geo_value = (char *)PyUnicode_AsUTF8(py_dumps);
                 }
 
                 ret_val = as_record_set_geojson_strp(rec, name,
@@ -1095,10 +1050,6 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 char *val = PyBytes_AsString(py_ustr);
                 ret_val = as_record_set_strp(rec, name, strdup(val), true);
                 Py_DECREF(py_ustr);
-            }
-            else if (PyString_Check(value)) {
-                char *val = PyString_AsString(value);
-                ret_val = as_record_set_strp(rec, name, val, false);
             }
             else if (PyByteArray_Check(value)) {
                 as_bytes *bytes;
@@ -1172,18 +1123,8 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
 
                 if (py_ttl) {
-                    if (PyInt_Check(py_ttl)) {
-                        rec->ttl = (uint32_t)PyInt_AsLong(py_ttl);
-                        if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
-                            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                                as_error_update(
-                                    err, AEROSPIKE_ERR_PARAM,
-                                    "integer value exceeds sys.maxsize");
-                            }
-                        }
-                    }
-                    else if (PyLong_Check(py_ttl)) {
-                        rec->ttl = (uint32_t)PyLong_AsLongLong(py_ttl);
+                    if (PyLong_Check(py_ttl)) {
+                        rec->ttl = (uint32_t)PyLong_AsLong(py_ttl);
                         if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
                             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                                 as_error_update(
@@ -1199,18 +1140,8 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
 
                 if (py_gen) {
-                    if (PyInt_Check(py_gen)) {
-                        rec->gen = (uint16_t)PyInt_AsLong(py_gen);
-                        if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
-                            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                                as_error_update(
-                                    err, AEROSPIKE_ERR_PARAM,
-                                    "integer value exceeds sys.maxsize");
-                            }
-                        }
-                    }
-                    else if (PyLong_Check(py_gen)) {
-                        rec->gen = (uint16_t)PyLong_AsLongLong(py_gen);
+                    if (PyLong_Check(py_gen)) {
+                        rec->gen = (uint16_t)PyLong_AsLong(py_gen);
                         if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
                             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                                 as_error_update(
@@ -1287,22 +1218,18 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "namespace is required");
     }
-    else if (!PyString_Check(py_ns)) {
+    else if (!PyUnicode_Check(py_ns)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "namespace must be a string");
     }
     else {
-        ns = PyString_AsString(py_ns);
+        ns = (char *)PyUnicode_AsUTF8(py_ns);
     }
 
     PyObject *py_ustr = NULL;
     if (py_set && py_set != Py_None) {
-        if (PyString_Check(py_set)) {
-            set = PyString_AsString(py_set);
-        }
-        else if (PyUnicode_Check(py_set)) {
-            py_ustr = PyUnicode_AsUTF8String(py_set);
-            set = PyBytes_AsString(py_ustr);
+        if (PyUnicode_Check(py_set)) {
+            set = (char *)PyUnicode_AsUTF8(py_set);
         }
         else {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -1322,25 +1249,8 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             returnResult = as_key_init_strp(key, ns, set, strdup(k), true);
             Py_DECREF(py_ustr);
         }
-        else if (PyString_Check(py_key)) {
-            char *k = PyString_AsString(py_key);
-            // free flag is set to false, as char *k is an user memory
-            // when as_key_destroy is called, it will try to free this memory
-            // which is invalid.
-            returnResult = as_key_init_strp(key, ns, set, k, false);
-        }
-        else if (PyInt_Check(py_key)) {
-            int64_t k = (int64_t)PyInt_AsLong(py_key);
-            if (-1 == k && PyErr_Occurred()) {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "integer value for KEY exceeds sys.maxsize");
-            }
-            else {
-                returnResult = as_key_init_int64(key, ns, set, k);
-            }
-        }
         else if (PyLong_Check(py_key)) {
-            int64_t k = (int64_t)PyLong_AsLongLong(py_key);
+            int64_t k = (int64_t)PyLong_AsLong(py_key);
             if (-1 == k && PyErr_Occurred()) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "integer value for KEY exceeds sys.maxsize");
@@ -1420,7 +1330,7 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
     switch (as_val_type(val)) {
     case AS_INTEGER: {
         as_integer *i = as_integer_fromval(val);
-        *py_val = PyInt_FromLong((long)as_integer_get(i));
+        *py_val = PyLong_FromLong((long)as_integer_get(i));
         if (!*py_val) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Failed to create integer or long.");
@@ -1442,7 +1352,7 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
         as_string *s = as_string_fromval(val);
         char *str = as_string_get(s);
         if (str) {
-            *py_val = PyString_FromString(str);
+            *py_val = PyUnicode_FromString(str);
             if (!*py_val) {
                 size_t sz = strlen(str);
                 *py_val = PyUnicode_DecodeUTF8(str, sz, NULL);
@@ -1519,7 +1429,7 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
     case AS_GEOJSON: {
         as_geojson *gp = as_geojson_fromval(val);
         char *locstr = as_geojson_get(gp);
-        PyObject *py_locstr = PyString_FromString(locstr);
+        PyObject *py_locstr = PyUnicode_FromString(locstr);
         PyObject *py_loads = AerospikeGeospatial_DoLoads(py_locstr, err);
         Py_DECREF(py_locstr);
         if (err->code != AEROSPIKE_OK) {
@@ -1869,11 +1779,11 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
     PyObject *py_digest = NULL;
 
     if (strlen(key->ns) > 0) {
-        py_namespace = PyString_FromString(key->ns);
+        py_namespace = PyUnicode_FromString(key->ns);
     }
 
     if (strlen(key->set) > 0) {
-        py_set = PyString_FromString(key->set);
+        py_set = PyUnicode_FromString(key->set);
     }
 
     if (key->valuep) {
@@ -1882,12 +1792,12 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
         switch (type) {
         case AS_INTEGER: {
             as_integer *ival = as_integer_fromval(val);
-            py_key = PyInt_FromLong((long)as_integer_get(ival));
+            py_key = PyLong_FromLong((long)as_integer_get(ival));
             break;
         }
         case AS_STRING: {
             as_string *sval = as_string_fromval(val);
-            py_key = PyString_FromString(as_string_get(sval));
+            py_key = PyUnicode_FromString(as_string_get(sval));
             if (!py_key) {
                 py_key = PyUnicode_DecodeUTF8(as_string_get(sval),
                                               as_string_len(sval), NULL);
@@ -2102,8 +2012,8 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
     }
 
-    PyObject *py_ttl = PyInt_FromLong(rec->ttl);
-    PyObject *py_gen = PyInt_FromLong(rec->gen);
+    PyObject *py_ttl = PyLong_FromLong(rec->ttl);
+    PyObject *py_gen = PyLong_FromLong(rec->gen);
 
     PyObject *py_meta = PyDict_New();
     PyDict_SetItemString(py_meta, "ttl", py_ttl);
@@ -2120,7 +2030,7 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
 {
     PyObject *py_file = NULL;
     if (err->file) {
-        py_file = PyString_FromString(err->file);
+        py_file = PyUnicode_FromString(err->file);
     }
     else {
         Py_INCREF(Py_None);
@@ -2128,7 +2038,7 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     }
     PyObject *py_line = NULL;
     if (err->line > 0) {
-        py_line = PyInt_FromLong(err->line);
+        py_line = PyLong_FromLong(err->line);
     }
     else {
         Py_INCREF(Py_None);
@@ -2136,7 +2046,7 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     }
 
     PyObject *py_code = PyLong_FromLongLong(err->code);
-    PyObject *py_message = PyString_FromString(err->message);
+    PyObject *py_message = PyUnicode_FromString(err->message);
 
     PyObject *py_in_doubt = err->in_doubt ? Py_True : Py_False;
     Py_INCREF(py_in_doubt);
@@ -2156,27 +2066,15 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 {
 
     as_bin *binop_bin = &binop->bin;
-    if (PyInt_Check(py_value)) {
-        int val = PyInt_AsLong(py_value);
+    if (PyLong_Check(py_value)) {
+        int val = PyLong_AsLong(py_value);
         as_integer_init((as_integer *)&binop_bin->value, val);
-        binop_bin->valuep = &binop_bin->value;
-    }
-    else if (PyLong_Check(py_value)) {
-        long val = PyLong_AsLong(py_value);
-        as_integer_init((as_integer *)&binop_bin->value, val);
-        binop_bin->valuep = &binop_bin->value;
-    }
-    else if (PyString_Check(py_value)) {
-        char *val = PyString_AsString(py_value);
-        as_string_init((as_string *)&binop_bin->value, val, false);
         binop_bin->valuep = &binop_bin->value;
     }
     else if (PyUnicode_Check(py_value)) {
-        PyObject *py_ustr1 = PyUnicode_AsUTF8String(py_value);
-        char *val = PyBytes_AsString(py_ustr1);
+        char *val = (char *)PyUnicode_AsUTF8(py_value);
         as_string_init((as_string *)&binop_bin->value, val, false);
         binop_bin->valuep = &binop_bin->value;
-        Py_XDECREF(py_ustr1);
     }
     else if (PyFloat_Check(py_value)) {
         int64_t val = PyFloat_AsDouble(py_value);
@@ -2244,8 +2142,8 @@ as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
     as_error_reset(err);
 
     if (py_bin) {
-        if (PyString_Check(py_bin)) {
-            *bin = PyString_AsString(py_bin);
+        if (PyUnicode_Check(py_bin)) {
+            *bin = (char *)PyUnicode_AsUTF8(py_bin);
         }
         else if (PyByteArray_Check(py_bin)) {
             *bin = PyByteArray_AsString(py_bin);
@@ -2295,11 +2193,8 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
         uint32_t ttl = 0;
         uint16_t gen = 0;
         if (py_ttl) {
-            if (PyInt_Check(py_ttl)) {
-                ttl = (uint32_t)PyInt_AsLong(py_ttl);
-            }
-            else if (PyLong_Check(py_ttl)) {
-                ttl = (uint32_t)PyLong_AsLongLong(py_ttl);
+            if (PyLong_Check(py_ttl)) {
+                ttl = (uint32_t)PyLong_AsLong(py_ttl);
             }
             else {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2315,11 +2210,8 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
         }
 
         if (py_gen) {
-            if (PyInt_Check(py_gen)) {
-                gen = (uint16_t)PyInt_AsLong(py_gen);
-            }
-            else if (PyLong_Check(py_gen)) {
-                gen = (uint16_t)PyLong_AsLongLong(py_gen);
+            if (PyLong_Check(py_gen)) {
+                gen = (uint16_t)PyLong_AsLong(py_gen);
             }
             else {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2344,10 +2236,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
 as_status pyobject_to_index(AerospikeClient *self, as_error *err,
                             PyObject *py_value, long *long_val)
 {
-    if (PyInt_Check(py_value)) {
-        *long_val = PyInt_AsLong(py_value);
-    }
-    else if (PyLong_Check(py_value)) {
+    if (PyLong_Check(py_value)) {
         *long_val = PyLong_AsLong(py_value);
         if (*long_val == -1 && PyErr_Occurred() && self->strict_types) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -2488,21 +2377,9 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 {
     /* Not needed if we drop support for Python > 3 < 3.3 */
 
-    PyObject *intermediate_uni = NULL;
     *c_str_ptr = NULL;
-    if (PyString_Check(py_string)) {
-        *c_str_ptr = PyString_AsString(py_string);
-        return AEROSPIKE_OK;
-    }
-    else if (PyUnicode_Check(py_string)) {
-        intermediate_uni = PyUnicode_AsUTF8String(py_string);
-        if (!intermediate_uni) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Invalid unicode value");
-        }
-
-        *c_str_ptr = PyBytes_AsString(intermediate_uni);
-        *pyuni_r = intermediate_uni;
+    if (PyUnicode_Check(py_string)) {
+        *c_str_ptr = (char *)PyUnicode_AsUTF8(py_string);
         return AEROSPIKE_OK;
     }
     return as_error_update(err, AEROSPIKE_ERR_PARAM, "String value required");
