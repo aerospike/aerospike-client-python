@@ -94,6 +94,47 @@ jobs:
         docker container stop aerospike
         docker container rm aerospike
 
+  rhel9:
+    runs-on: ubuntu-latest
+    services:
+      aerospike:
+        # Docker Hub image
+        image: aerospike/aerospike-server
+        ports:
+        - 3000:3000
+        - 3001:3001
+        - 3002:3002
+    container: redhat/ubi9:latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - run: yum update
+    - name: Install C client dependencies (from README)
+      run: yum install -y openssl-devel glibc-devel autoconf automake libtool
+    - name: Install C client dependencies not in README
+      run: yum install -y zlib-devel
+    - name: Install Python client dependencies + git
+      run: yum install -y openssl-devel python-devel git
+    - run: python3 -m pip install build
+    - run: python3 -m build
+    - run: python3 -m pip install dist/*.whl
+    - name: Install test dependencies
+      run: python3 -m pip install -r requirements.txt
+      working-directory: test
+    - name: Configure tests
+      # Use | to escape the colon when parsing this file
+      run: |
+        sed -i "s/hosts: 127.0.0.1:3000/hosts: $hostname:3000/" config.conf
+      working-directory: test
+      env:
+        # Get host from label
+        hostname: aerospike
+    # TODO: race condition where we have to assume the server is ready
+    # but leaving this alone for now since the server should be ready by this point
+    - run: python3 -m pytest new_tests/
+      working-directory: test
+
   build:
     runs-on: ubuntu-latest
     strategy:
