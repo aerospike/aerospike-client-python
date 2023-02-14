@@ -106,6 +106,7 @@ jobs:
         - 3002:3002
     container: redhat/ubi9:latest
     steps:
+    - run: yum install -y git
     - uses: actions/checkout@v2
       with:
         submodules: recursive
@@ -114,8 +115,8 @@ jobs:
       run: yum install -y openssl-devel glibc-devel autoconf automake libtool
     - name: Install C client dependencies not in README
       run: yum install -y zlib-devel
-    - name: Install Python client dependencies + git
-      run: yum install -y openssl-devel python-devel git
+    - name: Install Python client dependencies
+      run: yum install -y openssl-devel python-devel
     - run: python3 -m pip install build
     - run: python3 -m build
     - run: python3 -m pip install dist/*.whl
