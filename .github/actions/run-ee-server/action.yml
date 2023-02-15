@@ -45,7 +45,7 @@ runs:
 
   - name: Enable security features using aerospike.conf
     # Security stanza
-    run: echo -e "security {\n\n}\n" >> ./aerospike.conf
+    run: echo -e "security {\n\tenable-quotas true\n}\n" >> ./aerospike.conf
     working-directory: ./configs
     shell: bash
 
