@@ -345,7 +345,7 @@ class TestQuery(TestBaseClass):
             # because AEROSPIKE_ERR_INDEX_NOT_FOUND is now a retriable error.
             assert err_code == AerospikeStatus.AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
             assert "AEROSPIKE_ERR_INDEX_NOT_FOUND" in err_info.msg
-            
+
     def test_query_with_where_incorrect(self):
         """
         Invoke query() with predicate which
