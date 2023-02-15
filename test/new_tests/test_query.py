@@ -334,7 +334,7 @@ class TestQuery(TestBaseClass):
         def callback(input_tuple):
             pass
 
-        with pytest.raises(e.NamespaceNotFound):
+        with pytest.raises(e.IndexNotFound):
             query.foreach(callback)
 
     def test_query_with_where_incorrect(self):
