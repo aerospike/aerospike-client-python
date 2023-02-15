@@ -268,7 +268,20 @@ jobs:
       run: sleep 3
 
     - name: Run tests
+      if: ${{ matrix.py-version != '3.11'}}
       run: python -m pytest ./new_tests
+      working-directory: test
+
+    - name: Run tests with coverage
+      if: ${{ matrix.py-version == '3.11'}}
+      run: python -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
+      working-directory: test
+
+    - name: Comment coverage report on PR
+      if: ${{ matrix.py-version == '3.11'}}
+      uses: MishaKav/pytest-coverage-comment@main
+      with:
+        pytest-xml-coverage-path: "coverage.xml"
       working-directory: test
 
   test-ee:
