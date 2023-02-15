@@ -281,8 +281,7 @@ jobs:
       if: ${{ matrix.py-version == '3.11'}}
       uses: MishaKav/pytest-coverage-comment@main
       with:
-        pytest-xml-coverage-path: "coverage.xml"
-      working-directory: test
+        pytest-xml-coverage-path: "./test/coverage.xml"
 
   test-ee:
     runs-on: ubuntu-latest
