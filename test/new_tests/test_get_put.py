@@ -214,7 +214,7 @@ class TestGetPut:
         """
         key = ("namespace", "demo", 1)
 
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.NamespaceNotFound):
             key, _, _ = self.as_connection.get(key)
 
     @pytest.mark.parametrize(

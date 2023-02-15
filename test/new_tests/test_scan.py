@@ -390,7 +390,7 @@ class TestScan(TestBaseClass):
         with pytest.raises(e.NamespaceNotFound) as err_info:
             scan_obj.foreach(callback)
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_scan_with_none_ns_and_set(self):
 

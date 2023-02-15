@@ -417,7 +417,7 @@ class TestPrepend:
         """
         key = ("test1", "demo", 1)
         policy = {}
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.NamespaceNotFound):
             self.as_connection.prepend(key, "name", "ABC", {}, policy)
 
     @pytest.mark.parametrize(
