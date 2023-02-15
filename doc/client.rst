@@ -894,7 +894,7 @@ Info Operations
         .. include:: examples/get_expression_base64.py
             :code: python
 
-        .. versionchanged:: 7.0.0
+        .. deprecated:: :ref:`aerospike.get_expression_base64` should be used instead.
 
     .. method:: shm_key()  ->  int
 
@@ -1069,7 +1069,7 @@ Index Operations
         .. include:: examples/get_cdtctx_base64.py
             :code: python
 
-        .. deprecated:: 10.1.0 :class:`aerospike.Query` should be used instead.
+        .. deprecated:: :ref:`aerospike.get_cdtctx_base64` should be used instead.
 
 
     .. index::

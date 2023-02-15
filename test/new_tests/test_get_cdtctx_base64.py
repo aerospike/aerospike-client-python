@@ -6,6 +6,7 @@ import aerospike
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 from aerospike_helpers import cdt_ctx
+from . import base64_helpers
 
 list_index = "list_index"
 list_rank = "list_rank"
@@ -56,8 +57,15 @@ ctx_empty = []
 
 
 class TestCDTIndexB64(object):
+    # Backwards compatibility test
+    # Setup client connection before deciding which method to use
+    # Order of fixtures executed: as_connection() -> get_cdtctx_base64_method() -> setup()
+    @pytest.fixture(scope="class", params=["client", "aerospike"])
+    def get_cdtctx_base64_method(self, request, as_connection):
+        return base64_helpers.get_cdtctx_base64_method(self, request.param)
+
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
+    def setup(self, request, get_cdtctx_base64_method, as_connection):
         if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
             pytest.skip("It only applies to >= 6.1 enterprise edition")
 
@@ -93,12 +101,12 @@ class TestCDTIndexB64(object):
 
         request.addfinalizer(teardown)
 
-    def test_get_cdtctxb64_with_correct_parameters(self):
+    def test_get_cdtctxb64_with_correct_parameters(self, get_cdtctx_base64_method):
         """
         Invoke get_cdtctx_base64() with correct arguments
         """
         policy = {}
-        bs_b4_cdt = aerospike.get_cdtctx_base64([cdt_ctx.cdt_ctx_list_index(0)])
+        bs_b4_cdt = get_cdtctx_base64_method([cdt_ctx.cdt_ctx_list_index(0)])
 
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
@@ -116,20 +124,20 @@ class TestCDTIndexB64(object):
 
         assert retobj != 0
 
-    def test_get_cdtctxb64_with_invalid_parameters(self):
+    def test_get_cdtctxb64_with_invalid_parameters(self, get_cdtctx_base64_method):
         """
         Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            aerospike.get_cdtctx_base64({})
+            get_cdtctx_base64_method({})
         except e.ParamError:
             pass
 
-    def test_get_cdtctxb64_with_invalid_ctx(self):
+    def test_get_cdtctxb64_with_invalid_ctx(self, get_cdtctx_base64_method):
         """
         Invoke get_cdtctx_base64() with invalid arguments
         """
         try:
-            aerospike.get_cdtctx_base64(ctx_empty)
+            get_cdtctx_base64_method(ctx_empty)
         except e.ParamError:
             pass

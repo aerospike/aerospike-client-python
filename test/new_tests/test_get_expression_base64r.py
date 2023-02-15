@@ -24,21 +24,24 @@ from aerospike_helpers.expressions import (
 )
 
 import aerospike
+from . import base64_helpers
 
 
 @pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
-@pytest.mark.usefixtures("as_connection", "connection_config")
 class TestGetExpressionBase64(object):
-    @pytest.fixture(autouse=True)
-    def setup_method(self, request, as_connection):
-        pass
+    # Backwards compatibility test
+    # Setup client connection before deciding which method to use
+    @pytest.fixture(scope="class", params=["client", "aerospike"])
+    def get_expression_base64_method(self, request, as_connection, connection_config):
+        return base64_helpers.get_expression_base64_method(self, request.param)
 
-    def test_get_expression_base64_pos(self):
+    def test_get_expression_base64_pos(self, get_expression_base64_method):
+
         expr = Eq(IntBin("bin1"), 6).compile()
-        b64 = aerospike.get_expression_base64(expr)
+        b64 = get_expression_base64_method(expr)
         assert b64 == "kwGTUQKkYmluMQY="
 
-    def test_get_expression_base64_large_expression_pos(self):
+    def test_get_expression_base64_large_expression_pos(self, get_expression_base64_method):
         bin = "ilist_bin"
         expr = And(
             Eq(
@@ -98,7 +101,7 @@ class TestGetExpressionBase64(object):
             Eq(ListGetByRankRange(None, aerospike.LIST_RETURN_COUNT, 1, ListSize(None, bin), bin), 2),
         ).compile()
 
-        b64 = aerospike.get_expression_base64(expr)
+        b64 = get_expression_base64_method(expr)
         expected = (
             "lxCTAZV/AgCVGwWVfwIAkxMHAJNRBKlpbGlzdF9iaW4BA5NRBKlpbGlzdF9iaW4CkwGVfwQAkxYBBpV/BAC"
             "UGQcBB5NRBKlpbGlzdF9iaW6SfpECkwGVfwIAkxcFkn6SAgaVfwQAlBsHAQGTUQSpaWxpc3RfYmluApMBlX8CAJMYBQGVfwQAlBgHAQOTU"
@@ -108,10 +111,10 @@ class TestGetExpressionBase64(object):
 
         assert b64 == expected
 
-    def test_get_expression_base64_bad_filter_neg(self):
+    def test_get_expression_base64_bad_filter_neg(self, get_expression_base64_method):
         with pytest.raises(e.ParamError):
-            aerospike.get_expression_base64("bad_filter")
+            get_expression_base64_method("bad_filter")
 
-    def test_get_expression_base64_bad_list_filter_neg(self):
+    def test_get_expression_base64_bad_list_filter_neg(self, get_expression_base64_method):
         with pytest.raises(e.ParamError):
-            aerospike.get_expression_base64(["hi"])
+            get_expression_base64_method(["hi"])
