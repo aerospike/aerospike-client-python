@@ -104,7 +104,7 @@ this means that the data type returned may vary (usually depending on the ``retu
 
     Currently, Aerospike expressions for the python client do not support comparing ``as_python_bytes`` blobs.
 
-    Comparisons between constant map values and map expressions are also unsupported.
+    Only comparisons between **key ordered** map values and map expressions are supported.
 
 Expression Type Aliases
 -----------------------
