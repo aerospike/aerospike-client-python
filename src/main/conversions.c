@@ -753,7 +753,21 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     Py_ssize_t size = PyDict_Size(py_dict);
 
     if (*map == NULL) {
-        *map = (as_map *)as_hashmap_new((uint32_t)size);
+        int is_pydict_keyordered =
+            PyObject_IsInstance(py_dict, AerospikeKeyOrderedDict_Get_Type());
+        if (PyErr_Occurred()) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to check if dictionary is key ordered or not");
+        }
+
+        if (is_pydict_keyordered) {
+            *map = (as_map *)as_orderedmap_new((uint32_t)size);
+        }
+        else {
+            // Create unordered dict
+            *map = (as_map *)as_hashmap_new((uint32_t)size);
+        }
     }
 
     while (PyDict_Next(py_dict, &pos, &py_key, &py_val)) {
@@ -892,12 +906,6 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         as_map *map = NULL;
         pyobject_to_map(self, err, py_obj, &map, static_pool, serializer_type);
         if (err->code == AEROSPIKE_OK) {
-            if (PyObject_IsInstance(py_obj,
-                                    AerospikeKeyOrderedDict_Get_Type())) {
-                // Special case for aerospike.KeyOrderedDict, useful to just in time sort maps for by value operations.
-                map->flags |= AS_MAP_KEY_ORDERED;
-            }
-
             *val = (as_val *)map;
         }
     }

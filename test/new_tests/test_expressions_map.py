@@ -193,7 +193,11 @@ class TestExpressions(TestBaseClass):
                 },
                 "smap_bin": {"b": "b", "d": "d", "f": "f"},
                 "lmap_bin": {1: [1, 2], 2: [1, 3], 3: [1, 4]},
-                "mmap_bin": {1: {1: 2}, 2: {1: 3}, 3: {1: 4}},
+                "mmap_bin": {
+                    1: aerospike.KeyOrderedDict({1: 2}),
+                    2: aerospike.KeyOrderedDict({1: 3}),
+                    3: aerospike.KeyOrderedDict({1: 4})
+                },
                 "bymap_bin": {1: "b".encode("utf8"), 2: "d".encode("utf8"), 3: "f".encode("utf8")},
                 "bomap_bin": {1: False, 2: False, 3: True},
                 "nmap_bin": {1: None, 2: aerospike.null, 3: aerospike.null},
@@ -448,7 +452,14 @@ class TestExpressions(TestBaseClass):
                 "mmap_bin",
                 None,
                 {},
-                [7, {1: 8}, 1, {1: 2}, 3, {1: 4}],
+                [
+                    7,
+                    aerospike.KeyOrderedDict({1: 8}),
+                    1,
+                    aerospike.KeyOrderedDict({1: 2}),
+                    3,
+                    aerospike.KeyOrderedDict({1: 4})
+                ],
             ),
             (
                 "bymap_bin",
