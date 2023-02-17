@@ -57,21 +57,21 @@ jobs:
         curl -O --connect-timeout 60 $BUILDCTL_URL
         chmod 700 ./buildctl.linux
 
-        BUILD_ID=$(./buildctl.linux rev --repo $REPO --ref $CLIENT_CLONE_REV | sed -n 2p | awk '{print $3}')
+        BUILD_ID=$(./buildctl.linux rev --repo citrusleaf/aerospike-server --ref master | sed -n 2p | awk '{print $3}')
         ARTIFACTS_URL="build.browser.qe.aerospike.com/citrusleaf/aerospike-server/$BUILD_ID/build/x86-ubuntu-22.04/community/artifacts"
 
         # Download the .deb artifact
         wget -r --no-parent --accept "*.deb" --no-directories $ARTIFACTS_URL
 
-    - name: Install server rc
-      run: dpkg -i *.deb 
+    # - name: Install server rc
+    #   run: sudo dpkg -i *.deb 
 
-    - name: Setup tmate session
-      if: ${{ always() }}
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   if: ${{ always() }}
+    #   uses: mxschmitt/action-tmate@v3
 
     # - name: Configure server rc
-    #   run: sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+    #   run: sudo sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
 
   alpine:
     runs-on: ubuntu-latest
