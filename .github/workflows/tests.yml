@@ -112,8 +112,7 @@ jobs:
 
     - name: Build and test client
       # Run in host network so it can connect to host's localhost server
-      run: docker run --name alpine --network host alpine:latest sh -c "apk add git py3-pip python3-dev \\
-        zlib-dev automake make musl-dev gcc openssl-dev lua-dev libuv-dev doxygen graphviz && \
+      run: docker run --name alpine --network host alpine:latest sh -c "apk add git py3-pip python3-dev zlib-dev automake make musl-dev gcc openssl-dev lua-dev libuv-dev doxygen graphviz && \
         git clone --branch ${{ env.GITHUB_REF_NAME }} --recurse-submodules https://github.com/aerospike/aerospike-client-python && \
         cd aerospike-client-python/ && \
         python3 -m pip install build && \
