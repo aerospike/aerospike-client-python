@@ -33,6 +33,8 @@ jobs:
         sudo apt update
         sudo apt install -y openvpn openvpn-systemd-resolved
 
+    - uses: actions/checkout@v2
+
     - uses: bluwy/substitute-string-action@v1
       id: sub
       with:
