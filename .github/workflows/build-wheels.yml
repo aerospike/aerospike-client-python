@@ -3,6 +3,19 @@ name: Build wheels
 # Builds wheels and sends to QE and Aerospike artifactory
 on:
   workflow_dispatch:
+    inputs:
+      run_tests:
+        description: "Run integration tests"
+        required: true
+        default: true
+      change_type:
+        description: "Major, minor, or patch change"
+        required: true
+        options:
+        - major
+        - minor
+        - patch
+  pull_request:
 
 jobs:
   test-sdist:
@@ -83,6 +96,10 @@ jobs:
           yum install python-setuptools -y
         CIBW_ARCHS: "aarch64"
         CIBW_TEST_COMMAND: >
+          if [[ $INPUT_RUN_TESTS == "false" ]]; then
+            # Skip tests
+            exit 0
+          fi &&
           cd {project}/test/ &&
           pip install -r requirements.txt &&
           python -m pytest new_tests/
@@ -138,6 +155,10 @@ jobs:
           yum install python-setuptools -y
         CIBW_ARCHS: "x86_64"
         CIBW_TEST_COMMAND: >
+          if [[ $INPUT_RUN_TESTS == "false" ]]; then
+            # Skip tests
+            exit 0
+          fi &&
           cd {project}/test/ &&
           pip install -r requirements.txt &&
           python -m pytest new_tests/
@@ -180,6 +201,10 @@ jobs:
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
+          if [[ $INPUT_RUN_TESTS == "false" ]]; then
+            # Skip tests
+            exit 0
+          fi &&
           vagrant up &&
           sleep 3 &&
           pip install -r test/requirements.txt
@@ -190,10 +215,11 @@ jobs:
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}-x86_64-${{ matrix.python-version[0] }}-wheel
+        name: ${{ matrix.os }}-x86_64-${{ matrix.python-version[0] }}
         path: wheelhouse/*.whl
 
   macOS-m1:
+    if: ${{ false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -233,7 +259,7 @@ jobs:
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}-arm64-${{ matrix.python }}-wheel
+        name: ${{ matrix.os }}-arm64-${{ matrix.python }}
         path: wheelhouse/*.whl
     # TODO: create Terraform deployment and send to there
 
@@ -250,3 +276,98 @@ jobs:
       #     aws_bucket: ${{ secrets.AWS_BUCKET }}
       #     # Send all distributions to QE build system
       #     source_dir: './wheelhouse'
+
+  send-to-artifactory:
+    needs: [
+      manylinux_x86_64,
+      manylinux_arm64,
+      macOS-x86
+    ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+          # Use to get all tags
+          fetch-depth: 0
+
+      - name: Get build version
+        run: |
+          # 2.0.0-rc.1+build.1
+          highestTag=$(git tag | tail -n 1)
+          releaseCandidateRegex='[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
+          highestTagIsReleaseCandidate=[[ "$highestTag" =~ $releaseCandidateRegex ]]
+          pip install semver
+          if [[ $highestTagIsReleaseCandidate ]]; then
+            # Get theoretical new version from change, ignoring all other changes since last release
+            lastReleaseVersion=$(grep -vE $releaseCandidateRegex)
+            newVersion=$(pysemver bump ${{ github.event.inputs.change_type }} $lastReleaseVersion)
+            # Compare new version with release candidate version
+            result=$(pysemver compare $newVersion $highestTag)
+            if [[ $result < 0 ]]; then
+              # Bump the higher version RC number
+              newVersion=$(pysemver bump prerelease $highestTag)
+            else
+              newVersion=$(pysemver bump prerelease $newVersion)
+            fi
+          else
+            newVersion=$(pysemver bump prerelease $newVersion)
+          fi
+          newVersion=$(pysemver bump build $newVersion)
+          git tag $newBuildVersion
+
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v3
+        with:
+          path: wheelhouse/
+
+      - name: Reorganize artifacts
+        # Move wheels from their folders into release candidate folder
+        run: |
+          mkdir ${{ env.BUILD_NAME }}
+          find wheelhouse/ -type f -exec mv {} ${{ env.BUILD_NAME }} \;
+          rm -r wheelhouse/
+
+      # Store sensitive data in openvpn config template
+      - name: Install OpenVPN
+        run: |
+          sudo apt update
+          sudo apt install -y openvpn openvpn-systemd-resolved
+
+      - uses: bluwy/substitute-string-action@v1
+        id: sub
+        with:
+          _input-file: ".github/workflows/aerospike.ovpn"
+          _format-key: '%%key%%'
+          VPN_URL: ${{ secrets.VPN_URL }}
+          CA_CERT: ${{ secrets.CA_CERT }}
+          CERT: ${{ secrets.CERT }}
+          PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
+          OPENVPN_STATIC_KEY: ${{ secrets.OPENVPN_STATIC_KEY }}
+          _output-file: ".github/workflows/aerospike.ovpn"
+
+      - name: Connect to Aerospike VPN
+        uses: "kota65535/github-openvpn-connect-action@v2"
+        with:
+          config_file: ".github/workflows/aerospike.ovpn"
+          username: ${{ secrets.VPN_USERNAME }}
+          password: ${{ secrets.VPN_PASSWORD }}
+
+      - name: Upload artifacts to Aerospike artifactory
+        uses: burnett01/rsync-deployments@5.2.1
+        with:
+          switches: -avzr --delete
+          path: ${{ env.BUILD_NAME }}
+          remote_path: /var/www/artifacts/development/aerospike-client-python/
+          remote_host: ${{ secrets.ARTIFACTORY_HOST_IP }}
+          remote_user: ${{ secrets.ARTIFACTORY_USERNAME }}
+          remote_key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
+
+      - name: Verify artifacts are uploaded
+        uses: appleboy/ssh-action@v0.1.6
+        with:
+          host: ${{ secrets.ARTIFACTORY_HOST_IP }}
+          username: ${{ secrets.ARTIFACTORY_USERNAME }}
+          password: ''
+          key: ${{ secrets.ARTIFACTORY_PRIVATE_KEY }}
+          script: "tree /var/www/artifacts/development/aerospike-client-python/"
