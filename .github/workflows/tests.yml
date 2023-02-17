@@ -54,8 +54,18 @@ jobs:
         username: ${{ secrets.VPN_USERNAME }}
         password: ${{ secrets.VPN_PASSWORD }}
 
-    - name: Get latest Aerospike server release candidate
-      run: ./get-artifacts.sh git@github.com:citrusleaf/aerospike-server x86-ubuntu-22.04 master
+    - name: Get latest server rc
+      run: |
+        ipAddress=${{ secrets.QE_BUILD_BROWSER_IP }}
+        BUILDCTL_URL="$ipAddress/citrusleaf/qe.go/3.3.0-52-gd66bd4b/build/1.17/default/artifacts/buildctl.linux"
+        curl -O --connect-timeout 60 $BUILDCTL_URL
+        chmod 700 ./buildctl.linux
+
+        BUILD_ID=$(./$BUILDCTL rev --repo $REPO --ref $CLIENT_CLONE_REV | sed -n 2p | awk '{print $3}')
+        ARTIFACTS_URL="$URL_BASE/citrusleaf/aerospike-server/$BUILD_ID/build/x86-ubuntu-22.04/community/artifacts"
+
+        # Download the .deb artifact
+        wget -r --no-parent --accept "*.deb" --no-directories $ARTIFACTS_URL
 
     - name: Install server rc
       run: dpkg -i *.deb 
