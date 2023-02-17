@@ -59,6 +59,7 @@ jobs:
       run: dpkg -i *.deb 
 
     - name: Setup tmate session
+      if: ${{ always() }}
       uses: mxschmitt/action-tmate@v3
 
     # - name: Configure server rc
