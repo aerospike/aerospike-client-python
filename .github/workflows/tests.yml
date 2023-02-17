@@ -9,6 +9,11 @@ on:
   pull_request:
     branches: ["stage"]
   workflow_dispatch:
+    inputs:
+      server-rc:
+        default: false
+        required: true
+        type: boolean
 
 jobs:
   lint:
