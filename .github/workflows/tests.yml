@@ -25,13 +25,8 @@ jobs:
 
   get-server-rc:
     runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'new-server-features')
     steps:
-    - name: Is this a new server feature?
-      uses: Dreamcodeio/pr-has-label-action@master
-      id: checkLabel
-      with:
-        label: new-server-features
-
     # Store sensitive data in openvpn config template
     - name: Install OpenVPN
       if: ${{ steps.checkLabel.outputs.hasLabel == true }}
