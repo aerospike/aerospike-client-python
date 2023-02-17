@@ -38,31 +38,27 @@ jobs:
     - uses: bluwy/substitute-string-action@v1
       id: sub
       with:
-        _input-file: ".github/workflows/aerospike.ovpn"
+        _input-file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
         _format-key: '%%key%%'
-        VPN_URL: ${{ secrets.VPN_URL }}
-        CA_CERT: ${{ secrets.CA_CERT }}
-        CERT: ${{ secrets.CERT }}
-        PRIVATE_KEY: ${{ secrets.PRIVATE_KEY }}
-        OPENVPN_STATIC_KEY: ${{ secrets.OPENVPN_STATIC_KEY }}
-        _output-file: ".github/workflows/aerospike.ovpn"
+        CA_CERT: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_CA_CERT }}
+        PRIVATE_KEY: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_PRIVATE_KEY }}
+        _output-file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
 
     - name: Connect to Aerospike VPN
       uses: "kota65535/github-openvpn-connect-action@v2"
       with:
-        config_file: ".github/workflows/aerospike.ovpn"
-        username: ${{ secrets.VPN_USERNAME }}
-        password: ${{ secrets.VPN_PASSWORD }}
+        config_file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
+        username: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_USERNAME }}
+        password: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_PASSWORD }}
 
     - name: Get latest server rc
       run: |
-        ipAddress=${{ secrets.QE_BUILD_BROWSER_IP }}
-        BUILDCTL_URL="$ipAddress/citrusleaf/qe.go/3.3.0-52-gd66bd4b/build/1.17/default/artifacts/buildctl.linux"
+        BUILDCTL_URL="build.browser.qe.aerospike.com/citrusleaf/qe.go/3.3.0-52-gd66bd4b/build/1.17/default/artifacts/buildctl.linux"
         curl -O --connect-timeout 60 $BUILDCTL_URL
         chmod 700 ./buildctl.linux
 
-        BUILD_ID=$(./$BUILDCTL rev --repo $REPO --ref $CLIENT_CLONE_REV | sed -n 2p | awk '{print $3}')
-        ARTIFACTS_URL="$URL_BASE/citrusleaf/aerospike-server/$BUILD_ID/build/x86-ubuntu-22.04/community/artifacts"
+        BUILD_ID=$(./buildctl.linux rev --repo $REPO --ref $CLIENT_CLONE_REV | sed -n 2p | awk '{print $3}')
+        ARTIFACTS_URL="build.browser.qe.aerospike.com/citrusleaf/aerospike-server/$BUILD_ID/build/x86-ubuntu-22.04/community/artifacts"
 
         # Download the .deb artifact
         wget -r --no-parent --accept "*.deb" --no-directories $ARTIFACTS_URL
