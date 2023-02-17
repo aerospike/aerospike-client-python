@@ -116,7 +116,7 @@ jobs:
         python3 -m pip install dist/*.whl && \
         cd test/ && \
         python3 -m pip install pytest && \
-        python3 -m pytest new_tests/" \
+        python3 -m pytest new_tests/"
 
     - name: Cleanup
       run: |
