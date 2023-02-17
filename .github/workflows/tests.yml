@@ -29,13 +29,11 @@ jobs:
     steps:
     # Store sensitive data in openvpn config template
     - name: Install OpenVPN
-      if: ${{ steps.checkLabel.outputs.hasLabel == true }}
       run: |
         sudo apt update
         sudo apt install -y openvpn openvpn-systemd-resolved
 
     - uses: bluwy/substitute-string-action@v1
-      if: ${{ steps.checkLabel.outputs.hasLabel == true }}
       id: sub
       with:
         _input-file: ".github/workflows/aerospike.ovpn"
@@ -48,7 +46,6 @@ jobs:
         _output-file: ".github/workflows/aerospike.ovpn"
 
     - name: Connect to Aerospike VPN
-      if: ${{ steps.checkLabel.outputs.hasLabel == true }}
       uses: "kota65535/github-openvpn-connect-action@v2"
       with:
         config_file: ".github/workflows/aerospike.ovpn"
@@ -56,11 +53,9 @@ jobs:
         password: ${{ secrets.VPN_PASSWORD }}
 
     - name: Get latest Aerospike server release candidate
-      if: ${{ steps.checkLabel.outputs.hasLabel == true }}
       run: ./get-artifacts.sh git@github.com:citrusleaf/aerospike-server x86-ubuntu-22.04 master
 
     - name: Install server rc
-      if: ${{ steps.checkLabel.outputs.hasLabel == true }}
       run: dpkg -i *.deb 
 
     - name: Setup tmate session
