@@ -163,13 +163,31 @@ jobs:
 
   test-ce:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, get-server-rc]
     strategy:
       matrix:
         py-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
       fail-fast: false
 
     steps:
+    - name: Get server release candidate
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: actions/download-artifact@v3
+      with:
+        name: server-rc
+
+    - name: Install server rc
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: sudo dpkg -i *.deb 
+
+    - name: Configure server rc
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: sudo sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+
+    - name: Start server rc
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: sudo systemctl start aerospike
+
     - uses: actions/checkout@v2
       with:
         submodules: recursive
