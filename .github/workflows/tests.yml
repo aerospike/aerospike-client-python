@@ -110,17 +110,13 @@ jobs:
       with:
         short-length: 8 # Same as v3 and before
 
+    - name: Get build script
+      uses: actions/checkout@v2
+
     - name: Build and test client
       # Run in host network so it can connect to host's localhost server
-      run: docker run --name alpine --network host alpine:latest sh -c "apk add git py3-pip python3-dev zlib-dev automake make musl-dev gcc openssl-dev lua-dev libuv-dev doxygen graphviz && \
-        git clone --branch ${{ env.GITHUB_REF_NAME }} --recurse-submodules https://github.com/aerospike/aerospike-client-python && \
-        cd aerospike-client-python/ && \
-        python3 -m pip install build && \
-        python3 -m build && \
-        python3 -m pip install dist/*.whl && \
-        cd test/ && \
-        python3 -m pip install pytest && \
-        python3 -m pytest new_tests/"
+      run: docker run --name alpine --network host alpine:latest ./build-alpine.sh
+      working-directory: .github/workflows
 
     - name: Cleanup
       run: |
