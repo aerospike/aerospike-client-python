@@ -122,7 +122,7 @@ jobs:
       working-directory: .github/workflows
 
     - name: Build and test
-      run: docker exec alpine build-alpine.sh ${{ env.GITHUB_REF_NAME }}
+      run: docker exec alpine ./build-alpine.sh ${{ env.GITHUB_REF_NAME }}
 
     - name: Cleanup
       run: |
