@@ -113,13 +113,16 @@ jobs:
     - name: Get build script
       uses: actions/checkout@v2
 
-    - name: Build and test client
+    - name: Start Alpine container
       # Run in host network so it can connect to host's localhost server
-      run: |
-        docker run --name alpine --network host --detach alpine:latest -f /dev/null
-        docker cp ./build-alpine.sh alpine:/
-        docker exec /build-alpine.sh
+      run: docker run --name alpine --network host --detach alpine:latest -f /dev/null
+
+    - name: Build and test client
+      run: docker cp ./build-alpine.sh alpine:/
       working-directory: .github/workflows
+
+    - name: Build and test
+      run: docker exec sh build-alpine.sh ${{ env.GITHUB_REF_NAME }}
 
     - name: Cleanup
       run: |
