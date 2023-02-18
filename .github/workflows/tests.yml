@@ -115,9 +115,9 @@ jobs:
 
     - name: Start Alpine container
       # Run in host network so it can connect to host's localhost server
-      run: docker run --name alpine --network host --detach alpine:latest -f /dev/null
+      run: docker run --name alpine --network host --detach alpine:latest tail -f /dev/null
 
-    - name: Build and test client
+    - name: Copy build and test script to container
       run: docker cp ./build-alpine.sh alpine:/
       working-directory: .github/workflows
 
