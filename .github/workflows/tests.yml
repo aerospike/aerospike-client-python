@@ -80,28 +80,37 @@ jobs:
     needs: [get-server-rc]
     steps:
     - name: Get server release candidate
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') == true || inputs.server-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
+    - name: "Check file existence"
+      uses: andstor/file-existence-action@v2
+      id: check_files
+      with:
+        files: "*.deb"
+
     - name: Install server rc
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: sudo dpkg -i *.deb 
+      if: steps.check_files.outputs.files_exists == 'true'
+      run: sudo dpkg -i *.deb
 
     - name: Configure server rc
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: steps.check_files.outputs.files_exists == 'true'
       run: sudo sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
 
     - name: Start server rc
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: steps.check_files.outputs.files_exists == 'true'
       run: sudo systemctl start aerospike
 
-    - name: Run Aerospike server
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') == false }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - name: Set up Aerospike Database
+      if: steps.check_files.outputs.files_exists != 'true'
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
 
     - name: Wait for database to be ready
+      # Should be ready after 3 seconds
       run: sleep 3
 
     # Use this to get current branch of workflow
@@ -171,22 +180,38 @@ jobs:
 
     steps:
     - name: Get server release candidate
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') == true || inputs.server-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
+    - name: "Check file existence"
+      uses: andstor/file-existence-action@v2
+      id: check_files
+      with:
+        files: "*.deb"
+
     - name: Install server rc
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: sudo dpkg -i *.deb 
+      if: steps.check_files.outputs.files_exists == 'true'
+      run: sudo dpkg -i *.deb
 
     - name: Configure server rc
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: steps.check_files.outputs.files_exists == 'true'
       run: sudo sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
 
     - name: Start server rc
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: steps.check_files.outputs.files_exists == 'true'
       run: sudo systemctl start aerospike
+
+    - name: Set up Aerospike Database
+      if: steps.check_files.outputs.files_exists != 'true'
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
 
     - uses: actions/checkout@v2
       with:
@@ -206,15 +231,6 @@ jobs:
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
-
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
 
     - name: Run tests
       run: python -m pytest ./new_tests
