@@ -115,7 +115,10 @@ jobs:
 
     - name: Build and test client
       # Run in host network so it can connect to host's localhost server
-      run: docker run --name alpine --network host alpine:latest ./build-alpine.sh
+      run: |
+        docker run --name alpine --network host --detach alpine:latest -f /dev/null
+        docker cp ./build-alpine.sh alpine:/
+        docker exec /build-alpine.sh
       working-directory: .github/workflows
 
     - name: Cleanup
