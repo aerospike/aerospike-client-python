@@ -1059,7 +1059,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 char *geo_value = NULL;
 
                 if (PyUnicode_Check(py_dumps)) {
-                    PyObject *py_ustr = PyUnicode_AsUTF8String(py_dumps);
+                    py_ustr = PyUnicode_AsUTF8String(py_dumps);
                     if (!py_ustr) {
                         return as_error_update(
                             err, AEROSPIKE_ERR_CLIENT,
