@@ -298,7 +298,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run server 5.7
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:5.7.0.0
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:5.7.0.7
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
