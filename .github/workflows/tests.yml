@@ -274,7 +274,7 @@ jobs:
       run: python -m pytest ./new_tests -vv
       working-directory: test
 
-  test-server-5.7:
+  test-lowest-supported-server:
     runs-on: ubuntu-latest
     needs: build
     steps:
