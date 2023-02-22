@@ -19,5 +19,6 @@
 #include <Python.h>
 
 PyObject *AerospikeException_New(void);
-PyObject *raise_exception(as_error *err);
+void raise_exception(as_error *err);
+PyObject *raise_exception_old(as_error *err);
 void remove_exception(as_error *err);

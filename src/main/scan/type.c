@@ -257,11 +257,7 @@ AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
         as_error err;
         as_error_init(&err);
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 }

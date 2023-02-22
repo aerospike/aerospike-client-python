@@ -1497,11 +1497,7 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
-    PyObject *py_err = NULL;
-    error_to_pyobject(&constructor_err, &py_err);
-    PyObject *exception_type = raise_exception(&constructor_err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
+    raise_exception(&constructor_err);
     return -1;
 }
 
@@ -1682,15 +1678,10 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
         goto CLEANUP;
     }
 
-
     as_error err;
     as_error_init(&err);
-    PyObject *py_err = NULL;
     as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
-    error_to_pyobject(&err, &py_err);
-    PyObject *exception_type = raise_exception(&err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
+    raise_exception(&err);
 
 CLEANUP:
     AerospikeClient_Type.tp_free(self);

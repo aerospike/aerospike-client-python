@@ -262,13 +262,7 @@ CLEANUP:
     Py_XDECREF(py_ustr);
 
     if (data.error.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL, *exception_type = NULL;
-        if (data.error.code != AEROSPIKE_OK) {
-            error_to_pyobject(&data.error, &py_err);
-            exception_type = raise_exception(&data.error);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&data.error);
         return NULL;
     }
 

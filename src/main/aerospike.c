@@ -292,11 +292,7 @@ PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds)
     as_error_update(
         &err, AEROSPIKE_ERR,
         "Support for async is disabled, build software with async option");
-    PyObject *py_err = NULL, *exception_type = NULL;
-    error_to_pyobject(&err, &py_err);
-    exception_type = raise_exception(&err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
+    raise_exception(&err);
     return NULL;
 #endif
     return PyLong_FromLong(0);

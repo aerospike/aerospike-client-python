@@ -166,11 +166,7 @@ CLEANUP: /*??trace()*/
 
     if (err.code != AEROSPIKE_OK) {
         Py_XDECREF(py_results);
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

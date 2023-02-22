@@ -269,7 +269,7 @@ CLEANUP:
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
+        PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "module")) {
             PyObject_SetAttrString(exception_type, "module", Py_None);
         }
@@ -372,7 +372,7 @@ CLEANUP:
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
+        PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "module")) {
             PyObject_SetAttrString(exception_type, "module", py_filename);
         }
@@ -470,7 +470,7 @@ CLEANUP:
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
+        PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "module")) {
             PyObject_SetAttrString(exception_type, "module", Py_None);
         }
@@ -586,7 +586,7 @@ CLEANUP:
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
+        PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "module")) {
             PyObject_SetAttrString(exception_type, "module", py_module);
         }

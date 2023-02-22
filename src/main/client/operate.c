@@ -78,7 +78,7 @@ static inline bool isExprOp(int op);
     if (err.code != AEROSPIKE_OK) {                                            \
         PyObject *py_err = NULL;                                               \
         error_to_pyobject(&err, &py_err);                                      \
-        PyObject *exception_type = raise_exception(&err);                      \
+        PyObject *exception_type = raise_exception_old(&err);                  \
         if (PyObject_HasAttrString(exception_type, "key")) {                   \
             PyObject_SetAttrString(exception_type, "key", py_key);             \
         }                                                                      \
@@ -917,11 +917,7 @@ CLEANUP:
     as_operations_destroy(&ops);
 
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(err);
         return NULL;
     }
 
@@ -1135,11 +1131,7 @@ CLEANUP:
     as_operations_destroy(&ops);
 
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(err);
         return NULL;
     }
 
@@ -1211,7 +1203,7 @@ CLEANUP:
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
+        PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "key")) {
             PyObject_SetAttrString(exception_type, "key", py_key);
         }

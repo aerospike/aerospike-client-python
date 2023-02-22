@@ -132,7 +132,7 @@
     if (__err.code != AEROSPIKE_OK) {                                          \
         PyObject *py_err = NULL;                                               \
         error_to_pyobject(&__err, &py_err);                                    \
-        PyObject *exception_type = raise_exception(&__err);                    \
+        PyObject *exception_type = raise_exception_old(&__err);                \
         PyErr_SetObject(exception_type, py_err);                               \
         Py_DECREF(py_err);                                                     \
         return NULL;                                                           \

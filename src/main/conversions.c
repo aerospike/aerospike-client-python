@@ -2266,11 +2266,7 @@ as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
 
 CLEANUP:
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(err);
     }
     return err->code;
 }
