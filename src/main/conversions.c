@@ -434,6 +434,7 @@ as_status as_partitions_status_to_pyobject(
             Py_DECREF(new_py_tuple);
             goto END;
         }
+        Py_DECREF(new_py_tuple);
     }
 
     *py_dict = new_dict;
