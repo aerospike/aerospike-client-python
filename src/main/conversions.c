@@ -434,6 +434,7 @@ as_status as_partitions_status_to_pyobject(
             Py_DECREF(new_py_tuple);
             goto END;
         }
+        Py_DECREF(py_id);
         Py_DECREF(new_py_tuple);
     }
 
@@ -878,10 +879,11 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         PyObject *py_parameter = PyString_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
-        char *geo_value =
-            PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+        PyObject *geo_py_str = AerospikeGeospatial_DoDumps(py_data, err);
+        char *geo_value = strdup(PyString_AsString(geo_py_str));
         Py_DECREF(py_data);
-        *val = (as_val *)as_geojson_new(geo_value, false);
+        Py_DECREF(geo_py_str);
+        *val = (as_val *)as_geojson_new(geo_value, true);
     }
     else if (PyByteArray_Check(py_obj)) {
         as_bytes *bytes;
@@ -2599,6 +2601,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             else {
                 if (pyobject_to_val(self, err, value_temp, &val, static_pool,
                                     serializer_type) != AEROSPIKE_OK) {
+                    as_cdt_ctx_destroy(cdt_ctx);
                     return as_error_update(
                         err, AEROSPIKE_ERR_PARAM,
                         "Failed to convert %s, value to as_val", CTX_KEY);
