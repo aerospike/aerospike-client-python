@@ -225,6 +225,7 @@ as_status convert_partition_filter(AerospikeClient *self,
 
             PyObject *key = PyLong_FromLong(ps->part_id);
             PyObject *status_dict = PyDict_GetItem(parts_stat, key);
+            Py_DECREF(key);
 
             if (!status_dict || !PyTuple_Check(status_dict)) {
                 as_log_debug("invalid id for part_id: %d", ps->part_id);
