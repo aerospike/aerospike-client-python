@@ -386,8 +386,9 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
 
     while (PyDict_Next(py_val, &pos, &key_op, &value)) {
         if (!PyString_Check(key_op)) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "An operation key must be a string.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "An operation key must be a string.");
+            goto CLEANUP;
         }
         else {
             char *name = PyString_AsString(key_op);
@@ -423,10 +424,11 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                 ctx_ref = (ctx_in_use ? &ctx : NULL);
             }
             else {
-                return as_error_update(
+                as_error_update(
                     err, AEROSPIKE_ERR_PARAM,
                     "Operation can contain only op, bin, index, key, val, "
                     "return_type and map_policy keys");
+                goto CLEANUP;
             }
         }
     }
@@ -447,27 +449,30 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             bin = PyByteArray_AsString(py_bin);
         }
         else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Bin name should be of type string");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Bin name should be of type string");
+            goto CLEANUP;
         }
 
         if (self->strict_types) {
             if (strlen(bin) > AS_BIN_NAME_MAX_LEN) {
-                return as_error_update(
+                as_error_update(
                     err, AEROSPIKE_ERR_BIN_NAME,
                     "A bin name should not exceed 14 characters limit");
+                goto CLEANUP;
             }
         }
     }
     else if (operation != AS_OPERATOR_TOUCH &&
              operation != AS_OPERATOR_DELETE) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Bin is not given");
+        goto CLEANUP;
     }
 
     if (py_value) {
         if (self->strict_types) {
             if (check_type(self, py_value, operation, err)) {
-                return err->code;
+                goto CLEANUP;
             }
         }
     }
@@ -484,7 +489,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     if (py_map_policy) {
         if (pyobject_to_map_policy(err, py_map_policy, &map_policy) !=
             AEROSPIKE_OK) {
-            return err->code;
+            goto CLEANUP;
         }
     }
     else if (opRequiresMapPolicy(operation)) {
@@ -507,11 +512,11 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
 
     /* Add the inverted flag to the return type if it's present */
     if (invertIfSpecified(err, py_val, &return_type) != AEROSPIKE_OK) {
-        return err->code;
+        goto CLEANUP;
     }
 
     if (err->code != AEROSPIKE_OK) {
-        return err->code;
+        goto CLEANUP;
     }
 
     *ret_type = return_type;
@@ -550,7 +555,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                 if (serialize_based_on_serializer_policy(
                         self, SERIALIZER_PYTHON, &bytes, py_value, err) !=
                     AEROSPIKE_OK) {
-                    return err->code;
+                    goto CLEANUP;
                 }
                 as_operations_add_append_rawp(ops, bin, bytes->value,
                                               bytes->size, true);
@@ -583,7 +588,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                 if (serialize_based_on_serializer_policy(
                         self, SERIALIZER_PYTHON, &bytes, py_value, err) !=
                     AEROSPIKE_OK) {
-                    return err->code;
+                    goto CLEANUP;
                 }
                 as_operations_add_prepend_rawp(ops, bin, bytes->value,
                                                bytes->size, true);
@@ -635,7 +640,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     case AS_OPERATOR_TOUCH:
         if (py_value) {
             if (pyobject_to_index(self, err, py_value, &ttl) != AEROSPIKE_OK) {
-                return err->code;
+                goto CLEANUP;
             }
             ops->ttl = ttl;
         }
@@ -722,10 +727,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         break;
     case OP_MAP_REMOVE_BY_INDEX_RANGE:
         if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
-            if (ctx_in_use) {
-                as_cdt_ctx_destroy(&ctx);
-            }
-            return err->code;
+            goto CLEANUP;
         }
         as_operations_map_remove_by_index_range(ops, bin, ctx_ref, index,
                                                 offset, return_type);
@@ -735,10 +737,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         break;
     case OP_MAP_REMOVE_BY_RANK_RANGE:
         if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
-            if (ctx_in_use) {
-                as_cdt_ctx_destroy(&ctx);
-            }
-            return err->code;
+            goto CLEANUP;
         }
         as_operations_map_remove_by_rank_range(ops, bin, ctx_ref, index, offset,
                                                return_type);
@@ -778,10 +777,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         break;
     case OP_MAP_GET_BY_INDEX_RANGE:
         if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
-            if (ctx_in_use) {
-                as_cdt_ctx_destroy(&ctx);
-            }
-            return err->code;
+            goto CLEANUP;
         }
         as_operations_map_get_by_index_range(ops, bin, ctx_ref, index, offset,
                                              return_type);
@@ -791,10 +787,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         break;
     case OP_MAP_GET_BY_RANK_RANGE:
         if (pyobject_to_index(self, err, py_value, &offset) != AEROSPIKE_OK) {
-            if (ctx_in_use) {
-                as_cdt_ctx_destroy(&ctx);
-            }
-            return err->code;
+            goto CLEANUP;
         }
         as_operations_map_get_by_rank_range(ops, bin, ctx_ref, index, offset,
                                             return_type);
@@ -802,14 +795,13 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
 
     default:
         if (self->strict_types) {
-            if (ctx_in_use) {
-                as_cdt_ctx_destroy(&ctx);
-            }
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Invalid operation given");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Invalid operation given");
+            goto CLEANUP;
         }
     }
 
+CLEANUP:
     if (ctx_in_use) {
         as_cdt_ctx_destroy(&ctx);
     }
