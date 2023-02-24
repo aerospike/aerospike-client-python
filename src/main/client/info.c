@@ -187,6 +187,9 @@ static bool AerospikeClient_Info_each(as_error *err, const as_node *node,
         else if (!PyList_Check(py_hosts)) {
             as_error_update(&udata_ptr->error, AEROSPIKE_ERR_PARAM,
                             "Hosts should be specified in a list.");
+            if (py_res) {
+                Py_DECREF(py_res);
+            }
             goto CLEANUP;
         }
     }
