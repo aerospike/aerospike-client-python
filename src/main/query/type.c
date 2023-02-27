@@ -342,9 +342,9 @@ AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
         Py_INCREF(client);
         return self;
     }
-    else {
-        return NULL;
-    }
+
+    AerospikeQuery_Type.tp_free(self);
+    return NULL;
 }
 
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj)
