@@ -1620,6 +1620,10 @@ static as_status add_op_list_get(AerospikeClient *self, as_error *err,
                                "Failed to add list_get operation");
     }
 
+    if (ctx_in_use) {
+        as_cdt_ctx_destroy(&ctx);
+    }
+
     return AEROSPIKE_OK;
 }
 
