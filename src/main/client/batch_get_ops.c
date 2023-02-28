@@ -91,6 +91,7 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
         PyTuple_SetItem(py_rec, 2, py_rec_bins);
 
         PyList_Append(data->py_results, py_rec);
+        Py_DECREF(py_rec);
     }
 
     PyGILState_Release(gstate);
