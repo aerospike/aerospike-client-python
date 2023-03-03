@@ -132,8 +132,8 @@ jobs:
     - name: Set up server release version
       # If not using server rc at all
       if: |
-        ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false) }}
+        !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
+        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false)
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
@@ -200,8 +200,8 @@ jobs:
     - name: Set up server release version
       # If not using server rc at all
       if: |
-        ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false) }}
+        !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
+        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false)
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
