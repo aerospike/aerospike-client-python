@@ -300,9 +300,9 @@ jobs:
           cd {project}/test/ &&
           python -m pytest new_tests/
 
-    - name: Setup tmate session
-      if: ${{ always() }}
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   if: ${{ always() }}
+    #   uses: mxschmitt/action-tmate@v3
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
