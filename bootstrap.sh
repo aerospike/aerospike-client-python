@@ -16,8 +16,8 @@ else
     dpkg -i *.deb
 fi
 
-systemctl start aerospike
-
 # Configure aerospike server to run tests
 # asinfo doesn't come with QE builds
 sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+
+systemctl start aerospike
