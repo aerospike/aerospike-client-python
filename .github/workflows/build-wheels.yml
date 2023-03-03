@@ -11,11 +11,11 @@ on:
         - docker-hub-release
         - docker-hub-rc
         - qe-rc
-        default: docker-hub-release
+        default: 'docker-hub-release'
 
 jobs:
   get-server-rc:
-    if: ${{ inputs.server-version == "qe-rc" }}
+    if: ${{ inputs.server-version == 'qe-rc' }}
     runs-on: ubuntu-latest
     steps:
     # Store sensitive data in openvpn config template
@@ -120,22 +120,22 @@ jobs:
         platforms: all
 
     - name: Use Docker Hub RC
-      if: ${{ inputs.server-version == "docker-hub-rc" }}
+      if: ${{ inputs.server-version == 'docker-hub-rc' }}
       uses: ./.github/actions/setup-docker-hub-rc
 
     - name: Get server RC from QE
-      if: ${{ inputs.server-version == "qe-rc" }}
+      if: ${{ inputs.server-version == 'qe-rc' }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
     - name: Install server rc from QE
       uses: ./.github/actions/install-server-rc
-      if: ${{ inputs.server-version == "qe-rc" }}
+      if: ${{ inputs.server-version == 'qe-rc' }}
 
     - name: Set up server release version
       # If not using server rc at all
-      if: ${{ inputs.server-version == "docker-hub-release" }}
+      if: ${{ inputs.server-version == 'docker-hub-release' }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
@@ -190,22 +190,22 @@ jobs:
         submodules: recursive
 
     - name: Use Docker Hub RC
-      if: ${{ inputs.server-version == "docker-hub-rc" }}
+      if: ${{ inputs.server-version == 'docker-hub-rc' }}
       uses: ./.github/actions/setup-docker-hub-rc
 
     - name: Get server RC from QE
-      if: ${{ inputs.server-version == "qe-rc" }}
+      if: ${{ inputs.server-version == 'qe-rc' }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
     - name: Install server rc from QE
       uses: ./.github/actions/install-server-rc
-      if: ${{ inputs.server-version == "qe-rc" }}
+      if: ${{ inputs.server-version == 'qe-rc' }}
 
     - name: Set up server release version
       # If not using server rc at all
-      if: ${{ inputs.server-version == "docker-hub-release" }}
+      if: ${{ inputs.server-version == 'docker-hub-release' }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
@@ -241,7 +241,7 @@ jobs:
   macOS-x86:
     # TODO: support running Docker Hub RC on MacOS
     needs: [get-server-rc]
-    if: ${{ always() && inputs.server-version != "docker-hub-rc" && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
+    if: ${{ always() && inputs.server-version != 'docker-hub-rc' && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -264,13 +264,13 @@ jobs:
         python-version: ${{ matrix.python-version[1] }}
 
     - name: Get server release candidate
-      if: ${{ inputs.server-version == "qe-rc" }}
+      if: ${{ inputs.server-version == 'qe-rc' }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
     - name: Copy server RC to shared folder for Linux VM
-      if: ${{ inputs.server-version == "qe-rc" }}
+      if: ${{ inputs.server-version == 'qe-rc' }}
       run: |
         mkdir vagrant_data
         mv *.deb vagrant_data/
@@ -306,7 +306,7 @@ jobs:
 
   macOS-m1:
     needs: [get-server-rc]
-    if: ${{ always() && inputs.server-version != "docker-hub-rc" && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
+    if: ${{ always() && inputs.server-version != 'docker-hub-rc' && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
