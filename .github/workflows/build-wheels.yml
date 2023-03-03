@@ -228,10 +228,6 @@ jobs:
           pip install -r requirements.txt &&
           python -m pytest new_tests/
 
-    - name: Setup tmate session
-      if: ${{ always() }}
-      uses: mxschmitt/action-tmate@v3
-
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
       with:
@@ -253,8 +249,7 @@ jobs:
           ["cp310", "3.10"],
           ["cp311", "3.11"]
         ]
-        os: [macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
     steps:
     - uses: actions/checkout@v3
       with:
@@ -295,6 +290,10 @@ jobs:
         CIBW_TEST_COMMAND: >
           cd {project}/test/ &&
           python -m pytest new_tests/
+
+    - name: Setup tmate session
+      if: ${{ always() }}
+      uses: mxschmitt/action-tmate@v3
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
