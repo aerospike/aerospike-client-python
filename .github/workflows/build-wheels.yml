@@ -16,7 +16,7 @@ on:
 jobs:
   get-server-rc:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-server-rc == true }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
     steps:
     # Store sensitive data in openvpn config template
     - name: Install OpenVPN
