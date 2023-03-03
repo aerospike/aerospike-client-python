@@ -139,6 +139,12 @@ jobs:
       with:
         port: 3000
 
+    - name: Get host ip address
+      run: |
+        pip install crudini
+        crudini --set config.conf community-edition hosts 172.17.0.1:3000
+      working-directory: test
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
       env:
@@ -152,9 +158,6 @@ jobs:
         CIBW_TEST_COMMAND: >
           cd {project}/test/ &&
           pip install -r requirements.txt &&
-          pip install crudini &&
-          # Need to access host's internal ip address to access localhost
-          crudini --set config.conf community-edition hosts host.docker.internal:3000 &&
           python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
@@ -204,6 +207,12 @@ jobs:
       with:
         port: 3000
 
+    - name: Get host ip address
+      run: |
+        pip install crudini
+        crudini --set config.conf community-edition hosts 172.17.0.1:3000
+      working-directory: test
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
       env:
@@ -217,8 +226,6 @@ jobs:
         CIBW_TEST_COMMAND: >
           cd {project}/test/ &&
           pip install -r requirements.txt &&
-          pip install crudini &&
-          crudini --set config.conf community-edition hosts host.docker.internal:3000 &&
           python -m pytest new_tests/
 
     - name: Setup tmate session
