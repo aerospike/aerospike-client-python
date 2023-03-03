@@ -6,12 +6,16 @@ runs:
   steps:
   - name: Install server rc
     run: sudo dpkg -i *.deb
+    shell: bash
 
   - name: Configure server rc
     run: sudo sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+    shell: bash
 
   - name: Start server rc
     run: sudo systemctl start aerospike
+    shell: bash
 
   - name: Wait for server to start
     run: sleep 3
+    shell: bash
