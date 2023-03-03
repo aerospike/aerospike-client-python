@@ -81,6 +81,7 @@ jobs:
   alpine:
     runs-on: ubuntu-latest
     needs: [get-server-rc]
+    if: ${{ always() && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     steps:
     - uses: actions/checkout@v2
 
@@ -177,6 +178,7 @@ jobs:
   test-ce:
     runs-on: ubuntu-latest
     needs: [build, get-server-rc]
+    if: ${{ always() && needs.build.result == 'success' && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     strategy:
       matrix:
         py-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]

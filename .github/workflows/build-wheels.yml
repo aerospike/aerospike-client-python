@@ -16,7 +16,6 @@ on:
 jobs:
   get-server-rc:
     runs-on: ubuntu-latest
-    if: ${{ inputs.qe-rc == true }}
     steps:
     # Store sensitive data in openvpn config template
     - name: Install OpenVPN
@@ -95,6 +94,7 @@ jobs:
 
   manylinux_arm64:
     needs: [get-server-rc]
+    if: ${{ always() && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -169,6 +169,7 @@ jobs:
 
   manylinux_x86_64:
     needs: [get-server-rc]
+    if: ${{ always() && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -237,8 +238,8 @@ jobs:
 
   macOS-x86:
     # TODO: support running Docker Hub RC on MacOS
-    if: ${{ inputs.docker-hub-rc == false }}
     needs: [get-server-rc]
+    if: ${{ always() && inputs.docker-hub-rc == false && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
