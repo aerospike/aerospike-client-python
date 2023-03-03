@@ -15,6 +15,7 @@ on:
 
 jobs:
   get-server-rc:
+    if: ${{ inputs.docker-hub-rc == false }}
     runs-on: ubuntu-latest
     steps:
     # Store sensitive data in openvpn config template
