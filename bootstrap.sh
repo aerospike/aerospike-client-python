@@ -19,4 +19,5 @@ fi
 systemctl start aerospike
 
 # Configure aerospike server to run tests
-asinfo -v "set-config:context=namespace;id=test;allow-ttl-without-nsup=true" -l
+# asinfo doesn't come with QE builds
+sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
