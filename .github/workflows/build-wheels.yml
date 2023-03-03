@@ -196,6 +196,9 @@ jobs:
     - name: Use Docker Hub RC
       if: ${{ inputs.server-version == 'docker-hub-rc' }}
       uses: ./.github/actions/setup-docker-hub-rc
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Get server RC from QE
       if: ${{ inputs.server-version == 'qe-rc' }}

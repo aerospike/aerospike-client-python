@@ -193,6 +193,9 @@ jobs:
     - name: Use Docker Hub RC
       if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') }}
       uses: ./.github/actions/setup-docker-hub-rc
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Set up release server
       if: |
