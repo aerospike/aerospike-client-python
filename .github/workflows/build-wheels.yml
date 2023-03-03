@@ -221,6 +221,10 @@ jobs:
           crudini --set config.conf community-edition hosts host.docker.internal:3000 &&
           python -m pytest new_tests/
 
+    - name: Setup tmate session
+      if: ${{ always() }}
+      uses: mxschmitt/action-tmate@v3
+
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
       with:
