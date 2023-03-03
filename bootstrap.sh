@@ -3,7 +3,7 @@
 test -e /vagrant_data/*.deb
 is_using_server_rc=$?
 if [[ $is_using_server_rc == 1 ]]; then
-    wget -r --no-parent -l1 --accept 'aerospike-server-community_*_ubuntu20.04_x86_64.tgz' --no-directories https://download.aerospike.com/artifacts/aerospike-server-community/latest/
+    wget -r --no-parent -l1 --accept 'aerospike-server-community_*_ubuntu22.04_x86_64.tgz' --no-directories https://download.aerospike.com/artifacts/aerospike-server-community/latest/
     tar -xvf *.tgz
 
     fileName=$(ls *.tgz)
