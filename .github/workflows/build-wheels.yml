@@ -273,10 +273,12 @@ jobs:
       with:
         name: server-rc
 
+    - name: Shared folder
+      run: mkdir vagrant_data
+
     - name: Copy server RC to shared folder for Linux VM
       if: ${{ inputs.server-version == 'qe-rc' }}
       run: |
-        mkdir vagrant_data
         mv *.deb vagrant_data/
 
     - name: Run Linux VM
