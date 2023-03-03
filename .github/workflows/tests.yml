@@ -79,6 +79,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: [get-server-rc]
     steps:
+    - uses: actions/checkout@v2
+
     - name: Get server release candidate
       if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
       uses: actions/download-artifact@v3
@@ -115,9 +117,6 @@ jobs:
     - name: Start Alpine container
       # Run in host network so it can connect to host's localhost server
       run: docker run --name alpine --network host --detach alpine:latest tail -f /dev/null
-
-    - name: Get build script
-      uses: actions/checkout@v2
 
     - name: Copy build and test script to container
       run: docker cp ./build-alpine.sh alpine:/
@@ -172,6 +171,8 @@ jobs:
       fail-fast: false
 
     steps:
+    - uses: actions/checkout@v2
+
     - name: Get server release candidate
       if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
       uses: actions/download-artifact@v3
@@ -198,10 +199,6 @@ jobs:
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
-
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
 
     - uses: actions/setup-python@v2
       with:
