@@ -124,8 +124,7 @@ jobs:
       uses: ./.github/actions/setup-docker-hub-rc
       with:
         username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
+        token: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Get server RC from QE
       if: ${{ inputs.server-version == 'qe-rc' }}
