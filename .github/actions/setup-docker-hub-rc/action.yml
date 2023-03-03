@@ -3,7 +3,7 @@ description: 'Run server release candidate from Docker Hub'
 inputs:
   username:
     required: true
-  token:
+  password:
     required: true
 
 runs:
