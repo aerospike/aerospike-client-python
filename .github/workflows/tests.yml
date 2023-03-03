@@ -103,7 +103,7 @@ jobs:
     - name: Set up release server
       if: |
         ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        && inputs.qe-rc != true && inputs.docker-hub-rc != true }}
+        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false) }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
@@ -195,7 +195,7 @@ jobs:
     - name: Set up release server
       if: |
         ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        && inputs.qe-rc != true && inputs.docker-hub-rc != true }}
+        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false) }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
@@ -223,7 +223,7 @@ jobs:
     # TODO: support EE rc tests
     if: |
       ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-      && inputs.qe-rc == false && inputs.docker-hub-rc == false }}
+      || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false) }}
     runs-on: ubuntu-latest
     needs: build
     steps:

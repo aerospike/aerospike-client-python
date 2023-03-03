@@ -16,8 +16,7 @@ on:
 jobs:
   get-server-rc:
     runs-on: ubuntu-latest
-    if: |
-      ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-server-rc == true }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-server-rc == true }}
     steps:
     # Store sensitive data in openvpn config template
     - name: Install OpenVPN
@@ -134,7 +133,7 @@ jobs:
       # If not using server rc at all
       if: |
         ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        && inputs.qe-rc != true && inputs.docker-hub-rc != true }}
+        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false) }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
@@ -202,7 +201,7 @@ jobs:
       # If not using server rc at all
       if: |
         ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        && inputs.qe-rc != true && inputs.docker-hub-rc != true }}
+        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false) }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
