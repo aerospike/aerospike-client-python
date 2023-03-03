@@ -91,12 +91,12 @@ jobs:
       with:
         files: "*.deb"
 
-    - run: ./.github/actions/install-server-rc
+    - uses: ./.github/actions/install-server-rc
       if: steps.check_files.outputs.files_exists == 'true'
 
     - name: Use Docker Hub RC
       if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
-      run: ./.github/actions/setup-docker-hub-rc
+      uses: ./.github/actions/setup-docker-hub-rc
 
     - name: Set up release server
       if: |
@@ -184,12 +184,12 @@ jobs:
       with:
         files: "*.deb"
 
-    - run: ./.github/actions/install-server-rc
+    - uses: ./.github/actions/install-server-rc
       if: steps.check_files.outputs.files_exists == 'true'
 
     - name: Use Docker Hub RC
       if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
-      run: ./.github/actions/setup-docker-hub-rc
+      uses: ./.github/actions/setup-docker-hub-rc
 
     - name: Set up release server
       if: |

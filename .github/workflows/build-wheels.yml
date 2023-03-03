@@ -118,7 +118,7 @@ jobs:
 
     - name: Use Docker Hub RC
       if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
-      run: ./.github/actions/setup-docker-hub-rc
+      uses: ./.github/actions/setup-docker-hub-rc
 
     - name: Get server RC from QE
       if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
@@ -127,7 +127,7 @@ jobs:
         name: server-rc
 
     - name: Install server rc from QE
-      runs: ./.github/actions/install-server-rc
+      uses: ./.github/actions/install-server-rc
       if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
 
     - name: Set up server release version
