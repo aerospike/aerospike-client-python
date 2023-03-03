@@ -16,7 +16,7 @@ on:
 jobs:
   get-server-rc:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+    if: ${{ inputs.qe-rc == true }}
     steps:
     # Store sensitive data in openvpn config template
     - name: Install OpenVPN
@@ -116,24 +116,22 @@ jobs:
         platforms: all
 
     - name: Use Docker Hub RC
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
+      if: ${{ inputs.docker-hub-rc == true }}
       uses: ./.github/actions/setup-docker-hub-rc
 
     - name: Get server RC from QE
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+      if: ${{ inputs.qe-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
     - name: Install server rc from QE
       uses: ./.github/actions/install-server-rc
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+      if: ${{ inputs.qe-rc == true }}
 
     - name: Set up server release version
       # If not using server rc at all
-      if: |
-        !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false)
+      if: ${{ inputs.qe-rc == false && inputs.docker-hub-rc == false }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
@@ -184,24 +182,21 @@ jobs:
         submodules: recursive
 
     - name: Use Docker Hub RC
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
+      if: ${{ inputs.docker-hub-rc == true }}
       run: ./.github/actions/setup-docker-hub-rc
 
     - name: Get server RC from QE
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+      if: ${{ inputs.qe-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
     - name: Install server rc from QE
       uses: ./.github/actions/install-server-rc
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+      if: ${{ inputs.qe-rc == true }}
 
     - name: Set up server release version
-      # If not using server rc at all
-      if: |
-        !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false)
+      if: ${{ inputs.qe-rc == false && inputs.docker-hub-rc == false }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
@@ -232,7 +227,7 @@ jobs:
 
   macOS-x86:
     # TODO: support running Docker Hub RC on MacOS
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') == false && inputs.docker-hub-rc == false }}
+    if: ${{ inputs.docker-hub-rc == false }}
     needs: [get-server-rc]
     strategy:
       fail-fast: false
@@ -257,19 +252,13 @@ jobs:
         python-version: ${{ matrix.python-version[1] }}
 
     - name: Get server release candidate
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') == true || inputs.qe-rc == true }}
+      if: ${{ inputs.qe-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
-    - name: "Check file existence"
-      uses: andstor/file-existence-action@v2
-      id: check_files
-      with:
-        files: "*.deb"
-
     - name: Copy server RC to shared folder for Linux VM
-      if: steps.check_files.outputs.files_exists == 'true'
+      if: ${{ inputs.qe-rc == true }}
       run: |
         mkdir vagrant_data
         mv *.deb vagrant_data/
@@ -300,7 +289,7 @@ jobs:
         path: wheelhouse/*.whl
 
   macOS-m1:
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') == false && inputs.docker-hub-rc == false }}
+    if: ${{ inputs.docker-hub-rc == false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

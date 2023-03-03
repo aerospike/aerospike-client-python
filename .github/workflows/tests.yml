@@ -102,8 +102,17 @@ jobs:
 
     - name: Set up release server
       if: |
-        !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
-        || (github.event_name == 'workflow_dispatch' && inputs.qe-rc == false && inputs.docker-hub-rc == false)
+        (
+          github.event_name == 'pull_request' &&
+          !contains(github.event.pull_request.labels.*.name, 'qe-rc') &&
+          !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
+        )
+        ||
+        (
+          github.event_name == 'workflow_dispatch' &&
+          inputs.qe-rc == false &&
+          inputs.docker-hub-rc == false
+        )
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
