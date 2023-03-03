@@ -30,7 +30,7 @@ jobs:
 
   get-server-rc:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') || inputs.server-rc == true }}
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
     steps:
     # Store sensitive data in openvpn config template
     - name: Install OpenVPN
@@ -80,7 +80,7 @@ jobs:
     needs: [get-server-rc]
     steps:
     - name: Get server release candidate
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') == true || inputs.server-rc == true }}
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
@@ -91,27 +91,20 @@ jobs:
       with:
         files: "*.deb"
 
-    - name: Install server rc
+    - run: ./.github/actions/install-server-rc
       if: steps.check_files.outputs.files_exists == 'true'
-      run: sudo dpkg -i *.deb
 
-    - name: Configure server rc
-      if: steps.check_files.outputs.files_exists == 'true'
-      run: sudo sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+    - name: Use Docker Hub RC
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
+      run: ./.github/actions/setup-docker-hub-rc
 
-    - name: Start server rc
-      if: steps.check_files.outputs.files_exists == 'true'
-      run: sudo systemctl start aerospike
-
-    - name: Set up Aerospike Database
-      if: steps.check_files.outputs.files_exists != 'true'
+    - name: Set up release server
+      if: |
+        ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
+        && inputs.qe-rc == false && inputs.docker-hub-rc == false }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
 
     # Use this to get current branch of workflow
     - name: Inject slug/short variables
@@ -119,12 +112,12 @@ jobs:
       with:
         short-length: 8 # Same as v3 and before
 
-    - name: Get build script
-      uses: actions/checkout@v2
-
     - name: Start Alpine container
       # Run in host network so it can connect to host's localhost server
       run: docker run --name alpine --network host --detach alpine:latest tail -f /dev/null
+
+    - name: Get build script
+      uses: actions/checkout@v2
 
     - name: Copy build and test script to container
       run: docker cp ./build-alpine.sh alpine:/
@@ -135,7 +128,7 @@ jobs:
 
     - name: Cleanup
       run: |
-        docker container stop aerospike alpine
+        docker container stop alpine
         docker container prune -f
 
   build:
@@ -180,7 +173,7 @@ jobs:
 
     steps:
     - name: Get server release candidate
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') == true || inputs.server-rc == true }}
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
@@ -191,27 +184,20 @@ jobs:
       with:
         files: "*.deb"
 
-    - name: Install server rc
+    - run: ./.github/actions/install-server-rc
       if: steps.check_files.outputs.files_exists == 'true'
-      run: sudo dpkg -i *.deb
 
-    - name: Configure server rc
-      if: steps.check_files.outputs.files_exists == 'true'
-      run: sudo sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+    - name: Use Docker Hub RC
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
+      run: ./.github/actions/setup-docker-hub-rc
 
-    - name: Start server rc
-      if: steps.check_files.outputs.files_exists == 'true'
-      run: sudo systemctl start aerospike
-
-    - name: Set up Aerospike Database
-      if: steps.check_files.outputs.files_exists != 'true'
+    - name: Set up release server
+      if: |
+        ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
+        && inputs.qe-rc == false && inputs.docker-hub-rc == false }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
 
     - uses: actions/checkout@v2
       with:
@@ -237,6 +223,10 @@ jobs:
       working-directory: test
 
   test-ee:
+    # TODO: support EE rc tests
+    if: |
+      ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
+      && inputs.qe-rc == false && inputs.docker-hub-rc == false }}
     runs-on: ubuntu-latest
     needs: build
     steps:

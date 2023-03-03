@@ -1,0 +1,17 @@
+name: 'Run Server RC'
+description: 'Run server release candidate'
+
+runs:
+  using: "composite"
+  steps:
+  - name: Install server rc
+    run: sudo dpkg -i *.deb
+
+  - name: Configure server rc
+    run: sudo sed -i "s/namespace test {/namespace test {\n\tallow-ttl-without-nsup true/" /etc/aerospike/aerospike.conf
+
+  - name: Start server rc
+    run: sudo systemctl start aerospike
+
+  - name: Wait for server to start
+    run: sleep 3

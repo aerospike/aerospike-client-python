@@ -3,8 +3,65 @@ name: Build wheels
 # Builds wheels and sends to QE and Aerospike artifactory
 on:
   workflow_dispatch:
+    inputs:
+      qe-rc:
+        default: false
+        required: true
+        type: boolean
+      docker-hub-rc:
+        default: false
+        required: true
+        type: boolean
 
 jobs:
+  get-server-rc:
+    runs-on: ubuntu-latest
+    if: |
+      ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-server-rc == true }}
+    steps:
+    # Store sensitive data in openvpn config template
+    - name: Install OpenVPN
+      run: |
+        sudo apt update
+        sudo apt install -y openvpn openvpn-systemd-resolved
+
+    - uses: actions/checkout@v2
+
+    - name: Fill in openvpn config file
+      uses: bluwy/substitute-string-action@v1
+      id: sub
+      with:
+        _input-file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
+        _format-key: '%%key%%'
+        CA_CERT: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_CA }}
+        STATIC_KEY: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_STATIC_KEY }}
+        _output-file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
+
+    - name: Connect to Aerospike VPN
+      uses: "kota65535/github-openvpn-connect-action@v2"
+      with:
+        config_file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
+        username: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_USERNAME }}
+        password: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_PASSWORD }}
+
+    - name: Get latest server release candidate
+      run: |
+        BUILDCTL_URL="build.browser.qe.aerospike.com/citrusleaf/qe.go/3.3.0-52-gd66bd4b/build/1.17/default/artifacts/buildctl.linux"
+        curl -O --connect-timeout 60 $BUILDCTL_URL
+        chmod 700 ./buildctl.linux
+
+        BUILD_ID=$(./buildctl.linux rev --repo citrusleaf/aerospike-server --ref master | sed -n 2p | awk '{print $3}')
+        ARTIFACTS_URL="build.browser.qe.aerospike.com/citrusleaf/aerospike-server/$BUILD_ID/build/x86-ubuntu-22.04/community/artifacts"
+
+        # Download the .deb artifact
+        wget --timeout=60 -r --no-parent --accept "*.deb" --no-directories $ARTIFACTS_URL
+
+    - name: Upload server release candidate to Github
+      uses: actions/upload-artifact@v3
+      with:
+        name: server-rc
+        path: ./*.deb
+
   test-sdist:
     name: Build and install sdist
     runs-on: ubuntu-latest
@@ -35,6 +92,7 @@ jobs:
         name: sdist
 
   manylinux_arm64:
+    needs: [get-server-rc]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -58,19 +116,28 @@ jobs:
       with:
         platforms: all
 
-    - name: Set up Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - name: Use Docker Hub RC
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
+      run: ./.github/actions/setup-docker-hub-rc
 
-    - name: Wait for server to start
-      run: sleep 5
+    - name: Get server RC from QE
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+      uses: actions/download-artifact@v3
+      with:
+        name: server-rc
 
-    - name: Set config.conf to use Docker IP address of Aerospike server
-      # config.conf should be copied into the cibuildwheel Docker container
-      run: |
-        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-        pip install crudini
-        crudini --set config.conf community-edition hosts ${SERVER_DOCKER_IP}:3000
-      working-directory: test
+    - name: Install server rc from QE
+      runs: ./.github/actions/install-server-rc
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+
+    - name: Set up server release version
+      # If not using server rc at all
+      if: |
+        ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
+        && inputs.qe-rc == false && inputs.docker-hub-rc == false }}
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
@@ -85,6 +152,9 @@ jobs:
         CIBW_TEST_COMMAND: >
           cd {project}/test/ &&
           pip install -r requirements.txt &&
+          pip install crudini &&
+          # Need to access host's internal ip address to access localhost
+          crudini --set config.conf community-edition hosts host.docker.internal:3000 &&
           python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
@@ -95,6 +165,7 @@ jobs:
         name: manylinux-aarch64-${{ matrix.python }}
 
   manylinux_x86_64:
+    needs: [get-server-rc]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -113,19 +184,28 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Set up Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - name: Use Docker Hub RC
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') || inputs.docker-hub-rc == true }}
+      run: ./.github/actions/setup-docker-hub-rc
 
-    - name: Wait for server to start
-      run: sleep 5
+    - name: Get server RC from QE
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+      uses: actions/download-artifact@v3
+      with:
+        name: server-rc
 
-    - name: Set config.conf to use Docker IP address of Aerospike server
-      # config.conf should be copied into the cibuildwheel Docker container
-      run: |
-        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-        pip install crudini
-        crudini --set config.conf community-edition hosts ${SERVER_DOCKER_IP}:3000
-      working-directory: test
+    - name: Install server rc from QE
+      runs: ./.github/actions/install-server-rc
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') || inputs.qe-rc == true }}
+
+    - name: Set up server release version
+      # If not using server rc at all
+      if: |
+        ${{ !contains(github.event.pull_request.labels.*.name, 'qe-rc') && !contains(github.event.pull_request.labels.*.name, 'docker-hub-rc')
+        && inputs.qe-rc == false && inputs.docker-hub-rc == false }}
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
@@ -140,6 +220,8 @@ jobs:
         CIBW_TEST_COMMAND: >
           cd {project}/test/ &&
           pip install -r requirements.txt &&
+          pip install crudini &&
+          crudini --set config.conf community-edition hosts host.docker.internal:3000 &&
           python -m pytest new_tests/
 
     - name: Upload wheels to GitHub
@@ -150,6 +232,9 @@ jobs:
         name: manylinux-x86_64-${{ matrix.python[0] }}
 
   macOS-x86:
+    # TODO: support running Docker Hub RC on MacOS
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') == false && inputs.docker-hub-rc == false }}
+    needs: [get-server-rc]
     strategy:
       fail-fast: false
       matrix:
@@ -172,6 +257,30 @@ jobs:
       with:
         python-version: ${{ matrix.python-version[1] }}
 
+    - name: Get server release candidate
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'qe-rc') == true || inputs.qe-rc == true }}
+      uses: actions/download-artifact@v3
+      with:
+        name: server-rc
+
+    - name: "Check file existence"
+      uses: andstor/file-existence-action@v2
+      id: check_files
+      with:
+        files: "*.deb"
+
+    - name: Copy server RC to shared folder for Linux VM
+      if: steps.check_files.outputs.files_exists == 'true'
+      run: |
+        mkdir vagrant_data
+        mv *.deb vagrant_data/
+
+    - name: Run Linux VM
+      run: vagrant up
+
+    - name: Wait for VM to be ready
+      run: sleep 3
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
       env:
@@ -180,8 +289,6 @@ jobs:
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
-          vagrant up &&
-          sleep 3 &&
           pip install -r test/requirements.txt
         CIBW_TEST_COMMAND: >
           cd {project}/test/ &&
@@ -194,6 +301,7 @@ jobs:
         path: wheelhouse/*.whl
 
   macOS-m1:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'docker-hub-rc') == false && inputs.docker-hub-rc == false }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
