@@ -265,6 +265,9 @@ jobs:
     - name: Run Linux VM
       run: vagrant up
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
       env:
