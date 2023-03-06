@@ -4,18 +4,14 @@ name: Build wheels
 on:
   workflow_dispatch:
     inputs:
-      server-version:
-        type: choice
-        description: Which server version to run tests on
-        options:
-        - docker-hub-release
-        - docker-hub-rc
-        - qe-rc
-        default: 'docker-hub-release'
+      use-server-rc:
+        type: boolean
+        default: false
+        required: true
 
 jobs:
   get-server-rc:
-    if: ${{ inputs.server-version == 'qe-rc' }}
+    if: ${{ inputs.use-server-rc == true }}
     runs-on: ubuntu-latest
     steps:
     # Store sensitive data in openvpn config template
@@ -50,7 +46,7 @@ jobs:
         chmod 700 ./buildctl.linux
 
         BUILD_ID=$(./buildctl.linux rev --repo citrusleaf/aerospike-server --ref master | sed -n 2p | awk '{print $3}')
-        ARTIFACTS_URL="build.browser.qe.aerospike.com/citrusleaf/aerospike-server/$BUILD_ID/build/x86-ubuntu-22.04/community/artifacts"
+        ARTIFACTS_URL="build.browser.qe.aerospike.com/citrusleaf/aerospike-server/$BUILD_ID/build/x86-ubuntu-22.04/enterprise/artifacts"
 
         # Download the .deb artifact
         wget --timeout=60 -r --no-parent --accept "*.deb" --no-directories $ARTIFACTS_URL
@@ -119,34 +115,26 @@ jobs:
       with:
         platforms: all
 
-    - name: Use Docker Hub RC
-      if: ${{ inputs.server-version == 'docker-hub-rc' }}
-      uses: ./.github/actions/setup-docker-hub-rc
-      env:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-
     - name: Get server RC from QE
-      if: ${{ inputs.server-version == 'qe-rc' }}
+      if: ${{ inputs.use-server-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
     - name: Install server rc from QE
       uses: ./.github/actions/install-server-rc
-      if: ${{ inputs.server-version == 'qe-rc' }}
+      if: ${{ inputs.use-server-rc == true }}
 
     - name: Set up server release version
-      # If not using server rc at all
-      if: ${{ inputs.server-version == 'docker-hub-release' }}
+      if: ${{ inputs.use-server-rc == false }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
 
-    - name: Get host ip address
+    - name: Run tests on server located in host
       run: |
         pip install crudini
+        # 172.17.0.1 in a Docker container is equivalent to 127.0.0.1 on the host
         crudini --set config.conf community-edition hosts 172.17.0.1:3000
       working-directory: test
 
@@ -193,31 +181,23 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Use Docker Hub RC
-      if: ${{ inputs.server-version == 'docker-hub-rc' }}
-      uses: ./.github/actions/setup-docker-hub-rc
-      env:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
     - name: Get server RC from QE
-      if: ${{ inputs.server-version == 'qe-rc' }}
+      if: ${{ inputs.use-server-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
     - name: Install server rc from QE
       uses: ./.github/actions/install-server-rc
-      if: ${{ inputs.server-version == 'qe-rc' }}
+      if: ${{ inputs.use-server-rc == true }}
 
     - name: Set up server release version
-      # If not using server rc at all
-      if: ${{ inputs.server-version == 'docker-hub-release' }}
+      if: ${{ inputs.use-server-rc == false }}
       uses: reugn/github-action-aerospike@dev
       with:
         port: 3000
 
-    - name: Get host ip address
+    - name: Run tests on server located in host
       run: |
         pip install crudini
         crudini --set config.conf community-edition hosts 172.17.0.1:3000
@@ -246,9 +226,8 @@ jobs:
         name: manylinux-x86_64-${{ matrix.python[0] }}
 
   macOS-x86:
-    # TODO: support running Docker Hub RC on MacOS
     needs: [get-server-rc]
-    if: ${{ always() && inputs.server-version != 'docker-hub-rc' && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
+    if: ${{ always() && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -271,24 +250,20 @@ jobs:
         python-version: ${{ matrix.python-version[1] }}
 
     - name: Get server release candidate
-      if: ${{ inputs.server-version == 'qe-rc' }}
+      if: ${{ inputs.use-server-rc == true }}
       uses: actions/download-artifact@v3
       with:
         name: server-rc
 
-    - name: Shared folder
+    - name: Create VM shared folder
       run: mkdir vagrant_data
 
     - name: Copy server RC to shared folder for Linux VM
-      if: ${{ inputs.server-version == 'qe-rc' }}
-      run: |
-        mv *.deb vagrant_data/
+      if: ${{ inputs.use-server-rc == true }}
+      run: mv *.deb vagrant_data/
 
     - name: Run Linux VM
       run: vagrant up
-
-    - name: Wait for VM to be ready
-      run: sleep 3
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
@@ -303,10 +278,6 @@ jobs:
           cd {project}/test/ &&
           python -m pytest new_tests/
 
-    # - name: Setup tmate session
-    #   if: ${{ always() }}
-    #   uses: mxschmitt/action-tmate@v3
-
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
@@ -315,7 +286,7 @@ jobs:
 
   macOS-m1:
     needs: [get-server-rc]
-    if: ${{ always() && inputs.server-version != 'docker-hub-rc' && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
+    if: ${{ always() && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -357,7 +328,6 @@ jobs:
       with:
         name: ${{ matrix.os }}-arm64-${{ matrix.python }}-wheel
         path: wheelhouse/*.whl
-    # TODO: create Terraform deployment and send to there
 
   send-to-qe:
     needs: [manylinux_x86_64, manylinux_arm64]

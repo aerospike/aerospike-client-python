@@ -15,7 +15,3 @@ runs:
   - name: Start server rc
     run: sudo systemctl start aerospike
     shell: bash
-
-  - name: Wait for server to start
-    run: sleep 3
-    shell: bash
