@@ -8,7 +8,6 @@ on:
     branches: ["stage", "master"]
   pull_request:
     branches: ["stage"]
-  workflow_dispatch:
 
 jobs:
   lint:
@@ -23,17 +22,77 @@ jobs:
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
+  get-server-rc:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+    steps:
+    # Store sensitive data in openvpn config template
+    - name: Install OpenVPN
+      run: |
+        sudo apt update
+        sudo apt install -y openvpn openvpn-systemd-resolved
+
+    - uses: actions/checkout@v2
+
+    - name: Fill in openvpn config file
+      uses: bluwy/substitute-string-action@v1
+      id: sub
+      with:
+        _input-file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
+        _format-key: '%%key%%'
+        CA_CERT: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_CA }}
+        STATIC_KEY: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_STATIC_KEY }}
+        _output-file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
+
+    - name: Connect to Aerospike VPN
+      uses: "kota65535/github-openvpn-connect-action@v2"
+      with:
+        config_file: ".github/workflows/aerospike_vpn_nosplit.ovpn"
+        username: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_USERNAME }}
+        password: ${{ secrets.AEROSPIKE_VPN_NOSPLIT_PASSWORD }}
+
+    - name: Get latest server release candidate
+      run: |
+        BUILDCTL_URL="build.browser.qe.aerospike.com/citrusleaf/qe.go/3.3.0-52-gd66bd4b/build/1.17/default/artifacts/buildctl.linux"
+        curl -O --connect-timeout 60 $BUILDCTL_URL
+        chmod 700 ./buildctl.linux
+
+        BUILD_ID=$(./buildctl.linux rev --repo citrusleaf/aerospike-server --ref master | sed -n 2p | awk '{print $3}')
+        ARTIFACTS_URL="build.browser.qe.aerospike.com/citrusleaf/aerospike-server/$BUILD_ID/build/x86-ubuntu-22.04/community/artifacts"
+
+        # Download the .deb artifact
+        wget --timeout=60 -r --no-parent --accept "*.deb" --no-directories $ARTIFACTS_URL
+
+    - name: Disconnect from vpn
+      run: sudo killall openvpn
+
+    - name: Upload server release candidate to Github
+      uses: actions/upload-artifact@v3
+      with:
+        name: server-rc
+        path: ./*.deb
+
   alpine:
     runs-on: ubuntu-latest
+    needs: [get-server-rc]
+    if: ${{ always() && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     steps:
-    - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - uses: actions/checkout@v2
 
-    - name: Wait for database to be ready
-      run: sleep 3
+    - name: Get server release candidate
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: actions/download-artifact@v3
+      with:
+        name: server-rc
 
-    - name: Get server ip
-      run: echo SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike) >> $GITHUB_ENV
+    - uses: ./.github/actions/install-server-rc
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+
+    - name: Set up release server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
 
     # Use this to get current branch of workflow
     - name: Inject slug/short variables
@@ -41,47 +100,21 @@ jobs:
       with:
         short-length: 8 # Same as v3 and before
 
-    - uses: addnab/docker-run-action@v3
-      with:
-        image: alpine:latest
-        options: -e GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }} -e SERVER_IP=${{ env.SERVER_IP }}
-        run: |
-          apk add py3-pip
-          apk add python3-dev
-          apk add zlib-dev
-          apk add git
-          # C client dependencies
-          apk add automake
-          apk add make
-          apk add musl-dev
-          apk add gcc
-          apk add openssl-dev
-          apk add lua-dev
-          apk add libuv-dev  # (for node.js)
-          apk add doxygen  # (for make docs)
-          apk add graphviz # (for make docs)
+    - name: Start Alpine container
+      # Run in host network so it can connect to host's localhost server
+      run: docker run --name alpine --network host --detach alpine:latest tail -f /dev/null
 
-          git clone --recurse-submodules https://github.com/aerospike/aerospike-client-python
-          cd aerospike-client-python/
-          git checkout $GITHUB_REF_NAME
-          git submodule update --recursive
+    - name: Copy build and test script to container
+      run: docker cp ./build-alpine.sh alpine:/
+      working-directory: .github/workflows
 
-          python3 -m pip install build
-          python3 -m build
-          python3 -m pip install dist/*.whl
-          cd test/
-          # requirements.txt is not working atm
-          python3 -m pip install pytest
-
-          # Configure tests
-          sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" config.conf
-
-          python3 -m pytest new_tests/
+    - name: Build and test
+      run: docker exec alpine ./build-alpine.sh ${{ env.GITHUB_REF_NAME }}
 
     - name: Cleanup
       run: |
-        docker container stop aerospike
-        docker container rm aerospike
+        docker container stop alpine
+        docker container prune -f
 
   build:
     runs-on: ubuntu-latest
@@ -117,7 +150,10 @@ jobs:
 
   test-ce:
     runs-on: ubuntu-latest
-    needs: build
+    needs: [build, get-server-rc]
+    # We still want this job to run even if get-server-rc is skipped
+    # in case we are simply running a release server instead of a release candidate
+    if: ${{ always() && needs.build.result == 'success' && (needs.get-server-rc.result == 'success' || needs.get-server-rc.result == 'skipped') }}
     strategy:
       matrix:
         py-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
@@ -125,8 +161,21 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+
+    - name: Get server release candidate
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: actions/download-artifact@v3
       with:
-        submodules: recursive
+        name: server-rc
+
+    - uses: ./.github/actions/install-server-rc
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+
+    - name: Set up release server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: reugn/github-action-aerospike@dev
+      with:
+        port: 3000
 
     - uses: actions/setup-python@v2
       with:
@@ -143,20 +192,12 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
     - name: Run tests
       run: python -m pytest ./new_tests
       working-directory: test
 
   test-ee:
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
     runs-on: ubuntu-latest
     needs: build
     steps:
