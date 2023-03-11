@@ -631,7 +631,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
 
             APPEND_ARRAY(0, BIN_EXPR());
             break;
-        case VAL:;
+        case VAL:
+        case _AS_EXP_CODE_AS_VAL:
             as_exp_entry tmp_expr;
             if (get_exp_val_from_pyval(
                     self, static_pool, serializer_type, &tmp_expr,

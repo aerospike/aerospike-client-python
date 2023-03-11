@@ -41,6 +41,16 @@ TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
 # Value Expressions
 ###################
 
+class Val(_BaseExpr):
+    """Create an expression that returns a nil value.
+    """
+
+    _op = _ExprOp._AS_EXP_CODE_AS_VAL
+
+    def __init__(self, value: Any):
+        self._children = (value,)
+        super().__init__()
+
 
 class Unknown(_BaseExpr):
     """Create an 'Unknown' expression, which allows an operation expression

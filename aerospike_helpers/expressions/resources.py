@@ -84,6 +84,8 @@ class _ExprOp:  # TODO replace this with an enum
     LET = 125
     DEF = 126
 
+    _AS_EXP_CODE_AS_VAL = 128
+
     # virtual ops
 
     _AS_EXP_CODE_CALL_VOP_START = 139
@@ -107,7 +109,6 @@ class ResultType:
     """
     Flags used to indicate expression value_type.
     """
-
     BOOLEAN = 1
     INTEGER = 2
     STRING = 3
@@ -148,16 +149,22 @@ class _BaseExpr(_AtomExpr):
     def _get_op(self) -> TypeCompiledOp:
         return (self._op, self._rt, self._fixed, len(self._children))
 
-    def _vop(self, v) -> TypeCompiledOp:
+    # Raw values can be passed to expressions as arguments directly
+    # or they can be represented by expressions
+    def _vop(self, v, is_raw_value: bool) -> TypeCompiledOp:
         return (
-            _ExprOp.VAL,
+            _ExprOp.VAL if is_raw_value else self._op,
             None,
             {_Keys.VALUE_KEY: v},
             0,
         )
 
     def compile(self) -> TypeExpression:
-        expression: TypeExpression = [self._get_op()]
+        if self._op == _ExprOp._AS_EXP_CODE_AS_VAL:
+            expression = [self._vop(self._children[0], True)]
+        else:
+            expression = [self._get_op()]
+        # type: 'TypeExpression'
         work = chain(self._children)
 
         while True:
@@ -167,11 +174,15 @@ class _BaseExpr(_AtomExpr):
                 break
 
             if isinstance(item, _BaseExpr):
-                expression.append(item._get_op())
-                work = chain(item._children, work)
+                # Expression object
+                if item._op == _ExprOp._AS_EXP_CODE_AS_VAL:
+                    expression.append(self._vop(item._children[0], False))
+                else:
+                    expression.append(item._get_op())
+                    work = chain(item._children, work)
             else:
-                # Should be a str, bin, int, float, etc.
-                expression.append(self._vop(item))
+                # Should be a raw value, such as a str, bin, int, float, etc.
+                expression.append(self._vop(item, True))
 
         return expression
 
