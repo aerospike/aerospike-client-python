@@ -9,6 +9,11 @@ on:
   pull_request:
     branches: ["stage"]
   workflow_dispatch:
+    inputs:
+      rc-tag:
+        type: string
+        default: "latest"
+        required: false
 
 jobs:
   lint:
@@ -26,11 +31,13 @@ jobs:
   alpine:
     runs-on: ubuntu-latest
     steps:
-    - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - name: Run Aerospike server release candidate with specific tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.rc-tag }}
 
-    - name: Wait for database to be ready
-      run: sleep 3
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Get server ip
       run: echo SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike) >> $GITHUB_ENV
@@ -143,10 +150,13 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - name: Set up Aerospike Database
-      uses: reugn/github-action-aerospike@dev
-      with:
-        port: 3000
+    - name: Run Aerospike server release candidate with specific tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.rc-tag }}
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
@@ -192,9 +202,16 @@ jobs:
     - name: Create config folder to store configs in
       run: mkdir configs
 
+    - name: Run Aerospike server release candidate with specific tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:${{ inputs.rc-tag }}
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise
+
     - name: Get default aerospike.conf from Docker server EE container
       run: |
-        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise
         sleep 5
         docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
         docker container stop aerospike
@@ -205,7 +222,12 @@ jobs:
       run: echo -e "security {\n\n}\n" >> ./aerospike.conf
       working-directory: ./configs
 
+    - name: Run Aerospike server release candidate with specific tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:${{ inputs.rc-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+
     - name: Run enterprise edition server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /opt/aerospike/etc/aerospike.conf
 
     - name: Wait for server to start
