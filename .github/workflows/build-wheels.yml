@@ -3,6 +3,11 @@ name: Build wheels
 # Builds wheels and sends to QE and Aerospike artifactory
 on:
   workflow_dispatch:
+    inputs:
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
 
 jobs:
   test-sdist:
@@ -58,11 +63,13 @@ jobs:
       with:
         platforms: all
 
-    - name: Set up Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - name: Run Aerospike server release candidate
+      if: ${{ inputs.use-server-rc }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
 
-    - name: Wait for server to start
-      run: sleep 5
+    - name: Set up Aerospike server
+      if: ${{ !inputs.use-server-rc }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Set config.conf to use Docker IP address of Aerospike server
       # config.conf should be copied into the cibuildwheel Docker container
@@ -113,7 +120,12 @@ jobs:
       with:
         submodules: recursive
 
+    - name: Run Aerospike server release candidate
+      if: ${{ inputs.use-server-rc }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+
     - name: Set up Aerospike server
+      if: ${{ !inputs.use-server-rc }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Wait for server to start
@@ -180,6 +192,7 @@ jobs:
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
+          export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
           vagrant up &&
           sleep 3 &&
           pip install -r test/requirements.txt
@@ -235,7 +248,6 @@ jobs:
       with:
         name: ${{ matrix.os }}-arm64-${{ matrix.python }}-wheel
         path: wheelhouse/*.whl
-    # TODO: create Terraform deployment and send to there
 
   send-to-qe:
     needs: [manylinux_x86_64, manylinux_arm64]

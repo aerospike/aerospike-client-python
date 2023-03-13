@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
 
   # Every Vagrant development environment requires a box. You can search for
   # boxes at https://vagrantcloud.com/search.
-  config.vm.box = "ubuntu/focal64"
+  config.vm.box = "ubuntu/jammy64"
 
   # Disable automatic box update checking. If you disable this, then
   # boxes will only be checked for updates when the user runs
@@ -67,5 +67,14 @@ Vagrant.configure("2") do |config|
   #   apt-get update
   #   apt-get install -y apache2
   # SHELL
-  config.vm.provision :shell, path: "bootstrap.sh"
+
+  config.vm.provision "docker" do |d|
+    if ENV["USE_SERVER_RC"] == "true"
+      $image_name = "aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest"
+    else
+      $image_name = "aerospike/aerospike-server:latest"
+    end
+    d.run $image_name,
+      args: "-p 3000:3000"
+  end
 end
