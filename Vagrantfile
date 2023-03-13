@@ -75,6 +75,7 @@ Vagrant.configure("2") do |config|
       $image_name += ENV["RC_TAG"]
     else
       $image_name = "aerospike/aerospike-server:latest"
+    end
     d.run $image_name
   end
 end
