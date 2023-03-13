@@ -8,6 +8,16 @@ on:
     branches: ["stage", "master"]
   pull_request:
     branches: ["stage"]
+    types: [
+      # Default triggers
+      opened,
+      synchronize,
+      reopened,
+      # Additional triggers
+      labeled,
+      unlabeled
+    ]
+  workflow_dispatch:
 
 jobs:
   lint:
