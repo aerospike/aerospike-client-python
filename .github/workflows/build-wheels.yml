@@ -253,7 +253,6 @@ jobs:
       with:
         name: ${{ matrix.os }}-arm64-${{ matrix.python }}-wheel
         path: wheelhouse/*.whl
-    # TODO: create Terraform deployment and send to there
 
   send-to-qe:
     needs: [manylinux_x86_64, manylinux_arm64]
