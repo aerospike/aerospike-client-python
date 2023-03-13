@@ -12,7 +12,7 @@ on:
     inputs:
       rc-tag:
         type: string
-        default: "latest"
+        default: latest
         required: false
 
 jobs:
@@ -32,8 +32,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Run Aerospike server release candidate with specific tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && inputs.rc-tag != '' }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.rc-tag }}
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && inputs.rc-tag == '' }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
@@ -151,8 +155,12 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run Aerospike server release candidate with specific tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && inputs.rc-tag != '' }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.rc-tag }}
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && inputs.rc-tag == '' }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
@@ -203,8 +211,12 @@ jobs:
       run: mkdir configs
 
     - name: Run Aerospike server release candidate with specific tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && inputs.rc-tag != '' }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:${{ inputs.rc-tag }}
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && inputs.rc-tag == '' }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
@@ -223,8 +235,12 @@ jobs:
       working-directory: ./configs
 
     - name: Run Aerospike server release candidate with specific tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && inputs.rc-tag != '' }}
       run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:${{ inputs.rc-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && inputs.rc-tag == '' }}
+      run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:latest asd --config-file /opt/aerospike/etc/aerospike.conf
 
     - name: Run enterprise edition server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
