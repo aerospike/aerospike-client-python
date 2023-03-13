@@ -8,10 +8,6 @@ on:
         type: boolean
         required: true
         default: false
-      rc-tag:
-        type: string
-        default: "latest"
-        required: false
 
 jobs:
   test-sdist:
@@ -69,7 +65,7 @@ jobs:
 
     - name: Run Aerospike server release candidate
       if: ${{ inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.rc-tag }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
 
     - name: Set up Aerospike server
       if: ${{ !inputs.use-server-rc }}
@@ -126,7 +122,7 @@ jobs:
 
     - name: Run Aerospike server release candidate
       if: ${{ inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.rc-tag }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
 
     - name: Set up Aerospike server
       if: ${{ !inputs.use-server-rc }}
@@ -197,7 +193,6 @@ jobs:
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
           export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
-          export RC_TAG=${{ inputs.rc-tag }} &&
           vagrant up &&
           sleep 3 &&
           pip install -r test/requirements.txt

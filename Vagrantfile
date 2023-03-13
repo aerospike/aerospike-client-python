@@ -70,9 +70,7 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "docker" do |d|
     if ENV["USE_SERVER_RC"] == "true"
-      $image_name = "aerospike.jfrog.io/docker/aerospike/aerospike-server-rc"
-      $image_name += ":"
-      $image_name += ENV["RC_TAG"]
+      $image_name = "aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest"
     else
       $image_name = "aerospike/aerospike-server:latest"
     end
