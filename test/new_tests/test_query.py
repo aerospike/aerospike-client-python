@@ -334,17 +334,8 @@ class TestQuery(TestBaseClass):
         def callback(input_tuple):
             pass
 
-        try:
+        with pytest.raises(e.IndexNotFound):
             query.foreach(callback)
-        except e.IndexNotFound:
-            # before server version 6.0 IndexNotFound was not retryable
-            assert self.server_version < [6, 0]
-        except e.MaxRetriesExceeded as err_info:
-            err_code = err_info.code
-            # Changed to AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
-            # because AEROSPIKE_ERR_INDEX_NOT_FOUND is now a retriable error.
-            assert err_code == AerospikeStatus.AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED
-            assert "AEROSPIKE_ERR_INDEX_NOT_FOUND" in err_info.msg
 
     def test_query_with_where_incorrect(self):
         """
