@@ -925,7 +925,7 @@ class TestQuery(TestBaseClass):
         foreach should raise an error since the ns
         is invalid
         """
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             query = self.as_connection.query("fake_namespace", "demo1")
 
             def callback(input_tuple):
@@ -936,7 +936,7 @@ class TestQuery(TestBaseClass):
             query.foreach(callback)
 
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_query_with_ns_not_string(self):
         """

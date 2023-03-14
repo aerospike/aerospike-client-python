@@ -236,10 +236,10 @@ class TestQueryPagination(TestBaseClass):
             _, _, record = input_tuple
             records.append(record)
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_query_pagination_with_callback_contains_error(self):
         records = []

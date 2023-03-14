@@ -895,7 +895,7 @@ Info Operations
             :code: python
 
         .. deprecated:: 11.0.0
-            :ref:`aerospike.get_expression_base64` should be used instead.
+            :meth:`aerospike.get_expression_base64` should be used instead.
 
     .. method:: shm_key()  ->  int
 
@@ -1071,7 +1071,7 @@ Index Operations
             :code: python
 
         .. deprecated:: 11.0.0
-            :ref:`aerospike.get_cdtctx_base64` should be used instead.
+            :meth:`aerospike.get_cdtctx_base64` should be used instead.
 
 
     .. index::
