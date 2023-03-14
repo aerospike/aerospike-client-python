@@ -37,7 +37,7 @@ class TestPredEveryWhere(object):
             for j in range(1, 5)
         ]
         self.test_data.append({"string_list": ["s1", "s2", "s3", "s4"]})
-        self.test_data.append({"map_bin": {"k1": 1, "k2": 2, "k3": 3, "k4": 4}})
+        self.test_data.append({"map_bin": aerospike.KeyOrderedDict({"k1": 1, "k2": 2, "k3": 3, "k4": 4})})
 
         georec = {"id": 1, "point": geo_point, "region": geo_circle, "geolist": [geo_point]}
 
