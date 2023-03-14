@@ -441,7 +441,7 @@ Policies
         * **max_retries** :class:`int`
             | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            | If max_retries is exceeded, the transaction will the last suberror that was received.
             |
             | Default: ``0``
 
