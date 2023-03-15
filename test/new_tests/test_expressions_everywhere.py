@@ -44,7 +44,7 @@ class TestPredEveryWhere(object):
 
         self.test_data.append(georec)
         self.test_data_bin = "test_data"
-        self.keys = [("test", "pred_evry", i + 1) for i, _ in enumerate(self.test_data)]
+        self.keys = [("test", "demo", i + 1) for i, _ in enumerate(self.test_data)]
         # print('self keys is: ', self.keys)
 
         for key, data in zip(self.keys, self.test_data):
@@ -287,7 +287,7 @@ class TestPredEveryWhere(object):
         """
         Invoke the C client aerospike_key_operate with expressions.
         """
-        key = ("test", "pred_evry", key_num)
+        key = ("test", "demo", key_num)
 
         _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expressions.compile()})
         assert res == expected_res
@@ -314,7 +314,7 @@ class TestPredEveryWhere(object):
         """
         Invoke the C client aerospike_key_operate with expressions using operate_ordered.
         """
-        key = ("test", "pred_evry", key_num)
+        key = ("test", "demo", key_num)
 
         _, _, res = self.as_connection.operate_ordered(key, ops, policy={"expressions": expressions.compile()})
         assert res == expected_res
@@ -339,7 +339,7 @@ class TestPredEveryWhere(object):
         """
         Invoke the C client aerospike_key_operate with expressions using operate_ordered with expected failures.
         """
-        key = ("test", "pred_evry", key_num)
+        key = ("test", "demo", key_num)
 
         with pytest.raises(expected):
             _, _, res = self.as_connection.operate_ordered(key, ops, policy={"expressions": expressions.compile()})
@@ -365,7 +365,7 @@ class TestPredEveryWhere(object):
         """
         Invoke the C client aerospike_key_operate with expressions.
         """
-        key = ("test", "pred_evry", key_num)
+        key = ("test", "demo", key_num)
 
         _, _, _ = self.as_connection.operate(key, ops, policy={"expressions": expressions.compile()})
 
@@ -379,14 +379,14 @@ class TestPredEveryWhere(object):
         """
 
         for i in range(5):
-            key = "test", "pred_lut", i
+            key = "test", "demo", i
             self.as_connection.put(key, {"time": "earlier"})
 
         cutoff_nanos = (10**9) * int(time.time() + 2)
         time.sleep(5)
 
         for i in range(5, 10):
-            key = "test", "pred_lut", i
+            key = "test", "demo", i
             self.as_connection.put(key, {"time": "later"})
 
         results = []
@@ -396,7 +396,7 @@ class TestPredEveryWhere(object):
 
         for i in range(10):
             try:
-                key = "test", "pred_lut", i
+                key = "test", "demo", i
                 _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expr.compile()})
                 results.append(res)
             except Exception:
@@ -414,7 +414,7 @@ class TestPredEveryWhere(object):
         """
 
         for i in range(5):
-            key = "test", "pred_ttl", i
+            key = "test", "demo", i
             self.as_connection.put(key, {"time": "earlier"}, meta={"ttl": 100})
 
         # 150 second range for record TTLs should be enough, we are storing with
@@ -423,7 +423,7 @@ class TestPredEveryWhere(object):
         void_time_range_end = (10**9) * int(time.time() + 150)
 
         for i in range(5, 10):
-            key = "test", "pred_ttl", i
+            key = "test", "demo", i
             self.as_connection.put(key, {"time": "later"}, meta={"ttl": 1000})
 
         results = []
@@ -436,7 +436,7 @@ class TestPredEveryWhere(object):
 
         for i in range(10):
             try:
-                key = "test", "pred_ttl", i
+                key = "test", "demo", i
                 _, _, res = self.as_connection.operate(key, ops, policy={"expressions": expr})
                 results.append(res)
             except Exception:
@@ -515,7 +515,7 @@ class TestPredEveryWhere(object):
         """
         Invoke the C client aerospike_key_operate with expressions. Expecting failures.
         """
-        key = ("test", "pred_evry", key_num)
+        key = ("test", "demo", key_num)
 
         with pytest.raises(expected):
             self.as_connection.operate(key, ops, policy={"expressions": expressions})

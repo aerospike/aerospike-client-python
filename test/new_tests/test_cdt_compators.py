@@ -34,7 +34,7 @@ class TestNewRelativeCDTValues(object):
             "g": [3, "g"],
         }
 
-        self.cdt_key = ("test", "cdt_values", "wildcard")
+        self.cdt_key = ("test", "demo", "wildcard")
         self.cdt_list_bin = "cdt_list_bin"
         self.cdt_map_bin = "cdt_map_bin"
 
