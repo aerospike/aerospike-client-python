@@ -298,8 +298,8 @@ class TestNewListOperationsHelpers(object):
     @pytest.mark.parametrize(
             "map_return_type",
             [
-                (aerospike.MAP_RETURN_ORDERED_MAP,),
-                (aerospike.MAP_RETURN_UNORDERED_MAP,)
+                aerospike.MAP_RETURN_ORDERED_MAP,
+                aerospike.MAP_RETURN_UNORDERED_MAP
             ]
     )
     def test_map_return_types(self, map_return_type):
