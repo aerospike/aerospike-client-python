@@ -49,6 +49,8 @@ class Val(_BaseExpr):
     _op = _ExprOp._AS_EXP_CODE_AS_VAL
 
     def __init__(self, value: Any):
+        """:return: (value)
+        """
         self._fixed = {_Keys.VALUE_KEY: value}
         super().__init__()
 
