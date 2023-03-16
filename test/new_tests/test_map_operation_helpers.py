@@ -303,8 +303,8 @@ class TestNewListOperationsHelpers(object):
             ]
     )
     def test_map_return_types(self, map_return_type):
-        if not self.Server61:
-            pytest.skip("It only applies to >= 6.1 enterprise edition")
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 3):
+            pytest.skip("It only applies to >= 6.3 enterprise edition")
 
         operations = [
             map_ops.map_get_by_key_list(self.unsorted_map_bin, ["a", "b", "c"], map_return_type)
