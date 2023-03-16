@@ -296,7 +296,7 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals == ["f", "e"]
 
     @pytest.mark.parametrize(
-        "map_return_type", "expected_results",
+        "map_return_type, expected_results",
         [
             (aerospike.MAP_RETURN_UNORDERED_MAP, {"a": 1, "c": 3, "b": 2}),
             (aerospike.MAP_RETURN_ORDERED_MAP, {"a": 1, "b": 2, "c": 3}),
