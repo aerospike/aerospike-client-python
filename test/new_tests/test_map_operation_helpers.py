@@ -307,9 +307,9 @@ class TestNewListOperationsHelpers(object):
             pytest.skip("It only applies to >= 6.1 enterprise edition")
 
         operations = [
-            map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], map_return_type)
+            map_ops.map_get_by_key_list(self.unsorted_map_bin, ["a", "b", "c"], map_return_type)
         ]
-        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.unsorted_map_bin)
 
         assert ret_vals.items() == expected_results.items()
 
