@@ -126,12 +126,62 @@ jobs:
         name: wheel-${{ matrix.py-version }}
         path: ./dist/*.whl
 
+  # Run this when testing new server features on server release candidate
+  # to make sure the tests don't regress on the last server release.
+  test-ce-latest-release:
+    runs-on: ubuntu-latest
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+    needs: build
+    strategy:
+      matrix:
+        py-version: [
+          "3.7",
+        ]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.py-version }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ matrix.py-version }}
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
+
   test-ce:
     runs-on: ubuntu-latest
     needs: build
     strategy:
       matrix:
-        py-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        py-version: [
+          "3.7",
+          "3.8",
+          "3.9",
+          "3.10",
+          "3.11"
+        ]
       fail-fast: false
 
     steps:
