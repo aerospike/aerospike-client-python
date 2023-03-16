@@ -1207,6 +1207,16 @@ Return types used by various map operations.
 
         ``[key1, value1, key2, value2, ...]``
 
+.. data:: MAP_RETURN_UNORDERED_MAP
+
+    Return unordered map.
+
+    For the Python client, this return type returns the same results as :data:`aerospike.MAP_RETURN_ORDERED_MAP`.
+
+.. data:: MAP_RETURN_ORDERED_MAP
+
+    Return ordered map.
+
 Bitwise
 -------
 
