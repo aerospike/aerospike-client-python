@@ -159,11 +159,19 @@ class TestExpressions(TestBaseClass):
         request.addfinalizer(teardown)
 
     def test_val_pos(self):
+        expr = Val(2).compile()
         ops = [
-            expressions.expression_write("extra", Val(1).compile())
+            expressions.expression_write("extra", expr)
         ]
         record = self.as_connection.operate(("test", "demo", _NUM_RECORDS), ops)
-        assert record[2]["extra"] == 1
+
+        expr = Eq(IntBin("extra"), Val(2))
+        record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
+        assert record[2]["extra"] == 2
+
+        with pytest.raises(e.FilteredOut):
+            expr = Eq(IntBin("extra"), Val(4))
+            self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
 
     @pytest.mark.xfail(reason="Will fail on storage engine device.")
     def test_device_size_pos(self):
