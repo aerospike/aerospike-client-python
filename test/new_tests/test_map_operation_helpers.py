@@ -315,7 +315,7 @@ class TestNewListOperationsHelpers(object):
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
-        assert ret_vals is expected_results
+        assert ret_vals == expected_results
 
     def test_map_get_exists_by_key_range(self):
         if not self.Server61:
