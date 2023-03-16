@@ -295,23 +295,23 @@ class TestNewListOperationsHelpers(object):
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
         assert ret_vals == ["f", "e"]
 
-    @pytest.mark.parametrize(
-        "map_return_type, expected_results",
-        [
-            (aerospike.MAP_RETURN_UNORDERED_MAP, {"a": 1, "c": 3, "b": 2}),
-            (aerospike.MAP_RETURN_ORDERED_MAP, {"a": 1, "b": 2, "c": 3}),
-        ],
-    )
-    def test_map_return_types(self, map_return_type, expected_results):
+    def test_map_return_types(self):
         if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
 
         operations = [
-            map_ops.map_get_by_key_list(self.unsorted_map_bin, ["a", "b", "c"], map_return_type)
+            map_ops.map_get_by_key_list(self.unsorted_map_bin, ["a", "b", "c"], aerospike.MAP_RETURN_UNORDERED_MAP)
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.unsorted_map_bin)
 
-        assert ret_vals.items() == expected_results.items()
+        assert list(ret_vals.items()) == list({"a": 1, "c": 3, "b": 2}.items())
+
+        operations = [
+            map_ops.map_get_by_key_list(self.unsorted_map_bin, ["a", "b", "c"], aerospike.MAP_RETURN_ORDERED_MAP)
+        ]
+        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.unsorted_map_bin)
+
+        assert list(ret_vals.items()) == list({"a": 1, "b": 2, "c": 3}.items())
 
     def test_map_get_exists_by_key_list(self):
         if not self.Server61:
