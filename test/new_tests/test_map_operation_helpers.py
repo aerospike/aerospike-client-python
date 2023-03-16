@@ -2,7 +2,6 @@
 import pytest
 import aerospike
 from aerospike import exception as e
-from aerospike import KeyOrderedDict
 from aerospike_helpers.operations import map_operations as map_ops
 from .test_base_class import TestBaseClass
 
@@ -60,9 +59,12 @@ class TestNewListOperationsHelpers(object):
         # boolean < integer
         self.test_map = {"a": 5, "b": 4, "c": 3, "d": 2, "e": 1, "f": True, "g": False}
 
+        self.unsorted_map_bin = "unsorted_map"
+        self.unsorted_map = {"a": 1, "c": 3, "b": 2}
+
         self.test_key = "test", "demo", "new_map_op"
         self.test_bin = "map"
-        self.as_connection.put(self.test_key, {self.test_bin: self.test_map})
+        self.as_connection.put(self.test_key, {self.test_bin: self.test_map, self.unsorted_map_bin: self.unsorted_map})
         self.keys.append(self.test_key)
 
         yield
@@ -294,28 +296,32 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals == ["f", "e"]
 
     @pytest.mark.parametrize(
-        "map_return_type, key_list, expected_results",
+        "map_return_type", "expected_results",
         [
-            (aerospike.MAP_RETURN_EXISTS,        ["a", "b", "c"],      True),
-            # Keys are guaranteed to be ordered for an ordered map
-            (
-                aerospike.MAP_RETURN_ORDERED_MAP,
-                ["d", "c", "b", "a"],
-                KeyOrderedDict({"a": 5, "b": 4, "c": 3, "d": 2})
-            ),
-            # The ordering of keys is not guaranteed for an unordered map
-            (aerospike.MAP_RETURN_UNORDERED_MAP, ["d", "c", "b", "a"], {"a": 5, "b": 4, "c": 3, "d": 2})
+            (aerospike.MAP_RETURN_UNORDERED_MAP, {"a": 1, "c": 3, "b": 2}),
+            (aerospike.MAP_RETURN_ORDERED_MAP, {"a": 1, "b": 2, "c": 3}),
         ],
     )
-    def test_map_get_exists_by_key_list(self, map_return_type, key_list, expected_results):
+    def test_map_return_types(self, map_return_type, expected_results):
         if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
+
         operations = [
-            map_ops.map_get_by_key_list(self.test_bin, key_list, map_return_type)
+            map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], map_return_type)
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
-        assert ret_vals == expected_results
+        assert ret_vals.items() == expected_results.items()
+
+    def test_map_get_exists_by_key_list(self):
+        if not self.Server61:
+            pytest.skip("It only applies to >= 6.1 enterprise edition")
+        operations = [
+            map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], aerospike.MAP_RETURN_EXISTS)
+        ]
+        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
+
+        assert ret_vals is True
 
     def test_map_get_exists_by_key_range(self):
         if not self.Server61:
