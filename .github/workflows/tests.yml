@@ -110,7 +110,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
-    - run: yum update
+    - run: yum update -y
     - name: Install C client dependencies (from README)
       run: yum install -y openssl-devel glibc-devel autoconf automake libtool
     - name: Install C client dependencies not in README
