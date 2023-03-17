@@ -257,7 +257,7 @@ class HLLDescribe(_BaseExpr):
 
 
 class HLLMayContain(_BaseExpr):
-    """Create an expression that checks if the HLL bin contains any keys in
+    """Create an expression that checks if the HLL bin may contain any of the keys in
     list.
     """
 
@@ -269,14 +269,14 @@ class HLLMayContain(_BaseExpr):
         bin: "TypeBinName",
     ):
         """Args:
-            list (TypeListValue): A list expression of keys to check if the HLL may contain them.
+            list (TypeListValue): A list expression of keys to check if the HLL may contain any of them.
             bin (TypeBinName): An :class:`~aerospike_helpers.expressions.base.HLLBin` expression.
 
-        :return: 1 if bin contains any key in list, 0 otherwise.
+        :return: 1 if bin may contain any key in list, 0 otherwise.
 
         Example::
 
-            # Check if HLL bin "d" contains any of the keys in `list`.
+            # Check if HLL bin "d" may contain any of the keys in `list`.
             expr = exp.HLLMayContain(["key1", "key2", "key3"], exp.HLLBin("d")).compile()
         """
         self._children = (
