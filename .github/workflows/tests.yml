@@ -124,7 +124,7 @@ jobs:
       run: python3 -m pip install -r requirements.txt
       working-directory: test
     - name: Configure tests
-      # Use | to escape the colon when parsing this file
+      # Use | to escape the colon when parsing this string
       run: |
         sed -i "s/hosts: 127.0.0.1:3000/hosts: $hostname:3000/" config.conf
       working-directory: test
