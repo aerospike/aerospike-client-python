@@ -56,7 +56,7 @@ include_dirs = ['src/include'] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O0', '-DDEBUG', '-fprofile-arcs', '-ftest-coverage',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
@@ -65,7 +65,7 @@ extra_compile_args = [
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
 extra_objects = []
-extra_link_args = []
+extra_link_args = ['-lgcov']
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
