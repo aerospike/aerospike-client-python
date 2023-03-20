@@ -1309,7 +1309,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_min_conns_per_node =
-        PyDict_GetItemString(py_policies, "min_conns_per_node");
+        PyDict_GetItemString(py_config, "min_conns_per_node");
     if (py_min_conns_per_node && PyLong_Check(py_min_conns_per_node)) {
         config.min_conns_per_node = PyLong_AsLong(py_min_conns_per_node);
     }
