@@ -126,6 +126,38 @@ jobs:
         name: wheel-${{ matrix.py-version }}
         path: ./dist/*.whl
 
+  test-coverage:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
+        architecture: 'x64'
+
+    - name: Build client
+      run: python3 setup.py build
+
+    - name: Install client
+      run: python3 setup.py install --user
+
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - run: python cov.py
+      working-directory: test
+
+    - name: Show coverage
+      run: gcov build/temp.linux-x86_64-cpython-39/src/main/aerospike.o
+
+    - name: Setup tmate session
+      if: ${{ always() }}
+      uses: mxschmitt/action-tmate@v3
+
   # Run this when testing new server features on server release candidate
   # to make sure the tests don't regress on the last server release.
   test-ce-latest-release:
@@ -159,7 +191,12 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+
     - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - name: Wait for database to be ready
