@@ -243,53 +243,12 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - name: Install crudini to manipulate config.conf
-      run: pip install crudini
-
-    - name: Add enterprise edition config to config.conf
-      run: |
-        crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-        crudini --set config.conf enterprise-edition user superuser
-        crudini --set config.conf enterprise-edition password superuser
-      working-directory: test
-
-    - name: Create config folder to store configs in
-      run: mkdir configs
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:latest
-
-    - name: Run Aerospike server
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-enterprise
-
-    - name: Get default aerospike.conf from Docker server EE container
-      run: |
-        sleep 5
-        docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
-        docker container stop aerospike
-        docker container rm aerospike
-
-    - name: Enable security features using aerospike.conf
-      # Security stanza
-      run: echo -e "security {\n\n}\n" >> ./aerospike.conf
-      working-directory: ./configs
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:latest asd --config-file /opt/aerospike/etc/aerospike.conf
-
-    - name: Run enterprise edition server
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike aerospike/aerospike-server-enterprise:latest asd --config-file /opt/aerospike/etc/aerospike.conf
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
 
     - name: Wait for server to start
       run: sleep 5
-
-    - name: Create user in database for tests
-      # Use default admin user to create another user for testing
-      run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
 
     - name: Run tests
       run: python -m pytest ./new_tests/test_admin_*.py
