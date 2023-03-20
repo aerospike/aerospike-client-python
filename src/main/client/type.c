@@ -1308,6 +1308,12 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         config.max_conns_per_node = PyInt_AsLong(py_max_threads);
     }
 
+    PyObject *py_min_conns_per_node =
+        PyDict_GetItemString(py_policies, "min_conns_per_node");
+    if (py_min_conns_per_node && PyLong_Check(py_min_conns_per_node)) {
+        config.min_conns_per_node = PyLong_AsLong(py_min_conns_per_node);
+    }
+
     // max_conns_per_node
     PyObject *py_max_conns =
         PyDict_GetItemString(py_config, "max_conns_per_node");
