@@ -297,8 +297,10 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - name: Run server 5.7
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:5.7.0.7
+    - name: Run lowest supported server
+      run: |
+        SERVER_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/aerospike/aerospike-server/tags?page_size=100" | jq '.results[] | select(.name | startswith("6.0")).name' -r | head -n 1)
+        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:$SERVER_VERSION
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
