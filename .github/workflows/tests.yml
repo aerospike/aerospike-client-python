@@ -144,11 +144,15 @@ jobs:
     - name: Install client
       run: python3 setup.py install --user
 
-    - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
     - run: pip install -r requirements.txt
       working-directory: test
+
+    - name: Run Aerospike server
+      uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+
+    - run: sleep 5
 
     - run: python3 -m pytest new_tests/
       working-directory: test
@@ -168,11 +172,13 @@ jobs:
         find . -type f -name "*.o" -exec gcov {} \;
 
     - name: Get exact folder to find coverage reports
+      if: ${{ always() }}
       run: |
         obj_dir=$(ls -d build/temp*/src/main/)
         echo "OBJ_DIR=$obj_dir" >> $GITHUB_ENV
 
     - uses: codecov/codecov-action@v3
+      if: ${{ always() }}
       with:
         directory: ${{ env.OBJ_DIR }}
         verbose: true # optional (default = false)
