@@ -1,0 +1,45 @@
+name: Valgrind
+
+on:
+  workflow_dispatch:
+    inputs:
+      test-file:
+        description: 'new_test/<test-file>'
+        required: false
+        default: ""
+      use-server-rc:
+        required: true
+        default: false
+
+jobs:
+  valgrind:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+        architecture: 'x64'
+
+    - name: Install client
+      run: pip install .
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Run EE server
+      uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - run: sudo apt update
+    - run: sudo apt install valgrind -y
+    - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+      working-directory: test
