@@ -135,6 +135,9 @@ jobs:
     # but leaving this alone for now since the server should be ready by this point
     - run: python3 -m pytest new_tests/
       working-directory: test
+    - run: pip uninstall -y aerospike
+    - name: Test wheel install from PyPI
+      run: python3 -m pip install aerospike -y
 
   build:
     runs-on: ubuntu-latest
