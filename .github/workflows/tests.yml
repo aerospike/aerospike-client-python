@@ -157,9 +157,9 @@ jobs:
       if: ${{ always() }}
       run: |
         cd build/temp*/src/main
-        mkdir src/main -p
-        cd ../../../../src/
-        cp . -r ../build/temp*/src/
+        mkdir src
+        cd ../../../../
+        cp src/ build/temp*/src/main/ -r
 
     - name: Generate coverage report
       if: ${{ always() }}
