@@ -96,48 +96,50 @@ jobs:
 
   rhel9:
     runs-on: ubuntu-latest
-    services:
-      aerospike:
-        # Docker Hub image
-        image: aerospike/aerospike-server
-        ports:
-        - 3000:3000
-        - 3001:3001
-        - 3002:3002
-    container: redhat/ubi9:latest
     steps:
-    - run: yum install -y git
-    - uses: actions/checkout@v2
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Get server ip
+      run: echo SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike) >> $GITHUB_ENV
+
+    # Use this to get current branch of workflow
+    - name: Inject slug/short variables
+      uses: rlespinasse/github-slug-action@v4
       with:
-        submodules: recursive
-    - run: yum update -y
-    - name: Install C client dependencies (from README)
-      run: yum install -y openssl-devel glibc-devel autoconf automake libtool
-    - name: Install C client dependencies not in README
-      run: yum install -y zlib-devel
-    - name: Install Python client dependencies
-      run: yum install -y openssl-devel python-devel
-    - run: python3 -m pip install build
-    - run: python3 -m build
-    - run: python3 -m pip install dist/*.whl
-    - name: Install test dependencies
-      run: python3 -m pip install -r requirements.txt
-      working-directory: test
-    - name: Configure tests
-      # Use | to escape the colon when parsing this string
+        short-length: 8 # Same as v3 and before
+
+    - uses: addnab/docker-run-action@v3
+      with:
+        image: redhat/ubi9:latest
+        options: -e GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }} -e SERVER_IP=${{ env.SERVER_IP }}
+        run: |
+          test "a" == "b"
+          yum update -y
+          yum install -y git
+          yum install -y openssl-devel glibc-devel autoconf automake libtool
+          yum install -y zlib-devel
+          yum install -y openssl-devel python-devel
+          git clone --branch $GITHUB_REF_NAME --recurse-submodules https://github.com/aerospike/aerospike-client-python
+          python3 -m pip install build
+          python3 -m build
+          python3 -m pip install dist/*.whl
+          python3 -m pip install -r test/requirements.txt
+          sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" test/config.conf
+          python3 -m pytest test/new_tests/
+          # Wheel install test
+          pip uninstall -y aerospike
+          python3 -m pip install aerospike
+
+    - name: Cleanup
       run: |
-        sed -i "s/hosts: 127.0.0.1:3000/hosts: $hostname:3000/" config.conf
-      working-directory: test
-      env:
-        # Get host from label
-        hostname: aerospike
-    # TODO: race condition where we have to assume the server is ready
-    # but leaving this alone for now since the server should be ready by this point
-    - run: python3 -m pytest new_tests/
-      working-directory: test
-    - run: pip uninstall -y aerospike
-    - name: Test wheel install from PyPI
-      run: python3 -m pip install aerospike
+        docker container stop aerospike
+        docker container rm aerospike
 
   build:
     runs-on: ubuntu-latest
