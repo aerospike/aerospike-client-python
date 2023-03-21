@@ -2,6 +2,7 @@
 import time
 
 import pytest
+from .test_base_class import TestBaseClass
 
 from aerospike import exception as e
 from aerospike_helpers import expressions as exp
@@ -668,6 +669,8 @@ class TestPredEveryWhere(object):
             self.as_connection.get(self.keys[0], {"expressions": expr.compile()})
 
     def test_get_with_keyordered_dict_expression(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 3):
+            pytest.skip(reason="Comparing key ordered maps in expressions is only supported in server 6.3 and higher")
         expr = exp.Eq(exp.MapBin("map_bin"), aerospike.KeyOrderedDict({"k1": 1, "k2": 2, "k4": 4, "k3": 3})).compile()
         policy = {"expressions": expr}
         self.as_connection.get(self.keys[5], policy)

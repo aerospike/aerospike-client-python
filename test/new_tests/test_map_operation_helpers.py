@@ -59,9 +59,12 @@ class TestNewListOperationsHelpers(object):
         # boolean < integer
         self.test_map = {"a": 5, "b": 4, "c": 3, "d": 2, "e": 1, "f": True, "g": False}
 
+        self.unsorted_map_bin = "unsorted_map"
+        self.unsorted_map = {"a": 1, "c": 3, "b": 2}
+
         self.test_key = "test", "demo", "new_map_op"
         self.test_bin = "map"
-        self.as_connection.put(self.test_key, {self.test_bin: self.test_map})
+        self.as_connection.put(self.test_key, {self.test_bin: self.test_map, self.unsorted_map_bin: self.unsorted_map})
         self.keys.append(self.test_key)
 
         yield
@@ -292,11 +295,32 @@ class TestNewListOperationsHelpers(object):
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
         assert ret_vals == ["f", "e"]
 
+    @pytest.mark.parametrize(
+            "map_return_type",
+            [
+                aerospike.MAP_RETURN_ORDERED_MAP,
+                aerospike.MAP_RETURN_UNORDERED_MAP
+            ]
+    )
+    def test_map_return_types(self, map_return_type):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 3):
+            pytest.skip("It only applies to >= 6.3 enterprise edition")
+
+        operations = [
+            map_ops.map_get_by_key_list(self.unsorted_map_bin, ["a", "b", "c"], map_return_type)
+        ]
+        ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.unsorted_map_bin)
+
+        # The C client will always reorder maps using their keys
+        # so it doesn't matter whether the user requests an unordered or ordered map
+        # Both will return the same results
+        assert list(ret_vals.items()) == list({"a": 1, "b": 2, "c": 3}.items())
+
     def test_map_get_exists_by_key_list(self):
         if not self.Server61:
             pytest.skip("It only applies to >= 6.1 enterprise edition")
         operations = [
-            map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], return_type=aerospike.MAP_RETURN_EXISTS)
+            map_ops.map_get_by_key_list(self.test_bin, ["a", "b", "c"], aerospike.MAP_RETURN_EXISTS)
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
 
