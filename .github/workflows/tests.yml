@@ -167,9 +167,14 @@ jobs:
         cd build/temp*/src/main
         find . -type f -name "*.o" -exec gcov {} \;
 
+    - name: Get exact folder to find coverage reports
+      run: |
+        obj_dir=$(ls -d build/temp*/src/main/)
+        echo "OBJ_DIR=$obj_dir" >> $GITHUB_ENV
+
     - uses: codecov/codecov-action@v3
       with:
-        directory: build/temp*/src/main/
+        directory: ${{ env.OBJ_DIR }}
         verbose: true # optional (default = false)
         fail_ci_if_error: true
 
