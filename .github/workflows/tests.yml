@@ -157,7 +157,8 @@ jobs:
       run: |
         cd build/temp.linux-x86_64-cpython-39/src/main
         mkdir src/main -p
-        cp ../../../..src/main/aerospike.c src/main
+        cd ../../../../src/
+        cp . -r src/
 
     - name: Generate coverage report
       if: ${{ always() }}
@@ -166,6 +167,10 @@ jobs:
     - name: Show coverage report
       if: ${{ always() }}
       run: cat build/temp.linux-x86_64-cpython-39/src/main/aerospike.c.gcov
+
+    - name: Setup tmate session
+      if: ${{ failed() }}
+      uses: mxschmitt/action-tmate@v3
 
   # Run this when testing new server features on server release candidate
   # to make sure the tests don't regress on the last server release.
