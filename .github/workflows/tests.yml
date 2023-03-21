@@ -137,7 +137,7 @@ jobs:
       working-directory: test
     - run: pip uninstall -y aerospike
     - name: Test wheel install from PyPI
-      run: python3 -m pip install aerospike -y
+      run: python3 -m pip install aerospike
 
   build:
     runs-on: ubuntu-latest
