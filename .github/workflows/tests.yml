@@ -139,9 +139,14 @@ jobs:
         architecture: 'x64'
 
     - name: Build client
-      run: python3 setup.py build
+      # Use old build command to generate object .o files in build/temp*/src/main directory
+      # They will also contain .gcno files there
+      # and .gcda files will be generated there after running the tests
+      # The build frontend doesn't generate these .o files (may be wrong?)
+      run: COVERAGE=1 python3 setup.py build
 
     - name: Install client
+      # Install in user directory to prevent permission errors
       run: python3 setup.py install --user
 
     - run: pip install -r requirements.txt
@@ -159,13 +164,15 @@ jobs:
 
     - name: Copy over source files to build dir
       if: ${{ always() }}
+      # The build/temp*/src/main directory will contain a hierarchy of object .o files
+      # But the source files must be stored in the same folder hierarchy at build/temp*/src/main/src/main
       run: |
         cd build/temp*/src/main
         mkdir src
         cd ../../../../
         cp src/ build/temp*/src/main/ -r
 
-    - name: Generate coverage report
+    - name: Generate coverage report for all object files
       if: ${{ always() }}
       run: |
         cd build/temp*/src/main
@@ -173,6 +180,7 @@ jobs:
 
     - name: Get exact folder to find coverage reports
       if: ${{ always() }}
+      # Can't pass in glob pattern to codecov action (I think?)
       run: |
         obj_dir=$(ls -d build/temp*/src/main/)
         echo "OBJ_DIR=$obj_dir" >> $GITHUB_ENV

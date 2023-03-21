@@ -46,6 +46,7 @@ CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 EVENT_LIB = os.getenv('EVENT_LIB')
+COVERAGE = os.getenv('COVERAGE')
 
 ################################################################################
 # GENERIC BUILD SETTINGS
@@ -56,7 +57,7 @@ include_dirs = ['src/include'] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O0', '-DDEBUG', '-fprofile-arcs', '-ftest-coverage',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
@@ -65,7 +66,7 @@ extra_compile_args = [
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
 extra_objects = []
-extra_link_args = ['-lgcov']
+extra_link_args = []
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
@@ -74,6 +75,12 @@ libraries = [
     'm',
     'z'
 ]
+
+if COVERAGE:
+    extra_compile_args.append('-fprofile-arcs')
+    extra_compile_args.append('-ftest-coverage')
+    extra_link_args.append('-lgcov')
+
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
 ################################################################################
