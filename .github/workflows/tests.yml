@@ -156,18 +156,23 @@ jobs:
     - name: Copy over source files to build dir
       if: ${{ always() }}
       run: |
-        cd build/temp.linux-x86_64-cpython-39/src/main
+        cd build/temp*/src/main
         mkdir src/main -p
         cd ../../../../src/
-        cp . -r build/temp.linux-x86_64-cpython-39/src/
+        cp . -r ../build/temp*/src/
 
     - name: Generate coverage report
       if: ${{ always() }}
-      run: gcov build/temp.linux-x86_64-cpython-39/src/main/aerospike.o
+      run: |
+        pip install gcovr
+        cd build/temp*/src/main
+        gcovr --gcov-ignore-errors=no_working_dir_found --html-details coverage.html
 
-    - name: Show coverage report
+    - name: HTML Preview
       if: ${{ always() }}
-      run: cat build/temp.linux-x86_64-cpython-39/src/main/aerospike.c.gcov
+      uses: pavi2410/html-preview-action@v2
+      with:
+        html_file: 'coverage.html'
 
     - name: Setup tmate session
       if: ${{ failure() }}
