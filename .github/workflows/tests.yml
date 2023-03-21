@@ -154,11 +154,12 @@ jobs:
       working-directory: test
 
     - name: Copy over source files to build dir
+      if: ${{ always() }}
       run: |
         cd build/temp.linux-x86_64-cpython-39/src/main
         mkdir src/main -p
         cd ../../../../src/
-        cp . -r src/
+        cp . -r build/temp.linux-x86_64-cpython-39/src/
 
     - name: Generate coverage report
       if: ${{ always() }}
