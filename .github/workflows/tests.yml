@@ -147,7 +147,7 @@ jobs:
     - name: Run Aerospike server
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
-    - run: python cov.py
+    - run: python3 -m pytest new_tests/
       working-directory: test
 
     - name: Show coverage
