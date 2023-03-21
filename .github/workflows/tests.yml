@@ -168,15 +168,10 @@ jobs:
         cd build/temp*/src/main
         gcovr --gcov-ignore-errors=no_working_dir_found --html-details coverage.html
 
-    - name: HTML Preview
-      if: ${{ always() }}
-      id: html_preview
-      uses: pavi2410/html-preview-action@v2
+    - uses: codecov/codecov-action@v3
       with:
-        html_file: 'coverage.html'
-
-    - name: Show HTML link
-      run: echo ${{ steps.html_preview.outputs.url }}
+        directory: build/temp*/src/main/
+        verbose: true # optional (default = false)
 
     - name: Setup tmate session
       if: ${{ failure() }}
