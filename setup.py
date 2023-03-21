@@ -46,6 +46,8 @@ CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 EVENT_LIB = os.getenv('EVENT_LIB')
+# COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
+# Not for developers to use, unless you know what the workflow is doing!
 COVERAGE = os.getenv('COVERAGE')
 
 ################################################################################
