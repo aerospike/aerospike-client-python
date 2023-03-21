@@ -170,7 +170,7 @@ jobs:
       run: cat build/temp.linux-x86_64-cpython-39/src/main/aerospike.c.gcov
 
     - name: Setup tmate session
-      if: ${{ failed() }}
+      if: ${{ failure() }}
       uses: mxschmitt/action-tmate@v3
 
   # Run this when testing new server features on server release candidate
