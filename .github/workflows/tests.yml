@@ -268,21 +268,50 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      if: ${{ matrix.py-version != '3.11'}}
       run: python -m pytest ./new_tests
       working-directory: test
 
+  test-ee-coverage:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-3.7
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
     - name: Run tests with coverage
-      if: ${{ always() && matrix.py-version == '3.11'}}
       run: python -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
 
     - name: Comment coverage report on PR
-      if: ${{ always() && matrix.py-version == '3.11'}}
+      if: ${{ always() }}
       uses: MishaKav/pytest-coverage-comment@main
       with:
         pytest-xml-coverage-path: "./test/coverage.xml"
-        pathPrefix: "./"
 
   test-ee:
     runs-on: ubuntu-latest
