@@ -147,6 +147,9 @@ jobs:
     - name: Run Aerospike server
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
+    - run: pip install -r requirements.txt
+      working-directory: test
+
     - run: python3 -m pytest new_tests/
       working-directory: test
 
