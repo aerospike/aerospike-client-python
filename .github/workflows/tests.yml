@@ -151,6 +151,7 @@ jobs:
       working-directory: test
 
     - name: Show coverage
+      if: ${{ always() }}
       run: gcov build/temp.linux-x86_64-cpython-39/src/main/aerospike.o
 
     - name: Setup tmate session
