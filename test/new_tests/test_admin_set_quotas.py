@@ -9,16 +9,14 @@ import aerospike
 
 
 class TestSetQuotas(TestBaseClass):
-
-    pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    )
-    client = TestBaseClass.get_new_connection()
-
     def setup_method(self, method):
         """
         Setup method
         """
+        self.client = TestBaseClass.get_new_connection()
+        if TestBaseClass.auth_in_use() is False:
+            pytest.skip("No user specified, may not be a secured cluster", allow_module_level=True)
+
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
@@ -29,8 +27,7 @@ class TestSetQuotas(TestBaseClass):
         try:
             self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
         except e.QuotasNotEnabled:
-            pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
-            pytest.skip()
+            pytest.skip(reason="Got QuotasNotEnabled, skipping quota test.")
 
         time.sleep(1)
 
