@@ -160,7 +160,7 @@ jobs:
         find . -type f -name "*.o" -exec gcov {} \;
 
     - name: Move aerospike_helpers coverage report to this directory
-      run: mv coverage.xml build/temp*/src/main
+      run: mv test/coverage.xml build/temp*/src/main
 
     - name: Get exact folder to find coverage reports
       if: ${{ always() }}
