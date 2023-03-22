@@ -274,11 +274,6 @@ jobs:
       run: python -m pytest ./new_tests -vv
       working-directory: test
 
-
-    - name: Run tests with coverage
-      run: python -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
-      working-directory: test
-
   test-ee:
     runs-on: ubuntu-latest
     needs: build
