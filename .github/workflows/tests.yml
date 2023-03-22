@@ -35,13 +35,10 @@ jobs:
   test-distros:
     strategy:
       matrix:
-        image-name: [
-          "alpine",
-          "redhat/ubi9"
-        ]
-        container-name: [
-          "alpine",
-          "rhel9"
+        distros: [
+          # Image name, container name
+          ["alpine", "alpine"],
+          ["redhat/ubi9", "rhel9"]
         ]
     runs-on: ubuntu-latest
     steps:
@@ -62,18 +59,18 @@ jobs:
         short-length: 8 # Same as v3 and before
 
     - name: Run Alpine container
-      run: docker run --name ${{ matrix.container-name }} --network host --detach ${{ matrix.image-name }}:latest tail -f /dev/null
+      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }}:latest tail -f /dev/null
 
     - name: Copy build and test script to container
-      run: docker cp ./build-${{ matrix.container-name }}.sh ${{ matrix.container-name }}:/
+      run: docker cp ./build-${{ matrix.distros[1] }}.sh ${{ matrix.distros[1] }}:/
       working-directory: .github/workflows
 
     - name: Build and test
-      run: docker exec ${{ matrix.container-name }} ./build-${{ matrix.container-name }}.sh ${{ env.GITHUB_REF_NAME }}
+      run: docker exec ${{ matrix.distros[1] }} ./build-${{ matrix.distros[1] }}.sh ${{ env.GITHUB_REF_NAME }}
 
     - name: Cleanup
       run: |
-        docker container stop ${{ matrix.container-name }}
+        docker container stop ${{ matrix.distros[1] }}
         docker container stop aerospike
         docker container prune -f
 
