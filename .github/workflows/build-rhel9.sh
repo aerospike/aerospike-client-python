@@ -3,8 +3,6 @@
 set -e
 set -x
 
-test "a" == "b"
-
 # Update packages to get latest git version
 yum update -y
 yum install -y git openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
