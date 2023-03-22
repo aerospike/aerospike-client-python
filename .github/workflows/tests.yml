@@ -32,7 +32,15 @@ jobs:
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
-  alpine:
+  test-distros:
+    strategy:
+      matrix:
+        distros: [
+          # Image name, container name
+          ["alpine", "alpine"],
+          ["redhat/ubi9", "rhel9"]
+        ]
+      fail-fast: false
     runs-on: ubuntu-latest
     steps:
     - name: Run Aerospike server release candidate with latest tag
@@ -43,8 +51,7 @@ jobs:
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
-    - name: Get server ip
-      run: echo SERVER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' aerospike) >> $GITHUB_ENV
+    - uses: actions/checkout@v2
 
     # Use this to get current branch of workflow
     - name: Inject slug/short variables
@@ -52,47 +59,21 @@ jobs:
       with:
         short-length: 8 # Same as v3 and before
 
-    - uses: addnab/docker-run-action@v3
-      with:
-        image: alpine:latest
-        options: -e GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }} -e SERVER_IP=${{ env.SERVER_IP }}
-        run: |
-          apk add py3-pip
-          apk add python3-dev
-          apk add zlib-dev
-          apk add git
-          # C client dependencies
-          apk add automake
-          apk add make
-          apk add musl-dev
-          apk add gcc
-          apk add openssl-dev
-          apk add lua-dev
-          apk add libuv-dev  # (for node.js)
-          apk add doxygen  # (for make docs)
-          apk add graphviz # (for make docs)
+    - name: Run Alpine container
+      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }}:latest tail -f /dev/null
 
-          git clone --recurse-submodules https://github.com/aerospike/aerospike-client-python
-          cd aerospike-client-python/
-          git checkout $GITHUB_REF_NAME
-          git submodule update --recursive
+    - name: Copy build and test script to container
+      run: docker cp ./build-${{ matrix.distros[1] }}.sh ${{ matrix.distros[1] }}:/
+      working-directory: .github/workflows
 
-          python3 -m pip install build
-          python3 -m build
-          python3 -m pip install dist/*.whl
-          cd test/
-          # requirements.txt is not working atm
-          python3 -m pip install pytest
-
-          # Configure tests
-          sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" config.conf
-
-          python3 -m pytest new_tests/
+    - name: Build and test
+      run: docker exec ${{ matrix.distros[1] }} ./build-${{ matrix.distros[1] }}.sh ${{ env.GITHUB_REF_NAME }}
 
     - name: Cleanup
       run: |
+        docker container stop ${{ matrix.distros[1] }}
         docker container stop aerospike
-        docker container rm aerospike
+        docker container prune -f
 
   build:
     runs-on: ubuntu-latest
