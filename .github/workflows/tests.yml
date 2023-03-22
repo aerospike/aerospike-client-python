@@ -52,41 +52,21 @@ jobs:
       with:
         short-length: 8 # Same as v3 and before
 
-    - uses: addnab/docker-run-action@v3
-      with:
-        image: alpine:latest
-        options: -e GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }} -e SERVER_IP=${{ env.SERVER_IP }}
-        run: |
-          apk add py3-pip
-          apk add python3-dev
-          apk add zlib-dev
-          apk add git
+    - run: |
+        docker run alpine:latest -c
+          # Python client dependencies and git
+          apk add py3-pip python3-dev zlib-dev git &&
           # C client dependencies
-          apk add automake
-          apk add make
-          apk add musl-dev
-          apk add gcc
-          apk add openssl-dev
-          apk add lua-dev
-          apk add libuv-dev  # (for node.js)
-          apk add doxygen  # (for make docs)
-          apk add graphviz # (for make docs)
-
-          git clone --recurse-submodules https://github.com/aerospike/aerospike-client-python
-          cd aerospike-client-python/
-          git checkout $GITHUB_REF_NAME
-          git submodule update --recursive
-
-          python3 -m pip install build
-          python3 -m build
-          python3 -m pip install dist/*.whl
-          cd test/
+          apk add automake make musl-dev gcc openssl-dev lua-dev libuv-dev doxygen graphviz &&
+          git clone --branch $GITHUB_REF_NAME --recurse-submodules https://github.com/aerospike/aerospike-client-python &&
+          python3 -m pip install build &&
+          python3 -m build &&
+          python3 -m pip install dist/*.whl &&
+          cd test/ &&
           # requirements.txt is not working atm
-          python3 -m pip install pytest
-
+          python3 -m pip install pytest &&
           # Configure tests
-          sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" config.conf
-
+          sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" config.conf &&
           python3 -m pytest new_tests/
 
     - name: Cleanup
@@ -114,27 +94,21 @@ jobs:
       with:
         short-length: 8 # Same as v3 and before
 
-    - uses: addnab/docker-run-action@v3
-      with:
-        image: redhat/ubi9:latest
-        options: -e GITHUB_REF_NAME=${{ env.GITHUB_REF_NAME }} -e SERVER_IP=${{ env.SERVER_IP }}
-        run: |
-          test "a" == "b"
-          yum update -y
-          yum install -y git
-          yum install -y openssl-devel glibc-devel autoconf automake libtool
-          yum install -y zlib-devel
-          yum install -y openssl-devel python-devel
-          git clone --branch $GITHUB_REF_NAME --recurse-submodules https://github.com/aerospike/aerospike-client-python
-          python3 -m pip install build
-          python3 -m build
-          python3 -m pip install dist/*.whl
-          python3 -m pip install -r test/requirements.txt
-          sed -i "s/hosts: 127.0.0.1:3000/hosts: $SERVER_IP:3000/" test/config.conf
-          python3 -m pytest test/new_tests/
-          # Wheel install test
-          pip uninstall -y aerospike
-          python3 -m pip install aerospike
+    - run: |
+          docker run redhat/ubi9:latest -c
+            test "a" == "b" &&
+            yum update -y &&
+            yum install -y git openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel &&
+            git clone --branch ${{ env.GITHUB_REF_NAME }} --recurse-submodules https://github.com/aerospike/aerospike-client-python &&
+            python3 -m pip install build &&
+            python3 -m build &&
+            python3 -m pip install dist/*.whl &&
+            python3 -m pip install -r test/requirements.txt &&
+            sed -i "s/hosts: 127.0.0.1:3000/hosts: ${{ env.SERVER_IP }}:3000/" test/config.conf &&
+            python3 -m pytest test/new_tests/ &&
+            # Wheel install test
+            pip uninstall -y aerospike &&
+            python3 -m pip install aerospike
 
     - name: Cleanup
       run: |
