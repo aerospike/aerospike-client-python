@@ -1207,6 +1207,10 @@ Return types used by various map operations.
 
         ``[key1, value1, key2, value2, ...]``
 
+.. data:: MAP_RETURN_EXISTS
+
+    Return true if count of items selected > 0.
+
 .. data:: MAP_RETURN_UNORDERED_MAP
 
     Return unordered map.
