@@ -279,12 +279,6 @@ jobs:
       run: python -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
 
-    - name: Comment coverage report on PR
-      if: ${{ always() }}
-      uses: MishaKav/pytest-coverage-comment@main
-      with:
-        pytest-xml-coverage-path: "./test/coverage.xml"
-
   test-ee:
     runs-on: ubuntu-latest
     needs: build
