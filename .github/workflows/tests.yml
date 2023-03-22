@@ -37,6 +37,10 @@ jobs:
       matrix:
         image-name: [
           "alpine",
+          "redhat/ubi9"
+        ]
+        container-name: [
+          "alpine",
           "rhel9"
         ]
     runs-on: ubuntu-latest
@@ -58,18 +62,18 @@ jobs:
         short-length: 8 # Same as v3 and before
 
     - name: Run Alpine container
-      run: docker run --name ${{ matrix.image-name }} --network host --detach ${{ matrix.image-name }}:latest tail -f /dev/null
+      run: docker run --name ${{ matrix.container-name }} --network host --detach ${{ matrix.image-name }}:latest tail -f /dev/null
 
     - name: Copy build and test script to container
-      run: docker cp ./build-${{ matrix.image-name }}.sh ${{ matrix.image-name }}:/
+      run: docker cp ./build-${{ matrix.container-name }}.sh ${{ matrix.container-name }}:/
       working-directory: .github/workflows
 
     - name: Build and test
-      run: docker exec ${{ matrix.image-name }} ./build-${{ matrix.image-name }}.sh ${{ env.GITHUB_REF_NAME }}
+      run: docker exec ${{ matrix.container-name }} ./build-${{ matrix.container-name }}.sh ${{ env.GITHUB_REF_NAME }}
 
     - name: Cleanup
       run: |
-        docker container stop ${{ matrix.image-name }}
+        docker container stop ${{ matrix.container-name }}
         docker container stop aerospike
         docker container prune -f
 
