@@ -140,7 +140,7 @@ jobs:
 
     - run: sleep 5
 
-    - run: python3 -m pytest new_tests/
+    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
 
     - name: Copy over source files to build dir
@@ -158,6 +158,9 @@ jobs:
       run: |
         cd build/temp*/src/main
         find . -type f -name "*.o" -exec gcov {} \;
+
+    - name: Move aerospike_helpers coverage report to this directory
+      run: mv coverage.xml build/temp*/src/main
 
     - name: Get exact folder to find coverage reports
       if: ${{ always() }}
@@ -271,37 +274,6 @@ jobs:
       run: python -m pytest ./new_tests -vv
       working-directory: test
 
-  test-ee-coverage:
-    runs-on: ubuntu-latest
-    needs: build
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: "3.7"
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-3.7
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - uses: ./.github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
 
     - name: Run tests with coverage
       run: python -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
