@@ -140,7 +140,7 @@ jobs:
 
     - run: sleep 5
 
-    - run: python3 -m pytest new_tests/
+    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
 
     - name: Copy over source files to build dir
@@ -158,6 +158,9 @@ jobs:
       run: |
         cd build/temp*/src/main
         find . -type f -name "*.o" -exec gcov {} \;
+
+    - name: Move aerospike_helpers coverage report to this directory
+      run: mv test/coverage.xml build/temp*/src/main
 
     - name: Get exact folder to find coverage reports
       if: ${{ always() }}
@@ -268,7 +271,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: python -m pytest ./new_tests
+      run: python -m pytest ./new_tests -vv
       working-directory: test
 
   test-ee:
