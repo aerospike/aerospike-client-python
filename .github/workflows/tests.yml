@@ -40,7 +40,7 @@ jobs:
           ["alpine", "alpine"],
           ["redhat/ubi9", "rhel9"]
         ]
-        fail-fast: false
+      fail-fast: false
     runs-on: ubuntu-latest
     steps:
     - name: Run Aerospike server release candidate with latest tag
