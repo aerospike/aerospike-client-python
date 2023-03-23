@@ -274,6 +274,42 @@ jobs:
       run: python -m pytest ./new_tests -vv
       working-directory: test
 
+  test-lowest-supported-server:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-3.7
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Run lowest supported server
+      run: |
+        SERVER_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/aerospike/aerospike-server/tags?page_size=100" | jq '.results[] | select(.name | startswith("6.0")).name' -r | head -n 1)
+        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:$SERVER_VERSION
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run tests
+      run: python -m pytest ./new_tests
+      working-directory: test
+
   test-ee:
     runs-on: ubuntu-latest
     needs: build
