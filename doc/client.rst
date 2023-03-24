@@ -629,12 +629,12 @@ User Defined Functions
             #    'type': 0}
             # ]
 
-    .. method:: udf_get(module[, language=aerospike.UDF_TYPE_LUA[, policy: dict]]) -> str
+    .. method:: udf_get(module: str[, language: int = aerospike.UDF_TYPE_LUA[, policy: dict]]) -> str
 
         Return the content of a UDF module which is registered with the cluster.
 
         :param str module: the UDF module to read from the cluster.
-        :param int udf_type: :data:`aerospike.UDF_TYPE_LUA`
+        :param int language: :data:`aerospike.UDF_TYPE_LUA`
         :param dict policy: currently **timeout** in milliseconds is the available policy.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1048,7 +1048,7 @@ Index Operations
             client.close()
 
 
-    .. method:: index_remove(ns, name[, policy: dict])
+    .. method:: index_remove(ns: str, name: str[, policy: dict])
 
         Remove the index with *name* from the namespace.
 
