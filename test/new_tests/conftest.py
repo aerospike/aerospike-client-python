@@ -3,6 +3,7 @@ import time
 import os
 import sys
 from distutils.version import LooseVersion
+import logging
 
 import pytest
 from _pytest.terminal import TerminalReporter  # noqa: F401
@@ -181,6 +182,15 @@ def as_connection(request):
 
     request.addfinalizer(close_connection)
     return as_client
+
+
+logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(autouse=True)
+def clear_database(as_connection):
+    logger.info("Truncating database...")
+    as_connection.truncate("test", None, 0)
 
 
 @pytest.fixture(scope="class")
