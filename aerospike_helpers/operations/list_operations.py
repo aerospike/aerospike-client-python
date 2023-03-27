@@ -24,6 +24,7 @@ The ctx argument is a list of cdt_ctx context operation objects. See :class:`aer
 
 """
 import aerospike
+from typing import Optional
 
 
 OP_KEY = "op"
@@ -43,7 +44,7 @@ SORT_FLAGS_KEY = "sort_flags"
 CTX_KEY = "ctx"
 
 
-def list_append(bin_name: str, value, policy: dict = None, ctx: list = None):
+def list_append(bin_name: str, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list append operation.
 
@@ -71,7 +72,7 @@ def list_append(bin_name: str, value, policy: dict = None, ctx: list = None):
     return op_dict
 
 
-def list_append_items(bin_name: str, values, policy: dict = None, ctx: list = None):
+def list_append_items(bin_name: str, values, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list append items operation.
 
@@ -99,7 +100,7 @@ def list_append_items(bin_name: str, values, policy: dict = None, ctx: list = No
     return op_dict
 
 
-def list_insert(bin_name: str, index, value, policy: dict = None, ctx: list = None):
+def list_insert(bin_name: str, index, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list insert operation.
 
@@ -129,7 +130,7 @@ def list_insert(bin_name: str, index, value, policy: dict = None, ctx: list = No
     return op_dict
 
 
-def list_insert_items(bin_name: str, index, values, policy: dict = None, ctx: list = None):
+def list_insert_items(bin_name: str, index, values, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list insert items operation.
 
@@ -159,7 +160,7 @@ def list_insert_items(bin_name: str, index, values, policy: dict = None, ctx: li
     return op_dict
 
 
-def list_increment(bin_name: str, index, value, policy: dict = None, ctx: list = None):
+def list_increment(bin_name: str, index, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list increment operation.
 
@@ -188,7 +189,7 @@ def list_increment(bin_name: str, index, value, policy: dict = None, ctx: list =
     return op_dict
 
 
-def list_pop(bin_name: str, index, ctx: list = None):
+def list_pop(bin_name: str, index, ctx: Optional[list] = None):
     """
     Creates a list pop operation.
 
@@ -212,7 +213,7 @@ def list_pop(bin_name: str, index, ctx: list = None):
     return op_dict
 
 
-def list_pop_range(bin_name: str, index, count, ctx: list = None):
+def list_pop_range(bin_name: str, index, count, ctx: Optional[list] = None):
     """
     Creates a list pop range operation.
 
@@ -237,7 +238,7 @@ def list_pop_range(bin_name: str, index, count, ctx: list = None):
     return op_dict
 
 
-def list_remove(bin_name: str, index, ctx: list = None):
+def list_remove(bin_name: str, index, ctx: Optional[list] = None):
     """
     Creates a list remove operation.
 
@@ -260,7 +261,7 @@ def list_remove(bin_name: str, index, ctx: list = None):
     return op_dict
 
 
-def list_remove_range(bin_name: str, index, count, ctx: list = None):
+def list_remove_range(bin_name: str, index, count, ctx: Optional[list] = None):
     """
     Creates a list remove range operation.
 
@@ -285,7 +286,7 @@ def list_remove_range(bin_name: str, index, count, ctx: list = None):
     return op_dict
 
 
-def list_clear(bin_name: str, ctx: list = None):
+def list_clear(bin_name: str, ctx: Optional[list] = None):
     """Create list clear operation.
 
     The list clear operation removes all items from the list specified by `bin_name`
@@ -307,7 +308,7 @@ def list_clear(bin_name: str, ctx: list = None):
     return op_dict
 
 
-def list_set(bin_name: str, index, value, policy: dict = None, ctx: list = None):
+def list_set(bin_name: str, index, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """Create a list set operation.
 
     The list set operations sets the value of the item at `index` to `value`
@@ -334,7 +335,7 @@ def list_set(bin_name: str, index, value, policy: dict = None, ctx: list = None)
     return op_dict
 
 
-def list_get(bin_name: str, index, ctx: list = None):
+def list_get(bin_name: str, index, ctx: Optional[list] = None):
     """Create a list get operation.
 
     The list get operation gets the value of the item at `index` and returns the value
@@ -357,7 +358,7 @@ def list_get(bin_name: str, index, ctx: list = None):
     return op_dict
 
 
-def list_get_range(bin_name: str, index, count, ctx: list = None):
+def list_get_range(bin_name: str, index, count, ctx: Optional[list] = None):
     """Create a list get range operation.
 
     The list get range operation gets `count` items starting `index` and returns the values.
@@ -381,7 +382,7 @@ def list_get_range(bin_name: str, index, count, ctx: list = None):
     return op_dict
 
 
-def list_trim(bin_name: str, index, count, ctx: list = None):
+def list_trim(bin_name: str, index, count, ctx: Optional[list] = None):
     """Create a list trim operation.
 
     Server removes items in list bin that do not fall into range specified by index and count range.
@@ -405,7 +406,7 @@ def list_trim(bin_name: str, index, count, ctx: list = None):
     return op_dict
 
 
-def list_size(bin_name: str, ctx: list = None):
+def list_size(bin_name: str, ctx: Optional[list] = None):
     """Create a list size operation.
 
     Server returns the size of the list in the specified bin.
@@ -430,7 +431,7 @@ def list_size(bin_name: str, ctx: list = None):
 # Post 3.4.0 Operations. Require Server >= 3.16.0.1
 
 
-def list_get_by_index(bin_name: str, index, return_type, ctx: list = None):
+def list_get_by_index(bin_name: str, index, return_type, ctx: Optional[list] = None):
     """Create a list get index operation.
 
     The list get operation gets the item at `index` and returns a value
@@ -461,7 +462,7 @@ def list_get_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def list_get_by_index_range(bin_name: str, index, return_type, count=None, inverted=False, ctx: list = None):
+def list_get_by_index_range(bin_name: str, index, return_type, count=None, inverted=False, ctx: Optional[list] = None):
     """Create a list get index range operation.
 
     The list get by index range operation gets `count` items starting at `index` and returns a value
@@ -500,7 +501,7 @@ def list_get_by_index_range(bin_name: str, index, return_type, count=None, inver
     return op_dict
 
 
-def list_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
+def list_get_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = None):
     """Create a list get by rank operation.
 
     Server selects list item identified by `rank` and returns selected data
@@ -526,7 +527,7 @@ def list_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: list = None):
+def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: Optional[list] = None):
     """Create a list get by rank range operation.
 
     Server selects `count` items starting at the specified `rank` and returns selected data
@@ -565,7 +566,7 @@ def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverte
     return op_dict
 
 
-def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: Optional[list] = None):
     """Create a list get by value operation.
 
     Server selects list items with a value equal to `value` and returns selected data specified by
@@ -598,7 +599,7 @@ def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: li
     return op_dict
 
 
-def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
+def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: Optional[list] = None):
     """Create a list get by value list operation.
 
     Server selects list items with a value contained in `value_list` and returns selected data
@@ -632,7 +633,14 @@ def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=Fals
     return op_dict
 
 
-def list_get_by_value_range(bin_name: str, return_type, value_begin, value_end, inverted=False, ctx: list = None):
+def list_get_by_value_range(
+    bin_name: str,
+    return_type,
+    value_begin,
+    value_end,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Create a list get by value list operation.
 
     Server selects list items with a value greater than or equal to `value_begin`
@@ -674,7 +682,7 @@ def list_get_by_value_range(bin_name: str, return_type, value_begin, value_end, 
     return op_dict
 
 
-def list_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
+def list_remove_by_index(bin_name: str, index, return_type, ctx: Optional[list] = None):
     """Create a list remove by index operation.
 
     The list_remove_by_index operation removes the value of the item at `index` and returns a value
@@ -705,7 +713,14 @@ def list_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def list_remove_by_index_range(bin_name: str, index, return_type, count=None, inverted=False, ctx: list = None):
+def list_remove_by_index_range(
+    bin_name: str,
+    index,
+    return_type,
+    count=None,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Create a list remove by index range operation.
 
     The list remove by index range operation removes `count` starting at `index` and returns a value
@@ -744,7 +759,7 @@ def list_remove_by_index_range(bin_name: str, index, return_type, count=None, in
     return op_dict
 
 
-def list_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
+def list_remove_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = None):
     """Create a list remove by rank operation.
 
     Server removes a list item identified by `rank` and returns selected data
@@ -775,7 +790,7 @@ def list_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: list = None):
+def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: Optional[list] = None):
     """Create a list remove by rank range operation.
 
     Server removes `count` items starting at the specified `rank` and returns selected data
@@ -814,7 +829,7 @@ def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inve
     return op_dict
 
 
-def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: Optional[list] = None):
     """Create a list remove by value operation.
 
     Server removes list items with a value equal to `value` and returns selected data specified by
@@ -848,7 +863,7 @@ def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx:
     return op_dict
 
 
-def list_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
+def list_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: Optional[list] = None):
     """Create a list remove by value list operation.
 
     Server removes list items with a value matching one contained in `value_list`
@@ -883,7 +898,7 @@ def list_remove_by_value_list(bin_name: str, value_list, return_type, inverted=F
 
 
 def list_remove_by_value_range(
-    bin_name: str, return_type, value_begin=None, value_end=None, inverted=False, ctx: list = None
+    bin_name: str, return_type, value_begin=None, value_end=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a list remove by value range operation.
 
@@ -927,7 +942,7 @@ def list_remove_by_value_range(
     return op_dict
 
 
-def list_set_order(bin_name: str, list_order, ctx: list = None):
+def list_set_order(bin_name: str, list_order, ctx: Optional[list] = None):
     """Create a list set order operation.
 
     The list_set_order operation sets an order on a specified list bin.
@@ -950,7 +965,7 @@ def list_set_order(bin_name: str, list_order, ctx: list = None):
     return op_dict
 
 
-def list_sort(bin_name: str, sort_flags: int = 0, ctx: list = None):
+def list_sort(bin_name: str, sort_flags: int = 0, ctx: Optional[list] = None):
     """Create a list sort operation
 
     The list sort operation will sort the specified list bin.
@@ -974,7 +989,7 @@ def list_sort(bin_name: str, sort_flags: int = 0, ctx: list = None):
 
 
 def list_get_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a list get by value rank range relative operation
 
@@ -1052,7 +1067,7 @@ def list_get_by_value_rank_range_relative(
 
 
 def list_remove_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a list get by value rank range relative operation
 
