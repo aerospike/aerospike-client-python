@@ -435,7 +435,6 @@ as_status as_partitions_status_to_pyobject(
             goto END;
         }
         Py_DECREF(py_id);
-        Py_DECREF(new_py_tuple);
     }
 
     *py_dict = new_dict;
@@ -2199,7 +2198,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         // Make a copy of the encoding since the utf8 encoding points to a buffer in the PyUnicode object
         // So if we deallocate the PyUnicode object, the buffer will also be deallocated
         // and then the geojson object will be pointing to invalid memory
-        char* geo_data_str_cpy = strdup(geo_data_str);
+        char *geo_data_str_cpy = strdup(geo_data_str);
         as_geojson_init((as_geojson *)&binop_bin->value, geo_data_str_cpy,
                         true);
         binop_bin->valuep = &binop_bin->value;
