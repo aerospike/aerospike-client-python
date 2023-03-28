@@ -878,11 +878,15 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         PyObject *py_parameter = PyString_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
-        PyObject *geo_py_str = AerospikeGeospatial_DoDumps(py_data, err);
-        char *geo_value = strdup(PyString_AsString(geo_py_str));
+
+        PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
+        char *geo_value = PyString_AsString(geospatial_dump);
+        char *geo_value_cpy = strdup(geo_value);
+
         Py_DECREF(py_data);
-        Py_DECREF(geo_py_str);
-        *val = (as_val *)as_geojson_new(geo_value, true);
+        Py_DECREF(geospatial_dump);
+
+        *val = (as_val *)as_geojson_new(geo_value_cpy, true);
     }
     else if (PyByteArray_Check(py_obj)) {
         as_bytes *bytes;
