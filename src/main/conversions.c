@@ -1894,6 +1894,8 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
             if (!py_key) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                 "Unknown type for value");
+                Py_XDECREF(py_namespace);
+                Py_XDECREF(py_set);
                 return err->code;
             }
             break;
