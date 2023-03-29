@@ -6,7 +6,6 @@ import aerospike
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 from aerospike_helpers import cdt_ctx
-from . import base64_helpers
 
 list_index = "list_index"
 list_rank = "list_rank"
@@ -113,26 +112,13 @@ class TestCDTIndex(object):
 
         assert retobj == 0
 
-    # Backwards compatibility test
-    @pytest.mark.parametrize(
-        "get_cdtctx_base64_parent",
-        [
-            # We don't pass the client method directly
-            # since it requires a client instance from the test class using "self"
-            # So access the client later through the test method
-            ("client"),
-            ("aerospike"),
-        ]
-    )
-    def test_pos_cdtindex_with_info_command(self, get_cdtctx_base64_parent):
+    def test_pos_cdtindex_with_info_command(self):
         """
         Invoke index_cdt_create() with info command
         """
-        get_cdtctx_base64 = base64_helpers.get_cdtctx_base64_method(self, get_cdtctx_base64_parent)
-
         policy = {}
 
-        bs_b4_cdt = get_cdtctx_base64(ctx_list_index)
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
 
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
