@@ -10,7 +10,6 @@ from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
 from threading import Lock
 import time
-from . import base64_helpers
 
 list_index = "list_index"
 list_rank = "list_rank"
@@ -1044,18 +1043,6 @@ class TestQuery(TestBaseClass):
         assert records
         assert len(records) == 3
 
-    # Backwards compatibility test
-    @pytest.mark.parametrize(
-        "get_cdtctx_base64_parent",
-        [
-            # We don't pass the client method directly
-            # since it requires a client instance from the test class using "self"
-            # So access the client later through the test method
-            ("client"),
-            ("aerospike"),
-        ]
-    )
-    def test_query_with_base64_cdt_ctx(self, get_cdtctx_base64_parent):
-        get_cdtctx_base64 = base64_helpers.get_cdtctx_base64_method(self, get_cdtctx_base64_parent)
-        bs_b4_cdt = get_cdtctx_base64(ctx_list_index)
+    def test_query_with_base64_cdt_ctx(self):
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
         assert bs_b4_cdt == "khAA"

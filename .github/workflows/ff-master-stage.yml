@@ -14,7 +14,7 @@ jobs:
       # Basic use case example
       - name: Fast Forward PR
         id: ff-action
-        uses:  ./
+        uses: endre-spotlab/fast-forward-js-action@master
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           success_message: 'Success! Fast forwarded master to stage! ```git checkout master && git merge stage --ff-only``` '
