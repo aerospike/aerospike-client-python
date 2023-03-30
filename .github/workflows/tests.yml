@@ -177,7 +177,6 @@ jobs:
         fail_ci_if_error: true
 
     - name: Setup tmate session
-      if: ${{ failure() }}
       uses: mxschmitt/action-tmate@v3
 
   # Run this when testing new server features on server release candidate
