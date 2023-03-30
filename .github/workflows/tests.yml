@@ -160,15 +160,15 @@ jobs:
         mkdir -p scan/src/main/scan
 
         cd ../../../../
-        cp src/main/* build/temp*/src/main/src/main
-        cp src/main/cdt_types/* build/temp*/src/main/cdt_types/src/main/cdt_types/
-        cp src/main/client/* build/temp*/src/main/client/src/main/client/
-        cp src/main/geospatial/* build/temp*/src/main/geospatial/src/main/geospatial/
-        cp src/main/global_hosts/* build/temp*/src/main/global_hosts/src/main/global_hosts/
-        cp src/main/key_ordered_dict/* build/temp*/src/main/key_ordered_dict/src/main/key_ordered_dict/
-        cp src/main/nullobject/* build/temp*/src/main/nullobject/src/main/nullobject/
-        cp src/main/query/* build/temp*/src/main/query/src/main/query/
-        cp src/main/scan/* build/temp*/src/main/scan/src/main/scan/
+        cp src/main/*.c build/temp*/src/main/src/main
+        cp src/main/cdt_types/*.c build/temp*/src/main/cdt_types/src/main/cdt_types/
+        cp src/main/client/*.c build/temp*/src/main/client/src/main/client/
+        cp src/main/geospatial/*.c build/temp*/src/main/geospatial/src/main/geospatial/
+        cp src/main/global_hosts/*.c build/temp*/src/main/global_hosts/src/main/global_hosts/
+        cp src/main/key_ordered_dict/*.c build/temp*/src/main/key_ordered_dict/src/main/key_ordered_dict/
+        cp src/main/nullobject/*.c build/temp*/src/main/nullobject/src/main/nullobject/
+        cp src/main/query/*.c build/temp*/src/main/query/src/main/query/
+        cp src/main/scan/*.c build/temp*/src/main/scan/src/main/scan/
 
     - name: Generate coverage report for all object files
       if: ${{ always() }}
