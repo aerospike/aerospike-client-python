@@ -193,9 +193,6 @@ jobs:
         verbose: true # optional (default = false)
         fail_ci_if_error: true
 
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-
   # Run this when testing new server features on server release candidate
   # to make sure the tests don't regress on the last server release.
   test-ce-latest-release:
