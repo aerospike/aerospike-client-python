@@ -101,6 +101,19 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() == 3
 
+    # TODO: this test doesn't actually check if min_conns_per_node works properly
+    # It just checks that the setting is configured in the Python client (basically a coverage test)
+    def test_connect_positive_min_conns_per_node(self):
+        """
+        Invoke connect() with min_conns_per_node specified
+        """
+        config = self.connection_config.copy()
+        config["min_conns_per_node"] = 0
+
+        with open_as_connection(config) as client:
+            assert client is not None
+            assert client.is_connected()
+
     def test_connect_positive_shm_key_default(self):
         """
         Invoke connect() with shm enabled but shm_key not specified

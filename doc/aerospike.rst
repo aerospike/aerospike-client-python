@@ -593,6 +593,16 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 * ``0`` (disabled) for non-TLS connections
                 * ``55`` for TLS connections
 
+        * **min_conns_per_node** (:class:`int`)
+            Minimum number of synchronous connections allowed per server node. Preallocate minimum
+            connections on client node creation.  The client will periodically allocate new connections
+            if count falls below min connections.
+
+            Server ``proto-fd-idle-ms`` and client ``max_socket_idle`` should be set to zero (no reap) if
+            ``min_conns_per_node`` is greater than zero.  Reaping connections can defeat the purpose
+            of keeping connections in reserve for a future burst of activity.
+
+            Default: ``0``
         * **max_conns_per_node** (:class:`int`)
             Maximum number of pipeline connections allowed for each node
         * **tend_interval** (:class:`int`)
