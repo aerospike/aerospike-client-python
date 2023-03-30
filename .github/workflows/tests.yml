@@ -157,7 +157,7 @@ jobs:
       if: ${{ always() }}
       run: |
         cd build/temp*/src/main
-        find . -type f -name "*.o" -exec gcov {} \;
+        find . -type f -name "*.o" -execdir gcov {} \;
 
     - name: Move aerospike_helpers coverage report to this directory
       run: mv test/coverage.xml build/temp*/src/main
