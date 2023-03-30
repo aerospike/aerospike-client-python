@@ -512,7 +512,7 @@ Single-Record Transactions
 .. class:: Client
     :noindex:
 
-    .. method:: operate(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+    .. method:: operate(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
         Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*.
 
@@ -522,7 +522,7 @@ Single-Record Transactions
         :py:obj:`None` value. )
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list operations: See :ref:`aerospike_operation_helpers.operations`.
+        :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`.
@@ -538,7 +538,7 @@ Single-Record Transactions
 
         .. versionchanged:: 2.1.3
 
-    .. method:: operate_ordered(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+    .. method:: operate_ordered(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
         Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*. \
         The results will be returned as a list of (bin-name, result) tuples. The order of the \
@@ -546,7 +546,7 @@ Single-Record Transactions
         from the input parameters.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list operations: See :ref:`aerospike_operation_helpers.operations`.
+        :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
