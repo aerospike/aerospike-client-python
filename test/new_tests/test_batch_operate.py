@@ -262,6 +262,7 @@ class TestBatchOperate(TestBaseClass):
                 ],
                 {},
                 {
+                    # Out of bounds
                     "ttl": 2**32
                 },
                 e.ParamError,
