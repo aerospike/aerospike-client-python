@@ -148,6 +148,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     // The C client's batch write policy doesn't have a ttl option
     // The correct way is to set the ttl inside the as_operations object
     PyObject *py_ttl = PyDict_GetItemString(py_policy_batch_write, "ttl");
+    Py_XINCREF(py_ttl);
     // Default ttl
     if (py_ttl != NULL) {
         if (PyLong_Check(py_ttl)) {
