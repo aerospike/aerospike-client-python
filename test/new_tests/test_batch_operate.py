@@ -114,6 +114,20 @@ class TestBatchOperate(TestBaseClass):
                 [{"count": 7}],
             ),
             (
+                "simple-write-policy-batch-write-with-ttl",
+                [("test", "demo", 0)],
+                [
+                    op.write("count", 7),
+                    op.read("count")
+                ],
+                {},
+                {
+                    "ttl": 200
+                },
+                [AerospikeStatus.AEROSPIKE_OK],
+                [{"count": 7}],
+            ),
+            (
                 "simple-write-policy-both",
                 [("test", "demo", 0)],
                 [op.write("count", 7), op.read("count")],
@@ -238,6 +252,18 @@ class TestBatchOperate(TestBaseClass):
                 ],
                 {},
                 ["bad-batch-write-policy"],
+                e.ParamError,
+            ),
+            (
+                "bad-batch-write-policy-ttl",
+                [("test", "demo", 1)],
+                [
+                    op.write("count", 2),
+                ],
+                {},
+                {
+                    "ttl": 2**32
+                },
                 e.ParamError,
             ),
         ],

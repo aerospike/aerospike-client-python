@@ -16,6 +16,7 @@
 
 #include <Python.h>
 
+#include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
@@ -143,6 +144,25 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
 
     Py_ssize_t ops_size = PyList_Size(py_ops);
     as_operations_inita(&ops, ops_size);
+
+    // The C client's batch write policy doesn't have a ttl option
+    // The correct way is to set the ttl inside the as_operations object
+    PyObject *py_ttl = PyDict_GetItemString(py_policy_batch_write, "ttl");
+    // Default ttl
+    if (py_ttl != NULL) {
+        if (PyLong_Check(py_ttl)) {
+            long ttl = PyLong_AsLong(py_ttl);
+            if (ttl > UINT32_MAX || ttl < 0) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "ttl is out of range. It must be a 32 bit "
+                                "unsigned integer.");
+                Py_DECREF(py_ttl);
+                goto CLEANUP;
+            }
+            ops.ttl = ttl;
+        }
+    }
+    Py_XDECREF(py_ttl);
 
     PyObject *br_instance = NULL;
 
