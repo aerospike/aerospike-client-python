@@ -173,10 +173,9 @@ MOD_INIT(aerospike)
 
     PyModule_AddStringConstant(aerospike, "__version__", version);
 
-    int retval;
     PyObject *exception = AerospikeException_New();
     Py_INCREF(exception);
-    retval = PyModule_AddObject(aerospike, "exception", exception);
+    int retval = PyModule_AddObject(aerospike, "exception", exception);
     if (retval == -1) {
         goto CLEANUP;
     }
