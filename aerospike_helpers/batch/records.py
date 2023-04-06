@@ -15,6 +15,7 @@
 ##########################################################################
 
 import typing as ty
+from typing import Optional
 
 TypeOps = ty.List[ty.Dict]
 TypeBatchPolicyWrite = ty.Union[ty.Dict, None]
@@ -74,7 +75,7 @@ class Write(BatchRecord):
     """
 
     def __init__(
-        self, key: tuple, ops: "TypeOps", meta: "dict" = None, policy: "TypeBatchPolicyWrite" = None
+        self, key: tuple, ops: "TypeOps", meta: Optional[dict] = None, policy: "TypeBatchPolicyWrite" = None
     ) -> None:
         """
         Example::
@@ -129,7 +130,7 @@ class Read(BatchRecord):
         key: tuple,
         ops: ty.Union[TypeOps, None],
         read_all_bins: bool = False,
-        meta: "dict" = None,
+        meta: Optional[dict] = None,
         policy: "TypeBatchPolicyRead" = None,
     ) -> None:
         """
@@ -271,7 +272,7 @@ class BatchRecords:
             non 0 if an error occured. The most common error being -16 (One or more batch sub transactions failed).
     """
 
-    def __init__(self, batch_records: TypeBatchRecordList = None) -> None:
+    def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:
         """
         Example::
 
