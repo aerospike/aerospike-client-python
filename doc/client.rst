@@ -512,7 +512,7 @@ Single-Record Transactions
 .. class:: Client
     :noindex:
 
-    .. method:: operate(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+    .. method:: operate(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
         Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*.
 
@@ -522,7 +522,7 @@ Single-Record Transactions
         :py:obj:`None` value. )
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list operations: See :ref:`aerospike_operation_helpers.operations`.
+        :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
         :return: a :ref:`aerospike_record_tuple`.
@@ -538,7 +538,7 @@ Single-Record Transactions
 
         .. versionchanged:: 2.1.3
 
-    .. method:: operate_ordered(key, operations: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+    .. method:: operate_ordered(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
 
         Performs an atomic transaction, with multiple bin operations, against a single record with a given *key*. \
         The results will be returned as a list of (bin-name, result) tuples. The order of the \
@@ -546,7 +546,7 @@ Single-Record Transactions
         from the input parameters.
 
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list operations: See :ref:`aerospike_operation_helpers.operations`.
+        :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
         :param dict policy: optional :ref:`aerospike_operate_policies`.
 
@@ -937,7 +937,7 @@ Index Operations
 .. class:: Client
     :noindex:
 
-    .. method:: index_string_create(ns, set, bin, index_name[, policy: dict])
+    .. method:: index_string_create(ns, set, bin, name[, policy: dict])
 
         Create a string index with *index_name* on the *bin* in the specified \
         *ns*, *set*.
@@ -945,25 +945,25 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_integer_create(ns, set, bin, index_name[, policy])
+    .. method:: index_integer_create(ns, set, bin, name[, policy])
 
-        Create an integer index with *index_name* on the *bin* in the specified \
+        Create an integer index with *name* on the *bin* in the specified \
         *ns*, *set*.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: index_list_create(ns, set, bin, index_datatype, index_name[, policy: dict])
+    .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
 
-        Create an index named *index_name* for numeric, string or GeoJSON values \
+        Create an index named *name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a list.
 
@@ -971,15 +971,15 @@ Index Operations
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires server version >= 3.8.0
 
-    .. method:: index_map_keys_create(ns, set, bin, index_datatype, index_name[, policy: dict])
+    .. method:: index_map_keys_create(ns, set, bin, index_datatype, name[, policy: dict])
 
-        Create an index named *index_name* for numeric, string or GeoJSON values \
+        Create an index named *name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a map. The index will include the keys of the map.
 
@@ -987,15 +987,15 @@ Index Operations
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. note:: Requires server version >= 3.8.0
 
-    .. method:: index_map_values_create(ns, set, bin, index_datatype, index_name[, policy: dict])
+    .. method:: index_map_values_create(ns, set, bin, index_datatype, name[, policy: dict])
 
-        Create an index named *index_name* for numeric, string or GeoJSON values \
+        Create an index named *name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
         whose *bin* is a map. The index will include the values of the map.
 
@@ -1003,7 +1003,7 @@ Index Operations
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
         :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
-        :param str index_name: the name of the index.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1023,15 +1023,15 @@ Index Operations
             client.index_map_values_create('test', 'demo', 'fav_movies', aerospike.INDEX_NUMERIC, 'demo_fav_movies_views_idx')
             client.close()
 
-    .. method:: index_geo2dsphere_create(ns, set, bin, index_name[, policy: dict])
+    .. method:: index_geo2dsphere_create(ns, set, bin, name[, policy: dict])
 
-        Create a geospatial 2D spherical index with *index_name* on the *bin* \
+        Create a geospatial 2D spherical index with *name* on the *bin* \
         in the specified *ns*, *set*.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param str index_name: the name of the index.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
@@ -1048,12 +1048,12 @@ Index Operations
             client.close()
 
 
-    .. method:: index_remove(ns, index_name[, policy: dict])
+    .. method:: index_remove(ns, name[, policy: dict])
 
-        Remove the index with *index_name* from the namespace.
+        Remove the index with *name* from the namespace.
 
         :param str ns: the namespace in the aerospike cluster.
-        :param str index_name: the name of the index.
+        :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
