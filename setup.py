@@ -59,7 +59,7 @@ include_dirs = ['src/include'] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-O1', '-DDEBUG',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
@@ -82,6 +82,13 @@ if COVERAGE:
     extra_compile_args.append('-fprofile-arcs')
     extra_compile_args.append('-ftest-coverage')
     extra_link_args.append('-lgcov')
+
+DEBUG = os.getenv('DEBUG')
+if DEBUG:
+    extra_compile_args.append("-O0")
+else:
+    # Release build
+    extra_compile_args.append("-O1")
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS

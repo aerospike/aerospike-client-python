@@ -20,6 +20,7 @@ the :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` 
 import warnings
 
 import aerospike
+from typing import Optional
 
 
 def read(bin_name):
@@ -111,7 +112,7 @@ def increment(bin_name, amount):
     return {"op": aerospike.OPERATOR_INCR, "bin": bin_name, "val": amount}
 
 
-def touch(ttl: int = None):
+def touch(ttl: Optional[int] = None):
     """Create a touch operation dictionary.
 
     Using ttl here is deprecated. It should be set in the record metadata for the operate method.
