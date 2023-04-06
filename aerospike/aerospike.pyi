@@ -1,4 +1,4 @@
-from typing import Any, Union
+from typing import Any, Union, final
 
 from aerospike_helpers.batch.records import BatchRecords
 AS_BOOL: int
@@ -292,13 +292,13 @@ TTL_NAMESPACE_DEFAULT: int
 TTL_NEVER_EXPIRE: int
 UDF_TYPE_LUA: int
 
+@final
 class CDTInfinite:
-    @classmethod
-    def __init__(cls, *args, **kwargs) -> None: ...
+    def __init__(self, *args, **kwargs) -> None: ...
 
+@final
 class CDTWildcard:
-    @classmethod
-    def __init__(cls, *args, **kwargs) -> None: ...
+    def __init__(self, *args, **kwargs) -> None: ...
 
 class Client:
     def __init__(self, *args, **kwargs) -> None: ...
