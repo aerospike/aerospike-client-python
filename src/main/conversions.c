@@ -432,6 +432,7 @@ as_status as_partitions_status_to_pyobject(
                             "failed set item in new_dict");
             Py_DECREF(new_dict);
             Py_DECREF(new_py_tuple);
+            Py_XDECREF(py_id);
             goto END;
         }
         Py_DECREF(py_id);
