@@ -432,8 +432,10 @@ as_status as_partitions_status_to_pyobject(
                             "failed set item in new_dict");
             Py_DECREF(new_dict);
             Py_DECREF(new_py_tuple);
+            Py_XDECREF(py_id);
             goto END;
         }
+        Py_DECREF(py_id);
     }
 
     *py_dict = new_dict;
@@ -877,10 +879,15 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         PyObject *py_parameter = PyString_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
-        char *geo_value =
-            PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
+
+        PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
+        char *geo_value = PyString_AsString(geospatial_dump);
+        char *geo_value_cpy = strdup(geo_value);
+
         Py_DECREF(py_data);
-        *val = (as_val *)as_geojson_new(geo_value, false);
+        Py_DECREF(geospatial_dump);
+
+        *val = (as_val *)as_geojson_new(geo_value_cpy, true);
     }
     else if (PyByteArray_Check(py_obj)) {
         as_bytes *bytes;
@@ -959,7 +966,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
     }
     else if (PyDict_Check(py_rec)) {
-        PyObject *key = NULL, *value = NULL, *py_ukey = NULL;
+        PyObject *key = NULL, *value = NULL;
         Py_ssize_t pos = 0;
         Py_ssize_t size = PyDict_Size(py_rec);
         char *name = NULL;
@@ -969,30 +976,21 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
 
         while (PyDict_Next(py_rec, &pos, &key, &value)) {
 
-            if (PyUnicode_Check(key)) {
-                py_ukey = PyUnicode_AsUTF8String(key);
-                if (!py_ukey) {
-                    return as_error_update(
-                        err, AEROSPIKE_ERR_CLIENT,
-                        "Unicode bin name not encoded in utf-8.");
-                }
-                name = PyBytes_AsString(py_ukey);
-            }
-            else if (PyString_Check(key)) {
-                name = PyString_AsString(key);
-            }
-            else {
+            if (!PyUnicode_Check(key)) {
                 return as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
                     "A bin name must be a string or unicode string.");
             }
 
+            name = PyUnicode_AsUTF8(key);
+            if (!name) {
+                return as_error_update(
+                    err, AEROSPIKE_ERR_CLIENT,
+                    "Unable to convert unicode object to C string");
+            }
+
             if (self->strict_types) {
                 if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-                    if (py_ukey) {
-                        Py_DECREF(py_ukey);
-                        py_ukey = NULL;
-                    }
                     return as_error_update(
                         err, AEROSPIKE_ERR_BIN_NAME,
                         "A bin name should not exceed 14 characters limit");
@@ -1018,13 +1016,8 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     ret_val = as_record_set_bytes(rec, name, bool_bytes);
                     break;
                 case SEND_BOOL_AS_AS_BOOL:;
-                    as_boolean *converted_bool = NULL;
-                    if (py_bool_to_as_bool(err, value, &converted_bool) !=
-                        AEROSPIKE_OK) {
-                        return err->code;
-                    }
-                    ret_val = as_record_set_bool(
-                        rec, name, as_boolean_get(converted_bool));
+                    bool converted_value = (value == Py_True);
+                    ret_val = as_record_set_bool(rec, name, converted_value);
                     break;
                 case SEND_BOOL_AS_INTEGER:;
                     as_integer *converted_integer = NULL;
@@ -1072,7 +1065,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 char *geo_value = NULL;
 
                 if (PyUnicode_Check(py_dumps)) {
-                    PyObject *py_ustr = PyUnicode_AsUTF8String(py_dumps);
+                    py_ustr = PyUnicode_AsUTF8String(py_dumps);
                     if (!py_ustr) {
                         return as_error_update(
                             err, AEROSPIKE_ERR_CLIENT,
@@ -1159,11 +1152,6 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                         ret_val = as_record_set_bytes(rec, name, bytes);
                     }
                 }
-            }
-
-            if (py_ukey) {
-                Py_DECREF(py_ukey);
-                py_ukey = NULL;
             }
 
             if (self->strict_types) {
@@ -1911,6 +1899,8 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
             if (!py_key) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                 "Unknown type for value");
+                Py_XDECREF(py_namespace);
+                Py_XDECREF(py_set);
                 return err->code;
             }
             break;
@@ -2208,12 +2198,21 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         binop_bin->valuep = (as_bin_value *)map;
     }
     else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
-        PyObject *py_data =
-            PyObject_GenericGetAttr(py_value, PyString_FromString("geo_data"));
-        char *geo_value =
-            PyString_AsString(AerospikeGeospatial_DoDumps(py_data, err));
-        as_geojson_init((as_geojson *)&binop_bin->value, geo_value, false);
+        PyObject *geo_data = PyObject_GetAttrString(py_value, "geo_data");
+        PyObject *geo_data_py_str = AerospikeGeospatial_DoDumps(geo_data, err);
+        const char *geo_data_str = PyUnicode_AsUTF8(geo_data_py_str);
+
+        // Make a copy of the encoding since the utf8 encoding points to a buffer in the PyUnicode object
+        // So if we deallocate the PyUnicode object, the buffer will also be deallocated
+        // and then the geojson object will be pointing to invalid memory
+        char *geo_data_str_cpy = strdup(geo_data_str);
+        as_geojson_init((as_geojson *)&binop_bin->value, geo_data_str_cpy,
+                        true);
         binop_bin->valuep = &binop_bin->value;
+
+        // Cleanup
+        Py_XDECREF(geo_data_py_str);
+        Py_XDECREF(geo_data);
     }
     else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
@@ -2268,11 +2267,7 @@ as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
 
 CLEANUP:
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(err);
     }
     return err->code;
 }
@@ -2608,6 +2603,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             else {
                 if (pyobject_to_val(self, err, value_temp, &val, static_pool,
                                     serializer_type) != AEROSPIKE_OK) {
+                    as_cdt_ctx_destroy(cdt_ctx);
                     return as_error_update(
                         err, AEROSPIKE_ERR_PARAM,
                         "Failed to convert %s, value to as_val", CTX_KEY);

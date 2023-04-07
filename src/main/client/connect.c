@@ -36,7 +36,7 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-PyObject *AerospikeClientConnect(AerospikeClient *self)
+int AerospikeClientConnect(AerospikeClient *self)
 {
     as_error err;
     as_error_init(&err);
@@ -136,18 +136,12 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-
-        return NULL;
+        raise_exception(&err);
+        return -1;
     }
     self->is_conn_16 = true;
     self->has_connected = true;
-    Py_INCREF(self);
-    return (PyObject *)self;
+    return 0;
 }
 
 /**
@@ -189,7 +183,12 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         as_config_set_user(&self->as->config, username, password);
     }
 
-    return AerospikeClientConnect(self);
+    if (AerospikeClientConnect(self) == -1) {
+        return NULL;
+    }
+
+    Py_INCREF(self);
+    return (PyObject *)self;
 }
 
 /**
@@ -256,11 +255,7 @@ PyObject *AerospikeClient_shm_key(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

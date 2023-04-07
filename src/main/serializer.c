@@ -85,11 +85,7 @@ PyObject *AerospikeClient_Set_Serializer(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 
@@ -148,11 +144,7 @@ PyObject *AerospikeClient_Set_Deserializer(AerospikeClient *self,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 
@@ -193,11 +185,10 @@ void set_as_bytes(as_bytes **bytes, uint8_t *bytes_string,
 CLEANUP:
 
     if (error_p->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(error_p, &py_err);
-        PyObject *exception_type = raise_exception(error_p);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        // TODO: when exception is detected in this method
+        // the parent method may also raise an exception
+        // is this intended behavior?
+        raise_exception(error_p);
     }
     return;
 }
@@ -285,11 +276,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
 
 CLEANUP:
     if (error_p->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(error_p, &py_err);
-        PyObject *exception_type = raise_exception(error_p);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(error_p);
     }
 }
 
@@ -447,11 +434,7 @@ CLEANUP:
 
     Py_XDECREF(initresult);
     if (error_p->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(error_p, &py_err);
-        PyObject *exception_type = raise_exception(error_p);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(error_p);
     }
 
     return error_p->code;
@@ -593,11 +576,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
 CLEANUP:
 
     if (error_p->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(error_p, &py_err);
-        PyObject *exception_type = raise_exception(error_p);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(error_p);
     }
     // If one of the deserializers failed and the fallback to byte array conversion
     // was successful, we clear any error state left by Python

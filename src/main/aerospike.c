@@ -164,6 +164,9 @@ MOD_INIT(aerospike)
     MOD_DEF(aerospike, "aerospike", "Aerospike Python Client",
             sizeof(struct Aerospike_State), Aerospike_Methods, Aerospike_Clear)
 
+    // In case adding objects to module fails, we can properly deallocate the module state later
+    memset(Aerospike_State(aerospike), NULL, sizeof(struct Aerospike_State));
+
     Aerospike_Enable_Default_Logging();
 
     py_global_hosts = PyDict_New();
@@ -172,27 +175,42 @@ MOD_INIT(aerospike)
 
     PyObject *exception = AerospikeException_New();
     Py_INCREF(exception);
-    PyModule_AddObject(aerospike, "exception", exception);
+    int retval = PyModule_AddObject(aerospike, "exception", exception);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->exception = exception;
 
     PyTypeObject *client = AerospikeClient_Ready();
     Py_INCREF(client);
-    PyModule_AddObject(aerospike, "Client", (PyObject *)client);
+    retval = PyModule_AddObject(aerospike, "Client", (PyObject *)client);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->client = client;
 
     PyTypeObject *query = AerospikeQuery_Ready();
     Py_INCREF(query);
-    PyModule_AddObject(aerospike, "Query", (PyObject *)query);
+    retval = PyModule_AddObject(aerospike, "Query", (PyObject *)query);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->query = query;
 
     PyTypeObject *scan = AerospikeScan_Ready();
     Py_INCREF(scan);
-    PyModule_AddObject(aerospike, "Scan", (PyObject *)scan);
+    retval = PyModule_AddObject(aerospike, "Scan", (PyObject *)scan);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->scan = scan;
 
     PyTypeObject *kdict = AerospikeKeyOrderedDict_Ready();
     Py_INCREF(kdict);
-    PyModule_AddObject(aerospike, "KeyOrderedDict", (PyObject *)kdict);
+    retval = PyModule_AddObject(aerospike, "KeyOrderedDict", (PyObject *)kdict);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->kdict = kdict;
 
     /*
@@ -213,30 +231,51 @@ MOD_INIT(aerospike)
 
     PyObject *predicates = AerospikePredicates_New();
     Py_INCREF(predicates);
-    PyModule_AddObject(aerospike, "predicates", predicates);
+    retval = PyModule_AddObject(aerospike, "predicates", predicates);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->predicates = predicates;
 
     PyTypeObject *geospatial = AerospikeGeospatial_Ready();
     Py_INCREF(geospatial);
-    PyModule_AddObject(aerospike, "GeoJSON", (PyObject *)geospatial);
+    retval = PyModule_AddObject(aerospike, "GeoJSON", (PyObject *)geospatial);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->geospatial = geospatial;
 
     PyTypeObject *null_object = AerospikeNullObject_Ready();
     Py_INCREF(null_object);
-    PyModule_AddObject(aerospike, "null", (PyObject *)null_object);
+    retval = PyModule_AddObject(aerospike, "null", (PyObject *)null_object);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->null_object = null_object;
 
     PyTypeObject *wildcard_object = AerospikeWildcardObject_Ready();
     Py_INCREF(wildcard_object);
-    PyModule_AddObject(aerospike, "CDTWildcard", (PyObject *)wildcard_object);
+    retval = PyModule_AddObject(aerospike, "CDTWildcard",
+                                (PyObject *)wildcard_object);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->wildcard_object = wildcard_object;
 
     PyTypeObject *infinite_object = AerospikeInfiniteObject_Ready();
     Py_INCREF(infinite_object);
-    PyModule_AddObject(aerospike, "CDTInfinite", (PyObject *)infinite_object);
+    retval = PyModule_AddObject(aerospike, "CDTInfinite",
+                                (PyObject *)infinite_object);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
     Aerospike_State(aerospike)->infinite_object = infinite_object;
 
     return MOD_SUCCESS_VAL(aerospike);
+
+CLEANUP:
+    Aerospike_Clear(aerospike);
+    return NULL;
 }
 
 PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds)
@@ -252,11 +291,7 @@ PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds)
     as_error_update(
         &err, AEROSPIKE_ERR,
         "Support for async is disabled, build software with async option");
-    PyObject *py_err = NULL, *exception_type = NULL;
-    error_to_pyobject(&err, &py_err);
-    exception_type = raise_exception(&err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
+    raise_exception(&err);
     return NULL;
 #endif
     return PyLong_FromLong(0);

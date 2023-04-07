@@ -200,6 +200,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 as_vector *intermediate_expr_vector, as_exp_entry **expressions,
                 int *bottom, int *size, as_error *err);
 
+static bool free_temp_expr(intermediate_expr *temp_expr, as_error *err,
+                           bool is_ctx_initialized);
+
 /*
 * get_expr_size 
 * Sets `size_to_alloc` to the byte count required to fit the array of as_exp_entry that will be allocated
@@ -667,10 +670,10 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 PyDict_GetItemString(temp_expr->pydict, AS_PY_VAL_KEY);
             char *regex_str = NULL;
             if (PyUnicode_Check(py_val_from_dict)) {
-                PyObject *py_ustr = PyUnicode_AsUTF8String(py_val_from_dict);
-                regex_str = strdup(PyBytes_AsString(py_ustr));
+                const char *utf8_encoding = PyUnicode_AsUTF8(py_val_from_dict);
+                regex_str = strdup(utf8_encoding);
                 temp_expr->val.val_string_p = regex_str;
-                Py_DECREF(py_ustr);
+                temp_expr->val_flag = VAL_STRING_P_ACTIVE;
             }
             else {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -1530,10 +1533,15 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
+    // Flags in case we need to deallocate temp expr while it is being built
+    bool is_building_temp_expr = true;
+    bool is_ctx_initialized = false;
+
     for (int i = 0; i < size; ++i) {
-        temp_expr = (intermediate_expr){
-            .op = -1, .result_type = -1, .num_children = -1};
+        memset(&temp_expr, 0, sizeof(intermediate_expr));
         ctx_in_use = false;
+        // Reset flag for next temp expr being built
+        is_ctx_initialized = false;
 
         py_expr_tuple = PyList_GetItem(py_exp_list, (Py_ssize_t)i);
         if (!PyTuple_Check(py_expr_tuple) || PyTuple_Size(py_expr_tuple) != 4) {
@@ -1588,10 +1596,10 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
             if (get_cdt_ctx(self, err, temp_expr.ctx, temp_expr.pydict,
                             &ctx_in_use, &static_pool,
                             SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-                temp_expr.ctx = NULL;
                 goto CLEANUP;
             }
         }
+        is_ctx_initialized = true;
 
         py_list_policy_p =
             PyDict_GetItemString(temp_expr.pydict, AS_PY_LIST_POLICY);
@@ -1651,6 +1659,8 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         processed_exp_count++;
     }
 
+    is_building_temp_expr = false;
+
     if (get_expr_size(&size_to_alloc, (int *)&size, &intermediate_expr_queue,
                       err) != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -1671,43 +1681,19 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
 
     *exp_list = as_exp_compile(c_expr_entries, bottom);
 CLEANUP:
+    if (is_building_temp_expr) {
+        bool success = free_temp_expr(&temp_expr, err, is_ctx_initialized);
+        if (!success) {
+            return err->code;
+        }
+    }
+
     for (int i = 0; i < processed_exp_count; ++i) {
         intermediate_expr *temp_expr = (intermediate_expr *)as_vector_get(
             &intermediate_expr_queue, (uint32_t)i);
-
-        if (temp_expr == NULL) {
-            continue;
-        }
-
-        if (temp_expr->list_policy != NULL) {
-            free(temp_expr->list_policy);
-        }
-
-        if (temp_expr->map_policy != NULL) {
-            free(temp_expr->map_policy);
-        }
-
-        if (temp_expr->ctx != NULL) {
-            as_cdt_ctx_destroy(temp_expr->ctx);
-            free(temp_expr->ctx);
-        }
-
-        switch (temp_expr->val_flag) {
-        case 0:
-            break;
-        case VAL_STRING_P_ACTIVE:
-            free(temp_expr->val.val_string_p);
-            break;
-        case VAL_LIST_P_ACTIVE:
-            as_list_destroy(temp_expr->val.val_list_p);
-            break;
-        case VAL_MAP_P_ACTIVE:
-            as_map_destroy(temp_expr->val.val_map_p);
-            break;
-        default:
-            as_error_update(err, AEROSPIKE_ERR, "Unexpected val_flag %u.",
-                            temp_expr->val_flag);
-            break;
+        bool success = free_temp_expr(temp_expr, err, true);
+        if (!success) {
+            return err->code;
         }
     }
 
@@ -1719,4 +1705,47 @@ CLEANUP:
     POOL_DESTROY(&static_pool);
     as_vector_destroy(unicodeStrVector);
     return err->code;
+}
+
+// Returns true if successful, false if not
+static bool free_temp_expr(intermediate_expr *temp_expr, as_error *err,
+                           bool is_ctx_initialized)
+{
+    if (temp_expr == NULL) {
+        return true;
+    }
+
+    if (temp_expr->list_policy != NULL) {
+        free(temp_expr->list_policy);
+    }
+
+    if (temp_expr->map_policy != NULL) {
+        free(temp_expr->map_policy);
+    }
+
+    if (temp_expr->ctx != NULL) {
+        if (is_ctx_initialized) {
+            as_cdt_ctx_destroy(temp_expr->ctx);
+        }
+        free(temp_expr->ctx);
+    }
+
+    switch (temp_expr->val_flag) {
+    case 0:
+        break;
+    case VAL_STRING_P_ACTIVE:
+        free(temp_expr->val.val_string_p);
+        break;
+    case VAL_LIST_P_ACTIVE:
+        as_list_destroy(temp_expr->val.val_list_p);
+        break;
+    case VAL_MAP_P_ACTIVE:
+        as_map_destroy(temp_expr->val.val_map_p);
+        break;
+    default:
+        as_error_update(err, AEROSPIKE_ERR, "Unexpected val_flag %u.",
+                        temp_expr->val_flag);
+        return false;
+    }
+    return true;
 }

@@ -1416,7 +1416,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     self->as = aerospike_new(&config);
 
-    if (AerospikeClientConnect(self) == NULL) {
+    if (AerospikeClientConnect(self) == -1) {
+        aerospike_destroy(self->as);
         return -1;
     }
 
@@ -1496,11 +1497,7 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
-    PyObject *py_err = NULL;
-    error_to_pyobject(&constructor_err, &py_err);
-    PyObject *exception_type = raise_exception(&constructor_err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
+    raise_exception(&constructor_err);
     return -1;
 }
 
@@ -1671,35 +1668,22 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
 {
     AerospikeClient *self = (AerospikeClient *)AerospikeClient_Type.tp_new(
         &AerospikeClient_Type, args, kwds);
-    as_error err;
-    as_error_init(&err);
-    int return_code = 0;
-    return_code = AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
 
-    switch (return_code) {
-    // 0 Is success
-    case 0: {
+    int return_code =
+        AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
+    if (return_code == 0) {
         return self;
     }
-    case -1: {
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
-        break;
-    }
-    default: {
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
-        break;
-    }
+    if (PyErr_Occurred()) {
+        goto CLEANUP;
     }
 
-    PyObject *py_err = NULL;
+    as_error err;
+    as_error_init(&err);
     as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
-    error_to_pyobject(&err, &py_err);
-    PyObject *exception_type = raise_exception(&err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
+    raise_exception(&err);
+
+CLEANUP:
+    AerospikeClient_Type.tp_free(self);
     return NULL;
 }

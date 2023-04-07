@@ -546,7 +546,78 @@ void remove_exception(as_error *err)
     }
 }
 
-PyObject *raise_exception(as_error *err)
+void raise_exception(as_error *err)
+{
+    PyObject *py_key = NULL, *py_value = NULL;
+    Py_ssize_t pos = 0;
+    PyObject *py_module_dict = PyModule_GetDict(module);
+    bool found = false;
+
+    while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
+        if (PyObject_HasAttrString(py_value, "code")) {
+            PyObject *py_code = PyObject_GetAttrString(py_value, "code");
+            if (py_code == Py_None) {
+                continue;
+            }
+            if (err->code == PyInt_AsLong(py_code)) {
+                found = true;
+                PyObject *py_attr = NULL;
+                py_attr = PyString_FromString(err->message);
+                PyObject_SetAttrString(py_value, "msg", py_attr);
+                Py_DECREF(py_attr);
+
+                // as_error.file is a char* so this may be null
+                if (err->file) {
+                    py_attr = PyString_FromString(err->file);
+                    PyObject_SetAttrString(py_value, "file", py_attr);
+                    Py_DECREF(py_attr);
+                }
+                else {
+                    PyObject_SetAttrString(py_value, "file", Py_None);
+                }
+                // If the line is 0, set it as None
+                if (err->line > 0) {
+                    py_attr = PyInt_FromLong(err->line);
+                    PyObject_SetAttrString(py_value, "line", py_attr);
+                    Py_DECREF(py_attr);
+                }
+                else {
+                    PyObject_SetAttrString(py_value, "line", Py_None);
+                }
+
+                py_attr = PyBool_FromLong(err->in_doubt);
+                PyObject_SetAttrString(py_value, "in_doubt", py_attr);
+                Py_DECREF(py_attr);
+
+                break;
+            }
+            Py_DECREF(py_code);
+        }
+    }
+    // We haven't found the right exception, just use AerospikeError
+    if (!found) {
+        PyObject *base_exception =
+            PyDict_GetItemString(py_module_dict, "AerospikeError");
+        if (base_exception) {
+            py_value = base_exception;
+        }
+    }
+
+    // Convert borrowed reference of exception class to strong reference
+    Py_INCREF(py_value);
+
+    // Convert C error to Python exception
+    PyObject *py_err = NULL;
+    error_to_pyobject(err, &py_err);
+
+    // Raise exception
+    PyErr_SetObject(py_value, py_err);
+
+    Py_DECREF(py_value);
+    Py_DECREF(py_err);
+}
+
+PyObject *raise_exception_old(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;

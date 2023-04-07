@@ -184,6 +184,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
             }
 
             if (py_val1 == Py_None || py_val2 == Py_None) {
+                Py_XDECREF(py_ubin);
                 as_error_update(
                     err, AEROSPIKE_ERR_PARAM,
                     "Min and max must be provided for a range query");
@@ -193,6 +194,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 min = pyobject_to_int64(py_val1);
             }
             else {
+                Py_XDECREF(py_ubin);
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "Min value must be an integer or long");
                 return 1;
@@ -202,6 +204,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 max = pyobject_to_int64(py_val2);
             }
             else {
+                Py_XDECREF(py_ubin);
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "Max value must be an integer or long");
                 return 1;
@@ -224,6 +227,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                                as_range(MAPVALUES, NUMERIC, min, max));
             }
             else {
+                Py_XDECREF(py_ubin);
                 return 1;
             }
             if (py_ubin) {
@@ -485,11 +489,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 
@@ -627,11 +627,7 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
 CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

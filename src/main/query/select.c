@@ -69,11 +69,7 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
             // TRACE();
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "Bin name should be of type string");
-            PyObject *py_err = NULL;
-            error_to_pyobject(&err, &py_err);
-            PyObject *exception_type = raise_exception(&err);
-            PyErr_SetObject(exception_type, py_err);
-            Py_DECREF(py_err);
+            raise_exception(&err);
             return NULL;
         }
 
@@ -87,11 +83,7 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

@@ -206,7 +206,7 @@ CLEANUP:
     if (py_obj == NULL) {
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
+        PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "name")) {
             PyObject_SetAttrString(exception_type, "name", py_name);
         }
@@ -314,7 +314,7 @@ CLEANUP:
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
+        PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "name")) {
             PyObject_SetAttrString(exception_type, "name", py_name);
         }
@@ -480,11 +480,7 @@ static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
 
 CLEANUP:
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(err);
         return false;
     }
     return true;
@@ -637,11 +633,7 @@ CLEANUP:
         Py_DECREF(py_ustr_name);
     }
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

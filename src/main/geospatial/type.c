@@ -122,11 +122,7 @@ static int AerospikeGeospatial_Type_Init(AerospikeGeospatial *self,
 CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return -1;
     }
 
@@ -168,11 +164,7 @@ CLEANUP:
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         if (new_repr_str) {
             free(new_repr_str);
         }
@@ -210,11 +202,7 @@ CLEANUP:
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
     return initresult;
@@ -322,11 +310,7 @@ AerospikeGeospatial *Aerospike_Set_Geo_Data(PyObject *parent, PyObject *args,
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
     }
     return NULL;
 }
@@ -364,11 +348,7 @@ AerospikeGeospatial *Aerospike_Set_Geo_Json(PyObject *parent, PyObject *args,
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
     }
     return NULL;
 }

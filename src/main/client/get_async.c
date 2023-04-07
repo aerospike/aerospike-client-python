@@ -95,7 +95,7 @@ void read_async_callback_helper(as_error *cmd_error, as_record *record,
     }
 
     if (error->code != AEROSPIKE_OK) {
-        py_exception = raise_exception(error);
+        py_exception = raise_exception_old(error);
         if (PyObject_HasAttrString(py_exception, "key")) {
             PyObject_SetAttrString(py_exception, "key", py_key);
         }
@@ -199,7 +199,7 @@ PyObject *AerospikeClient_Get_Async(AerospikeClient *self, PyObject *args,
             "Support for async is disabled, build software with async option");
         PyObject *py_err = NULL, *exception_type = NULL;
         error_to_pyobject(&err, &py_err);
-        exception_type = raise_exception(&err);
+        exception_type = raise_exception_old(&err);
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);
         return NULL;

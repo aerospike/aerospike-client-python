@@ -248,11 +248,11 @@ CLEANUP:
         PyObject *exception_type = NULL;
         if (err.code != AEROSPIKE_OK) {
             error_to_pyobject(&err, &py_err);
-            exception_type = raise_exception(&err);
+            exception_type = raise_exception_old(&err);
         }
         if (data.error.code != AEROSPIKE_OK) {
             error_to_pyobject(&data.error, &py_err);
-            exception_type = raise_exception(&data.error);
+            exception_type = raise_exception_old(&data.error);
         }
         if (PyObject_HasAttrString(exception_type, "name")) {
             PyObject_SetAttrString(exception_type, "name", Py_None);

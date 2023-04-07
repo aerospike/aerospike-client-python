@@ -115,16 +115,16 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
 
+    if (ctx_in_use) {
+        as_cdt_ctx_destroy(&ctx);
+    }
+
     if (base64 != NULL) {
         cf_free(base64);
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

@@ -222,11 +222,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         return -1;
     }
 
@@ -342,9 +338,9 @@ AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
         Py_INCREF(client);
         return self;
     }
-    else {
-        return NULL;
-    }
+
+    AerospikeQuery_Type.tp_free(self);
+    return NULL;
 }
 
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj)
