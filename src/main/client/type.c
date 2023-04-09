@@ -1328,7 +1328,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     Py_XINCREF(py_max_error_rate);
     if (py_max_error_rate &&
         PyLong_Check(py_max_error_rate)) {
-        config.max_error_rate = PyInt_AsLong(py_max_error_rate);
+        config.max_error_rate = PyLong_AsLong(py_max_error_rate);
     }
     Py_XDECREF(py_max_error_rate);
 
