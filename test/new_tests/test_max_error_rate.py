@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import pytest
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 import aerospike
@@ -60,6 +60,29 @@ class TestMaxErrorRate(TestBaseClass):
             raise Exception
 
         for i in range(2 * MAX_ERROR_RATE):
+            try:
+                query.foreach(callback)
+            except e.ClientError as ex:
+                assert ex.code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+
+    def test_max_error_rate_is_zero(self):
+        """
+        max_error_rate is zero(unlimited).
+        """
+        MAX_ERROR_RATE = 0
+        config = TestBaseClass.get_connection_config()
+        config["tend_interval"] = 3000
+        config["max_error_rate"] = MAX_ERROR_RATE
+        config["error_rate_window"] = 3
+        client = aerospike.client(config)
+        
+        query = client.query("test", "demo")
+        
+        def callback(input_tuple):
+            time.sleep(1)
+            raise Exception
+        
+        for i in range(6):
             try:
                 query.foreach(callback)
             except e.ClientError as ex:
