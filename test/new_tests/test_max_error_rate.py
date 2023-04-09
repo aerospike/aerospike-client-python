@@ -10,12 +10,23 @@ DEFAULT_MAX_ERROR_RATE = 100
 
 class TestMaxErrorRate(TestBaseClass):
 
-    def test_max_error_rate_is_default(self):
+    @pytest.mark.parametrize(
+         "max_error_rate",
+         [
+             DEFAULT_MAX_ERROR_RATE,
+             # Above default
+             DEFAULT_MAX_ERROR_RATE + 1,
+             # Below default
+             DEFAULT_MAX_ERROR_RATE - 1,
+         ]
+    )
+    def test_max_error_rate(self, max_error_rate):
         """
         error count reaches default limit.
         """
         config = TestBaseClass.get_connection_config()
         config["tend_interval"] = 1000 * 100 # prevent for healthcheck thread to reset error count
+        config["max_error_rate"] = max_error_rate
         client = aerospike.client(config)
 
         query = client.query("test", "demo")
@@ -23,62 +34,11 @@ class TestMaxErrorRate(TestBaseClass):
         def callback(input_tuple):
             raise Exception
 
-        for i in range(2 * DEFAULT_MAX_ERROR_RATE):
-            
+        for i in range(2 * max_error_rate):
             try:
                 query.foreach(callback)
             except e.ClientError as ex:
-                if i <= DEFAULT_MAX_ERROR_RATE:
-                    assert ex.code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
-                else:
-                    assert ex.code == AerospikeStatus.AEROSPIKE_MAX_ERROR_RATE
-
-
-    def test_max_error_rate_is_over_default(self):
-        """
-        error count reaches limit over default.
-        """
-        MAX_ERROR_RATE = DEFAULT_MAX_ERROR_RATE + 1
-        config = TestBaseClass.get_connection_config()
-        config["tend_interval"] = 1000 * 100 # prevent for healthcheck thread to reset error count
-        config["max_error_rate"] = MAX_ERROR_RATE
-        client = aerospike.client(config)
-
-        query = client.query("test", "demo")
-
-        def callback(input_tuple):
-            raise Exception
-
-        for i in range(2 * MAX_ERROR_RATE):
-            try:
-                query.foreach(callback)
-            except e.ClientError as ex:
-                if i <= MAX_ERROR_RATE:
-                    assert ex.code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
-                else:
-                    assert ex.code == AerospikeStatus.AEROSPIKE_MAX_ERROR_RATE
-    
-    def test_max_error_rate_is_below_default(self):
-        """
-        error count reaches limit below default.
-        """
-        MAX_ERROR_RATE = DEFAULT_MAX_ERROR_RATE - 1
-        config = TestBaseClass.get_connection_config()
-        config["tend_interval"] = 1000 * 100 # prevent for healthcheck thread to reset error count
-        config["max_error_rate"] = MAX_ERROR_RATE
-        client = aerospike.client(config)
-
-        query = client.query("test", "demo")
-
-        def callback(input_tuple):
-
-            raise Exception
-
-        for i in range(2 * MAX_ERROR_RATE):
-            try:
-                query.foreach(callback)
-            except e.ClientError as ex:
-                if i <= MAX_ERROR_RATE:
+                if i < max_error_rate:
                     assert ex.code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
                 else:
                     assert ex.code == AerospikeStatus.AEROSPIKE_MAX_ERROR_RATE
