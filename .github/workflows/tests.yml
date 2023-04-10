@@ -59,7 +59,7 @@ jobs:
       run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }}:latest tail -f /dev/null
 
     - name: Copy repo to container
-      run: docker cp . ${{ matrix.distros[1] }}:/
+      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
 
     - name: Build and test
       run: docker exec ${{ matrix.distros[1] }} ./build-${{ matrix.distros[1] }}.sh -w aerospike-client-python
