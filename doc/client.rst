@@ -2069,6 +2069,12 @@ Batch Write Policies
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+        * **ttl** :class:`int`
+            | The time-to-live (expiration) in seconds to apply to every record in the batch.
+            |
+            | The ttl must be a 32-bit unsigned integer, or a :exc:`~aerospike.exception.ParamError` will be raised.
+            |
+            | Default: ``0``
 
 .. _aerospike_batch_apply_policies:
 
