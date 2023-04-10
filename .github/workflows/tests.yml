@@ -67,7 +67,7 @@ jobs:
       working-directory: .github/workflows
 
     - name: Build and test
-      run: docker exec ${{ matrix.distros[1] }} ./build-${{ matrix.distros[1] }}.sh ${{ env.GITHUB_REF_NAME }}
+      run: docker exec ${{ matrix.distros[1] }} ./build-${{ matrix.distros[1] }}.sh ${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG_URL }} ${{ env.GITHUB_REF_NAME }}
 
     - name: Cleanup
       run: |

@@ -7,7 +7,7 @@ set -x
 yum update -y
 yum install -y git openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
 
-git clone --branch $1 --recurse-submodules https://github.com/aerospike/aerospike-client-python
+git clone --branch $2 --recurse-submodules https://github.com/$1/aerospike-client-python
 cd aerospike-client-python/
 
 python3 -m pip install build
