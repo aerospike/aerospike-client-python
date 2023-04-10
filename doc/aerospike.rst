@@ -611,7 +611,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
             The counted error types are any error that causes the connection to close (socket errors and client timeouts), server device overload and server timeouts.
 
             The application should backoff or reduce the transaction load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
-            If max_error_rate is zero, there is no error limit.
 
             Default: ``100``
         * **error_rate_window** (:class:`int`)
