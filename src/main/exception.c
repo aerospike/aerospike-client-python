@@ -248,9 +248,11 @@ PyObject *AerospikeException_New(void)
     exceptions_array.MaxErrorRateExceeded = PyErr_NewException(
         "exception.MaxErrorRateExceeded", exceptions_array.ClientError, NULL);
     Py_INCREF(exceptions_array.MaxErrorRateExceeded);
-    PyModule_AddObject(module, "MaxErrorRateExceeded", exceptions_array.MaxErrorRateExceeded);
+    PyModule_AddObject(module, "MaxErrorRateExceeded",
+                       exceptions_array.MaxErrorRateExceeded);
     py_code = PyInt_FromLong(AEROSPIKE_MAX_ERROR_RATE);
-    PyObject_SetAttrString(exceptions_array.MaxErrorRateExceeded, "code", py_code);
+    PyObject_SetAttrString(exceptions_array.MaxErrorRateExceeded, "code",
+                           py_code);
     Py_DECREF(py_code);
 
     // max retries exceeded, AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED, -12

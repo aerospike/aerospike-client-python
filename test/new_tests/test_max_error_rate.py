@@ -8,6 +8,7 @@ import time
 
 DEFAULT_MAX_ERROR_RATE = 100
 
+
 class TestMaxErrorRate(TestBaseClass):
 
     @pytest.mark.parametrize(
@@ -25,7 +26,7 @@ class TestMaxErrorRate(TestBaseClass):
         error count reaches default limit.
         """
         config = TestBaseClass.get_connection_config()
-        config["tend_interval"] = 1000 * 100 # prevent for healthcheck thread to reset error count
+        config["tend_interval"] = 1000 * 100  # prevent for healthcheck thread to reset error count
         config["max_error_rate"] = max_error_rate
         client = aerospike.client(config)
 
@@ -49,14 +50,14 @@ class TestMaxErrorRate(TestBaseClass):
         """
         MAX_ERROR_RATE = 2
         config = TestBaseClass.get_connection_config()
-        config["tend_interval"] = 250 # mininum tend_interval (250ms)
+        config["tend_interval"] = 250  # mininum tend_interval (250ms)
         config["max_error_rate"] = MAX_ERROR_RATE
         client = aerospike.client(config)
 
         query = client.query("test", "demo")
 
         def callback(input_tuple):
-            time.sleep(2) # wait for mote than tend_interval
+            time.sleep(2)  # wait for mote than tend_interval
             raise Exception
 
         for i in range(2 * MAX_ERROR_RATE):
@@ -69,20 +70,19 @@ class TestMaxErrorRate(TestBaseClass):
         """
         max_error_rate is zero(unlimited).
         """
-        MAX_ERROR_RATE = 0
         config = TestBaseClass.get_connection_config()
-        config["tend_interval"] = 3000
-        config["max_error_rate"] = MAX_ERROR_RATE
-        config["error_rate_window"] = 3
+        config["tend_interval"] = 1000
+        config["error_rate_window"] = 6
         client = aerospike.client(config)
-        
+
         query = client.query("test", "demo")
-        
-        def callback(input_tuple):
+
+        def callback(_):
             time.sleep(1)
             raise Exception
-        
-        for i in range(6):
+
+        # MaxRetriesExceeded should never be thrown
+        for _ in range(6):
             try:
                 query.foreach(callback)
             except e.ClientError as ex:

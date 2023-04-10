@@ -607,9 +607,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Maximum number of pipeline connections allowed for each node
         * **max_error_rate** (:class:`int`)
             Maximum number of errors allowed per node per ``error_rate_window`` before backoff algorithm returns :exc:`~aerospike.exception.MaxErrorRateExceeded` for database commands to that node. If ``max_error_rate`` is zero, there is no error limit.
-            
+
             The counted error types are any error that causes the connection to close (socket errors and client timeouts), server device overload and server timeouts.
-            
+
             The application should backoff or reduce the transaction load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
             If max_error_rate is zero, there is no error limit.
 
