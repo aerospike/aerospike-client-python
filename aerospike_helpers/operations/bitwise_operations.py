@@ -14,8 +14,10 @@
 # limitations under the License.
 ##########################################################################
 """
-Helper functions to create bit operation dictionary arguments for
-the :meth:`aerospike.operate` and :meth:`aerospike.operate_ordered` methods of the aerospike client.
+Helper functions to create bit operation dictionary arguments for:
+
+* :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
+* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
 
     .. note:: Bitwise operations require server version >= 4.6.0
 
@@ -578,6 +580,7 @@ def bit_subtract(bin_name: str, bit_offset, bit_size, value, sign, action, polic
 
 
 def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
+
     """Creates a bit_xor_operation.
 
     Creates a bit and operation. Server performs bitwise xor with value and bitmap in bin

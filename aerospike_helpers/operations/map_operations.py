@@ -14,8 +14,10 @@
 # limitations under the License.
 ##########################################################################
 """
-Helper functions to create map operation dictionaries arguments for.
-the :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered` methods of the aerospike client.
+Helper functions to create map operation dictionaries arguments for:
+
+* :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
+* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
 
 Map operations support nested CDTs through an optional ctx context argument.
 The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.

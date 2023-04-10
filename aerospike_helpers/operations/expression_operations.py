@@ -14,8 +14,10 @@
 # limitations under the License.
 ##########################################################################
 """
-This module provides helper functions to produce dictionaries to be used with the
-:mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered` methods of the aerospike module.
+This module provides helper functions to produce dictionaries to be used with:
+
+* :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
+* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
 
 Expression operations support reading and writing the result of Aerospike expressions.
 
