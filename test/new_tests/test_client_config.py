@@ -10,8 +10,5 @@ from .test_base_class import TestBaseClass
 class TestClose:
     def test_client_batch_policy_replica(self):
         config = TestBaseClass.get_connection_config()
-        config["policies"] = {}
-        config["policies"]["batch"] = {
-            "replica": aerospike.POLICY_REPLICA_PREFER_RACK
-        }
+        config["policies"]["batch"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
         aerospike.client(config)
