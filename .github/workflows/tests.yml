@@ -40,6 +40,40 @@ jobs:
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
+  pypy39:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: 'pypy3.9'
+
+    - name: Install build dependencies (pip packages)
+      run: pypy3.9 -m pip install build
+
+    - name: Build client
+      run: pypy3.9 -m build
+
+    - name: Install client
+      run: pypy3.9 -m pip install dist/*.whl
+
+    - name: Install test dependencies
+      run: pypy3.9 -m pip install pytest
+      working-directory: test
+
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Wait for database to be ready
+      run: sleep 3
+
+    - name: Test
+      run: pypy3.9 -m pytest new_tests/ -vv
+      working-directory: test
+
   build:
     runs-on: ubuntu-latest
     strategy:
