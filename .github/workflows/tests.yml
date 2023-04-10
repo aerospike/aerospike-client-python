@@ -62,7 +62,7 @@ jobs:
       run: docker cp . ${{ matrix.distros[1] }}:/
 
     - name: Build and test
-      run: docker exec ${{ matrix.distros[1] }} -w aerospike-client-python ./build-${{ matrix.distros[1] }}.sh
+      run: docker exec ${{ matrix.distros[1] }} ./build-${{ matrix.distros[1] }}.sh -w aerospike-client-python
       working-directory: .github/workflows
 
     - name: Cleanup
