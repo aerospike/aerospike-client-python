@@ -3,8 +3,7 @@
 set -e
 set -x
 
-apk add git py3-pip python3-dev zlib-dev automake make musl-dev gcc openssl-dev lua-dev libuv-dev doxygen graphviz
-git clone --branch $2 --recurse-submodules https://github.com/$1/aerospike-client-python
+apk add py3-pip python3-dev zlib-dev automake make musl-dev gcc openssl-dev lua-dev libuv-dev doxygen graphviz
 cd aerospike-client-python/
 
 python3 -m pip install build

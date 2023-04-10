@@ -52,6 +52,8 @@ jobs:
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     # Use this to get current branch of workflow
     - name: Inject slug/short variables
@@ -63,11 +65,10 @@ jobs:
       run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }}:latest tail -f /dev/null
 
     - name: Copy build and test script to container
-      run: docker cp ./build-${{ matrix.distros[1] }}.sh ${{ matrix.distros[1] }}:/
-      working-directory: .github/workflows
+      run: docker cp . ${{ matrix.distros[1] }}:/
 
     - name: Build and test
-      run: docker exec ${{ matrix.distros[1] }} ./build-${{ matrix.distros[1] }}.sh ${{ env.GITHUB_REPOSITORY_OWNER_PART_SLUG_URL }} ${{ env.GITHUB_REF_NAME }}
+      run: docker exec ${{ matrix.distros[1] }} ./build-${{ matrix.distros[1] }}.sh
 
     - name: Cleanup
       run: |
