@@ -83,12 +83,13 @@ if COVERAGE:
     extra_compile_args.append('-ftest-coverage')
     extra_link_args.append('-lgcov')
 
-DEBUG = os.getenv('DEBUG')
-if DEBUG:
-    extra_compile_args.append("-O0")
-else:
-    # Release build
-    extra_compile_args.append("-O1")
+# TODO: this conflicts with the C client's DEBUG mode when building it
+# DEBUG = os.getenv('DEBUG')
+# if DEBUG:
+#     extra_compile_args.append("-O0")
+# else:
+#     # Release build
+#     extra_compile_args.append("-O1")
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS

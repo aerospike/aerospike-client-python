@@ -1201,6 +1201,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             config.policies.apply.replica = long_replica;
             config.policies.operate.replica = long_replica;
             config.policies.remove.replica = long_replica;
+            config.policies.batch.replica = long_replica;
         }
 
         PyObject *py_ap_read_mode =

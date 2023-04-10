@@ -467,6 +467,10 @@ as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy)
     if (status != AEROSPIKE_OK) {
         return status;
     }
+    status = set_optional_replica(&batch_policy->replica, py_policy, "replica");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
 
     return AEROSPIKE_OK;
 }
