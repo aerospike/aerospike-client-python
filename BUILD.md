@@ -99,11 +99,6 @@ sudo apt install clang-format
 
 ## Build
 
-    export STATIC_SSL=1
-    # substitute the paths to your OpenSSL 1.1 library
-    export SSL_LIB_PATH=/usr/local/Cellar/openssl@1.1/1.1.1l/lib/
-    export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
-
 Before building the wheel, it is recommended to manually clean the C client build:
 ```
 python3 setup.py clean
@@ -111,7 +106,15 @@ python3 setup.py clean
 Sometimes the C client will not rebuild if you switch branches and update the C client submodule, and you will end up
 using the wrong version of the C client. This can causes strange issues when building or testing the Python client.
 
-Then build the source distribution and wheel:
+Also, for macOS or any other operating system that doesn't have OpenSSL installed by default, you must install it and
+specify its location when building the wheel. In macOS, you would run these commands:
+```
+export SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/"
+export CPATH="$(brew --prefix openssl@1.1)/include/"
+export STATIC_SSL=1
+```
+
+Then build the source distribution and wheel.
 ```
 pip install build
 python3 -m build
