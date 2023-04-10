@@ -120,10 +120,10 @@ pip install build
 python3 -m build
 ```
 
-To build the client without any optimizations (usually for debugging), pass in the DEBUG environment variable:
+<!-- To build the client without any optimizations (usually for debugging), pass in the DEBUG environment variable:
 ```
 DEBUG=1 python3 -m build
-```
+``` -->
 
 ### Troubleshooting macOS
 
