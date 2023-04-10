@@ -1335,7 +1335,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     // error_rate_window
     PyObject *py_error_rate_window =
         PyDict_GetItemString(py_config, "error_rate_window");
-        Py_XINCREF(py_config);
+    Py_XINCREF(py_error_rate_window);
     if (py_error_rate_window &&
         PyLong_Check(py_error_rate_window)) {
         config.error_rate_window = PyInt_AsLong(py_error_rate_window);
