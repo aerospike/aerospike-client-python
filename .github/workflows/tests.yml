@@ -213,7 +213,8 @@ jobs:
     - name: Install client
       run: pip install *.whl
 
-    - run: pip install stubtest
+    - run: pip install mypy
+
     - run: stubtest aerospike
 
   # Run this when testing new server features on server release candidate
