@@ -605,6 +605,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Default: ``0``
         * **max_conns_per_node** (:class:`int`)
             Maximum number of pipeline connections allowed for each node
+
+            Default: ``100``
         * **max_error_rate** (:class:`int`)
             Maximum number of errors allowed per node per ``error_rate_window`` before backoff algorithm returns :exc:`~aerospike.exception.MaxErrorRateExceeded` for database commands to that node. If ``max_error_rate`` is zero, there is no error limit.
 
