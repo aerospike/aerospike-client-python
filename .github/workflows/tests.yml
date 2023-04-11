@@ -193,6 +193,28 @@ jobs:
         verbose: true # optional (default = false)
         fail_ci_if_error: true
 
+  stubtest:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ matrix.py-version }}
+
+    - name: Install client
+      run: pip install *.whl
+
+    - run: pip install stubtest
+    - run: stubtest aerospike
+
   # Run this when testing new server features on server release candidate
   # to make sure the tests don't regress on the last server release.
   test-ce-latest-release:
