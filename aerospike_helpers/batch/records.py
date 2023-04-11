@@ -270,7 +270,7 @@ class BatchRecords:
             result (int): The status code of the last batch call that used this BatchRecords.
                 ``0`` if all batch subtransactions succeeded (or if the only failures were \
                     ``FILTERED_OUT`` or ``RECORD_NOT_FOUND``)
-                Not ``0`` if an error occured. The most common error is ``-16`` \
+                Not ``0`` if an error occurred. The most common error is ``-16`` \
                     (One or more batch sub transactions failed).
     """
 
