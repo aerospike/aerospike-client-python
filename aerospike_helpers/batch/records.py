@@ -268,42 +268,52 @@ class BatchRecords:
             define batch operations and hold results. BatchRecord Types can be Remove, Write, \
             Read, and Apply.
             result (int): The status code of the last batch call that used this BatchRecords.
-            0 if all batch subtransactions succeeded (or if the only failures were FILTERED_OUT or RECORD_NOT_FOUND)
-            non 0 if an error occured. The most common error being -16 (One or more batch sub transactions failed).
+                ``0`` if all batch subtransactions succeeded (or if the only failures were \
+                    ``FILTERED_OUT`` or ``RECORD_NOT_FOUND``)
+                Not ``0`` if an error occurred. The most common error is ``-16`` \
+                    (One or more batch sub transactions failed).
     """
 
     def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:
         """
         Example::
 
-            # Create a BatchRecords to remove a record, write a bin, and read a bin.
-            # Assume client is an instantiated and connected aerospike cleint.
-            import aerospike_helpers.operations as op
+            import aerospike
+            import aerospike_helpers.operations.operations as op
+            from aerospike_helpers.batch.records import BatchRecords, Remove, Write, Read
 
+            # Setup
+            config = {
+                "hosts": [("127.0.0.1", 3000)]
+            }
+            client = aerospike.client(config)
 
             namespace = "test"
-            set = "demo"
-            bin_name = "id"
+            set_ = "demo"
             keys = [
-                (namespace, set, 1),
-                (namespace, set, 2),
-                (namespace, set, 3)
+                (namespace, set_, 1),
+                (namespace, set_, 2),
+                (namespace, set_, 3),
             ]
+            bin_name = "id"
+            for key in keys:
+                client.put(key, {bin_name: 1})
 
+            # Create a BatchRecords to remove a record, write a bin, and read a bin.
             brs = BatchRecords(
                 [
                     Remove(
-                        key=(namespace, set, 1),
+                        key=keys[0],
                     ),
                     Write(
-                        key=(namespace, set, 100),
+                        key=keys[1],
                         ops=[
                             op.write(bin_name, 100),
                             op.read(bin_name),
                         ]
                     ),
-                    BatchRead(
-                        key=(namespace, set, 333),
+                    Read(
+                        key=keys[2],
                         ops=[
                             op.read(bin_name)
                         ]
@@ -313,6 +323,15 @@ class BatchRecords:
 
             # Note this call will mutate brs and set results in it.
             client.batch_write(brs)
+            for br in brs.batch_records:
+                print(br.result)
+                print(br.record)
+            # 0
+            # (('test', 'demo', 1, bytearray(b'...')), {'ttl': 4294967295, 'gen': 0}, {})
+            # 0
+            # (('test', 'demo', 2, bytearray(b'...')), {'ttl': 2592000, 'gen': 4}, {'id': 100})
+            # 0
+            # (('test', 'demo', 3, bytearray(b'...')), {'ttl': 2592000, 'gen': 3}, {'id': 1})
         """
 
         if batch_records is None:

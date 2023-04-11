@@ -193,18 +193,36 @@ jobs:
         verbose: true # optional (default = false)
         fail_ci_if_error: true
 
+  stubtest:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.7'
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-3.7
+
+    - name: Install client
+      run: pip install *.whl
+
+    - run: pip install mypy
+
+    - run: stubtest aerospike --allowlist stubtest-allowlist
+
   # Run this when testing new server features on server release candidate
   # to make sure the tests don't regress on the last server release.
   test-ce-latest-release:
     runs-on: ubuntu-latest
     if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
     needs: build
-    strategy:
-      matrix:
-        py-version: [
-          "3.7",
-        ]
-      fail-fast: false
 
     steps:
     - uses: actions/checkout@v2
@@ -213,12 +231,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.py-version }}
+        python-version: '3.7'
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-${{ matrix.py-version }}
+        name: wheel-3.7
 
     - name: Install client
       run: pip install *.whl

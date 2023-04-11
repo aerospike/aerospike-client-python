@@ -14,8 +14,10 @@
 # limitations under the License.
 ##########################################################################
 """
-This module provides helper functions to produce dictionaries to be used with the
-:meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered` methods of the aerospike module.
+This module provides helper functions to produce dictionaries to be used with:
+
+* :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
+* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
 
 List operations support nested CDTs through an optional ctx context argument.
 The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.

@@ -1,4 +1,5 @@
-from typing import Any, Callable, Union, final
+from typing import Any, Callable, Union
+from typing_extensions import final
 
 from aerospike_helpers.batch.records import BatchRecords
 AS_BOOL: int
