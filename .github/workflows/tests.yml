@@ -208,7 +208,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-${{ matrix.py-version }}
+        name: wheel-3.7
 
     - name: Install client
       run: pip install *.whl
