@@ -194,6 +194,7 @@ jobs:
         fail_ci_if_error: true
 
   stubtest:
+    needs: build
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
