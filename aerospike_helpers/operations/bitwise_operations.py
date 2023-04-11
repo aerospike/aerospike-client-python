@@ -580,7 +580,6 @@ def bit_subtract(bin_name: str, bit_offset, bit_size, value, sign, action, polic
 
 
 def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=None):
-
     """Creates a bit_xor_operation.
 
     Creates a bit and operation. Server performs bitwise xor with value and bitmap in bin
