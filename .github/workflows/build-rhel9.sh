@@ -3,13 +3,8 @@
 set -e
 set -x
 
-# Update packages to get latest git version
-yum update -y
-yum install -y git openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
-
-git clone --branch $1 --recurse-submodules https://github.com/aerospike/aerospike-client-python
-cd aerospike-client-python/
-
+# Executed inside the aerospike-client-python directory
+yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
 python3 -m pip install build
 python3 -m build
 python3 -m pip install dist/*.whl

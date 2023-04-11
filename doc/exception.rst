@@ -80,6 +80,12 @@ Client Errors
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
+.. py:exception:: MaxErrorRateExceeded
+
+    The operation was not performed because the maximum error rate has been exceeded.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
 Server Errors
 -------------
 

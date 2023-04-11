@@ -1323,6 +1323,24 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         config.max_conns_per_node = PyInt_AsLong(py_max_conns);
     }
 
+    // max_error_rate
+    PyObject *py_max_error_rate =
+        PyDict_GetItemString(py_config, "max_error_rate");
+    Py_XINCREF(py_max_error_rate);
+    if (py_max_error_rate && PyLong_Check(py_max_error_rate)) {
+        config.max_error_rate = PyLong_AsLong(py_max_error_rate);
+    }
+    Py_XDECREF(py_max_error_rate);
+
+    // error_rate_window
+    PyObject *py_error_rate_window =
+        PyDict_GetItemString(py_config, "error_rate_window");
+    Py_XINCREF(py_error_rate_window);
+    if (py_error_rate_window && PyLong_Check(py_error_rate_window)) {
+        config.error_rate_window = PyInt_AsLong(py_error_rate_window);
+    }
+    Py_XDECREF(py_error_rate_window);
+
     //conn_timeout_ms
     PyObject *py_connect_timeout =
         PyDict_GetItemString(py_config, "connect_timeout");

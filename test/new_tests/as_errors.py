@@ -18,6 +18,12 @@
 #
 #    Client Errors
 #
+
+#
+#    Max errors limit reached.
+#
+AEROSPIKE_MAX_ERROR_RATE = -14
+
 #
 #    Synchronous connection error.
 #
