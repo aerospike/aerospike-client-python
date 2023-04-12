@@ -579,19 +579,36 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``16``
         * **max_socket_idle** (:class:`int`)
-            Maximum socket idle time in seconds.
+            Maximum socket idle in seconds. Connection pools will discard sockets that have been idle longer than the maximum.
 
-            Connection pools will discard sockets that have been idle longer than the maximum.
-            It's important to set this value to a few seconds less than the server's \
-            `proto-fd-idle-ms <https://docs.aerospike.com/reference/configuration#proto-fd-idle-ms>`_, \
+            Connection pools are now implemented by a LIFO stack.
+            Connections at the tail of the stack will always be the least used.
+            These connections are checked for ``max_socket_idle`` once every 30 tend iterations (usually 30 seconds).
+
+            If server's ``proto-fd-idle-ms`` is greater than zero,
+            then ``max_socket_idle`` should be at least a few seconds less than the server's ``proto-fd-idle-ms``,
             so the client does not attempt to use a socket that has already been reaped by the server.
 
-            The value is limited to 24 hours (86400 seconds).
+            If server's ``proto-fd-idle-ms`` is zero (no reap), then ``max_socket_idle`` should also be zero.
+            Connections retrieved from a pool in transactions will not be checked for ``max_socket_idle`` when ``max_socket_idle`` is zero.
+            Idle connections will still be trimmed down from peak connections to min connections \
+            (``min_conns_per_node`` and ``async_min_conns_per_node``) using a hard-coded 55 second limit in the cluster tend thread.
 
-            Default:
+            Default: ``0``
 
-                * ``0`` (disabled) for non-TLS connections
-                * ``55`` for TLS connections
+            .. Maximum socket idle time in seconds.
+
+            .. Connection pools will discard sockets that have been idle longer than the maximum.
+            .. It's important to set this value to a few seconds less than the server's \
+            .. `proto-fd-idle-ms <https://docs.aerospike.com/reference/configuration#proto-fd-idle-ms>`_, \
+            .. so the client does not attempt to use a socket that has already been reaped by the server.
+
+            .. The value is limited to 24 hours (86400 seconds).
+
+            .. Default:
+
+            ..     * ``0`` (disabled) for non-TLS connections
+            ..     * ``55`` for TLS connections
 
         * **min_conns_per_node** (:class:`int`)
             Minimum number of synchronous connections allowed per server node. Preallocate minimum
