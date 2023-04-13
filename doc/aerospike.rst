@@ -484,7 +484,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
                 It is still possible to specify a key when using **use_shared_connection** = `True`.
 
-                Default: ``0xA8000000``
+                Default: ``0xA9000000``
 
                 .. seealso::
                     `Shared Memory <https://www.aerospike.com/docs/client/c/usage/shm.html>`_
