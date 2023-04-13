@@ -241,7 +241,9 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
         if (p) {
             if (p->dtype == AS_INDEX_STRING ||
                 p->dtype == AS_INDEX_GEO2DSPHERE) {
-                free(p->value.string);
+                if (p->value.string_val._free) {
+                    free(p->value.string_val.string);
+                }
             }
         }
         if (i == 0) {
