@@ -7,7 +7,6 @@ on:
   push:
     branches: ["stage", "master"]
   pull_request:
-    branches: ["stage"]
   workflow_dispatch:
 
 jobs:
