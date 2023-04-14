@@ -207,47 +207,67 @@ jobs:
         path: wheelhouse/*.whl
 
   macOS-m1:
-    runs-on: ${{ matrix.os }}
+    runs-on: [self-hosted, macOS, ARM64]
     strategy:
       fail-fast: false
       matrix:
-        os: [
-          macos-latest,
+        python-version: [
+            "3.8",
+            "3.9",
+            "3.10",
+            "3.11"
         ]
-        # Python versions to build wheels on
-        python: [
-          "cp38",
-          "cp39",
-          "cp310",
-          "cp311"
-        ]
-
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: recursive
 
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
-      env:
-        CIBW_BUILD: ${{ matrix.python }}-macosx_arm64
-        CIBW_BUILD_FRONTEND: build
-        # Set env variables before building
-        CIBW_BEFORE_ALL_MACOS: >
-          git clone https://github.com/passepartoutvpn/openssl-apple &&
-          cd openssl-apple &&
-          export CONFIG_OPTIONS="no-shared" &&
-          ./build-libssl.sh --version=1.1.1q --targets="macos64-arm64" --macos-sdk=$(xcrun --show-sdk-version) ||
-          cat "./bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/build-openssl-1.1.1q.log"
-        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/lib/" CPATH="$(pwd)/openssl-apple/bin/MacOSX$(xcrun --show-sdk-version)-arm64.sdk/include/" STATIC_SSL=1
-        CIBW_ARCHS: "arm64"
-        # CIBW_TEST_COMMAND: python -c "import aerospike"
+    # Update dependencies if needed
+    - name: Add brew to path
+      run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
+    - run: brew install python@${{ matrix.python-version }}
+    - run: brew install openssl@1.1
+
+    - run: |
+        openssl_path=$(brew --prefix openssl@1.1)
+        echo SSL_LIB_PATH="$openssl_path/lib/" >> $GITHUB_ENV
+        echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
+        echo STATIC_SSL=1 >> $GITHUB_ENV
+
+    - run: python${{ matrix.python-version }} -m pip install build delocate
+
+    - name: Run Aerospike server release candidate
+      if: ${{ inputs.use-server-rc }}
+      run: sshpass -p ${{ secrets.M1_WORKFLOW_SERVER_PW }} ssh -n -o StrictHostKeyChecking=no citrusleaf@${{ secrets.M1_WORKFLOW_SERVER_ADDRESS }} docker run -d --pull "always" --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+
+    - name: Set up Aerospike server
+      if: ${{ !inputs.use-server-rc }}
+      run: echo IMAGE_NAME="aerospike/aerospike-server" >> $GITHUB_ENV
+
+    - name: Run server
+      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
+
+    - run: python${{ matrix.python-version }} -m build
+    - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
+    - run: python${{ matrix.python-version }} -m pip install --find-links=wheelhouse/ --no-index --force-reinstall aerospike
+
+    - run: python${{ matrix.python-version }} -m pip install -r requirements.txt
+      working-directory: test
+
+    - run: python${{ matrix.python-version }} -m pytest new_tests/
+      working-directory: test
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}-arm64-${{ matrix.python }}-wheel
+        name: macos-amd64-${{ matrix.python-version }}-wheel
         path: wheelhouse/*.whl
+
+    - name: Stop server
+      if: ${{ always() }}
+      run: |
+        docker container stop aerospike
+        docker container prune -f
 
   send-to-qe:
     needs: [manylinux_x86_64, manylinux_arm64]
