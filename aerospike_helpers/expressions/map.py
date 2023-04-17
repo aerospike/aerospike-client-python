@@ -302,9 +302,8 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
         Example::
 
             # {"key1": 1, "key2": 2, "key3": 3, "key4": 10}
-            expr = exp.MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, "key2", 1, \
-            exp.MapBin("b")).compile()
-            # [3, 10]
+            expr = exp.MapRemoveByKeyRelIndexRangeToEnd(None, "key2", 1, exp.MapBin("b")).compile()
+            # This returns {"key1": 1, "key2": 2}
         """
         self._children = (
             key,
