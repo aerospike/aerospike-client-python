@@ -128,6 +128,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 Py_DECREF(py_ubin);
                 py_ubin = NULL;
             }
+            self->query.where.entries[0].value.string_val._free = true;
         }
         else if (in_datatype == AS_INDEX_NUMERIC) {
             if (PyUnicode_Check(py_bin)) {
@@ -272,6 +273,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 Py_DECREF(py_ubin);
                 py_ubin = NULL;
             }
+            self->query.where.entries[0].value.string_val._free = true;
         }
         else {
             // If it ain't right, raise and error
@@ -304,6 +306,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (pctx) {
             cf_free(pctx);
         }
+    }
+    else if (ctx_in_use) {
+        self->query.where.entries[0].ctx_free = true;
     }
     return rc;
 }

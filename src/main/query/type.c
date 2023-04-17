@@ -236,22 +236,6 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
         Py_XDECREF(self->u_objs.ob[i]);
     }
 
-    for (i = 0; i < self->query.where.size; i++) {
-        as_predicate *p = &self->query.where.entries[i];
-        if (p) {
-            if (p->dtype == AS_INDEX_STRING ||
-                p->dtype == AS_INDEX_GEO2DSPHERE) {
-                free(p->value.string);
-            }
-        }
-        if (i == 0) {
-            if (p->ctx) {
-                as_cdt_ctx_destroy(p->ctx);
-                cf_free(p->ctx);
-            }
-        }
-    }
-
     as_query_destroy(&self->query);
 
     if (self->unicodeStrVector != NULL) {
