@@ -397,6 +397,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Contains :ref:`aerospike_batch_policies`.
             * **info** (:class:`dict`)
                 Contains :ref:`aerospike_info_policies`.
+            * **admin** (:class:`dict`)
+                Contains :ref:`aerospike_admin_policies`.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
