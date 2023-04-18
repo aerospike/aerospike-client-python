@@ -49,3 +49,4 @@ as_status set_operate_policy(as_policy_operate *operate_policy,
                              PyObject *py_policy);
 as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy);
 as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy);
+as_status set_admin_policy(as_policy_admin *admin_policy, PyObject *py_policy);
