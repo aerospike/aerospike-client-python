@@ -153,7 +153,7 @@ static int Aerospike_Clear(PyObject *aerospike)
 MOD_INIT(aerospike)
 {
 
-    const char version[8] = "11.0.1";
+    const char version[8] = "11.1.0";
     // Makes things "thread-safe"
     PyEval_InitThreads();
     int i = 0;
