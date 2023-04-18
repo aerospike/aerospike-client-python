@@ -4,6 +4,9 @@ inputs:
   use-server-rc:
     required: true
     default: false
+  server-tag:
+    required: true
+    default: false
 
 runs:
   using: "composite"
@@ -26,12 +29,12 @@ runs:
 
   - name: Use release server
     if: ${{ inputs.use-server-rc == 'false' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise" >> $GITHUB_ENV
+    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise:${{ inputs.server-tag }}" >> $GITHUB_ENV
     shell: bash
 
   - name: Use release candidate server
     if: ${{ inputs.use-server-rc == 'true' }}
-    run: echo "SERVER_IMAGE=aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc" >> $GITHUB_ENV
+    run: echo "SERVER_IMAGE=aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
     shell: bash
 
   - name: Get default aerospike.conf from Docker server EE container
