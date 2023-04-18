@@ -59,7 +59,7 @@ include_dirs = ['src/include'] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
@@ -202,7 +202,7 @@ class CClientBuild(build):
                 'make',
                 'V=' + str(self.verbose),
                 'EVENT_LIB='+EVENT_LIB,
-            ] 
+            ]
 
         def compile():
             print(cmd, library_dirs, libraries)
