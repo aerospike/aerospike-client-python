@@ -110,7 +110,7 @@ class TestSetQuotas(TestBaseClass):
         Set Quota positive policy
         """
         self.client.admin_set_quotas(
-            role="usr-sys-admin-test", read_quota=250, write_quota=300, policy={"timeout": 1000}
+            role="usr-sys-admin-test", read_quota=250, write_quota=300, policy={"timeout": 180000}
         )
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -127,7 +127,7 @@ class TestSetQuotas(TestBaseClass):
         """
         try:
             self.client.admin_set_quotas(
-                role="bad-role-name", read_quota=250, write_quota=300, policy={"timeout": 1000}
+                role="bad-role-name", read_quota=250, write_quota=300
             )
 
         except e.InvalidRole as exception:
@@ -139,7 +139,7 @@ class TestSetQuotas(TestBaseClass):
         Incorrect role type
         """
         try:
-            self.client.admin_set_quotas(role=None, read_quota=250, write_quota=300, policy={"timeout": 1000})
+            self.client.admin_set_quotas(role=None, read_quota=250, write_quota=300)
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Role name should be a string."
@@ -150,7 +150,7 @@ class TestSetQuotas(TestBaseClass):
         """
         try:
             self.client.admin_set_quotas(
-                role="usr-sys-admin-test", read_quota=-20, write_quota=300, policy={"timeout": 1000}
+                role="usr-sys-admin-test", read_quota=-20, write_quota=300
             )
 
         except e.InvalidRole as exception:
@@ -163,7 +163,7 @@ class TestSetQuotas(TestBaseClass):
         """
         try:
             self.client.admin_set_quotas(
-                role="usr-sys-admin-test", read_quota=None, write_quota=300, policy={"timeout": 1000}
+                role="usr-sys-admin-test", read_quota=None, write_quota=300
             )
 
         except e.ParamError as exception:

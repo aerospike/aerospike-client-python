@@ -36,11 +36,9 @@ class TestCreateRole(object):
         Teardown method
         """
 
-        policy = {}
-
         for user in self.delete_users:
             try:
-                self.client.admin_drop_user(user, policy)
+                self.client.admin_drop_user(user)
             except Exception:
                 pass
 
@@ -66,7 +64,7 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -121,7 +119,7 @@ class TestCreateRole(object):
         except e.InvalidRole:
             pass  # we are good, no such role exists
 
-        self.client.admin_create_role(role_name, privs, {"timeout": 1000})
+        self.client.admin_create_role(role_name, privs)
         time.sleep(1)
         roles = self.client.admin_get_role(role_name)
         assert roles == {"privileges": privs, "whitelist": [], "read_quota": 0, "write_quota": 0}
@@ -155,7 +153,7 @@ class TestCreateRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -326,7 +324,7 @@ class TestCreateRole(object):
         except Exception:
             pass  # EAFP
         status = self.client.admin_create_role(
-            role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 1000}
+            role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
         )
 
         assert status == 0
@@ -368,7 +366,7 @@ class TestCreateRole(object):
 
         try:
             self.client.admin_create_role(
-                role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 1000}
+                role_name, [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}]
             )
 
         except e.InvalidRole as exception:

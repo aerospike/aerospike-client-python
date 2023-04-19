@@ -27,13 +27,12 @@ class TestQueryUsers(TestBaseClass):
             time.sleep(2)
         except e.InvalidUser:
             pass
-        policy = {}
         user = "example-test"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
             time.sleep(2)
         except e.UserExistsError:
             pass
@@ -44,10 +43,8 @@ class TestQueryUsers(TestBaseClass):
         Teardown method
         """
 
-        policy = {}
-
         try:
-            self.client.admin_drop_user("example-test", policy)
+            self.client.admin_drop_user("example-test")
         except Exception:
             pass
         self.client.close()
@@ -72,7 +69,7 @@ class TestQueryUsers(TestBaseClass):
 
     def test_query_users_with_proper_timeout_policy_value(self):
 
-        policy = {"timeout": 50}
+        policy = {"timeout": 180000}
 
         time.sleep(2)
         user_details = self.client.admin_query_users(policy)
@@ -82,15 +79,14 @@ class TestQueryUsers(TestBaseClass):
 
     def test_query_users_with_no_roles(self):
 
-        policy = {}
         user = "example-test"
         roles = ["sys-admin", "read", "read-write"]
 
-        status = self.client.admin_revoke_roles(user, roles, policy)
+        status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_users(policy)
+        user_details = self.client.admin_query_users()
 
         time.sleep(2)
         assert user_details["example-test"] == []
@@ -99,9 +95,8 @@ class TestQueryUsers(TestBaseClass):
         """
         Invoke query_users() with extra argument.
         """
-        policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_query_users(policy, "")
+            self.client.admin_query_users(None, "")
 
         assert "admin_query_users() takes at most 1 argument (2 given)" in str(typeError.value)
 
