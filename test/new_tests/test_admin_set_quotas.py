@@ -168,4 +168,4 @@ class TestSetQuotas(TestBaseClass):
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "Read_quota must be an integer."
+            assert exception.msg == "py_read_quota must be an integer."
