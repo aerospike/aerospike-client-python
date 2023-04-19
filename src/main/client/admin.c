@@ -1392,11 +1392,17 @@ PyObject *AerospikeClient_Admin_Set_Quotas(AerospikeClient *self,
     if (py_read_quota != NULL) {
         get_int_from_py_int(&err, py_read_quota, &read_quota, "py_read_quota");
     }
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
 
     int write_quota = -1;
     if (py_write_quota != NULL) {
         get_int_from_py_int(&err, py_write_quota, &write_quota,
                             "py_write_quota");
+    }
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
 
     as_policy_admin admin_policy;
