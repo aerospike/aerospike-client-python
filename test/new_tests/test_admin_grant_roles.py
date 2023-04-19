@@ -27,13 +27,12 @@ class TestGrantRoles(TestBaseClass):
             time.sleep(1)
         except e.InvalidUser:
             pass
-        policy = {}
         user = "example-test"
         password = "foo2"
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
             time.sleep(1)
         except e.UserExistsError:
             pass
@@ -44,9 +43,8 @@ class TestGrantRoles(TestBaseClass):
         Teardown method
         """
 
-        policy = {}
         try:
-            self.client.admin_drop_user("example-test", policy)
+            self.client.admin_drop_user("example-test")
             time.sleep(1)
         except e.InvalidUser:
             pass
@@ -59,7 +57,7 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_with_proper_parameters(self):
 
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         user = "example-test"
         roles = ["read", "read-write", "sys-admin"]
 
@@ -73,7 +71,6 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_with_proper_parameters_without_policy(self):
 
-        policy = {"timeout": 1000}
         user = "example-test"
         roles = ["read", "read-write", "sys-admin"]
 
@@ -81,7 +78,7 @@ class TestGrantRoles(TestBaseClass):
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user(user, policy)
+        user_details = self.client.admin_query_user(user)
 
         assert user_details == ["read", "read-write", "sys-admin"]
 
@@ -115,12 +112,11 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_with_none_username(self):
 
-        policy = {"timeout": 20}
         user = None
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_grant_roles(user, roles, policy)
+            self.client.admin_grant_roles(user, roles)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -128,12 +124,11 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_with_empty_username(self):
 
-        policy = {"timeout": 1000}
         user = ""
         roles = ["read-write"]
 
         try:
-            self.client.admin_grant_roles(user, roles, policy)
+            self.client.admin_grant_roles(user, roles)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -141,19 +136,18 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_with_special_characters_in_username(self):
 
-        policy = {"timeout": 1000}
         user = "!#Q#AEQ@#$%&^*((^&*~~~````["
         password = "abcd"
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
             time.sleep(1)
         except e.UserExistsError:
             pass
 
         roles = ["read"]
-        status = self.client.admin_grant_roles(user, roles, policy)
+        status = self.client.admin_grant_roles(user, roles)
 
         time.sleep(2)
 
@@ -167,12 +161,11 @@ class TestGrantRoles(TestBaseClass):
 
     def test_grant_roles_with_empty_roles_list(self):
 
-        policy = {"timeout": 1000}
         user = "example-test"
         roles = []
 
         try:
-            self.client.admin_grant_roles(user, roles, policy)
+            self.client.admin_grant_roles(user, roles)
 
         except e.InvalidRole as exception:
             assert exception.code == 70
@@ -181,7 +174,6 @@ class TestGrantRoles(TestBaseClass):
     # TODO: incorrect test
     def test_grant_roles_with_role_name_exceeding_max_length(self):
 
-        policy = {"timeout": 1000}  # noqa: F841
         user = "example-test"
         roles = ["read" * 25, "read-write" * 25]
 

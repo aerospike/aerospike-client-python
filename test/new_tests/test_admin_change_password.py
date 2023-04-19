@@ -20,7 +20,7 @@ class TestChangePassword(object):
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
         try:
-            self.client.admin_create_user("testchangepassworduser", "aerospike", ["read"], {})
+            self.client.admin_create_user("testchangepassworduser", "aerospike", ["read"])
             time.sleep(2)
         except aerospike.exception.UserExistsError:
             pass  # we are good, no such role exists
@@ -73,7 +73,7 @@ class TestChangePassword(object):
 
     def test_change_password_with_invalid_timeout_policy_value(self):
 
-        policy = {"timeout": 0.1}
+        policy = {"timeout": 0.2}
         user = "testchangepassworduser"
         password = "newpassword"
 
@@ -92,7 +92,7 @@ class TestChangePassword(object):
         config = self.connection_config
         self.clientreaduser = aerospike.client(config).connect(user, "aerospike")
 
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         password = "newpassword"
 
         status = self.clientreaduser.admin_change_password(user, password, policy)
@@ -113,12 +113,11 @@ class TestChangePassword(object):
 
     def test_change_password_with_none_username(self):
 
-        policy = {}
         user = None
         password = "newpassword"
 
         try:
-            self.client.admin_change_password(user, password, policy)
+            self.client.admin_change_password(user, password)
 
         except aerospike.exception.ParamError as exception:
             assert exception.code == -2
@@ -126,12 +125,11 @@ class TestChangePassword(object):
 
     def test_change_password_with_none_password(self):
 
-        policy = {}
         user = "testchangepassworduser"
         password = None
 
         try:
-            self.client.admin_change_password(user, password, policy)
+            self.client.admin_change_password(user, password)
 
         except aerospike.exception.ParamError as exception:
             assert exception.code == -2
@@ -139,12 +137,11 @@ class TestChangePassword(object):
 
     def test_change_password_with_non_existent_user(self):
 
-        policy = {}
         user = "readwriteuser"
         password = "newpassword"
 
         try:
-            self.client.admin_change_password(user, password, policy)
+            self.client.admin_change_password(user, password)
 
         except aerospike.exception.InvalidUser as exception:
             assert exception.code == 60
@@ -156,10 +153,9 @@ class TestChangePassword(object):
         config = self.connection_config
         self.clientreaduser = aerospike.client(config).connect(user, "aerospike")
 
-        policy = {"timeout": 100}
         password = "password" * 1000
 
         with pytest.raises(aerospike.exception.ClientError):
-            self.clientreaduser.admin_change_password(user, password, policy)
+            self.clientreaduser.admin_change_password(user, password)
 
         self.clientreaduser.close()

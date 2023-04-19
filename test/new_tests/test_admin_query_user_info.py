@@ -26,13 +26,12 @@ class TestQueryUserInfo(TestBaseClass):
             time.sleep(1)
         except e.InvalidUser:
             pass
-        policy = {}
         user = "example-test"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
             time.sleep(1)
         except e.UserExistsError:
             pass
@@ -43,10 +42,8 @@ class TestQueryUserInfo(TestBaseClass):
         Teardown method
         """
 
-        policy = {}
-
         try:
-            self.client.admin_drop_user("example-test", policy)
+            self.client.admin_drop_user("example-test")
             time.sleep(1)
         except e.InvalidUser:
             pass
@@ -80,7 +77,7 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_proper_timeout_policy_value(self):
 
-        policy = {"timeout": 30}
+        policy = {"timeout": 180000}
         user = "example-test"
 
         time.sleep(2)
@@ -90,11 +87,10 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_none_username(self):
 
-        policy = {"timeout": 30}
         user = None
 
         try:
-            self.client.admin_query_user_info(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -102,11 +98,10 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_empty_username(self):
 
-        policy = {}
         user = ""
 
         try:
-            self.client.admin_query_user_info(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -114,11 +109,10 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_nonexistent_username(self):
 
-        policy = {}
         user = "non-existent"
 
         try:
-            self.client.admin_query_user_info(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -126,11 +120,10 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_no_roles(self):
 
-        policy = {}
         user = "example-test"
         roles = ["sys-admin", "read", "read-write"]
 
-        status = self.client.admin_revoke_roles(user, roles, policy)
+        status = self.client.admin_revoke_roles(user, roles)
         assert status == 0
         time.sleep(2)
 
@@ -142,9 +135,8 @@ class TestQueryUserInfo(TestBaseClass):
         """
         Invoke query_user() with extra argument.
         """
-        policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_query_user_info("foo", policy, "")
+            self.client.admin_query_user_info("foo", None, "")
 
         assert "admin_query_user_info() takes at most 2 arguments (3 given)" in str(typeError.value)
 

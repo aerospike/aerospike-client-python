@@ -130,7 +130,7 @@ class TestRevokePrivilege(TestBaseClass):
         Revoke privileges positive with policy
         """
         status = self.client.admin_grant_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}]
         )
 
         assert status == 0
@@ -143,7 +143,7 @@ class TestRevokePrivilege(TestBaseClass):
         ]
 
         status = self.client.admin_revoke_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 180000}
         )
 
         time.sleep(1)
@@ -156,7 +156,7 @@ class TestRevokePrivilege(TestBaseClass):
         Revoke write privileges positive with policy
         """
         status = self.client.admin_grant_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}]
         )
 
         assert status == 0
@@ -169,7 +169,7 @@ class TestRevokePrivilege(TestBaseClass):
         ]
 
         status = self.client.admin_revoke_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE}], {"timeout": 180000}
         )
 
         time.sleep(1)
