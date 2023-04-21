@@ -10,7 +10,7 @@ on:
         default: false
 
 jobs:
-  test-sdist:
+  build-sdist:
     name: Build and install sdist
     runs-on: ubuntu-latest
     steps:
@@ -38,6 +38,38 @@ jobs:
         path: ./dist/*.tar.gz
         # Artifact name, not the file name
         name: sdist
+
+  source-installs:
+    strategy:
+      matrix:
+        distros: [
+          # Image name, container name
+          ["alpine", "alpine"],
+          ["redhat/ubi9", "rhel9"]
+        ]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+    - name: Run Aerospike server release candidate with latest tag
+      if: ${{ inputs.use-server-rc }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+
+    - name: Run Aerospike server
+      if: ${{ !inputs.use-server-rc }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Run Alpine container
+      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }}:latest tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
+
+    - name: Build and test
+      run: docker exec -w /aerospike-client-python ${{ matrix.distros[1] }} ./.github/workflows/build-${{ matrix.distros[1] }}.sh
 
   manylinux_arm64:
     runs-on: ubuntu-latest
