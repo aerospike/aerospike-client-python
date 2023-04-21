@@ -161,6 +161,64 @@ jobs:
         # Artifact name, not the file name
         name: manylinux-x86_64-${{ matrix.python[0] }}
 
+  manylinux_x86_64_no_test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: cp37-manylinux_x86_64
+        CIBW_BUILD_FRONTEND: build
+        CIBW_BEFORE_ALL_LINUX: >
+          yum install openssl-devel -y &&
+          yum install python-devel -y &&
+          yum install python-setuptools -y
+        CIBW_ARCHS: "x86_64"
+
+    - name: Upload wheels to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+        # Artifact name, not the file name
+        name: manylinux-x86_64-cp37-distros
+
+  manylinux_x86_64_ubuntu2204:
+      needs: manylinux_x86_64_no_test
+      runs-on: ubuntu-22.04
+      steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: manylinux-x86_64-cp37-distros
+
+      - name: Set up Python 3.7
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.7"
+
+      - run: pip install *.whl
+
+      - name: Run Aerospike server release candidate
+        if: ${{ inputs.use-server-rc && matrix.test-distro-later == false }}
+        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+
+      - name: Set up Aerospike server
+        if: ${{ !inputs.use-server-rc && matrix.test-distro-later == false }}
+        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+      - name: Install test dependencies
+        run: pip install -r requirements.txt
+        working-directory: test
+
+      - name: Run tests
+        run: python3 -m pytest new_tests/
+        working-directory: test
+
   macOS-x86:
     strategy:
       fail-fast: false
