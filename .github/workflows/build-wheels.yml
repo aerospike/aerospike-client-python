@@ -197,7 +197,7 @@ jobs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
       env:
-        CIBW_BUILD: cp37-manylinux_x86_64
+        CIBW_BUILD: cp39-manylinux_x86_64
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
           yum install openssl-devel -y &&
@@ -210,7 +210,39 @@ jobs:
       with:
         path: ./wheelhouse/*.whl
         # Artifact name, not the file name
-        name: manylinux-x86_64-cp37-distros
+        name: manylinux-x86_64-cp39-distros
+
+  manylinux_x86_64_rhel8:
+      needs: manylinux_x86_64_no_test
+      runs-on: ubuntu-latest
+      container:
+        image: redhat/ubi8
+      steps:
+      - run: dnf -y update
+      - run: dnf -y install git
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: manylinux-x86_64-cp39-distros
+
+      - run: dnf -y install python3.9
+      - run: python3.9 -m pip install *.whl
+
+      - name: Run Aerospike server release candidate
+        if: ${{ inputs.use-server-rc && matrix.test-distro-later == false }}
+        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+
+      - name: Set up Aerospike server
+        if: ${{ !inputs.use-server-rc && matrix.test-distro-later == false }}
+        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+      - name: Install test dependencies
+        run: python3.9 -m pip install -r requirements.txt
+        working-directory: test
+
+      - name: Run tests
+        run: python3.9 -m pytest new_tests/
+        working-directory: test
 
   manylinux_x86_64_ubuntu2204:
       needs: manylinux_x86_64_no_test
@@ -220,12 +252,12 @@ jobs:
 
       - uses: actions/download-artifact@v3
         with:
-          name: manylinux-x86_64-cp37-distros
+          name: manylinux-x86_64-cp39-distros
 
-      - name: Set up Python 3.7
+      - name: Set up Python 3.9
         uses: actions/setup-python@v3
         with:
-          python-version: "3.7"
+          python-version: "3.9"
 
       - run: pip install *.whl
 
