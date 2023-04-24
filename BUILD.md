@@ -16,12 +16,12 @@ The client depends on:
 - OpenSSL 1.1 >= 1.1.1
 - The Aerospike C client
 
-### RedHat 7+ and CentOS 7+
+### RedHat and CentOS
 
 The following are dependencies for:
 
-- RedHat Enterprise (RHEL) 7 or newer
-- CentOS 7 or newer
+- RedHat Enterprise (RHEL) 8 or newer
+- CentOS 7 Linux
 - Related distributions which use the `yum` package manager
 
 ```sh
