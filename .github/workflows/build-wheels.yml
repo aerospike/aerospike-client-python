@@ -223,7 +223,10 @@ jobs:
       steps:
       - run: dnf -y update
       - run: dnf -y install git
-
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          
       - uses: actions/download-artifact@v3
         with:
           name: manylinux-x86_64-cp39-distros
