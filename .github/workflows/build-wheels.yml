@@ -217,7 +217,7 @@ jobs:
       runs-on: ubuntu-latest
       services:
         aerospike:
-          image: ${{ inputs.use-server-rc && aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest || aerospike/aerospike-server }}
+          image: ${{ inputs.use-server-rc && "aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest" || "aerospike/aerospike-server" }}
       container:
         image: redhat/ubi8
       steps:
