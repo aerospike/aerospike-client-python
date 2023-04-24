@@ -215,6 +215,9 @@ jobs:
   manylinux_x86_64_rhel8:
       needs: manylinux_x86_64_no_test
       runs-on: ubuntu-latest
+      services:
+        aerospike:
+          image: ${{ inputs.use-server-rc && aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest || aerospike/aerospike-server }}
       container:
         image: redhat/ubi8
       steps:
@@ -227,14 +230,6 @@ jobs:
 
       - run: dnf -y install python3.9
       - run: python3.9 -m pip install *.whl
-
-      - name: Run Aerospike server release candidate
-        if: ${{ inputs.use-server-rc && matrix.test-distro-later == false }}
-        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
-
-      - name: Set up Aerospike server
-        if: ${{ !inputs.use-server-rc && matrix.test-distro-later == false }}
-        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
       - name: Install test dependencies
         run: python3.9 -m pip install -r requirements.txt
@@ -262,11 +257,11 @@ jobs:
       - run: pip install *.whl
 
       - name: Run Aerospike server release candidate
-        if: ${{ inputs.use-server-rc && matrix.test-distro-later == false }}
+        if: ${{ inputs.use-server-rc }}
         run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
 
       - name: Set up Aerospike server
-        if: ${{ !inputs.use-server-rc && matrix.test-distro-later == false }}
+        if: ${{ !inputs.use-server-rc }}
         run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
       - name: Install test dependencies
