@@ -12,7 +12,7 @@ Compatibility
 -------------
 
 The Python client for Aerospike works with Python 3.7 - 3.11 running on
-**64-bit** macOS 10.15+ and Linux (CentOS 7 Linux; RHEL8 and 9; Debian 8, 9 & 10; Ubuntu
+**64-bit** macOS 11+ and Linux (CentOS 7 Linux; RHEL8 and 9; Debian 8, 9 & 10; Ubuntu
 18.04, 20.04, & 22.04; Alpine Linux).
 
 **NOTE:** Aerospike Python client 5.0.0 and up MUST be used with Aerospike server 4.9 or later.
