@@ -256,6 +256,7 @@ jobs:
             "debian:10"
           ]
         fail-fast: false
+      runs-on: ubuntu-latest
       services:
         aerospike:
           image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
