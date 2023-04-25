@@ -263,8 +263,8 @@ jobs:
       container:
         image: ${{ matrix.os }}
       steps:
-      - run: sudo apt update
-      - run: sudo apt install git python3.9 -y
+      - run: apt update
+      - run: apt install git python3.9 -y
 
       - uses: actions/checkout@v2
 
