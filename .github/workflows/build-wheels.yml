@@ -247,39 +247,52 @@ jobs:
         run: python3.9 -m pytest new_tests/
         working-directory: test
 
-  manylinux_x86_64_debian_based:
+  manylinux_x86_64_debian10:
       needs: manylinux_x86_64_no_test
-      strategy:
-        matrix:
-          os: [
-            "ubuntu:22.04",
-            "debian:10"
-          ]
-        fail-fast: false
       runs-on: ubuntu-latest
       services:
         aerospike:
           image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
       container:
-        image: ${{ matrix.os }}
+        image: debian:3.9-buster
       steps:
-      - run: apt update
-      - run: apt install git python3.9 -y
-
       - uses: actions/checkout@v2
 
       - uses: actions/download-artifact@v3
         with:
           name: manylinux-x86_64-cp39-distros
 
-      - run: python3.9 -m pip install *.whl
+      - run: python3 -m pip install *.whl
 
       - name: Install test dependencies
-        run: python3.9 -m pip install -r requirements.txt
+        run: python3 -m pip install -r requirements.txt
         working-directory: test
 
       - name: Run tests
-        run: python3.9 -m pytest new_tests/
+        run: python3 -m pytest new_tests/
+        working-directory: test
+
+  manylinux_x86_64_ubuntu2204:
+      needs: manylinux_x86_64_no_test
+      runs-on: ubuntu-22.04
+      services:
+        aerospike:
+          image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
+      steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: manylinux-x86_64-cp39-distros
+
+      - run: python3 -m pip install *.whl
+
+      - name: Install test dependencies
+        run: python3 -m pip install -r requirements.txt
+        working-directory: test
+
+      - name: Run tests
+        run: python3 -m pytest new_tests/
         working-directory: test
 
   macOS-x86:
