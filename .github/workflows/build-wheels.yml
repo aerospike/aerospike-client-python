@@ -254,7 +254,7 @@ jobs:
         aerospike:
           image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
       container:
-        image: debian:3.9-buster
+        image: python:3.9-buster
       steps:
       - uses: actions/checkout@v2
 
