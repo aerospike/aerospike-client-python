@@ -285,10 +285,10 @@ jobs:
         with:
           name: manylinux-x86_64-cp39-distros
 
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.9"
+      - name: Set up Python 3.9
+        uses: actions/setup-python@v3
+        with:
+          python-version: "3.9"
 
       - run: python3 -m pip install *.whl
 
