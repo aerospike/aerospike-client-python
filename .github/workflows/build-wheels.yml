@@ -226,7 +226,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           submodules: recursive
-          
+
       - uses: actions/download-artifact@v3
         with:
           name: manylinux-x86_64-cp39-distros
@@ -247,9 +247,46 @@ jobs:
         run: python3.9 -m pytest new_tests/
         working-directory: test
 
+  manylinux_x86_64_debian10:
+      needs: manylinux_x86_64_no_test
+      runs-on: ubuntu-latest
+      services:
+        aerospike:
+          image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
+      container:
+        image: python:3.9-buster
+      steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: manylinux-x86_64-cp39-distros
+
+      - run: python3 -m pip install *.whl
+
+      - name: Install test dependencies
+        run: python3 -m pip install -r requirements.txt
+        working-directory: test
+
+      - run: sed -i "s/127.0.0.1/$AEROSPIKE_HOST/" config.conf
+        working-directory: test
+        env:
+          AEROSPIKE_HOST: aerospike
+
+      - name: Run tests
+        run: python3 -m pytest new_tests/
+        working-directory: test
+
   manylinux_x86_64_ubuntu2204:
       needs: manylinux_x86_64_no_test
       runs-on: ubuntu-22.04
+      services:
+        aerospike:
+          image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
+          ports:
+            - 3000:3000
+            - 3001:3001
+            - 3002:3002
       steps:
       - uses: actions/checkout@v2
 
@@ -262,18 +299,10 @@ jobs:
         with:
           python-version: "3.9"
 
-      - run: pip install *.whl
-
-      - name: Run Aerospike server release candidate
-        if: ${{ inputs.use-server-rc }}
-        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
-
-      - name: Set up Aerospike server
-        if: ${{ !inputs.use-server-rc }}
-        run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      - run: python3 -m pip install *.whl
 
       - name: Install test dependencies
-        run: pip install -r requirements.txt
+        run: python3 -m pip install -r requirements.txt
         working-directory: test
 
       - name: Run tests

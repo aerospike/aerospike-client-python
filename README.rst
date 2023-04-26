@@ -15,7 +15,7 @@ The Python client for Aerospike works with Python 3.7 - 3.11 running on:
 - macOS 11 and 12
 - CentOS 7 Linux
 - RHEL 8 and 9
-- Debian 8, 9 and 10
+- Debian 8 to 11
 - Ubuntu 20.04 and 22.04
 - Alpine Linux
 
