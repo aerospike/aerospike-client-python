@@ -268,6 +268,11 @@ jobs:
         run: python3 -m pip install -r requirements.txt
         working-directory: test
 
+      - run: sed -i "s/127.0.0.1/$AEROSPIKE_HOST/" config.conf
+        working-directory: test
+        env:
+          AEROSPIKE_HOST: aerospike
+
       - name: Run tests
         run: python3 -m pytest new_tests/
         working-directory: test
@@ -295,6 +300,11 @@ jobs:
       - name: Install test dependencies
         run: python3 -m pip install -r requirements.txt
         working-directory: test
+
+      - run: sed -i "s/127.0.0.1/$AEROSPIKE_HOST/" config.conf
+        working-directory: test
+        env:
+          AEROSPIKE_HOST: aerospike
 
       - name: Run tests
         run: python3 -m pytest new_tests/
