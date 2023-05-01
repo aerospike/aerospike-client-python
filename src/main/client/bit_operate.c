@@ -396,10 +396,12 @@ static as_status add_op_bit_add(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_int64_t(err, ACTION_KEY, op_dict, ((int64_t *)(&action))) !=
+    uint64_t action_int64;
+    if (get_int64_t(err, ACTION_KEY, op_dict, &action_int64) !=
         AEROSPIKE_OK) {
         return err->code;
     }
+    action = action_int64;
 
     if (get_uint32t_from_pyargs(err, BIT_SIZE_KEY, op_dict, &bit_size) !=
         AEROSPIKE_OK) {
@@ -807,10 +809,12 @@ static as_status add_op_bit_subtract(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_int64_t(err, ACTION_KEY, op_dict, ((int64_t *)(&action))) !=
+    uint64_t action_int64;
+    if (get_int64_t(err, ACTION_KEY, op_dict, &action_int64) !=
         AEROSPIKE_OK) {
         return err->code;
     }
+    action = action_int64;
 
     if (get_uint32t_from_pyargs(err, BIT_SIZE_KEY, op_dict, &bit_size) !=
         AEROSPIKE_OK) {
