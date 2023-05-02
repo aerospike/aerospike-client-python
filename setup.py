@@ -64,12 +64,12 @@ extra_compile_args = [
     '-fno-common', '-fno-strict-aliasing',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
-    '-Wno-implicit-function-declaration'
 ]
 
 if not WINDOWS:
     # Windows does not have this flag
     extra_compile_args.append("-Wno-strict-prototypes")
+    extra_compile_args.append('-Wno-implicit-function-declaration')
 
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
