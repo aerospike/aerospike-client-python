@@ -200,10 +200,17 @@ class CClientBuild(build):
         os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
         os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
         # build core client
-        cmd = [
-            'make',
-            'V=' + str(self.verbose),
-        ]
+        if WINDOWS:
+            cmd = [
+                'msbuild',
+                'vs/aerospike.sln',
+                '-target:Release'
+            ]
+        else:
+            cmd = [
+                'make',
+                'V=' + str(self.verbose),
+            ]
 
         def compile():
             print(cmd, library_dirs, libraries)
