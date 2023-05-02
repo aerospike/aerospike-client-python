@@ -159,23 +159,23 @@ if not WINDOWS:
         AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
     ]
 
-    os.putenv('CPATH', ':'.join(include_dirs))
-    os.environ['CPATH'] = ':'.join(include_dirs)
+os.putenv('CPATH', ':'.join(include_dirs))
+os.environ['CPATH'] = ':'.join(include_dirs)
 
-    ################################################################################
-    # SETUP
-    ################################################################################
+################################################################################
+# SETUP
+################################################################################
 
-    # Get the long description from the relevant file
-    with io.open(os.path.join(CWD, 'README.rst'), "r", encoding='utf-8') as f:
-        long_description = f.read()
+# Get the long description from the relevant file
+with io.open(os.path.join(CWD, 'README.rst'), "r", encoding='utf-8') as f:
+    long_description = f.read()
 
-    # Get the version from the relevant file
-    with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
-        version = f.read()
+# Get the version from the relevant file
+with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
+    version = f.read()
 
-    BASEPATH = os.path.dirname(os.path.abspath(__file__))
-    CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
+BASEPATH = os.path.dirname(os.path.abspath(__file__))
+CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 class CClientBuild(build):
 
