@@ -145,36 +145,37 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Windows-' + machine
+    pass
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
-include_dirs = include_dirs + [
-    '/usr/local/opt/openssl/include',
-    AEROSPIKE_C_TARGET + '/include'
+if not WINDOWS:
+    include_dirs = include_dirs + [
+        '/usr/local/opt/openssl/include',
+        AEROSPIKE_C_TARGET + '/include'
+        ]
+    extra_objects = extra_objects + [
+        AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
     ]
-extra_objects = extra_objects + [
-    AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
-]
 
-os.putenv('CPATH', ':'.join(include_dirs))
-os.environ['CPATH'] = ':'.join(include_dirs)
+    os.putenv('CPATH', ':'.join(include_dirs))
+    os.environ['CPATH'] = ':'.join(include_dirs)
 
-################################################################################
-# SETUP
-################################################################################
+    ################################################################################
+    # SETUP
+    ################################################################################
 
-# Get the long description from the relevant file
-with io.open(os.path.join(CWD, 'README.rst'), "r", encoding='utf-8') as f:
-    long_description = f.read()
+    # Get the long description from the relevant file
+    with io.open(os.path.join(CWD, 'README.rst'), "r", encoding='utf-8') as f:
+        long_description = f.read()
 
-# Get the version from the relevant file
-with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
-    version = f.read()
+    # Get the version from the relevant file
+    with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
+        version = f.read()
 
-BASEPATH = os.path.dirname(os.path.abspath(__file__))
-CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
+    BASEPATH = os.path.dirname(os.path.abspath(__file__))
+    CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 class CClientBuild(build):
 
