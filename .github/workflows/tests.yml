@@ -47,11 +47,11 @@ jobs:
     #     python-version: "3.7"
     #     architecture: 'x64'
 
-    - name: Install build dependencies (pip packages)
-      run: python3 -m pip install build setuptools
+    # - name: Install build dependencies (pip packages)
+    #   run: python3 -m pip install build setuptools
 
     - name: Build client
-      run: python3 -m build
+      run: python3 setup.py build
 
   build:
     runs-on: ubuntu-latest
