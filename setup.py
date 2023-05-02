@@ -154,6 +154,9 @@ extra_objects = extra_objects + [
     AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
 ]
 
+# Temp: only for windows
+include_dirs.clear()
+
 os.putenv('CPATH', ':'.join(include_dirs))
 os.environ['CPATH'] = ':'.join(include_dirs)
 
