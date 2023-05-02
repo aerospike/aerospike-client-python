@@ -204,7 +204,7 @@ class CClientBuild(build):
             cmd = [
                 'msbuild',
                 'vs/aerospike.sln',
-                '-target:Release'
+                '/property:Configuration=Release'
             ]
         else:
             cmd = [
