@@ -145,7 +145,7 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    pass
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Windows-' + machine
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
