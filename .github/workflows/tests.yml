@@ -35,6 +35,24 @@ jobs:
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
+  temp-build-win:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.7"
+        architecture: 'x64'
+
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
+
+    - name: Build client
+      run: python3 -m build
+
   build:
     runs-on: ubuntu-latest
     strategy:
