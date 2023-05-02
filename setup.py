@@ -61,11 +61,15 @@ include_dirs = ['src/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
-    '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
+    '-fno-common', '-fno-strict-aliasing',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
     '-Wno-implicit-function-declaration'
 ]
+
+if not WINDOWS:
+    # Windows does not have this flag
+    extra_compile_args.append("-Wno-strict-prototypes")
 
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
