@@ -48,7 +48,7 @@ jobs:
     #     architecture: 'x64'
 
     - name: Install build dependencies (pip packages)
-      run: python3 -m pip install build
+      run: python3 -m pip install build setuptools
 
     - name: Build client
       run: python3 -m build
