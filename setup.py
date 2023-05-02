@@ -42,6 +42,8 @@ AEROSPIKE_C_TARGET = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
+WINDOWS = 'Windows' in PLATFORM
+
 CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
@@ -142,6 +144,8 @@ elif LINUX:
     ]
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
+elif WINDOWS:
+    pass
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
@@ -153,9 +157,6 @@ include_dirs = include_dirs + [
 extra_objects = extra_objects + [
     AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
 ]
-
-# Temp: only for windows
-include_dirs.clear()
 
 os.putenv('CPATH', ':'.join(include_dirs))
 os.environ['CPATH'] = ':'.join(include_dirs)
