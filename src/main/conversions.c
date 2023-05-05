@@ -145,7 +145,7 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
 }
 
 as_status strArray_to_py_list(as_error *err, int num_elements, int element_size,
-                              char str_array_ptr[][element_size],
+                              char** str_array_ptr,
                               PyObject *py_list)
 {
     as_error_reset(err);

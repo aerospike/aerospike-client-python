@@ -149,19 +149,28 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    pass
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME
+#    libraries.remove("pthread")
+#    libraries.append("pthreads")
+    libraries.clear()
+    extra_compile_args.append("-DAS_SHARED_IMPORT")
+    include_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.1/build/native/include")
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
+include_dirs = include_dirs + [
+    '/usr/local/opt/openssl/include',
+    AEROSPIKE_C_TARGET + '/src/include',
+
+]
 if not WINDOWS:
-    include_dirs = include_dirs + [
-        '/usr/local/opt/openssl/include',
-        AEROSPIKE_C_TARGET + '/include'
-        ]
     extra_objects = extra_objects + [
         AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
     ]
+else:
+#    library_dirs.append(AEROSPIKE_C_TARGET + "/vs/x64/Release")
+    extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
 
 os.putenv('CPATH', ':'.join(include_dirs))
 os.environ['CPATH'] = ':'.join(include_dirs)

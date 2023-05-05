@@ -708,12 +708,12 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
 
     if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end, static_pool,
                   serializer_type, false) != AEROSPIKE_OK) {
-        goto ERROR;
+        goto error;
     }
 
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
                     serializer_type) != AEROSPIKE_OK) {
-        goto ERROR;
+        goto error;
     }
 
     if (!as_operations_list_get_by_value_range(
@@ -721,7 +721,7 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
             return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_get_by_value_range operation");
-        goto ERROR;
+        goto error;
     }
 
     if (ctx_in_use) {
@@ -730,7 +730,7 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
 
     return err->code;
 
-ERROR:
+error:
     /* Free the as_vals if they exists*/
     if (val_begin) {
         as_val_destroy(val_begin);
@@ -1033,12 +1033,12 @@ static as_status add_op_list_remove_by_value_range(
 
     if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end, static_pool,
                   serializer_type, false) != AEROSPIKE_OK) {
-        goto ERROR;
+        goto error;
     }
 
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
                     serializer_type) != AEROSPIKE_OK) {
-        goto ERROR;
+        goto error;
     }
 
     if (!as_operations_list_remove_by_value_range(
@@ -1046,7 +1046,7 @@ static as_status add_op_list_remove_by_value_range(
             return_type)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to add list_remove_by_value_range operation");
-        goto ERROR;
+        goto error;
     }
 
     if (ctx_in_use) {
@@ -1055,7 +1055,7 @@ static as_status add_op_list_remove_by_value_range(
 
     return err->code;
 
-ERROR:
+error:
     /* Free the as_vals if they exist */
     if (val_begin) {
         as_val_destroy(val_begin);

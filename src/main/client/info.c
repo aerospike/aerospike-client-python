@@ -29,7 +29,6 @@
 #include "policy.h"
 #include "conversions.h"
 #include "exceptions.h"
-#include <arpa/inet.h>
 
 #include "tls_info_host.h"
 
