@@ -113,7 +113,7 @@ bool console_log_cb(as_log_level level, const char *func, const char *file,
     char msg[1024];
     va_list ap;
 
-    int counter = __sync_fetch_and_add(&log_counter, 1);
+    int counter = InterlockedExchangeAdd64((&log_counter), 1);
 
     va_start(ap, fmt);
     vsnprintf(msg, 1024, fmt, ap);

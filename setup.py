@@ -284,7 +284,6 @@ setup(
                 'src/main/client/remove.c',
                 'src/main/client/scan.c',
                 'src/main/client/select.c',
-                'src/main/client/tls_info_host.c',
                 'src/main/client/truncate.c',
                 'src/main/client/admin.c',
                 'src/main/client/udf.c',
