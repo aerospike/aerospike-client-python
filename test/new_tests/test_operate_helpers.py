@@ -378,7 +378,9 @@ class TestOperate(object):
 
         _, meta = self.as_connection.exists(key)
 
-        assert meta["ttl"] <= 1200 and meta["ttl"] >= 1150
+        # Clock skew between the client and server
+        # can cause the ttl value to differ from the value it was set to
+        assert meta["ttl"] <= 1250 and meta["ttl"] >= 1150
 
     def test_pos_operate_with_policy_gen_GT(self):
         """
