@@ -304,9 +304,11 @@ class TestQueryExpressions(object):
             key = "test", "lut", i
             self.as_connection.put(key, {"time": "earlier"})
 
-        cutoff_nanos = seconds_to_nanos(int(time.time() + 2))
-
         time.sleep(5)  # Make sure that we wait long enough
+
+        cutoff_nanos = time.time_ns()
+
+        time.sleep(5)
 
         # Store 5 records after the cutoff
         for i in range(7, 12):
