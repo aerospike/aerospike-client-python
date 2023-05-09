@@ -382,7 +382,9 @@ class TestPredEveryWhere(object):
             key = "test", "pred_lut", i
             self.as_connection.put(key, {"time": "earlier"})
 
-        cutoff_nanos = (10**9) * int(time.time() + 2)
+        # Hopefully clock skew isn't greater than 5 seconds
+        time.sleep(5)
+        cutoff_nanos = time.time_ns()
         time.sleep(5)
 
         for i in range(5, 10):
