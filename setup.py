@@ -19,6 +19,7 @@ from __future__ import print_function
 import os
 import platform
 import sys
+import shutil
 from subprocess import Popen
 from subprocess import call
 from setuptools import setup, Extension
@@ -169,7 +170,8 @@ if not WINDOWS:
         AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
     ]
 else:
-#    library_dirs.append(AEROSPIKE_C_TARGET + "/vs/x64/Release")
+    library_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.1/build/native/lib/x64/Release")
+    # Needed for linking the Python client with the C client
     extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
 
 os.putenv('CPATH', ':'.join(include_dirs))
@@ -190,6 +192,7 @@ with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
+dlls = ["aerospike.dll", "pthreadVC2.dll", "lua51.dll", "zlib.dll", "libeay32.dll", "ssleay32.dll"]
 class CClientBuild(build):
 
     def run(self):
@@ -227,6 +230,13 @@ class CClientBuild(build):
 
         self.execute(compile, [], 'Compiling core aerospike-client-c')
         # run original c-extension build code
+
+        if WINDOWS:
+            global dlls
+            dll_folder = AEROSPIKE_C_TARGET + "/vs/x64/Release/"
+            for dll in dlls:
+                shutil.copy(dll_folder + dll, "./")
+
         build.run(self)
 
 
@@ -358,9 +368,16 @@ setup(
         ]
     },
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
-              'aerospike_helpers.expressions',
+              'aerospike_helpers.expressions', 'aerospike_helpers.awaitable',
               'aerospike-stubs'],
-
+    data_files=[
+        ("", dlls)
+    ],
+#    package_data={
+#        # DLLs must be included for Python wheel so it can be used anywhere the DLLs aren't installed
+#        # Store in aerospike folder inside wheel so Windows can automatically find the DLLs
+#        "aerospike": ["*.dll"]
+#    },
     cmdclass={
         'build': CClientBuild,
         'clean': CClientClean
