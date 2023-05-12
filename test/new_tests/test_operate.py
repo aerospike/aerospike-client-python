@@ -1136,6 +1136,7 @@ class TestOperate(object):
 
         except e.BinNameError as exception:
             assert exception.code == 21
+            assert exception.msg == "A bin name should not exceed 15 characters limit"
 
     def test_neg_operate_empty_string_key(self):
         """

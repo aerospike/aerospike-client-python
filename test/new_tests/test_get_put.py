@@ -813,8 +813,9 @@ class TestGetPut:
         key = ("test", "demo", "put_rec")
         put_record = {"a" * 50: "unimportant"}
 
-        with pytest.raises(e.BinNameError):
+        with pytest.raises(e.BinNameError) as excinfo:
             self.as_connection.put(key, put_record)
+        assert excinfo.value.msg == "A bin name should not exceed 15 characters limit"
 
     def test_edge_put_with_integer_greater_than_maxisze(self):
         """

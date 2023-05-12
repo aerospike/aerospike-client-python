@@ -724,8 +724,9 @@ class TestPut:
         put_record = {"a" * 50: "unimportant"}
 
         async def async_io(key=None, rec=None, meta=None, policy=None, serialize=None):
-            with pytest.raises(e.BinNameError):
+            with pytest.raises(e.BinNameError) as excinfo:
                 await io.put(self.as_connection, key, rec, meta, policy, serialize)
+            assert excinfo.value.msg == "A bin name should not exceed 15 characters limit"
 
         await asyncio.gather(async_io(key, put_record))
 
