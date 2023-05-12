@@ -1557,6 +1557,7 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
     }
 
     PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
+    Py_XINCREF(rack_ids_pylist);
     if (rack_ids_pylist == NULL) {
         // TODO: should be false if no rack ids are given?
         return INIT_SUCCESS;
@@ -1566,10 +1567,10 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         return INIT_POLICY_PARAM_ERR;
     }
 
-    size_t size = PyList_Size(py_config_value);
+    size_t size = PyList_Size(rack_ids_pylist);
 
     for (size_t i = 0; i < size; i++) {
-        PyObject *rack_id_pyobj = PyList_GetItem(py_config_value, i);
+        PyObject *rack_id_pyobj = PyList_GetItem(rack_ids_pylist, i);
 
         if (PyLong_Check(rack_id_pyobj) == false) {
             // TODO: need to be specific about why these errors happen
