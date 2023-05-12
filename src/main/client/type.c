@@ -1571,7 +1571,11 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
 
     for (size_t i = 0; i < size; i++) {
         PyObject *rack_id_pyobj = PyList_GetItem(rack_ids_pylist, i);
+        if (rack_id_pyobj == NULL) {
+            // TODO: how to handle this case
+        }
 
+        Py_XINCREF(rack_id_pyobj);
         if (PyLong_Check(rack_id_pyobj) == false) {
             // TODO: need to be specific about why these errors happen
             return INIT_POLICY_PARAM_ERR;
@@ -1583,7 +1587,9 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
             return INIT_POLICY_PARAM_ERR;
         }
         as_config_add_rack_id(conf, (int)rack_id);
+        Py_XDECREF(rack_id_pyobj);
     }
+    Py_DECREF(rack_ids_pylist);
 
     return INIT_SUCCESS;
 }
