@@ -1555,7 +1555,6 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         }
         conf->rack_id = (int)rack_id;
     }
-    return INIT_SUCCESS;
 
     PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
     if (rack_ids_pylist == NULL) {
@@ -1570,7 +1569,7 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
     size_t size = PyList_Size(py_config_value);
 
     for (size_t i = 0; i < size; i++) {
-        PyObject* rack_id_pyobj = PyList_GetItem(py_config_value, i);
+        PyObject *rack_id_pyobj = PyList_GetItem(py_config_value, i);
 
         if (PyLong_Check(rack_id_pyobj) == false) {
             // TODO: need to be specific about why these errors happen
@@ -1584,6 +1583,8 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         }
         as_config_add_rack_id(conf, (int)rack_id);
     }
+
+    return INIT_SUCCESS;
 }
 
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict)
