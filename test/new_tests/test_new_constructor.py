@@ -83,6 +83,12 @@ def test_setting_rack_aware_and_rack_id():
     client = aerospike.client(config)
     assert client is not None
 
+def test_setting_rack_aware_and_rack_ids():
+    config = copy.deepcopy(gconfig)
+    config["rack_aware"] = True
+    config["rack_ids"] = [1, 3, 4]
+    client = aerospike.client(config)
+    assert client is not None
 
 def test_setting_use_services_alternate():
     config = copy.deepcopy(gconfig)

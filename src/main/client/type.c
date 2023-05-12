@@ -23,6 +23,7 @@
 #include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
+#include <aerospike/as_vector.h>
 
 #include "admin.h"
 #include "client.h"
@@ -1555,6 +1556,34 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         conf->rack_id = (int)rack_id;
     }
     return INIT_SUCCESS;
+
+    PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
+    if (rack_ids_pylist == NULL) {
+        // TODO: should be false if no rack ids are given?
+        return INIT_SUCCESS;
+    }
+
+    if (!PyList_Check(rack_ids_pylist)) {
+        return INIT_POLICY_PARAM_ERR;
+    }
+
+    size_t size = PyList_Size(py_config_value);
+
+    for (size_t i = 0; i < size; i++) {
+        PyObject* rack_id_pyobj = PyList_GetItem(py_config_value, i);
+
+        if (PyLong_Check(rack_id_pyobj) == false) {
+            // TODO: need to be specific about why these errors happen
+            return INIT_POLICY_PARAM_ERR;
+        }
+
+        long rack_id = PyLong_AsLong(rack_id_pyobj);
+        if (rack_id == -1) {
+            // Error occurred
+            return INIT_POLICY_PARAM_ERR;
+        }
+        as_config_add_rack_id(conf, (int)rack_id);
+    }
 }
 
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict)

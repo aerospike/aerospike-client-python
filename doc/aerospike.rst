@@ -639,7 +639,15 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
+            ``rack_aware``, ``POLICY_REPLICA_PREFER_RACK`` and server rack configuration must also be set to enable this functionality.
+
             Default: ``0``
+
+        * **rack_ids** (:class:`list`)
+            List of preferred racks in order of preference. If ``rack_ids`` is set, ``rack_id`` is ignored.
+
+            ``rack_aware``, ``POLICY_REPLICA_PREFER_RACK`` and server rack configuration must also be set to enable this functionality.
+
         * **rack_aware** (:class:`bool`)
             Track server rack data.
 
