@@ -240,8 +240,8 @@ class TestSelect(object):
 
     @pytest.mark.skip(reason="Behavior is unexpected, but not wrong")
     def test_select_with_very_long_bin_name(self):
-        bins_to_select = ["a" * 10000]  # max bin name size is 14
-        # internally this only sends the first 14 characters to
+        bins_to_select = ["a" * 10000]  # max bin name size is 15
+        # internally this only sends the first 15 characters to
         # the select function
         _, _, rec = self.as_connection.select(self.test_key, bins_to_select)
         assert rec["a" * 14] == "long_bin_14"

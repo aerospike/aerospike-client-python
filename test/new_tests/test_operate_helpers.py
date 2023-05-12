@@ -863,8 +863,9 @@ class TestOperate(object):
 
         llist = [operations.prepend("name", "ram"), operations.increment(max_length, 3)]
 
-        with pytest.raises(e.BinNameError):
+        with pytest.raises(e.BinNameError) as excinfo:
             self.as_connection.operate(key, llist)
+        assert excinfo.value.msg == "A bin name should not exceed 15 characters limit"
 
     def test_neg_operate_empty_string_key(self):
         """

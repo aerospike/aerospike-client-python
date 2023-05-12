@@ -51,7 +51,7 @@ def test_validate_digest_ints(pk, expected):
 
 """
 These strings are tested in the other clients' digest tests,
-but the max binname allowed is 14 characters (15 bytes):
+but the max binname allowed is 15 characters (15 bytes):
 https://github.com/aerospike/aerospike-server/blob/master/as/include/base/datamodel.h#L130
 """
 

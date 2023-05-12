@@ -216,7 +216,7 @@ Record Errors
 
 .. py:exception:: BinNameError
 
-    Length of bin name exceeds the limit of 14 characters.
+    Length of bin name exceeds the limit of 15 characters.
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 

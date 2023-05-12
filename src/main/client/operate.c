@@ -458,7 +458,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             if (strlen(bin) > AS_BIN_NAME_MAX_LEN) {
                 as_error_update(
                     err, AEROSPIKE_ERR_BIN_NAME,
-                    "A bin name should not exceed 14 characters limit");
+                    "A bin name should not exceed 15 characters limit");
                 goto CLEANUP;
             }
         }

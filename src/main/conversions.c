@@ -993,7 +993,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
                     return as_error_update(
                         err, AEROSPIKE_ERR_BIN_NAME,
-                        "A bin name should not exceed 14 characters limit");
+                        "A bin name should not exceed 15 characters limit");
                 }
             }
 
@@ -2260,7 +2260,7 @@ as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
             if (strlen(*bin) > AS_BIN_NAME_MAX_LEN) {
                 as_error_update(
                     err, AEROSPIKE_ERR_BIN_NAME,
-                    "A bin name should not exceed 14 characters limit");
+                    "A bin name should not exceed 15 characters limit");
             }
         }
     }
