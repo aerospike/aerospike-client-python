@@ -69,7 +69,7 @@ Connection
             Python client 5.0.0 and up will fail to connect to Aerospike server 4.8.x or older.
             If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
 
-        .. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
+        .. seealso:: `Security features article <https://docs.aerospike.com/server/guide/security/index.html>`_.
 
     .. method:: is_connected()
 
@@ -1112,7 +1112,7 @@ user\'s roles. Users are assigned roles, which are collections of \
         print("Error [{0}]: {1}".format(e.code, e.msg))
     client.close()
 
-.. seealso:: `Security features article <https://www.aerospike.com/docs/guide/security/index.html>`_.
+.. seealso:: `Security features article <https://docs.aerospike.com/server/guide/security/index.html>`_.
 
 .. class:: Client
     :noindex:
