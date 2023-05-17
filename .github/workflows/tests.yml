@@ -60,6 +60,17 @@ jobs:
     - name: Build client
       run: python3 -m build
 
+    - name: Install client
+      run: python3 -m pip install aerospike --find-links dist/
+
+    - name: Install test deps
+      run: python3 -m pip install -r requirements.txt
+      working-directory: test
+
+    - name: Run tests
+      run: python3 -m pytest new_tests/
+      working-directory: test
+
   build:
     runs-on: ubuntu-latest
     strategy:
