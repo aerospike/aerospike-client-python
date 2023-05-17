@@ -54,6 +54,10 @@ jobs:
       with:
         dotnet-version: '4.8'
 
+    - name: Install C client deps
+      run: nuget restore
+      working-directory: aerospike-client-c/vs
+
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install build
 
