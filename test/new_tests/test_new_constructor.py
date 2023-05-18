@@ -92,6 +92,20 @@ def test_setting_rack_aware_and_rack_ids():
     assert client is not None
 
 
+@pytest.mark.parametrize(
+    "rack_ids",
+    (
+        4,  # Not a list
+        ["str", 4],  # Invalid rack id
+    )
+)
+def test_neg_setting_rack_ids(rack_ids):
+    config = copy.deepcopy(gconfig)
+    config["rack_ids"] = rack_ids
+    client = aerospike.client(config)
+    assert client is not None
+
+
 def test_setting_use_services_alternate():
     config = copy.deepcopy(gconfig)
     config["use_services_alternate"] = True
