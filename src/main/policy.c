@@ -724,6 +724,7 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
         POLICY_SET_BASE_FIELD(compress, bool);
 
         POLICY_SET_FIELD(deserialize, bool);
+        POLICY_SET_FIELD(replica, as_policy_replica);
 
         // C client 5.0 new expressions
         POLICY_SET_EXPRESSIONS_BASE_FIELD();
@@ -867,6 +868,7 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(records_per_second, uint32_t);
         POLICY_SET_FIELD(max_records, uint64_t);
+        POLICY_SET_FIELD(replica, as_policy_replica);
 
         // C client 5.0 new expressions
         POLICY_SET_EXPRESSIONS_BASE_FIELD();

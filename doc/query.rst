@@ -517,6 +517,11 @@ Policies
 
             .. note:: Requires Aerospike server version >= 6.0
 
+        * **replica**
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            |
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+
 .. _aerospike_query_options:
 
 Options

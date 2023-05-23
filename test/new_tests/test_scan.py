@@ -65,7 +65,7 @@ class TestScan(TestBaseClass):
 
         assert len(records) == self.record_count
 
-    def test_scan_with_timeout_policy(self):
+    def test_scan_with_policy(self):
 
         records = []
 
@@ -75,7 +75,7 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"timeout": 180000})
+        scan_obj.foreach(callback, {"timeout": 180000, "replica": aerospike.POLICY_REPLICA_MASTER})
 
         assert len(records) == self.record_count
 

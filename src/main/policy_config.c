@@ -328,6 +328,11 @@ as_status set_query_policy(as_policy_query *query_policy, PyObject *py_policy)
         return status;
     }
 
+    status = set_optional_replica(&query_policy->replica, py_policy, "replica");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     return AEROSPIKE_OK;
 }
 
@@ -350,6 +355,11 @@ as_status set_scan_policy(as_policy_scan *scan_policy, PyObject *py_policy)
 
     status = set_optional_bool_property(&scan_policy->durable_delete, py_policy,
                                         "durable_delete");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_replica(&scan_policy->replica, py_policy, "replica");
     if (status != AEROSPIKE_OK) {
         return status;
     }

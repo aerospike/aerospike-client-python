@@ -373,7 +373,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with policy
         """
-        policy = {"timeout": 180000}
+        policy = {"timeout": 180000, "replica": aerospike.POLICY_REPLICA_MASTER}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
