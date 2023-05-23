@@ -218,7 +218,10 @@ jobs:
       needs: manylinux_x86_64_no_test
       strategy:
         matrix:
-          image: ["redhat/ubi8", "amazonlinux:2023"]
+          image: [
+            "redhat/ubi8",
+            "amazonlinux:2023"
+          ]
         fail-fast: false
       runs-on: ubuntu-latest
       services:
@@ -238,6 +241,8 @@ jobs:
           name: manylinux-x86_64-cp39-distros
 
       - run: dnf -y install python3.9
+      # Amazon Linux 2023 doesn't come with pip
+      - run: python3.9 -m ensurepip
       - run: python3.9 -m pip install *.whl
 
       - name: Install test dependencies
