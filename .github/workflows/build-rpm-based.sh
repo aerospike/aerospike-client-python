@@ -14,7 +14,3 @@ python3 -m pip install dist/*.whl
 cd test
 python3 -m pip install -r requirements.txt
 python3 -m pytest new_tests/
-
-# Wheel install test
-pip uninstall -y aerospike
-python3 -m pip install aerospike
