@@ -557,6 +557,10 @@ Policies
             |
             | Default: ``{}`` (All partitions will be scanned).
 
+        * **replica**
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            |
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
 .. _aerospike_scan_options:
 
