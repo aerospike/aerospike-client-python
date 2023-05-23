@@ -16,7 +16,7 @@ The client depends on:
 - OpenSSL 1.1 >= 1.1.1
 - The Aerospike C client
 
-### RedHat and CentOS
+### RedHat, CentOS, Amazon Linux 2023
 
 The following are dependencies for:
 
