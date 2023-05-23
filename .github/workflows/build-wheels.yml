@@ -43,9 +43,10 @@ jobs:
     strategy:
       matrix:
         distros: [
-          # Image name, container name
+          # Image name, build-<name> and container name 
           ["alpine", "alpine"],
-          ["redhat/ubi9", "rhel9"]
+          ["redhat/ubi9", "rpm-based"],
+          ["amazonlinux:2023", "rpm-based"]
         ]
       fail-fast: false
     runs-on: ubuntu-latest
@@ -63,7 +64,7 @@ jobs:
         submodules: recursive
 
     - name: Run Alpine container
-      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }}:latest tail -f /dev/null
+      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
 
     - name: Copy repo to container
       run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
@@ -212,14 +213,22 @@ jobs:
         # Artifact name, not the file name
         name: manylinux-x86_64-cp39-distros
 
-  manylinux_x86_64_rhel8:
+  # Test RPM-based Linux OS's
+  manylinux_x86_64_rpm_based:
       needs: manylinux_x86_64_no_test
+      strategy:
+        matrix:
+          image: [
+            "redhat/ubi8",
+            "amazonlinux:2023"
+          ]
+        fail-fast: false
       runs-on: ubuntu-latest
       services:
         aerospike:
           image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
       container:
-        image: redhat/ubi8
+        image: ${{ matrix.image }}
       steps:
       - run: dnf -y update
       - run: dnf -y install git
@@ -232,6 +241,8 @@ jobs:
           name: manylinux-x86_64-cp39-distros
 
       - run: dnf -y install python3.9
+      # Amazon Linux 2023 doesn't come with pip
+      - run: python3.9 -m ensurepip
       - run: python3.9 -m pip install *.whl
 
       - name: Install test dependencies
