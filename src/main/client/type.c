@@ -23,6 +23,7 @@
 #include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
+#include <aerospike/as_vector.h>
 
 #include "admin.h"
 #include "client.h"
@@ -1554,7 +1555,51 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         }
         conf->rack_id = (int)rack_id;
     }
+
+    PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
+    if (rack_ids_pylist == NULL) {
+        return INIT_SUCCESS;
+    }
+    Py_INCREF(rack_ids_pylist);
+
+    if (!PyList_Check(rack_ids_pylist)) {
+        goto PARAM_ERROR;
+    }
+
+    size_t size = PyList_Size(rack_ids_pylist);
+
+    for (size_t i = 0; i < size; i++) {
+        PyObject *rack_id_pyobj = PyList_GetItem(rack_ids_pylist, i);
+        if (rack_id_pyobj == NULL) {
+            // This shouldn't happen, but just return an error if it does
+            goto PARAM_ERROR;
+        }
+
+        Py_INCREF(rack_id_pyobj);
+        if (PyLong_Check(rack_id_pyobj) == false) {
+            Py_DECREF(rack_id_pyobj);
+            goto PARAM_ERROR;
+        }
+
+        long rack_id = PyLong_AsLong(rack_id_pyobj);
+        if (rack_id == -1) {
+            // Error occurred
+            Py_DECREF(rack_id_pyobj);
+            goto PARAM_ERROR;
+        }
+
+        as_config_add_rack_id(conf, (int)rack_id);
+        Py_DECREF(rack_id_pyobj);
+    }
+
+    Py_DECREF(rack_ids_pylist);
     return INIT_SUCCESS;
+
+PARAM_ERROR:
+    // In any case param error is thrown
+    // rack ids is a PyObject that needs to be freed
+    Py_DECREF(rack_ids_pylist);
+    return INIT_POLICY_PARAM_ERR;
 }
 
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict)
