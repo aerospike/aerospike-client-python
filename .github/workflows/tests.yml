@@ -71,6 +71,7 @@ jobs:
         path: ./dist/*.whl
 
   test-windows:
+    needs: temp-build-win
     runs-on: [self-hosted, Windows]
     steps:
     - uses: actions/checkout@v2
