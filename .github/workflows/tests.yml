@@ -72,6 +72,10 @@ jobs:
 
   test-windows:
     needs: temp-build-win
+    defaults:
+      run:
+        # Use powershell 7, not 5.1
+        shell: pwsh
     runs-on: [self-hosted, Windows]
     steps:
     - uses: actions/checkout@v2
