@@ -81,7 +81,7 @@ jobs:
         name: wheel-windows
 
     - name: Install client
-      run: python -m pip install aerospike --find-links=./ --no-index --force-reinstall
+      run: python -m pip install aerospike --find-links=./ --no-index --force-reinstall --user
 
     - uses: webfactory/ssh-agent@v0.8.0
       with:
