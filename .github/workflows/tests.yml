@@ -75,7 +75,7 @@ jobs:
     defaults:
       run:
         # Use powershell 7, not 5.1
-        shell: pwsh
+        shell: pwsh {0}
     runs-on: [self-hosted, Windows]
     steps:
     - uses: actions/checkout@v2
