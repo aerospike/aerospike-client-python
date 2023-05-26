@@ -35,6 +35,7 @@ from aerospike_helpers.expressions import (
     Unknown,
     Var,
     VoidTime,
+    Val
 )
 from aerospike_helpers.operations import expression_operations as expressions
 from aerospike_helpers.operations import operations
@@ -156,6 +157,21 @@ class TestExpressions(TestBaseClass):
             as_connection.remove(("test", "demo", bytearray("b_string", "utf-8")))
 
         request.addfinalizer(teardown)
+
+    def test_val_pos(self):
+        expr = Val(2).compile()
+        ops = [
+            expressions.expression_write("extra", expr)
+        ]
+        record = self.as_connection.operate(("test", "demo", _NUM_RECORDS), ops)
+
+        expr = Eq(IntBin("extra"), Val(2))
+        record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
+        assert record[2]["extra"] == 2
+
+        with pytest.raises(e.FilteredOut):
+            expr = Eq(IntBin("extra"), Val(4))
+            self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
 
     @pytest.mark.xfail(reason="Will fail on storage engine device.")
     def test_device_size_pos(self):

@@ -84,8 +84,8 @@ class _ExprOp:  # TODO replace this with an enum
     LET = 125
     DEF = 126
 
+    _AS_EXP_CODE_AS_VAL = 128
     # virtual ops
-
     _AS_EXP_CODE_CALL_VOP_START = 139
     _AS_EXP_CODE_CDT_LIST_CRMOD = 140
     _AS_EXP_CODE_CDT_LIST_MOD = 141
@@ -157,7 +157,8 @@ class _BaseExpr(_AtomExpr):
         )
 
     def compile(self) -> TypeExpression:
-        expression: TypeExpression = [self._get_op()]
+        expression = [self._get_op()]
+        # type: 'TypeExpression'
         work = chain(self._children)
 
         while True:

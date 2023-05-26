@@ -216,6 +216,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
 
     static const int EXPR_SIZES[] = {
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
+        [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         [VAL] = EXP_SZ(as_exp_val(
             NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
         [EQ] = EXP_SZ(as_exp_cmp_eq(
@@ -631,7 +632,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
 
             APPEND_ARRAY(0, BIN_EXPR());
             break;
-        case VAL:;
+        case VAL:
+        case _AS_EXP_CODE_AS_VAL:;
             as_exp_entry tmp_expr;
             if (get_exp_val_from_pyval(
                     self, static_pool, serializer_type, &tmp_expr,
