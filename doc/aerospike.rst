@@ -1487,7 +1487,7 @@ Miscellaneous
 
     An index whose values are of the aerospike GetJSON data type.
 
-.. seealso:: `Data Types <http://www.aerospike.com/docs/guide/data-types.html>`_.
+.. seealso:: `Data Types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
 
 .. data:: INDEX_TYPE_LIST
 

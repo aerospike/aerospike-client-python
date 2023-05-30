@@ -231,7 +231,7 @@ Assume this boilerplate code is run before all examples below:
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
-        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <http://www.aerospike.com/docs/guide/data-types.html>`_.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you can use a serializer like pickle first.
         :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
