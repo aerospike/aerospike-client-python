@@ -338,8 +338,17 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
+    package_data={
+        "aerospike-stubs": [
+            "__init__.pyi",
+            "aerospike.pyi",
+            "exception.pyi",
+            "predicates.pyi",
+        ]
+    },
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
-              'aerospike_helpers.expressions', 'aerospike_helpers.awaitable'],
+              'aerospike_helpers.expressions', 'aerospike_helpers.awaitable',
+              'aerospike-stubs'],
 
     cmdclass={
         'build': CClientBuild,
