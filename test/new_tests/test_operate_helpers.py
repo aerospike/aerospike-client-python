@@ -609,6 +609,20 @@ class TestOperate(object):
                 "int_bin",
                 [1, 2, 3, 4],
             ),
+            # List insert with LIST_WRITE_DEFAULT policy explicitly set
+            (
+                [
+                    list_operations.list_insert(
+                        "int_bin",
+                        7,
+                        99,
+                        {"list_write": aerospike.LIST_WRITE_DEFAULT}
+                    ),
+                ],
+                {"int_bin": 8},
+                "int_bin",
+                [1, 2, 3, 4, None, None, None, 99],
+            ),
             (
                 [
                     list_operations.list_insert_items("int_bin", 2, [7, 9]),

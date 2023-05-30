@@ -53,6 +53,8 @@ def list_append(bin_name: str, value, policy: Optional[dict] = None, ctx: Option
     The list append operation instructs the aerospike server to append an item to the
     end of a list bin.
 
+    Returns a dictionary that maps the bin name to the list size after appending the item.
+
     Args:
         bin_name (str): The name of the bin to be operated on.
         value: The value to be appended to the end of the list.
