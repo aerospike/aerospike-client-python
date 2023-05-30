@@ -87,6 +87,8 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.WINDOWS_WORKFLOW_LINUX_PK }}
 
+    - uses: mxschmitt/action-tmate@v3
+
     - run: ssh ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - run: sed -i "s/127.0.0.1/${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }}/" config.conf
