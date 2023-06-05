@@ -519,11 +519,6 @@ Policies
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
             | Default: ``False``
-        * **fail_on_cluster_change** :class:`bool`
-            | Deprecated in 6.0.0. No longer has any effect..
-            | Abort the scan if the cluster is not in a stable state. Only used for server versions < 4.9.
-            |
-            | Default: ``False``
         * **durable_delete** :class:`bool`
             | Perform durable delete (requires Enterprise server version >= 3.10)
             | If the transaction results in a record deletion, leave a tombstone for the record.
