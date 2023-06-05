@@ -569,9 +569,6 @@ Options
     .. hlist::
         :columns: 1
 
-        * **priority**
-            | Deprecated in 6.0.0. Scan priority will be removed in a coming release.
-            | Scan priority has been replaced by the records_per_second policy see :ref:`aerospike_scan_policies`.
         * **nobins** :class:`bool`
             | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`.
             |

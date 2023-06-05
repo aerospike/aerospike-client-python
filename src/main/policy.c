@@ -477,7 +477,7 @@ static AerospikeJobConstants aerospike_job_constants[] = {
     {"scan", "JOB_SCAN"}, {"query", "JOB_QUERY"}};
 /**
  * Function for setting scan parameters in scan.
- * Like Scan Priority, Percentage, Concurrent, Nobins
+ * Like Percentage, Concurrent, Nobins
  *
  * @param err                   The as_error to be populated by the function
  *                              with the encountered error if any.

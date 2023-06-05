@@ -902,12 +902,6 @@ Specifies the type of authentication to be used when communicating with the serv
 Scan Constants
 --------------
 
-.. data:: SCAN_PRIORITY
-
-    .. deprecated:: 3.10.0
-        Scan priority has been replaced by the ``records_per_second`` policy (see Scan :ref:`aerospike_scan_policies`).
-        Scan priority will be removed in a coming release.
-
 .. data:: SCAN_STATUS_ABORTED
 
     .. deprecated:: 1.0.50
