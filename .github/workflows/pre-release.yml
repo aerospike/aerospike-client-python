@@ -27,7 +27,7 @@ jobs:
           pip install python-semantic-release
           latest_tag=$(cat VERSION)
           echo "Bumping off of latest tag $latest_tag"
-          new_tag=$(pysemver bump patch $latest_tag)
+          new_tag=$(pysemver nextver $latest_tag patch)
           echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
           echo "The new tag for this build is $new_tag"
 
