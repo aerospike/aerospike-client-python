@@ -41,6 +41,7 @@ jobs:
         with:
           commit-message: Bump version to ${{ env.NEW_TAG }}
           branch: bump-to-${{ env.NEW_TAG }}
+          base: stage
           add-paths: VERSION, src/main/aerospike.c
           delete-branch: true
           title: Bump version to ${{ env.NEW_TAG }}
