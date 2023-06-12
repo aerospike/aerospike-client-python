@@ -16,7 +16,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: stage
           fetch-depth: 0
       - uses: actions/setup-python@v3
         with:
