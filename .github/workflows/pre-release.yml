@@ -31,8 +31,6 @@ jobs:
           echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
           echo "The new tag for this build is $new_tag"
 
-      - run: git checkout -b bump-to-${{ env.NEW_TAG }} origin/stage
-
       # TODO: Create a reusable workflow for this
       - name: Update version
         run: |
