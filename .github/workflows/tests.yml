@@ -108,10 +108,10 @@ jobs:
       working-directory: test
 
     - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker container stop aerospike
-      if: ${{ always() && steps.first-connection.outcome != 'success' }}
+      if: ${{ always() && steps.first-connection.outcome == 'success' }}
 
     - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker container prune -f
-      if: ${{ always() && steps.first-connection.outcome != 'success' }}
+      if: ${{ always() && steps.first-connection.outcome == 'success' }}
 
   build:
     runs-on: ubuntu-latest
