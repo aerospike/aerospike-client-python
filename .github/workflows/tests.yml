@@ -87,7 +87,7 @@ jobs:
       with:
         ssh-private-key: ${{ secrets.WINDOWS_WORKFLOW_LINUX_PK }}
 
-    - run: ssh ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - run: sed -i "s/127.0.0.1/${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }}/" config.conf
       working-directory: test
@@ -98,10 +98,10 @@ jobs:
     - run: python -m pytest new_tests/
       working-directory: test
 
-    - run: ssh ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker container stop aerospike
+    - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker container stop aerospike
       if: ${{ always() }}
 
-    - run: ssh ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker container prune -f
+    - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker container prune -f
       if: ${{ always() }}
 
   build:
