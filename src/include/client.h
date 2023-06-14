@@ -516,26 +516,6 @@ PyObject *AerospikeClient_InfoSingleNode(AerospikeClient *self, PyObject *args,
 PyObject *AerospikeClient_InfoRandomNode(AerospikeClient *self, PyObject *args,
                                          PyObject *kwds);
 
-/**
- *  ----------------------------- DEPRECATED ---------------------------------
- * Please use info_single_node() instead.
- * Performs a `info` operation. This will invoke the info request against each
- * node in the cluster. The return value is a dict where the key is the node
- * name and the value is a tuple of (Error,Response). If an error occurred on
- * the node, the Error will be an object containing details, otherwise it is
- * None. If the request was successful, then the Response will contain the
- * string response from the node, otherwise it is None.
- *
- *		for node,(err,res) in client.info('statistics').items():
- *			if err == None:
- *				print "{0} - OK: {1}".format(record,res)
- *			else:
- *				print "{0} - ERR: {1}".format(record,err)
- *
- */
-PyObject *AerospikeClient_InfoNode(AerospikeClient *self, PyObject *args,
-                                   PyObject *kwds);
-
 /*******************************************************************************
  * UDF OPERATIONS
  ******************************************************************************/
