@@ -101,7 +101,7 @@ jobs:
     - run: python -m crudini --set config.conf community-edition hosts ${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }}:3000
       working-directory: test
 
-    - run: python -m pip install -r requirements.txt
+    - run: python -m pip install --user -r requirements.txt
       working-directory: test
 
     - run: python -m pytest new_tests/
