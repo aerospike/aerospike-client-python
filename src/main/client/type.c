@@ -529,10 +529,6 @@ PyDoc_STRVAR(exists_many_doc, "exists_many(keys[, policy]) -> [ (key, meta)]\n\
 Batch-read metadata for multiple keys, and return it as a list. \
 Any record that does not exist will have a None value for metadata in the result tuple.");
 
-PyDoc_STRVAR(get_key_digest_doc, "get_key_digest(ns, set, key) -> bytearray\n\
-\n\
-Calculate the digest of a particular key. See: Key Tuple.");
-
 PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
 \n\
 Read/Write multiple records for specified batch keys in one batch call. \
@@ -855,8 +851,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, select_many_doc},
     {"exists_many", (PyCFunction)AerospikeClient_Exists_Many,
      METH_VARARGS | METH_KEYWORDS, exists_many_doc},
-    {"get_key_digest", (PyCFunction)AerospikeClient_Get_Key_Digest,
-     METH_VARARGS | METH_KEYWORDS, get_key_digest_doc},
     {"batch_write", (PyCFunction)AerospikeClient_BatchWrite,
      METH_VARARGS | METH_KEYWORDS, batch_write_doc},
     {"batch_operate", (PyCFunction)AerospikeClient_Batch_Operate,
