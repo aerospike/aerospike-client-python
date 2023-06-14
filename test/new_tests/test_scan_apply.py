@@ -87,7 +87,7 @@ class TestScanApply(object):
             exp.NE(exp.IntBin("age"), 3),
         )
 
-        policy = {"timeout": 180000, "expressions": expr.compile()}
+        policy = {"total_timeout": 180000, "expressions": expr.compile()}
         scan_id = self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
         wait_for_job_completion(self.as_connection, scan_id)
@@ -106,7 +106,7 @@ class TestScanApply(object):
         """
         expr = exp.Eq(exp.StrBin("name"), 4)
 
-        policy = {"timeout": 180000, "expressions": expr.compile()}
+        policy = {"total_timeout": 180000, "expressions": expr.compile()}
         with pytest.raises(e.InvalidRequest):
             self.as_connection.scan_apply("test", None, "bin_lua", "mytransform", ["age", 2], policy)
 
@@ -356,7 +356,7 @@ class TestScanApply(object):
         """
         Invoke scan_apply() with incorrect policy
         """
-        policy = {"timeout": 0.5}
+        policy = {"total_timeout": 0.5}
 
         with pytest.raises(e.ParamError):
             self.as_connection.scan_apply("test", "demo", "bin_lua", "mytransform", ["age", 2], policy)

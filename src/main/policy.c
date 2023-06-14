@@ -105,22 +105,6 @@
         }                                                                      \
     }
 
-/* This allows the old timeout field to properly set timeout, remove in future release: > 3.1 */
-#define POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT()                                \
-    {                                                                          \
-        PyObject *py_field = PyDict_GetItemString(py_policy, "timeout");       \
-        if (py_field) {                                                        \
-            if (PyLong_Check(py_field)) {                                      \
-                policy->base.total_timeout =                                   \
-                    (uint32_t)PyLong_AsLong(py_field);                         \
-            }                                                                  \
-            else {                                                             \
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
-                                       "timeout is invalid");                  \
-            }                                                                  \
-        }                                                                      \
-    }
-
 #define MAP_POLICY_SET_FIELD(__field)                                          \
     {                                                                          \
         PyObject *py_field = PyDict_GetItemString(py_policy, #__field);        \
@@ -641,8 +625,6 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
-
         POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(max_retries, uint32_t);
@@ -717,7 +699,6 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
         POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(max_retries, uint32_t);
@@ -762,8 +743,6 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
-
         POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(max_retries, uint32_t);
@@ -810,8 +789,6 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
-
         POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(max_retries, uint32_t);
@@ -857,9 +834,6 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        // server side socket_timeout
-        POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
-
         POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(max_retries, uint32_t);
@@ -902,8 +876,6 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
-
         // Base policy_fields
         POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
@@ -951,8 +923,6 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
-
         POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(max_retries, uint32_t);
@@ -1002,8 +972,6 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_TOTAL_TIMEOUT_FROM_TIMEOUT();
-
         POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
         POLICY_SET_BASE_FIELD(max_retries, uint32_t);

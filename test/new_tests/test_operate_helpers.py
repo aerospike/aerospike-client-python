@@ -261,7 +261,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 180000,
+            "total_timeout": 180000,
             "key": aerospike.POLICY_KEY_SEND,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -896,7 +896,7 @@ class TestOperate(object):
         Invoke operate() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 180000}
+        policy = {"total_timeout": 180000}
         llist = [operations.prepend("name", "ram")]
         with pytest.raises(TypeError):
             self.as_connection.operate(key, llist, {}, policy, "")

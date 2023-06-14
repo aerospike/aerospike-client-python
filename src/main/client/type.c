@@ -1119,23 +1119,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             config.policies.remove.key = long_key_policy;
         }
 
-        /* This was the name of the policy pre 3.0.0, keep for legacy reasons
-		 * It is the same as total_timeout
-		 */
-        PyObject *py_timeout = PyDict_GetItemString(py_policies, "timeout");
-        if (py_timeout && PyLong_Check(py_timeout)) {
-            long long_timeout = PyLong_AsLong(py_timeout);
-
-            config.policies.write.base.total_timeout = long_timeout;
-            config.policies.read.base.total_timeout = long_timeout;
-            config.policies.apply.base.total_timeout = long_timeout;
-            config.policies.operate.base.total_timeout = long_timeout;
-            config.policies.query.base.total_timeout = long_timeout;
-            config.policies.scan.base.total_timeout = long_timeout;
-            config.policies.remove.base.total_timeout = long_timeout;
-            config.policies.batch.base.total_timeout = long_timeout;
-        }
-
         PyObject *py_sock_timeout =
             PyDict_GetItemString(py_policies, "socket_timeout");
         if (py_sock_timeout && PyLong_Check(py_sock_timeout)) {

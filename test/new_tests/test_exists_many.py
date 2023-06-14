@@ -247,7 +247,7 @@ class TestExistsMany:
         key = ("test", "demo", 20)
         rec = {"name": "John"}
         meta = {"gen": 3, "ttl": 1}
-        policy = {"timeout": 2}
+        policy = {"total_timeout": 2}
 
         try:
             put_data(self.as_connection, key, rec, meta, policy)

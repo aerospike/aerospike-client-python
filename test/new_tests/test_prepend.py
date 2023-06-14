@@ -56,7 +56,7 @@ class TestPrepend:
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 180000,
+            "total_timeout": 180000,
             "key": aerospike.POLICY_KEY_SEND,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL
         }
@@ -355,13 +355,13 @@ class TestPrepend:
         Invoke prepend() with incorrect policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 0.5}
+        policy = {"total_timeout": 0.5}
         try:
             self.as_connection.prepend(key, "name", "str", {}, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "timeout is invalid"
+            assert exception.msg == "total_timeout is invalid"
 
     @pytest.mark.parametrize(
         "key, bin, value, meta, policy, ex_code, ex_msg",
