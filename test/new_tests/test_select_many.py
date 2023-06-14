@@ -92,7 +92,7 @@ class TestSelectMany(object):
             #  Verify that only bins specified in filter bins are present
             assert set(bins) <= set(filter_bins)
 
-    @pytest.mark.parametrize("policy", [{"timeout": 180000}, None], ids=["valid timeout", "None policy"])
+    @pytest.mark.parametrize("policy", [{"total_timeout": 180000}, None], ids=["valid timeout", "None policy"])
     def test_select_many_with_valid_policy_parameters(self, policy):
 
         filter_bins = ["title", "name", "float_value"]

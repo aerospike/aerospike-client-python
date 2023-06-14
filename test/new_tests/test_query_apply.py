@@ -174,7 +174,7 @@ class TestQueryApply(object):
         """
         Invoke query_apply() with incorrect policy
         """
-        policy = {"timeout": 0.5}
+        policy = {"total_timeout": 0.5}
 
         with pytest.raises(e.ParamError):
             self.as_connection.query_apply(

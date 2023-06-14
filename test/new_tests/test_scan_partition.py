@@ -118,7 +118,7 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        scan_obj.foreach(callback, {"timeout": 180000, "partition_filter": {"begin": 1000, "count": 1}})
+        scan_obj.foreach(callback, {"total_timeout": 180000, "partition_filter": {"begin": 1000, "count": 1}})
 
         assert len(records) == self.partition_1000_count
 

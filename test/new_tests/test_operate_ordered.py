@@ -170,7 +170,7 @@ class TestOperateOrdered(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 180000,
+            "total_timeout": 180000,
             "key": aerospike.POLICY_KEY_SEND,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -847,7 +847,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with incorrect policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 0.5}
+        policy = {"total_timeout": 0.5}
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
