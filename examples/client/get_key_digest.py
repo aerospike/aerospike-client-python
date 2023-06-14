@@ -110,7 +110,7 @@ try:
         set = options.set if options.set and options.set != 'None' else None
         key = args.pop(0)
 
-        digest = client.get_key_digest(namespace, set, key)
+        digest = aerospike.calc_digest(namespace, set, key)
         print("---")
         print("Digest is: ", digest)
 

@@ -197,25 +197,6 @@ Record Operations
         .. include:: examples/remove.py
             :code: python
 
-    .. method:: get_key_digest(ns, set, key) -> bytearray
-
-        Calculate the digest of a particular key. See :ref:`aerospike_key_tuple`.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param key: the primary key identifier of the record within the set.
-        :type key: :py:class:`str` or :py:class:`int`
-
-        :return: a RIPEMD-160 digest of the input tuple.
-
-        :rtype: :class:`bytearray`
-
-        .. include:: examples/get_key_digest.py
-            :code: python
-
-        .. deprecated:: 2.0.1
-            use the function :func:`aerospike.calc_digest` instead.
-
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
