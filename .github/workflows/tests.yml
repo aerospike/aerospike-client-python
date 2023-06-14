@@ -94,6 +94,7 @@ jobs:
     #     ssh-private-key: ${{ secrets.WINDOWS_WORKFLOW_LINUX_PK }}
 
     - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      id: first-connection
 
     - run: sed -i "s/127.0.0.1/${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }}/" config.conf
       working-directory: test
@@ -105,10 +106,10 @@ jobs:
       working-directory: test
 
     - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker container stop aerospike
-      if: ${{ always() }}
+      if: ${{ always() && steps.first-connection.outcome != 'success' }}
 
     - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker container prune -f
-      if: ${{ always() }}
+      if: ${{ always() && steps.first-connection.outcome != 'success' }}
 
   build:
     runs-on: ubuntu-latest
