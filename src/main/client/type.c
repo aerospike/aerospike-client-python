@@ -429,11 +429,6 @@ PyDoc_STRVAR(info_random_node_doc,
 \n\
 Send an info command to a single random node.");
 
-PyDoc_STRVAR(info_node_doc, "info_node(command, host[, policy]) -> str\n\
-\n\
-DEPRECATED: Please user info_single_node() instead.\n\
-Send an info command to a single node specified by host.");
-
 PyDoc_STRVAR(get_nodes_doc, "get_nodes() -> []\n\
 \n\
 Return the list of hosts present in a connected cluster.");
@@ -811,9 +806,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, info_single_node_doc},
     {"info_random_node", (PyCFunction)AerospikeClient_InfoRandomNode,
      METH_VARARGS | METH_KEYWORDS, info_random_node_doc},
-    {"info_node", // DEPRECATED
-     (PyCFunction)AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
-     info_node_doc},
     {"get_nodes", (PyCFunction)AerospikeClient_GetNodes,
      METH_VARARGS | METH_KEYWORDS, get_nodes_doc},
     {"get_node_names", (PyCFunction)AerospikeClient_GetNodeNames,

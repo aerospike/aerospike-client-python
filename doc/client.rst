@@ -815,23 +815,6 @@ Info Operations
 
         .. versionchanged:: 6.0.0
 
-    .. method:: info_node(command, host[, policy: dict]) -> str
-
-        .. deprecated:: 6.0.0
-            Use :meth:`info_single_node` to send a request to a single node.
-
-        Send an info command to a single node specified by host.
-
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
-        :param tuple host: a `tuple` containing an *address*, *port* , optional *tls-name* . Example: ``('127.0.0.1', 3000)`` or when using TLS ``('127.0.0.1', 4333, 'server-tls-name')``. In order to send an info request when TLS is enabled, the *tls-name* must be present.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`str`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. versionchanged:: 3.0.0
-
-        .. warning:: for client versions < 3.0.0 :meth:`~aerospike.client.info_node` will not work when using TLS
-
     .. method:: info(command[, hosts[, policy: dict]]) -> {}
 
         .. deprecated:: 3.0.0
@@ -860,7 +843,7 @@ Info Operations
                         output = {}
                         for host in hosts:
                             try:
-                                response = client.info_node(request, host, policy)
+                                response = client.info_single_node(request, host, policy)
                                 output[host] = response
                             except Exception as e:
                                 #  Handle the error gracefully here
