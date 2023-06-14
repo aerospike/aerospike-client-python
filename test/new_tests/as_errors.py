@@ -127,6 +127,7 @@ AEROSPIKE_ERR_BIN_EXISTS = 6
 #
 #    A cluster state change occurred during the request. This may also be
 #    returned by scan operations with the fail_on_cluster_change flag set.
+#    TODO: update outdated docstring. fail_on_cluster_change no longer exists
 #
 AEROSPIKE_ERR_CLUSTER_CHANGE = 7
 

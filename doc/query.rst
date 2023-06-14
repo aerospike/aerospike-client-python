@@ -486,11 +486,6 @@ Policies
             | Set to `False` for backup programs that just need access to raw bytes.
             |
             | Default: ``True``
-        * **fail_on_cluster_change** :class:`bool`
-            | Deprecated in 6.0.0. No longer has any effect..
-            | Terminate query if cluster is in migration state.
-            |
-            | Default ``False``
         * **short_query** :class:`bool`
             | Is query expected to return less than 100 records.
             | If True, the server will optimize the query for a small record set.
