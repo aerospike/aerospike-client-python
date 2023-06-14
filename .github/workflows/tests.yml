@@ -96,7 +96,9 @@ jobs:
     - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
       id: first-connection
 
-    - run: sed -i "s/127.0.0.1/${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }}/" config.conf
+    - run: |
+       python -m pip install crudini
+       crudini --set config.conf community-edition hosts ${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }}:3000
       working-directory: test
 
     - run: python -m pip install -r requirements.txt
