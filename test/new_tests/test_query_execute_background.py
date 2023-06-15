@@ -87,17 +87,28 @@ class TestQueryApply(object):
         res = query.execute_background()
         assert isinstance(res, (int, long))
 
-    def test_background_execute_return_val_with_ttl(self, clean_test_background):
+    def test_background_with_ttl(self, clean_test_background):
         """
-        Ensure that Query.execute_background() returns an int like object
+        Ensure that ttl is set for the record found with background query
         """
-        test_bin = "tz"
-        query = self.as_connection.query(TEST_NS, TEST_SET)
-        query.max_records = 100
-        query.ttl = aerospike.TTL_DONT_UPDATE
-        query.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin])
-        res = query.execute_background()
-        assert isinstance(res, (int, long))
+        query: aerospike.Query = self.as_connection.query(TEST_NS, TEST_SET)
+        query.ttl = 5000
+        user_key = 4
+        bin_name = "number"
+        query.where(predicates.equals(bin_name, user_key))
+        ops = [
+            operations.increment(bin_name, 1)
+        ]
+        query.add_ops(ops)
+        status = query.execute_background()
+
+        wait_for_job_completion(self.as_connection, status)
+
+        key = (TEST_NS, TEST_SET, 4)
+        _, meta = self.as_connection.exists(key)
+        # Account for clock skew
+        skew_tolerance_secs = 50
+        assert meta["ttl"] in range(query.ttl - skew_tolerance_secs, query.ttl + skew_tolerance_secs)
 
     def test_background_execute_no_predicate(self, clean_test_background):
         """
