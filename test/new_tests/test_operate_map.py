@@ -6,6 +6,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers.operations import map_operations as map_ops
 
 # aerospike.OP_MAP_SET_POLICY
 # aerospike.OP_MAP_PUT
@@ -34,6 +35,7 @@ from aerospike import exception as e
 # aerospike.OP_MAP_GET_BY_RANK_RANGE
 
 
+# TODO: Move these tests to test_map_operation_helpers.py
 class TestOperate(object):
     def setup_class(cls):
         """
@@ -55,8 +57,11 @@ class TestOperate(object):
         self.test_map = test_map
         self.test_map_bin = "test_map"
         key_order_policy = {"map_order": aerospike.MAP_KEY_ORDERED}
-        as_connection.map_put_items(key, bin="test_map", items=test_map, map_policy=key_order_policy)
-        as_connection.map_put_items(key, bin="test_map2", items=test_map, map_policy=key_order_policy)
+        ops = [
+            map_ops.map_put_items(bin_name="test_map", item_dict=test_map, map_policy=key_order_policy),
+            map_ops.map_put_items(bin_name="test_map2", item_dict=test_map, map_policy=key_order_policy)
+        ]
+        as_connection.operate(key, ops)
 
         def teardown():
             try:

@@ -264,8 +264,6 @@ setup(
                 'src/main/client/info_random_node.c',
                 'src/main/client/info.c',
                 'src/main/client/put.c',
-                'src/main/client/operate_list.c',
-                'src/main/client/operate_map.c',
                 'src/main/client/operate.c',
                 'src/main/client/query.c',
                 'src/main/client/remove.c',
