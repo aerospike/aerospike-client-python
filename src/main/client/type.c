@@ -163,10 +163,6 @@ PyDoc_STRVAR(
 \n\
 Initiate a background scan and apply a record UDF to each record matched by the scan.");
 
-PyDoc_STRVAR(scan_info_doc, "scan_info(scan_id) -> dict\n\
-\n\
-Return the status of a scan running in the background.");
-
 PyDoc_STRVAR(info_doc, "info(command[, hosts[, policy]]) -> {}\n\
 \n\
 Send an info command to multiple nodes specified in a hosts list.");
@@ -459,9 +455,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      scan_doc},
     {"scan_apply", (PyCFunction)AerospikeClient_ScanApply,
      METH_VARARGS | METH_KEYWORDS, scan_apply_doc},
-
-    {"scan_info", (PyCFunction)AerospikeClient_ScanInfo,
-     METH_VARARGS | METH_KEYWORDS, scan_info_doc},
 
     // INFO OPERATIONS
 

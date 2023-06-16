@@ -688,24 +688,6 @@ User Defined Functions
         :returns: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: scan_info(scan_id) -> dict
-
-        .. deprecated:: 1.0.50
-            Use :meth:`job_info` instead.
-
-        Return the status of a scan running in the background.
-
-
-        The returned :class:`dict` contains these keys:
-
-            * ``"status"``: see :ref:`aerospike_scan_constants` for possible values.
-            * ``"records_scanned"``: number of scanned records.
-            * ``"progress_pct"``: progress percentage of the job
-
-        :param int scan_id: the scan ID returned by :meth:`scan_apply`.
-        :returns: :class:`dict`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
     .. index::
         single: Info Operations
 
