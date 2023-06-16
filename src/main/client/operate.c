@@ -74,21 +74,24 @@ static inline bool isExprOp(int op);
         goto CLEANUP;                                                          \
     }
 
-#define EXCEPTION_ON_ERROR()                                                   \
-    if (err.code != AEROSPIKE_OK) {                                            \
-        PyObject *py_err = NULL;                                               \
-        error_to_pyobject(&err, &py_err);                                      \
-        PyObject *exception_type = raise_exception_old(&err);                  \
-        if (PyObject_HasAttrString(exception_type, "key")) {                   \
-            PyObject_SetAttrString(exception_type, "key", py_key);             \
-        }                                                                      \
-        if (PyObject_HasAttrString(exception_type, "bin")) {                   \
-            PyObject_SetAttrString(exception_type, "bin", py_bin);             \
-        }                                                                      \
-        PyErr_SetObject(exception_type, py_err);                               \
-        Py_DECREF(py_err);                                                     \
-        return NULL;                                                           \
+static inline void EXCEPTION_ON_ERROR(as_error *err, PyObject *py_key,
+                                      PyObject *py_bin)
+{
+    if (err->code != AEROSPIKE_OK) {
+        PyObject *py_err = NULL;
+        error_to_pyobject(err, &py_err);
+        PyObject *exception_type = raise_exception_old(err);
+        if (PyObject_HasAttrString(exception_type, "key")) {
+            PyObject_SetAttrString(exception_type, "key", py_key);
+        }
+        if (PyObject_HasAttrString(exception_type, "bin")) {
+            PyObject_SetAttrString(exception_type, "bin", py_bin);
+        }
+        PyErr_SetObject(exception_type, py_err);
+        Py_DECREF(py_err);
+        return NULL;
     }
+}
 
 #define DECREF_LIST_AND_RESULT()                                               \
     if (py_list) {                                                             \
@@ -978,7 +981,7 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
     }
 
 CLEANUP:
-    EXCEPTION_ON_ERROR();
+    EXCEPTION_ON_ERROR(&err, py_key, py_bin);
 
     return py_result;
 }
@@ -1258,7 +1261,7 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
     DECREF_LIST_AND_RESULT();
 
 CLEANUP:
-    EXCEPTION_ON_ERROR();
+    EXCEPTION_ON_ERROR(&err, py_key, py_bin);
 
     return PyLong_FromLong(0);
 }
@@ -1306,7 +1309,7 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
     DECREF_LIST_AND_RESULT();
 
 CLEANUP:
-    EXCEPTION_ON_ERROR();
+    EXCEPTION_ON_ERROR(&err, py_key, py_bin);
 
     return PyLong_FromLong(0);
 }
@@ -1353,7 +1356,7 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
     DECREF_LIST_AND_RESULT();
 
 CLEANUP:
-    EXCEPTION_ON_ERROR();
+    EXCEPTION_ON_ERROR(&err, py_key, py_bin);
 
     return PyLong_FromLong(0);
 }
@@ -1404,7 +1407,7 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
     DECREF_LIST_AND_RESULT();
 
 CLEANUP:
-    EXCEPTION_ON_ERROR();
+    EXCEPTION_ON_ERROR(&err, py_key, py_bin);
 
     return PyLong_FromLong(0);
 }
