@@ -250,8 +250,6 @@ AerospikeScan *AerospikeClient_Scan(AerospikeClient *self, PyObject *args,
                                     PyObject *kwds);
 PyObject *AerospikeClient_ScanApply(AerospikeClient *self, PyObject *args,
                                     PyObject *kwds);
-PyObject *AerospikeClient_ScanInfo(AerospikeClient *self, PyObject *args,
-                                   PyObject *kwds);
 
 /*******************************************************************************
  * QUERY OPERATIONS

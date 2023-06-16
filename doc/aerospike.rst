@@ -897,33 +897,6 @@ Specifies the type of authentication to be used when communicating with the serv
     .. warning::
         This mode should only be used for testing purposes because it is not secure authentication.
 
-.. _aerospike_scan_constants:
-
-Scan Constants
---------------
-
-.. data:: SCAN_STATUS_ABORTED
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_COMPLETED
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_INPROGRESS
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_UNDEF
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. versionadded:: 1.0.39
-
 .. _aerospike_job_constants:
 
 Job Constants
