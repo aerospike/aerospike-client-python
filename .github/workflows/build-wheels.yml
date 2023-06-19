@@ -39,7 +39,6 @@ jobs:
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: Bump version to ${{ env.NEW_TAG }}
-        tagging_message: ${{ env.NEW_TAG }}
 
   build-sdist:
     name: Build and install sdist
