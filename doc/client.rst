@@ -1286,6 +1286,23 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
+    .. method:: admin_query_user_info (user: str[, policy: dict]) -> dict
+
+        Retrieve roles and other info for a given user.
+
+        :param str user: the username of the user.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+
+        :return: a :class:`dict` of user data. See :ref:`admin_user_dict`.
+
+    .. method:: admin_query_users_info ([policy: dict]) -> list
+
+        Retrieve roles and other info for all users.
+
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+
+        :return: a :class:`list` of users' data. See :ref:`admin_user_dict`.
+
     .. method:: admin_query_user (username[, policy: dict]) -> []
 
         Return the list of roles granted to the specified user.
@@ -1304,6 +1321,43 @@ user\'s roles. Users are assigned roles, which are collections of \
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+.. _admin_user_dict:
+
+User Dictionary
+===============
+
+The user dictionary has the following key-value pairs:
+
+    * ``"read_info"`` (:class:`list[int]`): list of read statistics.
+      List may be :py:obj:`None`. Current statistics by offset are:
+
+       * 0: read quota in records per second
+
+       * 1: single record read transaction rate (TPS)
+
+       * 2: read scan/query record per second rate (RPS)
+
+       * 3: number of limitless read scans/queries
+
+    Future server releases may add additional statistics.
+
+    * ``"write_info"`` (:class:`list[int]`): list of write statistics.
+      List may be :py:obj:`None`. Current statistics by offset are:
+
+       * 0: write quota in records per second
+
+       * 1: single record write transaction rate (TPS)
+
+       * 2: write scan/query record per second rate (RPS)
+
+       * 3: number of limitless write scans/queries
+
+    Future server releases may add additional statistics.
+
+    * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
+
+    * ``"roles"`` (:class:`list[str]`): list of assigned role names.
 
 Scan and Query Constructors
 ---------------------------
