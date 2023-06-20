@@ -1314,6 +1314,8 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
+        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
+
     .. method:: admin_query_users ([policy: dict]) -> {}
 
         Get the roles of all users.
@@ -1321,6 +1323,8 @@ user\'s roles. Users are assigned roles, which are collections of \
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
 
 .. _admin_user_dict:
 

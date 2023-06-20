@@ -8,6 +8,7 @@ from aerospike import exception as e
 import aerospike
 
 
+@pytest.mark.skip("client.admin_query_users() is deprecated")
 class TestQueryUsers(TestBaseClass):
 
     pytestmark = pytest.mark.skipif(
