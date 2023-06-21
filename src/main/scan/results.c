@@ -71,7 +71,6 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     PyObject *py_policy = NULL;
     PyObject *py_results = NULL;
     PyObject *py_nodename = NULL;
-    PyObject *py_ustr = NULL;
 
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
@@ -178,8 +177,6 @@ CLEANUP:
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
     }
-
-    Py_XDECREF(py_ustr);
 
     if (err.code != AEROSPIKE_OK) {
         Py_XDECREF(py_results);

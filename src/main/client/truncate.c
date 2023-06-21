@@ -65,7 +65,6 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
     PyObject *py_ns = NULL;
     PyObject *py_nanos = NULL;
     PyObject *py_policy = NULL;
-    PyObject *py_ustr = NULL;
     PyObject *ret_val = NULL;
     long long temp_long;
     as_error err;
