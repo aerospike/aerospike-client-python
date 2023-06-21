@@ -128,7 +128,6 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     PyObject *py_policy = NULL;
     PyObject *py_options = NULL;
     PyObject *py_nodename = NULL;
-    PyObject *py_ustr = NULL;
 
     char *nodename = NULL;
 
@@ -249,8 +248,6 @@ CLEANUP:
         as_exp_destroy(exp_list_p);
         ;
     }
-
-    Py_XDECREF(py_ustr);
 
     if (data.error.code != AEROSPIKE_OK) {
         raise_exception(&data.error);

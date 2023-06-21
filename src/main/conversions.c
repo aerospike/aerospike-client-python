@@ -1226,7 +1226,6 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
         ns = (char *)PyUnicode_AsUTF8(py_ns);
     }
 
-    PyObject *py_ustr = NULL;
     if (py_set && py_set != Py_None) {
         if (PyUnicode_Check(py_set)) {
             set = (char *)PyUnicode_AsUTF8(py_set);
@@ -1302,10 +1301,6 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
     else {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "either key or digest is required");
-    }
-
-    if (py_ustr) {
-        Py_DECREF(py_ustr);
     }
 
     if (!returnResult) {

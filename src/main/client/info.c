@@ -244,7 +244,6 @@ static bool AerospikeClient_InfoAll_each(as_error *err, const as_node *node,
                                          void *udata)
 {
     PyObject *py_err = NULL;
-    PyObject *py_ustr = NULL;
     PyObject *py_out = NULL;
     foreach_callback_info_udata *udata_ptr =
         (foreach_callback_info_udata *)udata;
@@ -275,9 +274,6 @@ static bool AerospikeClient_InfoAll_each(as_error *err, const as_node *node,
     Py_DECREF(py_res);
 
 CLEANUP:
-    if (py_ustr) {
-        Py_DECREF(py_ustr);
-    }
     if (udata_ptr->error.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
         error_to_pyobject(&udata_ptr->error, &py_err);
