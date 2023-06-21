@@ -112,6 +112,9 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 py_ubin = PyUnicode_AsUTF8String(py_bin);
                 bin = PyBytes_AsString(py_ubin);
             }
+            else if (PyByteArray_Check(py_bin)) {
+                bin = PyByteArray_AsString(py_bin);
+            }
             else {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "Bin must be a string or unicode");
