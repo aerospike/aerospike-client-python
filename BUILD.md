@@ -35,7 +35,7 @@ sudo yum install python-setuptools
 
 The following are dependencies for:
 
-- Debian 8 or newer
+- Debian 10 or newer
 - Ubuntu 20.04 or newer
 - Related distributions which use the `apt` package manager
 
