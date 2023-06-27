@@ -2841,7 +2841,7 @@ class TestCTXOperations(object):
         [
             ([map_index], [3], e.OpNotApplicable),
             ([map_index, map_rank, map_value], [0, 0, {"dog": "cat"}], e.OpNotApplicable),
-            ([map_index, map_index, map_index, map_index], [1, 0, 0, 0], e.InvalidRequest),
+            ([map_index, map_index, map_index, map_index], [1, 0, 0, 0], e.BinIncompatibleType),
         ],
     )
     def test_ctx_map_size_negative(self, ctx_types, map_indexes, expected):
