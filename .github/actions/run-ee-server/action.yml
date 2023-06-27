@@ -9,7 +9,7 @@ runs:
   using: "composite"
   steps:
   - name: Install crudini to manipulate config.conf
-    run: pip install crudini
+    run: pip install crudini==0.10.4
     shell: bash
 
   - name: Add enterprise edition config to config.conf

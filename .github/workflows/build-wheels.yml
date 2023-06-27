@@ -23,7 +23,7 @@ jobs:
 
     - name: Get new version and build number
       run: |
-        pip install python-semantic-release
+        pip install python-semantic-release==7.34.6
         latest_tag=$(cat VERSION)
         echo "Bumping off of latest tag $latest_tag"
         new_tag=$(pysemver bump prerelease $latest_tag)
@@ -60,7 +60,7 @@ jobs:
     - name: Install build dependencies (apt packages)
       run: sudo apt install python3-dev libssl-dev -y
     - name: Install build dependencies (pip packages)
-      run: python3 -m pip install build
+      run: python3 -m pip install -r requirements.txt
 
     - name: Build source distribution
       run: python3 -m build --sdist
@@ -139,7 +139,7 @@ jobs:
       # config.conf should be copied into the cibuildwheel Docker container
       run: |
         export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-        pip install crudini
+        pip install crudini==0.9.4
         sed -i "s/127.0.0.1:3000//" config.conf
         crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
       working-directory: test
@@ -198,7 +198,7 @@ jobs:
       # config.conf should be copied into the cibuildwheel Docker container
       run: |
         export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-        pip install crudini
+        pip install crudini==0.9.4
         sed -i "s/127.0.0.1:3000//" config.conf
         crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
       working-directory: test
@@ -434,7 +434,7 @@ jobs:
         echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
         echo STATIC_SSL=1 >> $GITHUB_ENV
 
-    - run: python${{ matrix.python-version }} -m pip install build delocate
+    - run: python${{ matrix.python-version }} -m pip install build delocate==0.10.4
 
     - name: Use server rc
       if: ${{ inputs.use-server-rc }}
