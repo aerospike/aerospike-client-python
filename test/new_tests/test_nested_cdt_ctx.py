@@ -329,7 +329,7 @@ class TestCTXOperations(object):
         [
             (0, 1, None, [1], e.InvalidRequest),
             (0, "cat", None, [1], e.InvalidRequest),
-            (0, 1, None, [1, 1, 1, 1], e.InvalidRequest),
+            (0, 1, None, [1, 1, 1, 1], e.BinIncompatibleType),
         ],
     )
     def test_ctx_list_increment_negative(self, index, value, policy, list_indexes, expected):
@@ -372,7 +372,7 @@ class TestCTXOperations(object):
         "index, list_indexes, expected",
         [
             (3, [1, 1, 1], e.OpNotApplicable),
-            (2, [1, 1, 1, 1], e.InvalidRequest),
+            (2, [1, 1, 1, 1], e.BinIncompatibleType),
             ("cat", [0], e.ParamError),
         ],
     )
@@ -416,7 +416,7 @@ class TestCTXOperations(object):
         "index, list_indexes, count, expected",
         [
             # (4, [1,1,1], 1, e.OpNotApplicable),
-            (2, [1, 1, 1, 1], 1, e.InvalidRequest),
+            (2, [1, 1, 1, 1], 1, e.BinIncompatibleType),
             ("cat", [0], 1, e.ParamError),
             # (0, [1,1,1], 20, e.OpNotApplicable),
         ],
@@ -462,7 +462,7 @@ class TestCTXOperations(object):
         [
             (0, "cat", e.ParamError),
             (40, [1], e.OpNotApplicable),
-            (0, [1, 1, 1, 1], e.InvalidRequest),
+            (0, [1, 1, 1, 1], e.BinIncompatibleType),
         ],
     )
     def test_ctx_list_remove_negative(self, index, list_indexes, expected):
@@ -505,7 +505,7 @@ class TestCTXOperations(object):
         "count, index, list_indexes, expected",
         [
             (1, 0, "cat", e.ParamError),
-            (1, 0, [1, 1, 1, 1], e.InvalidRequest),
+            (1, 0, [1, 1, 1, 1], e.BinIncompatibleType),
         ],
     )
     def test_ctx_list_remove_range_negative(self, count, index, list_indexes, expected):
@@ -548,7 +548,7 @@ class TestCTXOperations(object):
         "list_indexes, expected",
         [
             ("cat", e.ParamError),
-            ([1, 1, 1, 1], e.InvalidRequest),
+            ([1, 1, 1, 1], e.BinIncompatibleType),
         ],
     )
     def test_ctx_list_clear_negative(self, list_indexes, expected):
@@ -863,7 +863,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "value, offset, return_type, count, inverted, list_indexes, expected",
         [
-            (2, 0, aerospike.LIST_RETURN_VALUE, 2, False, [1, 1, 1, 1], e.InvalidRequest),
+            (2, 0, aerospike.LIST_RETURN_VALUE, 2, False, [1, 1, 1, 1], e.BinIncompatibleType),
         ],
     )
     def test_ctx_list_remove_by_value_rank_range_negative(
@@ -1312,7 +1312,7 @@ class TestCTXOperations(object):
             (1, aerospike.LIST_RETURN_VALUE, [2], e.OpNotApplicable),
             (4, aerospike.LIST_RETURN_VALUE, [1, 1, 1], e.OpNotApplicable),
             ("cat", aerospike.LIST_RETURN_VALUE, [1], e.ParamError),
-            (0, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], e.InvalidRequest),
+            (0, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], e.BinIncompatibleType),
         ],
     )
     def test_ctx_list_remove_by_index_negative(self, index, return_type, list_indexes, expected):
@@ -1395,7 +1395,7 @@ class TestCTXOperations(object):
             (1, aerospike.LIST_RETURN_VALUE, 1, False, ["dog"], e.ParamError),
             (1, 42, 1, False, [1], e.OpNotApplicable),
             (0, aerospike.LIST_RETURN_INDEX, "dog", False, [1, 1, 1], e.ParamError),
-            (0, aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1, 1], e.InvalidRequest),
+            (0, aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1, 1], e.BinIncompatibleType),
             # (4, aerospike.LIST_RETURN_VALUE, 3, False, [1], e.OpNotApplicable), why does this silently fail?
         ],
     )
@@ -1468,7 +1468,7 @@ class TestCTXOperations(object):
         [
             (1, aerospike.LIST_RETURN_VALUE, [2], e.OpNotApplicable),
             (3, aerospike.LIST_RETURN_VALUE, [1, 1, 1], e.OpNotApplicable),
-            (1, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], e.InvalidRequest),
+            (1, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], e.BinIncompatibleType),
             ("cat", aerospike.LIST_RETURN_VALUE, [1], e.ParamError),
         ],
     )
@@ -1550,7 +1550,7 @@ class TestCTXOperations(object):
             (1, aerospike.LIST_RETURN_VALUE, 1, False, ["dog"], e.ParamError),
             (1, 42, 1, False, [1], e.OpNotApplicable),
             (0, aerospike.LIST_RETURN_INDEX, "dog", False, [1, 1, 1], e.ParamError),
-            (0, aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1, 1], e.InvalidRequest),
+            (0, aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1, 1], e.BinIncompatibleType),
             ("dog", aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1], e.ParamError),
         ],
     )
@@ -1623,7 +1623,7 @@ class TestCTXOperations(object):
         "value, return_type, inverted, list_indexes, expected",
         [
             (1, aerospike.LIST_RETURN_VALUE, False, [2], e.OpNotApplicable),
-            (1, aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.InvalidRequest),
+            (1, aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.BinIncompatibleType),
         ],
     )
     def test_ctx_list_remove_by_value_negative(self, value, return_type, inverted, list_indexes, expected):
@@ -1697,7 +1697,7 @@ class TestCTXOperations(object):
         "values, return_type, inverted, list_indexes, expected",
         [
             ([1], aerospike.LIST_RETURN_VALUE, False, [2], e.OpNotApplicable),
-            ([2], aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.InvalidRequest),
+            ([2], aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.BinIncompatibleType),
             ([1], "bad_return_type", False, [1], e.ParamError),
         ],
     )
@@ -1780,7 +1780,7 @@ class TestCTXOperations(object):
         "return_type, value_begin, value_end, inverted, list_indexes, expected",
         [
             (aerospike.LIST_RETURN_VALUE, 0, 1, False, [2], e.OpNotApplicable),
-            (aerospike.LIST_RETURN_VALUE, 0, 1, False, [1, 1, 1, 1], e.InvalidRequest),
+            (aerospike.LIST_RETURN_VALUE, 0, 1, False, [1, 1, 1, 1], e.BinIncompatibleType),
             ("bad_return_type", 0, 1, False, [1], e.ParamError),
         ],
     )
@@ -1828,7 +1828,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "list_order, list_indexes, expected",
         [
-            (aerospike.LIST_ORDERED, [0, 1], e.InvalidRequest),
+            (aerospike.LIST_ORDERED, [0, 1], e.BinIncompatibleType),
             ("bad_list_order_type", [1], e.ParamError),
         ],
     )
@@ -1870,8 +1870,8 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "sort_flags, list_indexes, expected",
         [
-            (aerospike.LIST_SORT_DEFAULT, [0, 1], e.InvalidRequest),
-            (aerospike.LIST_SORT_DROP_DUPLICATES, [0, 1], e.InvalidRequest),
+            (aerospike.LIST_SORT_DEFAULT, [0, 1], e.BinIncompatibleType),
+            (aerospike.LIST_SORT_DROP_DUPLICATES, [0, 1], e.BinIncompatibleType),
             ("bad_sort_flags_type", [1], e.ParamError),
         ],
     )
