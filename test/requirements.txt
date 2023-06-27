@@ -1,4 +1,7 @@
-pytest
-pytest-cov
+pytest==7.4.0
+# To generate coverage reports in the Github Actions pipeline
+pytest-cov==4.0.0
+# TODO: these should be removed since we are not using them
 psutil
+# TODO: we are not officially supporting async functions in the client
 pytest-asyncio
