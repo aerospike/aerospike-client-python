@@ -5,6 +5,7 @@ from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
 from aerospike import predicates as p
+from aerospike_helpers.operations import operations
 import time
 
 import aerospike
@@ -472,8 +473,8 @@ class TestGeospatial(object):
         geo_object_operate = aerospike.GeoJSON({"type": "Point", "coordinates": [43.45, 56.75]})
         key = ("test", "demo", "single_geo_operate")
         llist = [
-            {"op": aerospike.OPERATOR_WRITE, "bin": "write_bin", "val": {"no": geo_object_operate}},
-            {"op": aerospike.OPERATOR_READ, "bin": "write_bin"},
+            operations.write("write_bin", {"no": geo_object_operate}),
+            operations.read("write_bin")
         ]
 
         key, _, bins = self.as_connection.operate(key, llist)

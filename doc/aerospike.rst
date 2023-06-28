@@ -679,19 +679,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
 Constants
 =========
 
-.. _aerospike_operators:
-
-Operators
----------
-
-Operators for the single-record, multi-operation transaction method :py:meth:`Client.operate`.
-
-.. note::
-
-    Starting version 3.4.0, it is highly recommended to use the :ref:`aerospike_operation_helpers.operations` \
-    to create the arguments for :py:meth:`Client.operate` and :py:meth:`Client.operate_ordered`
-    Old style operators are deprecated. The docs for old style operators were removed in client 6.0.0.
-
 Policy Options
 --------------
 
