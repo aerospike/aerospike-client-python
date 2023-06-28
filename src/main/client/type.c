@@ -163,10 +163,6 @@ PyDoc_STRVAR(
 \n\
 Initiate a background scan and apply a record UDF to each record matched by the scan.");
 
-PyDoc_STRVAR(info_doc, "info(command[, hosts[, policy]]) -> {}\n\
-\n\
-Send an info command to multiple nodes specified in a hosts list.");
-
 PyDoc_STRVAR(
     set_xdr_filter_doc,
     "set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> {}\n\
@@ -458,8 +454,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // INFO OPERATIONS
 
-    {"info", (PyCFunction)AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
-     info_doc},
     {"set_xdr_filter", (PyCFunction)AerospikeClient_SetXDRFilter,
      METH_VARARGS | METH_KEYWORDS, set_xdr_filter_doc},
     {"get_expression_base64", (PyCFunction)AerospikeClient_GetExpressionBase64,

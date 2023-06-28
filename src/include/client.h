@@ -557,15 +557,6 @@ PyObject *AerospikeClient_InfoAll(AerospikeClient *self, PyObject *args,
                                   PyObject *kwds);
 
 /**
-* Perform info operation on the database.
-*
-* client.info((x,y,z))
-*
-*/
-PyObject *AerospikeClient_Info(AerospikeClient *self, PyObject *args,
-                               PyObject *kwds);
-
-/**
 * Perform get nodes operation on the database.
 *
 * client.get_nodes((x,y,z))
