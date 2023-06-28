@@ -1130,7 +1130,8 @@ class MapGetByIndex(_BaseExpr):
         Example::
 
             # Get the value at index 0 in map bin "b". (assume this value is an integer)
-            expr = exp.MapGetByIndex(None, aerospike.MAP_RETURN_VALUE, ResultType.INTEGER, 0, MapBin("b")).compile()
+            expr = exp.MapGetByIndex(None, aerospike.MAP_RETURN_VALUE,
+                                     exp.ResultType.INTEGER, 0, exp.MapBin("b")).compile()
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.VALUE_TYPE_KEY: value_type, _Keys.RETURN_TYPE_KEY: return_type}
