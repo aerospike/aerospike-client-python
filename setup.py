@@ -72,7 +72,7 @@ extra_compile_args.extend(sanitizer_flags)
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
 extra_objects = []
-extra_link_args = ["-static-libsan"]
+extra_link_args = ["-static-libasan"]
 extra_link_args.extend(sanitizer_flags)
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
