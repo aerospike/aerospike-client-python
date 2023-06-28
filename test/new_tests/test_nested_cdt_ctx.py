@@ -8,8 +8,6 @@ from aerospike_helpers import cdt_ctx
 from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import map_operations
 
-from .test_base_class import TestBaseClass
-
 list_index = "list_index"
 list_rank = "list_rank"
 list_value = "list_value"
@@ -34,7 +32,9 @@ def add_ctx_op(ctx_type, value):
     return ctx_func(value)
 
 
-invalid_nested_type_err = None
+# InvalidRequest is thrown in server < 6.4
+# BinIncompatibleType is thrown in server >= 6.4
+invalid_nested_type_err = (e.InvalidRequest, e.BinIncompatibleType)
 
 
 class TestCTXOperations(object):
@@ -43,12 +43,6 @@ class TestCTXOperations(object):
         """
         Setup Method
         """
-        global invalid_nested_type_err
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (6, 4):
-            invalid_nested_type_err = e.InvalidRequest
-        else:
-            invalid_nested_type_err = e.BinIncompatibleType
-
         self.keys = []
         self.test_key = "test", "demo", "nested_cdt_ops"
         self.nested_list = [["hi", "friend", ["how", "are", ["you"]]], ["hey", ["numbers", [1, 2, 3]], "home boy"]]
