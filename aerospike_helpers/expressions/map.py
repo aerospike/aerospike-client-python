@@ -1233,7 +1233,7 @@ class MapGetByRank(_BaseExpr):
         Example::
 
             # Get the smallest element in map bin "b".
-            expr = exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, aerospike.ResultType.INTEGER, 0,
+            expr = exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0,
                 exp.MapBin("b")).compile()
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else MapBin(bin))

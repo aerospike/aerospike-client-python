@@ -2503,7 +2503,7 @@ Partition Objects
         # partition_status is most easily used to resume a query
         # and can be obtained by calling Query.get_partitions_status()
         partition_status = {
-            0: {0, False, Flase, bytearray([0]*20)}...
+            0: {0, False, False, bytearray([0]*20)}...
         }
 
         policy = {
