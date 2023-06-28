@@ -56,7 +56,7 @@ jobs:
       run: python3 -m pip install -r requirements.txt
 
     - name: Build client
-      run: python3 -m build
+      run: CC=clang python3 -m build
 
     - name: Send wheel to test jobs
       uses: actions/upload-artifact@v3
