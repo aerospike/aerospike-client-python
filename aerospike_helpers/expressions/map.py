@@ -1162,7 +1162,7 @@ class MapGetByIndexRangeToEnd(_BaseExpr):
         Example::
 
             # Get element at index 5 to end from map bin "b".
-            expr = exp.MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 5, MapBin("b")).compile()
+            expr = exp.MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 5, exp.MapBin("b")).compile()
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
