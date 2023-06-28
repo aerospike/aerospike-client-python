@@ -778,43 +778,6 @@ Info Operations
 
         .. versionchanged:: 6.0.0
 
-    .. method:: info(command[, hosts[, policy: dict]]) -> {}
-
-        .. deprecated:: 3.0.0
-            Use :meth:`info_all` to send a request to the entire cluster.
-
-        Send an info command to all nodes in the cluster, and optionally filter responses to only include certain nodes.
-
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_
-        :param list hosts: a :class:`list` containing ``(address, port)`` tuples. If specified, only send the command to these hosts. Example: ``[('127.0.0.1', 3000)]``
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`dict`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. code-block:: python
-
-            response = client.info(command)
-            client.close()
-            # {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
-
-        .. note::
-                Sending requests to specific nodes can be better handled with a simple Python function such as:
-
-                .. code-block:: python
-
-                    def info_to_host_list(client, request, hosts, policy=None):
-                        output = {}
-                        for host in hosts:
-                            try:
-                                response = client.info_single_node(request, host, policy)
-                                output[host] = response
-                            except Exception as e:
-                                #  Handle the error gracefully here
-                                output[host] = e
-                        return output
-
-        .. versionchanged:: 3.0.0
-
     .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy: dict]) -> str
 
         Set the cluster's xdr filter using an Aerospike expression.
