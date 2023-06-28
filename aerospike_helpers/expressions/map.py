@@ -1194,7 +1194,7 @@ class MapGetByIndexRange(_BaseExpr):
         Example::
 
             # Get elements at indexes 3, 4, 5, 6 in map bin "b".
-            expr = exp.MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 3, 4, MapBin("b")).compile()
+            expr = exp.MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 3, 4, exp.MapBin("b")).compile()
         """
         self._children = (index, count, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
@@ -1234,7 +1234,7 @@ class MapGetByRank(_BaseExpr):
 
             # Get the smallest element in map bin "b".
             expr = exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, aerospike.ResultType.INTEGER, 0,
-                MapBin("b")).compile()
+                exp.MapBin("b")).compile()
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.VALUE_TYPE_KEY: value_type, _Keys.RETURN_TYPE_KEY: return_type}
