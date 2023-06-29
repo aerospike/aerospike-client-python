@@ -263,3 +263,8 @@ linkcheck_anchors_ignore = [
     'xdr-set-filter',
     'records'
 ]
+
+# False positives
+linkcheck_ignore = [
+    "https://docs.aerospike.com/server/guide/security/index.html"
+]
