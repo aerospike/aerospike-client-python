@@ -67,6 +67,7 @@ extra_compile_args = [
 ]
 sanitizer_flags = [
     '-fsanitize=address',
+    '-fsanitize-recover=all'
 ]
 extra_compile_args.extend(sanitizer_flags)
 
