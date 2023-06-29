@@ -214,7 +214,7 @@ def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> 
     If a non-list element exists at the index, an :py:exc:`~aerospike.exception.InvalidRequest` will be thrown.
 
     Args:
-        key (object): The index to create the list at.
+        index (int): The index to create the list at.
         order (int): The :ref:`sort order <aerospike_list_order>` to create the List with.
             (default: ``aerospike.LIST_UNORDERED``)
         pad (bool): If index is out of bounds and ``pad`` is :py:obj:`True`,
