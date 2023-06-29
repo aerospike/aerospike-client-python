@@ -1489,6 +1489,10 @@ Miscellaneous
 
 .. seealso:: `Data Types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
 
+.. data:: INDEX_TYPE_DEFAULT
+
+    Index a bin that doesn't contain a complex data type.
+
 .. data:: INDEX_TYPE_LIST
 
     Index a bin whose contents is an aerospike list.
