@@ -2526,12 +2526,9 @@ Partition Objects
 
     The dictionary contains these key-value pairs:
 
-    * ``"retry"``: :class:`str` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
+    * ``"retry"``: :class:`bool` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
 
-        This maps to a boolean value.
-    * ``"done"``: :class:`str` represents whether all partitions were finished.
-
-        This maps to a boolean value.
+    * ``"done"``: :class:`bool` represents whether all partitions were finished.
 
     In addition, the dictionary contains keys of the partition IDs (:class:`int`),
     and each partition ID is mapped to a dictionary containing the status details of a partition.
