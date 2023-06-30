@@ -38,7 +38,7 @@ Example::
     # Configure the client.
     config = {"hosts": [("127.0.0.1", 3000)]}
     # Create a client and connect it to the cluster.
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     key = ("test", "demo", "foo")
     five_ones_bin_name = "bitwise1"
@@ -84,7 +84,7 @@ Example::
     from aerospike_helpers.operations import bitwise_operations
 
     config = {'hosts': [('127.0.0.1', 3000)]}
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     key = ('test', 'demo', 'bit_example')
     five_one_blob = bytearray([1] * 5)

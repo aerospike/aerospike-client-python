@@ -590,7 +590,7 @@ User Defined Functions
             'hosts': [ ('127.0.0.1', 3000)],
             'lua': { 'user_path': '/path/to/lua/user_path'}
         }
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
         # Register the UDF module and copy it to the Lua 'user_path'
         client.udf_put('/path/to/my_module.lua')
         client.close()
@@ -1013,7 +1013,7 @@ Index Operations
 
             import aerospike
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
 
             # assume the bin fav_movies in the set test.demo bin should contain
             # a dict { (str) _title_ : (int) _times_viewed_ }
@@ -1043,7 +1043,7 @@ Index Operations
 
             import aerospike
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
@@ -1448,7 +1448,7 @@ Key Tuple
         # NOTE: change this to your Aerospike server's seed node address
         seedNode = ('127.0.0.1', 3000)
         config = config = {'hosts': [seedNode]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         # The key tuple comprises the following:
         namespaceName = 'test'
@@ -1514,7 +1514,7 @@ Record Tuple
             # NOTE: change this to your Aerospike server's seed node address
             seedNode = ('127.0.0.1', 3000)
             config = {'hosts': [seedNode]}
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
 
             namespaceName = 'test'
             setName = 'setname'

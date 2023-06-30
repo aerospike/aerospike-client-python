@@ -28,7 +28,7 @@ Example::
 
     # Configure the client.
     config = {"hosts": [("127.0.0.1", 3000)]}
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     key = ("test", "demo", "foo")
     listWithMaps = [

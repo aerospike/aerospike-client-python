@@ -41,7 +41,7 @@ Example::
     # Configure the client.
     config = {"hosts": [("127.0.0.1", 3000)]}
     # Create a client and connect it to the cluster.
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     # Create customer keys
     TEST_NS = "test"

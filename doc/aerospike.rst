@@ -82,13 +82,11 @@ Client
             "cafile": "/path/to/cacert.pem",
             "enable": True
         }
-
-        client = aerospike.client({
-            "hosts": hosts,
-            "tls": tls_config
-        })
         try:
-            client.connect()
+            client = aerospike.client({
+                "hosts": hosts,
+                "tls": tls_config
+            })
         except Exception as e:
             print(e)
             print("Failed to connect")
@@ -159,7 +157,7 @@ Types
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
         #  get all values of the form [1, ...] from a list of lists.
@@ -183,7 +181,7 @@ Types
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
         #  get all values of the form [1, ...] from a list of lists.

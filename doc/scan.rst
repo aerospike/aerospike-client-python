@@ -98,7 +98,7 @@ Methods
 
             pp = pprint.PrettyPrinter(indent=2)
             config = { 'hosts': [ ('127.0.0.1',3000)]}
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
 
             client.put(('test','test','key1'), {'id':1,'a':1},
                 policy={'key':aerospike.POLICY_KEY_SEND})
@@ -178,7 +178,7 @@ Methods
 
             pp = pprint.PrettyPrinter(indent=2)
             config = { 'hosts': [ ('127.0.0.1',3000)]}
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
 
             client.put(('test','test','key1'), {'id':1,'a':1},
                 policy={'key':aerospike.POLICY_KEY_SEND})
@@ -213,7 +213,7 @@ Methods
                 import aerospike
 
                 config = { 'hosts': [ ('127.0.0.1',3000)]}
-                client = aerospike.client(config).connect()
+                client = aerospike.client(config)
 
                 def limit(lim, result):
                     c = [0] # integers are immutable so a list (mutable) is used for the counter
@@ -287,7 +287,7 @@ Methods
                 import time
 
                 config = {"hosts": [("127.0.0.1", 3000)]}
-                client = aerospike.client(config).connect()
+                client = aerospike.client(config)
 
                 # register udf
                 try:
