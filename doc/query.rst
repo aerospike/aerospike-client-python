@@ -377,15 +377,13 @@ Assume this boilerplate code is run before all examples below:
     .. method:: get_partitions_status()
 
         Get this query instance's partition status. That is which partitions have been queried and which have not.
-        The returned value is a :class:`dict` with partition id, :class:`int`, as keys and :class:`tuple` as values.
         If the query instance is not tracking its partitions, the returned :class:`dict` will be empty.
 
         .. note::
             A query instance must have had .paginate() called on it, or been used with a partition filter, in order retrieve its
             partition status. If .paginate() was not called, or partition_filter was not used, the query instance will not save partition status.
 
-        :return: a :class:`tuple` of form (id: :class:`int`, init: class`bool`, done: class`bool`, digest: :class:`bytearray`).
-            See :ref:`aerospike_partition_objects` for more information.
+        :return: See :ref:`aerospike_partition_objects` for a description of the partition status return value.
 
         .. code-block:: python
 
