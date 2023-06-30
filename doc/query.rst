@@ -137,7 +137,7 @@ Assume this boilerplate code is run before all examples below:
 
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
+        :return: a :class:`list` of :ref:`aerospike_record_tuple` for record UDFs, or a list containing the result of a stream UDF. The result of a stream UDF is one of the supported types: :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
         .. include:: examples/query/results.py
             :code: python
@@ -233,7 +233,7 @@ Assume this boilerplate code is run before all examples below:
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you can use a serializer like pickle first.
-        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
+        :return: :class:`aerospike.Query` object that called this function.
 
         .. seealso:: `Developing Stream UDFs <https://developer.aerospike.com/udf/developing_stream_udfs>`_
 
