@@ -2531,20 +2531,20 @@ Partition Objects
     * ``"done"``: :class:`bool` represents whether all partitions were finished.
 
     In addition, the dictionary contains keys of the partition IDs (:class:`int`),
-    and each partition ID is mapped to a dictionary containing the status details of a partition.
+    and each partition ID is mapped to a tuple containing the status details of a partition.
 
-    Each partition ID has a dictionary with the following keys:
+    That tuple has the following values in this order:
 
     .. hlist::
         :columns: 1
 
-        * ``"id"``: :class:`int` represents a partition ID number
-        * ``"init"``: :class:`bool` represents whether the digest being queried was calculated.
-        * ``"retry"``: :class:`bool` represents whether this partition should be retried.
-        * ``"digest"``: :class:`bytearray` represents the digest of the record being queried.
+        * ``id``: :class:`int` represents a partition ID number
+        * ``init``: :class:`bool` represents whether the digest being queried was calculated.
+        * ``retry``: :class:`bool` represents whether this partition should be retried.
+        * ``digest``: :class:`bytearray` represents the digest of the record being queried.
 
             Should be 20 characters long.
-        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
+        * ``bval``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
 
     Default: ``{}`` (All partitions will be queried).
 
