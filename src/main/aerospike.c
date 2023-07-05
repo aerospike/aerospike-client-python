@@ -38,7 +38,6 @@
 PyObject *py_global_hosts;
 int counter = 0xA8000000;
 bool user_shm_key = false;
-uint32_t async_support = 0;
 
 PyDoc_STRVAR(client_doc, "client(config) -> client object\n\
 \n\
@@ -51,10 +50,6 @@ config = {\n\
 }\n\
 client = aerospike.client(config)");
 
-PyDoc_STRVAR(init_async_doc,
-             "init_async() -> initialize aerospike async eventloop library\n\
-aerospike.init_async()");
-
 static PyMethodDef Aerospike_Methods[] = {
 
     //Serialization
@@ -65,8 +60,6 @@ static PyMethodDef Aerospike_Methods[] = {
     {"unset_serializers", (PyCFunction)AerospikeClient_Unset_Serializers,
      METH_VARARGS | METH_KEYWORDS, "Unsets the serializer and deserializer"},
 
-    {"init_async", (PyCFunction)AerospikeInitAsync,
-     METH_VARARGS | METH_KEYWORDS, init_async_doc},
     {"client", (PyCFunction)AerospikeClient_New, METH_VARARGS | METH_KEYWORDS,
      client_doc},
     {"set_log_level", (PyCFunction)Aerospike_Set_Log_Level,
@@ -87,10 +80,6 @@ static PyMethodDef Aerospike_Methods[] = {
     //Get partition ID for given digest
     {"get_partition_id", (PyCFunction)Aerospike_Get_Partition_Id, METH_VARARGS,
      "Get partition ID for given digest"},
-
-    //Is async supported
-    {"is_async_supoorted", (PyCFunction)Aerospike_Is_AsyncSupported,
-     METH_NOARGS, "check whether async supported or not"},
 
     {NULL}};
 
@@ -132,10 +121,6 @@ struct Aerospike_State {
 
 static int Aerospike_Clear(PyObject *aerospike)
 {
-
-#if AS_EVENT_LIB_DEFINED
-    as_event_close_loops();
-#endif
     Py_CLEAR(Aerospike_State(aerospike)->exception);
     Py_CLEAR(Aerospike_State(aerospike)->client);
     Py_CLEAR(Aerospike_State(aerospike)->query);
@@ -281,23 +266,4 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 CLEANUP:
     Aerospike_Clear(aerospike);
     return NULL;
-}
-
-PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds)
-{
-#if AS_EVENT_LIB_DEFINED
-    as_log_info("AerospikeInitAsync");
-    as_event_destroy_loops();
-    as_event_create_loops(1);
-    async_support = true;
-#else
-    as_error err;
-    as_error_init(&err);
-    as_error_update(
-        &err, AEROSPIKE_ERR,
-        "Support for async is disabled, build software with async option");
-    raise_exception(&err);
-    return NULL;
-#endif
-    return PyLong_FromLong(0);
 }
