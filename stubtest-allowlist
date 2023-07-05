@@ -1,9 +1,5 @@
-aerospike.Client.get_async
-aerospike.Client.put_async
 aerospike.aerospike
 aerospike.exception
 aerospike.get_cdtctx_base64
 aerospike.get_expression_base64
-aerospike.init_async
-aerospike.is_async_supoorted
 aerospike.predicates
