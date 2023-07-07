@@ -494,6 +494,15 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
                                         PyObject *kwds);
 
 /**
+ * Perform reads on multiple keys.
+ *
+ *      client.batch_read([keys], [bins], policy_batch)
+ *
+ */
+PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
+                                    PyObject *kwds);
+
+/**
  * Remove multiple records by key.
  * Requires server version 6.0+
  *

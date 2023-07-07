@@ -225,4 +225,5 @@ as_status as_partition_status_to_pyobject(
 
 as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          as_batch_result *bres,
-                                         PyObject *py_batch_record);
+                                         PyObject *py_batch_record,
+                                         bool checking_if_records_exist);

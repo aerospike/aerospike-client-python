@@ -521,6 +521,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, batch_remove_doc},
     {"batch_apply", (PyCFunction)AerospikeClient_Batch_Apply,
      METH_VARARGS | METH_KEYWORDS, batch_apply_doc},
+    {"batch_read", (PyCFunction)AerospikeClient_BatchRead,
+     METH_VARARGS | METH_KEYWORDS, "Read multiple keys."},
 
     // TRUNCATE OPERATIONS
     {"truncate", (PyCFunction)AerospikeClient_Truncate,

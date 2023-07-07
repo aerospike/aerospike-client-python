@@ -328,6 +328,26 @@ Batch Operations
         .. seealso:: More information about the \
             batch helpers :ref:`aerospike_operation_helpers.batch`
 
+    .. method:: batch_read(keys: list, [bins: list], [policy_batch: dict]) -> BatchRecords
+
+        Read multiple records.
+
+        If a list of bins is not provided, return all the bins for each record.
+
+        If a list of bins is provided, return only these bins for the given list of records.
+
+        If an empty list of bins is provided, return only the metadata for each record.
+
+        :param list keys: The keys of the records to fetch.
+        :param list bins: List of bins to fetch for each record.
+        :param dict policy_batch: See :ref:`aerospike_batch_policies`.
+
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
+
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 6.0.0.
+
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
 
         Perform the same read/write transactions on multiple keys.
