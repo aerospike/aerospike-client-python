@@ -12,6 +12,7 @@ from aerospike import exception as e
 from .test_base_class import TestBaseClass
 
 
+@pytest.mark.skip("client.batch_get_ops() is deprecated")
 class TestBatchExpressionsOperations(TestBaseClass):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

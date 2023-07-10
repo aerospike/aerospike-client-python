@@ -305,6 +305,9 @@ Batch Operations
         .. include:: examples/batch_get_ops.py
             :code: python
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_operate` instead.
+
     The following batch methods will return a :class:`BatchRecords` object with
     a ``result`` value of ``0`` if one of the following is true:
 
