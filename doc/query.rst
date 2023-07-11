@@ -275,7 +275,7 @@ Assume this boilerplate code is run before all examples below:
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
 
         .. code-block:: python
 
