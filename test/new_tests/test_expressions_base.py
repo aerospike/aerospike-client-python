@@ -190,9 +190,9 @@ class TestExpressions(TestBaseClass):
         record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
         assert record[2]["extra"] == "record"
 
-    @pytest.mark.xfail(reason="Will fail on storage engine device.")
     def test_memory_size_pos(self):
-        expr = GT(MemorySize(), 0)
+        # The Docker Aerospike image uses storage-memory device by default
+        expr = Eq(MemorySize(), 0)
         self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
 
     def test_remove_with_expressions_neg(self):
