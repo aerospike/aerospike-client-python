@@ -1,6 +1,7 @@
 import pytest
 
 from aerospike_helpers.batch.records import BatchRecords
+from aerospike_helpers.expressions import base as exp
 from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
@@ -49,7 +50,8 @@ class TestBatchRead(TestBaseClass):
         request.addfinalizer(teardown)
 
     def test_batch_read_with_policy(self):
-        self.as_connection.batch_read(self.keys, policy={"respond_all_keys": False})
+        expr = exp.Eq(exp.IntBin("count"), 1).compile()
+        self.as_connection.batch_read(self.keys, policy={"respond_all_keys": False, "expressions": expr})
 
     def test_batch_read_all_bins(self):
         res: BatchRecords = self.as_connection.batch_read(self.keys)
