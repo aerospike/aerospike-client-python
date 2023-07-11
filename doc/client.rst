@@ -47,6 +47,8 @@ Basic example:
 Methods
 =======
 
+To create a new client, use :meth:`aerospike.client`.
+
 .. _aerospike_connection_operations:
 
 Connection
