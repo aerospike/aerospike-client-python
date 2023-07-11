@@ -137,7 +137,7 @@ Assume this boilerplate code is run before all examples below:
 
         :param dict policy: optional :ref:`aerospike_query_policies`.
         :param dict options: optional :ref:`aerospike_query_options`.
-        :return: a :class:`list` of :ref:`aerospike_record_tuple` for record UDFs, or a list containing the result of a stream UDF. The result of a stream UDF is one of the supported types: :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
+        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
 
         .. include:: examples/query/results.py
             :code: python
