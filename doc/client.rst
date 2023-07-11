@@ -2554,7 +2554,7 @@ Partition Objects
 
        # Here is the form of partition_status.
        # partition_status = {
-       #     0: (0, False, Flase, bytearray([0]*20), 0)...
+       #     0: (0, False, False, bytearray([0]*20), 0)...
        # }
        partition_status = query.get_partitions_status()
 
