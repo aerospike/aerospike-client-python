@@ -753,7 +753,7 @@ class MapGetByKey(_BaseExpr):
         Example::
 
             # Get the value at key "key0" in map bin "b". (assume the value at key0 is an integer)
-            expr = exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, ResultType.INTEGER, "key0",
+            expr = exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, "key0",
                 exp.MapBin("b")).compile()
         """
         self._children = (
