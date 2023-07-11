@@ -1505,7 +1505,7 @@ Record Tuple
         * bins (:class:`dict`)
             Contains bin-name/bin-value pairs.
 
-    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from ``client.get()``:
+    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from :meth:`~aerospike.Client.get()`:
 
         .. code-block:: python
 
