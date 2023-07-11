@@ -337,7 +337,7 @@ Batch Operations
         If a list of bins is provided, return only these bins for the given list of records.
 
         If an empty list of bins is provided, only the metadata of each record will be returned.
-        Each `BatchRecord.record` in `BatchRecords.batch_records` will only be a 2-tuple `(key, meta)`.
+        Each ``BatchRecord.record`` in ``BatchRecords.batch_records`` will only be a 2-tuple ``(key, meta)``.
 
         :param list keys: The keys of the records to fetch.
         :param list bins: List of bins to fetch for each record.
