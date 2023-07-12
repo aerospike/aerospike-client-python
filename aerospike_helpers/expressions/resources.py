@@ -73,6 +73,7 @@ class _ExprOp:  # TODO replace this with an enum
     META_KEY_EXISTS = 70
     META_SINCE_UPDATE_TIME = 71
     META_IS_TOMBSTONE = 72
+    META_MEMORY_SIZE = 73
 
     REC_KEY = 80
     BIN = 81
