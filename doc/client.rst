@@ -240,6 +240,9 @@ Batch Operations
         .. include:: examples/get_many.py
             :code: python
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
     .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys.
@@ -255,6 +258,9 @@ Batch Operations
         .. include:: examples/exists_many.py
             :code: python
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
     .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read specific bins from multiple records.
@@ -269,6 +275,9 @@ Batch Operations
 
         .. include:: examples/select_many.py
             :code: python
+
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
 
     .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
 
