@@ -341,15 +341,15 @@ Batch Operations
 
         Read multiple records.
 
-        If a list of bins is not provided, return all the bins for each record.
+        If a list of bin names is not provided, return all the bins for each record.
 
-        If a list of bins is provided, return only these bins for the given list of records.
+        If a list of bin names is provided, return only these bins for the given list of records.
 
-        If an empty list of bins is provided, only the metadata of each record will be returned.
+        If an empty list of bin names is provided, only the metadata of each record will be returned.
         Each ``BatchRecord.record`` in ``BatchRecords.batch_records`` will only be a 2-tuple ``(key, meta)``.
 
-        :param list keys: The keys of the records to fetch.
-        :param list bins: List of bins to fetch for each record.
+        :param list keys: The key tuples of the records to fetch.
+        :param list[str] bins: List of bin names to fetch for each record.
         :param dict policy_batch: See :ref:`aerospike_batch_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
