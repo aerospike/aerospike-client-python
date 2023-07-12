@@ -54,7 +54,8 @@ Client
         # Also sets a top level policy for read operations
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
-            'policies': {'read': {total_timeout': 1000}},
+            'policies': {'read': {'total_timeout': 1000}},
+        }
         client = aerospike.client(config)
 
     Connecting using TLS example:
@@ -81,13 +82,11 @@ Client
             "cafile": "/path/to/cacert.pem",
             "enable": True
         }
-
-        client = aerospike.client({
-            "hosts": hosts,
-            "tls": tls_config
-        })
         try:
-            client.connect()
+            client = aerospike.client({
+                "hosts": hosts,
+                "tls": tls_config
+            })
         except Exception as e:
             print(e)
             print("Failed to connect")
@@ -158,7 +157,7 @@ Types
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
         #  get all values of the form [1, ...] from a list of lists.
@@ -182,7 +181,7 @@ Types
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
         #  get all values of the form [1, ...] from a list of lists.
@@ -1442,6 +1441,10 @@ Miscellaneous
     An index whose values are of the aerospike GetJSON data type.
 
 .. seealso:: `Data Types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
+
+.. data:: INDEX_TYPE_DEFAULT
+
+    Index a bin that doesn't contain a complex data type.
 
 .. data:: INDEX_TYPE_LIST
 

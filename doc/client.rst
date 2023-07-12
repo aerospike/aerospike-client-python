@@ -576,7 +576,7 @@ User Defined Functions
             'hosts': [ ('127.0.0.1', 3000)],
             'lua': { 'user_path': '/path/to/lua/user_path'}
         }
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
         # Register the UDF module and copy it to the Lua 'user_path'
         client.udf_put('/path/to/my_module.lua')
         client.close()
@@ -927,7 +927,7 @@ Index Operations
 
             import aerospike
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
 
             # assume the bin fav_movies in the set test.demo bin should contain
             # a dict { (str) _title_ : (int) _times_viewed_ }
@@ -957,7 +957,7 @@ Index Operations
 
             import aerospike
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
@@ -1362,7 +1362,7 @@ Key Tuple
         # NOTE: change this to your Aerospike server's seed node address
         seedNode = ('127.0.0.1', 3000)
         config = config = {'hosts': [seedNode]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         # The key tuple comprises the following:
         namespaceName = 'test'
@@ -1419,7 +1419,7 @@ Record Tuple
         * bins (:class:`dict`)
             Contains bin-name/bin-value pairs.
 
-    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from ``client.get()``:
+    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from :meth:`~aerospike.Client.get()`:
 
         .. code-block:: python
 
@@ -1428,7 +1428,7 @@ Record Tuple
             # NOTE: change this to your Aerospike server's seed node address
             seedNode = ('127.0.0.1', 3000)
             config = {'hosts': [seedNode]}
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
 
             namespaceName = 'test'
             setName = 'setname'
@@ -2410,7 +2410,7 @@ Partition Objects
         # partition_status is most easily used to resume a query
         # and can be obtained by calling Query.get_partitions_status()
         partition_status = {
-            0: {0, False, Flase, bytearray([0]*20)}...
+            0: {0, False, False, bytearray([0]*20)}...
         }
 
         policy = {
@@ -2433,28 +2433,25 @@ Partition Objects
 
     The dictionary contains these key-value pairs:
 
-    * ``"retry"``: :class:`str` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
+    * ``"retry"``: :class:`bool` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
 
-        This maps to a boolean value.
-    * ``"done"``: :class:`str` represents whether all partitions were finished.
-
-        This maps to a boolean value.
+    * ``"done"``: :class:`bool` represents whether all partitions were finished.
 
     In addition, the dictionary contains keys of the partition IDs (:class:`int`),
-    and each partition ID is mapped to a dictionary containing the status details of a partition.
+    and each partition ID is mapped to a tuple containing the status details of a partition.
 
-    Each partition ID has a dictionary with the following keys:
+    That tuple has the following values in this order:
 
     .. hlist::
         :columns: 1
 
-        * ``"id"``: :class:`int` represents a partition ID number
-        * ``"init"``: :class:`bool` represents whether the digest being queried was calculated.
-        * ``"retry"``: :class:`bool` represents whether this partition should be retried.
-        * ``"digest"``: :class:`bytearray` represents the digest of the record being queried.
+        * ``id``: :class:`int` represents a partition ID number
+        * ``init``: :class:`bool` represents whether the digest being queried was calculated.
+        * ``retry``: :class:`bool` represents whether this partition should be retried.
+        * ``digest``: :class:`bytearray` represents the digest of the record being queried.
 
             Should be 20 characters long.
-        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
+        * ``bval``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
 
     Default: ``{}`` (All partitions will be queried).
 
@@ -2464,7 +2461,7 @@ Partition Objects
 
        # Here is the form of partition_status.
        # partition_status = {
-       #     0: (0, False, Flase, bytearray([0]*20), 0)...
+       #     0: (0, False, False, bytearray([0]*20), 0)...
        # }
        partition_status = query.get_partitions_status()
 
