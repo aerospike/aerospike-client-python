@@ -256,9 +256,6 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
 
     Py_END_ALLOW_THREADS
 
-    Py_DECREF(data.py_results);
-    Py_DECREF(data.func_name);
-
     PyObject *py_br_res = PyLong_FromLong((long)err.code);
     PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_br_res);
     Py_DECREF(py_br_res);
@@ -276,6 +273,9 @@ CLEANUP5:
 CLEANUP4:
 
     Py_DECREF(br_module);
+
+    Py_DECREF(data.py_results);
+    Py_DECREF(data.func_name);
 
 CLEANUP3:
 
