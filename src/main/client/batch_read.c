@@ -66,6 +66,7 @@ static bool batch_read_cb(const as_batch_result *results, uint32_t n,
                 "as_batch_result_to_BatchRecord failed at results index: %d",
                 i);
             success = false;
+            Py_DECREF(py_batch_record);
             break;
         }
 
