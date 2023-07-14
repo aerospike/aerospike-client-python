@@ -5,6 +5,7 @@ from aerospike_helpers.expressions import base as exp
 from aerospike import exception as e
 
 from .test_base_class import TestBaseClass
+from . import as_errors
 
 
 class TestBatchRead(TestBaseClass):
@@ -50,8 +51,14 @@ class TestBatchRead(TestBaseClass):
         request.addfinalizer(teardown)
 
     def test_batch_read_with_policy(self):
-        expr = exp.Eq(exp.IntBin("count"), 1).compile()
-        self.as_connection.batch_read(self.keys, policy={"respond_all_keys": False, "expressions": expr})
+        # No record will satisfy this expression condition
+        expr = exp.Eq(exp.IntBin("count"), 99).compile()
+        res: BatchRecords = self.as_connection.batch_read(self.keys, policy={"expressions": expr})
+        assert res.result == 0
+        for i, batch_rec in enumerate(res.batch_records):
+            assert batch_rec.key[:3] == self.keys[i]  # checking key
+            assert batch_rec.record is None
+            assert batch_rec.result == as_errors.AEROSPIKE_FILTERED_OUT
 
     def test_batch_read_all_bins(self):
         res: BatchRecords = self.as_connection.batch_read(self.keys)
