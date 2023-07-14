@@ -94,6 +94,8 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
+    PyObject *br_instance = NULL;
+
     // required arg so don't need to check for NULL
     if (!PyList_Check(py_keys)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -184,7 +186,7 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
 
     PyObject *obj_name = PyUnicode_FromString("BatchRecords");
     PyObject *res_list = PyList_New(0);
-    PyObject *br_instance =
+    br_instance =
         PyObject_CallMethodObjArgs(br_module, obj_name, res_list, NULL);
 
     Py_DECREF(obj_name);
@@ -208,7 +210,7 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     data.checking_if_records_exist = false;
 
     Py_ssize_t bin_count = 0;
-    char **filter_bins = NULL;
+    const char **filter_bins = NULL;
 
     // Parse list of bins
     if (py_bins != NULL) {
@@ -223,7 +225,7 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
             data.checking_if_records_exist = true;
         }
         else {
-            filter_bins = (char **)malloc(sizeof(char *) * bin_count);
+            filter_bins = (const char **)malloc(sizeof(char *) * bin_count);
 
             for (Py_ssize_t i = 0; i < bin_count; i++) {
                 PyObject *py_bin = PyList_GetItem(py_bins, i);
