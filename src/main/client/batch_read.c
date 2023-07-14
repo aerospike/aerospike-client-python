@@ -263,10 +263,6 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
 
     as_error_reset(&err);
 
-    if (batch_exp_list_p) {
-        as_exp_destroy(batch_exp_list_p);
-    }
-
 CLEANUP5:
 
     free(filter_bins);
@@ -281,6 +277,10 @@ CLEANUP4:
 CLEANUP3:
 
     as_batch_destroy(&batch);
+
+    if (batch_exp_list_p) {
+        as_exp_destroy(batch_exp_list_p);
+    }
 
 CLEANUP2:
 
