@@ -190,6 +190,10 @@ class TestExpressions(TestBaseClass):
         record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
         assert record[2]["extra"] == "record"
 
+    @pytest.mark.skip("MemorySize() value depends on whether server is configured to store data in memory or not.\
+                      QE tests #1 and #2 are failing because some of their server scenarios have this configured\
+                      where some nodes have it configured and some don't. It's also hard to figure out\
+                      which node the record belongs to.")
     def test_memory_size_pos(self):
         # The Docker Aerospike image uses storage-memory device by default
         expr = Eq(MemorySize(), 0)
