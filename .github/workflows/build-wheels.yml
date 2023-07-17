@@ -23,7 +23,7 @@ jobs:
 
     - name: Get new version and build number
       run: |
-        pip install python-semantic-release
+        pip install python-semantic-release==7.*
         latest_tag=$(cat VERSION)
         echo "Bumping off of latest tag $latest_tag"
         new_tag=$(pysemver bump prerelease $latest_tag)
