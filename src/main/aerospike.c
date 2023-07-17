@@ -153,7 +153,7 @@ static int Aerospike_Clear(PyObject *aerospike)
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
 
-    const char version[] = "12.0.0-rc.10";
+    const char version[] = "12.0.0-rc.11";
     // Makes things "thread-safe"
     Py_Initialize();
     int i = 0;
