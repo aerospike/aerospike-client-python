@@ -214,6 +214,8 @@ AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND = 23
 
 AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS = 24
 
+AEROSPIKE_FILTERED_OUT = 27
+
 #
 #    There are no more records left for query.
 #

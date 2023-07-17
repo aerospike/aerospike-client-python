@@ -240,6 +240,9 @@ Batch Operations
         .. include:: examples/get_many.py
             :code: python
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
     .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys.
@@ -255,6 +258,9 @@ Batch Operations
         .. include:: examples/exists_many.py
             :code: python
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
     .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read specific bins from multiple records.
@@ -269,6 +275,9 @@ Batch Operations
 
         .. include:: examples/select_many.py
             :code: python
+
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
 
     .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
 
@@ -327,6 +336,27 @@ Batch Operations
 
         .. seealso:: More information about the \
             batch helpers :ref:`aerospike_operation_helpers.batch`
+
+    .. method:: batch_read(keys: list, [bins: list], [policy_batch: dict]) -> BatchRecords
+
+        Read multiple records.
+
+        If a list of bin names is not provided, return all the bins for each record.
+
+        If a list of bin names is provided, return only these bins for the given list of records.
+
+        If an empty list of bin names is provided, only the metadata of each record will be returned.
+        Each ``BatchRecord.record`` in ``BatchRecords.batch_records`` will only be a 2-tuple ``(key, meta)``.
+
+        :param list keys: The key tuples of the records to fetch.
+        :param list[str] bins: List of bin names to fetch for each record.
+        :param dict policy_batch: See :ref:`aerospike_batch_policies`.
+
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
+
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 6.0.0.
 
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
 

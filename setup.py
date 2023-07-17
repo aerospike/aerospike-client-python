@@ -320,7 +320,8 @@ setup(
                 'src/main/client/batch_write.c',
                 'src/main/client/batch_operate.c',
                 'src/main/client/batch_remove.c',
-                'src/main/client/batch_apply.c'
+                'src/main/client/batch_apply.c',
+                'src/main/client/batch_read.c'
             ],
 
             # Compile

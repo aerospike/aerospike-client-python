@@ -2630,9 +2630,13 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
     return AEROSPIKE_OK;
 }
 
+// checking_if_records_exist:
+// false if we want to get the record metadata and bins
+// true if we only care about the record's metadata
 as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          as_batch_result *bres,
-                                         PyObject *py_batch_record)
+                                         PyObject *py_batch_record,
+                                         bool checking_if_records_exist)
 {
     as_status *result_code = &(bres->result);
     as_record *result_rec = &(bres->record);
@@ -2649,7 +2653,20 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
 
     if (*result_code == AEROSPIKE_OK) {
         PyObject *rec = NULL;
-        record_to_pyobject(self, err, result_rec, bres->key, &rec);
+        if (!checking_if_records_exist) {
+            record_to_pyobject(self, err, result_rec, bres->key, &rec);
+        }
+        else {
+            PyObject *py_result_key = NULL;
+            PyObject *py_result_meta = NULL;
+
+            key_to_pyobject(err, bres->key, &py_result_key);
+            metadata_to_pyobject(err, &(bres->record), &py_result_meta);
+
+            rec = PyTuple_New(2);
+            PyTuple_SetItem(rec, 0, py_result_key);
+            PyTuple_SetItem(rec, 1, py_result_meta);
+        }
         PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD, rec);
         Py_DECREF(rec);
     }
