@@ -63,12 +63,19 @@ extra_compile_args = [
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
-    '-Wno-implicit-function-declaration'
+    '-Wno-implicit-function-declaration',
 ]
+sanitizer_flags = [
+    '-fsanitize=address',
+    '-fsanitize-recover=all'
+]
+extra_compile_args.extend(sanitizer_flags)
+
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
 extra_objects = []
-extra_link_args = []
+extra_link_args = ["-static-libasan"]
+extra_link_args.extend(sanitizer_flags)
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
