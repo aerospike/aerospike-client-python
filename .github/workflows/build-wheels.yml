@@ -84,13 +84,9 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
-
-    - name: Run Aerospike server
-      if: ${{ !inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
 
     - uses: actions/checkout@v2
       with:
