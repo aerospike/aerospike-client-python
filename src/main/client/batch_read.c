@@ -124,11 +124,11 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
         PyObject *py_key = PyList_GetItem(py_keys, i);
         as_key *tmp_key = (as_key *)as_vector_get(&tmp_keys, i);
 
-        Py_XINCREF(py_key);
+        Py_INCREF(py_key);
         if (!PyTuple_Check(py_key)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "key should be an aerospike key tuple");
-            Py_XDECREF(py_key);
+            Py_DECREF(py_key);
             goto CLEANUP2;
         }
 
@@ -136,9 +136,11 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
         if (err.code != AEROSPIKE_OK) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "failed to convert key at index: %d", i);
+            Py_DECREF(py_key);
             goto CLEANUP2;
         }
 
+        Py_DECREF(py_key);
         processed_key_count++;
     }
 
