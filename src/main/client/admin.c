@@ -134,10 +134,6 @@ PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
     aerospike_create_user(self->as, &err, admin_policy_p, user, password,
                           (const char **)roles, roles_size);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
     for (int i = 0; i < roles_size; i++) {
@@ -237,7 +233,6 @@ PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
     alias_to_search = NULL;
 
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 
@@ -331,10 +326,6 @@ PyObject *AerospikeClient_Admin_Set_Password(AerospikeClient *self,
     Py_BEGIN_ALLOW_THREADS
     aerospike_set_password(self->as, &err, admin_policy_p, user, password);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -439,11 +430,6 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
     PyMem_Free(alias_to_search);
     alias_to_search = NULL;
 
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
 CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
@@ -544,10 +530,6 @@ PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
     aerospike_grant_roles(self->as, &err, admin_policy_p, user,
                           (const char **)roles, roles_size);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
     for (int i = 0; i < roles_size; i++) {
@@ -658,7 +640,6 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
                            (const char **)roles, roles_size);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 
@@ -751,7 +732,6 @@ PyObject *AerospikeClient_Admin_Query_User(AerospikeClient *self,
     aerospike_query_user(self->as, &err, admin_policy_p, user_name, &user);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 
@@ -851,7 +831,6 @@ PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
     aerospike_query_user(self->as, &err, admin_policy_p, user_name, &user);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 
@@ -940,16 +919,11 @@ PyObject *AerospikeClient_Admin_Query_Users(AerospikeClient *self,
     aerospike_query_users(self->as, &err, admin_policy_p, &users, &users_size);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 
     // Convert returned array of as_user structs into python object;
     as_user_array_to_pyobject(&err, users, &py_users, users_size);
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
     if (users) {
@@ -1029,7 +1003,6 @@ PyObject *AerospikeClient_Admin_Query_Users_Info(AerospikeClient *self,
     aerospike_query_users(self->as, &err, admin_policy_p, &users, &users_size);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 

@@ -353,10 +353,6 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
     Py_BEGIN_ALLOW_THREADS
     aerospike_udf_remove(self->as, &err, info_policy_p, filename);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -442,18 +438,12 @@ PyObject *AerospikeClient_UDF_List(AerospikeClient *self, PyObject *args,
     aerospike_udf_list(self->as, &err, info_policy_p, &files);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 
     // Convert as_udf_files struct into python object
     PyObject *py_files;
     as_udf_files_to_pyobject(&err, &files, &py_files);
-
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -564,7 +554,6 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
                       (language - AS_UDF_TYPE_LUA), &file);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
     udf_content = Py_BuildValue("s#", file.content.bytes, file.content.size);

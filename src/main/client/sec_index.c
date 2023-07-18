@@ -298,10 +298,6 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
     Py_BEGIN_ALLOW_THREADS
     aerospike_index_remove(self->as, &err, info_policy_p, namespace, name);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -597,11 +593,7 @@ static PyObject *createIndexWithDataAndCollectionType(
                                set_ptr, bin_ptr, name, index_type, data_type,
                                ctx);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-    else {
+    if (err.code == AEROSPIKE_OK) {
         Py_BEGIN_ALLOW_THREADS
         aerospike_index_create_wait(&err, &task, 2000);
         Py_END_ALLOW_THREADS
