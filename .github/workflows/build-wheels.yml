@@ -8,9 +8,14 @@ on:
         type: boolean
         required: true
         default: false
+      skip-updating-version:
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   update-version:
+    if: ${{ inputs.skip-updating-version == false }}
     runs-on: ubuntu-latest
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
@@ -44,6 +49,8 @@ jobs:
     name: Build and install sdist
     runs-on: ubuntu-latest
     needs: update-version
+    if: |
+      always() && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
     steps:
     - uses: actions/checkout@v2
       with:
@@ -108,6 +115,8 @@ jobs:
   manylinux_arm64:
     runs-on: ubuntu-latest
     needs: update-version
+    if: |
+      always() && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -169,6 +178,8 @@ jobs:
   manylinux_x86_64:
     runs-on: ubuntu-latest
     needs: update-version
+    if: |
+      always() && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -365,6 +376,8 @@ jobs:
 
   macOS-x86:
     needs: update-version
+    if: |
+      always() && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
@@ -413,6 +426,8 @@ jobs:
   macOS-m1:
     runs-on: [self-hosted, macOS, ARM64]
     needs: update-version
+    if: |
+      always() && (needs.update-version.result == 'success' || needs.update-version.result == 'skipped')
     strategy:
       fail-fast: false
       matrix:
