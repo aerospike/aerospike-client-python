@@ -8,6 +8,13 @@ on:
         type: boolean
         required: true
         default: false
+      build-rc-or-release:
+        type: choice
+        options:
+          - rc
+          - release
+        default: 'rc'
+        required: true
 
 jobs:
   update-version:
@@ -21,11 +28,16 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Get new version and build number
-      run: |
-        pip install python-semantic-release==7.*
+    - run: pip install python-semantic-release==7.*
+
+    - run: |
         latest_tag=$(cat VERSION)
         echo "Bumping off of latest tag $latest_tag"
+        # If creating release wheels, bump rc version to release version
+        bump="patch"
+        if [[ ${{ inputs.build-rc-or-release }} == "rc" ]]; then
+          bump="prerelease"
+        fi
         new_tag=$(pysemver bump prerelease $latest_tag)
         echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
         echo "The new tag for this build is $new_tag"
