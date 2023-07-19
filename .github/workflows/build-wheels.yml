@@ -295,14 +295,20 @@ jobs:
         run: python3.9 -m pytest new_tests/
         working-directory: test
 
-  manylinux_x86_64_debian10:
+  manylinux_x86_64_debian:
       needs: manylinux_x86_64_no_test
       runs-on: ubuntu-latest
       services:
         aerospike:
           image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
+      strategy:
+        matrix:
+          debian-name: [
+            "buster",
+            "bookworm"
+          ]
       container:
-        image: python:3.9-buster
+        image: python:3.9-${{ matrix.debian-name }}
       steps:
       - uses: actions/checkout@v2
 
@@ -490,7 +496,7 @@ jobs:
       # Wheel installs (cat 2 tests)
       manylinux_x86_64_rpm_based,
       manylinux_x86_64_ubuntu2204,
-      manylinux_x86_64_debian10,
+      manylinux_x86_64_debian,
       # CentOS 7 Linux cat 2 tests (for all wheels)
       manylinux_x86_64,
       manylinux_arm64,
