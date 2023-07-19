@@ -34,11 +34,11 @@ jobs:
         latest_tag=$(cat VERSION)
         echo "Bumping off of latest tag $latest_tag"
         # If creating release wheels, bump rc version to release version
-        bump="patch"
         if [[ ${{ inputs.build-rc-or-release }} == "rc" ]]; then
-          bump="prerelease"
+          new_tag=$(pysemver bump prerelease $latest_tag)
+        else
+          new_tag=$(pysemver nextver $latest_tag patch)
         fi
-        new_tag=$(pysemver bump prerelease $latest_tag)
         echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
         echo "The new tag for this build is $new_tag"
 
