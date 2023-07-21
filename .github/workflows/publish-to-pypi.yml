@@ -1,0 +1,19 @@
+name: Publish to PyPI
+on: workflow_dispatch
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get latest release version
+      run: |
+        python3 -m pip install aerospike --index-url ${{ secrets.JFROG_URL }}
+        echo export LATEST_VERSION=$(python3 -c "import aerospike;print(aerospike.__version__)") >> $GITHUB_ENV
+
+    - name: Download all artifacts for latest version
+      run: jf rt dl local-aerospike-client-python/aerospike/${{ env.LATEST_VERSION }}/* jfrog-artifacts/
+
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: jfrog-artifacts/
