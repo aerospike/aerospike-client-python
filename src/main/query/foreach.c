@@ -230,6 +230,11 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     if (data.error.code != AEROSPIKE_OK) {
         as_error_update(&data.error, data.error.code, NULL);
+        if (data.error.code == -14) {
+            uint8_t *bytes = NULL;
+            uint8_t bytes_size = 0;
+            as_query_to_bytes(&(self->query), &bytes, &bytes_size);
+        }
         goto CLEANUP;
     }
 
