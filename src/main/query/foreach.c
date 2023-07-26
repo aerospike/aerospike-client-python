@@ -53,7 +53,7 @@ static bool each_result(const as_val *val, void *udata)
     uint8_t *bytes = NULL;
     uint8_t bytes_size = 0;
     if (data->error.code == -14) {
-        as_query_to_bytes(&(data->query), &bytes, &bytes_size);
+        as_query_to_bytes(data->query, &bytes, &bytes_size);
     }
 
     // Python Function Arguments and Result Value
