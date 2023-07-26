@@ -34,6 +34,7 @@ typedef struct {
     PyObject *callback;
     AerospikeClient *client;
     int partition_query;
+    as_query *query;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -48,6 +49,12 @@ static bool each_result(const as_val *val, void *udata)
     LocalData *data = (LocalData *)udata;
     as_error *err = &data->error;
     PyObject *py_callback = data->callback;
+
+    uint8_t *bytes = NULL;
+    uint8_t bytes_size = 0;
+    if (data->error.code == -14) {
+        as_query_to_bytes(&(data->query), &bytes, &bytes_size);
+    }
 
     // Python Function Arguments and Result Value
     PyObject *py_arglist = NULL;
@@ -146,6 +153,7 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     LocalData data;
     data.callback = py_callback;
     data.client = self->client;
+    data.query = &(self->query);
     data.partition_query = 0;
 
     as_error_init(&data.error);
@@ -228,13 +236,8 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     Py_END_ALLOW_THREADS
 
-    uint8_t *bytes = NULL;
-    uint8_t bytes_size = 0;
     if (data.error.code != AEROSPIKE_OK) {
         as_error_update(&data.error, data.error.code, NULL);
-        if (data.error.code == -14) {
-            as_query_to_bytes(&(self->query), &bytes, &bytes_size);
-        }
         goto CLEANUP;
     }
 
