@@ -116,7 +116,7 @@ export STATIC_SSL=1
 
 Then build the source distribution and wheel.
 ```
-pip install build
+python3 -m pip install -r requirements.txt
 python3 -m build
 ```
 
@@ -173,23 +173,6 @@ Simply call `python` with the path to the example
 
 ## Contributing
 
-### Codestyle
-
-All code in `aerospike_helpers` must pass a lint test using `flake8`:
-```
-pip install flake8
-```
-
-The command is:
-```
-python3 -m flake8
-```
-
-All C source code must be formatted with `clang-format`:
-```
-clang-format -i <filename>
-```
-
 ### Precommit Hooks
 
 All commits must pass precommit hook tests. To install precommit hooks:
@@ -197,6 +180,8 @@ All commits must pass precommit hook tests. To install precommit hooks:
 pip install pre-commit
 pre-commit install
 ```
+
+This will run the lint tests for the C and Python code in this project.
 
 See pre-commit's documentation for more usage explanations.
 
