@@ -54,7 +54,8 @@ Client
         # Also sets a top level policy for read operations
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
-            'policies': {'read': {total_timeout': 1000}},
+            'policies': {'read': {'total_timeout': 1000}},
+        }
         client = aerospike.client(config)
 
     Connecting using TLS example:
@@ -81,13 +82,11 @@ Client
             "cafile": "/path/to/cacert.pem",
             "enable": True
         }
-
-        client = aerospike.client({
-            "hosts": hosts,
-            "tls": tls_config
-        })
         try:
-            client.connect()
+            client = aerospike.client({
+                "hosts": hosts,
+                "tls": tls_config
+            })
         except Exception as e:
             print(e)
             print("Failed to connect")
@@ -158,7 +157,7 @@ Types
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
         #  get all values of the form [1, ...] from a list of lists.
@@ -182,7 +181,7 @@ Types
         import aerospike
         from aerospike_helpers.operations import list_operations as list_ops
 
-        client = aerospike.client({'hosts': [('localhost', 3000)]}).connect()
+        client = aerospike.client({'hosts': [('localhost', 3000)]})
         key = 'test', 'demo', 1
 
         #  get all values of the form [1, ...] from a list of lists.
@@ -679,19 +678,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
 Constants
 =========
 
-.. _aerospike_operators:
-
-Operators
----------
-
-Operators for the single-record, multi-operation transaction method :py:meth:`Client.operate`.
-
-.. note::
-
-    Starting version 3.4.0, it is highly recommended to use the :ref:`aerospike_operation_helpers.operations` \
-    to create the arguments for :py:meth:`Client.operate` and :py:meth:`Client.operate_ordered`
-    Old style operators are deprecated. The docs for old style operators were removed in client 6.0.0.
-
 Policy Options
 --------------
 
@@ -896,39 +882,6 @@ Specifies the type of authentication to be used when communicating with the serv
 
     .. warning::
         This mode should only be used for testing purposes because it is not secure authentication.
-
-.. _aerospike_scan_constants:
-
-Scan Constants
---------------
-
-.. data:: SCAN_PRIORITY
-
-    .. deprecated:: 3.10.0
-        Scan priority has been replaced by the ``records_per_second`` policy (see Scan :ref:`aerospike_scan_policies`).
-        Scan priority will be removed in a coming release.
-
-.. data:: SCAN_STATUS_ABORTED
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_COMPLETED
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_INPROGRESS
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. data:: SCAN_STATUS_UNDEF
-
-    .. deprecated:: 1.0.50
-        used by :meth:`Client.scan_info`
-
-.. versionadded:: 1.0.39
 
 .. _aerospike_job_constants:
 
@@ -1488,6 +1441,10 @@ Miscellaneous
     An index whose values are of the aerospike GetJSON data type.
 
 .. seealso:: `Data Types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
+
+.. data:: INDEX_TYPE_DEFAULT
+
+    Index a bin that doesn't contain a complex data type.
 
 .. data:: INDEX_TYPE_LIST
 

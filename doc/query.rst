@@ -233,7 +233,6 @@ Assume this boilerplate code is run before all examples below:
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you can use a serializer like pickle first.
-        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
         .. seealso:: `Developing Stream UDFs <https://developer.aerospike.com/udf/developing_stream_udfs>`_
 
@@ -276,7 +275,7 @@ Assume this boilerplate code is run before all examples below:
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`aerospike.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
 
         .. code-block:: python
 
@@ -377,15 +376,13 @@ Assume this boilerplate code is run before all examples below:
     .. method:: get_partitions_status()
 
         Get this query instance's partition status. That is which partitions have been queried and which have not.
-        The returned value is a :class:`dict` with partition id, :class:`int`, as keys and :class:`tuple` as values.
         If the query instance is not tracking its partitions, the returned :class:`dict` will be empty.
 
         .. note::
             A query instance must have had .paginate() called on it, or been used with a partition filter, in order retrieve its
             partition status. If .paginate() was not called, or partition_filter was not used, the query instance will not save partition status.
 
-        :return: a :class:`tuple` of form (id: :class:`int`, init: class`bool`, done: class`bool`, digest: :class:`bytearray`).
-            See :ref:`aerospike_partition_objects` for more information.
+        :return: See :ref:`aerospike_partition_objects` for a description of the partition status return value.
 
         .. code-block:: python
 
@@ -486,11 +483,6 @@ Policies
             | Set to `False` for backup programs that just need access to raw bytes.
             |
             | Default: ``True``
-        * **fail_on_cluster_change** :class:`bool`
-            | Deprecated in 6.0.0. No longer has any effect..
-            | Terminate query if cluster is in migration state.
-            |
-            | Default ``False``
         * **short_query** :class:`bool`
             | Is query expected to return less than 100 records.
             | If True, the server will optimize the query for a small record set.

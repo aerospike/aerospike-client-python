@@ -302,9 +302,8 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
         Example::
 
             # {"key1": 1, "key2": 2, "key3": 3, "key4": 10}
-            expr = exp.MapGetByKeyRelIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, "key2", 1, \
-            exp.MapBin("b")).compile()
-            # [3, 10]
+            expr = exp.MapRemoveByKeyRelIndexRangeToEnd(None, "key2", 1, exp.MapBin("b")).compile()
+            # This returns {"key1": 1, "key2": 2}
         """
         self._children = (
             key,
@@ -754,7 +753,7 @@ class MapGetByKey(_BaseExpr):
         Example::
 
             # Get the value at key "key0" in map bin "b". (assume the value at key0 is an integer)
-            expr = exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, ResultType.INTEGER, "key0",
+            expr = exp.MapGetByKey(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, "key0",
                 exp.MapBin("b")).compile()
         """
         self._children = (
@@ -1131,7 +1130,8 @@ class MapGetByIndex(_BaseExpr):
         Example::
 
             # Get the value at index 0 in map bin "b". (assume this value is an integer)
-            expr = exp.MapGetByIndex(None, aerospike.MAP_RETURN_VALUE, ResultType.INTEGER, 0, MapBin("b")).compile()
+            expr = exp.MapGetByIndex(None, aerospike.MAP_RETURN_VALUE,
+                                     exp.ResultType.INTEGER, 0, exp.MapBin("b")).compile()
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.VALUE_TYPE_KEY: value_type, _Keys.RETURN_TYPE_KEY: return_type}
@@ -1162,7 +1162,7 @@ class MapGetByIndexRangeToEnd(_BaseExpr):
         Example::
 
             # Get element at index 5 to end from map bin "b".
-            expr = exp.MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 5, MapBin("b")).compile()
+            expr = exp.MapGetByIndexRangeToEnd(None, aerospike.MAP_RETURN_VALUE, 5, exp.MapBin("b")).compile()
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
@@ -1194,7 +1194,7 @@ class MapGetByIndexRange(_BaseExpr):
         Example::
 
             # Get elements at indexes 3, 4, 5, 6 in map bin "b".
-            expr = exp.MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 3, 4, MapBin("b")).compile()
+            expr = exp.MapGetByIndexRange(None, aerospike.MAP_RETURN_VALUE, 3, 4, exp.MapBin("b")).compile()
         """
         self._children = (index, count, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
@@ -1233,8 +1233,8 @@ class MapGetByRank(_BaseExpr):
         Example::
 
             # Get the smallest element in map bin "b".
-            expr = exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, aerospike.ResultType.INTEGER, 0,
-                MapBin("b")).compile()
+            expr = exp.MapGetByRank(None, aerospike.MAP_RETURN_VALUE, exp.ResultType.INTEGER, 0,
+                exp.MapBin("b")).compile()
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.VALUE_TYPE_KEY: value_type, _Keys.RETURN_TYPE_KEY: return_type}

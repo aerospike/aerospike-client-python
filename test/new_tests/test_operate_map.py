@@ -6,6 +6,8 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers.operations import operations
+from aerospike_helpers.operations import map_operations
 
 # aerospike.OP_MAP_SET_POLICY
 # aerospike.OP_MAP_PUT
@@ -34,6 +36,7 @@ from aerospike import exception as e
 # aerospike.OP_MAP_GET_BY_RANK_RANGE
 
 
+# TODO: Move these tests to test_map_operation_helpers.py
 class TestOperate(object):
     def setup_class(cls):
         """
@@ -55,8 +58,11 @@ class TestOperate(object):
         self.test_map = test_map
         self.test_map_bin = "test_map"
         key_order_policy = {"map_order": aerospike.MAP_KEY_ORDERED}
-        as_connection.map_put_items(key, bin="test_map", items=test_map, map_policy=key_order_policy)
-        as_connection.map_put_items(key, bin="test_map2", items=test_map, map_policy=key_order_policy)
+        ops = [
+            map_operations.map_put_items(bin_name="test_map", item_dict=test_map, map_policy=key_order_policy),
+            map_operations.map_put_items(bin_name="test_map2", item_dict=test_map, map_policy=key_order_policy)
+        ]
+        as_connection.operate(key, ops)
 
         def teardown():
             try:
@@ -431,13 +437,8 @@ class TestOperate(object):
         self.test_map.copy()
         self.as_connection.put(self.test_map_key, {"cool_list": [1, 2, 3]})
         ops = [
-            {"op": aerospike.OPERATOR_READ, "bin": "cool_list"},
-            {
-                "op": aerospike.OP_MAP_REMOVE_BY_KEY,
-                "bin": self.test_map_bin,
-                "key": "c",
-                "return_type": aerospike.MAP_RETURN_KEY_VALUE,
-            },
+            operations.read("cool_list"),
+            map_operations.map_remove_by_key(self.test_map_bin, "c", aerospike.MAP_RETURN_KEY_VALUE)
         ]
 
         _, _, bins = self.as_connection.operate(self.test_map_key, ops)
@@ -447,13 +448,8 @@ class TestOperate(object):
         self.test_map.copy()
         self.as_connection.put(self.test_map_key, {"cool_list": [1, 2, 3, 4]})
         ops = [
-            {"op": aerospike.OPERATOR_READ, "bin": "cool_list"},
-            {
-                "op": aerospike.OP_MAP_REMOVE_BY_KEY,
-                "bin": self.test_map_bin,
-                "key": "c",
-                "return_type": aerospike.MAP_RETURN_KEY_VALUE,
-            },
+            operations.read("cool_list"),
+            map_operations.map_remove_by_key(self.test_map_bin, "c", aerospike.MAP_RETURN_KEY_VALUE)
         ]
 
         _, _, bins = self.as_connection.operate(self.test_map_key, ops)
@@ -461,12 +457,7 @@ class TestOperate(object):
 
     @pytest.mark.parametrize("entry", ("bin", "key"))
     def test_map_remove_by_key_missing_required_entries(self, entry):
-        op = {
-            "op": aerospike.OP_MAP_REMOVE_BY_KEY,
-            "bin": self.test_map_bin,
-            "key": "c",
-            "return_type": aerospike.MAP_RETURN_KEY_VALUE,
-        }
+        op = map_operations.map_remove_by_key(self.test_map_bin, "c", aerospike.MAP_RETURN_KEY_VALUE)
 
         del op[entry]
         ops = [op]

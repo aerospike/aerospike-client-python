@@ -4,6 +4,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers.operations import operations
 
 
 class TestOperateOrdered(object):
@@ -75,17 +76,17 @@ class TestOperateOrdered(object):
             (
                 ("test", "demo", 1),
                 [
-                    {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
-                    {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
-                    {"op": aerospike.OPERATOR_READ, "bin": "name"},
+                    operations.prepend("name", "ram"),
+                    operations.increment("age", 3),
+                    operations.read("name")
                 ],
                 [("name", "ramname1")],
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
                 [
-                    {"op": aerospike.OPERATOR_WRITE, "bin": "write_bin", "val": {"no": 89.8}},
-                    {"op": aerospike.OPERATOR_READ, "bin": "write_bin"},
+                    operations.write("write_bin", {"no": 89.8}),
+                    operations.read("write_bin")
                 ],
                 [("write_bin", {"no": 89.8})],
             ),
@@ -170,7 +171,7 @@ class TestOperateOrdered(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 180000,
+            "total_timeout": 180000,
             "key": aerospike.POLICY_KEY_SEND,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -847,7 +848,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with incorrect policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 0.5}
+        policy = {"total_timeout": 0.5}
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},

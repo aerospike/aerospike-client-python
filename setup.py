@@ -45,7 +45,6 @@ DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
-EVENT_LIB = os.getenv('EVENT_LIB')
 # COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
 # Not for developers to use, unless you know what the workflow is doing!
 COVERAGE = os.getenv('COVERAGE')
@@ -155,25 +154,6 @@ with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
-# if EVENT_LIB is None or EVENT_LIB == "":
-#     EVENT_LIB = "libevent"
-
-if EVENT_LIB is not None:
-    if EVENT_LIB == "libuv":
-        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
-        library_dirs = library_dirs + ['/usr/local/lib/']
-        libraries = libraries + ['uv']
-    elif EVENT_LIB == "libevent":
-        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
-        library_dirs = library_dirs + ['/usr/local/lib/']
-        libraries = libraries + ['event_core', 'event_pthreads']
-    elif EVENT_LIB == "libev":
-        extra_compile_args = extra_compile_args + ['-DAS_EVENT_LIB_DEFINED']
-        library_dirs = library_dirs + ['/usr/local/lib/']
-        libraries = libraries + ['ev']
-    else:
-        print("Building aerospike with no-async support\n")
-
 class CClientBuild(build):
 
     def run(self):
@@ -197,12 +177,6 @@ class CClientBuild(build):
             'make',
             'V=' + str(self.verbose),
         ]
-        if EVENT_LIB is not None:
-            cmd = [
-                'make',
-                'V=' + str(self.verbose),
-                'EVENT_LIB='+EVENT_LIB,
-            ]
 
         def compile():
             print(cmd, library_dirs, libraries)
@@ -255,18 +229,13 @@ setup(
                 'src/main/client/exists.c',
                 'src/main/client/exists_many.c',
                 'src/main/client/get.c',
-                'src/main/client/get_async.c',
-                'src/main/client/put_async.c',
                 'src/main/client/get_many.c',
                 'src/main/client/batch_get_ops.c',
                 'src/main/client/select_many.c',
                 'src/main/client/info_single_node.c',
                 'src/main/client/info_random_node.c',
-                'src/main/client/info_node.c',
                 'src/main/client/info.c',
                 'src/main/client/put.c',
-                'src/main/client/operate_list.c',
-                'src/main/client/operate_map.c',
                 'src/main/client/operate.c',
                 'src/main/client/query.c',
                 'src/main/client/remove.c',
@@ -279,7 +248,6 @@ setup(
                 'src/main/client/sec_index.c',
                 'src/main/serializer.c',
                 'src/main/client/remove_bin.c',
-                'src/main/client/get_key_digest.c',
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
                 'src/main/query/add_ops.c',
@@ -324,7 +292,8 @@ setup(
                 'src/main/client/batch_write.c',
                 'src/main/client/batch_operate.c',
                 'src/main/client/batch_remove.c',
-                'src/main/client/batch_apply.c'
+                'src/main/client/batch_apply.c',
+                'src/main/client/batch_read.c'
             ],
 
             # Compile
@@ -347,7 +316,7 @@ setup(
         ]
     },
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
-              'aerospike_helpers.expressions', 'aerospike_helpers.awaitable',
+              'aerospike_helpers.expressions',
               'aerospike-stubs'],
 
     cmdclass={

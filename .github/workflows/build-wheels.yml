@@ -8,6 +8,13 @@ on:
         type: boolean
         required: true
         default: false
+      build-rc-or-release:
+        type: choice
+        options:
+          - rc
+          - release
+        default: 'rc'
+        required: true
 
 jobs:
   update-version:
@@ -21,12 +28,16 @@ jobs:
       with:
         fetch-depth: 0
 
-    - name: Get new version and build number
-      run: |
-        pip install python-semantic-release==7.34.6
+    - run: pip install python-semantic-release==7.34.6
+    - run: |
         latest_tag=$(cat VERSION)
         echo "Bumping off of latest tag $latest_tag"
-        new_tag=$(pysemver bump prerelease $latest_tag)
+        # If creating release wheels, bump rc version to release version
+        if [[ ${{ inputs.build-rc-or-release }} == "rc" ]]; then
+          new_tag=$(pysemver bump prerelease $latest_tag)
+        else
+          new_tag=$(pysemver nextver $latest_tag patch)
+        fi
         echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
         echo "The new tag for this build is $new_tag"
 
@@ -295,14 +306,20 @@ jobs:
         run: python3.9 -m pytest new_tests/
         working-directory: test
 
-  manylinux_x86_64_debian10:
+  manylinux_x86_64_debian:
       needs: manylinux_x86_64_no_test
       runs-on: ubuntu-latest
       services:
         aerospike:
           image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
+      strategy:
+        matrix:
+          debian-name: [
+            "buster",
+            "bookworm"
+          ]
       container:
-        image: python:3.9-buster
+        image: python:3.9-${{ matrix.debian-name }}
       steps:
       - uses: actions/checkout@v2
 
@@ -490,7 +507,7 @@ jobs:
       # Wheel installs (cat 2 tests)
       manylinux_x86_64_rpm_based,
       manylinux_x86_64_ubuntu2204,
-      manylinux_x86_64_debian10,
+      manylinux_x86_64_debian,
       # CentOS 7 Linux cat 2 tests (for all wheels)
       manylinux_x86_64,
       manylinux_arm64,

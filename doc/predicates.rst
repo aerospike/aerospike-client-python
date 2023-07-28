@@ -28,7 +28,7 @@ Bin Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
         query = client.query('test', 'demo')
         query.where(p.between('age', 20, 30))
         res = query.results()
@@ -51,7 +51,7 @@ Bin Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
         query = client.query('test', 'demo')
         query.where(p.equals('name', 'that guy'))
         res = query.results()
@@ -82,7 +82,7 @@ GeoJSON Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
         bins = {'pad_id': 1,
@@ -133,7 +133,7 @@ GeoJSON Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
         bins = {'pad_id': 1,
@@ -170,7 +170,7 @@ GeoJSON Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         client.index_geo2dsphere_create('test', 'launch_centers', 'area', 'launch_area_geo')
         rect = GeoJSON({ 'type': "Polygon",
@@ -217,7 +217,7 @@ GeoJSON Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         client.index_geo2dsphere_create('test', 'launch_centers', 'area', 'launch_area_geo')
         rect = GeoJSON({ 'type': "Polygon",
@@ -261,7 +261,7 @@ Map and List Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         # assume the bin fav_movies in the set test.demo bin should contain
         # a dict { (str) _title_ : (int) _times_viewed_ }
@@ -298,7 +298,7 @@ Map and List Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         # create a secondary index for numeric values of test.demo records whose 'age' bin is a list
         client.index_list_create('test', 'demo', 'age', aerospike.INDEX_NUMERIC, 'demo_age_nidx')

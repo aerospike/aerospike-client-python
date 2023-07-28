@@ -70,11 +70,6 @@ PyDoc_STRVAR(get_doc, "get(key[, policy]) -> (key, meta, bins)\n\
 \n\
 Read a record with a given key, and return the record as a tuple() consisting of key, meta and bins.");
 
-PyDoc_STRVAR(get_async_doc,
-             "get_async(get_callback, key[, policy]) -> (key, meta, bins)\n\
-\n\
-Read a record asynchronously with a given key, and return the record as a tuple() consisting of key, meta and bins.");
-
 PyDoc_STRVAR(select_doc, "select(key, bins[, policy]) -> (key, meta, bins)\n\
 \n\
 Read a record with a given key, and return the record as a tuple() consisting of key, meta and bins, \
@@ -85,10 +80,6 @@ Starting with 3.6.0, if a bin does not exist it will not be present in the retur
 PyDoc_STRVAR(put_doc, "put(key, bins[, meta[, policy[, serializer]]])\n\
 \n\
 Write a record with a given key to the cluster.");
-
-PyDoc_STRVAR(put_async_doc, "put(key, bins[, meta[, policy[, serializer]]])\n\
-\n\
-Write a record asynchronously with a given key to the cluster.");
 
 PyDoc_STRVAR(remove_doc, "remove(key[, policy])\n\
 \n\
@@ -135,238 +126,6 @@ PyDoc_STRVAR(
 Perform multiple bin operations on a record with the results being returned as a list of (bin-name, result) tuples. \
 The order of the elements in the list will correspond to the order of the operations from the input parameters.");
 
-PyDoc_STRVAR(list_append_doc, "list_append(key, bin, val[, meta[, policy]])\n\
-\n\
-Append a single element to a list value in bin.");
-
-PyDoc_STRVAR(list_extend_doc, "list_extend(key, bin, items[, meta[, policy]])\n\
-\n\
-Extend the list value in bin with the given items.");
-
-PyDoc_STRVAR(list_insert_doc,
-             "list_insert(key, bin, index, val[, meta[, policy]])\n\
-\n\
-Insert an element at the specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_insert_items_doc,
-             "list_insert_items(key, bin, index, items[, meta[, policy]])\n\
-\n\
-Insert the items at the specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_pop_doc,
-             "list_pop(key, bin, index[, meta[, policy]]) -> val\n\
-\n\
-Remove and get back a list element at a given index of a list value in bin.");
-
-PyDoc_STRVAR(list_pop_range_doc,
-             "list_pop_range(key, bin, index, count[, meta[, policy]]) -> val\n\
-\n\
-Remove and get back list elements at a given index of a list value in bin.");
-
-PyDoc_STRVAR(list_remove_doc, "list_remove(key, bin, index[, meta[, policy]])\n\
-\n\
-Remove a list element at a given index of a list value in bin.");
-
-PyDoc_STRVAR(list_remove_range_doc,
-             "list_remove_range(key, bin, index, count[, meta[, policy]])\n\
-\n\
-Remove list elements at a given index of a list value in bin.");
-
-PyDoc_STRVAR(list_clear_doc, "list_clear(key, bin[, meta[, policy]])\n\
-\n\
-Remove all the elements from a list value in bin.");
-
-PyDoc_STRVAR(list_set_doc, "list_set(key, bin, index, val[, meta[, policy]])\n\
-\n\
-Set list element val at the specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_get_doc,
-             "list_get(key, bin, index[, meta[, policy]]) -> val\n\
-\n\
-Get the list element at the specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_get_range_doc,
-             "list_get_range(key, bin, index, count[, meta[, policy]]) -> val\n\
-\n\
-Get the list of count elements starting at a specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_trim_doc,
-             "list_trim(key, bin, index, count[, meta[, policy]]) -> val\n\
-\n\
-Remove elements from the list which are not within the range starting at the given index plus count.");
-
-PyDoc_STRVAR(list_size_doc, "list_size(key, bin[, meta[, policy]]) -> count\n\
-\n\
-Count the number of elements in the list value in bin.");
-
-PyDoc_STRVAR(map_set_policy_doc, "map_set_policy(key, bin, map_policy)\n\
-\n\
-Set the map policy for the given bin.");
-
-PyDoc_STRVAR(map_put_doc,
-             "map_put(key, bin, map_key, val[, map_policy[, meta[, policy]]])\n\
-\n\
-Add the given map_key/value pair to the map record specified by key and bin.");
-
-PyDoc_STRVAR(map_put_items_doc,
-             "map_put_items(key, bin, items[, map_policy[, meta[, policy]]])\n\
-\n\
-Add the given items dict of key/value pairs to the map record specified by key and bin.");
-
-PyDoc_STRVAR(
-    map_increment_doc,
-    "map_increment(key, bin, map_key, incr[, map_policy[, meta[, policy]]])\n\
-\n\
-Increment the value of the map entry by given incr. Map entry is specified by key, bin and map_key.");
-
-PyDoc_STRVAR(
-    map_decrement_doc,
-    "map_decrement(key, bin, map_key, decr[, map_policy[, meta[, policy]]])\n\
-\n\
-Decrement the value of the map entry by given decr. Map entry is specified by key, bin and map_key.");
-
-PyDoc_STRVAR(map_size_doc, "map_size(key, bin[, meta[, policy]]) -> count\n\
-\n\
-Return the size of the map specified by key and bin.");
-
-PyDoc_STRVAR(map_clear_doc, "map_clear(key, bin[, meta[, policy]])\n\
-\n\
-Remove all entries from the map specified by key and bin.");
-
-PyDoc_STRVAR(
-    map_remove_by_key_doc,
-    "map_remove_by_key(key, bin, map_key, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return first map entry from the map specified by key and bin which matches given map_key.");
-
-PyDoc_STRVAR(
-    map_remove_by_key_list_doc,
-    "map_remove_by_key_list(key, bin, list, return_type[, meta[, policy]][, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin \
-which have keys that match the given list of keys.");
-
-PyDoc_STRVAR(
-    map_remove_by_key_range_doc,
-    "map_remove_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin identified \
-by the key range (map_key inclusive, range exclusive).");
-
-PyDoc_STRVAR(
-    map_remove_by_value_doc,
-    "map_remove_by_value(key, bin, val, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin which \
-have a value matching val parameter.");
-
-PyDoc_STRVAR(
-    map_remove_by_value_list_doc,
-    "map_remove_by_value_list(key, bin, list, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin which \
-have a value matching the list of values.");
-
-PyDoc_STRVAR(
-    map_remove_by_value_range_doc,
-    "map_remove_by_value_range(key, bin, val, range, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin identified \
-by the value range (val inclusive, range exclusive).");
-
-PyDoc_STRVAR(
-    map_remove_by_index_doc,
-    "map_remove_by_index(key, bin, index, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return the map entry from the map specified by key and bin at the given index location.");
-
-PyDoc_STRVAR(
-    map_remove_by_index_range_doc,
-    "map_remove_by_index_range(key, bin, index, range, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return the map entries from the map specified by key and bin starting at \
-the given index location and removing range number of items.");
-
-PyDoc_STRVAR(
-    map_remove_by_rank_doc,
-    "map_remove_by_rank(key, bin, rank, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return the map entry from the map specified by key and bin \
-with a value that has the given rank.");
-
-PyDoc_STRVAR(
-    map_remove_by_rank_range_doc,
-    "map_remove_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return the map entries from the map specified by key and bin which \
-have a value rank starting at rank and removing range number of items.");
-
-PyDoc_STRVAR(
-    map_get_by_key_doc,
-    "map_get_by_key(key, bin, map_key, return_type[, meta[, policy]])\n\
-\n\
-Return map entry from the map specified by key and bin which has a key that matches the given map_key.");
-
-PyDoc_STRVAR(
-    map_get_by_key_range_doc,
-    "map_get_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin identified by the key range \
-(map_key inclusive, range exclusive).");
-
-PyDoc_STRVAR(map_get_by_value_doc,
-             "map_get_by_value(key, bin, val, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin which have a value matching val parameter.");
-
-PyDoc_STRVAR(
-    map_get_by_value_range_doc,
-    "map_get_by_value_range(key, bin, val, range, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin identified by the value \
-range (val inclusive, range exclusive).");
-
-PyDoc_STRVAR(
-    map_get_by_value_list_doc,
-    "map_get_by_value_range(key, bin, value_list, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin which contain a value matching one \
-of the values in the provided value_list.\n\
-Requires Aerospike Server versions >= 3.16.0.1");
-
-PyDoc_STRVAR(
-    map_get_by_key_list_doc,
-    "map_get_by_value_range(key, bin, key_list, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin for keys matching those \
-in the provided key_list.\n\
-Requires Aerospike Server versions >= 3.16.0.1");
-
-PyDoc_STRVAR(
-    map_get_by_index_doc,
-    "map_get_by_index(key, bin, index, return_type[, meta[, policy]])\n\
-\n\
-Return the map entry from the map specified by key and bin at the given index location.");
-
-PyDoc_STRVAR(
-    map_get_by_index_range_doc,
-    "map_get_by_index_range(key, bin, index, range, return_type[, meta[, policy]])\n\
-\n\
-Return the map entries from the map specified by key and bin starting at the given index \
-location and removing range number of items.");
-
-PyDoc_STRVAR(map_get_by_rank_doc,
-             "map_get_by_rank(key, bin, rank, return_type[, meta[, policy]])\n\
-\n\
-Return the map entry from the map specified by key and bin with a value that has the given rank.");
-
-PyDoc_STRVAR(
-    map_get_by_rank_range_doc,
-    "map_get_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])\n\
-\n\
-Return the map entries from the map specified by key and bin which have a value rank starting \
-at rank and removing range number of items.");
-
 PyDoc_STRVAR(query_doc, "query(namespace[, set]) -> Query\n\
 \n\
 Return a `aerospike.Query` object to be used for executing queries over a specified set \
@@ -395,14 +154,6 @@ PyDoc_STRVAR(
 \n\
 Initiate a background scan and apply a record UDF to each record matched by the scan.");
 
-PyDoc_STRVAR(scan_info_doc, "scan_info(scan_id) -> dict\n\
-\n\
-Return the status of a scan running in the background.");
-
-PyDoc_STRVAR(info_doc, "info(command[, hosts[, policy]]) -> {}\n\
-\n\
-Send an info command to multiple nodes specified in a hosts list.");
-
 PyDoc_STRVAR(
     set_xdr_filter_doc,
     "set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> {}\n\
@@ -428,11 +179,6 @@ PyDoc_STRVAR(info_random_node_doc,
              "info_random_node(command, [policy]) -> str\n\
 \n\
 Send an info command to a single random node.");
-
-PyDoc_STRVAR(info_node_doc, "info_node(command, host[, policy]) -> str\n\
-\n\
-DEPRECATED: Please user info_single_node() instead.\n\
-Send an info command to a single node specified by host.");
 
 PyDoc_STRVAR(get_nodes_doc, "get_nodes() -> []\n\
 \n\
@@ -533,10 +279,6 @@ PyDoc_STRVAR(exists_many_doc, "exists_many(keys[, policy]) -> [ (key, meta)]\n\
 \n\
 Batch-read metadata for multiple keys, and return it as a list. \
 Any record that does not exist will have a None value for metadata in the result tuple.");
-
-PyDoc_STRVAR(get_key_digest_doc, "get_key_digest(ns, set, key) -> bytearray\n\
-\n\
-Calculate the digest of a particular key. See: Key Tuple.");
 
 PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
 \n\
@@ -656,14 +398,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, exists_doc},
     {"get", (PyCFunction)AerospikeClient_Get, METH_VARARGS | METH_KEYWORDS,
      get_doc},
-    {"get_async", (PyCFunction)AerospikeClient_Get_Async,
-     METH_VARARGS | METH_KEYWORDS, get_async_doc},
     {"select", (PyCFunction)AerospikeClient_Select,
      METH_VARARGS | METH_KEYWORDS, select_doc},
     {"put", (PyCFunction)AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
      put_doc},
-    {"put_async", (PyCFunction)AerospikeClient_Put_Async,
-     METH_VARARGS | METH_KEYWORDS, put_async_doc},
     {"get_key_partition_id", (PyCFunction)AerospikeClient_Get_Key_PartitionID,
      METH_VARARGS | METH_KEYWORDS, get_key_partition_id_doc},
     {"remove", (PyCFunction)AerospikeClient_Remove,
@@ -685,99 +423,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"operate_ordered", (PyCFunction)AerospikeClient_OperateOrdered,
      METH_VARARGS | METH_KEYWORDS, operate_ordered_doc},
 
-    // LIST OPERATIONS
-
-    {"list_append", (PyCFunction)AerospikeClient_ListAppend,
-     METH_VARARGS | METH_KEYWORDS, list_append_doc},
-    {"list_extend", (PyCFunction)AerospikeClient_ListExtend,
-     METH_VARARGS | METH_KEYWORDS, list_extend_doc},
-    {"list_insert", (PyCFunction)AerospikeClient_ListInsert,
-     METH_VARARGS | METH_KEYWORDS, list_insert_doc},
-    {"list_insert_items", (PyCFunction)AerospikeClient_ListInsertItems,
-     METH_VARARGS | METH_KEYWORDS, list_insert_items_doc},
-    {"list_pop", (PyCFunction)AerospikeClient_ListPop,
-     METH_VARARGS | METH_KEYWORDS, list_pop_doc},
-    {"list_pop_range", (PyCFunction)AerospikeClient_ListPopRange,
-     METH_VARARGS | METH_KEYWORDS, list_pop_range_doc},
-    {"list_remove", (PyCFunction)AerospikeClient_ListRemove,
-     METH_VARARGS | METH_KEYWORDS, list_remove_doc},
-    {"list_remove_range", (PyCFunction)AerospikeClient_ListRemoveRange,
-     METH_VARARGS | METH_KEYWORDS, list_remove_range_doc},
-    {"list_clear", (PyCFunction)AerospikeClient_ListClear,
-     METH_VARARGS | METH_KEYWORDS, list_clear_doc},
-    {"list_set", (PyCFunction)AerospikeClient_ListSet,
-     METH_VARARGS | METH_KEYWORDS, list_set_doc},
-    {"list_get", (PyCFunction)AerospikeClient_ListGet,
-     METH_VARARGS | METH_KEYWORDS, list_get_doc},
-    {"list_get_range", (PyCFunction)AerospikeClient_ListGetRange,
-     METH_VARARGS | METH_KEYWORDS, list_get_range_doc},
-    {"list_trim", (PyCFunction)AerospikeClient_ListTrim,
-     METH_VARARGS | METH_KEYWORDS, list_trim_doc},
-    {"list_size", (PyCFunction)AerospikeClient_ListSize,
-     METH_VARARGS | METH_KEYWORDS, list_size_doc},
-
-    // MAP OPERATIONS
-
-    {"map_set_policy", (PyCFunction)AerospikeClient_MapSetPolicy,
-     METH_VARARGS | METH_KEYWORDS, map_set_policy_doc},
-    {"map_put", (PyCFunction)AerospikeClient_MapPut,
-     METH_VARARGS | METH_KEYWORDS, map_put_doc},
-    {"map_put_items", (PyCFunction)AerospikeClient_MapPutItems,
-     METH_VARARGS | METH_KEYWORDS, map_put_items_doc},
-    {"map_increment", (PyCFunction)AerospikeClient_MapIncrement,
-     METH_VARARGS | METH_KEYWORDS, map_increment_doc},
-    {"map_decrement", (PyCFunction)AerospikeClient_MapDecrement,
-     METH_VARARGS | METH_KEYWORDS, map_decrement_doc},
-    {"map_size", (PyCFunction)AerospikeClient_MapSize,
-     METH_VARARGS | METH_KEYWORDS, map_size_doc},
-    {"map_clear", (PyCFunction)AerospikeClient_MapClear,
-     METH_VARARGS | METH_KEYWORDS, map_clear_doc},
-    {"map_remove_by_key", (PyCFunction)AerospikeClient_MapRemoveByKey,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_key_doc},
-    {"map_remove_by_key_list", (PyCFunction)AerospikeClient_MapRemoveByKeyList,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_key_list_doc},
-    {"map_remove_by_key_range",
-     (PyCFunction)AerospikeClient_MapRemoveByKeyRange,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_key_range_doc},
-    {"map_remove_by_value", (PyCFunction)AerospikeClient_MapRemoveByValue,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_value_doc},
-    {"map_remove_by_value_list",
-     (PyCFunction)AerospikeClient_MapRemoveByValueList,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_value_list_doc},
-    {"map_remove_by_value_range",
-     (PyCFunction)AerospikeClient_MapRemoveByValueRange,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_value_range_doc},
-    {"map_remove_by_index", (PyCFunction)AerospikeClient_MapRemoveByIndex,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_index_doc},
-    {"map_remove_by_index_range",
-     (PyCFunction)AerospikeClient_MapRemoveByIndexRange,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_index_range_doc},
-    {"map_remove_by_rank", (PyCFunction)AerospikeClient_MapRemoveByRank,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_rank_doc},
-    {"map_remove_by_rank_range",
-     (PyCFunction)AerospikeClient_MapRemoveByRankRange,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_rank_range_doc},
-    {"map_get_by_key", (PyCFunction)AerospikeClient_MapGetByKey,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_key_doc},
-    {"map_get_by_key_range", (PyCFunction)AerospikeClient_MapGetByKeyRange,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_key_range_doc},
-    {"map_get_by_key_list", (PyCFunction)AerospikeClient_MapGetByKeyList,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_key_list_doc},
-    {"map_get_by_value", (PyCFunction)AerospikeClient_MapGetByValue,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_value_doc},
-    {"map_get_by_value_range", (PyCFunction)AerospikeClient_MapGetByValueRange,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_value_range_doc},
-    {"map_get_by_value_list", (PyCFunction)AerospikeClient_MapGetByValueList,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_value_list_doc},
-    {"map_get_by_index", (PyCFunction)AerospikeClient_MapGetByIndex,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_index_doc},
-    {"map_get_by_index_range", (PyCFunction)AerospikeClient_MapGetByIndexRange,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_index_range_doc},
-    {"map_get_by_rank", (PyCFunction)AerospikeClient_MapGetByRank,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_rank_doc},
-    {"map_get_by_rank_range", (PyCFunction)AerospikeClient_MapGetByRankRange,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_rank_range_doc},
-
     // QUERY OPERATIONS
 
     {"query", (PyCFunction)AerospikeClient_Query, METH_VARARGS | METH_KEYWORDS,
@@ -794,13 +439,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"scan_apply", (PyCFunction)AerospikeClient_ScanApply,
      METH_VARARGS | METH_KEYWORDS, scan_apply_doc},
 
-    {"scan_info", (PyCFunction)AerospikeClient_ScanInfo,
-     METH_VARARGS | METH_KEYWORDS, scan_info_doc},
-
     // INFO OPERATIONS
 
-    {"info", (PyCFunction)AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
-     info_doc},
     {"set_xdr_filter", (PyCFunction)AerospikeClient_SetXDRFilter,
      METH_VARARGS | METH_KEYWORDS, set_xdr_filter_doc},
     {"get_expression_base64", (PyCFunction)AerospikeClient_GetExpressionBase64,
@@ -811,9 +451,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, info_single_node_doc},
     {"info_random_node", (PyCFunction)AerospikeClient_InfoRandomNode,
      METH_VARARGS | METH_KEYWORDS, info_random_node_doc},
-    {"info_node", // DEPRECATED
-     (PyCFunction)AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
-     info_node_doc},
     {"get_nodes", (PyCFunction)AerospikeClient_GetNodes,
      METH_VARARGS | METH_KEYWORDS, get_nodes_doc},
     {"get_node_names", (PyCFunction)AerospikeClient_GetNodeNames,
@@ -863,8 +500,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, select_many_doc},
     {"exists_many", (PyCFunction)AerospikeClient_Exists_Many,
      METH_VARARGS | METH_KEYWORDS, exists_many_doc},
-    {"get_key_digest", (PyCFunction)AerospikeClient_Get_Key_Digest,
-     METH_VARARGS | METH_KEYWORDS, get_key_digest_doc},
     {"batch_write", (PyCFunction)AerospikeClient_BatchWrite,
      METH_VARARGS | METH_KEYWORDS, batch_write_doc},
     {"batch_operate", (PyCFunction)AerospikeClient_Batch_Operate,
@@ -873,6 +508,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, batch_remove_doc},
     {"batch_apply", (PyCFunction)AerospikeClient_Batch_Apply,
      METH_VARARGS | METH_KEYWORDS, batch_apply_doc},
+    {"batch_read", (PyCFunction)AerospikeClient_BatchRead,
+     METH_VARARGS | METH_KEYWORDS, "Read multiple keys."},
 
     // TRUNCATE OPERATIONS
     {"truncate", (PyCFunction)AerospikeClient_Truncate,
@@ -1117,23 +754,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             config.policies.apply.key = long_key_policy;
             config.policies.operate.key = long_key_policy;
             config.policies.remove.key = long_key_policy;
-        }
-
-        /* This was the name of the policy pre 3.0.0, keep for legacy reasons
-		 * It is the same as total_timeout
-		 */
-        PyObject *py_timeout = PyDict_GetItemString(py_policies, "timeout");
-        if (py_timeout && PyLong_Check(py_timeout)) {
-            long long_timeout = PyLong_AsLong(py_timeout);
-
-            config.policies.write.base.total_timeout = long_timeout;
-            config.policies.read.base.total_timeout = long_timeout;
-            config.policies.apply.base.total_timeout = long_timeout;
-            config.policies.operate.base.total_timeout = long_timeout;
-            config.policies.query.base.total_timeout = long_timeout;
-            config.policies.scan.base.total_timeout = long_timeout;
-            config.policies.remove.base.total_timeout = long_timeout;
-            config.policies.batch.base.total_timeout = long_timeout;
         }
 
         PyObject *py_sock_timeout =

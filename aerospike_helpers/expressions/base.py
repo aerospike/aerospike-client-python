@@ -487,6 +487,20 @@ class DeviceSize(_BaseExpr):
         super().__init__()
 
 
+class MemorySize(_BaseExpr):
+    """Returns the records memory size in bytes as an integer when either the namespace
+    is configured data-in-memory true or storage-engine memory, otherwise returns 0.
+    """
+
+    _op = _ExprOp.META_MEMORY_SIZE
+    _rt = ResultType.INTEGER
+
+    def __init__(self):
+        """:return: (integer value)
+        """
+        super().__init__()
+
+
 class LastUpdateTime(_BaseExpr):
     """Create an expression that the returns record last update time expressed as 64 bit
     integer nanoseconds since 1970-01-01 epoch.
@@ -908,7 +922,7 @@ class Cond(_BaseExpr):
             }
 
             # Create a client and connect it to the cluster
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
             client.truncate('test', "demo", 0)
 
             # Store 2 bin integers and use expressions to perform arithmetic

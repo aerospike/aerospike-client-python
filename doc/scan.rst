@@ -98,7 +98,7 @@ Methods
 
             pp = pprint.PrettyPrinter(indent=2)
             config = { 'hosts': [ ('127.0.0.1',3000)]}
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
 
             client.put(('test','test','key1'), {'id':1,'a':1},
                 policy={'key':aerospike.POLICY_KEY_SEND})
@@ -178,7 +178,7 @@ Methods
 
             pp = pprint.PrettyPrinter(indent=2)
             config = { 'hosts': [ ('127.0.0.1',3000)]}
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
 
             client.put(('test','test','key1'), {'id':1,'a':1},
                 policy={'key':aerospike.POLICY_KEY_SEND})
@@ -213,7 +213,7 @@ Methods
                 import aerospike
 
                 config = { 'hosts': [ ('127.0.0.1',3000)]}
-                client = aerospike.client(config).connect()
+                client = aerospike.client(config)
 
                 def limit(lim, result):
                     c = [0] # integers are immutable so a list (mutable) is used for the counter
@@ -274,7 +274,7 @@ Methods
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`aerospike.job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_SCAN``, as it runs in the background.
 
         .. note::
             Python client version 3.10.0 implemented scan execute_background.
@@ -287,7 +287,7 @@ Methods
                 import time
 
                 config = {"hosts": [("127.0.0.1", 3000)]}
-                client = aerospike.client(config).connect()
+                client = aerospike.client(config)
 
                 # register udf
                 try:
@@ -519,11 +519,6 @@ Policies
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
             | Default: ``False``
-        * **fail_on_cluster_change** :class:`bool`
-            | Deprecated in 6.0.0. No longer has any effect..
-            | Abort the scan if the cluster is not in a stable state. Only used for server versions < 4.9.
-            |
-            | Default: ``False``
         * **durable_delete** :class:`bool`
             | Perform durable delete (requires Enterprise server version >= 3.10)
             | If the transaction results in a record deletion, leave a tombstone for the record.
@@ -574,9 +569,6 @@ Options
     .. hlist::
         :columns: 1
 
-        * **priority**
-            | Deprecated in 6.0.0. Scan priority will be removed in a coming release.
-            | Scan priority has been replaced by the records_per_second policy see :ref:`aerospike_scan_policies`.
         * **nobins** :class:`bool`
             | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`.
             |

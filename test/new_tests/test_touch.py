@@ -48,7 +48,7 @@ class TestTouch(object):
         Invoke touch() with correct policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 180000, "retry": aerospike.POLICY_RETRY_ONCE}
+        policy = {"total_timeout": 180000, "retry": aerospike.POLICY_RETRY_ONCE}
         response = self.as_connection.touch(key, 120, {}, policy)
         assert response == AerospikeStatus.AEROSPIKE_OK
 

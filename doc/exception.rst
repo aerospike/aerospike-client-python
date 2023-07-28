@@ -20,7 +20,7 @@ This is a simple example on how to catch an exception thrown by the Aerospike cl
 
     try:
         config = { 'hosts': [ ('127.0.0.1', 3000)], 'policies': { 'total_timeout': 1200}}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
         client.close()
     except ex.AerospikeError as e:
         print("Error: {0} [{1}]".format(e.msg, e.code))

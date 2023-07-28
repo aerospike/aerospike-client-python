@@ -85,9 +85,9 @@ class TestCompress:
         }
 
         llist = [
-            {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": "aa"},
-            {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
-            {"op": aerospike.OPERATOR_READ, "bin": "name"},
+            operations.append("name", "aa"),
+            operations.increment("age", 3),
+            operations.read("name")
         ]
 
         key, _, bins = self.as_connection.operate(key, llist, {}, policy)

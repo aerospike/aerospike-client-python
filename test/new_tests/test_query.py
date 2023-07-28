@@ -373,7 +373,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with policy
         """
-        policy = {"timeout": 180000, "replica": aerospike.POLICY_REPLICA_MASTER}
+        policy = {"total_timeout": 180000, "replica": aerospike.POLICY_REPLICA_MASTER}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.equals("test_age", 1))
@@ -749,7 +749,7 @@ class TestQuery(TestBaseClass):
         """
         Invoke query() with policy
         """
-        policy = {"timeout": 1000}  # noqa: F841
+        policy = {"total_timeout": 1000}  # noqa: F841
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         with pytest.raises(TypeError):

@@ -77,8 +77,8 @@ static bool batch_apply_cb(const as_batch_result *results, uint32_t n,
         }
         Py_DECREF(py_key);
 
-        as_batch_result_to_BatchRecord(data->client, &err, res,
-                                       py_batch_record);
+        as_batch_result_to_BatchRecord(data->client, &err, res, py_batch_record,
+                                       false);
         if (err.code != AEROSPIKE_OK) {
             as_log_error(
                 "as_batch_result_to_BatchRecord failed at results index: %d",

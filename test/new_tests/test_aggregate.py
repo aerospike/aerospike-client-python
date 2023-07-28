@@ -290,7 +290,7 @@ class TestAggregate(object):
         """
         Invoke aggregate() with extra parameter
         """
-        policy = {"timeout": 1000}
+        policy = {"total_timeout": 1000}
 
         with pytest.raises(e.ParamError) as paramError:
             query = self.as_connection.query("test", "demo")

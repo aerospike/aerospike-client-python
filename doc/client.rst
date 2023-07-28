@@ -47,6 +47,8 @@ Basic example:
 Methods
 =======
 
+To create a new client, use :meth:`aerospike.client`.
+
 .. _aerospike_connection_operations:
 
 Connection
@@ -197,25 +199,6 @@ Record Operations
         .. include:: examples/remove.py
             :code: python
 
-    .. method:: get_key_digest(ns, set, key) -> bytearray
-
-        Calculate the digest of a particular key. See :ref:`aerospike_key_tuple`.
-
-        :param str ns: the namespace in the aerospike cluster.
-        :param str set: the set name.
-        :param key: the primary key identifier of the record within the set.
-        :type key: :py:class:`str` or :py:class:`int`
-
-        :return: a RIPEMD-160 digest of the input tuple.
-
-        :rtype: :class:`bytearray`
-
-        .. include:: examples/get_key_digest.py
-            :code: python
-
-        .. deprecated:: 2.0.1
-            use the function :func:`aerospike.calc_digest` instead.
-
     .. method:: remove_bin(key, list[, meta: dict[, policy: dict]])
 
         Remove a list of bins from a record with a given *key*. Equivalent to \
@@ -257,6 +240,9 @@ Batch Operations
         .. include:: examples/get_many.py
             :code: python
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
     .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys.
@@ -272,6 +258,9 @@ Batch Operations
         .. include:: examples/exists_many.py
             :code: python
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
     .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read specific bins from multiple records.
@@ -286,6 +275,9 @@ Batch Operations
 
         .. include:: examples/select_many.py
             :code: python
+
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
 
     .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
 
@@ -304,6 +296,9 @@ Batch Operations
 
         .. include:: examples/batch_get_ops.py
             :code: python
+
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_operate` instead.
 
     The following batch methods will return a :class:`BatchRecords` object with
     a ``result`` value of ``0`` if one of the following is true:
@@ -341,6 +336,27 @@ Batch Operations
 
         .. seealso:: More information about the \
             batch helpers :ref:`aerospike_operation_helpers.batch`
+
+    .. method:: batch_read(keys: list, [bins: list], [policy_batch: dict]) -> BatchRecords
+
+        Read multiple records.
+
+        If a list of bin names is not provided, return all the bins for each record.
+
+        If a list of bin names is provided, return only these bins for the given list of records.
+
+        If an empty list of bin names is provided, only the metadata of each record will be returned.
+        Each ``BatchRecord.record`` in ``BatchRecords.batch_records`` will only be a 2-tuple ``(key, meta)``.
+
+        :param list keys: The key tuples of the records to fetch.
+        :param list[str] bins: List of bin names to fetch for each record.
+        :param dict policy_batch: See :ref:`aerospike_batch_policies`.
+
+        :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
+
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. note:: Requires server version >= 6.0.0.
 
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
 
@@ -590,7 +606,7 @@ User Defined Functions
             'hosts': [ ('127.0.0.1', 3000)],
             'lua': { 'user_path': '/path/to/lua/user_path'}
         }
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
         # Register the UDF module and copy it to the Lua 'user_path'
         client.udf_put('/path/to/my_module.lua')
         client.close()
@@ -707,24 +723,6 @@ User Defined Functions
         :returns: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-    .. method:: scan_info(scan_id) -> dict
-
-        .. deprecated:: 1.0.50
-            Use :meth:`job_info` instead.
-
-        Return the status of a scan running in the background.
-
-
-        The returned :class:`dict` contains these keys:
-
-            * ``"status"``: see :ref:`aerospike_scan_constants` for possible values.
-            * ``"records_scanned"``: number of scanned records.
-            * ``"progress_pct"``: progress percentage of the job
-
-        :param int scan_id: the scan ID returned by :meth:`scan_apply`.
-        :returns: :class:`dict`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
     .. index::
         single: Info Operations
 
@@ -809,60 +807,6 @@ Info Operations
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. versionchanged:: 6.0.0
-
-    .. method:: info_node(command, host[, policy: dict]) -> str
-
-        .. deprecated:: 6.0.0
-            Use :meth:`info_single_node` to send a request to a single node.
-
-        Send an info command to a single node specified by host.
-
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
-        :param tuple host: a `tuple` containing an *address*, *port* , optional *tls-name* . Example: ``('127.0.0.1', 3000)`` or when using TLS ``('127.0.0.1', 4333, 'server-tls-name')``. In order to send an info request when TLS is enabled, the *tls-name* must be present.
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`str`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. versionchanged:: 3.0.0
-
-        .. warning:: for client versions < 3.0.0 :meth:`~aerospike.client.info_node` will not work when using TLS
-
-    .. method:: info(command[, hosts[, policy: dict]]) -> {}
-
-        .. deprecated:: 3.0.0
-            Use :meth:`info_all` to send a request to the entire cluster.
-
-        Send an info command to all nodes in the cluster, and optionally filter responses to only include certain nodes.
-
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_
-        :param list hosts: a :class:`list` containing ``(address, port)`` tuples. If specified, only send the command to these hosts. Example: ``[('127.0.0.1', 3000)]``
-        :param dict policy: optional :ref:`aerospike_info_policies`.
-        :rtype: :class:`dict`
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. code-block:: python
-
-            response = client.info(command)
-            client.close()
-            # {'BB9581F41290C00': (None, '127.0.0.1:3000\n'), 'BC3581F41290C00': (None, '127.0.0.1:3010\n')}
-
-        .. note::
-                Sending requests to specific nodes can be better handled with a simple Python function such as:
-
-                .. code-block:: python
-
-                    def info_to_host_list(client, request, hosts, policy=None):
-                        output = {}
-                        for host in hosts:
-                            try:
-                                response = client.info_node(request, host, policy)
-                                output[host] = response
-                            except Exception as e:
-                                #  Handle the error gracefully here
-                                output[host] = e
-                        return output
-
-        .. versionchanged:: 3.0.0
 
     .. method:: set_xdr_filter(data_center, namespace, expression_filter[, policy: dict]) -> str
 
@@ -1013,7 +957,7 @@ Index Operations
 
             import aerospike
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
 
             # assume the bin fav_movies in the set test.demo bin should contain
             # a dict { (str) _title_ : (int) _times_viewed_ }
@@ -1043,7 +987,7 @@ Index Operations
 
             import aerospike
 
-            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]}).connect()
+            client = aerospike.client({ 'hosts': [ ('127.0.0.1', 3000)]})
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
@@ -1286,6 +1230,23 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
+    .. method:: admin_query_user_info (user: str[, policy: dict]) -> dict
+
+        Retrieve roles and other info for a given user.
+
+        :param str user: the username of the user.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+
+        :return: a :class:`dict` of user data. See :ref:`admin_user_dict`.
+
+    .. method:: admin_query_users_info ([policy: dict]) -> list
+
+        Retrieve roles and other info for all users.
+
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+
+        :return: a :class:`list` of users' data. See :ref:`admin_user_dict`.
+
     .. method:: admin_query_user (username[, policy: dict]) -> []
 
         Return the list of roles granted to the specified user.
@@ -1297,6 +1258,8 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
+        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
+
     .. method:: admin_query_users ([policy: dict]) -> {}
 
         Get the roles of all users.
@@ -1304,6 +1267,45 @@ user\'s roles. Users are assigned roles, which are collections of \
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
+
+.. _admin_user_dict:
+
+User Dictionary
+===============
+
+The user dictionary has the following key-value pairs:
+
+    * ``"read_info"`` (:class:`list[int]`): list of read statistics.
+      List may be :py:obj:`None`. Current statistics by offset are:
+
+       * 0: read quota in records per second
+
+       * 1: single record read transaction rate (TPS)
+
+       * 2: read scan/query record per second rate (RPS)
+
+       * 3: number of limitless read scans/queries
+
+    Future server releases may add additional statistics.
+
+    * ``"write_info"`` (:class:`list[int]`): list of write statistics.
+      List may be :py:obj:`None`. Current statistics by offset are:
+
+       * 0: write quota in records per second
+
+       * 1: single record write transaction rate (TPS)
+
+       * 2: write scan/query record per second rate (RPS)
+
+       * 3: number of limitless write scans/queries
+
+    Future server releases may add additional statistics.
+
+    * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
+
+    * ``"roles"`` (:class:`list[str]`): list of assigned role names.
 
 Scan and Query Constructors
 ---------------------------
@@ -1390,7 +1392,7 @@ Key Tuple
         # NOTE: change this to your Aerospike server's seed node address
         seedNode = ('127.0.0.1', 3000)
         config = config = {'hosts': [seedNode]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         # The key tuple comprises the following:
         namespaceName = 'test'
@@ -1447,7 +1449,7 @@ Record Tuple
         * bins (:class:`dict`)
             Contains bin-name/bin-value pairs.
 
-    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from ``client.get()``:
+    We reuse the code example in the key-tuple section and print the ``meta`` and ``bins`` values that were returned from :meth:`~aerospike.Client.get()`:
 
         .. code-block:: python
 
@@ -1456,7 +1458,7 @@ Record Tuple
             # NOTE: change this to your Aerospike server's seed node address
             seedNode = ('127.0.0.1', 3000)
             config = {'hosts': [seedNode]}
-            client = aerospike.client(config).connect()
+            client = aerospike.client(config)
 
             namespaceName = 'test'
             setName = 'setname'
@@ -1998,13 +2000,6 @@ Batch Policies
 
             Default: ``False``
 
-        * **send_set_name** (:class:`bool`)
-            |
-            |   .. deprecated:: in client version 7.0.0, the client ignores this policy and always sends set name to the server.
-            |
-            | Send set name field to server for every key in the batch for batch index protocol. This is only necessary when authentication is enabled and security roles are defined on a per set basis.
-            |
-            | Default: ``False``
         * **deserialize** (:class:`bool`)
             | Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes.
             |
@@ -2445,7 +2440,7 @@ Partition Objects
         # partition_status is most easily used to resume a query
         # and can be obtained by calling Query.get_partitions_status()
         partition_status = {
-            0: {0, False, Flase, bytearray([0]*20)}...
+            0: {0, False, False, bytearray([0]*20)}...
         }
 
         policy = {
@@ -2468,28 +2463,25 @@ Partition Objects
 
     The dictionary contains these key-value pairs:
 
-    * ``"retry"``: :class:`str` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
+    * ``"retry"``: :class:`bool` represents the overall retry status of this partition query. (i.e. Does this query/scan need to be retried?)
 
-        This maps to a boolean value.
-    * ``"done"``: :class:`str` represents whether all partitions were finished.
-
-        This maps to a boolean value.
+    * ``"done"``: :class:`bool` represents whether all partitions were finished.
 
     In addition, the dictionary contains keys of the partition IDs (:class:`int`),
-    and each partition ID is mapped to a dictionary containing the status details of a partition.
+    and each partition ID is mapped to a tuple containing the status details of a partition.
 
-    Each partition ID has a dictionary with the following keys:
+    That tuple has the following values in this order:
 
     .. hlist::
         :columns: 1
 
-        * ``"id"``: :class:`int` represents a partition ID number
-        * ``"init"``: :class:`bool` represents whether the digest being queried was calculated.
-        * ``"retry"``: :class:`bool` represents whether this partition should be retried.
-        * ``"digest"``: :class:`bytearray` represents the digest of the record being queried.
+        * ``id``: :class:`int` represents a partition ID number
+        * ``init``: :class:`bool` represents whether the digest being queried was calculated.
+        * ``retry``: :class:`bool` represents whether this partition should be retried.
+        * ``digest``: :class:`bytearray` represents the digest of the record being queried.
 
             Should be 20 characters long.
-        * ``"bval"``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
+        * ``bval``: :class:`int` is used in conjunction with ``"digest"`` to determine the last record received by a partition query.
 
     Default: ``{}`` (All partitions will be queried).
 
@@ -2499,7 +2491,7 @@ Partition Objects
 
        # Here is the form of partition_status.
        # partition_status = {
-       #     0: (0, False, Flase, bytearray([0]*20), 0)...
+       #     0: (0, False, False, bytearray([0]*20), 0)...
        # }
        partition_status = query.get_partitions_status()
 

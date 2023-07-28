@@ -3,5 +3,3 @@ pytest==7.4.0
 pytest-cov==4.1.0
 # TODO: these should be removed since we are not using them
 psutil
-# TODO: we are not officially supporting async functions in the client
-pytest-asyncio
