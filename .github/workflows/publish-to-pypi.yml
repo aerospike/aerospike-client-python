@@ -1,7 +1,5 @@
 name: Publish to PyPI
 on:
-  # TODO: add this to trigger
-  pull_request:
   workflow_dispatch:
     inputs:
       bump:
