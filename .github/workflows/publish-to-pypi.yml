@@ -35,7 +35,7 @@ jobs:
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        packages-dir: jfrog-artifacts/
+        packages-dir: jfrog-artifacts/aerospike/${{ env.LATEST_VERSION }}
         password: ${{ secrets.PYPI_API_TOKEN }}
 
   next-release-version:
