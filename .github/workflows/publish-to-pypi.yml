@@ -13,6 +13,7 @@ on:
 
 jobs:
   publish:
+    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
     - name: Get latest release version
@@ -37,7 +38,7 @@ jobs:
         password: ${{ secrets.PYPI_API_TOKEN }}
 
   next-release-version:
-    needs: publish
+#     needs: publish
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -61,8 +62,13 @@ jobs:
       run: |
         sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
         echo -e "${{ env.NEW_TAG }}" > VERSION
-        
-    - name: Commit new version
-      uses: stefanzweifel/git-auto-commit-action@v4
+
+    - name: Create Pull Request to bump version in stage
+      uses: peter-evans/create-pull-request@v5
       with:
-        commit_message: Bump version to ${{ env.NEW_TAG }}
+        commit-message: Bump version to ${{ env.NEW_TAG }}
+        branch: bump-to-${{ env.NEW_TAG }}
+        base: stage
+        add-paths: VERSION, src/main/aerospike.c
+        delete-branch: true
+        title: Bump version to ${{ env.NEW_TAG }}
