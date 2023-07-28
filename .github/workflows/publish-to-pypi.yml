@@ -26,9 +26,8 @@ jobs:
       env:
         # JFrog platform url (for example: https://acme.jfrog.io) 
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        # Basic authentication credentials
-        JF_USER: ${{ secrets.JFROG_USERNAME }}
-        JF_PASSWORD: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        # JFrog Platform access token
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
     - name: Download all artifacts for latest version
       run: jf rt dl local-aerospike-client-python/aerospike/${{ env.LATEST_VERSION }}/* jfrog-artifacts/
