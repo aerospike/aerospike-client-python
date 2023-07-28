@@ -1,0 +1,73 @@
+name: Publish to PyPI
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        default: 'major'
+        required: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get latest release version
+      run: |
+        python3 -m pip install aerospike --index-url ${{ secrets.JFROG_PYTHON_CLIENT_REPO_SIMPLE_URL }}
+        echo LATEST_VERSION=$(python3 -c "import aerospike;print(aerospike.__version__)") >> $GITHUB_ENV
+
+    - uses: jfrog/setup-jfrog-cli@v3
+      env:
+        # JFrog platform url (for example: https://acme.jfrog.io) 
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        # JFrog Platform access token
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - name: Download all artifacts for latest version
+      run: jf rt dl local-aerospike-client-python/aerospike/${{ env.LATEST_VERSION }}/* jfrog-artifacts/
+
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: jfrog-artifacts/aerospike/${{ env.LATEST_VERSION }}
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  next-release-version:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        ref: stage
+
+    - run: pip install python-semantic-release==7.*
+
+    - name: Update stage branch's version
+      run: |
+        # Get next release version and turn it into a release candidate
+        # e.g If current version is 12.0.0 and next release is 13.0.0
+        # The new version should be 13.0.0-rc.1
+        current_version=$(cat VERSION)
+        new_version=$(pysemver bump ${{ inputs.bump }} $current_version)
+        new_version=$(pysemver bump prerelease $new_version)
+        echo "Bumping $current_version to $new_version"
+        echo "NEW_TAG=$new_version" >> $GITHUB_ENV
+    
+    - name: Update version
+      run: |
+        sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
+        echo -e "${{ env.NEW_TAG }}" > VERSION
+
+    - name: Create Pull Request to bump version in stage
+      uses: peter-evans/create-pull-request@v5
+      with:
+        commit-message: Bump version to ${{ env.NEW_TAG }}
+        branch: bump-to-${{ env.NEW_TAG }}
+        base: stage
+        add-paths: VERSION, src/main/aerospike.c
+        delete-branch: true
+        title: Bump version to ${{ env.NEW_TAG }}
