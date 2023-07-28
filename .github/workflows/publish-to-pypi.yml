@@ -13,7 +13,6 @@ on:
 
 jobs:
   publish:
-    if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
     - name: Get latest release version
@@ -38,7 +37,7 @@ jobs:
         password: ${{ secrets.PYPI_API_TOKEN }}
 
   next-release-version:
-#     needs: publish
+    needs: publish
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
