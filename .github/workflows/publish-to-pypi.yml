@@ -1,5 +1,15 @@
 name: Publish to PyPI
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+        default: 'major'
+        required: true
 
 jobs:
   publish:
@@ -10,6 +20,14 @@ jobs:
         python3 -m pip install aerospike --index-url ${{ secrets.JFROG_URL }}
         echo export LATEST_VERSION=$(python3 -c "import aerospike;print(aerospike.__version__)") >> $GITHUB_ENV
 
+    - uses: jfrog/setup-jfrog-cli@v3
+      env:
+        # JFrog platform url (for example: https://acme.jfrog.io) 
+        JF_URL: ${{ secrets.JFROG_URL }}
+        # Basic authentication credentials
+        JF_USER: ${{ secrets.JFROG_USERNAME }}
+        JF_PASSWORD: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
     - name: Download all artifacts for latest version
       run: jf rt dl local-aerospike-client-python/aerospike/${{ env.LATEST_VERSION }}/* jfrog-artifacts/
 
@@ -17,3 +35,33 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         packages-dir: jfrog-artifacts/
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  next-release-version:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - run: pip install python-semantic-release==7.*
+
+    - name: Update stage branch's version
+      run: |
+        # Get next release version and turn it into a release candidate
+        # e.g If current version is 12.0.0 and next release is 13.0.0
+        # The new version should be 13.0.0-rc.1
+        current_version=$(cat VERSION)
+        new_version=$(pysemver bump ${{ inputs.bump }} $current_version)
+        new_version=$(pysemver bump prerelease $new_version)
+        echo "Bumping $current_version to $new_version"
+        echo "NEW_TAG=$new_version" >> $GITHUB_ENV
+    
+    - name: Update version
+      run: |
+        sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
+        echo -e "${{ env.NEW_TAG }}" > VERSION
+        
+    - name: Commit new version
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Bump version to ${{ env.NEW_TAG }}
