@@ -88,7 +88,7 @@ jobs:
       matrix:
         distros: [
           # Image name, build-<name> and container name 
-          ["alpine", "alpine"],
+          # ["alpine", "alpine"],
           ["redhat/ubi9", "rpm-based"],
           ["amazonlinux:2023", "rpm-based"]
         ]
@@ -107,7 +107,7 @@ jobs:
       with:
         submodules: recursive
 
-    - name: Run Alpine container
+    - name: Run distro container
       run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
 
     - name: Copy repo to container
