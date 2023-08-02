@@ -36,7 +36,7 @@ class TestTouch(object):
 
     def test_touch_with_no_value(self):
         """
-        Invoke touch() with no value
+        Invoke touch() which sets record's ttl to default server ttl value
         """
         key = ("test", "demo", 1)
         self.as_connection.touch(key)
