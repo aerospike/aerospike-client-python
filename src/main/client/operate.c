@@ -1384,6 +1384,12 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    if (py_touchvalue == NULL) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Touch operation must contain a ttl value");
+        goto CLEANUP;
+    }
+
     PyObject *py_list = NULL;
     py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue);
     py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,

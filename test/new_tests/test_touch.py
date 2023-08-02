@@ -34,6 +34,13 @@ class TestTouch(object):
             self.as_connection.touch()
         assert "argument 'key' (pos 1)" in str(typeError.value)
 
+    def test_touch_with_no_value(self):
+        """
+        Invoke touch() with no value
+        """
+        key = ("test", "demo", 1)
+        self.as_connection.touch(key)
+
     def test_touch_with_correct_paramters(self):
         """
         Invoke touch() with correct parameters
