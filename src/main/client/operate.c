@@ -1385,9 +1385,7 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
     }
 
     if (py_touchvalue == NULL) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Touch operation must contain a ttl value");
-        goto CLEANUP;
+        py_touchvalue = PyLong_FromLong(0);
     }
 
     PyObject *py_list = NULL;
