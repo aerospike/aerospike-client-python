@@ -94,11 +94,7 @@ static inline bool isExprOp(int op);
     if (py_list) {                                                             \
         Py_DECREF(py_list);                                                    \
     }                                                                          \
-    if (err.code != AEROSPIKE_OK) {                                            \
-        as_error_update(&err, err.code, NULL);                                 \
-        goto CLEANUP;                                                          \
-    }                                                                          \
-    else if (!py_result) {                                                     \
+    if (err.code == AEROSPIKE_OK && !py_result) {                              \
         return NULL;                                                           \
     }                                                                          \
     else {                                                                     \
