@@ -94,11 +94,13 @@ static inline bool isExprOp(int op);
     if (py_list) {                                                             \
         Py_DECREF(py_list);                                                    \
     }                                                                          \
-    if (err.code == AEROSPIKE_OK && !py_result) {                              \
-        return NULL;                                                           \
-    }                                                                          \
-    else {                                                                     \
-        Py_DECREF(py_result);                                                  \
+    if (err.code == AEROSPIKE_OK) {                                            \
+        if (!py_result) {                                                      \
+            return NULL;                                                       \
+        }                                                                      \
+        else {                                                                 \
+            Py_DECREF(py_result);                                              \
+        }                                                                      \
     }
 
 #define CONVERT_VAL_TO_AS_VAL()                                                \
