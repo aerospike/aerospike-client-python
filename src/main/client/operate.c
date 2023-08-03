@@ -880,7 +880,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     Py_END_ALLOW_THREADS
 
     if (err->code != AEROSPIKE_OK) {
-        as_error_update(err, err->code, NULL);
         goto CLEANUP;
     }
     /* The op succeeded; it's now safe to free the record */
@@ -1062,7 +1061,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     Py_END_ALLOW_THREADS
 
     if (err->code != AEROSPIKE_OK) {
-        as_error_update(err, err->code, NULL);
         goto CLEANUP;
     }
 
