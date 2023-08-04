@@ -538,7 +538,7 @@ Single-Record Transactions
         :py:obj:`None` value. )
 
         Write operations or read operations that fail will not return a `(bin-name, result)` tuple.
-        
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param list list: See :ref:`aerospike_operation_helpers.operations`.
         :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
