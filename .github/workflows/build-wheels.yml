@@ -404,7 +404,7 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_x86_64
         CIBW_BUILD_FRONTEND: build
-        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@3)/lib/" CPATH="$(brew --prefix openssl@3)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
           export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
@@ -443,10 +443,10 @@ jobs:
     - name: Add brew to path
       run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
     - run: brew install python@${{ matrix.python-version }}
-    - run: brew install openssl@1.1
+    - run: brew install openssl@3
 
     - run: |
-        openssl_path=$(brew --prefix openssl@1.1)
+        openssl_path=$(brew --prefix openssl@3)
         echo SSL_LIB_PATH="$openssl_path/lib/" >> $GITHUB_ENV
         echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
         echo STATIC_SSL=1 >> $GITHUB_ENV
@@ -531,3 +531,4 @@ jobs:
         password: ${{ secrets.JFROG_ACCESS_TOKEN }}
         packages-dir: artifacts/
         verbose: true
+        skip-existing: true
