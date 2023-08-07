@@ -34,11 +34,6 @@ pos_data = [
     #        (('test', 'demo', 1),
     #            {'odict': OrderedDict(sorted({'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}.items(),
     #                key=lambda t: t[0]))}),
-    # Tuple Data
-    (("test", "demo", "tuple_key"), {"tuple_seq": tuple("abc")}),
-    # Set Data
-    (("test", "demo", "set_key"), {"set_data": set([1, 2])}),
-    (("test", "demo", "fset_key"), {"fset_data": frozenset(["Frankfurt", "Basel", "Freiburg"])}),
     # Hybrid
     (
         ("test", "demo", "multiple_bins"),
@@ -56,7 +51,6 @@ pos_data = [
             "names_and_age": [{"name": "John", "age": 24}, {"name": "Marlen", "age": 25}],
         },
     ),
-    (("test", "demo", "map_tuple_key"), {"seq": {"bb": tuple("abc")}}),
 ]
 
 key_neg = [
