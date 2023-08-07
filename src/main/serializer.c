@@ -454,57 +454,10 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                                                     as_error *error_p)
 {
     switch (as_bytes_get_type(bytes)) {
-    case AS_BYTES_PYTHON: {
-        PyObject *sysmodules = PyImport_GetModuleDict();
-        PyObject *cpickle_module = NULL;
-        if (PyMapping_HasKeyString(sysmodules, "pickle")) {
-            cpickle_module = PyMapping_GetItemString(sysmodules, "pickle");
-        }
-        else {
-            cpickle_module = PyImport_ImportModule("pickle");
-        }
-
-        PyObject *initresult = NULL;
-        if (!cpickle_module) {
-            /* insert error handling here! and exit this function */
-            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                            "Unable to load pickle module");
-            goto CLEANUP;
-        }
-        else {
-            char *bytes_val_p = (char *)bytes->value;
-            PyObject *py_value =
-                PyBytes_FromStringAndSize(bytes_val_p, as_bytes_size(bytes));
-            PyObject *py_funcname = PyUnicode_FromString("loads");
-
-            Py_INCREF(cpickle_module);
-            initresult = PyObject_CallMethodObjArgs(cpickle_module, py_funcname,
-                                                    py_value, NULL);
-            Py_DECREF(cpickle_module);
-            Py_DECREF(py_funcname);
-            Py_DECREF(py_value);
-            if (!initresult) {
-                // At this point we want to try to fallback to returning a byte array
-                uint32_t bval_size = as_bytes_size(bytes);
-                initresult = PyByteArray_FromStringAndSize(
-                    (char *)as_bytes_get(bytes), bval_size);
-                // We couldn't convert the value into a byte array
-                if (!initresult) {
-                    as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                                    "Unable to deserialize bytes");
-                    Py_XDECREF(cpickle_module);
-                    goto CLEANUP;
-                }
-                // The fallback deserialization succeeded
-                *retval = initresult;
-                as_error_update(error_p, AEROSPIKE_OK, NULL);
-            }
-            else {
-                *retval = initresult;
-            }
-        }
-        Py_XDECREF(cpickle_module);
-    } break;
+    case AS_BYTES_PYTHON:
+        as_error_update(error_p, AEROSPIKE_ERR,
+                        "Unable to deserialize AS_BYTES_PYTHON bytes");
+        break;
     case AS_BYTES_BLOB: {
         if (self->user_deserializer_call_info.callback) {
             execute_user_callback(&self->user_deserializer_call_info, &bytes,
