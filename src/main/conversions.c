@@ -843,16 +843,10 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         *val = (as_val *)as_geojson_new(geo_value_cpy, true);
     }
     else if (PyByteArray_Check(py_obj)) {
-        as_bytes *bytes;
-        GET_BYTES_POOL(bytes, static_pool, err);
-        if (err->code == AEROSPIKE_OK) {
-            if (serialize_based_on_serializer_policy(self, serializer_type,
-                                                     &bytes, py_obj,
-                                                     err) != AEROSPIKE_OK) {
-                return err->code;
-            }
-            *val = (as_val *)bytes;
-        }
+        char *str = PyByteArray_AsString(py_obj);
+        Py_ssize_t str_len = PyByteArray_Size(py_obj);
+        *val = (as_val *)as_bytes_new_wrap((uint8_t *)str, (uint32_t)str_len,
+                                           false);
     }
     else if (PyList_Check(py_obj)) {
         as_list *list = NULL;
