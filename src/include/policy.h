@@ -37,8 +37,8 @@
  */
 
 enum Aerospike_serializer_values {
-    SERIALIZER_NONE,
-    SERIALIZER_PYTHON, /* default handler for serializer type */
+    SERIALIZER_NONE, /* default handler for serializer type */
+    SERIALIZER_PYTHON,
     SERIALIZER_JSON,
     SERIALIZER_USER,
 };

@@ -172,7 +172,7 @@ PyObject *AerospikeClient_Put(AerospikeClient *self, PyObject *args,
     PyObject *py_meta = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_serializer_option = NULL;
-    long serializer_option = SERIALIZER_PYTHON;
+    long serializer_option = SERIALIZER_NONE;
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"key",    "bins",       "meta",

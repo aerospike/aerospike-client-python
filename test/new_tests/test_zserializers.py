@@ -119,25 +119,15 @@ class TestPythonSerializer(object):
         with pytest.raises(e.ClientError):
             self.as_connection.put(self.test_key, self.mixed_record)
 
-    # TODO: remove this because SERIALIZER_PYTHON should be removed
-    def test_put_with_serializer_python_set(self):
+    def test_builtin_with_class_serializer(self):
         """
         Invoke put() for mixed data record with builtin serializer
         """
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
-
-    # TODO: remove this because SERIALIZER_PYTHON should be removed
-    def test_builtin_with_class_serializer1(self):
-        """
-        Invoke put() for mixed data record with builtin serializer
-        """
-        aerospike.set_serializer(class_serializer)
-        aerospike.set_deserializer(class_deserializer)
-
-        self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
+        with pytest.raises(e.ClientError):
+            client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_NONE)
 
     def test_with_class_serializer(self):
         """
@@ -160,7 +150,7 @@ class TestPythonSerializer(object):
     # TODO: remove this
     def test_builtin_with_class_serializer_and_instance_serializer(self):
         """
-        Invoke put() passing SERIALIZER_PYTHON and verify that it
+        Invoke put() passing SERIALIZER_NONE and verify that it
         causes the language serializer to override instance and class
         serializers
         """
@@ -169,9 +159,8 @@ class TestPythonSerializer(object):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
 
-        # TODO: unnecessary variable?
-        rec = {"normal": 1234, "tuple": (1, 2, 3)}  # noqa: F841
-        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
+        with pytest.raises(e.ClientError):
+            client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_NONE)
 
     def test_with_class_serializer_and_instance_serializer(self):
         """
@@ -201,10 +190,9 @@ class TestPythonSerializer(object):
         client = TestBaseClass.get_new_connection(method_config)
 
         aerospike.unset_serializers()
-        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
         with pytest.raises(e.ClientError):
-            _, _, bins = client.get(self.test_key)
+            client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_NONE)
 
     def test_unset_instance_serializer(self):
         """
@@ -231,14 +219,8 @@ class TestPythonSerializer(object):
 
         self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
 
-        self.as_connection.put(("test", "demo", "test_record_2"), self.mixed_record)
-
-        # this should not have been serialized with the class serializer
         with pytest.raises(e.ClientError):
-            _, _, record = self.as_connection.get(("test", "demo", "test_record_2"))
-
-        # Cleanup
-        self.as_connection.remove(("test", "demo", "test_record_2"))
+            self.as_connection.put(("test", "demo", "test_record_2"), self.mixed_record)
 
     def test_unsetting_serializers_after_a_record_put(self):
         aerospike.set_serializer(class_serializer)
@@ -252,7 +234,7 @@ class TestPythonSerializer(object):
         # this should not have been deserialized with the class serializer
         # it will have been deserialized by the class deserializer,
         # so this should be a deserialization of 'class serialized'
-        assert record["tuple"] == "class serialized"
+        assert record["tuple"] == b'class serialized'
 
     def test_changing_deserializer_after_a_record_put(self):
         aerospike.set_serializer(class_serializer)
@@ -274,7 +256,7 @@ class TestPythonSerializer(object):
 
         _, _, record = self.as_connection.get(self.test_key)
         # fetching the record doesn't require it's value to be deserialized
-        assert record["tuple"] == "class serialized"
+        assert record["tuple"] == b'class serialized'
 
     def test_only_setting_a_deserializer(self):
         # This should raise an error
@@ -356,7 +338,8 @@ class TestPythonSerializer(object):
 
     def test_put_with_invalid_serializer_arg_type(self):
 
-        self.as_connection.put(self.test_key, self.mixed_record, serializer="")
+        with pytest.raises(e.ClientError):
+            self.as_connection.put(self.test_key, self.mixed_record, serializer="")
 
     def test_serializer_raises_error(self):
 
