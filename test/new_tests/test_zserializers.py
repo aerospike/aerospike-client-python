@@ -301,24 +301,21 @@ class TestPythonSerializer(object):
 
     def test_class_serializer_non_callable(self):
         """
-        Verify that calling unset_serializers actually removes
-        the class serializer
+        Class serializer argument must be a callable function
         """
         with pytest.raises(e.ParamError):
             aerospike.set_serializer(5)
 
     def test_class_deserializer_non_callable(self):
         """
-        Verify that calling unset_serializers actually removes
-        the class serializer
+        Class deserializer argument must be a callable function
         """
         with pytest.raises(e.ParamError):
             aerospike.set_deserializer(5)
 
     def test_instance_serializer_non_callable(self):
         """
-        Verify that calling unset_serializers actually removes
-        the class serializer
+        Instance serializer must be a callable function
         """
 
         method_config = {"serialization": (5, instance_deserializer)}
@@ -328,8 +325,7 @@ class TestPythonSerializer(object):
 
     def test_instance_deserializer_non_callable(self):
         """
-        Verify that calling unset_serializers actually removes
-        the class serializer
+        Instance deserializer must be a callable function
         """
         with pytest.raises(e.ParamError):
             aerospike.set_deserializer(5)

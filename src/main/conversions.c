@@ -64,10 +64,6 @@
 
 static bool requires_int(uint64_t op);
 
-static as_status py_bool_to_py_bytes_blob(AerospikeClient *self, as_error *err,
-                                          as_static_pool *static_pool,
-                                          PyObject *py_bool, as_bytes **target,
-                                          int serializer_type);
 static as_status py_bool_to_as_integer(as_error *err, PyObject *py_bool,
                                        as_integer **target);
 static as_status py_bool_to_as_bool(as_error *err, PyObject *py_bool,
@@ -790,15 +786,6 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         PyBool_Check(
             py_obj)) { //TODO Change to true bool support post jump version.
         switch (self->send_bool_as) {
-        case SEND_BOOL_AS_PY_BYTES:;
-            as_bytes *bool_bytes = NULL;
-            if (py_bool_to_py_bytes_blob(self, err, static_pool, py_obj,
-                                         &bool_bytes,
-                                         serializer_type) != AEROSPIKE_OK) {
-                return err->code;
-            }
-            *val = (as_val *)bool_bytes;
-            break;
         case SEND_BOOL_AS_AS_BOOL:;
             as_boolean *converted_bool = NULL;
             if (py_bool_to_as_bool(err, py_obj, &converted_bool) !=
@@ -972,15 +959,6 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 PyBool_Check(
                     value)) { //TODO Change to true bool support post jump version.
                 switch (self->send_bool_as) {
-                case SEND_BOOL_AS_PY_BYTES:;
-                    as_bytes *bool_bytes = NULL;
-                    if (py_bool_to_py_bytes_blob(
-                            self, err, static_pool, value, &bool_bytes,
-                            serializer_type) != AEROSPIKE_OK) {
-                        return err->code;
-                    }
-                    ret_val = as_record_set_bytes(rec, name, bool_bytes);
-                    break;
                 case SEND_BOOL_AS_AS_BOOL:;
                     bool converted_value = (value == Py_True);
                     ret_val = as_record_set_bool(rec, name, converted_value);
@@ -2523,29 +2501,6 @@ static bool requires_int(uint64_t op)
     return op == AS_CDT_CTX_LIST_INDEX || op == AS_CDT_CTX_LIST_RANK ||
            op == AS_CDT_CTX_MAP_INDEX || op == AS_CDT_CTX_MAP_RANK ||
            op == CDT_CTX_LIST_INDEX_CREATE;
-}
-
-/*
- * py_bool_to_py_bytes_blob serializes py_bool.
- * Target should be a NULL pointer to an as_integer. py_bool_to_py_bytes_blob will get memory for target
- * from the static pool, static_pool. The pool should be destroyed after use, by the caller.
- */
-static as_status py_bool_to_py_bytes_blob(AerospikeClient *self, as_error *err,
-                                          as_static_pool *static_pool,
-                                          PyObject *py_bool, as_bytes **target,
-                                          int serializer_type)
-{
-    GET_BYTES_POOL(*target, static_pool, err);
-    if (err->code != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    if (serialize_based_on_serializer_policy(self, serializer_type, target,
-                                             py_bool, err) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    return AEROSPIKE_OK;
 }
 
 /*

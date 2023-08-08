@@ -44,9 +44,8 @@ enum Aerospike_serializer_values {
 };
 
 enum Aerospike_send_bool_as_values {
-    SEND_BOOL_AS_PY_BYTES, /* default for writing Python bools */
     SEND_BOOL_AS_INTEGER,
-    SEND_BOOL_AS_AS_BOOL,
+    SEND_BOOL_AS_AS_BOOL, /* default for writing Python bools */
 };
 
 enum Aerospike_list_operations {

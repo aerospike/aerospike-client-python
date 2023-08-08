@@ -936,12 +936,6 @@ Send Bool Constants
 
 Specifies how the Python client will write Python booleans.
 
-.. data:: PY_BYTES
-
-    Write Python Booleans as PY_BYTES_BLOBs.
-
-    This is Python's native boolean type.
-
 .. data:: INTEGER
 
     Write Python Booleans as integers.
