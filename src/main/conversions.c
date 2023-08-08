@@ -1023,17 +1023,19 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 ret_val = as_record_set_strp(rec, name, strdup(val), true);
                 Py_DECREF(py_ustr);
             }
+            else if (PyBytes_Check(value)) {
+                char *str = PyBytes_AsString(value);
+                Py_ssize_t str_len = PyBytes_Size(value);
+                as_bytes *bytes =
+                    as_bytes_new_wrap((uint8_t *)str, (uint32_t)str_len, false);
+                ret_val = as_record_set_bytes(rec, name, bytes);
+            }
             else if (PyByteArray_Check(value)) {
-                as_bytes *bytes;
-                GET_BYTES_POOL(bytes, static_pool, err);
-                if (err->code == AEROSPIKE_OK) {
-                    if (serialize_based_on_serializer_policy(
-                            self, serializer_type, &bytes, value, err) !=
-                        AEROSPIKE_OK) {
-                        return err->code;
-                    }
-                    ret_val = as_record_set_bytes(rec, name, bytes);
-                }
+                char *str = PyByteArray_AsString(value);
+                Py_ssize_t str_len = PyByteArray_Size(value);
+                as_bytes *bytes =
+                    as_bytes_new_wrap((uint8_t *)str, (uint32_t)str_len, false);
+                ret_val = as_record_set_bytes(rec, name, bytes);
             }
             else if (PyList_Check(value)) {
                 // as_list
