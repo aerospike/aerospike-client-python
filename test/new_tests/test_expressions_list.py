@@ -215,7 +215,7 @@ class TestExpressions(TestBaseClass):
             ),
             # (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9)
             # NOTE: this won't work because booleans are not serialized by default in expressions.
-            (None, None, None, aerospike.LIST_RETURN_VALUE, [None], _NUM_RECORDS),
+            (None, None, None, aerospike.LIST_RETURN_VALUE, [None, None], _NUM_RECORDS),
             (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
             ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
             (
@@ -226,7 +226,17 @@ class TestExpressions(TestBaseClass):
                 [aerospike.KeyOrderedDict({31: 31, 32: 32, 33: 33, 8: 8})],
                 1,
             ),
-            (None, None, aerospike.null(), aerospike.LIST_RETURN_VALUE, [aerospike.null()], _NUM_RECORDS),
+            (
+                None,
+                None,
+                aerospike.null(),
+                aerospike.LIST_RETURN_VALUE,
+                [
+                    aerospike.null(),
+                    aerospike.null()
+                ],
+                _NUM_RECORDS
+            ),
             (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], _NUM_RECORDS),
         ],
     )
@@ -275,7 +285,7 @@ class TestExpressions(TestBaseClass):
                 bytearray("bytearray_test3", "utf8"),
                 bytearray("bytearray_test6", "utf8"),
                 aerospike.LIST_RETURN_REVERSE_INDEX,
-                [[6], [6], [6]],
+                [[5] for _ in range(3)],
                 3,
             ),
             (
