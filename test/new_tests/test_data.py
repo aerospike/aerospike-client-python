@@ -15,7 +15,6 @@ pos_data = [
     (("test", "demo", "string"), {"place": "New York", "name": "John"}),
     (("test", "demo", "bb"), {"a": ["aa", 2, "aa", 4, "cc", 3, 2, 1]}),
     (("test", "demo", 1), {"age": 1, "name": "name1"}),
-    (("test", "demo", 1), {"is_present": None}),
     (("test", "unknown_set", 1), {"a": {"k": [bytearray("askluy3oijs", "utf-8")]}}),
     # Bytearray
     (("test", "demo", bytearray("asd;as[d'as;d", "utf-8")), {"name": "John"}),

@@ -112,6 +112,8 @@ class TestExpressions(TestBaseClass):
                 "key": i,
                 "alt_name": "name%s" % (str(i)),
                 "list_bin": [
+                    # TODO: None should not be encoded
+                    # because it's not documented to represent a server null type
                     None,
                     i,
                     "string_test" + str(i),
@@ -120,7 +122,7 @@ class TestExpressions(TestBaseClass):
                     bytearray("bytearray_test" + str(i), "utf8"),
                     ("bytes_test" + str(i)).encode("utf8"),
                     i % 2 == 1,
-                    aerospike.null,
+                    aerospike.null(),
                     float(i),
                 ],
                 "ilist_bin": [

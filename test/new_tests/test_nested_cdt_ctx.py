@@ -51,10 +51,11 @@ class TestCTXOperations(object):
         self.nested_map = {
             "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
             "second": {
+                # TODO: remove this?
                 "nested": {
-                    4,
-                    5,
-                    6,
+                    "a": 4,
+                    "b": 5,
+                    "c": 6,
                 },
                 "hundred": 100,
             },
@@ -1898,7 +1899,7 @@ class TestCTXOperations(object):
         [
             ([map_index], "greet", aerospike.MAP_RETURN_VALUE, [0], "hi"),
             ([map_index], 3, aerospike.MAP_RETURN_VALUE, [0], "hello"),
-            ([map_index], "nested", aerospike.MAP_RETURN_VALUE, [1], {4, 5, 6}),
+            ([map_index], "nested", aerospike.MAP_RETURN_VALUE, [1], {"a": 4, "b": 5, "c": 6}),
             ([map_index], "dog", aerospike.MAP_RETURN_VALUE, [1], None),
             (
                 [map_index, map_index, map_index],
