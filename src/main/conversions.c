@@ -900,8 +900,16 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
             *val = (as_val *)as_double_new(d);
         }
         else {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to serialize unknown Python native type.");
+            as_bytes *bytes;
+            GET_BYTES_POOL(bytes, static_pool, err);
+            if (err->code == AEROSPIKE_OK) {
+                if (serialize_based_on_serializer_policy(self, serializer_type,
+                                                         &bytes, py_obj,
+                                                         err) != AEROSPIKE_OK) {
+                    return err->code;
+                }
+                *val = (as_val *)bytes;
+            }
         }
     }
 

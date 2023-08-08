@@ -334,50 +334,8 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
             set_as_bytes(bytes, my_bytes, my_bytes_len, AS_BYTES_BLOB, error_p);
         }
         else {
-
-            /* get the sys.modules dictionary */
-            PyObject *sysmodules = PyImport_GetModuleDict();
-            PyObject *cpickle_module = NULL;
-            if (PyMapping_HasKeyString(sysmodules, "pickle")) {
-                cpickle_module = PyMapping_GetItemString(sysmodules, "pickle");
-            }
-            else {
-                cpickle_module = PyImport_ImportModule("pickle");
-            }
-
-            if (!cpickle_module) {
-                /* insert error handling here! and exit this function */
-                as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                                "Unable to load pickle module");
-                goto CLEANUP;
-            }
-            else {
-                PyObject *py_funcname = PyUnicode_FromString("dumps");
-
-                Py_INCREF(cpickle_module);
-                initresult = PyObject_CallMethodObjArgs(
-                    cpickle_module, py_funcname, value, NULL);
-                Py_DECREF(cpickle_module);
-                Py_DECREF(py_funcname);
-
-                if (!initresult) {
-                    /* more error handling &c */
-                    as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                                    "Unable to call dumps function");
-                    goto CLEANUP;
-                }
-                else {
-                    Py_INCREF(initresult);
-
-                    char *return_value;
-                    Py_ssize_t len;
-                    PyBytes_AsStringAndSize(initresult, &return_value, &len);
-                    set_as_bytes(bytes, (uint8_t *)return_value, len,
-                                 AS_BYTES_PYTHON, error_p);
-                    Py_DECREF(initresult);
-                }
-            }
-            Py_XDECREF(cpickle_module);
+            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
+                            "Unable to serialize unknown Python native type.");
         }
     } break;
     case SERIALIZER_JSON:
