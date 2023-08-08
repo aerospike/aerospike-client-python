@@ -111,21 +111,16 @@ class TestPythonSerializer(object):
         Test that when no serializer arg is passed in,
         and no instance serializer has been set,
         and a class serializer has been set,
-        the default language serializer is used.
+        the object fails to be serialized.
         """
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
 
-        self.as_connection.put(self.test_key, self.mixed_record)
+        with pytest.raises(e.ClientError):
+            self.as_connection.put(self.test_key, self.mixed_record)
 
-        _, _, bins = self.as_connection.get(self.test_key)
-
-        # The class serializer would have altered our record, so we
-        # We check that the data is the same as what we stored
-        assert bins == {"normal": 1234, "tuple": (1, 2, 3)}
-
-    # TODO: duplicate test name
-    def test_builtin_with_class_serializer(self):
+    # TODO: remove this because SERIALIZER_PYTHON should be removed
+    def test_put_with_serializer_python_set(self):
         """
         Invoke put() for mixed data record with builtin serializer
         """
@@ -134,11 +129,7 @@ class TestPythonSerializer(object):
 
         client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
-        _, _, bins = client.get(self.test_key)
-
-        assert bins == {"normal": 1234, "tuple": (1, 2, 3)}
-        client.close()
-
+    # TODO: remove this because SERIALIZER_PYTHON should be removed
     def test_builtin_with_class_serializer1(self):
         """
         Invoke put() for mixed data record with builtin serializer
@@ -146,15 +137,7 @@ class TestPythonSerializer(object):
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
 
-        response = self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
-
-        assert response == 0
-
-        _, _, bins = self.as_connection.get(self.test_key)
-
-        # The class serializer would have altered our record, so we
-        # We check that the data is the same as what we stored
-        assert bins == {"normal": 1234, "tuple": (1, 2, 3)}
+        self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
     def test_with_class_serializer(self):
         """
@@ -174,6 +157,7 @@ class TestPythonSerializer(object):
 
         assert bins == {"normal": 1234, "tuple": ("class serialized", "class deserialized")}
 
+    # TODO: remove this
     def test_builtin_with_class_serializer_and_instance_serializer(self):
         """
         Invoke put() passing SERIALIZER_PYTHON and verify that it
@@ -187,16 +171,7 @@ class TestPythonSerializer(object):
 
         # TODO: unnecessary variable?
         rec = {"normal": 1234, "tuple": (1, 2, 3)}  # noqa: F841
-        response = client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
-
-        assert response == 0
-
-        _, _, bins = client.get(self.test_key)
-
-        # The instance and class serializers would have mutated this,
-        # So getting back what we put in means the language serializer ran
-        assert bins == {"normal": 1234, "tuple": (1, 2, 3)}
-        client.close()
+        client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
     def test_with_class_serializer_and_instance_serializer(self):
         """
@@ -228,10 +203,8 @@ class TestPythonSerializer(object):
         aerospike.unset_serializers()
         client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_PYTHON)
 
-        _, _, bins = client.get(self.test_key)
-
-        assert bins == {"normal": 1234, "tuple": (1, 2, 3)}
-        client.close()
+        with pytest.raises(e.ClientError):
+            _, _, bins = client.get(self.test_key)
 
     def test_unset_instance_serializer(self):
         """
@@ -260,11 +233,12 @@ class TestPythonSerializer(object):
 
         self.as_connection.put(("test", "demo", "test_record_2"), self.mixed_record)
 
-        _, _, record = self.as_connection.get(("test", "demo", "test_record_2"))
-
-        self.as_connection.remove(("test", "demo", "test_record_2"))
         # this should not have been serialized with the class serializer
-        assert record == self.mixed_record
+        with pytest.raises(e.ClientError):
+            _, _, record = self.as_connection.get(("test", "demo", "test_record_2"))
+
+        # Cleanup
+        self.as_connection.remove(("test", "demo", "test_record_2"))
 
     def test_unsetting_serializers_after_a_record_put(self):
         aerospike.set_serializer(class_serializer)
@@ -278,7 +252,7 @@ class TestPythonSerializer(object):
         # this should not have been deserialized with the class serializer
         # it will have been deserialized by the class deserializer,
         # so this should be a deserialization of 'class serialized'
-        assert record["tuple"] != ("class serialized", "class deserialized")
+        assert record["tuple"] == "class serialized"
 
     def test_changing_deserializer_after_a_record_put(self):
         aerospike.set_serializer(class_serializer)
@@ -299,9 +273,8 @@ class TestPythonSerializer(object):
         self.as_connection.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_USER)
 
         _, _, record = self.as_connection.get(self.test_key)
-        # this should not have been deserialized with the class serializer
-        # it should now have used the language default serializer
-        assert record["tuple"] != ("class serialized", "class deserialized")
+        # fetching the record doesn't require it's value to be deserialized
+        assert record["tuple"] == "class serialized"
 
     def test_only_setting_a_deserializer(self):
         # This should raise an error
