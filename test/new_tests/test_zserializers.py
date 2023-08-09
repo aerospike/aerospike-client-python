@@ -121,9 +121,9 @@ class TestPythonSerializer(object):
         with pytest.raises(e.ClientError):
             self.as_connection.put(self.test_key, self.mixed_record)
 
-    def test_builtin_with_class_serializer(self):
+    def test_put_with_serializer_arg_none_and_instance_serializer_set(self):
         """
-        Invoke put() for mixed data record with builtin serializer
+        Invoke put() for mixed data record with serializer set to NONE
         """
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
@@ -149,12 +149,10 @@ class TestPythonSerializer(object):
 
         assert bins == {"normal": 1234, "tuple": ("class serialized", "class deserialized")}
 
-    # TODO: remove this
     def test_builtin_with_class_serializer_and_instance_serializer(self):
         """
         Invoke put() passing SERIALIZER_NONE and verify that it
-        causes the language serializer to override instance and class
-        serializers
+        causes the instance and class serializers to be ignored
         """
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
@@ -167,7 +165,7 @@ class TestPythonSerializer(object):
     def test_with_class_serializer_and_instance_serializer(self):
         """
         Invoke put() for mixed data record with class and instance serializer.
-        Verify that the instance serializer takes precedence
+        Verify that the instance serializer takes precedence over the class serializer
         """
         aerospike.set_serializer(class_serializer)
         aerospike.set_deserializer(class_deserializer)
@@ -180,21 +178,6 @@ class TestPythonSerializer(object):
 
         assert bins == {"normal": 1234, "tuple": ("instance serialized", "instance deserialized")}
         client.close()
-
-    def test_with_unset_serializer_python_serializer(self):
-        """
-        Invoke put() for mixed data record with python serializer and
-        calling unset_serializers
-        """
-        aerospike.set_serializer(json.dumps)
-        aerospike.set_deserializer(json.loads)
-        method_config = {}
-        client = TestBaseClass.get_new_connection(method_config)
-
-        aerospike.unset_serializers()
-
-        with pytest.raises(e.ClientError):
-            client.put(self.test_key, self.mixed_record, serializer=aerospike.SERIALIZER_NONE)
 
     def test_unset_instance_serializer(self):
         """
@@ -234,8 +217,9 @@ class TestPythonSerializer(object):
 
         _, _, record = self.as_connection.get(self.test_key)
         # this should not have been deserialized with the class serializer
-        # it will have been deserialized by the class deserializer,
-        # so this should be a deserialization of 'class serialized'
+        # it will have been serialized by the class serializer,
+        # so this should be a deserialization of b'class serialized' with the bytes type
+        # since server blob type is deserialized into Python types
         assert record["tuple"] == b'class serialized'
 
     def test_changing_deserializer_after_a_record_put(self):
@@ -376,6 +360,22 @@ class TestPythonSerializer(object):
         # tuples JSON-encode to a list, and we use this fact to check which
         # serializer ran:
         assert bins == {"normal": 1234, "tuple": ("instance serialized", "instance deserialized")}
+        client.close()
+
+    def test_instance_deserializer_with_operate(self):
+        method_config = {"serialization": (instance_serializer, instance_deserializer)}
+        client = TestBaseClass.get_new_connection(method_config)
+
+        client.put(self.test_key, self.mixed_record)
+
+        ops = [
+            operations.read("tuple")
+        ]
+        _, _, bins = client.operate(self.test_key, ops)
+
+        # tuples JSON-encode to a list, and we use this fact to check which
+        # serializer ran:
+        assert bins == {"tuple": ("instance serialized", "instance deserialized")}
         client.close()
 
     def test_instance_serializer_with_expressions(self):
