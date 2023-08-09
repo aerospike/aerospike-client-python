@@ -3,6 +3,8 @@
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
 from aerospike import exception as e
+from aerospike_helpers.operations import operations
+from aerospike_helpers.expressions import base as expr
 
 import pytest
 import json
@@ -409,3 +411,74 @@ class TestPythonSerializer(object):
 
         assert response["normal"] == 1234
         assert isinstance(response["tuple"], bytes)
+
+    def test_instance_serializer_with_operate(self):
+        method_config = {"serialization": (instance_serializer, instance_deserializer)}
+        client = TestBaseClass.get_new_connection(method_config)
+
+        ops = [operations.write(bin_name, bin_value) for bin_name, bin_value in self.mixed_record.items()]
+        client.operate(self.test_key, ops)
+
+        _, _, bins = client.get(self.test_key)
+
+        # tuples JSON-encode to a list, and we use this fact to check which
+        # serializer ran:
+        assert bins == {"normal": 1234, "tuple": ("instance serialized", "instance deserialized")}
+        client.close()
+
+    def test_instance_serializer_with_expressions(self):
+        # We have to use a different serializer and deserializer for this test case
+        # since the instance serializer and deserializer in this module don't deserialize the server value
+        # back to the original Python value.
+        method_config = {"serialization": (json.dumps, json.loads)}
+        client = TestBaseClass.get_new_connection(method_config)
+
+        client.put(self.test_key, self.mixed_record)
+
+        # The tuple bin should be serialized as a server blob type
+        # (1, 2, 3) will be serialized by the json.dumps serializer into a server blob type
+        # If it wasn't able to be serialized, client would throw a filtered out error
+        exp = expr.Eq(expr.BlobBin("tuple"), (1, 2, 3)).compile()
+        client.get(self.test_key, {"expressions": exp})
+
+        client.close()
+
+    def test_module_serializer_with_operate_neg(self):
+        # The module-level serializer will not work with operate()
+        aerospike.set_serializer(class_serializer)
+
+        ops = [operations.write("tuple", self.mixed_record["tuple"])]
+        with pytest.raises(e.ClientError):
+            self.as_connection.operate(self.test_key, ops)
+
+    def test_module_deserializer_with_operate(self):
+        # However, the module-level de-serializer will work with operate()
+        aerospike.set_deserializer(class_deserializer)
+
+        # Serialize the tuple and put it in the server
+        method_config = {"serialization": (instance_serializer, instance_deserializer)}
+        client = TestBaseClass.get_new_connection(method_config)
+        client.put(self.test_key, self.mixed_record)
+
+        # Try to fetch and deserialize the tuple with operate()
+        ops = [
+            operations.read("tuple")
+        ]
+        _, _, rec = self.as_connection.operate(self.test_key, ops)
+
+        assert rec["tuple"] == ("instance serialized", "class deserialized")
+
+    def test_module_serializer_with_expressions_neg(self):
+        # The module-level serializer will not work with expressions
+        method_config = {"serialization": (instance_serializer, instance_deserializer)}
+        client = TestBaseClass.get_new_connection(method_config)
+
+        client.put(self.test_key, self.mixed_record)
+
+        aerospike.set_serializer(class_serializer)
+
+        exp = expr.Eq(expr.BlobBin("tuple"), (1, 2, 3)).compile()
+        with pytest.raises(e.ClientError):
+            self.as_connection.get(self.test_key, {"expressions": exp})
+
+        client.close()
