@@ -348,6 +348,15 @@ class TestPythonSerializer(object):
         assert response["normal"] == 1234
         assert isinstance(response["tuple"], bytes)
 
+    # Operations and expressions
+
+    def test_operate_with_no_serializer(self):
+        ops = [
+            operations.write("tuple", self.mixed_record["tuple"])
+        ]
+        with pytest.raises(e.ClientError):
+            self.as_connection.operate(self.test_key, ops)
+
     def test_instance_serializer_with_operate(self):
         method_config = {"serialization": (instance_serializer, instance_deserializer)}
         client = TestBaseClass.get_new_connection(method_config)
