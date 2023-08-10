@@ -914,10 +914,6 @@ Job Statuses
 Serialization Constants
 -----------------------
 
-.. data:: SERIALIZER_PYTHON
-
-    Use the cPickle serializer to handle unsupported types (default)
-
 .. data:: SERIALIZER_USER
 
     Use a user-defined serializer to handle unsupported types. Must have \
@@ -925,7 +921,7 @@ Serialization Constants
 
 .. data:: SERIALIZER_NONE
 
-    Do not serialize bins whose data type is unsupported
+    Do not serialize bins whose data type is unsupported (default)
 
 .. versionadded:: 1.0.47
 
@@ -935,12 +931,6 @@ Send Bool Constants
 -------------------
 
 Specifies how the Python client will write Python booleans.
-
-.. data:: PY_BYTES
-
-    Write Python Booleans as PY_BYTES_BLOBs.
-
-    This is Python's native boolean type.
 
 .. data:: INTEGER
 

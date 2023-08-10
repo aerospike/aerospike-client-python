@@ -232,7 +232,7 @@ Assume this boilerplate code is run before all examples below:
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
-            If you need to use an unsupported type, (e.g. set or tuple) you can use a serializer like pickle first.
+            If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
 
         .. seealso:: `Developing Stream UDFs <https://developer.aerospike.com/udf/developing_stream_udfs>`_
 
