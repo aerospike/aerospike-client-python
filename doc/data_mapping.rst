@@ -27,7 +27,7 @@ instance-level pair of functions that handle serialization.
     It is important to consider how other clients connected to the Aerospike database write booleans in order to maintain cross client compatibility.
     For example, if there is a client that reads and writes booleans as integers, then another Python client working with the same data should do the same thing.
 
-    ``send_bool_as`` can be set so the client writes Python booleans as integers or the new server boolean type.
+    ``send_bool_as`` can be set so the client writes Python booleans as integers or the Aerospike native boolean type.
 
     All versions before ``6.x`` wrote Python booleans as ``AS_BYTES_PYTHON``.
 
