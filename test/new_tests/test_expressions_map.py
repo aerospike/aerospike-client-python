@@ -180,8 +180,7 @@ class TestExpressions(TestBaseClass):
                     bytearray("bytearray_test" + str(i), "utf8"),
                     ("bytes_test" + str(i)).encode("utf8"),
                     i % 2 == 1,
-                    aerospike.null,
-                    TestUsrDefinedClass(i),
+                    aerospike.null(),
                     float(i),
                     GEO_POLY,
                 ],
@@ -200,8 +199,7 @@ class TestExpressions(TestBaseClass):
                 },
                 "bymap_bin": {1: "b".encode("utf8"), 2: "d".encode("utf8"), 3: "f".encode("utf8")},
                 "bomap_bin": {1: False, 2: False, 3: True},
-                "nmap_bin": {1: None, 2: aerospike.null, 3: aerospike.null},
-                "blmap_bin": {1: TestUsrDefinedClass(1), 2: TestUsrDefinedClass(3), 3: TestUsrDefinedClass(4)},
+                "nmap_bin": {1: None, 2: aerospike.null(), 3: aerospike.null()},
                 "fmap_bin": {1.0: 1.0, 2.0: 2.0, 6.0: 6.0},
                 "gmap_bin": {1: GEO_POLY, 2: GEO_POLY1, 3: GEO_POLY2},
             }
@@ -434,7 +432,7 @@ class TestExpressions(TestBaseClass):
                 "imap_bin",
                 None,
                 {"map_write_flags": aerospike.MAP_WRITE_FLAGS_NO_FAIL},
-                [aerospike.CDTInfinite, 10, 1, 1, 3, 6],
+                [4, 10, 1, 1, 3, 6],
             ),
             (
                 "smap_bin",
