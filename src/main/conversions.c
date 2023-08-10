@@ -843,10 +843,13 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         *val = (as_val *)as_geojson_new(geo_value_cpy, true);
     }
     else if (PyByteArray_Check(py_obj)) {
-        char *str = PyByteArray_AsString(py_obj);
         Py_ssize_t str_len = PyByteArray_Size(py_obj);
-        *val = (as_val *)as_bytes_new_wrap((uint8_t *)str, (uint32_t)str_len,
-                                           false);
+        as_bytes *bytes = as_bytes_new(str_len);
+
+        char *str = PyByteArray_AsString(py_obj);
+        as_bytes_set(bytes, 0, (const uint8_t *)str, str_len);
+
+        *val = (as_val *)bytes;
     }
     else if (PyList_Check(py_obj)) {
         as_list *list = NULL;
@@ -1024,17 +1027,21 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 Py_DECREF(py_ustr);
             }
             else if (PyBytes_Check(value)) {
-                char *str = PyBytes_AsString(value);
                 Py_ssize_t str_len = PyBytes_Size(value);
-                as_bytes *bytes =
-                    as_bytes_new_wrap((uint8_t *)str, (uint32_t)str_len, false);
+                as_bytes *bytes = as_bytes_new(str_len);
+
+                char *str = PyBytes_AsString(value);
+                as_bytes_set(bytes, 0, (const uint8_t *)str, str_len);
+
                 ret_val = as_record_set_bytes(rec, name, bytes);
             }
             else if (PyByteArray_Check(value)) {
-                char *str = PyByteArray_AsString(value);
                 Py_ssize_t str_len = PyByteArray_Size(value);
-                as_bytes *bytes =
-                    as_bytes_new_wrap((uint8_t *)str, (uint32_t)str_len, false);
+                as_bytes *bytes = as_bytes_new(str_len);
+
+                char *str = PyByteArray_AsString(value);
+                as_bytes_set(bytes, 0, (const uint8_t *)str, str_len);
+
                 ret_val = as_record_set_bytes(rec, name, bytes);
             }
             else if (PyList_Check(value)) {
