@@ -8,6 +8,12 @@ on:
         type: boolean
         required: true
         default: false
+      # Test against a server version
+      # This is helpful if you need to create a backport from an older client major version
+      # And that older client major version does not accomodate for breaking changes in the latest server version
+      server-tag:
+        required: true
+        default: 'latest'
 
 jobs:
   test-sdist:
@@ -65,11 +71,11 @@ jobs:
 
     - name: Run Aerospike server release candidate
       if: ${{ inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.server-tag }}
 
     - name: Set up Aerospike server
       if: ${{ !inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ inputs.server-tag }}
 
     - name: Set config.conf to use Docker IP address of Aerospike server
       # config.conf should be copied into the cibuildwheel Docker container
@@ -122,11 +128,11 @@ jobs:
 
     - name: Run Aerospike server release candidate
       if: ${{ inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.server-tag }}
 
     - name: Set up Aerospike server
       if: ${{ !inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ inputs.server-tag }}
 
     - name: Wait for server to start
       run: sleep 5
@@ -193,7 +199,7 @@ jobs:
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
           export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
-          vagrant up &&
+          SERVER_TAG=${{ inputs.server-tag }} vagrant up &&
           sleep 3 &&
           pip install -r test/requirements.txt
         CIBW_TEST_COMMAND: >
@@ -238,11 +244,11 @@ jobs:
 
     - name: Run Aerospike server release candidate
       if: ${{ inputs.use-server-rc }}
-      run: sshpass -p ${{ secrets.M1_WORKFLOW_SERVER_PW }} ssh -n -o StrictHostKeyChecking=no citrusleaf@${{ secrets.M1_WORKFLOW_SERVER_ADDRESS }} docker run -d --pull "always" --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+      run: sshpass -p ${{ secrets.M1_WORKFLOW_SERVER_PW }} ssh -n -o StrictHostKeyChecking=no citrusleaf@${{ secrets.M1_WORKFLOW_SERVER_ADDRESS }} docker run -d --pull "always" --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.server-tag }}
 
     - name: Set up Aerospike server
       if: ${{ !inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike/aerospike-server" >> $GITHUB_ENV
+      run: echo IMAGE_NAME="aerospike/aerospike-server:${{ inputs.server-tag }}" >> $GITHUB_ENV
 
     - name: Run server
       run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
