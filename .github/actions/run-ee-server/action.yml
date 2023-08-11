@@ -4,6 +4,9 @@ inputs:
   use-server-rc:
     required: true
     default: false
+  server-tag:
+    required: true
+    default: 'latest'
 
 runs:
   using: "composite"
@@ -36,7 +39,7 @@ runs:
 
   - name: Get default aerospike.conf from Docker server EE container
     run: |
-      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE
+      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
       sleep 5
       docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
       docker container stop aerospike
@@ -50,7 +53,7 @@ runs:
     shell: bash
 
   - name: Run enterprise edition server
-    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE asd --config-file /opt/aerospike/etc/aerospike.conf
+    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
     shell: bash
 
   - name: Create user in database for tests

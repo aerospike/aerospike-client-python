@@ -69,10 +69,11 @@ Vagrant.configure("2") do |config|
   # SHELL
 
   config.vm.provision "docker" do |d|
+    server_tag = ENV["SERVER_TAG"] || "latest"
     if ENV["USE_SERVER_RC"] == "true"
-      $image_name = "aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest"
+      $image_name = "aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:#{server_tag}"
     else
-      $image_name = "aerospike/aerospike-server:latest"
+      $image_name = "aerospike/aerospike-server:#{server_tag}"
     end
     d.run $image_name,
       args: "-p 3000:3000"

@@ -15,6 +15,12 @@ on:
           - release
         default: 'rc'
         required: true
+      # Test against a server version
+      # This is helpful if you need to create a backport from an older client major version
+      # And that older client major version does not accomodate for breaking changes in the latest server version
+      server-tag:
+        required: true
+        default: 'latest'
 
 jobs:
   update-version:
@@ -145,6 +151,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
 
     - name: Set config.conf to use Docker IP address of Aerospike server
       # config.conf should be copied into the cibuildwheel Docker container
@@ -201,6 +208,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
 
     - name: Wait for server to start
       run: sleep 5
@@ -408,7 +416,7 @@ jobs:
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
           export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
-          vagrant up &&
+          SERVER_TAG=${{ inputs.server-tag }} vagrant up &&
           sleep 3 &&
           pip install -r test/requirements.txt
         CIBW_TEST_COMMAND: >
@@ -455,11 +463,11 @@ jobs:
 
     - name: Use server rc
       if: ${{ inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest" >> $GITHUB_ENV
+      run: echo IMAGE_NAME="aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
 
     - name: Use server release
       if: ${{ !inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike/aerospike-server" >> $GITHUB_ENV
+      run: echo IMAGE_NAME="aerospike/aerospike-server:${{ inputs.server-tag }}" >> $GITHUB_ENV
 
     - name: Run server
       run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
