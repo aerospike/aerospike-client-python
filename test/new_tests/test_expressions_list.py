@@ -79,8 +79,7 @@ LIST_BIN_EXAMPLE = [
                 bytearray("bytearray_test" + str(8), "utf8"),
                 ("bytes_test" + str(8)).encode("utf8"),
                 8 % 2 == 1,
-                aerospike.null,
-                TestUsrDefinedClass(8),
+                aerospike.null(),
                 float(8),
                 GEO_POLY
 ]
@@ -108,8 +107,7 @@ class TestExpressions(TestBaseClass):
                         bytearray("bytearray_test" + str(i), "utf8"),
                         ("bytes_test" + str(i)).encode("utf8"),
                         i % 2 == 1,
-                        aerospike.null,
-                        TestUsrDefinedClass(i),
+                        aerospike.null(),
                         float(i),
                         GEO_POLY
                     ],
@@ -145,13 +143,8 @@ class TestExpressions(TestBaseClass):
                     ],
                     'nlist_bin': [
                         None,
-                        aerospike.null,
-                        aerospike.null
-                    ],
-                    'bllist_bin': [
-                        TestUsrDefinedClass(1),
-                        TestUsrDefinedClass(3),
-                        TestUsrDefinedClass(4)
+                        aerospike.null(),
+                        aerospike.null()
                     ],
                     'flist_bin': [
                         1.0,
@@ -197,13 +190,12 @@ class TestExpressions(TestBaseClass):
         (None, None, "bytes_test3".encode("utf8"), aerospike.LIST_RETURN_VALUE, ["bytes_test3".encode("utf8")], 1),
         (None, None, bytearray("bytearray_test3", "utf8"), aerospike.LIST_RETURN_VALUE, [bytearray("bytearray_test3", "utf8")], 1),
         #(None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9), NOTE: this won't work because booleans are not serialized by default in expressions.
-        (None, None, None, aerospike.LIST_RETURN_VALUE, [None], _NUM_RECORDS),
+        (None, None, None, aerospike.LIST_RETURN_VALUE, [None, None], _NUM_RECORDS),
         (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
         ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
         (None, None, {31: 31, 32: 32, 33: 33, 8: 8}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 8: 8}], 1),
-        (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], _NUM_RECORDS),
+        (None, None, aerospike.null(), aerospike.LIST_RETURN_VALUE, [aerospike.null()], _NUM_RECORDS),
         (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], _NUM_RECORDS),
-        (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1)
     ])
     def test_list_get_by_value_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
@@ -228,11 +220,10 @@ class TestExpressions(TestBaseClass):
         # (None, None, 4, 7, aerospike.LIST_RETURN_RANK, [[1], [1], [1]], 3), temporarily failing because of bool jump rank
         (None, None, "string_test3","string_test6", aerospike.LIST_RETURN_INDEX, [[2], [2], [2]], 3),
         (None, None, "bytes_test6".encode("utf8"), "bytes_test9".encode("utf8"), aerospike.LIST_RETURN_COUNT, [1, 1, 1], 3),
-        (None, None, bytearray("bytearray_test3", "utf8"), bytearray("bytearray_test6", "utf8"), aerospike.LIST_RETURN_REVERSE_INDEX, [[6], [6], [6]], 3),
+        (None, None, bytearray("bytearray_test3", "utf8"), bytearray("bytearray_test6", "utf8"), aerospike.LIST_RETURN_REVERSE_INDEX, [[5] for _ in range(3)], 3),
         (None, None, [26, 27, 28, 6], [26, 27, 28, 9], aerospike.LIST_RETURN_VALUE, [[[26, 27, 28, 6]], [[26, 27, 28, 7]], [[26, 27, 28, 8]]], 3),
         ([list_index], [3], 5, 9, aerospike.LIST_RETURN_REVERSE_RANK, [[3], [3], [3]], 4),
         (None, None, GEO_POLY, aerospike.CDTInfinite(), aerospike.LIST_RETURN_VALUE, [[GEO_POLY], [GEO_POLY], [GEO_POLY]], _NUM_RECORDS),
-        (None, None, TestUsrDefinedClass(4), TestUsrDefinedClass(7), aerospike.LIST_RETURN_VALUE, [[TestUsrDefinedClass(4)], [TestUsrDefinedClass(5)], [TestUsrDefinedClass(6)]], 3) #NOTE py_bytes cannot be compard directly server side
     ])
     def test_list_get_by_value_range_pos(self, ctx_types, ctx_indexes, begin, end, return_type, check, expected):
         """
@@ -278,9 +269,9 @@ class TestExpressions(TestBaseClass):
         (None, None, ["string_test3", 3], aerospike.LIST_RETURN_VALUE, ["string_test3", 3], 0),
         (None, None, ["bytes_test8".encode("utf8"), 8, GEO_POLY], aerospike.LIST_RETURN_VALUE, [8, "bytes_test8".encode("utf8"), GEO_POLY], 1),
         (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
-        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ,10, 11], 1),
-        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0], 1),
-        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 12, 1),
+        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [i for i in range(len(LIST_BIN_EXAMPLE))], 1),
+        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_REVERSE_INDEX, [i for i in range(len(LIST_BIN_EXAMPLE) - 1, -1, -1)], 1),
+        (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, len(LIST_BIN_EXAMPLE), 1),
         # (None, None, [8], aerospike.LIST_RETURN_RANK, [1], 1), temporarily failing because of bool jump rank
         ([list_index], [3], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
     ])
@@ -299,9 +290,9 @@ class TestExpressions(TestBaseClass):
         expr = Eq(ListGetByValueList(ctx, return_type, value, 'list_bin'), check)
         verify_multiple_expression_result(self.as_connection, self.test_ns, self.test_set, expr.compile(), 'list_bin', expected)
 
-    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected", [
-        (None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest)
-    ])
+    @pytest.mark.parametrize("ctx_types, ctx_indexes, value, return_type, check, expected",
+        [(None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, "a", e.InvalidRequest)]
+    )
     def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
         """
         Invoke ListGetByValueList() with expected failures.

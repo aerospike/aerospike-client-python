@@ -55,7 +55,7 @@ class TestCTXOperations(object):
         random.seed(datetime.now())
         self.nested_list_order = [[4, 2, 5],[1, 4, 2, 3],[[2,2,2]]]
         self.nested_map = { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-        'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'}, 'cage': ['bird']}, 'two': []}}
+        'second': {'nested': {"a": 4, "b": 5, "c": 6}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'}, 'cage': ['bird']}, 'two': []}}
         self.layered_map = {'first': {'one': {1: {'g': 'layer', 'l': 'done'} } }, 'second': {'two': {2: {'g': 'layer', 'l': 'bye'} } } }
         self.num_map = {1: {1: 'v1', 2: 'v2', 3: 'v3'}, 2: {4: 'v4', 5: 'v5', 6: 'v6'}, 3: {7: 'v7', 8: 'v8', 9: 'v9', 10: {11: 'v11'}}}
 
@@ -1527,7 +1527,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize("ctx_types, key, return_type, list_indexes, expected", [
         ([map_index], 'greet', aerospike.MAP_RETURN_VALUE, [0], 'hi'),
         ([map_index], 3, aerospike.MAP_RETURN_VALUE, [0], 'hello'),
-        ([map_index], 'nested', aerospike.MAP_RETURN_VALUE, [1], {4,5,6}),
+        ([map_index], 'nested', aerospike.MAP_RETURN_VALUE, [1], {"a": 4, "b": 5, "c": 6}),
         ([map_index], 'dog', aerospike.MAP_RETURN_VALUE, [1], None),
         ([map_index, map_index, map_index], 'fish', aerospike.MAP_RETURN_VALUE, [2,0,0], 'pond'), # why does this fail?
         ([map_key], 'nested', aerospike.MAP_RETURN_INDEX, ['second'], 1)
@@ -1610,7 +1610,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize("ctx_types, key, return_type, inverted, list_indexes, expected", [
         ([map_index], ['greet'], aerospike.MAP_RETURN_VALUE, False, [0], ['hi']),
         ([map_index], ['numbers', 3], aerospike.MAP_RETURN_VALUE, False, [0], ['hello', [3,1,2]]),
-        ([map_index], ['nested', 'hundred'], aerospike.MAP_RETURN_VALUE, False, [1], [100, {4,5,6}]),
+        ([map_index], ['nested', 'hundred'], aerospike.MAP_RETURN_VALUE, False, [1], [100, {"a": 4,"b": 5,"c": 6}]),
         ([map_index], ['dog'], aerospike.MAP_RETURN_VALUE, False, [1], []),
         ([map_index, map_index, map_index], ['horse', 'fish'], aerospike.MAP_RETURN_VALUE, False, [2,0,0], ['pond', 'shoe']),
         ([map_key], ['nested'], aerospike.MAP_RETURN_INDEX, True, ['second'], [0])
@@ -1696,7 +1696,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize("ctx_types, index, rmv_count, return_type, inverted, list_indexes, expected", [
         ([map_index], 1, 1, aerospike.MAP_RETURN_VALUE, False, [0], ['hi']),
         ([map_index], 0, 3, aerospike.MAP_RETURN_VALUE, False, [0], ['hello', 'hi', [3,1,2]]),
-        ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [1], [100, {4,5,6}]),
+        ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [1], [100, {"a": 4,"b": 5,"c": 6}]),
         ([map_index, map_index, map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [2,0,0], ['pond', 'shoe']),
         ([map_key], 1, 2, aerospike.MAP_RETURN_INDEX, True, ['second'], [0]),
         ([map_rank, map_value], 0, 3, aerospike.MAP_RETURN_INDEX, False, [1, {'cat': 'dog',
@@ -1824,7 +1824,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize("ctx_types, values, return_type, inverted, list_indexes, expected", [
         ([map_index], ['hi', 'hello'], aerospike.MAP_RETURN_VALUE, False, [0], ['hello', 'hi']),
         ([map_index], ['hello'], aerospike.MAP_RETURN_VALUE, False, [0], ['hello']),
-        ([map_value], [{4,5,6}, 100], aerospike.MAP_RETURN_VALUE, False, [{'nested': {4,5,6,}, 'hundred': 100}], [100, {4,5,6}]),
+        ([map_value], [{"a": 4,"b": 5,"c": 6}, 100], aerospike.MAP_RETURN_VALUE, False, [{'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}], [100, {"a": 4,"b": 5,"c": 6}]),
         ([map_index], ['dog'], aerospike.MAP_RETURN_VALUE, False, [1], []),
         ([map_index, map_key], ['dog', ['bird']], aerospike.MAP_RETURN_VALUE, True, [2,'one'], [{'horse': 'shoe', 'fish': 'pond'}]),
     ])
@@ -1868,7 +1868,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize("ctx_types, rank, return_type, list_indexes, expected", [
         ([map_index], 1, aerospike.MAP_RETURN_VALUE, [0], 'hi'),
         ([map_index], 0, aerospike.MAP_RETURN_VALUE, [0], 'hello'),
-        ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {4,5,6}),
+        ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {"a": 4,"b": 5,"c": 6}),
         ([map_index, map_index, map_index], 0, aerospike.MAP_RETURN_VALUE, [2,0,0], 'pond'),
         ([map_key], 1, aerospike.MAP_RETURN_INDEX, ['second'], 1)
     ])
@@ -2131,13 +2131,13 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, key, amount, map_policy, map_indexes, expected_bin", [
         ([map_index], 'hundred', 27, None, [1], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 73},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 73},
          'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'}, 'cage': ['bird']}, 'two': []}}),
         ([map_index, map_rank, map_key], 'new', 10, None, [2,1,'barn'], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond', 'new': -10}, 'cage': ['bird']}, 'two': []}}),
         ([map_index, map_key], 2, 50, None, [2,'one'], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'}, 'cage': ['bird'], 2: -50}, 'two': []}}),
     ])
     def test_ctx_map_decrement(self, ctx_types, key, amount, map_policy, map_indexes, expected_bin):
@@ -2224,11 +2224,11 @@ class TestCTXOperations(object):
          'second': {},
          'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'}, 'cage': ['bird']}, 'two': []}}),
         ([map_index, map_key],  [2,'one'], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {}, 'two': []}}),
         ([map_index, map_key, map_value],  [2,'one', {'horse': 'shoe', 'fish': 'pond'}],
          { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {}, 'cage': ['bird']}, 'two': []}}),
     ])
     def test_ctx_map_clear(self, ctx_types, map_indexes, expected):
@@ -2269,19 +2269,19 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, key, return_type, list_indexes, expected_val, expected_bin", [
         ([map_index], 'greet', aerospike.MAP_RETURN_VALUE, [0], 'hi', { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
           'cage': ['bird']}, 'two': []}}),
         ([map_index], 3, aerospike.MAP_RETURN_VALUE, [0], 'hello', { 'first': {'greet': 'hi', 'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
-        ([map_index], 'nested', aerospike.MAP_RETURN_VALUE, [1], {4,5,6}, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
+        ([map_index], 'nested', aerospike.MAP_RETURN_VALUE, [1], {"a": 4,"b": 5,"c": 6,}, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': {'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index], 'dog', aerospike.MAP_RETURN_VALUE, [1], None, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index, map_index, map_index], 'fish', aerospike.MAP_RETURN_VALUE, [2,0,0], 'pond',
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6,}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe'}, 'cage': ['bird']}, 'two': []}}),
         ([map_key], 'nested', aerospike.MAP_RETURN_INDEX, ['second'], 1, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': { 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
@@ -2326,22 +2326,22 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, key, return_type, inverted, list_indexes, expected_val, expected_bin", [
         ([map_index], ['greet'], aerospike.MAP_RETURN_VALUE, False, [0], ['hi'], { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
           'cage': ['bird']}, 'two': []}}),
         ([map_index], ['numbers', 3], aerospike.MAP_RETURN_VALUE, False, [0], ['hello', [3,1,2]], { 'first': {'greet': 'hi',},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
-        ([map_index], ['nested', 'hundred'], aerospike.MAP_RETURN_VALUE, False, [1], [100, {4,5,6}], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
+        ([map_index], ['nested', 'hundred'], aerospike.MAP_RETURN_VALUE, False, [1], [100, {"a": 4,"b": 5,"c": 6,}], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': {}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index], ['dog'], aerospike.MAP_RETURN_VALUE, False, [1], [], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index, map_index, map_index], ['horse', 'fish'], aerospike.MAP_RETURN_VALUE, False, [2,0,0], ['pond', 'shoe'],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6,}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {}, 'cage': ['bird']}, 'two': []}}),
         ([map_key], ['nested'], aerospike.MAP_RETURN_INDEX, True, ['second'], [0], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': { 'nested': {4,5,6,}}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': { 'nested': {"a": 4,"b": 5,"c": 6,}}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}})
     ])
     def test_ctx_map_remove_by_key_list(self, ctx_types, key, return_type, inverted, list_indexes, expected_val, expected_bin):
@@ -2432,22 +2432,22 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, value, return_type, inverted, list_indexes, expected_val, expected_bin", [
         ([map_index], 'hi', aerospike.MAP_RETURN_VALUE, False, [0], ['hi'], { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
           'cage': ['bird']}, 'two': []}}),
         ([map_index], 'hello', aerospike.MAP_RETURN_VALUE, False, [0], ['hello'], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
-        ([map_index], {4,5,6}, aerospike.MAP_RETURN_VALUE, False, [1], [{4,5,6}], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
+        ([map_index], {"a": 4,"b": 5,"c": 6,}, aerospike.MAP_RETURN_VALUE, False, [1], [{"a": 4,"b": 5,"c": 6,}], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': {'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index], 'dog', aerospike.MAP_RETURN_VALUE, False, [1], [], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index, map_index, map_index], 'pond', aerospike.MAP_RETURN_VALUE, True, [2,0,0], ['shoe'],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6,}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {'fish': 'pond'}, 'cage': ['bird']}, 'two': []}}),
         ([map_key], 100, aerospike.MAP_RETURN_INDEX, False, ['second'], [0], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6}}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}})
     ])
     def test_ctx_map_remove_by_value(self, ctx_types, value, return_type, inverted, list_indexes, expected_val, expected_bin):
@@ -2489,19 +2489,19 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, values, return_type, inverted, list_indexes, expected_val, expected_bin", [
         ([map_index], ['hi', 'hello'], aerospike.MAP_RETURN_VALUE, False, [0], ['hello', 'hi'], { 'first': {'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
           'cage': ['bird']}, 'two': []}}),
         ([map_index], ['hello'], aerospike.MAP_RETURN_VALUE, False, [0], ['hello'], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
-        ([map_value], [{4,5,6}, 100], aerospike.MAP_RETURN_VALUE, False, [{'nested': {4,5,6,}, 'hundred': 100}], [100, {4,5,6}], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
+        ([map_value], [{"a": 4,"b": 5,"c": 6,}, 100], aerospike.MAP_RETURN_VALUE, False, [{'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}], [100, {"a": 4,"b": 5,"c": 6,}], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': {}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index], ['dog'], aerospike.MAP_RETURN_VALUE, False, [1], [], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index, map_key], ['dog', ['bird']], aerospike.MAP_RETURN_VALUE, True, [2,'one'], [{'horse': 'shoe', 'fish': 'pond'}],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6,}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'cage': ['bird']}, 'two': []}}),
     ])
     def test_ctx_map_remove_by_value_list(self, ctx_types, values, return_type, inverted, list_indexes, expected_val, expected_bin):
@@ -2591,16 +2591,16 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, index, return_type, list_indexes, expected_val, expected_bin", [
         ([map_index], 1, aerospike.MAP_RETURN_VALUE, [0], 'hi', { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
           'cage': ['bird']}, 'two': []}}),
         ([map_index], 0, aerospike.MAP_RETURN_VALUE, [0], 'hello', { 'first': {'greet': 'hi', 'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
-        ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {4,5,6}, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
+        ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {"a": 4,"b": 5,"c": 6,}, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': {'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index, map_index, map_index], 0, aerospike.MAP_RETURN_VALUE, [2,0,0], 'pond',
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6,}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe'}, 'cage': ['bird']}, 'two': []}}),
         ([map_key], 1, aerospike.MAP_RETURN_INDEX, ['second'], 1, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': { 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
@@ -2646,22 +2646,22 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, index, rmv_count, return_type, inverted, list_indexes, expected_val, expected_bin", [
         ([map_index], 1, 1, aerospike.MAP_RETURN_VALUE, False, [0], ['hi'], { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
           'cage': ['bird']}, 'two': []}}),
         ([map_index], 0, 3, aerospike.MAP_RETURN_VALUE, False, [0], ['hello', 'hi', [3,1,2]], { 'first': {},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
-        ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [1], [100, {4,5,6}], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
+        ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [1], [100, {"a": 4,"b": 5,"c": 6,}], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': {}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index, map_index, map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [2,0,0], ['pond', 'shoe'],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6,}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {}, 'cage': ['bird']}, 'two': []}}),
         ([map_key], 1, 2, aerospike.MAP_RETURN_INDEX, True, ['second'], [0], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6}}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_key, map_value], 0, 3, aerospike.MAP_RETURN_INDEX, False, ['third', {'cat': 'dog', 'barn': {'fish': 'pond', 'horse': 'shoe'}, 'cage': ['bird']}],
-         [0,1,2], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6,}, 'hundred': 100},
+         [0,1,2], { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {}, 'two': []}})
     ])
     def test_ctx_map_remove_by_index_range(self, ctx_types, index, rmv_count, return_type, inverted, list_indexes, expected_val, expected_bin):
@@ -2705,16 +2705,16 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, rank, return_type, list_indexes, expected_val, expected_bin", [
         ([map_index], 1, aerospike.MAP_RETURN_VALUE, [0], 'hi', { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
           'cage': ['bird']}, 'two': []}}),
         ([map_index], 0, aerospike.MAP_RETURN_VALUE, [0], 'hello', { 'first': {'greet': 'hi', 'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
-        ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {4,5,6}, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
+        ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {"a": 4,"b": 5,"c": 6,}, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': {'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index, map_index, map_index], 0, aerospike.MAP_RETURN_VALUE, [2,0,0], 'pond',
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6,}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe'}, 'cage': ['bird']}, 'two': []}}),
         ([map_key], 1, aerospike.MAP_RETURN_INDEX, ['second'], 1, { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'},
          'second': { 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
@@ -2809,16 +2809,16 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, value, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin", [
         ([map_index], 'hi', 0, aerospike.MAP_RETURN_VALUE, 1, False, [0], ['hi'], { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index], 'hi', 1, aerospike.MAP_RETURN_VALUE, 3, True, [0], ['hello', 'hi'], { 'first': {'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_key, map_index, map_value], 'pond', 0, aerospike.MAP_RETURN_VALUE, 2, False, ['third',0,{'horse': 'shoe', 'fish': 'pond'}], ['pond', 'shoe'],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {}, 'cage': ['bird']}, 'two': []}}),
         ([map_key, map_rank], {'horse': 'shoe', 'fish': 'pond'}, 0, aerospike.MAP_RETURN_VALUE, 2, True, ['third',1], ['dog',['bird']],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'barn': {'horse': 'shoe', 'fish': 'pond'}}, 'two': []}}),
     ])
     def test_ctx_map_remove_by_value_rank_range_relative(self, ctx_types, value, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin):
@@ -2905,16 +2905,16 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin", [
         ([map_index], 'greet', 0, aerospike.MAP_RETURN_VALUE, 1, False, [0], ['hi'], { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index], 'greet', 1, aerospike.MAP_RETURN_VALUE, 3, True, [0], ['hello', 'hi'], { 'first': {'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_key, map_index, map_value], 'fish', 0, aerospike.MAP_RETURN_VALUE, 2, False, ['third',0,{'horse': 'shoe', 'fish': 'pond'}], ['pond', 'shoe'],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {}, 'cage': ['bird']}, 'two': []}}),
         ([map_key, map_rank], 'barn', 0, aerospike.MAP_RETURN_VALUE, 2, True, ['third',1], ['dog'],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'barn': {'horse': 'shoe', 'fish': 'pond'}, 'cage': ['bird']}, 'two': []}}),
     ])
     def test_ctx_map_remove_by_key_index_range_relative(self, ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin):
@@ -2957,16 +2957,16 @@ class TestCTXOperations(object):
 
     @pytest.mark.parametrize("ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin", [
         ([map_index], 'greet', 0, aerospike.MAP_RETURN_VALUE, 1, False, [0], ['hi'], { 'first': {'numbers': [3, 1, 2], 3: 'hello'},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_index], 'greet', 1, aerospike.MAP_RETURN_VALUE, 3, True, [0], ['hello', 'hi'], { 'first': {'numbers': [3, 1, 2]},
-         'second': {'nested': {4,5,6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
+         'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100}, 'third': {'one': {'cat': 'dog', 'barn': {'horse': 'shoe', 'fish': 'pond'},
          'cage': ['bird']}, 'two': []}}),
         ([map_key, map_index, map_value], 'fish', 0, aerospike.MAP_RETURN_VALUE, 2, False, ['third',0,{'horse': 'shoe', 'fish': 'pond'}], ['pond', 'shoe'],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'cat': 'dog', 'barn': {}, 'cage': ['bird']}, 'two': []}}),
         ([map_key, map_rank], 'barn', 0, aerospike.MAP_RETURN_VALUE, 2, True, ['third',1], ['dog'],
-         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {4,5,6}, 'hundred': 100},
+         { 'first': {'greet': 'hi', 'numbers': [3, 1, 2], 3: 'hello'}, 'second': {'nested': {"a": 4,"b": 5,"c": 6,}, 'hundred': 100},
          'third': {'one': {'barn': {'horse': 'shoe', 'fish': 'pond'}, 'cage': ['bird']}, 'two': []}}),
     ])
     def test_ctx_map_remove_by_key_index_range_relative(self, ctx_types, key, offset, return_type, count, inverted, list_indexes, expected_val, expected_bin):
