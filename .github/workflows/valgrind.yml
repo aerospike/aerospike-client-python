@@ -10,6 +10,9 @@ on:
       use-server-rc:
         required: true
         default: false
+      server-tag:
+        required: true
+        default: 'latest'
 
 jobs:
   valgrind:
@@ -34,6 +37,7 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
