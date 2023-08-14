@@ -417,8 +417,8 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         // This prevents the client from throwing an exception and
         // breaking applications that don't handle the exception
         // in case it still fetches AS_BYTES_PYTHON types stored in the server.
-        // Applications using this client must serialize the AS_BYTES_PYTHON types
-        // manually.
+        // Applications using this client must deserialize the bytearrays
+        // manually with cPickle.
         uint32_t bval_size = as_bytes_size(bytes);
         PyObject *py_val = PyByteArray_FromStringAndSize(
             (char *)as_bytes_get(bytes), bval_size);
