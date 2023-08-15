@@ -412,7 +412,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                                                     as_error *error_p)
 {
     switch (as_bytes_get_type(bytes)) {
-    case AS_BYTES_PYTHON:
+    case AS_BYTES_PYTHON:;
         // Automatically convert AS_BYTES_PYTHON server types to bytearrays.
         // This prevents the client from throwing an exception and
         // breaking applications that don't handle the exception
