@@ -65,15 +65,9 @@ class TestNewListOperationsHelpers(object):
         Setup Method
         """
         self.keys = []
-        self.test_map = {
-            "a" : 5,
-            "b" : 4,
-            "c" : 3,
-            "d" : 2,
-            "e" : 1,
-            "f" : True,
-            "g" : False
-        }
+        # In a CDT, different types are also ordered from each other
+        # boolean < integer
+        self.test_map = {"a": 5, "b": 4, "c": 3, "d": 2, "e": 1, "f": True, "g": False}
 
         self.test_key = 'test', 'demo', 'new_map_op'
         self.test_bin = 'map'
@@ -240,17 +234,20 @@ class TestNewListOperationsHelpers(object):
     def test_map_remove_by_rank(self):
         operations = [map_ops.map_remove_by_rank(self.test_bin, 1, return_type=aerospike.MAP_RETURN_KEY)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
-        assert ret_vals == "d"
+        # True > False
+        assert ret_vals == "f"
         res_map = self.as_connection.get(self.test_key)[2][self.test_bin]
-        assert "d" not in res_map
+        assert "f" not in res_map
 
     def test_map_remove_by_rank_range(self):
         operations = [map_ops.map_remove_by_rank_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_KEY)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
-        assert set(ret_vals) == set(["d", "c"])
+        # f: True, e: 1
+        # Removes 2 items from rank 1 and going up the rank
+        assert set(ret_vals) == set(["e", "f"])
         res_map = self.as_connection.get(self.test_key)[2][self.test_bin]
-        assert "d" not in res_map
-        assert "c" not in res_map
+        assert "e" not in res_map
+        assert "f" not in res_map
 
 
     def test_map_get_by_key(self):
@@ -314,7 +311,7 @@ class TestNewListOperationsHelpers(object):
     def test_map_get_by_rank(self):
         operations = [map_ops.map_get_by_rank(self.test_bin, 1, return_type=aerospike.MAP_RETURN_KEY)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
-        assert ret_vals == "d"
+        assert ret_vals == "f"
 
     def test_map_get_by_rank_range(self):
         sort_map(self.as_connection, self.test_key, self.test_bin)
@@ -322,7 +319,7 @@ class TestNewListOperationsHelpers(object):
             map_ops.map_get_by_rank_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_KEY)
         ]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
-        assert ret_vals == ["d", "c"]
+        assert ret_vals == ["f", "e"]
 
     def test_map_get_exists_by_key_list(self):
         if not Server61:
