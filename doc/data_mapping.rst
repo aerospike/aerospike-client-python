@@ -6,9 +6,19 @@ Python Data Mappings
 
 .. rubric:: How Python types map to server types
 
+Default Behavior
+----------------
+
 By default, the :py:class:`~aerospike.Client` maps the supported Python types to Aerospike server \
 `types <https://docs.aerospike.com/server/guide/data-types/overview>`_. \
-When an unsupported type is encountered by the module, it does not serialize the type and will throw an error.
+When an unsupported type is encountered by the module:
+
+1. When sending data to the server, it does not serialize the type and will throw an error.
+2. When reading `AS_BYTES_PYTHON` types from the server, it returns the raw bytes as a :class:`bytearray`.
+   To deserialize this data, the application must use cPickle instead of relying on the client to do it automatically.
+
+Serializers
+-----------
 
 However, the functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
 allow for user-defined functions to handle serialization.
@@ -30,6 +40,9 @@ instance-level pair of functions that handle serialization.
     ``send_bool_as`` can be set so the client writes Python booleans as integers or the Aerospike native boolean type.
 
     All versions before ``6.x`` wrote Python booleans as ``AS_BYTES_PYTHON``.
+
+Data Mappings
+-------------
 
 The following table shows which Python types map directly to Aerospike server types.
 

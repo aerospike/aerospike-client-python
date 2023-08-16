@@ -3,6 +3,7 @@ lua
 namespace
 geospatial
 serialized
+Serializers
 deserialized
 Aerospike
 aerospike
