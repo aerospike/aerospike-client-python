@@ -1,0 +1,161 @@
+name: Build wheels
+
+# Builds wheels and sends to QE and Aerospike artifactory
+on:
+  workflow_dispatch:
+    inputs:
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+      # Test against a server version
+      # This is helpful if you need to create a backport from an older client major version
+      # And that older client major version does not accomodate for breaking changes in the latest server version
+      server-tag:
+        required: true
+        default: 'latest'
+
+jobs:
+  test-sdist:
+    name: Build and install sdist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+        architecture: 'x64'
+
+    - run: sudo apt update
+    - name: Install build dependencies (apt packages)
+      run: sudo apt install python3-dev libssl-dev -y
+    - name: Install build dependencies (pip packages)
+      run: python3 -m pip install build
+
+    - name: Build source distribution
+      run: python3 -m build --sdist
+
+    - name: Upload sdist to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./dist/*.tar.gz
+        # Artifact name, not the file name
+        name: sdist
+
+  manylinux_x86_64:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Python versions to build wheels on
+        python: [
+          ["cp36", "3.6"],
+          ["cp37", "3.7"],
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+        ]
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+
+    - name: Wait for server to start
+      run: sleep 5
+
+    - name: Set config.conf to use Docker IP address of Aerospike server
+      # config.conf should be copied into the cibuildwheel Docker container
+      run: |
+        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
+        pip install crudini
+        sed -i "s/127.0.0.1:3000//" config.conf
+        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+      working-directory: test
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python[0] }}-manylinux_x86_64
+        CIBW_BUILD_FRONTEND: build
+        CIBW_BEFORE_ALL_LINUX: >
+          yum install openssl-devel -y &&
+          yum install python-devel -y &&
+          yum install python-setuptools -y
+        CIBW_ARCHS: "x86_64"
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          pip install -r requirements.txt &&
+          python -m pytest new_tests/
+
+    - name: Upload wheels to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+        # Artifact name, not the file name
+        name: manylinux-x86_64-${{ matrix.python[0] }}
+
+  macOS-x86:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [
+          ["cp36", "3.6"],
+          ["cp37", "3.7"],
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+        ]
+        os: [macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Set up Python ${{ matrix.python-version[1] }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version[1] }}
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_x86_64
+        CIBW_BUILD_FRONTEND: build
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        CIBW_ARCHS: "x86_64"
+        CIBW_BEFORE_TEST: >
+          export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
+          SERVER_TAG=${{ inputs.server-tag }} vagrant up &&
+          sleep 3 &&
+          pip install -r test/requirements.txt
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          python -m pytest new_tests/
+
+    - name: Save macOS wheel
+      uses: actions/upload-artifact@v3
+      with:
+        name: ${{ matrix.os }}-x86_64-${{ matrix.python-version[0] }}-wheel
+        path: wheelhouse/*.whl
+
+  send-to-qe:
+    needs: [manylinux_x86_64]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - run: echo "Upload to QE"
+      # - uses: shallwefootball/s3-upload-action@master
+      #   with:
+      #     aws_key_id: ${{ secrets.AWS_KEY_ID }}
+      #     aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+      #     aws_bucket: ${{ secrets.AWS_BUCKET }}
+      #     # Send all distributions to QE build system
+      #     source_dir: './wheelhouse'
