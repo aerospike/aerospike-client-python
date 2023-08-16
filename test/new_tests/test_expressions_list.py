@@ -194,7 +194,7 @@ class TestExpressions(TestBaseClass):
         (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
         ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
         (None, None, {31: 31, 32: 32, 33: 33, 8: 8}, aerospike.LIST_RETURN_VALUE, [{31: 31, 32: 32, 33: 33, 8: 8}], 1),
-        (None, None, aerospike.null(), aerospike.LIST_RETURN_VALUE, [aerospike.null()], _NUM_RECORDS),
+        (None, None, aerospike.null(), aerospike.LIST_RETURN_VALUE, [aerospike.null(), aerospike.null()], _NUM_RECORDS),
         (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], _NUM_RECORDS),
     ])
     def test_list_get_by_value_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
