@@ -65,13 +65,13 @@ jobs:
 
     - name: Use release server
       if: ${{ inputs.use-server-rc == false }}
-      run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise:${{ inputs.server-tag }}" >> $GITHUB_ENV
+      run: echo "SERVER_IMAGE=aerospike/aerospike-server:${{ inputs.server-tag }}" >> $GITHUB_ENV
 
     - name: Use release candidate server
       if: ${{ inputs.use-server-rc == true }}
-      run: echo "SERVER_IMAGE=aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
+      run: echo "SERVER_IMAGE=aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
 
-    - name: Get default aerospike.conf from Docker server EE container
+    - name: Run server
       run: |
         docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE
 
@@ -83,8 +83,7 @@ jobs:
       run: |
         export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
         pip install crudini
-        sed -i "s/127.0.0.1:3000//" config.conf
-        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+        crudini --set config.conf community-edition hosts ${SERVER_DOCKER_IP}:3000
       working-directory: test
 
     - name: Build wheel
