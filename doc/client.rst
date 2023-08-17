@@ -179,7 +179,7 @@ Record Operations
 -----------------
 
 
-    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer]]])
+    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer=aerospike.SERIALIZER_NONE]]])
 
         Write a record with a given *key* to the cluster.
 

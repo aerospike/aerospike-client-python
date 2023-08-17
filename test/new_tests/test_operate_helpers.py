@@ -155,13 +155,6 @@ class TestOperate(object):
             ],
             {'write_bin': {u'no': 89}}),
         (
-            ('test', 'demo', 1),                               # write_tuple_positive
-            [
-                operations.write("write_bin", ('a', 'b', 'c')),
-                operations.read("write_bin")
-            ],
-            {'write_bin': ('a', 'b', 'c')}),
-        (
             ('test', 'demo', 1),                               # with_bin_bytearray
             [
                 operations.prepend("asd[;asjk", "ram"),
@@ -897,10 +890,10 @@ class TestOperate(object):
         ], {"string_bin": {"new_val": 1}}, "string_bin", ['a', 'b', 'c',
                                                           'd', {'new_val': 1}]),
         ([
-            list_operations.list_append_items("string_bin", [['z', 'x'], ('y', 'w')]),
+            list_operations.list_append_items("string_bin", [['z', 'x'], ['y', 'w']]),
             list_operations.list_get_range("string_bin", 3, 3)
-        ], {"string_bin": ['d', ['z', 'x'], ('y', 'w')]}, "string_bin", ['a', 'b', 'c',
-                                                                         'd', ['z', 'x'], ('y', 'w')]),
+        ], {"string_bin": ['d', ['z', 'x'], ['y', 'w']]}, "string_bin", ['a', 'b', 'c',
+                                                                         'd', ['z', 'x'], ['y', 'w']]),
         ([
             list_operations.list_insert("string_bin", 2, True),
             list_operations.list_pop("string_bin", 2)

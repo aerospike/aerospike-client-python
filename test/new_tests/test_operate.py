@@ -148,12 +148,6 @@ class TestOperate(object):
                 "val": {"no": 89}},
                 {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}],
             {'write_bin': {u'no': 89}}),
-        (('test', 'demo', 1),                               # write_tuple_positive
-            [{"op": aerospike.OPERATOR_WRITE,
-                "bin": "write_bin",
-                "val": tuple('abc')},
-                {"op": aerospike.OPERATOR_READ, "bin": "write_bin"}],
-            {'write_bin': ('a', 'b', 'c')}),
         (('test', 'demo', 1),                               # with_bin_bytearray
             [{"op": aerospike.OPERATOR_PREPEND,
               "bin": bytearray("asd[;asjk", "utf-8"),
@@ -1086,13 +1080,13 @@ class TestOperate(object):
         ([
             {"op": aerospike.OP_LIST_APPEND_ITEMS,
              "bin": "string_bin",
-             "val": [['z', 'x'], ('y', 'w')]},
+             "val": [['z', 'x'], ['y', 'w']]},
             {"op": aerospike.OP_LIST_GET_RANGE,
              "bin": "string_bin",
              "index": 3,
              "val": 3}
-        ], {"string_bin": ['d', ['z', 'x'], ('y', 'w')]}, "string_bin", ['a', 'b', 'c',
-                                                                         'd', ['z', 'x'], ('y', 'w')]),
+        ], {"string_bin": ['d', ['z', 'x'], ['y', 'w']]}, "string_bin", ['a', 'b', 'c',
+                                                                         'd', ['z', 'x'], ['y', 'w']]),
         ([
             {"op": aerospike.OP_LIST_INSERT,
              "bin": "string_bin",
