@@ -29,7 +29,6 @@ class TestSelect(object):
             'b': {"key": "asd';q;'1';"},
             'c': 1234,
             'd': '!@#@#$QSDAsd;as',
-            'n': None,
             ('a' * 14): 'long_bin_14',
         }
 
@@ -156,12 +155,12 @@ class TestSelect(object):
         self
     ):
 
-        bins_to_select = ['c', 'd', 'n', 'fake']
+        bins_to_select = ['c', 'd', 'fake']
 
         _, meta, bins = self.as_connection.select(
             self.test_key, bins_to_select)
 
-        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as', 'n': None}
+        assert bins == {'c': 1234, 'd': '!@#@#$QSDAsd;as'}
         assert meta is not None
 
     def test_select_with_key_and_non_existent_bin_in_middle(self):

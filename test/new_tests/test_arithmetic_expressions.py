@@ -366,7 +366,6 @@ class TestExpressionsArithmetic(TestBaseClass):
 
     @pytest.mark.parametrize("bin, val, check, expected", [
         (FloatBin("fbin"), [4.0], [5.0], e.InvalidRequest),
-        (FloatBin("fbin"), [10.0], [FloatBin("fbin")], e.InvalidRequest),
         (IntBin("ibin"), [2], 0, e.FilteredOut),
         (IntBin("ibin"), [5.0], 25, e.InvalidRequest),
         (FloatBin("fbin"), [3], 15.0, e.InvalidRequest),

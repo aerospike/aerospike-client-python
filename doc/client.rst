@@ -92,7 +92,7 @@ Record Operations
 .. class:: Client
     :noindex:
 
-    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer=aerospike.SERIALIZER_PYTHON]]])
+    .. method:: put(key, bins: dict[, meta: dict[, policy: dict[, serializer=aerospike.SERIALIZER_NONE]]])
 
         Create a new record, or remove / add bins to a record.
 

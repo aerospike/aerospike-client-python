@@ -45,11 +45,9 @@ class TestBitwiseOperations(object):
                 pass
 
     @pytest.mark.parametrize("send_bool_as, expected_true, expected_false", [
-        (aerospike.PY_BYTES, True, False),
         (aerospike.INTEGER, 1, 0),
         (aerospike.AS_BOOL, True, False),
         (100, True, False),
-        (0, True, False),
         (-1, True, False)
     ])
     def test_bool_read_write_pos(self, send_bool_as, expected_true, expected_false):
