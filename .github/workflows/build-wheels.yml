@@ -63,10 +63,19 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: ./.github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
+    - name: Use release server
+      if: ${{ inputs.use-server-rc == 'false' }}
+      run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise:${{ inputs.server-tag }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Use release candidate server
+      if: ${{ inputs.use-server-rc == 'true' }}
+      run: echo "SERVER_IMAGE=aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
+      shell: bash
+
+    - name: Get default aerospike.conf from Docker server EE container
+      run: |
+        docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE
 
     - name: Wait for server to start
       run: sleep 5
