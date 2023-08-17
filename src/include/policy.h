@@ -37,16 +37,15 @@
  */
 
 enum Aerospike_serializer_values {
-	SERIALIZER_NONE,
-	SERIALIZER_PYTHON, /* default handler for serializer type */
+	SERIALIZER_NONE, /* default handler for serializer type */
+	SERIALIZER_PYTHON,
 	SERIALIZER_JSON,
 	SERIALIZER_USER,
 };
 
 enum Aerospike_send_bool_as_values {
-	SEND_BOOL_AS_PY_BYTES, /* default for writing Python bools */
 	SEND_BOOL_AS_INTEGER,
-	SEND_BOOL_AS_AS_BOOL,
+	SEND_BOOL_AS_AS_BOOL, /* default for writing Python bools */
 };
 
 enum Aerospike_list_operations {

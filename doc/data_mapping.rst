@@ -6,29 +6,27 @@
 
 .. rubric:: How Python types map to server types
 
-.. note::
+Default Behavior
+----------------
 
-    By default, the :py:class:`~aerospike.Client` maps the supported types \
-    :py:class:`int`, :py:class:`bool`, :py:class:`str`, :py:class:`float`, :py:class:`bytearray`, \
-    :py:class:`list`, :py:class:`dict` to matching aerospike server \
-    `types <http://www.aerospike.com/docs/guide/data-types.html>`_ \
-    (int, string, double, blob, list, map). When an unsupported type is \
-    encountered, the module uses \
-    `cPickle <https://docs.python.org/2/library/pickle.html?highlight=cpickle#module-cPickle>`_ \
-    to serialize and deserialize the data, storing it into a blob of type \
-    `'Python' <https://www.aerospike.com/docs/udf/api/bytes.html#encoding-type>`_ \
-    (`AS_BYTES_PYTHON <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
+By default, the :py:class:`~aerospike.Client` maps the supported Python types to Aerospike server \
+`types <https://docs.aerospike.com/server/guide/data-types/overview>`_. \
+When an unsupported type is encountered by the module:
 
-    The functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
-    allow for user-defined functions to handle serialization, instead. The user provided function will be run instead of cPickle. \
-    The serialized data is stored as \
-    type (\
-    `AS_BYTES_BLOB <http://www.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_). \
-    This type allows the storage of binary data readable by Aerospike Clients in other languages. \
-    The *serialization* config param of :func:`aerospike.client` registers an \
-    instance-level pair of functions that handle serialization.
+1. When sending data to the server, it does not serialize the type and will throw an error.
+2. When reading `AS_BYTES_PYTHON` types from the server, it returns the raw bytes as a :class:`bytearray`.
+   To deserialize this data, the application must use cPickle instead of relying on the client to do it automatically.
 
-    Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. Python specific bytes may not be readable by Aerospike Clients for other languages.
+Serializers
+-----------
+
+However, the functions :func:`~aerospike.set_serializer` and :func:`~aerospike.set_deserializer` \
+allow for user-defined functions to handle serialization.
+The serialized data is stored in the server with generic encoding \
+(`AS_BYTES_BLOB <https://docs.aerospike.com/apidocs/c/d0/dd4/as__bytes_8h.html#a0cf2a6a1f39668f606b19711b3a98bf3>`_).
+This type allows the storage of binary data readable by Aerospike Clients in other languages. \
+The *serialization* config parameter of :func:`aerospike.client` registers an \
+instance-level pair of functions that handle serialization.
 
 .. warning::
 
@@ -36,9 +34,14 @@
     In order to support cross client compatibility and rolling upgrades, Python client version 6.x comes with a new client config, send_bool_as.
     Send_bool_as configures how the client writes Python booleans and allows for opting into using the new boolean type.
     It is important to consider how other clients connected to the Aerospike database write booleans in order to maintain cross client compatibility.
-    If a client reads and writes booleans as integers then the Python client should too, if they work with the same data.
-    Send_bool_as can be set so the client writes Python booleans as AS_BYTES_PYTHON, integer, or the new server boolean type.
-    All versions before 6.x wrote Python booleans as AS_BYTES_PYTHON.
+    For example, if there is a client that reads and writes booleans as integers, then another Python client working with the same data should do the same thing.
+    
+    ``send_bool_as`` can be set so the client writes Python booleans as integers or the Aerospike native boolean type.
+
+    All versions before ``6.x`` wrote Python booleans as ``AS_BYTES_PYTHON``.
+
+Data Mappings
+-------------
 
 The following table shows which Python types map directly to Aerospike server types.
 
@@ -72,7 +75,11 @@ The following table shows which Python types map directly to Aerospike server ty
 
 It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list as a value.
 
-.. note::
-
-	Unless a user specified serializer has been provided, all other types will be stored as Python specific bytes. Python specific bytes may not be readable by Aerospike Clients for other languages.
-
+.. _integer: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#integer
+.. _string: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#string
+.. _double: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#double
+.. _map: https://docs.aerospike.com/server/guide/data-types/cdt-map
+.. _key ordered map: https://docs.aerospike.com/server/guide/data-types/cdt-map
+.. _list: https://docs.aerospike.com/server/guide/data-types/cdt-list
+.. _blob: https://docs.aerospike.com/server/guide/data-types/blob
+.. _GeoJSON: https://docs.aerospike.com/server/guide/data-types/geospatial
