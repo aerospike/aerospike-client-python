@@ -97,6 +97,7 @@ jobs:
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v3
+      if: ${{ always() }}
       with:
         path: ./wheelhouse/*.whl
         # Artifact name, not the file name
@@ -141,6 +142,7 @@ jobs:
           python -m pytest new_tests/
 
     - name: Save macOS wheel
+      if: ${{ always() }}
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-x86_64-${{ matrix.python-version[0] }}-wheel
