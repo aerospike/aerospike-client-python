@@ -1,0 +1,32 @@
+name: Build sanitizer wheel
+
+on:
+  workflow_dispatch:
+
+jobs:
+  sanitizer:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        ref: ${{ github.ref_name }}
+
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: cp38-manylinux_x86_64
+        CIBW_BUILD_FRONTEND: build
+        CIBW_BEFORE_ALL_LINUX: >
+          yum install openssl-devel -y &&
+          yum install python-devel -y &&
+          yum install python-setuptools -y
+        CIBW_ARCHS: "x86_64"
+        CIBW_ENVIRONMENT_PASS_LINUX: SANITIZER
+
+    - name: Upload wheels to GitHub
+      uses: actions/upload-artifact@v3
+      with:
+        path: ./wheelhouse/*.whl
+        # Artifact name, not the file name
+        name: manylinux-x86_64-cp38
