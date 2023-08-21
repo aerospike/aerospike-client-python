@@ -127,7 +127,7 @@ DEBUG=1 python3 -m build
 
 ### Building with sanitizer enabled
 
-You can build the Python client with sanitizer by passing in an environment variable:
+You can build the Python client with sanitizer to find memory errors and memory leaks. To do this, pass in an environment variable:
 ```bash
 SANITIZER=1 python3 -m build
 ```
