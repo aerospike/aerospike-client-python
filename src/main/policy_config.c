@@ -16,7 +16,6 @@
 #include <stdint.h>
 
 #include "policy_config.h"
-#include "policy.h"
 
 as_status set_optional_key(as_policy_key *target_ptr, PyObject *py_policy,
                            const char *name);
