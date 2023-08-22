@@ -155,7 +155,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     PyObject *aerospike = PyModule_Create(&moduledef);
 
     // In case adding objects to module fails, we can properly deallocate the module state later
-    memset(Aerospike_State(aerospike), NULL, sizeof(struct Aerospike_State));
+    memset(Aerospike_State(aerospike), 0, sizeof(struct Aerospike_State));
 
     Aerospike_Enable_Default_Logging();
 
