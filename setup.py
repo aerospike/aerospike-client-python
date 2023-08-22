@@ -58,12 +58,13 @@ include_dirs = ['src/include'] + \
     ['/usr/local/opt/openssl/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
-    '-std=gnu99', '-g', '-Wall', '-Wextra', '-Werror', '-fPIC', '-DDEBUG', '-O1',
+    '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
     '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
     '-Wno-implicit-function-declaration'
 ]
+
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
 extra_objects = []
@@ -76,6 +77,22 @@ libraries = [
     'm',
     'z'
 ]
+
+##########################
+# GITHUB ACTIONS SETTINGS
+##########################
+
+# Only the Github Actions Ubuntu runner should enable this flag
+# when running CI/CD workflows to build the client
+# because compiler warnings can be different depending on the Linux distro
+WERROR = os.getenv('WERROR')
+if WERROR:
+    extra_compile_args.extend(
+        [
+            "-Werror",
+            "-Wextra"
+        ]
+    )
 
 if COVERAGE:
     extra_compile_args.append('-fprofile-arcs')
