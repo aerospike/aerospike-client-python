@@ -394,6 +394,14 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Contains :ref:`aerospike_scan_policies`.
             * **batch** (:class:`dict`)
                 Contains :ref:`aerospike_batch_policies`.
+            * **batch_remove** (:class:`dict`)
+                Default delete policy used in batch remove commands. Contains :ref:`aerospike_batch_remove_policies`.
+            * **batch_apply** (:class:`dict`)
+                Default user defined function policy used in batch UDF apply commands. Contains :ref:`aerospike_batch_apply_policies`.
+            * **batch_write** (:class:`dict`)
+                Default write policy used in batch operate commands. Contains :ref:`aerospike_batch_write_policies`.
+            * **batch_parent_write** (:class:`dict`)
+                Default parent policy used in batch write commands. Contains :ref:`aerospike_batch_policies`.
             * **info** (:class:`dict`)
                 Contains :ref:`aerospike_info_policies`.
             * **admin** (:class:`dict`)

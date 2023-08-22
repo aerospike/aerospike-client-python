@@ -144,3 +144,20 @@ def test_setting_wrong_type_services_alternate():
     config["use_services_alternate"] = "True"
     with pytest.raises(e.ParamError):
         aerospike.client(config)
+
+
+def test_setting_rack_aware():
+    config = copy.deepcopy(gconfig)
+    config["rack_aware"] = True
+    config["rack_id"] = 1
+    config["policies"]["batch"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
+    config["policies"]["scan"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
+    config["policies"]["query"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
+    aerospike.client(config)
+
+
+def test_setting_batch_policies():
+    config = copy.deepcopy(gconfig)
+    policies = ["batch_write", "batch_remove", "batch_apply", "batch_parent_write"]
+    for policy in policies:
+        config["policies"][policy] = {}
