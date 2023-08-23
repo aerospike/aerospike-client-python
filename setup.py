@@ -90,7 +90,6 @@ if WERROR:
     extra_compile_args.extend(
         [
             "-Werror",
-            "-Wextra"
         ]
     )
 
