@@ -150,8 +150,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
                                            Aerospike_Methods,
                                            NULL,
                                            NULL,
-                                           Aerospike_Clear,
-                                           NULL};
+                                           Aerospike_Clear};
 
     PyObject *aerospike = PyModule_Create(&moduledef);
 
