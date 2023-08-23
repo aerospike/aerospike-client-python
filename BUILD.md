@@ -125,6 +125,22 @@ python3 -m build
 DEBUG=1 python3 -m build
 ``` -->
 
+### Building with sanitizer enabled
+
+You can build the Python client with sanitizer to find memory errors and memory leaks. To do this, pass in an environment variable:
+```bash
+SANITIZER=1 python3 -m build
+```
+
+Then once you install the build with sanitizer, you may run a Python script using the Python client with this environment variable:
+
+```bash
+# Replace this file path with your actual libasan shared library path
+# You can find the path using this command:
+# ldconfig -p | grep libasan.so
+LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.6 python3 -c "import aerospike"
+```
+
 ### Troubleshooting macOS
 
 In some versions of macOS, Python 2.7 is installed as ``python`` with
