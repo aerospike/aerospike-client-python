@@ -58,7 +58,7 @@ jobs:
     - name: Build client
       run: python3 -m build
       env:
-        WERROR: 1
+        CFLAGS: '-Werror'
 
     - name: Send wheel to test jobs
       uses: actions/upload-artifact@v3

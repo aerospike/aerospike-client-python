@@ -95,17 +95,6 @@ libraries = [
 # GITHUB ACTIONS SETTINGS
 ##########################
 
-# Only the Github Actions Ubuntu runner should enable this flag
-# when running CI/CD workflows to build the client
-# because compiler warnings can be different depending on the Linux distro
-WERROR = os.getenv('WERROR')
-if WERROR:
-    extra_compile_args.extend(
-        [
-            "-Werror",
-        ]
-    )
-
 if COVERAGE:
     extra_compile_args.append('-fprofile-arcs')
     extra_compile_args.append('-ftest-coverage')
