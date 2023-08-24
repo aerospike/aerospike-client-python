@@ -354,7 +354,6 @@ CLEANUP:
 AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 {
     as_error err;
-    PyObject *py_err = NULL;
 
     PyObject *py_pred = NULL;
     PyObject *py_cdt_ctx = NULL;
