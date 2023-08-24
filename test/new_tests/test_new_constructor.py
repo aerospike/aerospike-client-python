@@ -193,3 +193,11 @@ def test_setting_batch_remove_gen_neg_value():
     with pytest.raises(e.ParamError) as excinfo:
         aerospike.client(config)
     assert excinfo.value.msg == "Invalid Policy setting value"
+
+
+def test_setting_batch_policies():
+    config = copy.deepcopy(gconfig)
+    policies = ["batch_remove", "batch_apply", "batch_write", "batch_parent_write"]
+    for policy in policies:
+        config["policies"][policy] = {}
+    aerospike.client(config)
