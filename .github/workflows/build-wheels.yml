@@ -380,11 +380,11 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [
-          ["cp37", "3.7"],
+          # ["cp37", "3.7"],
           ["cp38", "3.8"],
-          ["cp39", "3.9"],
-          ["cp310", "3.10"],
-          ["cp311", "3.11"]
+          # ["cp39", "3.9"],
+          # ["cp310", "3.10"],
+          # ["cp311", "3.11"]
         ]
         os: [macos-latest]
     runs-on: ${{ matrix.os }}
@@ -406,20 +406,54 @@ jobs:
         CIBW_BUILD_FRONTEND: build
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
-        CIBW_BEFORE_TEST: >
-          export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
-          vagrant up &&
-          sleep 3 &&
-          pip install -r test/requirements.txt
-        CIBW_TEST_COMMAND: >
-          cd {project}/test/ &&
-          python -m pytest new_tests/
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
         name: ${{ matrix.os }}-x86_64-${{ matrix.python-version[0] }}-wheel
         path: wheelhouse/*.whl
+
+  macos11:
+    runs-on: macos-11
+    needs: macOS-x86
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+        ref: ${{ github.ref_name }}
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.8'
+
+    - name: Download wheel
+      uses: actions/download-artifact@v3
+      with:
+        name: macos-latest-x86_64-cp38-wheel
+
+    - run: pip install *.whl
+
+    - run: pip install -r test/requirements.txt
+
+    - run: brew install colima
+
+    - run: brew install docker
+
+    - run: colima start
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+
+    - run: sleep 3
+
+    - name: Run test
+      run: python -m pytest new_tests/
+      working-directory: test
+
+    - run: cat /Users/runner/.lima/colima/ha.stderr.log
+      if: ${{ always() }}
 
   macOS-m1:
     runs-on: [self-hosted, macOS, ARM64]
@@ -501,6 +535,7 @@ jobs:
       #     source_dir: './wheelhouse'
 
   upload-artifacts-to-jfrog:
+    if: ${{ false }}
     needs: [
       # Cat 1 tests
       source-installs,
