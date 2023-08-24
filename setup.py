@@ -91,6 +91,10 @@ libraries = [
     'z'
 ]
 
+##########################
+# GITHUB ACTIONS SETTINGS
+##########################
+
 if COVERAGE:
     extra_compile_args.append('-fprofile-arcs')
     extra_compile_args.append('-ftest-coverage')

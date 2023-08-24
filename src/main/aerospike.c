@@ -138,7 +138,7 @@ static int Aerospike_Clear(PyObject *aerospike)
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
 
-    const char version[] = "14.0.0-rc.2";
+    const char version[] = "14.0.0-rc.4";
     // Makes things "thread-safe"
     Py_Initialize();
     int i = 0;
@@ -155,7 +155,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     PyObject *aerospike = PyModule_Create(&moduledef);
 
     // In case adding objects to module fails, we can properly deallocate the module state later
-    memset(Aerospike_State(aerospike), NULL, sizeof(struct Aerospike_State));
+    memset(Aerospike_State(aerospike), 0, sizeof(struct Aerospike_State));
 
     Aerospike_Enable_Default_Logging();
 

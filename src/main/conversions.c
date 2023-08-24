@@ -657,7 +657,6 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 {
 
     as_error_reset(err);
-    PyObject *py_u_str = NULL;
 
     if (!PyList_Check(py_list)) {
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
@@ -834,7 +833,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         Py_DECREF(py_parameter);
 
         PyObject *geospatial_dump = AerospikeGeospatial_DoDumps(py_data, err);
-        char *geo_value = PyUnicode_AsUTF8(geospatial_dump);
+        const char *geo_value = PyUnicode_AsUTF8(geospatial_dump);
         char *geo_value_cpy = strdup(geo_value);
 
         Py_DECREF(py_data);
@@ -919,7 +918,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
         PyObject *key = NULL, *value = NULL;
         Py_ssize_t pos = 0;
         Py_ssize_t size = PyDict_Size(py_rec);
-        char *name = NULL;
+        const char *name;
         long ret_val = 0;
 
         as_record_init(rec, size);

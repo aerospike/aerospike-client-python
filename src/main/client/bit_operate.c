@@ -396,7 +396,7 @@ static as_status add_op_bit_add(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    uint64_t action_int64;
+    int64_t action_int64;
     if (get_int64_t(err, ACTION_KEY, op_dict, &action_int64) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -808,7 +808,7 @@ static as_status add_op_bit_subtract(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    uint64_t action_int64;
+    int64_t action_int64;
     if (get_int64_t(err, ACTION_KEY, op_dict, &action_int64) != AEROSPIKE_OK) {
         return err->code;
     }
