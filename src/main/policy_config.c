@@ -565,6 +565,10 @@ as_status set_admin_policy(as_policy_admin *admin_policy, PyObject *py_policy)
     return AEROSPIKE_OK;
 }
 
+// For batch write, batch apply, and batch remove policies:
+// Don't set expressions field since it depends on the client's
+// serialization policy
+
 as_status set_batch_apply_policy(as_policy_batch_apply *batch_apply_policy,
                                  PyObject *py_policy)
 {
@@ -585,12 +589,6 @@ as_status set_batch_apply_policy(as_policy_batch_apply *batch_apply_policy,
 
     status = set_optional_bool_property(&batch_apply_policy->durable_delete,
                                         py_policy, "durable_delete");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_filter_exp(&batch_apply_policy->filter_exp, py_policy,
-                                     "filter_exp");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -639,12 +637,6 @@ as_status set_batch_write_policy(as_policy_batch_write *batch_write_policy,
         return status;
     }
 
-    status = set_optional_filter_exp(&batch_write_policy->filter_exp, py_policy,
-                                     "filter_exp");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
     status = set_optional_gen(&batch_write_policy->gen, py_policy, "gen");
     if (status != AEROSPIKE_OK) {
         return status;
@@ -678,12 +670,6 @@ as_status set_batch_remove_policy(as_policy_batch_remove *batch_remove_policy,
 
     status = set_optional_bool_property(&batch_remove_policy->durable_delete,
                                         py_policy, "durable_delete");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_filter_exp(&batch_remove_policy->filter_exp,
-                                     py_policy, "filter_exp");
     if (status != AEROSPIKE_OK) {
         return status;
     }
