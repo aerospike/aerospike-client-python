@@ -156,8 +156,34 @@ def test_setting_rack_aware():
     aerospike.client(config)
 
 
-def test_setting_batch_policies():
+def test_setting_batch_remove_gen():
     config = copy.deepcopy(gconfig)
-    policies = ["batch_write", "batch_remove", "batch_apply", "batch_parent_write"]
-    for policy in policies:
-        config["policies"][policy] = {}
+    config["policies"]["batch_remove"] = {
+        "generation": 24
+    }
+    aerospike.client(config)
+
+
+def test_setting_batch_remove_gen_invalid_type():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["batch_remove"] = {
+        "generation": 0.3
+    }
+    aerospike.client(config)
+
+
+def test_setting_batch_remove_gen_too_large():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["batch_remove"] = {
+        # Larger than max size for 16-bit unsigned integer
+        "generation": 2**16
+    }
+    aerospike.client(config)
+
+
+def test_setting_batch_remove_gen_neg_value():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["batch_remove"] = {
+        "generation": -1
+    }
+    aerospike.client(config)
