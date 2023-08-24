@@ -169,7 +169,9 @@ def test_setting_batch_remove_gen_invalid_type():
     config["policies"]["batch_remove"] = {
         "generation": 0.3
     }
-    aerospike.client(config)
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
 
 
 def test_setting_batch_remove_gen_too_large():
@@ -178,7 +180,9 @@ def test_setting_batch_remove_gen_too_large():
         # Larger than max size for 16-bit unsigned integer
         "generation": 2**16
     }
-    aerospike.client(config)
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
 
 
 def test_setting_batch_remove_gen_neg_value():
@@ -186,4 +190,6 @@ def test_setting_batch_remove_gen_neg_value():
     config["policies"]["batch_remove"] = {
         "generation": -1
     }
-    aerospike.client(config)
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
