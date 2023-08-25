@@ -501,19 +501,19 @@ jobs:
       #     source_dir: './wheelhouse'
 
   upload-artifacts-to-jfrog:
-    needs: [
-      # Cat 1 tests
-      source-installs,
-      # Wheel installs (cat 2 tests)
-      manylinux_x86_64_rpm_based,
-      manylinux_x86_64_ubuntu2204,
-      manylinux_x86_64_debian,
-      # CentOS 7 Linux cat 2 tests (for all wheels)
-      manylinux_x86_64,
-      manylinux_arm64,
-      macOS-x86,
-      macOS-m1,
-    ]
+    # needs: [
+    #   # Cat 1 tests
+    #   source-installs,
+    #   # Wheel installs (cat 2 tests)
+    #   manylinux_x86_64_rpm_based,
+    #   manylinux_x86_64_ubuntu2204,
+    #   manylinux_x86_64_debian,
+    #   # CentOS 7 Linux cat 2 tests (for all wheels)
+    #   manylinux_x86_64,
+    #   manylinux_arm64,
+    #   macOS-x86,
+    #   macOS-m1,
+    # ]
     runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v3
@@ -523,11 +523,19 @@ jobs:
         mkdir artifacts
         find . -type f -exec mv {} artifacts \;
 
-    - name: Publish package distributions to PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
-      with:
-        repository-url: ${{ secrets.JFROG_URL }}
-        user: ${{ secrets.JFROG_USERNAME }}
-        password: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        packages-dir: artifacts/
-        verbose: true
+    # - name: Publish package distributions to PyPI
+    #   uses: pypa/gh-action-pypi-publish@release/v1
+    #   with:
+    #     repository-url: ${{ secrets.JFROG_URL }}
+    #     user: ${{ secrets.JFROG_USERNAME }}
+    #     password: ${{ secrets.JFROG_ACCESS_TOKEN }}
+    #     packages-dir: artifacts/
+    #     verbose: true
+
+    - uses: jfrog/setup-jfrog-cli@v3
+      env:
+        JF_URL: ${{ secrets.JFROG_URL }}
+        JF_USER: ${{ secrets.JFROG_USERNAME }}
+        JF_PASSWORD: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - run: jf --version
