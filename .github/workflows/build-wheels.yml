@@ -535,7 +535,7 @@ jobs:
     - uses: jfrog/setup-jfrog-cli@v3
       env:
         JF_URL: ${{ secrets.JFROG_URL }}
-        JF_USER: ${{ secrets.JFROG_USERNAME }}
-        JF_PASSWORD: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        # JF_USER: ${{ secrets.JFROG_USERNAME }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
     - run: jf --version
