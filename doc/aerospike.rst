@@ -376,7 +376,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default: ``./``
 
         * **policies** (:class:`dict`)
-            A :class:`dict` of policies
+            A :class:`dict` of policies. Note that these policies do not accept expressions.
 
             * **read** (:class:`dict`)
                 Contains :ref:`aerospike_read_policies`.
