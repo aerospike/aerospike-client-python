@@ -144,3 +144,60 @@ def test_setting_wrong_type_services_alternate():
     config["use_services_alternate"] = "True"
     with pytest.raises(e.ParamError):
         aerospike.client(config)
+
+
+def test_setting_rack_aware():
+    config = copy.deepcopy(gconfig)
+    config["rack_aware"] = True
+    config["rack_id"] = 1
+    config["policies"]["batch"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
+    config["policies"]["scan"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
+    config["policies"]["query"]["replica"] = aerospike.POLICY_REPLICA_PREFER_RACK
+    aerospike.client(config)
+
+
+def test_setting_batch_remove_gen():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["batch_remove"] = {
+        "generation": 24
+    }
+    aerospike.client(config)
+
+
+def test_setting_batch_remove_gen_invalid_type():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["batch_remove"] = {
+        "generation": 0.3
+    }
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
+
+
+def test_setting_batch_remove_gen_too_large():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["batch_remove"] = {
+        # Larger than max size for 16-bit unsigned integer
+        "generation": 2**16
+    }
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
+
+
+def test_setting_batch_remove_gen_neg_value():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["batch_remove"] = {
+        "generation": -1
+    }
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
+
+
+def test_setting_batch_policies():
+    config = copy.deepcopy(gconfig)
+    policies = ["batch_remove", "batch_apply", "batch_write", "batch_parent_write"]
+    for policy in policies:
+        config["policies"][policy] = {}
+    aerospike.client(config)
