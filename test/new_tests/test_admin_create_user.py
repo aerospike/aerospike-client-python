@@ -164,6 +164,7 @@ class TestCreateUser(object):
         except e.InvalidUser as exception:
             assert exception.code == 60
             assert exception.msg == "AEROSPIKE_INVALID_USER"
+            assert exception.file == "as_admin.c"
 
     def test_create_user_with_special_characters_in_username(self):
 
