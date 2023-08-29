@@ -71,9 +71,7 @@ jobs:
       run: sleep 3
 
     - name: Test
-      run: |
-        sudo apt install valgrind -y
-        PYTHONMALLOC=malloc valgrind --leak-check=full pypy3.9 -m pytest new_tests/ -vv
+      run: PYTHONMALLOC=malloc valgrind --leak-check=full pypy3.9 -m pytest new_tests/ -vv
       working-directory: test
 
   build:
