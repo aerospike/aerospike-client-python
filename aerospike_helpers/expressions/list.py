@@ -411,7 +411,7 @@ class ListRemoveByValueList(_BaseExpr):
 class ListRemoveByValueRange(_BaseExpr):
     """Create an expression that removes list items identified by value range
     (begin inclusive, end exclusive). If begin is None, the range is less than end.
-    If end is None, the range is greater than or equal to begin.
+    If end is :ref:`aerospike.CDTInfinite()`, the range is greater than or equal to begin.
     """
 
     _op = aerospike.OP_LIST_REMOVE_BY_VALUE_RANGE
