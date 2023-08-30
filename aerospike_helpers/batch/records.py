@@ -178,8 +178,6 @@ class Apply(BatchRecord):
             in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
-            ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
-                on the record at key.
             policy (:ref:`aerospike_batch_apply_policies`, optional): An optional dictionary of batch apply policy
                 flags.
     """
@@ -230,8 +228,6 @@ class Remove(BatchRecord):
             in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
-            ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
-                on the record at key.
             policy (:ref:`aerospike_batch_remove_policies`, optional): An optional dictionary of batch remove policy
                 flags.
     """
