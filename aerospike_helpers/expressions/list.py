@@ -376,7 +376,9 @@ class ListRemoveByValue(_BaseExpr):
             expr = exp.Eq(listRemoved3, exp.ListBin("b")).compile()
         """
         self._children = (value, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -404,7 +406,9 @@ class ListRemoveByValueList(_BaseExpr):
             expr = exp.ListRemoveByValueList(None, [1, 2, 3], exp.ListBin("a")).compile()
         """
         self._children = (values, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -443,7 +447,9 @@ class ListRemoveByValueRange(_BaseExpr):
             expr = exp.ListRemoveByValueRange(None, 3, 7, exp.ListBin("a")).compile()
         """
         self._children = (begin, end, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -482,7 +488,9 @@ class ListRemoveByValueRelRankToEnd(_BaseExpr):
             # All elements starting with and after the rank are removed
         """
         self._children = (value, rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -524,7 +532,9 @@ class ListRemoveByValueRelRankRange(_BaseExpr):
             # Expected results: [4, 21]
         """
         self._children = (value, rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -552,7 +562,9 @@ class ListRemoveByIndex(_BaseExpr):
             expr = exp.ListSize(None, exp.ListRemoveByIndex(None, 3, exp.ListBin("a"))).compile()
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -580,7 +592,9 @@ class ListRemoveByIndexRangeToEnd(_BaseExpr):
             expr = exp.ListRemoveByIndexRangeToEnd(None, 3, exp.ListBin("a")).compile()
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -616,7 +630,9 @@ class ListRemoveByIndexRange(_BaseExpr):
             expr = exp.ListSize(None, exp.ListRemoveByIndexRange(None, 3, 3, exp.ListBin("a"))).compile()
         """
         self._children = (index, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -644,7 +660,9 @@ class ListRemoveByRank(_BaseExpr):
             expr = exp.ListRemoveByRank(None, 0, exp.ListBin("a")).compile()
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -674,7 +692,9 @@ class ListRemoveByRankRangeToEnd(_BaseExpr):
             # Expected results: [6, 4]
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -710,7 +730,9 @@ class ListRemoveByRankRange(_BaseExpr):
             expr = exp.ListRemoveByRankRange(None, 0, 3, exp.ListBin("a")).compile()
         """
         self._children = (rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {}
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+        }
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx

@@ -213,7 +213,7 @@ class MapRemoveByKey(_BaseExpr):
             key,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -244,7 +244,7 @@ class MapRemoveByKeyList(_BaseExpr):
             keys,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -287,7 +287,7 @@ class MapRemoveByKeyRange(_BaseExpr):
             end,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -321,7 +321,7 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
             index,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -366,7 +366,7 @@ class MapRemoveByKeyRelIndexRange(_BaseExpr):
             count,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -397,7 +397,7 @@ class MapRemoveByValue(_BaseExpr):
             value,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -428,7 +428,7 @@ class MapRemoveByValueList(_BaseExpr):
             values,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -471,7 +471,7 @@ class MapRemoveByValueRange(_BaseExpr):
             end,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -510,7 +510,7 @@ class MapRemoveByValueRelRankRangeToEnd(_BaseExpr):
             rank,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -555,7 +555,7 @@ class MapRemoveByValueRelRankRange(_BaseExpr):
             count,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -586,7 +586,7 @@ class MapRemoveByIndex(_BaseExpr):
             index,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -617,7 +617,7 @@ class MapRemoveByIndexRangeToEnd(_BaseExpr):
             index,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -657,7 +657,7 @@ class MapRemoveByIndexRange(_BaseExpr):
             count,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -688,7 +688,7 @@ class MapRemoveByRank(_BaseExpr):
             rank,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -719,7 +719,7 @@ class MapRemoveByRankRangeToEnd(_BaseExpr):
             rank,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -759,7 +759,7 @@ class MapRemoveByRankRange(_BaseExpr):
             count,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {}
+        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
