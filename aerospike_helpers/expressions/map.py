@@ -193,13 +193,14 @@ class MapRemoveByKey(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_KEY
 
-    def __init__(self, ctx: "TypeCTX", key: "TypeKey", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", key: "TypeKey", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             key (TypeKey): Key value or value expression of key to element to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -223,13 +224,14 @@ class MapRemoveByKeyList(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_LIST
 
-    def __init__(self, ctx: "TypeCTX", keys: List[TypeKey], bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", keys: List[TypeKey], bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             key (List[TypeKey]): List of key values or a list expression of keys to elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -256,7 +258,14 @@ class MapRemoveByKeyRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_RANGE
 
-    def __init__(self, ctx: "TypeCTX", begin: "TypeValue", end: "TypeValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        begin: "TypeValue",
+        end: "TypeValue",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -264,6 +273,7 @@ class MapRemoveByKeyRange(_BaseExpr):
             end (TypeValue): End value expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -288,7 +298,7 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", key: "TypeKey", index: "TypeIndex", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", key: "TypeKey", index: "TypeIndex", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -296,6 +306,7 @@ class MapRemoveByKeyRelIndexRangeToEnd(_BaseExpr):
             index (TypeIndex): Index integer or integer expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -321,7 +332,15 @@ class MapRemoveByKeyRelIndexRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE
 
-    def __init__(self, ctx: "TypeCTX", key: "TypeKey", index: "TypeIndex", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        key: "TypeKey",
+        index: "TypeIndex",
+        count: "TypeCount",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -330,6 +349,7 @@ class MapRemoveByKeyRelIndexRange(_BaseExpr):
             count (TypeCount): Integer expression for how many elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -357,13 +377,14 @@ class MapRemoveByValue(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE
 
-    def __init__(self, ctx: "TypeCTX", value: "TypeValue", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", value: "TypeValue", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             value (TypeValue): Value or value expression to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -387,13 +408,14 @@ class MapRemoveByValueList(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_LIST
 
-    def __init__(self, ctx: "TypeCTX", values: "TypeListValue", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", values: "TypeListValue", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             values (TypeListValue): List of values or list expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -420,7 +442,14 @@ class MapRemoveByValueRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_RANGE
 
-    def __init__(self, ctx: "TypeCTX", begin: "TypeValue", end: "TypeValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        begin: "TypeValue",
+        end: "TypeValue",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -428,6 +457,7 @@ class MapRemoveByValueRange(_BaseExpr):
             end (TypeValue): End value or value expression for range.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -452,7 +482,14 @@ class MapRemoveByValueRelRankRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", value: "TypeValue", rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        value: "TypeValue",
+        rank: "TypeRank",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -486,7 +523,15 @@ class MapRemoveByValueRelRankRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE
 
-    def __init__(self, ctx: "TypeCTX", value: "TypeValue", rank: "TypeRank", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        value: "TypeValue",
+        rank: "TypeRank",
+        count: "TypeCount",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -495,6 +540,7 @@ class MapRemoveByValueRelRankRange(_BaseExpr):
             count (TypeCount): Integer count or integer expression for how many elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -520,13 +566,14 @@ class MapRemoveByIndex(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_INDEX
 
-    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             index (TypeIndex): Index integer or integer expression of element to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -550,13 +597,14 @@ class MapRemoveByIndexRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             index (TypeIndex): Starting index integer or integer expression of elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -580,7 +628,14 @@ class MapRemoveByIndexRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_INDEX_RANGE
 
-    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+            self,
+            ctx: "TypeCTX",
+            index: "TypeIndex",
+            count: "TypeCount",
+            bin: "TypeBinName",
+            inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -588,6 +643,7 @@ class MapRemoveByIndexRange(_BaseExpr):
             count (TypeCount): Integer or integer expression, how many elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -612,13 +668,14 @@ class MapRemoveByRank(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_RANK
 
-    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -642,13 +699,14 @@ class MapRemoveByRankRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to start removing at.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -672,7 +730,14 @@ class MapRemoveByRankRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_RANK_RANGE
 
-    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+            self,
+            ctx: "TypeCTX",
+            rank: "TypeRank",
+            count: "TypeCount",
+            bin: "TypeBinName",
+            inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -680,6 +745,7 @@ class MapRemoveByRankRange(_BaseExpr):
             count (TypeCount): Count integer or integer expression of elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
