@@ -1827,10 +1827,6 @@ Apply Policies
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
-        * **gen**
-            | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
-            |
-            | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **commit_level**
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
