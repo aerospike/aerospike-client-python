@@ -86,6 +86,54 @@ Client Errors
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
+.. py:exception:: ClientAbortError
+
+    Query or scan was aborted in user's callback.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: InvalidNodeError
+
+    Node invalid or could not be found.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: TLSError
+
+    TLS error occurred.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: MaxRetriesExceeded
+
+    Max retries limit reached.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: NoResponse
+
+    No response received from server.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: BatchFailed
+
+    One or more keys failed in a batch.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: ConnectionError
+
+    Synchronous connection error.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: QueryAbortedError
+
+    Query was aborted.
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
 Server Errors
 -------------
 
@@ -160,6 +208,42 @@ Server Errors
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
+.. py:exception:: BatchQueueFullError
+
+    All batch queues are full.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: BatchMaxRequestError
+
+    Batch max requests have been exceeded.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: BatchDisabledError
+
+    Batch functionality has been disabled.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: ScanAbortedError
+
+    Scan aborted by user.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: LostConflict
+
+    Write command loses conflict to XDR.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: InvalidGeoJSON
+
+    Invalid/Unsupported GeoJSON.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
 Record Errors
 -------------
 
@@ -224,6 +308,18 @@ Record Errors
 
     Bin modification operation can't be done on an existing bin due to its value type \
     (for example appending to an integer).
+
+    Subclass of :py:exc:`~aerospike.exception.RecordError`.
+
+.. py:exception:: BinNotFound
+
+    Bin not found on update-only operation.
+
+    Subclass of :py:exc:`~aerospike.exception.RecordError`.
+
+.. py:exception:: BinExistsError
+
+    Bin already exists on a create-only operation.
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
@@ -345,6 +441,26 @@ Admin Errors
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidUser
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: QuotasNotEnabled
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: QuotaExceeded
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: InvalidQuota
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: NotWhitelisted
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: InvalidWhitelist
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
