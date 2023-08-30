@@ -100,7 +100,7 @@ Client Errors
 
 .. py:exception:: TLSError
 
-    Node invalid or could not be found.
+    TLS error occurred.
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
