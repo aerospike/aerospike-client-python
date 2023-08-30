@@ -1586,6 +1586,11 @@ Write Policies
 
             Default: ``0``, meaning 'never compress'
 
+        * **replica**
+            Algorithm used to determine target node. One of the :ref:`POLICY_REPLICA` values.
+
+            Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
+
 .. _aerospike_read_policies:
 
 Read Policies
@@ -1753,6 +1758,10 @@ Operate Policies
             | Perform durable delete
             |
             | Default: ``False``
+        * **deserialize** :class:`bool`
+            | Should raw bytes representing a list or map be deserialized to a Python list or map. Set to false for backup programs that just need access to raw bytes.
+            |
+            | Default: :py:obj:`True`
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
@@ -1899,6 +1908,8 @@ Remove Policies
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **generation** (:class:`int`)
+            | The generation of the record. This value is limited to a 16-bit unsigned integer.
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |
@@ -2113,7 +2124,7 @@ Batch Apply Policies
         * **durable_delete** :class:`bool`
             | If the transaction results in a record deletion, leave a tombstone for the record. This prevents deleted records from reappearing after node failures. Valid for Aerospike Server Enterprise Edition only.
             |
-            | Default: false (do not tombstone deleted records).
+            | Default: :py:obj:`False` (do not tombstone deleted records).
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
