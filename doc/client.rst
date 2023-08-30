@@ -2110,6 +2110,10 @@ Batch Apply Policies
             | Note that the TTL value will be employed ONLY on write/update calls.
             |
             | Default: 0
+        * **durable_delete** :class:`bool`
+            | If the transaction results in a record deletion, leave a tombstone for the record. This prevents deleted records from reappearing after node failures. Valid for Aerospike Server Enterprise Edition only.
+            |
+            | Default: false (do not tombstone deleted records).
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
