@@ -1019,6 +1019,10 @@ Return types used by various list operations.
 
     Return value for single key read and value list for range read.
 
+.. data:: LIST_RETURN_EXISTS
+
+    Return true if count of items selected > 0.
+
 .. _aerospike_list_order:
 
 List Order
