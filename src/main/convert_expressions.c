@@ -290,13 +290,13 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_LIST_REMOVE_BY_REL_RANK_RANGE] = EXP_SZ(
             as_exp_list_remove_by_rel_rank_range(NULL, 0, {}, {}, {}, {})),
         [OP_LIST_REMOVE_BY_INDEX] =
-            EXP_SZ(as_exp_list_remove_by_index(NULL, 0, {}, {})),
+            EXP_SZ(as_exp_list_remove_by_index(NULL, {}, {})),
         [OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END] =
             EXP_SZ(as_exp_list_remove_by_index_range_to_end(NULL, 0, {}, {})),
         [OP_LIST_REMOVE_BY_INDEX_RANGE] =
             EXP_SZ(as_exp_list_remove_by_index_range(NULL, 0, {}, {}, {})),
         [OP_LIST_REMOVE_BY_RANK] =
-            EXP_SZ(as_exp_list_remove_by_rank(NULL, 0, {}, {})),
+            EXP_SZ(as_exp_list_remove_by_rank(NULL, {}, {})),
         [OP_LIST_REMOVE_BY_RANK_RANGE_TO_END] =
             EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, 0, {}, {})),
         [OP_LIST_REMOVE_BY_RANK_RANGE] =
@@ -306,8 +306,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_MAP_INCREMENT] =
             EXP_SZ(as_exp_map_increment(NULL, NULL, {}, {}, {})),
         [OP_MAP_CLEAR] = EXP_SZ(as_exp_map_clear(NULL, {})),
-        [OP_MAP_REMOVE_BY_KEY] =
-            EXP_SZ(as_exp_map_remove_by_key(NULL, 0, {}, {})),
+        [OP_MAP_REMOVE_BY_KEY] = EXP_SZ(as_exp_map_remove_by_key(NULL, {}, {})),
         [OP_MAP_REMOVE_BY_KEY_LIST] =
             EXP_SZ(as_exp_map_remove_by_key_list(NULL, 0, {}, {})),
         [OP_MAP_REMOVE_BY_KEY_RANGE] =
@@ -329,13 +328,13 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE] = EXP_SZ(
             as_exp_map_remove_by_value_rel_rank_range(NULL, 0, {}, {}, {}, {})),
         [OP_MAP_REMOVE_BY_INDEX] =
-            EXP_SZ(as_exp_map_remove_by_index(NULL, 0, {}, {})),
+            EXP_SZ(as_exp_map_remove_by_index(NULL, {}, {})),
         [OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END] =
             EXP_SZ(as_exp_map_remove_by_index_range_to_end(NULL, 0, {}, {})),
         [OP_MAP_REMOVE_BY_INDEX_RANGE] =
             EXP_SZ(as_exp_map_remove_by_index_range(NULL, 0, {}, {}, {})),
         [OP_MAP_REMOVE_BY_RANK] =
-            EXP_SZ(as_exp_map_remove_by_rank(NULL, 0, {}, {})),
+            EXP_SZ(as_exp_map_remove_by_rank(NULL, {}, {})),
         [OP_MAP_REMOVE_BY_RANK_RANGE_TO_END] =
             EXP_SZ(as_exp_map_remove_by_rank_range_to_end(NULL, 0, {}, {})),
         [OP_MAP_REMOVE_BY_RANK_RANGE] =
@@ -973,13 +972,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                 {})); // -4 for value, rank, count, bin
             break;
         case OP_LIST_REMOVE_BY_INDEX:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
-                            &lval1) != AEROSPIKE_OK) {
-                return err->code;
-            }
-            APPEND_ARRAY(2,
-                         as_exp_list_remove_by_index(temp_expr->ctx, lval1, {},
-                                                     {})); // -2 for index, bin
+            APPEND_ARRAY(2, as_exp_list_remove_by_index(
+                                temp_expr->ctx, {}, {})); // -2 for index, bin
             break;
         case OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -1000,13 +994,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                 {})); // - 3 for index, count, bin
             break;
         case OP_LIST_REMOVE_BY_RANK:
-            if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
-                            &lval1) != AEROSPIKE_OK) {
-                return err->code;
-            }
-            APPEND_ARRAY(2,
-                         as_exp_list_remove_by_rank(temp_expr->ctx, lval1, {},
-                                                    {})); // -2 for rank, bin
+            APPEND_ARRAY(2, as_exp_list_remove_by_rank(temp_expr->ctx, {},
+                                                       {})); // -2 for rank, bin
             break;
         case OP_LIST_REMOVE_BY_RANK_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -1044,11 +1033,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                          as_exp_map_clear(temp_expr->ctx, {})); // - 1 for bin
             break;
         case OP_MAP_REMOVE_BY_KEY:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
-                            &lval1) != AEROSPIKE_OK) {
-                return err->code;
-            }
-            APPEND_ARRAY(2, as_exp_map_remove_by_key(temp_expr->ctx, lval1, {},
+            APPEND_ARRAY(2, as_exp_map_remove_by_key(temp_expr->ctx, {},
                                                      {})); // - 2 for key, bin
             break;
         case OP_MAP_REMOVE_BY_KEY_LIST:
@@ -1133,13 +1118,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                 {})); // - 4 for val, rank, count, bin
             break;
         case OP_MAP_REMOVE_BY_INDEX:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
-                            &lval1) != AEROSPIKE_OK) {
-                return err->code;
-            }
-            APPEND_ARRAY(2,
-                         as_exp_map_remove_by_index(temp_expr->ctx, lval1, {},
-                                                    {})); // - 2 for index, bin
+            APPEND_ARRAY(2, as_exp_map_remove_by_index(
+                                temp_expr->ctx, {}, {})); // - 2 for index, bin
             break;
         case OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1160,11 +1140,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                 {})); // - 3 for index, count, bin
             break;
         case OP_MAP_REMOVE_BY_RANK:
-            if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
-                            &lval1) != AEROSPIKE_OK) {
-                return err->code;
-            }
-            APPEND_ARRAY(2, as_exp_map_remove_by_rank(temp_expr->ctx, lval1, {},
+            APPEND_ARRAY(2, as_exp_map_remove_by_rank(temp_expr->ctx, {},
                                                       {})); // - 2 for rank, bin
             break;
         case OP_MAP_REMOVE_BY_RANK_RANGE_TO_END:
