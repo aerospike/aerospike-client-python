@@ -599,7 +599,58 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize(
         "bin_name, expr, expected",
         [
-            ("smap_bin", MapRemoveByKey(ctx=None, key="d", bin="smap_bin", inverted=True), {"d": "d"}),
+            (
+                "smap_bin",
+                MapRemoveByKeyList(ctx=None, keys=["b", "f"], bin="smap_bin", inverted=True),
+                {"b": "b", "f": "f"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRange(ctx=None, begin="b", end="e", bin="smap_bin", inverted=True),
+                {"b": "b", "d": "d"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRelIndexRangeToEnd(ctx=None, key="b", index=1, bin="smap_bin", inverted=True),
+                {"d": "d", "f": "f"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRelIndexRange(ctx=None, key="b", index=1, count=1, bin="smap_bin", inverted=True),
+                {"d": "d"}
+            ),
+            (
+                "bomap_bin",
+                MapRemoveByValue(ctx=None, value=False, bin="bomap_bin", inverted=True),
+                {1: False, 2: False}
+            ),
+            (
+                "bomap_bin",
+                MapRemoveByValueList(ctx=None, values=[False, True], bin="bomap_bin", inverted=True),
+                {1: False, 2: False, 3: True}
+            ),
+            ("imap_bin", MapRemoveByValueRange(ctx=None, begin=1, end=3, bin="imap_bin", inverted=True), {1: 1, 2: 2}),
+            # Rel rank of value 1: 0
+            # Rel rank of value 2: 1
+            # Without inversion, this expression removes map entries with values 2 and higher
+            # With inversion, remove map entries with values less than 2
+            (
+                "imap_bin",
+                MapRemoveByValueRelRankRangeToEnd(ctx=None, value=1, rank=1, bin="imap_bin", inverted=True),
+                {2: 2, 3: 6}
+            ),
+            # Without inversion, this expression removes 1 map entry starting with values 2 and higher
+            # With inversion, remove all other entries except for that 1 map entry
+            (
+                "imap_bin",
+                MapRemoveByValueRelRankRange(ctx=None, value=1, rank=1, count=1, bin="imap_bin", inverted=True),
+                {2: 2}
+            ),
+            ("imap_bin", MapRemoveByIndexRangeToEnd(ctx=None, index=1, bin="imap_bin", inverted=True), {2: 2, 3: 6}),
+            ("imap_bin", MapRemoveByIndexRange(ctx=None, index=1, count=1, bin="imap_bin", inverted=True), {2: 2}),
+            # Without inversion, remove all values starting with 2nd lowest value
+            ("imap_bin", MapRemoveByRankRangeToEnd(ctx=None, rank=1, bin="imap_bin", inverted=True), {2: 2, 3: 6}),
+            ("imap_bin", MapRemoveByRankRange(ctx=None, rank=0, count=2, bin="imap_bin", inverted=True), {1: 1, 2: 2}),
         ]
     )
     def test_map_remove_inverted(self, bin_name: str, expr, expected):
