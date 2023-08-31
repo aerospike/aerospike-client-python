@@ -48,6 +48,7 @@ from aerospike_helpers.expressions import (
     MapSize,
     ResultType,
 )
+from aerospike_helpers.operations import expression_operations as expr_ops
 
 import aerospike
 
@@ -594,3 +595,18 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "bin_name, expr, expected",
+        [
+            ("smap_bin", MapRemoveByKey(ctx=None, key="d", bin="smap_bin", inverted=True), {"d": "d"}),
+        ]
+    )
+    def test_map_remove_inverted(self, bin_name: str, expr, expected):
+        ops = [
+            expr_ops.expression_read(bin_name, expr.compile())
+        ]
+        key = (self.test_ns, self.test_set, 0)
+        _, _, bins = self.as_connection.operate(key, ops)
+
+        assert bins[bin_name] == expected
