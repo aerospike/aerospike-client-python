@@ -913,7 +913,7 @@ class TestExpressions(TestBaseClass):
             ),
         ]
     )
-    def test_list_remove_inverted(self, bin_name: str, expr, expected):
+    def test_list_expr_inverted(self, bin_name: str, expr, expected):
         ops = [
             expr_ops.expression_read(bin_name, expr.compile())
         ]

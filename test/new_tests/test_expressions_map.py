@@ -51,6 +51,7 @@ from aerospike_helpers.expressions import (
 from aerospike_helpers.operations import expression_operations as expr_ops
 
 import aerospike
+from aerospike import KeyOrderedDict
 
 # Constants
 _NUM_RECORDS = 9
@@ -651,9 +652,166 @@ class TestExpressions(TestBaseClass):
             # Without inversion, remove all values starting with 2nd lowest value
             ("imap_bin", MapRemoveByRankRangeToEnd(ctx=None, rank=1, bin="imap_bin", inverted=True), {2: 2, 3: 6}),
             ("imap_bin", MapRemoveByRankRange(ctx=None, rank=0, count=2, bin="imap_bin", inverted=True), {1: 1, 2: 2}),
+
+            # Get expressions
+
+            # Only select entry with key "f"
+            (
+                "smap_bin",
+                MapGetByKeyRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_COUNT | aerospike.MAP_RETURN_INVERTED,
+                    begin="b",
+                    end="e",
+                    bin="smap_bin"
+                ),
+                1
+            ),
+            (
+                "smap_bin",
+                MapGetByKeyList(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_EXISTS | aerospike.MAP_RETURN_INVERTED,
+                    keys=["b", "d", "f"],
+                    bin="smap_bin"
+                ),
+                False
+            ),
+            # Select entries with key "d" and after in the map
+            # Inversion means select key "b" which comes before "d"
+            # Key "b" should have index 0 since it was declared first in the dict
+            (
+                "smap_bin",
+                MapGetByKeyRelIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_INDEX | aerospike.MAP_RETURN_INVERTED,
+                    key="b",
+                    index=1,
+                    bin="smap_bin"
+                ),
+                [0]
+            ),
+            # Only select entry with key "d"
+            # Inversion is select entries with key "b" and "f"
+            (
+                "smap_bin",
+                MapGetByKeyRelIndexRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_KEY | aerospike.MAP_RETURN_INVERTED,
+                    key="b",
+                    index=1,
+                    count=1,
+                    bin="smap_bin"
+                ),
+                ["b", "f"]
+            ),
+            (
+                "smap_bin",
+                MapGetByValue(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_KEY_VALUE | aerospike.MAP_RETURN_INVERTED,
+                    value="f",
+                    bin="smap_bin"
+                ),
+                ["b", "b", "d", "d"]
+            ),
+            (
+                "smap_bin",
+                MapGetByValueRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_ORDERED_MAP | aerospike.MAP_RETURN_INVERTED,
+                    value_begin="b",
+                    value_end="e",
+                    bin="smap_bin"
+                ),
+                KeyOrderedDict({"f": "f"})
+            ),
+            (
+                "lmap_bin",
+                MapGetByValueList(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_UNORDERED_MAP | aerospike.MAP_RETURN_INVERTED,
+                    value=[[1, 2], [1, 3]],
+                    bin="lmap_bin"
+                ),
+                {3: [1, 4]}
+            ),
+            # Select entry with value [1, 4]
+            # Inverse is the entries with ranks 0 and 1
+            (
+                "lmap_bin",
+                MapGetByValueRelRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_RANK | aerospike.MAP_RETURN_INVERTED,
+                    value=[1, 2],
+                    rank=2,
+                    bin="lmap_bin"
+                ),
+                [0, 1]
+            ),
+            # Select {1: 4}
+            # Inverse is {1: 2} and {1: 3}
+            # Reverse indices for these values are 2 and 1 respectively
+            (
+                "mmap_bin",
+                MapGetByValueRelRankRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_REVERSE_INDEX | aerospike.MAP_RETURN_INVERTED,
+                    value=KeyOrderedDict({1: 3}),
+                    rank=1,
+                    count=1,
+                    bin="mmap_bin"
+                ),
+                [2, 1]
+            ),
+            # Get entries with keys 2.0 and 6.0
+            # Inverse is entry with key 1.0
+            # This has reverse rank 2
+            (
+                "fmap_bin",
+                MapGetByIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_REVERSE_RANK | aerospike.MAP_RETURN_INVERTED,
+                    index=1,
+                    bin="fmap_bin"
+                ),
+                [2]
+            ),
+            (
+                "bomap_bin",
+                MapGetByIndexRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE | aerospike.MAP_RETURN_INVERTED,
+                    index=0,
+                    count=2,
+                    bin="bomap_bin"
+                ),
+                [True]
+            ),
+            (
+                "nmap_bin",
+                MapGetByRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE | aerospike.MAP_RETURN_INVERTED,
+                    rank=0,
+                    bin="nmap_bin"
+                ),
+                []
+            ),
+            (
+                "imap_bin",
+                MapGetByRankRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE | aerospike.MAP_RETURN_INVERTED,
+                    rank=0,
+                    count=1,
+                    bin="imap_bin"
+                ),
+                [2, 6]
+            ),
         ]
     )
-    def test_map_remove_inverted(self, bin_name: str, expr, expected):
+    def test_map_expr_inverted(self, bin_name: str, expr, expected):
         ops = [
             expr_ops.expression_read(bin_name, expr.compile())
         ]
