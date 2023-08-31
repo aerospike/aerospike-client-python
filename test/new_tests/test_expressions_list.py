@@ -803,6 +803,114 @@ class TestExpressions(TestBaseClass):
                 ListRemoveByRankRange(ctx=None, rank=0, count=2, bin="slist_bin", inverted=True),
                 ["b", "d"]
             ),
+            (
+                "ilist_bin",
+                ListGetByValue(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_INDEX | aerospike.LIST_RETURN_INVERTED,
+                    value=2,
+                    bin="ilist_bin"
+                ),
+                [0, 2]
+            ),
+            (
+                "ilist_bin",
+                ListGetByValueRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_COUNT | aerospike.LIST_RETURN_INVERTED,
+                    value_begin=1,
+                    value_end=3,
+                    bin="ilist_bin"
+                ),
+                1
+            ),
+            (
+                "ilist_bin",
+                ListGetByValueList(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_EXISTS | aerospike.LIST_RETURN_INVERTED,
+                    value=[1, 2, 6],
+                    bin="ilist_bin"
+                ),
+                False
+            ),
+            # Without inversion, get all list values > 1
+            # With inversion, get all list values <= 1
+            # The rank of list value 1 is 0
+            (
+                "ilist_bin",
+                ListGetByValueRelRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_RANK | aerospike.LIST_RETURN_INVERTED,
+                    value=1,
+                    rank=1,
+                    bin="ilist_bin"
+                ),
+                [0]
+            ),
+            # The list value with relative rank 1 compared to list value 1 is 2
+            # We only get that list value 2 since count is 1
+            # With inversion, we get the other list values 1 and 6
+            # The reverse indices of these values is 2 and 0, respectively
+            (
+                "ilist_bin",
+                ListGetByValueRelRankRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_REVERSE_INDEX | aerospike.LIST_RETURN_INVERTED,
+                    value=1,
+                    rank=1,
+                    count=1,
+                    bin="ilist_bin"
+                ),
+                [2, 0]
+            ),
+            # Get list values 2 and 6
+            # The inverse result is list value 1
+            # The reverse rank of list value 1 is 2
+            (
+                "ilist_bin",
+                ListGetByIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_REVERSE_RANK | aerospike.LIST_RETURN_INVERTED,
+                    index=1,
+                    bin="ilist_bin"
+                ),
+                [2]
+            ),
+            (
+                "ilist_bin",
+                ListGetByIndexRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE | aerospike.LIST_RETURN_INVERTED,
+                    index=1,
+                    count=2,
+                    bin="ilist_bin"
+                ),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                ListGetByRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE | aerospike.LIST_RETURN_INVERTED,
+                    rank=1,
+                    bin="ilist_bin"
+                ),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                # This will select the last 2 list values: 2 and 6
+                # The inverse is list value 1
+                ListGetByRankRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE | aerospike.LIST_RETURN_INVERTED,
+                    rank=-2,
+                    count=2,
+                    bin="ilist_bin"
+                ),
+                [1]
+            ),
         ]
     )
     def test_list_remove_inverted(self, bin_name: str, expr, expected):
