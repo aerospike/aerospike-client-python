@@ -4,6 +4,7 @@ import pytest
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
+from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers.expressions import (
     And,
     Eq,
@@ -753,3 +754,62 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "bin_name, expr, expected",
+        [
+            (
+                "ilist_bin",
+                ListRemoveByValue(ctx=None, value=1, bin="ilist_bin", inverted=True),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueList(ctx=None, values=[1, 2], bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRange(ctx=None, begin=1, end=3, bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRelRankToEnd(ctx=None, value=1, rank=1, bin="ilist_bin", inverted=True),
+                [2, 6]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRelRankRange(ctx=None, value=1, rank=1, count=1, bin="ilist_bin", inverted=True),
+                [2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByIndexRangeToEnd(ctx=None, index=1, bin="ilist_bin", inverted=True),
+                [2, 6]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByIndexRange(ctx=None, index=0, count=2, bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "slist_bin",
+                ListRemoveByRankRangeToEnd(ctx=None, rank=1, bin="slist_bin", inverted=True),
+                ["d", "f"]
+            ),
+            (
+                "slist_bin",
+                ListRemoveByRankRange(ctx=None, rank=0, count=2, bin="slist_bin", inverted=True),
+                ["b", "d"]
+            ),
+        ]
+    )
+    def test_list_remove_inverted(self, bin_name: str, expr, expected):
+        ops = [
+            expr_ops.expression_read(bin_name, expr.compile())
+        ]
+        key = (self.test_ns, self.test_set, 0)
+        _, _, bins = self.as_connection.operate(key, ops)
+
+        assert bins[bin_name] == expected
