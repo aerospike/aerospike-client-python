@@ -1019,6 +1019,10 @@ Return types used by various list operations.
 
     Return value for single key read and value list for range read.
 
+.. data:: LIST_RETURN_INVERTED
+
+    Invert meaning of list command and return values.
+
 .. _aerospike_list_order:
 
 List Order
@@ -1181,6 +1185,10 @@ Return types used by various map operations.
 .. data:: MAP_RETURN_ORDERED_MAP
 
     Return ordered map.
+
+.. data:: MAP_RETURN_INVERTED
+
+    Invert meaning of map command and return values.
 
 Bitwise
 -------
