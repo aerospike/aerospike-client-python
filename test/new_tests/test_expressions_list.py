@@ -807,9 +807,10 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByValue(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_INDEX | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_INDEX,
                     value=2,
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 [0, 2]
             ),
@@ -817,10 +818,11 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByValueRange(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_COUNT | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_COUNT,
                     value_begin=1,
                     value_end=3,
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 1
             ),
@@ -828,9 +830,10 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByValueList(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_EXISTS | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_EXISTS,
                     value=[1, 2, 6],
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 False
             ),
@@ -841,10 +844,11 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByValueRelRankRangeToEnd(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_RANK | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_RANK,
                     value=1,
                     rank=1,
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 [0]
             ),
@@ -856,11 +860,12 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByValueRelRankRange(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_REVERSE_INDEX | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_REVERSE_INDEX,
                     value=1,
                     rank=1,
                     count=1,
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 [2, 0]
             ),
@@ -871,9 +876,10 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByIndexRangeToEnd(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_REVERSE_RANK | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_REVERSE_RANK,
                     index=1,
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 [2]
             ),
@@ -881,10 +887,11 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByIndexRange(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_VALUE | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_VALUE,
                     index=1,
                     count=2,
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 [1]
             ),
@@ -892,9 +899,10 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByRankRangeToEnd(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_VALUE | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_VALUE,
                     rank=1,
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 [1]
             ),
@@ -904,10 +912,11 @@ class TestExpressions(TestBaseClass):
                 # The inverse is list value 1
                 ListGetByRankRange(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_VALUE | aerospike.LIST_RETURN_INVERTED,
+                    return_type=aerospike.LIST_RETURN_VALUE,
                     rank=-2,
                     count=2,
-                    bin="ilist_bin"
+                    bin="ilist_bin",
+                    inverted=True
                 ),
                 [1]
             ),

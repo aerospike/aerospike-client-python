@@ -26,7 +26,7 @@ from aerospike_helpers import cdt_ctx
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
-from aerospike_helpers.expressions.resources import _Keys
+from aerospike_helpers.expressions.resources import _Keys, ReturnType
 from aerospike_helpers.expressions.base import ListBin
 
 ######################
@@ -377,7 +377,7 @@ class ListRemoveByValue(_BaseExpr):
         """
         self._children = (value, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -407,7 +407,7 @@ class ListRemoveByValueList(_BaseExpr):
         """
         self._children = (values, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -448,7 +448,7 @@ class ListRemoveByValueRange(_BaseExpr):
         """
         self._children = (begin, end, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -489,7 +489,7 @@ class ListRemoveByValueRelRankToEnd(_BaseExpr):
         """
         self._children = (value, rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -533,7 +533,7 @@ class ListRemoveByValueRelRankRange(_BaseExpr):
         """
         self._children = (value, rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -590,7 +590,7 @@ class ListRemoveByIndexRangeToEnd(_BaseExpr):
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -628,7 +628,7 @@ class ListRemoveByIndexRange(_BaseExpr):
         """
         self._children = (index, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -687,7 +687,7 @@ class ListRemoveByRankRangeToEnd(_BaseExpr):
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -725,7 +725,7 @@ class ListRemoveByRankRange(_BaseExpr):
         """
         self._children = (rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
+            _Keys.RETURN_TYPE_KEY: ReturnType.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
         }
 
         if ctx is not None:
@@ -770,7 +770,14 @@ class ListGetByValue(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_VALUE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value: "TypeValue",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -779,6 +786,7 @@ class ListGetByValue(_BaseExpr):
             value (TypeValue): Value or value expression of element to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -789,6 +797,8 @@ class ListGetByValue(_BaseExpr):
         """
         self._children = (value, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -802,7 +812,13 @@ class ListGetByValueRange(_BaseExpr):
     _op = aerospike.OP_LIST_GET_BY_VALUE_RANGE
 
     def __init__(
-        self, ctx: "TypeCTX", return_type: int, value_begin: "TypeValue", value_end: "TypeValue", bin: "TypeBinName"
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value_begin: "TypeValue",
+        value_end: "TypeValue",
+        bin: "TypeBinName",
+        inverted: bool = False
     ):
         """Create an expression that selects list items identified by value range and returns selected
         data specified by return_type.
@@ -816,6 +832,7 @@ class ListGetByValueRange(_BaseExpr):
             value_end (TypeValue): Value or value expression of ending element.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -826,6 +843,8 @@ class ListGetByValueRange(_BaseExpr):
         """
         self._children = (value_begin, value_end, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -838,7 +857,14 @@ class ListGetByValueList(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_VALUE_LIST
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeListValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value: "TypeListValue",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -849,6 +875,7 @@ class ListGetByValueList(_BaseExpr):
             value (TypeListValue): List or list expression of values of elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -859,6 +886,8 @@ class ListGetByValueList(_BaseExpr):
         """
         self._children = (value, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -869,7 +898,15 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeValue", rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value: "TypeValue",
+        rank: "TypeRank",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -879,6 +916,7 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
             rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -893,6 +931,8 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
         """
         self._children = (value, rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -913,6 +953,7 @@ class ListGetByValueRelRankRange(_BaseExpr):
         rank: "TypeRank",
         count: "TypeCount",
         bin: "TypeBinName",
+        inverted: bool = False
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -924,6 +965,7 @@ class ListGetByValueRelRankRange(_BaseExpr):
             count (TypeCount): Integer value or integer value expression, how many elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -939,6 +981,8 @@ class ListGetByValueRelRankRange(_BaseExpr):
         """
         self._children = (value, rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -991,7 +1035,14 @@ class ListGetByIndexRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, index: "TypeIndex", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        index: "TypeIndex",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1000,6 +1051,7 @@ class ListGetByIndexRangeToEnd(_BaseExpr):
             index (TypeIndex): Integer or integer expression of index to start getting elements at.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -1010,6 +1062,8 @@ class ListGetByIndexRangeToEnd(_BaseExpr):
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1022,7 +1076,15 @@ class ListGetByIndexRange(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_INDEX_RANGE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, index: "TypeIndex", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        index: "TypeIndex",
+        count: "TypeCount",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1032,6 +1094,7 @@ class ListGetByIndexRange(_BaseExpr):
             count (TypeCount): Integer or integer expression for count of elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -1042,6 +1105,8 @@ class ListGetByIndexRange(_BaseExpr):
         """
         self._children = (index, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1094,7 +1159,7 @@ class ListGetByRankRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1103,6 +1168,7 @@ class ListGetByRankRangeToEnd(_BaseExpr):
             rank (TypeRank): Rank integer or integer expression of first element to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -1113,6 +1179,8 @@ class ListGetByRankRangeToEnd(_BaseExpr):
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1125,7 +1193,14 @@ class ListGetByRankRange(_BaseExpr):
 
     _op = aerospike.OP_LIST_GET_BY_RANK_RANGE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self, ctx: "TypeCTX",
+        return_type: int,
+        rank: "TypeRank",
+        count: "TypeCount",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1135,6 +1210,7 @@ class ListGetByRankRange(_BaseExpr):
             count (TypeCount): Count integer or integer expression for how many elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of list command.
 
         :return: Expression.
 
@@ -1145,6 +1221,8 @@ class ListGetByRankRange(_BaseExpr):
         """
         self._children = (rank, count, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx

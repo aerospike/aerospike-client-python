@@ -660,10 +660,11 @@ class TestExpressions(TestBaseClass):
                 "smap_bin",
                 MapGetByKeyRange(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_COUNT | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_COUNT,
                     begin="b",
                     end="e",
-                    bin="smap_bin"
+                    bin="smap_bin",
+                    inverted=True
                 ),
                 1
             ),
@@ -671,9 +672,10 @@ class TestExpressions(TestBaseClass):
                 "smap_bin",
                 MapGetByKeyList(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_EXISTS | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_EXISTS,
                     keys=["b", "d", "f"],
-                    bin="smap_bin"
+                    bin="smap_bin",
+                    inverted=True
                 ),
                 False
             ),
@@ -684,10 +686,11 @@ class TestExpressions(TestBaseClass):
                 "smap_bin",
                 MapGetByKeyRelIndexRangeToEnd(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_INDEX | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_INDEX,
                     key="b",
                     index=1,
-                    bin="smap_bin"
+                    bin="smap_bin",
+                    inverted=True
                 ),
                 [0]
             ),
@@ -697,11 +700,12 @@ class TestExpressions(TestBaseClass):
                 "smap_bin",
                 MapGetByKeyRelIndexRange(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_KEY | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_KEY,
                     key="b",
                     index=1,
                     count=1,
-                    bin="smap_bin"
+                    bin="smap_bin",
+                    inverted=True
                 ),
                 ["b", "f"]
             ),
@@ -709,9 +713,10 @@ class TestExpressions(TestBaseClass):
                 "smap_bin",
                 MapGetByValue(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_KEY_VALUE | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_KEY_VALUE,
                     value="f",
-                    bin="smap_bin"
+                    bin="smap_bin",
+                    inverted=True
                 ),
                 ["b", "b", "d", "d"]
             ),
@@ -719,10 +724,11 @@ class TestExpressions(TestBaseClass):
                 "smap_bin",
                 MapGetByValueRange(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_ORDERED_MAP | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_ORDERED_MAP,
                     value_begin="b",
                     value_end="e",
-                    bin="smap_bin"
+                    bin="smap_bin",
+                    inverted=True
                 ),
                 KeyOrderedDict({"f": "f"})
             ),
@@ -730,9 +736,10 @@ class TestExpressions(TestBaseClass):
                 "lmap_bin",
                 MapGetByValueList(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_UNORDERED_MAP | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_UNORDERED_MAP,
                     value=[[1, 2], [1, 3]],
-                    bin="lmap_bin"
+                    bin="lmap_bin",
+                    inverted=True
                 ),
                 {3: [1, 4]}
             ),
@@ -742,10 +749,11 @@ class TestExpressions(TestBaseClass):
                 "lmap_bin",
                 MapGetByValueRelRankRangeToEnd(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_RANK | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_RANK,
                     value=[1, 2],
                     rank=2,
-                    bin="lmap_bin"
+                    bin="lmap_bin",
+                    inverted=True
                 ),
                 [0, 1]
             ),
@@ -756,11 +764,12 @@ class TestExpressions(TestBaseClass):
                 "mmap_bin",
                 MapGetByValueRelRankRange(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_REVERSE_INDEX | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_REVERSE_INDEX,
                     value=KeyOrderedDict({1: 3}),
                     rank=1,
                     count=1,
-                    bin="mmap_bin"
+                    bin="mmap_bin",
+                    inverted=True
                 ),
                 [2, 1]
             ),
@@ -771,9 +780,10 @@ class TestExpressions(TestBaseClass):
                 "fmap_bin",
                 MapGetByIndexRangeToEnd(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_REVERSE_RANK | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_REVERSE_RANK,
                     index=1,
-                    bin="fmap_bin"
+                    bin="fmap_bin",
+                    inverted=True
                 ),
                 [2]
             ),
@@ -781,10 +791,11 @@ class TestExpressions(TestBaseClass):
                 "bomap_bin",
                 MapGetByIndexRange(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_VALUE | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_VALUE,
                     index=0,
                     count=2,
-                    bin="bomap_bin"
+                    bin="bomap_bin",
+                    inverted=True
                 ),
                 [True]
             ),
@@ -792,9 +803,10 @@ class TestExpressions(TestBaseClass):
                 "nmap_bin",
                 MapGetByRankRangeToEnd(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_VALUE | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_VALUE,
                     rank=0,
-                    bin="nmap_bin"
+                    bin="nmap_bin",
+                    inverted=True
                 ),
                 []
             ),
@@ -802,10 +814,11 @@ class TestExpressions(TestBaseClass):
                 "imap_bin",
                 MapGetByRankRange(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_VALUE | aerospike.MAP_RETURN_INVERTED,
+                    return_type=aerospike.MAP_RETURN_VALUE,
                     rank=0,
                     count=1,
-                    bin="imap_bin"
+                    bin="imap_bin",
+                    inverted=True
                 ),
                 [2, 6]
             ),

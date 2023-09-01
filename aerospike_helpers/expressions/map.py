@@ -26,7 +26,7 @@ from aerospike_helpers import cdt_ctx
 from aerospike_helpers.expressions.resources import _GenericExpr
 from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
-from aerospike_helpers.expressions.resources import _Keys
+from aerospike_helpers.expressions.resources import _Keys, ReturnType
 from aerospike_helpers.expressions.base import MapBin
 
 ########################
@@ -838,7 +838,15 @@ class MapGetByKeyRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_KEY_RANGE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, begin: "TypeKey", end: "TypeKey", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        begin: "TypeKey",
+        end: "TypeKey",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -848,6 +856,7 @@ class MapGetByKeyRange(_BaseExpr):
             end (TypeKey): Key value or expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -862,6 +871,8 @@ class MapGetByKeyRange(_BaseExpr):
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -874,7 +885,14 @@ class MapGetByKeyList(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_KEY_LIST
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, keys: "TypeKeyList", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        keys: "TypeKeyList",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -883,6 +901,7 @@ class MapGetByKeyList(_BaseExpr):
             keys (TypeKeyList): List of key values or list expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -897,6 +916,8 @@ class MapGetByKeyList(_BaseExpr):
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -909,7 +930,15 @@ class MapGetByKeyRelIndexRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, key: "TypeKey", index: "TypeIndex", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        key: "TypeKey",
+        index: "TypeIndex",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -919,6 +948,7 @@ class MapGetByKeyRelIndexRangeToEnd(_BaseExpr):
             index (TypeIndex): Index integer or integer value expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -934,6 +964,8 @@ class MapGetByKeyRelIndexRangeToEnd(_BaseExpr):
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -954,6 +986,7 @@ class MapGetByKeyRelIndexRange(_BaseExpr):
         index: "TypeIndex",
         count: "TypeCount",
         bin: "TypeBinName",
+        inverted: bool = False
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -965,6 +998,7 @@ class MapGetByKeyRelIndexRange(_BaseExpr):
             count (TypeCount): Integer count or integer value expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -985,6 +1019,8 @@ class MapGetByKeyRelIndexRange(_BaseExpr):
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -997,7 +1033,14 @@ class MapGetByValue(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_VALUE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value: "TypeValue",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1006,6 +1049,7 @@ class MapGetByValue(_BaseExpr):
             value (TypeValue): Value or value expression of element to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1016,6 +1060,8 @@ class MapGetByValue(_BaseExpr):
         """
         self._children = (value, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1031,7 +1077,13 @@ class MapGetByValueRange(_BaseExpr):
     _op = aerospike.OP_MAP_GET_BY_VALUE_RANGE
 
     def __init__(
-        self, ctx: "TypeCTX", return_type: int, value_begin: "TypeValue", value_end: "TypeValue", bin: "TypeBinName"
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value_begin: "TypeValue",
+        value_end: "TypeValue",
+        bin: "TypeBinName",
+        inverted: bool = False
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -1042,6 +1094,7 @@ class MapGetByValueRange(_BaseExpr):
             value_end (TypeValue): Value or value expression of ending element.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1052,6 +1105,8 @@ class MapGetByValueRange(_BaseExpr):
         """
         self._children = (value_begin, value_end, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1064,7 +1119,14 @@ class MapGetByValueList(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_VALUE_LIST
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeListValue", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value: "TypeListValue",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1073,6 +1135,7 @@ class MapGetByValueList(_BaseExpr):
             value (TypeListValue): List or list expression of values of elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1083,6 +1146,8 @@ class MapGetByValueList(_BaseExpr):
         """
         self._children = (value, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1095,7 +1160,15 @@ class MapGetByValueRelRankRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, value: "TypeValue", rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        value: "TypeValue",
+        rank: "TypeRank",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1105,6 +1178,7 @@ class MapGetByValueRelRankRangeToEnd(_BaseExpr):
             rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1115,6 +1189,8 @@ class MapGetByValueRelRankRangeToEnd(_BaseExpr):
         """
         self._children = (value, rank, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1135,6 +1211,7 @@ class MapGetByValueRelRankRange(_BaseExpr):
         rank: "TypeRank",
         count: "TypeCount",
         bin: "TypeBinName",
+        inverted: bool = False
     ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -1146,6 +1223,7 @@ class MapGetByValueRelRankRange(_BaseExpr):
             count (TypeCount): Integer value or integer value expression, how many elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1158,6 +1236,8 @@ class MapGetByValueRelRankRange(_BaseExpr):
         """
         self._children = (value, rank, count, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1210,7 +1290,14 @@ class MapGetByIndexRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_INDEX_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, index: "TypeIndex", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        index: "TypeIndex",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1219,6 +1306,7 @@ class MapGetByIndexRangeToEnd(_BaseExpr):
             index (TypeIndex): Integer or integer expression of index to start getting elements at.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1229,6 +1317,8 @@ class MapGetByIndexRangeToEnd(_BaseExpr):
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1241,7 +1331,15 @@ class MapGetByIndexRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_INDEX_RANGE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, index: "TypeIndex", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        index: "TypeIndex",
+        count: "TypeCount",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1251,6 +1349,7 @@ class MapGetByIndexRange(_BaseExpr):
             count (TypeCount): Integer or integer expression for count of elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1261,6 +1360,8 @@ class MapGetByIndexRange(_BaseExpr):
         """
         self._children = (index, count, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1313,7 +1414,7 @@ class MapGetByRankRangeToEnd(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_RANK_RANGE_TO_END
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", bin: "TypeBinName"):
+    def __init__(self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", bin: "TypeBinName", inverted: bool = False):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1322,6 +1423,7 @@ class MapGetByRankRangeToEnd(_BaseExpr):
             rank (TypeRank): Rank integer or integer expression of first element to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1332,6 +1434,8 @@ class MapGetByRankRangeToEnd(_BaseExpr):
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -1344,7 +1448,15 @@ class MapGetByRankRange(_BaseExpr):
 
     _op = aerospike.OP_MAP_GET_BY_RANK_RANGE
 
-    def __init__(self, ctx: "TypeCTX", return_type: int, rank: "TypeRank", count: "TypeCount", bin: "TypeBinName"):
+    def __init__(
+        self,
+        ctx: "TypeCTX",
+        return_type: int,
+        rank: "TypeRank",
+        count: "TypeCount",
+        bin: "TypeBinName",
+        inverted: bool = False
+    ):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
@@ -1354,6 +1466,7 @@ class MapGetByRankRange(_BaseExpr):
             count (TypeCount): Count integer or integer expression for how many elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
+            inverted (bool): Return the opposite expected results of map command.
 
         :return: Expression.
 
@@ -1364,6 +1477,8 @@ class MapGetByRankRange(_BaseExpr):
         """
         self._children = (rank, count, bin if isinstance(bin, _BaseExpr) else MapBin(bin))
         self._fixed = {_Keys.RETURN_TYPE_KEY: return_type}
+        if inverted:
+            self._fixed[_Keys.RETURN_TYPE_KEY] |= ReturnType.LIST_RETURN_INVERTED
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
