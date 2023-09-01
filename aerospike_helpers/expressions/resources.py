@@ -108,6 +108,7 @@ class ReturnType:
     # Define here because we aren't including this constant in the Python client
     # But it exists in the C client
     LIST_RETURN_INVERTED = 0x10000
+    MAP_RETURN_INVERTED = 0x10000
 
 
 class ResultType:
