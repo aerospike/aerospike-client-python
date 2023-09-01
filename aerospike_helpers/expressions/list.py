@@ -545,14 +545,13 @@ class ListRemoveByIndex(_BaseExpr):
 
     _op = aerospike.OP_LIST_REMOVE_BY_INDEX
 
-    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", bin: "TypeBinName", inverted: bool = False):
+    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             index (TypeIndex): Index integer or integer expression of element to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
 
         :return: list expression.
 
@@ -562,9 +561,7 @@ class ListRemoveByIndex(_BaseExpr):
             expr = exp.ListSize(None, exp.ListRemoveByIndex(None, 3, exp.ListBin("a"))).compile()
         """
         self._children = (index, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
-        }
+        self._fixed = {}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -643,14 +640,13 @@ class ListRemoveByRank(_BaseExpr):
 
     _op = aerospike.OP_LIST_REMOVE_BY_RANK
 
-    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", bin: "TypeBinName", inverted: bool = False):
+    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
 
         :return: list expression.
 
@@ -660,9 +656,7 @@ class ListRemoveByRank(_BaseExpr):
             expr = exp.ListRemoveByRank(None, 0, exp.ListBin("a")).compile()
         """
         self._children = (rank, bin if isinstance(bin, _BaseExpr) else ListBin(bin))
-        self._fixed = {
-            _Keys.RETURN_TYPE_KEY: aerospike.LIST_RETURN_INVERTED if inverted else aerospike.LIST_RETURN_NONE
-        }
+        self._fixed = {}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx

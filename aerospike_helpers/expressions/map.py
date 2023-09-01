@@ -193,14 +193,13 @@ class MapRemoveByKey(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_KEY
 
-    def __init__(self, ctx: "TypeCTX", key: "TypeKey", bin: "TypeBinName", inverted: bool = False):
+    def __init__(self, ctx: "TypeCTX", key: "TypeKey", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             key (TypeKey): Key value or value expression of key to element to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -213,7 +212,7 @@ class MapRemoveByKey(_BaseExpr):
             key,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
+        self._fixed = {}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -566,14 +565,13 @@ class MapRemoveByIndex(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_INDEX
 
-    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", bin: "TypeBinName", inverted: bool = False):
+    def __init__(self, ctx: "TypeCTX", index: "TypeIndex", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             index (TypeIndex): Index integer or integer expression of element to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -586,7 +584,7 @@ class MapRemoveByIndex(_BaseExpr):
             index,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
+        self._fixed = {}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
@@ -668,14 +666,13 @@ class MapRemoveByRank(_BaseExpr):
 
     _op = aerospike.OP_MAP_REMOVE_BY_RANK
 
-    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", bin: "TypeBinName", inverted: bool = False):
+    def __init__(self, ctx: "TypeCTX", rank: "TypeRank", bin: "TypeBinName"):
         """Args:
             ctx (TypeCTX): An optional list of nested CDT :mod:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
                 objects.
             rank (TypeRank): Rank integer or integer expression of element to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of map command.
 
         :return: Map expression.
 
@@ -688,7 +685,7 @@ class MapRemoveByRank(_BaseExpr):
             rank,
             bin if isinstance(bin, _BaseExpr) else MapBin(bin),
         )
-        self._fixed = {_Keys.RETURN_TYPE_KEY: aerospike.MAP_RETURN_INVERTED if inverted else aerospike.MAP_RETURN_NONE}
+        self._fixed = {}
 
         if ctx is not None:
             self._fixed[_Keys.CTX_KEY] = ctx
