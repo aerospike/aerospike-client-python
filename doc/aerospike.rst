@@ -1023,6 +1023,10 @@ Return types used by various list operations.
 
     Invert meaning of list command and return values.
 
+.. data:: LIST_RETURN_EXISTS
+
+    Return true if count of items selected > 0.
+
 .. _aerospike_list_order:
 
 List Order
