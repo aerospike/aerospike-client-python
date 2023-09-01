@@ -481,6 +481,9 @@ def list_get_by_index_range(bin_name: str, index, return_type, count=None, inver
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items outside of the specified range will be returned.
             Default: `False`
+
+            .. deprecated:: 14.0.0
+                Instead of setting to `True`, "bitwise or" (|) the `return_type` parameter's value instead.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
 
@@ -549,6 +552,9 @@ def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverte
             If set to `True`, all items outside of the specified rank range will be returned.
             Default: `False`
 
+            .. deprecated:: 14.0.0
+                Instead of setting to `True`, "bitwise or" (|) the `return_type` parameter's value instead.
+
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
         format of the dictionary should be considered an internal detail, and subject to change.
@@ -583,6 +589,9 @@ def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: Op
             :ref:`list_return_types` values
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items not equal to `value` will be selected. Default: `False`
+
+            .. deprecated:: 14.0.0
+                Instead of setting to `True`, "bitwise or" (|) the `return_type` parameter's value instead.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -617,6 +626,9 @@ def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=Fals
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items not matching an entry in `value_list` will be selected.
             Default: `False`
+
+            .. deprecated:: 14.0.0
+                Instead of setting to `True`, "bitwise or" (|) the `return_type` parameter's value instead.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
