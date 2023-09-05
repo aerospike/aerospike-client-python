@@ -991,7 +991,7 @@ List Return Types
 
 Return types used by various list operations.
 
-.. autodata:: LIST_RETURN_NONE
+.. data:: LIST_RETURN_NONE = 0
 
     Do not return any value.
 
