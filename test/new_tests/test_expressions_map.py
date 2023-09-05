@@ -672,12 +672,12 @@ class TestExpressions(TestBaseClass):
                 "smap_bin",
                 MapGetByKeyList(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_EXISTS,
+                    return_type=aerospike.MAP_RETURN_COUNT,
                     keys=["b", "d", "f"],
                     bin="smap_bin",
                     inverted=True
                 ),
-                False
+                0
             ),
             # Select entries with key "d" and after in the map
             # Inversion means select key "b" which comes before "d"
