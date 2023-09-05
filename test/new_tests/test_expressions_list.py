@@ -830,12 +830,12 @@ class TestExpressions(TestBaseClass):
                 "ilist_bin",
                 ListGetByValueList(
                     ctx=None,
-                    return_type=aerospike.LIST_RETURN_EXISTS,
+                    return_type=aerospike.LIST_RETURN_COUNT,
                     value=[1, 2, 6],
                     bin="ilist_bin",
                     inverted=True
                 ),
-                False
+                0
             ),
             # Without inversion, get all list values > 1
             # With inversion, get all list values <= 1

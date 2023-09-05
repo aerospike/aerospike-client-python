@@ -724,24 +724,24 @@ class TestExpressions(TestBaseClass):
                 "smap_bin",
                 MapGetByValueRange(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_ORDERED_MAP,
+                    return_type=aerospike.MAP_RETURN_VALUE,
                     value_begin="b",
                     value_end="e",
                     bin="smap_bin",
                     inverted=True
                 ),
-                KeyOrderedDict({"f": "f"})
+                ["f"]
             ),
             (
                 "lmap_bin",
                 MapGetByValueList(
                     ctx=None,
-                    return_type=aerospike.MAP_RETURN_UNORDERED_MAP,
+                    return_type=aerospike.MAP_RETURN_VALUE,
                     value=[[1, 2], [1, 3]],
                     bin="lmap_bin",
                     inverted=True
                 ),
-                {3: [1, 4]}
+                [[1, 4]]
             ),
             # Select entry with value [1, 4]
             # Inverse is the entries with ranks 0 and 1
