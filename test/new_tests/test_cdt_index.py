@@ -6,6 +6,7 @@ import aerospike
 from aerospike import exception as e
 from .index_helpers import ensure_dropped_index
 from aerospike_helpers import cdt_ctx
+from aerospike import predicates as p
 
 list_index = "list_index"
 list_rank = "list_rank"
@@ -726,3 +727,26 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
             self.as_connection.index_cdt_create()
 
         assert "argument 'ns' (pos 1)" in str(typeError.value)
+
+    @pytest.mark.parametrize(
+        "bin, index_type, index_datatype, ctx, predicate",
+        [(
+            "addr",
+            aerospike.INDEX_TYPE_DEFAULT,
+            aerospike.INDEX_STRING,
+            None,
+            p.equals("addr", "name2")
+        )],
+        # Types of queries
+        ids=[
+            "with no context"
+        ]
+    )
+    def test_queries_with_cdt_index(self, bin, index_type, index_datatype, ctx, predicate):
+        """
+        """
+        self.as_connection.index_cdt_create("test", "demo", bin, index_type, index_datatype, "index_cdt", ctx)
+
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        query.select("name", "test_age")
+        query.where(predicate)

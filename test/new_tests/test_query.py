@@ -146,6 +146,19 @@ class TestQuery(TestBaseClass):
         except e.IndexFoundError:
             pass
 
+        try:
+            client.index_cdt_create(
+                "test",
+                "demo",
+                "numeric_map",
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_NUMERIC,
+                "numeric_map_cdt_index",
+                {"ctx": ctx_map_index},
+            )
+        except e.IndexFoundError:
+            pass
+
         client.close()
 
     def teardown_class(cls):
