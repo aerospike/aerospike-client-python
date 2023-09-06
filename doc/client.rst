@@ -995,7 +995,7 @@ Index Operations
 
     .. method:: index_cdt_create(ns: str, set: str, bin: str, index_type, index_datatype, index_name: str, ctx: dict[, policy: dict])
 
-        Create an complex data type (CDT) index named *index_name* for a scalar, list values, map keys or map values (as defined by *index_type*) and for
+        Create an collection data type (CDT) index named *index_name* for a scalar, list values, map keys, or map values (as defined by *index_type*) and for
         numeric, string, or GeoJSON values (as defined by *index_datatype*)
         on records of the specified *ns*, *set* whose bin is a list or map.
 
