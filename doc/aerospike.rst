@@ -1416,8 +1416,8 @@ Bin Types
 
 .. _aerospike_index_types:
 
-Index Type
-----------
+Index Types
+-----------
 
 .. data:: INDEX_TYPE_DEFAULT
 
@@ -1435,20 +1435,10 @@ Index Type
 
     Index all of a map's values.
 
-.. _aerospike_misc_constants:
+.. _aerospike_index_data_types:
 
-Miscellaneous
--------------
-
-.. data:: __version__
-
-    A :class:`str` containing the module's version.
-
-    .. versionadded:: 1.0.54
-
-.. data:: UDF_TYPE_LUA
-
-    UDF type is LUA (which is the only UDF type).
+Data Types
+----------
 
 .. data:: INDEX_STRING
 
@@ -1463,6 +1453,21 @@ Miscellaneous
     An index whose values are of the aerospike GetJSON data type.
 
 .. seealso:: `Data Types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
+
+.. _aerospike_misc_constants:
+
+Miscellaneous
+-------------
+
+.. data:: __version__
+
+    A :class:`str` containing the module's version.
+
+    .. versionadded:: 1.0.54
+
+.. data:: UDF_TYPE_LUA
+
+    UDF type is LUA (which is the only UDF type).
 
 .. _aerospike_log_levels:
 

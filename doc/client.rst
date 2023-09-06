@@ -1002,8 +1002,8 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_type: the type of the value or CDT containing the value.
-        :param index_datatype: the type of value being queried on. The possible arguments are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_type: whether we are querying a single scalar value or specific values of a CDT type. See :ref:`aerospike_index_types`.
+        :param index_datatype: the type of value being queried on. See :ref:`aerospike_index_data_types`.
         :param str index_name: the name of the index.
         :param dict ctx: a dictionary containing the ``"ctx"`` key mapping to a list of contexts.
         :param dict policy: optional :ref:`aerospike_info_policies`.
