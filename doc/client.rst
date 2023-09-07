@@ -895,6 +895,8 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+        .. deprecated:: 14.0.0 :meth:`index_single_value_create` should be used instead.
+
     .. method:: index_integer_create(ns, set, bin, name[, policy])
 
         Create an integer index with *name* on the *bin* in the specified \
@@ -906,6 +908,8 @@ Index Operations
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. deprecated:: 14.0.0 :meth:`index_single_value_create` should be used instead.
 
     .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
 
@@ -993,6 +997,7 @@ Index Operations
             client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
             client.close()
 
+        .. deprecated:: 14.0.0 :meth:`index_single_value_create` should be used instead.
 
     .. method:: index_remove(ns: str, name: str[, policy: dict])
 
