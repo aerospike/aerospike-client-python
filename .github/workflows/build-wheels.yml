@@ -1,6 +1,6 @@
 name: Build wheels
 
-# Builds wheels and sends to QE and Aerospike artifactory
+# Builds wheels and optionally sends artifacts to Jfrog Artifactory
 on:
   workflow_dispatch:
     inputs:
@@ -61,6 +61,7 @@ jobs:
   build-sdist:
     name: Build and install sdist
     runs-on: ubuntu-latest
+    if: ${{ needs.update-version.result == 'skipped' || needs.update-version.result == 'success' }}
     needs: update-version
     steps:
     - uses: actions/checkout@v2
@@ -126,6 +127,7 @@ jobs:
   manylinux_arm64:
     runs-on: ubuntu-latest
     needs: update-version
+    if: ${{ needs.update-version.result == 'skipped' || needs.update-version.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -187,6 +189,7 @@ jobs:
   manylinux_x86_64:
     runs-on: ubuntu-latest
     needs: update-version
+    if: ${{ needs.update-version.result == 'skipped' || needs.update-version.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -383,6 +386,7 @@ jobs:
 
   macOS-x86:
     needs: update-version
+    if: ${{ needs.update-version.result == 'skipped' || needs.update-version.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
@@ -431,6 +435,7 @@ jobs:
   macOS-m1:
     runs-on: [self-hosted, macOS, ARM64]
     needs: update-version
+    if: ${{ needs.update-version.result == 'skipped' || needs.update-version.result == 'success' }}
     strategy:
       fail-fast: false
       matrix:
