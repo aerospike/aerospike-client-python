@@ -8,16 +8,23 @@ on:
         type: boolean
         required: true
         default: false
-      build-rc-or-release:
+      should-bump-version:
+        type: boolean
+        required: true
+        default: false
+        description: 'In addition, uploads to JFrog if true, and does not upload to JFrog if false'
+      bump-rc-or-release:
         type: choice
         options:
           - rc
           - release
         default: 'rc'
         required: true
+        description: 'If should-bump-version is false, this option will be ignored.'
 
 jobs:
   update-version:
+    if: ${{ inputs.bump-rc-or-release }}
     runs-on: ubuntu-latest
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
@@ -486,21 +493,8 @@ jobs:
         docker container stop aerospike
         docker container prune -f
 
-  send-to-qe:
-    needs: [manylinux_x86_64, manylinux_arm64]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - run: echo "Upload to QE"
-      # - uses: shallwefootball/s3-upload-action@master
-      #   with:
-      #     aws_key_id: ${{ secrets.AWS_KEY_ID }}
-      #     aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-      #     aws_bucket: ${{ secrets.AWS_BUCKET }}
-      #     # Send all distributions to QE build system
-      #     source_dir: './wheelhouse'
-
   upload-artifacts-to-jfrog:
+    if: ${{ inputs.bump-rc-or-release }}
     needs: [
       # Cat 1 tests
       source-installs,
