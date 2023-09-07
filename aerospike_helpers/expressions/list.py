@@ -365,7 +365,7 @@ class ListRemoveByValue(_BaseExpr):
             value (TypeValue): Value or value expression to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -396,7 +396,7 @@ class ListRemoveByValueList(_BaseExpr):
             values (TypeListValue): List of values or list expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -437,7 +437,7 @@ class ListRemoveByValueRange(_BaseExpr):
             end (TypeValue): End value or value expression for range.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -475,7 +475,7 @@ class ListRemoveByValueRelRankToEnd(_BaseExpr):
             rank (TypeRank): Rank integer or integer expression.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -520,7 +520,7 @@ class ListRemoveByValueRelRankRange(_BaseExpr):
             count (TypeCount): How many elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -579,7 +579,7 @@ class ListRemoveByIndexRangeToEnd(_BaseExpr):
             index (TypeIndex): Starting index integer or integer expression of elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -617,7 +617,7 @@ class ListRemoveByIndexRange(_BaseExpr):
             count (TypeCount): Integer or integer expression, how many elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -674,7 +674,7 @@ class ListRemoveByRankRangeToEnd(_BaseExpr):
             rank (TypeRank): Rank integer or integer expression of element to start removing at.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -714,7 +714,7 @@ class ListRemoveByRankRange(_BaseExpr):
             count (TypeCount): Count integer or integer expression of elements to remove.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: list expression.
 
@@ -786,7 +786,7 @@ class ListGetByValue(_BaseExpr):
             value (TypeValue): Value or value expression of element to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
@@ -832,7 +832,7 @@ class ListGetByValueRange(_BaseExpr):
             value_end (TypeValue): Value or value expression of ending element.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
@@ -875,7 +875,7 @@ class ListGetByValueList(_BaseExpr):
             value (TypeListValue): List or list expression of values of elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
@@ -916,7 +916,7 @@ class ListGetByValueRelRankRangeToEnd(_BaseExpr):
             rank (TypeRank): Rank integer expression. rank relative to "value" to start getting elements.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
@@ -965,7 +965,7 @@ class ListGetByValueRelRankRange(_BaseExpr):
             count (TypeCount): Integer value or integer value expression, how many elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
@@ -1051,7 +1051,7 @@ class ListGetByIndexRangeToEnd(_BaseExpr):
             index (TypeIndex): Integer or integer expression of index to start getting elements at.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
@@ -1094,7 +1094,7 @@ class ListGetByIndexRange(_BaseExpr):
             count (TypeCount): Integer or integer expression for count of elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
@@ -1168,7 +1168,7 @@ class ListGetByRankRangeToEnd(_BaseExpr):
             rank (TypeRank): Rank integer or integer expression of first element to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
@@ -1210,7 +1210,7 @@ class ListGetByRankRange(_BaseExpr):
             count (TypeCount): Count integer or integer expression for how many elements to get.
             bin (TypeBinName): bin expression, such as :class:`~aerospike_helpers.expressions.base.MapBin` or
                 :class:`~aerospike_helpers.expressions.base.ListBin`.
-            inverted (bool): Return the opposite expected results of list command.
+            inverted (bool): Invert the expression's search criteria.
 
         :return: Expression.
 
