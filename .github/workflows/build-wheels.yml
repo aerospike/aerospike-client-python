@@ -24,7 +24,7 @@ on:
 
 jobs:
   update-version:
-    if: ${{ inputs.bump-rc-or-release }}
+    if: ${{ inputs.should-bump-version }}
     runs-on: ubuntu-latest
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
@@ -494,7 +494,7 @@ jobs:
         docker container prune -f
 
   upload-artifacts-to-jfrog:
-    if: ${{ inputs.bump-rc-or-release }}
+    if: ${{ inputs.should-bump-version }}
     needs: [
       # Cat 1 tests
       source-installs,
