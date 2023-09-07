@@ -591,13 +591,13 @@ void raise_exception(as_error *err)
                 found = true;
                 PyObject *py_attr = NULL;
                 py_attr = PyUnicode_FromString(err->message);
-                PyObject_SetAttrStringSafeSafe(py_value, "msg", py_attr);
+                PyObject_SetAttrStringSafe(py_value, "msg", py_attr);
                 Py_DECREF(py_attr);
 
                 // as_error.file is a char* so this may be null
                 if (err->file) {
                     py_attr = PyUnicode_FromString(err->file);
-                    PyObject_SetAttrStringSafeSafe(py_value, "file", py_attr);
+                    PyObject_SetAttrStringSafe(py_value, "file", py_attr);
                     Py_DECREF(py_attr);
                 }
                 else {
@@ -662,13 +662,13 @@ PyObject *raise_exception_old(as_error *err)
                 found = true;
                 PyObject *py_attr = NULL;
                 py_attr = PyUnicode_FromString(err->message);
-                PyObject_SetAttrStringSafeSafe(py_value, "msg", py_attr);
+                PyObject_SetAttrStringSafe(py_value, "msg", py_attr);
                 Py_DECREF(py_attr);
 
                 // as_error.file is a char* so this may be null
                 if (err->file) {
                     py_attr = PyUnicode_FromString(err->file);
-                    PyObject_SetAttrStringSafeSafe(py_value, "file", py_attr);
+                    PyObject_SetAttrStringSafe(py_value, "file", py_attr);
                     Py_DECREF(py_attr);
                 }
                 else {
