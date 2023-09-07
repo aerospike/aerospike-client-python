@@ -39,6 +39,7 @@
 #include <aerospike/as_msgpack_ext.h>
 
 #include "conversions.h"
+#include "macros.h"
 #include "geo.h"
 #include "policy.h"
 #include "serializer.h"
