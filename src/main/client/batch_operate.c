@@ -280,7 +280,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
 
     Py_BEGIN_ALLOW_THREADS
 
-    aerospike_batch_operate(self->as, &batch_apply_err, polic y_batch_p,
+    aerospike_batch_operate(self->as, &batch_apply_err, policy_batch_p,
                             policy_batch_write_p, &batch, &ops,
                             batch_operate_cb, &data);
 
