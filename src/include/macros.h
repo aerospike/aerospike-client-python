@@ -20,9 +20,8 @@
 #define AS_Matches_Classname(pyval, classname)                                 \
     (strcmp((pyval)->ob_type->tp_name, (classname)) == 0)
 
-static inline void PyObject_SetAttrStringSafe(PyObject *obj,
-                                              const char *attr_name,
-                                              PyObject *value)
+inline void PyObject_SetAttrStringSafe(PyObject *obj, const char *attr_name,
+                                       PyObject *value)
 {
     if (value == NULL) {
         PyObject_DelAttrString(obj, attr_name);
