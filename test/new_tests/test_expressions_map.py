@@ -48,8 +48,10 @@ from aerospike_helpers.expressions import (
     MapSize,
     ResultType,
 )
+from aerospike_helpers.operations import expression_operations as expr_ops
 
 import aerospike
+from aerospike import KeyOrderedDict
 
 # Constants
 _NUM_RECORDS = 9
@@ -594,3 +596,239 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "bin_name, expr, expected",
+        [
+            (
+                "smap_bin",
+                MapRemoveByKeyList(ctx=None, keys=["b", "f"], bin="smap_bin", inverted=True),
+                {"b": "b", "f": "f"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRange(ctx=None, begin="b", end="e", bin="smap_bin", inverted=True),
+                {"b": "b", "d": "d"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRelIndexRangeToEnd(ctx=None, key="b", index=1, bin="smap_bin", inverted=True),
+                {"d": "d", "f": "f"}
+            ),
+            (
+                "smap_bin",
+                MapRemoveByKeyRelIndexRange(ctx=None, key="b", index=1, count=1, bin="smap_bin", inverted=True),
+                {"d": "d"}
+            ),
+            (
+                "bomap_bin",
+                MapRemoveByValue(ctx=None, value=False, bin="bomap_bin", inverted=True),
+                {1: False, 2: False}
+            ),
+            (
+                "bomap_bin",
+                MapRemoveByValueList(ctx=None, values=[False, True], bin="bomap_bin", inverted=True),
+                {1: False, 2: False, 3: True}
+            ),
+            ("imap_bin", MapRemoveByValueRange(ctx=None, begin=1, end=3, bin="imap_bin", inverted=True), {1: 1, 2: 2}),
+            # Rel rank of value 1: 0
+            # Rel rank of value 2: 1
+            # Without inversion, this expression removes map entries with values 2 and higher
+            # With inversion, remove map entries with values less than 2
+            (
+                "imap_bin",
+                MapRemoveByValueRelRankRangeToEnd(ctx=None, value=1, rank=1, bin="imap_bin", inverted=True),
+                {2: 2, 3: 6}
+            ),
+            # Without inversion, this expression removes 1 map entry starting with values 2 and higher
+            # With inversion, remove all other entries except for that 1 map entry
+            (
+                "imap_bin",
+                MapRemoveByValueRelRankRange(ctx=None, value=1, rank=1, count=1, bin="imap_bin", inverted=True),
+                {2: 2}
+            ),
+            ("imap_bin", MapRemoveByIndexRangeToEnd(ctx=None, index=1, bin="imap_bin", inverted=True), {2: 2, 3: 6}),
+            ("imap_bin", MapRemoveByIndexRange(ctx=None, index=1, count=1, bin="imap_bin", inverted=True), {2: 2}),
+            # Without inversion, remove all values starting with 2nd lowest value
+            ("imap_bin", MapRemoveByRankRangeToEnd(ctx=None, rank=1, bin="imap_bin", inverted=True), {2: 2, 3: 6}),
+            ("imap_bin", MapRemoveByRankRange(ctx=None, rank=0, count=2, bin="imap_bin", inverted=True), {1: 1, 2: 2}),
+
+            # Get expressions
+
+            # Only select entry with key "f"
+            (
+                "smap_bin",
+                MapGetByKeyRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_COUNT,
+                    begin="b",
+                    end="e",
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                1
+            ),
+            (
+                "smap_bin",
+                MapGetByKeyList(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_COUNT,
+                    keys=["b", "d", "f"],
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                0
+            ),
+            # Select entries with key "d" and after in the map
+            # Inversion means select key "b" which comes before "d"
+            # Key "b" should have index 0 since it was declared first in the dict
+            (
+                "smap_bin",
+                MapGetByKeyRelIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_INDEX,
+                    key="b",
+                    index=1,
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                [0]
+            ),
+            # Only select entry with key "d"
+            # Inversion is select entries with key "b" and "f"
+            (
+                "smap_bin",
+                MapGetByKeyRelIndexRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_KEY,
+                    key="b",
+                    index=1,
+                    count=1,
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                ["b", "f"]
+            ),
+            (
+                "smap_bin",
+                MapGetByValue(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_KEY_VALUE,
+                    value="f",
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                ["b", "b", "d", "d"]
+            ),
+            (
+                "smap_bin",
+                MapGetByValueRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    value_begin="b",
+                    value_end="e",
+                    bin="smap_bin",
+                    inverted=True
+                ),
+                ["f"]
+            ),
+            (
+                "lmap_bin",
+                MapGetByValueList(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    value=[[1, 2], [1, 3]],
+                    bin="lmap_bin",
+                    inverted=True
+                ),
+                [[1, 4]]
+            ),
+            # Select entry with value [1, 4]
+            # Inverse is the entries with ranks 0 and 1
+            (
+                "lmap_bin",
+                MapGetByValueRelRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_RANK,
+                    value=[1, 2],
+                    rank=2,
+                    bin="lmap_bin",
+                    inverted=True
+                ),
+                [0, 1]
+            ),
+            # Select {1: 4}
+            # Inverse is {1: 2} and {1: 3}
+            # Reverse indices for these values are 2 and 1 respectively
+            (
+                "mmap_bin",
+                MapGetByValueRelRankRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_REVERSE_INDEX,
+                    value=KeyOrderedDict({1: 3}),
+                    rank=1,
+                    count=1,
+                    bin="mmap_bin",
+                    inverted=True
+                ),
+                [2, 1]
+            ),
+            # Get entries with keys 2.0 and 6.0
+            # Inverse is entry with key 1.0
+            # This has reverse rank 2
+            (
+                "fmap_bin",
+                MapGetByIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_REVERSE_RANK,
+                    index=1,
+                    bin="fmap_bin",
+                    inverted=True
+                ),
+                [2]
+            ),
+            (
+                "bomap_bin",
+                MapGetByIndexRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    index=0,
+                    count=2,
+                    bin="bomap_bin",
+                    inverted=True
+                ),
+                [True]
+            ),
+            (
+                "nmap_bin",
+                MapGetByRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    rank=0,
+                    bin="nmap_bin",
+                    inverted=True
+                ),
+                []
+            ),
+            (
+                "imap_bin",
+                MapGetByRankRange(
+                    ctx=None,
+                    return_type=aerospike.MAP_RETURN_VALUE,
+                    rank=0,
+                    count=1,
+                    bin="imap_bin",
+                    inverted=True
+                ),
+                [2, 6]
+            ),
+        ]
+    )
+    def test_map_expr_inverted(self, bin_name: str, expr, expected):
+        ops = [
+            expr_ops.expression_read(bin_name, expr.compile())
+        ]
+        key = (self.test_ns, self.test_set, 0)
+        _, _, bins = self.as_connection.operate(key, ops)
+
+        assert bins[bin_name] == expected

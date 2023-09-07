@@ -4,6 +4,7 @@ import pytest
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
+from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers.expressions import (
     And,
     Eq,
@@ -753,3 +754,179 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "bin_name, expr, expected",
+        [
+            (
+                "ilist_bin",
+                ListRemoveByValue(ctx=None, value=1, bin="ilist_bin", inverted=True),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueList(ctx=None, values=[1, 2], bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRange(ctx=None, begin=1, end=3, bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRelRankToEnd(ctx=None, value=1, rank=1, bin="ilist_bin", inverted=True),
+                [2, 6]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRelRankRange(ctx=None, value=1, rank=1, count=1, bin="ilist_bin", inverted=True),
+                [2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByIndexRangeToEnd(ctx=None, index=1, bin="ilist_bin", inverted=True),
+                [2, 6]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByIndexRange(ctx=None, index=0, count=2, bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "slist_bin",
+                ListRemoveByRankRangeToEnd(ctx=None, rank=1, bin="slist_bin", inverted=True),
+                ["d", "f"]
+            ),
+            (
+                "slist_bin",
+                ListRemoveByRankRange(ctx=None, rank=0, count=2, bin="slist_bin", inverted=True),
+                ["b", "d"]
+            ),
+            (
+                "ilist_bin",
+                ListGetByValue(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_INDEX,
+                    value=2,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [0, 2]
+            ),
+            (
+                "ilist_bin",
+                ListGetByValueRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_COUNT,
+                    value_begin=1,
+                    value_end=3,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                1
+            ),
+            (
+                "ilist_bin",
+                ListGetByValueList(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_COUNT,
+                    value=[1, 2, 6],
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                0
+            ),
+            # Without inversion, get all list values > 1
+            # With inversion, get all list values <= 1
+            # The rank of list value 1 is 0
+            (
+                "ilist_bin",
+                ListGetByValueRelRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_RANK,
+                    value=1,
+                    rank=1,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [0]
+            ),
+            # The list value with relative rank 1 compared to list value 1 is 2
+            # We only get that list value 2 since count is 1
+            # With inversion, we get the other list values 1 and 6
+            # The reverse indices of these values is 2 and 0, respectively
+            (
+                "ilist_bin",
+                ListGetByValueRelRankRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_REVERSE_INDEX,
+                    value=1,
+                    rank=1,
+                    count=1,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [2, 0]
+            ),
+            # Get list values 2 and 6
+            # The inverse result is list value 1
+            # The reverse rank of list value 1 is 2
+            (
+                "ilist_bin",
+                ListGetByIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_REVERSE_RANK,
+                    index=1,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [2]
+            ),
+            (
+                "ilist_bin",
+                ListGetByIndexRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE,
+                    index=1,
+                    count=2,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                ListGetByRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE,
+                    rank=1,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                # This will select the last 2 list values: 2 and 6
+                # The inverse is list value 1
+                ListGetByRankRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE,
+                    rank=-2,
+                    count=2,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [1]
+            ),
+        ]
+    )
+    def test_list_expr_inverted(self, bin_name: str, expr, expected):
+        ops = [
+            expr_ops.expression_read(bin_name, expr.compile())
+        ]
+        key = (self.test_ns, self.test_set, 0)
+        _, _, bins = self.as_connection.operate(key, ops)
+
+        assert bins[bin_name] == expected
