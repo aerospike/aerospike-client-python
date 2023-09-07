@@ -80,20 +80,10 @@ static inline bool isExprOp(int op);
         error_to_pyobject(&err, &py_err);                                      \
         PyObject *exception_type = raise_exception_old(&err);                  \
         if (PyObject_HasAttrString(exception_type, "key")) {                   \
-            if (py_key == NULL) {                                              \
-                PyObject_DelAttrString(exception_type, "key");                 \
-            }                                                                  \
-            else {                                                             \
-                PyObject_SetAttrString(exception_type, "key", py_key);         \
-            }                                                                  \
+            PyObject_SetAttrStringSafe(exception_type, "key", py_key);         \
         }                                                                      \
         if (PyObject_HasAttrString(exception_type, "bin")) {                   \
-            if (py_bin == NULL) {                                              \
-                PyObject_DelAttrString(exception_type, "bin");                 \
-            }                                                                  \
-            else {                                                             \
-                PyObject_SetAttrString(exception_type, "bin", py_bin);         \
-            }                                                                  \
+            PyObject_SetAttrStringSafe(exception_type, "bin", py_bin);         \
         }                                                                      \
         PyErr_SetObject(exception_type, py_err);                               \
         Py_DECREF(py_err);                                                     \
@@ -1217,7 +1207,7 @@ CLEANUP:
         error_to_pyobject(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
+            PyObject_SetAttrStringSafe(exception_type, "key", py_key);
         }
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);

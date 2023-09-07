@@ -262,7 +262,7 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
     PyObject *py_br_res = PyLong_FromLong((long)err.code);
-    PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_br_res);
+    PyObject_SetAttrStringSafe(br_instance, FIELD_NAME_BATCH_RESULT, py_br_res);
     Py_DECREF(py_br_res);
 
     as_error_reset(&err);
