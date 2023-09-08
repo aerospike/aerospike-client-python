@@ -41,7 +41,7 @@ jobs:
         latest_tag=$(cat VERSION)
         echo "Bumping off of latest tag $latest_tag"
         # If creating release wheels, bump rc version to release version
-        if [[ ${{ inputs.build-rc-or-release }} == "rc" ]]; then
+        if [[ ${{ inputs.bump-rc-or-release }} == "rc" ]]; then
           new_tag=$(pysemver bump prerelease $latest_tag)
         else
           new_tag=$(pysemver nextver $latest_tag patch)
