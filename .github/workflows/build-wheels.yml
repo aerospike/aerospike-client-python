@@ -13,7 +13,7 @@ on:
       should-bump-version:
         type: boolean
         required: true
-        default: false
+        default: true
         description: 'Bump version and upload to JFrog?'
       bump-rc-or-release:
         type: choice
