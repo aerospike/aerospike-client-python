@@ -8,11 +8,12 @@ on:
         type: boolean
         required: true
         default: false
+        description: 'Test against server release candidate?'
       should-bump-version:
         type: boolean
         required: true
         default: false
-        description: 'In addition, uploads to JFrog if true, and does not upload to JFrog if false'
+        description: 'Bump version and upload to JFrog?'
       bump-rc-or-release:
         type: choice
         options:
@@ -20,7 +21,7 @@ on:
           - release
         default: 'rc'
         required: true
-        description: 'If should-bump-version is false, this option will be ignored.'
+        description: 'If bumping version, what type of bump?'
 
 jobs:
   update-version:
