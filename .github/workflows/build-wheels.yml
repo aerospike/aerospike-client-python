@@ -10,6 +10,13 @@ on:
         required: true
         default: false
         description: 'Test against server release candidate?'
+      # Override the default server version to test against
+      # This is helpful if you need to create a backport from an older client major version
+      # And that older client major version does not accomodate for breaking changes in the latest server version
+      server-tag:
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
       should-bump-version:
         type: boolean
         required: true
@@ -23,13 +30,6 @@ on:
         default: 'rc'
         required: true
         description: 'If bumping version, what type of bump?'
-      # Test against a server version
-      # This is helpful if you need to create a backport from an older client major version
-      # And that older client major version does not accomodate for breaking changes in the latest server version
-      server-tag:
-        required: true
-        default: 'latest'
-        description: 'Server docker image tag'
 
 jobs:
   update-version:
