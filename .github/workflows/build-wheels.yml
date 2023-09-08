@@ -70,8 +70,10 @@ jobs:
   build-sdist:
     name: Build and install sdist
     runs-on: ubuntu-latest
+    # Need to replace default success() condition because skipped job is not "successful"
+    # always() will cause this job to become uncancellable, so we check if current job hasn't been cancelled yet
     # Run if update version workflow was skipped or succeeds
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     needs: update-version
     steps:
     - uses: actions/checkout@v2
@@ -137,7 +139,7 @@ jobs:
   manylinux_arm64:
     runs-on: ubuntu-latest
     needs: update-version
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -200,7 +202,7 @@ jobs:
   manylinux_x86_64:
     runs-on: ubuntu-latest
     needs: update-version
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -398,7 +400,7 @@ jobs:
 
   macOS-x86:
     needs: update-version
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -447,7 +449,7 @@ jobs:
   macOS-m1:
     runs-on: [self-hosted, macOS, ARM64]
     needs: update-version
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
