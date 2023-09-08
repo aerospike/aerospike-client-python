@@ -1,6 +1,7 @@
 name: Build wheels
+run-name: Build wheels (use-server-rc=${{ inputs.use-server-rc }}, should-bump-version=${{ inputs.should-bump-version }}, bump-rc-or-release=${{ inputs.bump-rc-or-release }})
 
-# Builds wheels and sends to QE and Aerospike artifactory
+# Builds wheels and optionally sends artifacts to Jfrog Artifactory
 on:
   workflow_dispatch:
     inputs:
@@ -8,16 +9,24 @@ on:
         type: boolean
         required: true
         default: false
-      build-rc-or-release:
+        description: 'Test against server release candidate?'
+      should-bump-version:
+        type: boolean
+        required: true
+        default: true
+        description: 'Bump version and upload to JFrog?'
+      bump-rc-or-release:
         type: choice
         options:
           - rc
           - release
         default: 'rc'
         required: true
+        description: 'If bumping version, what type of bump?'
 
 jobs:
   update-version:
+    if: ${{ inputs.should-bump-version }}
     runs-on: ubuntu-latest
     permissions:
       # Give the default GITHUB_TOKEN write permission to commit and push the
@@ -33,7 +42,7 @@ jobs:
         latest_tag=$(cat VERSION)
         echo "Bumping off of latest tag $latest_tag"
         # If creating release wheels, bump rc version to release version
-        if [[ ${{ inputs.build-rc-or-release }} == "rc" ]]; then
+        if [[ ${{ inputs.bump-rc-or-release }} == "rc" ]]; then
           new_tag=$(pysemver bump prerelease $latest_tag)
         else
           new_tag=$(pysemver nextver $latest_tag patch)
@@ -54,6 +63,8 @@ jobs:
   build-sdist:
     name: Build and install sdist
     runs-on: ubuntu-latest
+    # Run if update version workflow was skipped or succeeds
+    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     needs: update-version
     steps:
     - uses: actions/checkout@v2
@@ -119,6 +130,7 @@ jobs:
   manylinux_arm64:
     runs-on: ubuntu-latest
     needs: update-version
+    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -180,6 +192,7 @@ jobs:
   manylinux_x86_64:
     runs-on: ubuntu-latest
     needs: update-version
+    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -376,6 +389,7 @@ jobs:
 
   macOS-x86:
     needs: update-version
+    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -424,6 +438,7 @@ jobs:
   macOS-m1:
     runs-on: [self-hosted, macOS, ARM64]
     needs: update-version
+    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -486,21 +501,8 @@ jobs:
         docker container stop aerospike
         docker container prune -f
 
-  send-to-qe:
-    needs: [manylinux_x86_64, manylinux_arm64]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@master
-      - run: echo "Upload to QE"
-      # - uses: shallwefootball/s3-upload-action@master
-      #   with:
-      #     aws_key_id: ${{ secrets.AWS_KEY_ID }}
-      #     aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-      #     aws_bucket: ${{ secrets.AWS_BUCKET }}
-      #     # Send all distributions to QE build system
-      #     source_dir: './wheelhouse'
-
   upload-artifacts-to-jfrog:
+    if: ${{ inputs.should-bump-version }}
     needs: [
       # Cat 1 tests
       source-installs,
