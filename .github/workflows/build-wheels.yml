@@ -1,4 +1,5 @@
 name: Build wheels
+run-name: Build wheels (use-server-rc=${{ inputs.use-server-rc }}, should-bump-version=${{ inputs.should-bump-version }}, bump-rc-or-release=${{ inputs.bump-rc-or-release }})
 
 # Builds wheels and optionally sends artifacts to Jfrog Artifactory
 on:
