@@ -883,7 +883,19 @@ Index Operations
 .. class:: Client
     :noindex:
 
-    .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
+    .. method:: index_single_value_create(ns: str, set: str, bin: str, value_type: int, ctx: list = None, policy: dict = NOne)
+
+        Create a secondary index on a single value with a given type.
+
+        :param str index_name: the name of the index.
+        :param str ns: the namespace containing the value.
+        :param str set: the set containing the value.
+        :param str bin: the name of the bin containing the value.
+        :param str value_type: the type of the value being indexed. Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param list ctx: a list of contexts to specify the location of a nested value in a collection data type. Defaults to :py:obj:`None`.
+        :param dict policy: a dictionary defined by :ref:`aerospike_info_policies`. Defaults to :py:obj:`None`.
+
+    .. method:: index_list_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
         Create an index named *name* for numeric, string or GeoJSON values \
         (as defined by *index_datatype*) on records of the specified *ns*, *set* \
