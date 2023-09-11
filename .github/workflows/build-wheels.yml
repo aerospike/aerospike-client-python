@@ -1,5 +1,5 @@
 name: Build wheels
-run-name: Build wheels (use-server-rc=${{ inputs.use-server-rc }}, should-bump-version=${{ inputs.should-bump-version }}, bump-rc-or-release=${{ inputs.bump-rc-or-release }})
+run-name: Build wheels (use-server-rc=${{ inputs.use-server-rc }}, should-bump-version=${{ inputs.should-bump-version }}, bump-rc-or-release=${{ inputs.bump-rc-or-release }}, server-tag=${{ inputs.server-tag }})
 
 # Builds wheels and optionally sends artifacts to Jfrog Artifactory
 on:
@@ -10,6 +10,13 @@ on:
         required: true
         default: false
         description: 'Test against server release candidate?'
+      # Override the default server version to test against
+      # This is helpful if you need to create a backport from an older client major version
+      # And that older client major version does not accomodate for breaking changes in the latest server version
+      server-tag:
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
       should-bump-version:
         type: boolean
         required: true
@@ -63,8 +70,10 @@ jobs:
   build-sdist:
     name: Build and install sdist
     runs-on: ubuntu-latest
+    # Need to replace default success() condition because skipped job is not "successful"
+    # always() will cause this job to become uncancellable, so we check if current job hasn't been cancelled yet
     # Run if update version workflow was skipped or succeeds
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     needs: update-version
     steps:
     - uses: actions/checkout@v2
@@ -130,7 +139,7 @@ jobs:
   manylinux_arm64:
     runs-on: ubuntu-latest
     needs: update-version
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -157,6 +166,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
 
     - name: Set config.conf to use Docker IP address of Aerospike server
       # config.conf should be copied into the cibuildwheel Docker container
@@ -192,7 +202,7 @@ jobs:
   manylinux_x86_64:
     runs-on: ubuntu-latest
     needs: update-version
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -214,6 +224,7 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
 
     - name: Wait for server to start
       run: sleep 5
@@ -389,7 +400,7 @@ jobs:
 
   macOS-x86:
     needs: update-version
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -422,7 +433,7 @@ jobs:
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
           export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
-          vagrant up &&
+          SERVER_TAG=${{ inputs.server-tag }} vagrant up &&
           sleep 3 &&
           pip install -r test/requirements.txt
         CIBW_TEST_COMMAND: >
@@ -438,7 +449,7 @@ jobs:
   macOS-m1:
     runs-on: [self-hosted, macOS, ARM64]
     needs: update-version
-    if: ${{ always() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
       fail-fast: false
       matrix:
@@ -470,11 +481,11 @@ jobs:
 
     - name: Use server rc
       if: ${{ inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest" >> $GITHUB_ENV
+      run: echo IMAGE_NAME="aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
 
     - name: Use server release
       if: ${{ !inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike/aerospike-server" >> $GITHUB_ENV
+      run: echo IMAGE_NAME="aerospike/aerospike-server:${{ inputs.server-tag }}" >> $GITHUB_ENV
 
     - name: Run server
       run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
