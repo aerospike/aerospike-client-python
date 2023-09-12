@@ -145,7 +145,6 @@ jobs:
       matrix:
         # Python versions to build wheels on
         python: [
-          "cp37",
           "cp38",
           "cp39",
           "cp310",
@@ -208,7 +207,6 @@ jobs:
       matrix:
         # Python versions to build wheels on
         python: [
-          ["cp37", "3.7"],
           ["cp38", "3.8"],
           ["cp39", "3.9"],
           ["cp310", "3.10"],
@@ -405,7 +403,6 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [
-          ["cp37", "3.7"],
           ["cp38", "3.8"],
           ["cp39", "3.9"],
           ["cp310", "3.10"],
