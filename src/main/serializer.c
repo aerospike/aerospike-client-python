@@ -476,6 +476,33 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             }
         }
     } break;
+    case AS_BYTES_HLL:
+        // Convert bytes to Python bytes object
+        PyObject *py_bytes = PyBytes_FromStringAndSize((char *)bytes->value,
+                                                       (Py_ssize_t)bytes->size);
+        // Pass bytes object to new HLL class instance
+        PyObject *py_aerospike_module = PyImport_ImportModule("aerospike");
+        PyObject *py_hll_class =
+            PyObject_GetAttrString(py_aerospike_module, "HyperLogLog");
+        if (!PyCallable_Check(py_hll_class)) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to create HyperLogLog instance; "
+                            "HyperLogLog class is not callable");
+            goto HLL_CLEANUP;
+        }
+        PyObject *py_hll_instance =
+            PyObject_CallFunctionObjArgs(py_hll_class, py_bytes, NULL);
+        if (py_hll_instance == NULL) {
+            PyErr_Print();
+        }
+
+        *retval = py_hll_instance;
+
+    HLL_CLEANUP:
+        Py_DECREF(py_hll_class);
+        Py_DECREF(py_aerospike_module);
+        Py_DECREF(py_bytes);
+        break;
     default: {
         // First try to return a raw byte array, if that fails raise an error
         uint32_t bval_size = as_bytes_size(bytes);

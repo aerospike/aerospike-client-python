@@ -266,6 +266,7 @@ setup(
                 'src/main/client/sec_index.c',
                 'src/main/serializer.c',
                 'src/main/client/remove_bin.c',
+                'src/main/hll/type.c',
                 'src/main/query/type.c',
                 'src/main/query/apply.c',
                 'src/main/query/add_ops.c',

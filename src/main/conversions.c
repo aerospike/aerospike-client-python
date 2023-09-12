@@ -825,7 +825,12 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
     else if (PyBytes_Check(py_obj)) {
         uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
         uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
-        *val = (as_val *)as_bytes_new_wrap(b, b_len, false);
+        as_bytes *bytes = as_bytes_new_wrap(b, b_len, false);
+        *val = (as_val *)bytes;
+
+        if (!strcmp(py_obj->ob_type->tp_name, "aerospike.HyperLogLog")) {
+            bytes->type = AS_BYTES_HLL;
+        }
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");

@@ -33,6 +33,7 @@
 #include "module_functions.h"
 #include "nullobject.h"
 #include "cdt_types.h"
+#include "hll.h"
 #include <aerospike/as_log_macros.h>
 
 PyObject *py_global_hosts;
@@ -263,7 +264,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
     Aerospike_State(aerospike)->infinite_object = infinite_object;
 
-    PyTypeObject *hll_object = AerospikeHyperLogLogObject_Ready();
+    PyTypeObject *hll_object = AerospikeHyperLogLog_Ready();
     Py_INCREF(hll_object);
     retval =
         PyModule_AddObject(aerospike, "HyperLogLog", (PyObject *)hll_object);
