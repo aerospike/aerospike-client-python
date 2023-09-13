@@ -1,21 +1,12 @@
 # -*- coding: utf-8 -*-
 from __future__ import print_function
 
-
-from distutils.version import LooseVersion
 import pytest
 from .as_status_codes import AerospikeStatus
 from .udf_helpers import wait_for_udf_removal, wait_for_udf_to_exist
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
-
-
-def is_greater_451(version_str):
-    """
-    Is the server version 4.5.1.0-pre or newer
-    """
-    return LooseVersion(version_str) >= LooseVersion("4.5.1")
 
 
 class TestUdfRemove(object):
@@ -169,11 +160,7 @@ class TestIncorrectCallsToUDFRemove(object):
         policy = {}
         module = "some_fake_module_that_does_not_exist"
 
-        if is_greater_451(self.string_server_version):
-            self.as_connection.udf_remove(module, policy)
-        else:
-            with pytest.raises(e.UDFError):
-                self.as_connection.udf_remove(module, policy)
+        self.as_connection.udf_remove(module, policy)
 
     def test_udf_remove_without_parameters(self):
         """
