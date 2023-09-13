@@ -898,9 +898,7 @@ Index Operations
 
     .. method:: index_list_create(ns, set, bin, index_datatype, name, policy: dict = None, ctx: list = None)
 
-        Create an index named *name* for numeric, string or GeoJSON values \
-        (as defined by *index_datatype*) on records of the specified *ns*, *set* \
-        whose *bin* is a list.
+        Create a secondary index for all of a list's values, where all the values are the same type.
 
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
