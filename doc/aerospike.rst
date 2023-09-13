@@ -1414,21 +1414,31 @@ Bin Types
 
     (int): 24
 
+.. _aerospike_index_types:
 
-.. _aerospike_misc_constants:
+Index Types
+-----------
 
-Miscellaneous
--------------
+.. data:: INDEX_TYPE_DEFAULT
 
-.. data:: __version__
+    Index a single scalar value.
 
-    A :class:`str` containing the module's version.
+.. data:: INDEX_TYPE_LIST
 
-    .. versionadded:: 1.0.54
+    Index all of a list's values.
 
-.. data:: UDF_TYPE_LUA
+.. data:: INDEX_TYPE_MAPKEYS
 
-    UDF type is LUA (which is the only UDF type).
+    Index all of a map's keys.
+
+.. data:: INDEX_TYPE_MAPVALUES
+
+    Index all of a map's values.
+
+.. _aerospike_index_data_types:
+
+Data Types
+----------
 
 .. data:: INDEX_STRING
 
@@ -1444,21 +1454,20 @@ Miscellaneous
 
 .. seealso:: `Data Types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
 
-.. data:: INDEX_TYPE_DEFAULT
+.. _aerospike_misc_constants:
 
-    Index a bin that doesn't contain a complex data type.
+Miscellaneous
+-------------
 
-.. data:: INDEX_TYPE_LIST
+.. data:: __version__
 
-    Index a bin whose contents is an aerospike list.
+    A :class:`str` containing the module's version.
 
-.. data:: INDEX_TYPE_MAPKEYS
+    .. versionadded:: 1.0.54
 
-    Index the keys of a bin whose contents is an aerospike map.
+.. data:: UDF_TYPE_LUA
 
-.. data:: INDEX_TYPE_MAPVALUES
-
-    Index the values of a bin whose contents is an aerospike map.
+    UDF type is LUA (which is the only UDF type).
 
 .. _aerospike_log_levels:
 
