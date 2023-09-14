@@ -4,20 +4,19 @@ typedef struct {
     PyBytesObject *data;
 } HyperLogLog;
 
-static int AerospikeHyperLogLog_init(HyperLogLog *self, PyObject *args,
-                                     PyObject *kwds)
+static PyObject *AerospikeHyperLogLog_new(PyTypeObject *type, PyObject *args,
+                                          PyObject *kwds)
 {
-    if (PyBytes_Type.tp_init((PyObject *)self, args, kwds) < 0)
-        return -1;
-    return 0;
+    PyObject *py_hll_instance = PyBytes_Type.tp_new(type, args, kwds);
+    return py_hll_instance;
 }
 
 static PyTypeObject AerospikeHyperLogLogType = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.HyperLogLog",
     .tp_doc = PyDoc_STR("HyperLogLog object"),
     .tp_basicsize = sizeof(HyperLogLog),
+    .tp_new = AerospikeHyperLogLog_new,
     .tp_itemsize = 0,
-    .tp_init = (initproc)AerospikeHyperLogLog_init,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
 };
 
