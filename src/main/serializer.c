@@ -481,7 +481,8 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         PyObject *py_bytes = PyBytes_FromStringAndSize(
             (const char *)bytes->value, (Py_ssize_t)bytes->size);
         // Pass bytes object to new HLL class instance
-        PyObject *py_aerospike_module = PyImport_ImportModule("aerospike");
+        PyObject *py_aerospike_module =
+            PyImport_ImportModule("aerospike_helpers");
         PyObject *py_hll_class =
             PyObject_GetAttrString(py_aerospike_module, "HyperLogLog");
         if (!PyCallable_Check(py_hll_class)) {

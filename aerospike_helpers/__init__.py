@@ -13,3 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 ##########################################################################
+
+class HyperLogLog(bytes):
+    def __new__(cls, o) -> "HyperLogLog":
+        return super().__new__(cls, o)

@@ -264,6 +264,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
     Aerospike_State(aerospike)->infinite_object = infinite_object;
 
+    /*
     PyTypeObject *hll_object = AerospikeHyperLogLog_Ready();
     Py_INCREF(hll_object);
     retval =
@@ -272,6 +273,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         goto CLEANUP;
     }
     Aerospike_State(aerospike)->hll_object = hll_object;
+    */
 
     return aerospike;
 

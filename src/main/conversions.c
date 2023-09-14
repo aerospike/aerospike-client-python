@@ -828,7 +828,8 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         as_bytes *bytes = as_bytes_new_wrap(b, b_len, false);
         *val = (as_val *)bytes;
 
-        if (!strcmp(py_obj->ob_type->tp_name, "aerospike.HyperLogLog")) {
+        if (!strcmp(py_obj->ob_type->tp_name,
+                    "aerospike_helpers.HyperLogLog")) {
             bytes->type = AS_BYTES_HLL;
         }
     }
