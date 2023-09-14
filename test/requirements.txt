@@ -1,6 +1,8 @@
 pytest==7.4.0
 # To generate coverage reports in the Github Actions pipeline
 pytest-cov==4.1.0
+# Memory profiling
 pytest-memray==1.5.0
+memray==1.9.1
 # TODO: these should be removed since we are not using them
 psutil

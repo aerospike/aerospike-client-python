@@ -95,7 +95,19 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: python -m pytest ./new_tests --memray
+      run: python -m pytest ./new_tests --memray --memray-bin-path=./
+      working-directory: test
+
+    - name: Print memray summary report
+      run: memray summary *.bin
+      working-directory: test
+
+    - name: Print memray tree report
+      run: memray tree *.bin
+      working-directory: test
+
+    - name: Print memray output report
+      run: memray output *.bin
       working-directory: test
 
   test-coverage:
