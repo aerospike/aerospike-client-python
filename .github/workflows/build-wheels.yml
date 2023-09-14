@@ -454,10 +454,11 @@ jobs:
       fail-fast: false
       matrix:
         python-version: [
-            "3.8",
-            "3.9",
-            "3.10",
-            "3.11"
+          "cp37",
+          "cp38",
+          "cp39",
+          "cp310",
+          "cp311"
         ]
     steps:
     - uses: actions/checkout@v3
@@ -468,16 +469,16 @@ jobs:
     # Update dependencies if needed
     - name: Add brew to path
       run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
-    - run: brew install python@${{ matrix.python-version }}
+    # - run: brew install python@${{ matrix.python-version }}
     - run: brew install openssl@1.1
 
-    - run: |
-        openssl_path=$(brew --prefix openssl@1.1)
-        echo SSL_LIB_PATH="$openssl_path/lib/" >> $GITHUB_ENV
-        echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
-        echo STATIC_SSL=1 >> $GITHUB_ENV
+    # - run: |
+    #     openssl_path=$(brew --prefix openssl@1.1)
+    #     echo SSL_LIB_PATH="$openssl_path/lib/" >> $GITHUB_ENV
+    #     echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
+    #     echo STATIC_SSL=1 >> $GITHUB_ENV
 
-    - run: python${{ matrix.python-version }} -m pip install build delocate==0.10.4
+    # - run: python${{ matrix.python-version }} -m pip install build delocate==0.10.4
 
     - name: Use server rc
       if: ${{ inputs.use-server-rc }}
@@ -490,15 +491,31 @@ jobs:
     - name: Run server
       run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
 
-    - run: python${{ matrix.python-version }} -m build
-    - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
-    - run: python${{ matrix.python-version }} -m pip install --find-links=wheelhouse/ --no-index --force-reinstall aerospike
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_arm64
+        CIBW_BUILD_FRONTEND: build
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        CIBW_ARCHS: "x86_64"
+        CIBW_BEFORE_TEST: >
+          export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
+          SERVER_TAG=${{ inputs.server-tag }} vagrant up &&
+          sleep 3 &&
+          pip install -r test/requirements.txt
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          python -m pytest new_tests/
 
-    - run: python${{ matrix.python-version }} -m pip install -r requirements.txt
-      working-directory: test
+    # - run: python${{ matrix.python-version }} -m build
+    # - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
+    # - run: python${{ matrix.python-version }} -m pip install --find-links=wheelhouse/ --no-index --force-reinstall aerospike
 
-    - run: python${{ matrix.python-version }} -m pytest new_tests/
-      working-directory: test
+    # - run: python${{ matrix.python-version }} -m pip install -r requirements.txt
+    #   working-directory: test
+
+    # - run: python${{ matrix.python-version }} -m pytest new_tests/
+    #   working-directory: test
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
