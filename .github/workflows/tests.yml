@@ -95,7 +95,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=20
+      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=0
       working-directory: test
 
   test-coverage:
