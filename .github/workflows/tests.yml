@@ -96,6 +96,7 @@ jobs:
 
     - name: Get number of tests
       run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
+      working-directory: test
 
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
