@@ -33,7 +33,6 @@
 #include "module_functions.h"
 #include "nullobject.h"
 #include "cdt_types.h"
-#include "hll.h"
 #include <aerospike/as_log_macros.h>
 
 PyObject *py_global_hosts;
@@ -116,7 +115,6 @@ struct Aerospike_State {
     PyTypeObject *null_object;
     PyTypeObject *wildcard_object;
     PyTypeObject *infinite_object;
-    PyTypeObject *hll_object;
 };
 
 #define Aerospike_State(o) ((struct Aerospike_State *)PyModule_GetState(o))
@@ -133,7 +131,6 @@ static int Aerospike_Clear(PyObject *aerospike)
     Py_CLEAR(Aerospike_State(aerospike)->null_object);
     Py_CLEAR(Aerospike_State(aerospike)->wildcard_object);
     Py_CLEAR(Aerospike_State(aerospike)->infinite_object);
-    Py_CLEAR(Aerospike_State(aerospike)->hll_object);
 
     return 0;
 }
@@ -263,17 +260,6 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         goto CLEANUP;
     }
     Aerospike_State(aerospike)->infinite_object = infinite_object;
-
-    /*
-    PyTypeObject *hll_object = AerospikeHyperLogLog_Ready();
-    Py_INCREF(hll_object);
-    retval =
-        PyModule_AddObject(aerospike, "HyperLogLog", (PyObject *)hll_object);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->hll_object = hll_object;
-    */
 
     return aerospike;
 
