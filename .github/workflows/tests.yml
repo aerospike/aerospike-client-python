@@ -94,9 +94,12 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Get number of tests
+      run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
+
     - name: Run tests
-      # Show 500 test allocations since setting to 0 doesn't work properly
-      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=500
+      # Get number of tests since setting to 0 doesn't work properly
+      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }}
       working-directory: test
 
   test-coverage:
