@@ -1,5 +1,4 @@
-from typing import Any, Callable, Union
-from typing_extensions import final, Literal
+from typing import Any, Callable, Union, final, Literal
 
 from aerospike_helpers.batch.records import BatchRecords
 AS_BOOL: Literal[1]
