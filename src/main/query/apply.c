@@ -25,6 +25,7 @@
 #include "conversions.h"
 #include "exceptions.h"
 #include "query.h"
+#include "policy.h"
 
 bool Illegal_UDF_Args_Check(PyObject *py_args);
 
