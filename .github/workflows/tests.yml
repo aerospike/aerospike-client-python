@@ -297,7 +297,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: python -m pytest ./new_tests
+      run: python -m pytest ./new_tests -s
       working-directory: test
 
   test-ee:
