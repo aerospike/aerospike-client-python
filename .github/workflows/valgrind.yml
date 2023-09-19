@@ -43,7 +43,28 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - run: sudo apt update
-    - run: sudo apt install valgrind -y
+    # We want the latest version of valgrind
+    - name: Download valgrind source code
+      run: wget https://sourceware.org/pub/valgrind/valgrind-3.21.0.tar.bz2
+
+    - name: Extract valgrind source code
+      run: tar -xjvf valgrind-3.21.0.tar.bz2
+
+    - name: Compile valgrind (step 1)
+      run: ./autogen.sh
+      working-directory: valgrind-3.21.0
+
+    - name: Compile valgrind (step 2)
+      run: ./configure
+      working-directory: valgrind-3.21.0
+
+    - name: Compile valgrind (step 3)
+      run: make
+      working-directory: valgrind-3.21.0
+
+    - name: Compile valgrind (step 4)
+      run: make install
+      working-directory: valgrind-3.21.0
+
     - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
