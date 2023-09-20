@@ -13,7 +13,8 @@ on:
 
 jobs:
   valgrind:
-    runs-on: ubuntu-22.04-16core
+    runs-on:
+      group: client_team_runners
     steps:
     - uses: actions/checkout@v2
       with:
