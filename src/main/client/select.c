@@ -161,9 +161,6 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
         select_succeeded = true;
         record_to_pyobject(self, &err, rec, &key, &py_rec);
     }
-    else {
-        as_error_update(&err, err.code, NULL);
-    }
 
 CLEANUP:
     if (exp_list_p) {
