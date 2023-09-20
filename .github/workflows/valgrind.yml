@@ -16,6 +16,9 @@ jobs:
     runs-on:
       group: client_team_runners
     steps:
+    - name: Collect Workflow Telemetry
+      uses: runforesight/workflow-telemetry-action@v1
+
     - uses: actions/checkout@v2
       with:
         submodules: recursive
