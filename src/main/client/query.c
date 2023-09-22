@@ -433,10 +433,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
             aerospike_query_wait(self->as, &err, info_policy_p, &query,
                                  query_id, 0);
             Py_END_ALLOW_THREADS
-            if (err.code != AEROSPIKE_OK) {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                "Unable to perform query_wait on the query");
-            }
         }
     }
     else {

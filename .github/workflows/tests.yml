@@ -1,5 +1,8 @@
 name: PR pre-merge tests
 
+env:
+  LOWEST_SUPPORTED_PY_VERSION: '3.8'
+
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
 # 2. Commits are pushed directly to the stage or master branch
@@ -36,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        py-version: ["3.8", "3.9", "3.10", "3.11"]
       fail-fast: false
 
     steps:
@@ -199,12 +202,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.7'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.7
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
@@ -227,12 +230,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.7'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.7
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
@@ -257,7 +260,6 @@ jobs:
     strategy:
       matrix:
         py-version: [
-          "3.7",
           "3.8",
           "3.9",
           "3.10",
@@ -311,12 +313,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: "3.7"
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.7
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
@@ -347,12 +349,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.7
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl

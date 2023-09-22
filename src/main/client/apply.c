@@ -146,9 +146,6 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     if (err.code == AEROSPIKE_OK) {
         val_to_pyobject(self, &err, result, &py_result);
     }
-    else {
-        as_error_update(&err, err.code, NULL);
-    }
 
 CLEANUP:
     if (exp_list_p) {

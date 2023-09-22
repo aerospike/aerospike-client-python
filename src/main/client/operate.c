@@ -94,15 +94,13 @@ static inline bool isExprOp(int op);
     if (py_list) {                                                             \
         Py_DECREF(py_list);                                                    \
     }                                                                          \
-    if (err.code != AEROSPIKE_OK) {                                            \
-        as_error_update(&err, err.code, NULL);                                 \
-        goto CLEANUP;                                                          \
-    }                                                                          \
-    else if (!py_result) {                                                     \
-        return NULL;                                                           \
-    }                                                                          \
-    else {                                                                     \
-        Py_DECREF(py_result);                                                  \
+    if (err.code == AEROSPIKE_OK) {                                            \
+        if (!py_result) {                                                      \
+            return NULL;                                                       \
+        }                                                                      \
+        else {                                                                 \
+            Py_DECREF(py_result);                                              \
+        }                                                                      \
     }
 
 #define CONVERT_VAL_TO_AS_VAL()                                                \
@@ -880,7 +878,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     Py_END_ALLOW_THREADS
 
     if (err->code != AEROSPIKE_OK) {
-        as_error_update(err, err->code, NULL);
         goto CLEANUP;
     }
     /* The op succeeded; it's now safe to free the record */
@@ -1062,7 +1059,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     Py_END_ALLOW_THREADS
 
     if (err->code != AEROSPIKE_OK) {
-        as_error_update(err, err->code, NULL);
         goto CLEANUP;
     }
 
