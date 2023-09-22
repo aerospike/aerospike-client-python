@@ -9,7 +9,6 @@ from _pytest.terminal import TerminalReporter  # noqa: F401
 from collections import namedtuple
 from itertools import groupby
 import tracemalloc
-from typing import List
 
 from . import invalid_data
 from .test_base_class import TestBaseClass
@@ -284,6 +283,6 @@ def invalid_key(request):
 # pytest-memray may throw this error because it has a bug
 # https://github.com/bloomberg/pytest-memray/issues/93
 # Just ignore it for now until it is fixed in a newer version of pytest-memray
-def pytest_collection_modifyitems(session: pytest.Session, config, items: List[pytest.Item]):
+def pytest_collection_modifyitems(session: pytest.Session, config, items: list[pytest.Item]):
     for item in items:
         item.add_marker(pytest.mark.xfail(raises=ZeroDivisionError))
