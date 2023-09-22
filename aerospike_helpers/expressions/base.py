@@ -501,6 +501,24 @@ class MemorySize(_BaseExpr):
         super().__init__()
 
 
+class RecordSize(_BaseExpr):
+    """
+    Create expression that returns the record size. This expression usually evaluates
+    quickly because record meta data is cached in memory.
+
+    Requires server version 7.0+. This expression replaces :py:class:`DeviceSize()` and
+    :py:class:`MemorySize()`.
+    """
+    _op = _ExprOp.META_RECORD_SIZE
+    _rt = ResultType.INTEGER
+
+    def __init__(self):
+        """
+        :return: (integer value) Record size in bytes
+        """
+        super().__init__()
+
+
 class LastUpdateTime(_BaseExpr):
     """Create an expression that the returns record last update time expressed as 64 bit
     integer nanoseconds since 1970-01-01 epoch.
