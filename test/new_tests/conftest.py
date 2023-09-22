@@ -279,10 +279,3 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
-
-# pytest-memray may throw this error because it has a bug
-# https://github.com/bloomberg/pytest-memray/issues/93
-# Just ignore it for now until it is fixed in a newer version of pytest-memray
-def pytest_collection_modifyitems(session: pytest.Session, config, items: list[pytest.Item]):
-    for item in items:
-        item.add_marker(pytest.mark.xfail(raises=ZeroDivisionError))
