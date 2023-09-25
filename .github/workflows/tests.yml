@@ -105,7 +105,7 @@ jobs:
       # Get number of tests since setting to 0 doesn't work properly
       # pytest-memray currently throws a ZeroDivision error due to having a bug
       # We ignore this for now
-      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --native --most-allocations=${{ env.NUM_TESTS }} || true
+      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }} || true
       working-directory: test
 
   test-coverage:
