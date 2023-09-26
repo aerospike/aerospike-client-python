@@ -1,0 +1,123 @@
+name: Bump version, build wheels, and upload RCs to JFrog
+
+on:
+  push:
+    branches:
+    - 'dev'
+  workflow_dispatch:
+    inputs:
+      # Debugging option
+      # Disable this to skip testing the wheel right after building it
+      # This is useful if we need to debug later parts of the pipeline
+      # and are pressed on time
+      run_server_release_tests:
+        description: "Run server release tests"
+        required: true
+        type: boolean
+        default: true
+      # Override the default server version to test against
+      # This is helpful if you need to create a backport from an older client major version
+      # And that older client major version does not accomodate for breaking changes in the latest server version
+      server-tag:
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+
+jobs:
+  bump-dev-number:
+    name: Bump to next dev version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.pass-new-version.outputs.new_version }}
+      bump_sha: ${{ steps.pass-bump-commit-sha.outputs.bump_sha }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - run: pip install parver -c requirements.txt
+      working-directory: .github/workflows
+
+    - name: Bump to next release candidate version
+      run: echo NEW_TAG=$(python3 bump-dev-num.py) >> $GITHUB_ENV
+      working-directory: .github/workflows
+
+    - uses: ./.github/actions/bump-commit-version
+      with:
+        new_version: ${{ env.NEW_TAG }}
+        CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
+
+    - name: Pass new version to JFrog upload job
+      id: pass-new-version
+      run: echo "new_version=${{ env.NEW_TAG }}" >> $GITHUB_OUTPUT
+
+    # With the push event, the next job will checkout the commit that triggered the workflow
+    # instead of the bump commit that was just made
+    # So we need to pass the bump commit's hash to the next job so it checks out the right commit
+    - name: Pass SHA for bump commit to next job
+      id: pass-bump-commit-sha
+      run: echo "bump_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+
+  test-latest-server-release:
+    name: Build, install, and test artifacts against latest server release
+    needs: bump-dev-number
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      server-tag: ${{ inputs.server-tag }}
+      run_tests: ${{ inputs.run_server_release_tests }}
+      commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
+    secrets:
+      DOCKER_HUB_BOT_USERNAME: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+      DOCKER_HUB_BOT_PW: ${{ secrets.DOCKER_HUB_BOT_PW }}
+      MAC_M1_SELF_HOSTED_RUNNER_PW: ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      test-latest-server-release,
+      bump-dev-number
+    ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download all artifacts that passed testing
+      uses: actions/download-artifact@v3
+
+    - name: Make folder to store artifacts
+      run: mkdir artifacts
+
+    - name: Reorganize artifacts
+      run: find . -type f -exec mv {} artifacts \;
+
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v3
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - name: Upload passing builds to JFrog
+      # Source path must be in quotes if it contains an asterisk
+      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
+      run: jf rt upload --build-name python-client --build-number $NEW_VERSION "artifacts/*" local-aerospike-client-python/aerospike/$NEW_VERSION/
+      env:
+        NEW_VERSION: ${{ needs.bump-dev-number.outputs.new_version }}
+
+    - name: Publish build info
+      run: jf rt build-publish python-client ${{ needs.bump-dev-number.outputs.new_version }}
+
+  test-artifacts-with-server-rc:
+    # TODO: should we care about server RCs when backporting?
+    if: ${{ inputs.server-tag == 'latest' }}
+    needs: [
+      upload-to-jfrog,
+      bump-dev-number
+    ]
+    uses: ./.github/workflows/test-server-rc.yml
+    with:
+      server-tag: ${{ inputs.server-tag }}
+      build-number: ${{ needs.bump-dev-number.outputs.new_version }}
+      # We don't need to pass the bump commit hash here
+      # because the commit that the workflow was triggered on has up-to-date tests
+    secrets:
+      JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+      JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+      DOCKER_HUB_BOT_USERNAME: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+      DOCKER_HUB_BOT_PW: ${{ secrets.DOCKER_HUB_BOT_PW }}
+      MAC_M1_SELF_HOSTED_RUNNER_PW: ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}

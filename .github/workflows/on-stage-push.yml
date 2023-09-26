@@ -1,0 +1,36 @@
+name: Stage tests
+
+on:
+  push:
+    branches:
+    - 'stage'
+  workflow_dispatch:
+    inputs:
+      # For creating a backport client version
+      server-tag:
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+
+jobs:
+  promote-dev-build-to-rc:
+    # TODO: make sure bump commit is passed to next job
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+
+    - run: pip install parver -c requirements.txt
+      working-directory: .github/workflows
+
+    - name: Bump to next release candidate version
+      run: echo NEW_TAG=$(python3 promote-dev-build-to-rc.py) >> $GITHUB_ENV
+      working-directory: .github/workflows
+
+    - uses: ./.github/actions/bump-commit-version
+      with:
+        new_version: ${{ env.NEW_TAG }}
+
+  run-stage-tests:
+    uses: ./.github/workflows/stage-tests.yml
+    with:
+      run_tests: false

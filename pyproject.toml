@@ -5,6 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "aerospike"
 description = "Aerospike Client Library for Python"
+version = "14.0.0-rc.8"
 authors = [
     {name = "Aerospike, Inc.", email = "info@aerospike.com"}
 ]
@@ -22,7 +23,6 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Topic :: Database"
 ]
-dynamic = ["version"]
 
 [project.urls]
 "Homepage" = "https://aerospike.com"

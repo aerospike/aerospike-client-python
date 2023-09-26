@@ -1,0 +1,312 @@
+name: Stage tests
+
+on:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+        description: 'Test against server release candidate?'
+      server-tag:
+        type: string
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+  workflow_call:
+    inputs:
+      use-server-rc:
+        type: boolean
+        required: false
+        default: false
+        description: 'Test against server release candidate?'
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
+        description: 'Server docker image tag'
+      build-number:
+        type: string
+        required: true
+        description: 'Build number to label in JFrog'
+    secrets:
+      # Required for labelling the JFrog artifacts
+      JFROG_PLATFORM_URL:
+        required: true
+      JFROG_ACCESS_TOKEN:
+        required: true
+      # Required for testing against a server RC
+      DOCKER_HUB_BOT_USERNAME:
+        required: true
+      DOCKER_HUB_BOT_PW:
+        required: true
+
+jobs:
+  build-artifacts:
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: false
+
+  # We run some source distribution (QE category 1) tests here
+  # because QE doesn't have disk space for more Linux distros
+  sdist-tests:
+    needs: build-artifacts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distros: [
+          # Image name, build-<name> script and container name, JFrog label name
+          # We do not officially support alpine linux
+          # ["alpine", "alpine"],
+          # Both OS'es support Python 3.9 and 3.11 out of the box
+          ["redhat/ubi9", "RHEL9"],
+          ["amazonlinux:2023", "AmazonLinux2023"]
+        ]
+        python-version: [
+          '3.9',
+          '3.11'
+        ]
+      fail-fast: false
+    steps:
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: sdist
+
+    - name: Run distro container
+      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
+
+    - name: Install python 3.11 if applicable
+      run: docker exec --name ${{ matrix.distros[1] }} yum install -y python3.11
+      if: ${{ matrix.python-version == '3.11' }}
+
+    - name: Install build dependencies
+      run: docker exec --name ${{ matrix.distros[1] }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
+
+    - name: Make sure pip is installed
+      run: docker exec --name ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m ensurepip
+
+    - name: Install more build dependencies using pip
+      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version }} -m pip install -r requirements.txt
+
+    - name: Install source distribution
+      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version }} -m pip install *.tar.gz
+
+    - name: Install test dependencies
+      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version }} -m pip install -r requirements.txt
+
+    - name: Run tests
+      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version }} -m pytest new_tests/
+
+    - uses: ./.github/actions/label-jfrog-build
+      with:
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        build-number: ${{ inputs.build-number }}
+        property-name: 'cat1-${{ matrix.distros[2] }}'
+
+# We also run some wheel (QE test category 2) tests
+# because of the same reason we have some source distribution tests
+
+  manylinux_x86_64_rhel_based:
+    needs: build-artifacts
+    strategy:
+      matrix:
+        distros: [
+          # Image name, container name
+          ["amazonlinux:2023", "AmazonLinux2023"]
+        ]
+        python-version: [
+          # Python version, version in file name
+          ["3.9", "cp39"],
+          ["3.11", "cp311"]
+        ]
+        platform: [
+          # Artifact platform in file name, Docker platform
+          ["x86_64", "linux/amd64"],
+          ["aarch64", "linux/arm64"]
+        ]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: actions/checkout@v3
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ matrix.python-version[1] }}-manylinux-${{ matrix.platform[0] }}
+
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: Run distro container
+      run: docker run --name ${{ matrix.distros[1] }} --platform ${{ matrix.platform[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
+
+    - name: Install python 3.11 if applicable
+      run: docker exec --name ${{ matrix.distros[1] }} yum install -y python3.11
+      if: ${{ matrix.python-version[0] == '3.11' }}
+
+    - name: Make sure pip is installed
+      run: docker exec --name ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m ensurepip
+
+    - name: Install wheel
+      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version[0] }} -m pip install *.whl
+
+    - name: Install test dependencies
+      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
+
+    - name: Run tests
+      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pytest new_tests/
+
+    - uses: ./.github/actions/label-jfrog-build
+      with:
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        build-number: ${{ inputs.build-number }}
+        property-name: 'cat2-${{ matrix.distros[1] }}'
+
+  manylinux_x86_64_debian:
+    needs: build-artifacts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        debian-name: [
+          "bookworm"
+        ]
+        python-version: [
+          ["3.8", "cp38"],
+          ["3.9", "cp39"],
+          ["3.10", "cp310"],
+          ["3.11", "cp311"]
+        ]
+        platform: [
+          # Artifact platform in file name, Docker platform
+          ["x86_64", "linux/amd64"],
+          ["aarch64", "linux/arm64"]
+        ]
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ matrix.python-version[1] }}-manylinux-${{ matrix.platform[0] }}
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: Run distro container
+      run: docker run --name python:${{ matrix.python-version[0] }}-${{ matrix.debian-name }} --platform ${{ matrix.platform[1] }} --detach ${{ matrix.debian-name }} tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.debian-name }}:/aerospike-client-python
+
+    - name: Make sure pip is installed
+      run: docker exec --name ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m ensurepip
+
+    - name: Install wheel
+      run: docker exec --name ${{ matrix.debian-name }} --workdir aerospike-client-python/ python${{ matrix.python-version[0] }} -m pip install *.whl
+
+    - name: Install test dependencies
+      run: docker exec --name ${{ matrix.debian-name }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
+
+    - name: Run tests
+      run: docker exec --name ${{ matrix.debian-name }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pytest new_tests/
+
+    - uses: ./.github/actions/label-jfrog-build
+      with:
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        build-number: ${{ inputs.build-number }}
+        property-name: 'cat2-debian-${{ matrix.debian-name }}'
+
+  manylinux_x86_64_ubuntu2204:
+    needs: build-artifacts
+    strategy:
+      matrix:
+        platform: [
+          # Artifact platform in file name, Docker platform
+          ["x86_64", "linux/amd64"],
+          ["aarch64", "linux/arm64"]
+        ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    # Ubuntu 22.04 uses Python 3.10 by default
+    - uses: actions/download-artifact@v3
+      with:
+        name: cp310-manylinux-${{ matrix.platform[0] }}
+
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: Run distro container
+      run: docker run --name Ubuntu --platform ${{ matrix.platform[1] }} --detach ubuntu:22.04 tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . Ubuntu:/aerospike-client-python
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Make sure pip is installed
+      run: docker exec --name Ubuntu python3.10 -m ensurepip
+
+    - name: Install wheel
+      run: docker exec --name Ubuntu --workdir aerospike-client-python/ python3.10 -m pip install *.whl
+
+    - name: Install test dependencies
+      run: docker exec --name Ubuntu --workdir aerospike-client-python/test python3.10 -m pip install -r requirements.txt
+
+    - name: Run tests
+      run: docker exec --name Ubuntu --workdir aerospike-client-python/test python3.10 -m pytest new_tests/
+
+    - uses: ./.github/actions/label-jfrog-build
+      with:
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        build-number: ${{ inputs.build-number }}
+        property-name: 'cat2-ubuntu22.04'

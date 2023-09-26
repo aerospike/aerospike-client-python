@@ -1,0 +1,24 @@
+name: 'Bump and commit a new version'
+inputs:
+  new_version:
+    required: true
+    type: string
+  CLIENT_BOT_PAT:
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+  - name: Update __version__ in aerospike module
+    run: sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ inputs.new_version }}\";/" src/main/aerospike.c
+
+  - name: Update version in project metadata file
+    run: echo -e "${{ inputs.new_version }}" > VERSION
+
+  - name: Commit new version
+    uses: stefanzweifel/git-auto-commit-action@v4
+    with:
+      commit_message: Auto-bump version to ${{ inputs.new_version }}
+      token: ${{ inputs.CLIENT_BOT_PAT }}
+      commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
