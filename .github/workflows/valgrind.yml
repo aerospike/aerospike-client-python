@@ -16,9 +16,6 @@ jobs:
     runs-on:
       group: client_team_runners
     steps:
-    - name: Collect Workflow Telemetry
-      uses: runforesight/workflow-telemetry-action@v1
-
     - uses: actions/checkout@v2
       with:
         submodules: recursive
@@ -45,5 +42,25 @@ jobs:
 
     - run: sudo apt update
     - run: sudo apt install valgrind -y
+    - run: export "TEST_FILE_COUNT=$(ls -1 test_*.py | wc -l)" >> $GITHUB_ENV
+      working-directory: test/new_tests/
+
+    - run: export FIRST_HALF_TEST_NAMES=$(ls -1 test_*.py | head -n $((TEST_FILE_COUNT/2))) | find . -name "test_*.py" -printf "%f ") >> $GITHUB_ENV
+    - run: export SECOND_HALF_TEST_NAMES=$(ls -1 test_*.py | head -n $((1-TEST_FILE_COUNT/2)) | find . -name "test_*.py" -printf "%f ") >> $GITHUB_ENV
+
     - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+      if: ${{ inputs.test-file != '' }}
       working-directory: test
+
+    - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ env.FIRST_HALF_TEST_NAMES }} & 2>&1 > first_half.log
+      if: ${{ inputs.test-file == '' }}
+      working-directory: test
+
+    - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ env.SECOND_HALF_TEST_NAMES }} 
+      if: ${{ inputs.test-file == '' }}
+      working-directory: test
+
+    - run: cat first_half.log
+      working-directory: test
+      if: ${{ always() }}
+
