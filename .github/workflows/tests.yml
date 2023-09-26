@@ -261,7 +261,7 @@ jobs:
       run: sleep 3
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv
+      run: python -m pytest ./new_tests -vv --durations=0
       working-directory: test
 
   test-lowest-supported-server:
@@ -331,7 +331,7 @@ jobs:
       run: sleep 5
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_admin_*.py
+      run: python -m pytest ./new_tests/test_admin_*.py -vv --durations=0
       working-directory: test
 
     - name: Show logs if failed
