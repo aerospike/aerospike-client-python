@@ -44,17 +44,17 @@ jobs:
     - run: sudo apt install valgrind -y
     - run: |
         export "TEST_FILE_COUNT=$(ls -1 test_*.py | wc -l)" >> $GITHUB_ENV
-        cat $TEST_FILE_COUNT
+        echo $TEST_FILE_COUNT
       working-directory: test/new_tests/
 
     - run: |
         export FIRST_HALF_TEST_NAMES=$(ls -1 test_*.py | head -n $((TEST_FILE_COUNT/2)) | find . -name "test_*.py" -printf "%f ") >> $GITHUB_ENV
-        cat $FIRST_HALF_TEST_NAMES
+        echo $FIRST_HALF_TEST_NAMES
       working-directory: test/new_tests/
 
     - run: |
         export SECOND_HALF_TEST_NAMES=$(ls -1 test_*.py | head -n $((1-TEST_FILE_COUNT/2)) | find . -name "test_*.py" -printf "%f ") >> $GITHUB_ENV
-        cat $SECOND_HALF_TEST_NAMES
+        echo $SECOND_HALF_TEST_NAMES
       working-directory: test/new_tests/
 
     - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
