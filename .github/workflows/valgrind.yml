@@ -45,7 +45,7 @@ jobs:
     - run: export "TEST_FILE_COUNT=$(ls -1 test_*.py | wc -l)" >> $GITHUB_ENV
       working-directory: test/new_tests/
 
-    - run: export FIRST_HALF_TEST_NAMES=$(ls -1 test_*.py | head -n $((TEST_FILE_COUNT/2))) | find . -name "test_*.py" -printf "%f ") >> $GITHUB_ENV
+    - run: export FIRST_HALF_TEST_NAMES=$(ls -1 test_*.py | head -n $((TEST_FILE_COUNT/2)) | find . -name "test_*.py" -printf "%f ") >> $GITHUB_ENV
     - run: export SECOND_HALF_TEST_NAMES=$(ls -1 test_*.py | head -n $((1-TEST_FILE_COUNT/2)) | find . -name "test_*.py" -printf "%f ") >> $GITHUB_ENV
 
     - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
