@@ -1,33 +1,33 @@
 name: 'Run EE Server'
 description: 'Run EE server'
 inputs:
+  # All inputs in composite actions are strings
   use-server-rc:
     required: true
     default: false
-  server-tag:
-    required: true
-    default: 'latest'
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
     required: false
-    type: string
   docker-hub-password:
     required: false
-    type: string
+  server-tag:
+    required: true
+    default: 'latest'
 
 runs:
   using: "composite"
   steps:
   - name: Install crudini to manipulate config.conf
-    run: python3 -m pip install crudini==0.9.4
+    run: pip3 install crudini -c requirements.txt
+    working-directory: .github/workflows
     shell: bash
 
   - name: Add enterprise edition config to config.conf
     run: |
-      python3 -m crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      python3 -m crudini --set config.conf enterprise-edition user superuser
-      python3 -m crudini --set config.conf enterprise-edition password superuser
+      crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
+      crudini --set config.conf enterprise-edition user superuser
+      crudini --set config.conf enterprise-edition password superuser
     working-directory: test
     shell: bash
 

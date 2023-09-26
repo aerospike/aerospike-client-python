@@ -1,0 +1,352 @@
+name: Stage tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+        description: 'Test against server release candidate?'
+      server-tag:
+        type: string
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+  workflow_call:
+    inputs:
+      commit_sha:
+        type: string
+        required: true
+      # Default values for workflow_call to use
+      use-server-rc:
+        type: boolean
+        required: false
+        default: false
+        description: 'Test against server release candidate?'
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
+        description: 'Server docker image tag'
+    secrets:
+      # Required for testing against a server RC
+      DOCKER_HUB_BOT_USERNAME:
+        required: true
+      DOCKER_HUB_BOT_PW:
+        required: true
+
+jobs:
+  build-artifacts:
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: false
+      commit_sha: ${{ inputs.commit_sha }}
+
+  # We run some source distribution (QE category 1) tests here
+  # because QE doesn't have disk space for more Linux distros
+  sdist-tests:
+    needs: build-artifacts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        distros: [
+          # Image name, build-<name> script and container name, JFrog label name
+          # We do not officially support alpine linux
+          # ["alpine", "alpine"],
+          ["redhat/ubi9", "RHEL9"],
+          ["amazonlinux:2023", "AmazonLinux2023"]
+        ]
+        python-version: [
+          '3.9',
+        ]
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        ref: ${{ inputs.commit_sha }}
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: sdist.build
+
+    - name: Run distro container
+      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
+
+    - name: Install python 3.11 if applicable
+      run: docker exec ${{ matrix.distros[1] }} yum install -y python3.11
+      if: ${{ matrix.python-version == '3.11' }}
+
+    - name: Install build dependencies
+      run: docker exec ${{ matrix.distros[1] }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
+
+    - name: Make sure pip is installed
+      run: docker exec ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m ensurepip
+
+    - name: Install more build dependencies using pip
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install -r requirements.txt
+
+    - name: Install source distribution
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install *.tar.gz
+
+    - name: Install test dependencies
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install pytest -c requirements.txt
+
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
+
+# We also run some wheel (QE test category 2) tests
+# because of the same reason we have some source distribution tests
+
+  manylinux_rhel_based:
+    needs: build-artifacts
+    strategy:
+      matrix:
+        distros: [
+          # Image name, container name
+          ["amazonlinux:2023", "AmazonLinux2023"]
+        ]
+        python-version: [
+          # Python version, version in file name
+          ["3.9", "cp39"],
+          ["3.11", "cp311"]
+        ]
+        platform: [
+          # Artifact platform in file name, Docker platform
+          ["x86_64", "linux/amd64"],
+          ["aarch64", "linux/arm64"]
+        ]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.commit_sha }}
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.build
+
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: Run distro container
+      run: docker run --name ${{ matrix.distros[1] }} --platform ${{ matrix.platform[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
+
+    - name: Install python 3.11 if applicable
+      run: docker exec ${{ matrix.distros[1] }} yum install -y python3.11
+      if: ${{ matrix.python-version[0] == '3.11' }}
+
+    - name: Make sure pip is installed
+      run: docker exec ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m ensurepip
+
+    - name: Install wheel
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install *.whl
+
+    - name: Install test dependencies
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
+
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
+
+  manylinux_debian:
+    needs: build-artifacts
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        debian-name: [
+          "bookworm"
+        ]
+        python-version: [
+          ["3.8", "cp38"],
+          ["3.9", "cp39"],
+          ["3.10", "cp310"],
+          ["3.11", "cp311"]
+        ]
+        platform: [
+          # Artifact platform in file name, Docker platform
+          ["x86_64", "linux/amd64"],
+          ["aarch64", "linux/arm64"]
+        ]
+      fail-fast: false
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.commit_sha }}
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.build
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: Run distro container
+      run: docker run --name ${{ matrix.debian-name }} --platform ${{ matrix.platform[1] }} --network host --detach python:${{ matrix.python-version[0] }}-${{ matrix.debian-name }} tail -f /dev/null
+
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.debian-name }}:/aerospike-client-python
+
+    - name: Make sure pip is installed
+      run: docker exec ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m ensurepip
+
+    - name: Install wheel
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install *.whl
+
+    - name: Install test dependencies
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
+
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
+
+  manylinux_ubuntu2204:
+    needs: build-artifacts
+    strategy:
+      matrix:
+        platform: [
+          # Artifact platform in file name, Docker platform
+          ["x86_64", "linux/amd64"],
+          ["aarch64", "linux/arm64"]
+        ]
+      fail-fast: false
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.commit_sha }}
+
+    # Ubuntu 22.04 uses Python 3.10 by default
+    - uses: actions/download-artifact@v4
+      with:
+        name: cp310-manylinux_${{ matrix.platform[0] }}.build
+
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: Run distro container
+      run: docker run --name Ubuntu --platform ${{ matrix.platform[1] }} --network host --detach ubuntu:22.04 tail -f /dev/null
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Copy repo to container
+      run: docker cp . Ubuntu:/aerospike-client-python
+
+    - name: Install python 3.10 that comes by default (step 1)
+      run: docker exec Ubuntu apt update
+
+    - name: Install python 3.10 that comes by default (step 2)
+      run: docker exec Ubuntu apt install python3 python3-pip -y
+
+    - name: Install wheel
+      run: docker exec --workdir /aerospike-client-python/ Ubuntu python3.10 -m pip install *.whl
+
+    - name: Install test dependencies
+      run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pip install pytest -c requirements.txt
+
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
+
+  macOS:
+    needs: build-artifacts
+    strategy:
+      matrix:
+        macos-version: [
+          'macos-11',
+        ]
+        python-version: [
+          ["3.8", "cp38"],
+          ["3.9", "cp39"],
+          ["3.10", "cp310"],
+          ["3.11", "cp311"]
+        ]
+      fail-fast: false
+    runs-on: ${{ matrix.macos-version }}
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.commit_sha }}
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.python-version[1] }}-macosx_x86_64.build
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version[0] }}
+
+    - name: Install Docker Engine
+      run: brew install colima
+
+    - name: Install Docker client
+      run: brew install docker
+
+    - name: Start Docker Engine
+      run: colima start
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: true
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Wait for server to be ready
+      run: sleep 5
+
+    - name: Install wheel
+      run: python3 -m pip install *.whl
+
+    - name: Install test dependencies
+      run: python3 -m pip install pytest -c requirements.txt
+      working-directory: test
+
+    - name: Run tests
+      run: python3 -m pytest new_tests/
+      id: test
+      working-directory: test

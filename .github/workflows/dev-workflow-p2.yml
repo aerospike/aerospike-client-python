@@ -1,0 +1,38 @@
+name: Dev workflow (part 2)
+
+on:
+  pull_request_target:
+    branches:
+    - 'dev*'
+    types:
+      - closed
+
+jobs:
+  bump-dev-number:
+    if: ${{ github.event.pull_request.merged == true }}
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'bump-dev-num'
+    secrets: inherit
+
+  rebuild-artifacts-with-new-dev-num:
+    needs: bump-dev-number
+    name: Rebuild artifacts with new dev number
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: false
+      # On pull_request_target, the bump version commit will be ignored
+      # So we must pass it manually to the workflow
+      commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
+    secrets: inherit
+
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: [
+      bump-dev-number,
+      rebuild-artifacts-with-new-dev-num
+    ]
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      new_version: ${{ needs.bump-dev-number.outputs.new_version }}
+    secrets: inherit

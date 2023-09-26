@@ -1,0 +1,40 @@
+name: Upload to JFrog
+
+on:
+  workflow_call:
+    inputs:
+      new_version:
+        type: string
+        required: true
+    secrets:
+      JFROG_PLATFORM_URL:
+        required: true
+      JFROG_ACCESS_TOKEN:
+        required: true
+
+jobs:
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        pattern: '*.build'
+        merge-multiple: true
+        path: artifacts
+    - name: Set up JFrog credentials
+      uses: jfrog/setup-jfrog-cli@v3
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - name: Upload passing builds to JFrog
+      # Source path must be in quotes if it contains an asterisk
+      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
+      run: jf rt upload --build-name python-client --build-number $NEW_VERSION "artifacts/*" local-aerospike-client-python/aerospike/$NEW_VERSION/
+      env:
+        NEW_VERSION: ${{ inputs.new_version }}
+
+    - name: Publish build info
+      run: jf rt build-publish python-client ${{ inputs.new_version }}
