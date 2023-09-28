@@ -1,5 +1,8 @@
 name: Valgrind
 
+env:
+  PYTHON_VERSION: '3.8'
+
 on:
   workflow_dispatch:
     inputs:
@@ -21,7 +24,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: ${{ env.PYTHON_VERSION }}
         architecture: 'x64'
 
     - name: Install client
@@ -42,7 +45,10 @@ jobs:
     - run: sudo apt update
     - run: sudo apt install valgrind -y
 
-    - run: wget https://svn.python.org/projects/python/trunk/Misc/valgrind-python.supp
+    - run: wget https://raw.githubusercontent.com/python/cpython/3.8/Misc/valgrind-python.supp
+      working-directory: test
+
+    - run: sed -i "127,185s/###//" valgrind-python.supp
       working-directory: test
 
     - run: PYTHONMALLOC=malloc valgrind --leak-check=full --suppressions=valgrind-python.supp --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
