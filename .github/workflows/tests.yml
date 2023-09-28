@@ -8,9 +8,9 @@ env:
 # 2. Commits are pushed directly to the stage or master branch
 on:
   push:
-    branches: ["stage", "master"]
+    branches: ["stage", "master", "dev"]
   pull_request:
-    branches: ["stage"]
+    branches: ["stage", "dev"]
     types: [
       # Default triggers
       opened,
