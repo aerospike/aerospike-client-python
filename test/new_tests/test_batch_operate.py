@@ -4,7 +4,7 @@
 import pytest
 
 import aerospike
-
+from aerospike_helpers.batch.records import BatchRecords
 from aerospike_helpers import expressions as exp
 from aerospike_helpers.operations import operations as op
 from aerospike import exception as e
@@ -58,14 +58,25 @@ class TestBatchOperate(TestBaseClass):
         request.addfinalizer(teardown)
 
     @pytest.mark.parametrize(
-        "name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec",
+        "name, keys, ops, policy_batch, policy_batch_write, batch_records_res, exp_res, exp_rec",
         [
+            (
+                "read-only-ops",
+                [("test", "demo", 0)],
+                [op.read("count")],
+                None,
+                None,
+                AerospikeStatus.AEROSPIKE_OK,
+                [AerospikeStatus.AEROSPIKE_OK],
+                [{"count": 0}],
+            ),
             (
                 "simple-write",
                 [("test", "demo", 0)],
                 [op.write("count", 2), op.read("count")],
                 None,
                 None,
+                AerospikeStatus.AEROSPIKE_OK,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 2}],
             ),
@@ -75,6 +86,7 @@ class TestBatchOperate(TestBaseClass):
                 [op.write("count", 3), op.read("count")],
                 {},
                 {},
+                AerospikeStatus.AEROSPIKE_OK,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 3}],
             ),
@@ -94,6 +106,7 @@ class TestBatchOperate(TestBaseClass):
                     ).compile(),
                 },
                 {},
+                AerospikeStatus.AEROSPIKE_OK,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
@@ -110,6 +123,7 @@ class TestBatchOperate(TestBaseClass):
                     "durable_delete": False,
                     "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
                 },
+                AerospikeStatus.AEROSPIKE_OK,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
@@ -124,6 +138,7 @@ class TestBatchOperate(TestBaseClass):
                 {
                     "ttl": 200
                 },
+                AerospikeStatus.AEROSPIKE_OK,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
@@ -150,17 +165,29 @@ class TestBatchOperate(TestBaseClass):
                     "durable_delete": False,
                     "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),  # this expression takes precedence
                 },
+                AerospikeStatus.AEROSPIKE_OK,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
         ],
     )
-    def test_batch_operate_pos(self, name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec):
+    def test_batch_operate_pos(
+        self,
+        name,
+        keys,
+        ops,
+        policy_batch,
+        policy_batch_write,
+        batch_records_res,
+        exp_res,
+        exp_rec
+    ):
         """
         Test batch_operate positive.
         """
 
-        res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+        res: BatchRecords = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+        assert res.result == batch_records_res
 
         for i, batch_rec in enumerate(res.batch_records):
             assert batch_rec.result == exp_res[i]
