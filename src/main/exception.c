@@ -675,8 +675,9 @@ PyObject *raise_exception_old(as_error *err)
                     PyObject_SetAttrString(py_value, "line", Py_None);
                 }
 
-                PyObject_SetAttrString(py_value, "in_doubt",
-                                       PyBool_FromLong(err->in_doubt));
+                py_attr = PyBool_FromLong(err->in_doubt);
+                PyObject_SetAttrString(py_value, "in_doubt", py_attr);
+                Py_DECREF(py_attr);
 
                 break;
             }
