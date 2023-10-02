@@ -16,41 +16,21 @@ def setup():
         "fa/ir": "بر آن مردم دیده روشنایی سلامی چو بوی خوش آشنایی",
     })
 
+setup()
 
-def put():
-    global client, key
-    client.put(key, {
+runner = pyperf.Runner()
+runner.bench_func('put', client.put,
+    key,
+    {
         "id": 0,
         "brand": "Ford",
         "model": "Mustang",
         "year": 1964,
         "fa/ir": "بر آن مردم دیده روشنایی سلامی چو بوی خوش آشنایی",
-    })
-
-def get():
-    global client, key
-    client.get(key)
-
-def touch():
-    global client, key
-    client.touch(key)
-
-def append():
-    global client, key
-    client.append(key, {"brand": "+"})
-
-def prepend():
-    global client, key
-    client.prepend(key, {"brand": "-"})
-
-def exists():
-    global client, key
-    client.exists(key)
-
-runner = pyperf.Runner()
-runner.bench_func('put', put)
-runner.bench_func('get', get)
-runner.bench_func('touch', touch)
-runner.bench_func('append', append)
-runner.bench_func('prepend', prepend)
-runner.bench_func('exists', exists)
+    }
+)
+runner.bench_func('get', client.get, key)
+runner.bench_func('touch', client.touch, key)
+runner.bench_func('append', client.append, key, "brand", "+")
+runner.bench_func('prepend', client.prepend, key, "brand", "-")
+runner.bench_func('exists', client.exists, key)
