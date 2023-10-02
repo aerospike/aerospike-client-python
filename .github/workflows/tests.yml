@@ -194,6 +194,39 @@ jobs:
         verbose: true # optional (default = false)
         fail_ci_if_error: true
 
+  benchmark:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install benchmark dependencies
+      run: pip install pyperf -c requirements.txt
+      working-directory: benchmarks
+
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Wait for database to be ready
+      # Should be ready after 3 seconds
+      run: sleep 3
+
+    - name: Run benchmarks
+      run: python rust-based-client-benchmarks.py
+      working-directory: benchmarks
+
   stubtest:
     needs: build
     runs-on: ubuntu-latest
