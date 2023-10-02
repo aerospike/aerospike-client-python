@@ -143,17 +143,14 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     Py_Initialize();
     int i = 0;
 
-    static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        "aerospike",
-        "Aerospike Python Client",
-        sizeof(struct Aerospike_State),
-        Aerospike_Methods,
-        NULL,
-        NULL,
-        Aerospike_Clear,
-        Aerospike_Clear
-    };
+    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
+                                           "aerospike",
+                                           "Aerospike Python Client",
+                                           sizeof(struct Aerospike_State),
+                                           Aerospike_Methods,
+                                           NULL,
+                                           NULL,
+                                           Aerospike_Clear};
 
     PyObject *aerospike = PyModule_Create(&moduledef);
 
