@@ -554,7 +554,7 @@ PyObject *AerospikeException_New(void)
     return module;
 }
 
-void remove_exception(as_error *err)
+void remove_exception()
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
