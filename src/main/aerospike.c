@@ -119,6 +119,25 @@ struct Aerospike_State {
 
 #define Aerospike_State(o) ((struct Aerospike_State *)PyModule_GetState(o))
 
+static int Aerospike_Traverse(PyObject *aerospike, visitproc visit, void *arg)
+{
+    // Submodules
+    Py_VISIT(Aerospike_State(aerospike)->exception);
+    Py_VISIT(Aerospike_State(aerospike)->predicates);
+
+    // Classes
+    Py_VISIT(Aerospike_State(aerospike)->client);
+    Py_VISIT(Aerospike_State(aerospike)->query);
+    Py_VISIT(Aerospike_State(aerospike)->scan);
+    Py_VISIT(Aerospike_State(aerospike)->kdict);
+    Py_VISIT(Aerospike_State(aerospike)->geospatial);
+    Py_VISIT(Aerospike_State(aerospike)->null_object);
+    Py_VISIT(Aerospike_State(aerospike)->wildcard_object);
+    Py_VISIT(Aerospike_State(aerospike)->infinite_object);
+
+    return 0;
+}
+
 static int Aerospike_Clear(PyObject *aerospike)
 {
     remove_exception();
@@ -145,14 +164,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     Py_Initialize();
     int i = 0;
 
-    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
-                                           "aerospike",
-                                           "Aerospike Python Client",
-                                           sizeof(struct Aerospike_State),
-                                           Aerospike_Methods,
-                                           NULL,
-                                           NULL,
-                                           Aerospike_Clear};
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,     "aerospike",
+        "Aerospike Python Client", sizeof(struct Aerospike_State),
+        Aerospike_Methods,         NULL,
+        Aerospike_Traverse,        Aerospike_Clear};
 
     PyObject *aerospike = PyModule_Create(&moduledef);
 
