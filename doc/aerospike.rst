@@ -360,8 +360,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
         * **user** (:class:`str`)
             (Optional) A defined user with roles in the cluster. See :meth:`admin_create_user`.
+
         * **password** (:class:`str`)
             (Optional) The password will be hashed by the client using bcrypt.
+
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
 
