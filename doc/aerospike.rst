@@ -340,9 +340,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
 .. object:: config
 
-    * .. _hosts:
+    .. _hosts:
 
-        **hosts** (:class:`list`)
+    * **hosts** (:class:`list`)
         A list of tuples identifying a node (or multiple nodes) in the cluster.
 
         The tuple is in this format: ``(address, port, [tls-name])``
