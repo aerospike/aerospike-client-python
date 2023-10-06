@@ -140,8 +140,6 @@ static int Aerospike_Traverse(PyObject *aerospike, visitproc visit, void *arg)
 
 static int Aerospike_Clear(PyObject *aerospike)
 {
-    remove_exception();
-
     Py_CLEAR(Aerospike_State(aerospike)->exception);
     Py_CLEAR(Aerospike_State(aerospike)->client);
     Py_CLEAR(Aerospike_State(aerospike)->query);

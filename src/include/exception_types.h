@@ -24,7 +24,7 @@
 #define INDEX_EXCEPTION_COUNT 6
 #define ADMIN_EXCEPTION_COUNT 22
 
-struct exceptions {
+struct AerospikeException_State {
     PyObject *AerospikeError;
 
     //Aerospike exceptions
