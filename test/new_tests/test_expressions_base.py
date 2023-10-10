@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers.expressions import (
@@ -36,7 +37,8 @@ from aerospike_helpers.expressions import (
     Unknown,
     Var,
     VoidTime,
-    Val
+    Val,
+    RecordSize
 )
 from aerospike_helpers.operations import expression_operations as expressions
 from aerospike_helpers.operations import operations
@@ -386,3 +388,13 @@ class TestExpressions(TestBaseClass):
         assert bins
 
         test_client.close()
+
+    def test_record_size_pos(self):
+        key = ("test", "demo", 0)
+        expr = RecordSize().compile()
+        ops = [
+            expressions.expression_read("record_size", expr)
+        ]
+        _, _, res = self.as_connection.operate(key, ops)
+
+        assert res["record_size"] > 0
