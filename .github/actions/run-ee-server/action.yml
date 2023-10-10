@@ -20,14 +20,14 @@ runs:
   using: "composite"
   steps:
   - name: Install crudini to manipulate config.conf
-    run: pip install crudini==0.9.4
+    run: python3 -m pip install crudini==0.9.4
     shell: bash
 
   - name: Add enterprise edition config to config.conf
     run: |
-      crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --set config.conf enterprise-edition user superuser
-      crudini --set config.conf enterprise-edition password superuser
+      python3 -m crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
+      python3 -m crudini --set config.conf enterprise-edition user superuser
+      python3 -m crudini --set config.conf enterprise-edition password superuser
     working-directory: test
     shell: bash
 
