@@ -48,6 +48,7 @@ runs:
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
+    shell: bash
 
   - name: Get default aerospike.conf from Docker server EE container
     run: |
