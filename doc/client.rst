@@ -907,6 +907,18 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+    .. method:: index_blob_create(ns, set, bin, name[, policy])
+
+        Create an blob index with index name *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of the bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
     .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
 
         Create an index named *name* for numeric, string or GeoJSON values \

@@ -14,7 +14,7 @@ class TestIndex(object):
     def setup(self, request, as_connection):
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i}
+            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i, "bytes": b'123'}
             as_connection.put(key, rec)
 
         def teardown():
@@ -209,6 +209,11 @@ class TestIndex(object):
 
         ensure_dropped_index(self.as_connection, "test", "age_index")
         assert retobj == AerospikeStatus.AEROSPIKE_OK
+
+    def test_create_blob_index(self):
+        self.as_connection.index_blob_create(ns="test", set="demo", bin="bytes", name="bytes_index", policy={})
+
+        ensure_dropped_index(self.as_connection, "test", "bytes_index")
 
     def test_create_string_index_positive(self):
         """
