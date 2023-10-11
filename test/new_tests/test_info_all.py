@@ -3,6 +3,7 @@
 import pytest
 
 from aerospike import exception as e
+from .test_base_class import TestBaseClass
 
 import aerospike
 
@@ -35,6 +36,9 @@ class TestInfo(object):
         Test to see whether a namespace, set,
         and bin exist after a key is added
         """
+        if container_type == "bins" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+            pytest.skip("\"bins\" info command has been removed in server 7.0")
+
         key = ("test", "demo", "list_key")
         rec = {"names": ["John", "Marlen", "Steve"]}
 

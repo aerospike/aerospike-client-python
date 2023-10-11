@@ -115,9 +115,16 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
+
+    - if: ${{ inputs.use-server-rc }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
     - name: Run Aerospike server release candidate with latest tag
       if: ${{ inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !inputs.use-server-rc }}
@@ -166,6 +173,8 @@ jobs:
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Set config.conf to use Docker IP address of Aerospike server
       # config.conf should be copied into the cibuildwheel Docker container
@@ -223,6 +232,8 @@ jobs:
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Wait for server to start
       run: sleep 5
@@ -296,7 +307,10 @@ jobs:
       runs-on: ubuntu-latest
       services:
         aerospike:
-          image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
+          image: ${{ format('{0}:{1}', inputs.use-server-rc && 'aerospike/aerospike-server-rc' || 'aerospike/aerospike-server', inputs.server-tag) }}
+          credentials:
+            username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+            password: ${{ secrets.DOCKER_HUB_BOT_PW}}
       container:
         image: ${{ matrix.image }}
       steps:
@@ -333,7 +347,10 @@ jobs:
       runs-on: ubuntu-latest
       services:
         aerospike:
-          image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
+          image: ${{ format('{0}:{1}', inputs.use-server-rc && 'aerospike/aerospike-server-rc' || 'aerospike/aerospike-server', inputs.server-tag) }}
+          credentials:
+            username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+            password: ${{ secrets.DOCKER_HUB_BOT_PW}}
       strategy:
         matrix:
           debian-name: [
@@ -369,7 +386,10 @@ jobs:
       runs-on: ubuntu-22.04
       services:
         aerospike:
-          image: ${{ inputs.use-server-rc && 'aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server' }}
+          image: ${{ format('{0}:{1}', inputs.use-server-rc && 'aerospike/aerospike-server-rc' || 'aerospike/aerospike-server', inputs.server-tag) }}
+          credentials:
+            username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+            password: ${{ secrets.DOCKER_HUB_BOT_PW}}
           ports:
             - 3000:3000
             - 3001:3001
@@ -416,10 +436,21 @@ jobs:
         submodules: recursive
         ref: ${{ github.ref_name }}
 
-    - name: Set up Python ${{ matrix.python-version[1] }}
-      uses: actions/setup-python@v3
+    - name: Install Docker Engine
+      run: brew install colima
+
+    - name: Install Docker client
+      run: brew install docker
+
+    - name: Start Docker Engine
+      run: colima start
+
+    - uses: ./.github/actions/run-ee-server
       with:
-        python-version: ${{ matrix.python-version[1] }}
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.11.2
@@ -429,9 +460,6 @@ jobs:
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
         CIBW_BEFORE_TEST: >
-          export USE_SERVER_RC=${{ inputs.use-server-rc }} &&
-          SERVER_TAG=${{ inputs.server-tag }} vagrant up &&
-          sleep 3 &&
           pip install -r test/requirements.txt
         CIBW_TEST_COMMAND: >
           cd {project}/test/ &&
@@ -476,9 +504,20 @@ jobs:
 
     - run: python${{ matrix.python-version }} -m pip install build delocate==0.10.4
 
+    # Self-hosted runner only
+    # Need to be able to save Docker Hub credentials to keychain
+    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+      if: ${{ inputs.use-server-rc }}
+
+    - if: ${{ inputs.use-server-rc }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
     - name: Use server rc
       if: ${{ inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
+      run: echo IMAGE_NAME="aerospike/aerospike-server-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
 
     - name: Use server release
       if: ${{ !inputs.use-server-rc }}
