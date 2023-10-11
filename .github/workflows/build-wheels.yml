@@ -488,7 +488,7 @@ jobs:
       # CentOS 7 Linux cat 2 tests (for all wheels)
       manylinux_x86_64,
       manylinux_arm64,
-      macOS-x86,
+      macOS,
     ]
     runs-on: ubuntu-latest
     steps:
