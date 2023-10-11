@@ -108,7 +108,7 @@ jobs:
       run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }} || true
       working-directory: test
 
-  test-coverage:
+  generate-coverage-report:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -147,7 +147,7 @@ jobs:
       working-directory: test
 
     - name: Copy over source files to build dir
-      if: ${{ always() }}
+      if: ${{ !cancelled() }}
       # The build/temp*/src/main directory will contain a hierarchy of object .o files
       # But the source files must be stored in the same folder hierarchy at build/temp*/src/main/src/main
       run: |
@@ -174,25 +174,39 @@ jobs:
         cp src/main/scan/*.c build/temp*/src/main/scan/src/main/scan/
 
     - name: Generate coverage report for all object files
-      if: ${{ always() }}
+      if: ${{ !cancelled() }}
       run: |
         cd build/temp*/src/main
         find . -type f -name "*.o" -execdir gcov {} \;
 
     - name: Move aerospike_helpers coverage report to this directory
+      if: ${{ !cancelled() }}
       run: mv test/coverage.xml build/temp*/src/main
 
-    - name: Get exact folder to find coverage reports
-      if: ${{ always() }}
-      # Can't pass in glob pattern to codecov action (I think?)
-      run: |
-        obj_dir=$(ls -d build/temp*/src/main/)
-        echo "OBJ_DIR=$obj_dir" >> $GITHUB_ENV
+    - name: Upload coverage report folder to Github
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: build/temp*/src/main/
+
+  coverage-upload:
+    needs: generate-coverage-report
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: coverage-report
+        path: ./coverage-report
 
     - uses: codecov/codecov-action@v3
-      if: ${{ always() }}
       with:
-        directory: ${{ env.OBJ_DIR }}
+        directory: coverage-report
         verbose: true # optional (default = false)
         fail_ci_if_error: true
 
