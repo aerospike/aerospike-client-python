@@ -428,8 +428,13 @@ jobs:
           ["cp310", "3.10"],
           ["cp311", "3.11"]
         ]
-        os: [macos-latest]
-    runs-on: ${{ matrix.os }}
+        os: [
+          # x86
+          [macos-latest, x86_64],
+          # M1
+          [macos-13-xlarge, arm64]
+        ]
+    runs-on: ${{ matrix.os[0] }}
     steps:
     - uses: actions/checkout@v3
       with:
@@ -458,7 +463,7 @@ jobs:
         CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_x86_64
         CIBW_BUILD_FRONTEND: build
         CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
-        CIBW_ARCHS: "x86_64"
+        CIBW_ARCHS: ${{ matrix.os[1] }}
         CIBW_BEFORE_TEST: >
           pip install -r test/requirements.txt
         CIBW_TEST_COMMAND: >
@@ -468,85 +473,8 @@ jobs:
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.os }}-x86_64-${{ matrix.python-version[0] }}-wheel
+        name: ${{ matrix.os }}-${{ matrix.os[1] }}-${{ matrix.python-version[0] }}-wheel
         path: wheelhouse/*.whl
-
-  macOS-m1:
-    runs-on: [self-hosted, macOS, ARM64]
-    needs: update-version
-    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [
-            "3.8",
-            "3.9",
-            "3.10",
-            "3.11"
-        ]
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        ref: ${{ github.ref_name }}
-
-    # Update dependencies if needed
-    - name: Add brew to path
-      run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
-    - run: brew install python@${{ matrix.python-version }}
-    - run: brew install openssl@1.1
-
-    - run: |
-        openssl_path=$(brew --prefix openssl@1.1)
-        echo SSL_LIB_PATH="$openssl_path/lib/" >> $GITHUB_ENV
-        echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
-        echo STATIC_SSL=1 >> $GITHUB_ENV
-
-    - run: python${{ matrix.python-version }} -m pip install build delocate==0.10.4
-
-    # Self-hosted runner only
-    # Need to be able to save Docker Hub credentials to keychain
-    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-      if: ${{ inputs.use-server-rc }}
-
-    - if: ${{ inputs.use-server-rc }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Use server rc
-      if: ${{ inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike/aerospike-server-rc:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Use server release
-      if: ${{ !inputs.use-server-rc }}
-      run: echo IMAGE_NAME="aerospike/aerospike-server:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Run server
-      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
-
-    - run: python${{ matrix.python-version }} -m build
-    - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
-    - run: python${{ matrix.python-version }} -m pip install --find-links=wheelhouse/ --no-index --force-reinstall aerospike
-
-    - run: python${{ matrix.python-version }} -m pip install -r requirements.txt
-      working-directory: test
-
-    - run: python${{ matrix.python-version }} -m pytest new_tests/
-      working-directory: test
-
-    - name: Save macOS wheel
-      uses: actions/upload-artifact@v3
-      with:
-        name: macos-amd64-${{ matrix.python-version }}-wheel
-        path: wheelhouse/*.whl
-
-    - name: Stop server
-      if: ${{ always() }}
-      run: |
-        docker container stop aerospike
-        docker container prune -f
 
   upload-artifacts-to-jfrog:
     if: ${{ inputs.should-bump-version }}
