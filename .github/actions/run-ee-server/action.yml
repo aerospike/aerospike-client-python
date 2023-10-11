@@ -7,19 +7,27 @@ inputs:
   server-tag:
     required: true
     default: 'latest'
+  # Github Composite Actions can't access secrets
+  # so we need to pass them in as inputs
+  docker-hub-username:
+    required: false
+    type: string
+  docker-hub-password:
+    required: false
+    type: string
 
 runs:
   using: "composite"
   steps:
   - name: Install crudini to manipulate config.conf
-    run: pip install crudini==0.9.4
+    run: python3 -m pip install crudini==0.9.4
     shell: bash
 
   - name: Add enterprise edition config to config.conf
     run: |
-      crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --set config.conf enterprise-edition user superuser
-      crudini --set config.conf enterprise-edition password superuser
+      python3 -m crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
+      python3 -m crudini --set config.conf enterprise-edition user superuser
+      python3 -m crudini --set config.conf enterprise-edition password superuser
     working-directory: test
     shell: bash
 
@@ -34,7 +42,12 @@ runs:
 
   - name: Use release candidate server
     if: ${{ inputs.use-server-rc == 'true' }}
-    run: echo "SERVER_IMAGE=aerospike.jfrog.io/docker/aerospike/aerospike-server-enterprise-rc" >> $GITHUB_ENV
+    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise-rc" >> $GITHUB_ENV
+    shell: bash
+
+  - name: Log into Docker Hub to get server RC
+    if: ${{ inputs.use-server-rc == 'true' }}
+    run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
   - name: Get default aerospike.conf from Docker server EE container
