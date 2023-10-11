@@ -416,7 +416,7 @@ jobs:
         run: python3 -m pytest new_tests/
         working-directory: test
 
-  macOS-x86:
+  macOS:
     needs: update-version
     if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     strategy:
@@ -489,7 +489,6 @@ jobs:
       manylinux_x86_64,
       manylinux_arm64,
       macOS-x86,
-      macOS-m1,
     ]
     runs-on: ubuntu-latest
     steps:
