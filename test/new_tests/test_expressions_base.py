@@ -390,6 +390,10 @@ class TestExpressions(TestBaseClass):
         test_client.close()
 
     def test_record_size_pos(self):
+        if self.server_version < [7, 0]:
+            pytest.mark.xfail(reason="RecordSize() expression only supported in server 7.0+")
+            pytest.xfail()
+
         key = ("test", "demo", 0)
         expr = RecordSize().compile()
         ops = [
