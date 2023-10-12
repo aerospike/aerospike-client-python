@@ -89,6 +89,7 @@ enum expr_ops {
     META_SINCE_UPDATE_TIME = 71,
     META_IS_TOMBSTONE = 72,
     META_MEMORY_SIZE = 73,
+    META_RECORD_SIZE = 74,
 
     REC_KEY = 80,
     BIN = 81,
@@ -241,6 +242,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [META_SET_NAME] = EXP_SZ(as_exp_set_name()),
         [META_KEY_EXISTS] = EXP_SZ(as_exp_key_exist()),
         [META_MEMORY_SIZE] = EXP_SZ(as_exp_memory_size()),
+        [META_RECORD_SIZE] = EXP_SZ(as_exp_record_size()),
         [REC_KEY] = EXP_SZ(
             as_exp_key_int()), // this covers as_exp_key_int() -> as_exp_key_blob
         [BIN_TYPE] = EXP_SZ(as_exp_bin_type("")),
@@ -740,6 +742,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case META_MEMORY_SIZE:
             APPEND_ARRAY(0, as_exp_memory_size());
+            break;
+        case META_RECORD_SIZE:
+            APPEND_ARRAY(0, as_exp_record_size());
             break;
         case REC_KEY:
             APPEND_ARRAY(0, KEY_EXPR());
