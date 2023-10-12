@@ -41,6 +41,8 @@ RANGE_KEY = "range"
 COUNT_KEY = "count"
 RANK_KEY = "rank"
 CTX_KEY = "ctx"
+MAP_ORDER_KEY = "map_order"
+PERSIST_INDEX_KEY = "persist_index"
 
 
 def map_set_policy(bin_name: str, policy, ctx: Optional[list] = None):
@@ -58,6 +60,34 @@ def map_set_policy(bin_name: str, policy, ctx: Optional[list] = None):
         format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {OP_KEY: aerospike.OP_MAP_SET_POLICY, BIN_KEY: bin_name, POLICY_KEY: policy}
+
+    if ctx is not None:
+        op_dict[CTX_KEY] = ctx
+
+    return op_dict
+
+
+def map_create(bin_name: str, map_order: int, persist_index: bool, ctx: Optional[list] = None):
+    """
+    Create map create operation.
+
+    Server creates map at given context level.
+
+    Args:
+        bin_name (str):	Bin name.
+        map_order (int): Map order.
+        persist_index (bool): If true, persist map index. A map index improves lookup performance,
+            but requires more storage. A map index can be created for a top-level
+            ordered map only. Nested and unordered map indexes are not supported.
+        ctx (Optional[dict]): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>`
+            specifying the path to nested map. If not defined, the top-level map is used.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_CREATE,
+        BIN_KEY: bin_name,
+        MAP_ORDER_KEY: map_order,
+        PERSIST_INDEX_KEY: persist_index
+    }
 
     if ctx is not None:
         op_dict[CTX_KEY] = ctx

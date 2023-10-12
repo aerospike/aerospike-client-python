@@ -283,7 +283,8 @@ bool opRequiresValue(int op)
             op != OP_MAP_REMOVE_BY_KEY && op != OP_MAP_REMOVE_BY_INDEX &&
             op != OP_MAP_REMOVE_BY_RANK && op != OP_MAP_GET_BY_KEY &&
             op != OP_MAP_GET_BY_INDEX && op != OP_MAP_GET_BY_KEY_RANGE &&
-            op != OP_MAP_GET_BY_RANK && op != AS_OPERATOR_DELETE);
+            op != OP_MAP_GET_BY_RANK && op != AS_OPERATOR_DELETE &&
+            op != OP_MAP_CREATE);
 }
 
 bool opRequiresRange(int op)
@@ -347,6 +348,10 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     PyObject *py_range = NULL;
     PyObject *py_map_policy = NULL;
     PyObject *py_return_type = NULL;
+    // For map_create operation
+    PyObject *py_map_order = NULL;
+    PyObject *py_persist_index = NULL;
+
     Py_ssize_t pos = 0;
 
     if (get_operation(err, py_val, &operation) != AEROSPIKE_OK) {
@@ -418,6 +423,12 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             else if (strcmp(name, "ctx") == 0) {
                 CONVERT_PY_CTX_TO_AS_CTX();
                 ctx_ref = (ctx_in_use ? &ctx : NULL);
+            }
+            else if (strcmp(name, "map_order") == 0) {
+                py_map_order = value;
+            }
+            else if (strcmp(name, "persist_index") == 0) {
+                py_persist_index = value;
             }
             else {
                 as_error_update(
@@ -652,6 +663,11 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     //------- MAP OPERATIONS ---------
     case OP_MAP_SET_POLICY:
         as_operations_map_set_policy(ops, bin, ctx_ref, &map_policy);
+        break;
+    case OP_MAP_CREATE:;
+        as_map_order order = (as_map_order)PyLong_AsLong(py_map_order);
+        bool persist_index = PyObject_IsTrue(py_persist_index);
+        as_operations_map_create_all(ops, bin, ctx_ref, order, persist_index);
         break;
     case OP_MAP_PUT:
         CONVERT_VAL_TO_AS_VAL();

@@ -95,6 +95,7 @@ enum Aerospike_list_operations {
 
 enum Aerospike_map_operations {
     OP_MAP_SET_POLICY = 1101,
+    OP_MAP_CREATE,
     OP_MAP_PUT,
     OP_MAP_PUT_ITEMS,
     OP_MAP_INCREMENT,

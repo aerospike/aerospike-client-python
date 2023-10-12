@@ -187,6 +187,7 @@ static AerospikeConstants aerospike_constants[] = {
     {OP_LIST_INCREMENT, "OP_LIST_INCREMENT"},
 
     {OP_MAP_SET_POLICY, "OP_MAP_SET_POLICY"},
+    {OP_MAP_CREATE, "OP_MAP_CREATE"},
     {OP_MAP_PUT, "OP_MAP_PUT"},
     {OP_MAP_PUT_ITEMS, "OP_MAP_PUT_ITEMS"},
     {OP_MAP_INCREMENT, "OP_MAP_INCREMENT"},

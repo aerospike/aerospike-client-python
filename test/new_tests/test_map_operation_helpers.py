@@ -394,3 +394,14 @@ class TestNewListOperationsHelpers(object):
         operations = [map_ops.map_get_by_rank_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
         assert ret_vals is True
+
+    def test_map_create(self):
+        # This should create an empty dictionary
+        # map_create only works if a map does not already exist at the given bin and context path
+        operations = [
+            map_ops.map_create(bin_name="new_map", map_order=aerospike.MAP_KEY_ORDERED, persist_index=False, ctx=None)
+        ]
+        get_map_result_from_operation(self.as_connection, self.test_key, operations, "new_map")
+
+        res_map = self.as_connection.get(self.test_key)[2]["new_map"]
+        assert res_map == {}
