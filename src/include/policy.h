@@ -95,7 +95,6 @@ enum Aerospike_list_operations {
 
 enum Aerospike_map_operations {
     OP_MAP_SET_POLICY = 1101,
-    OP_MAP_CREATE,
     OP_MAP_PUT,
     OP_MAP_PUT_ITEMS,
     OP_MAP_INCREMENT,
@@ -137,7 +136,8 @@ enum Aerospike_map_operations {
     OP_MAP_GET_BY_KEY_REL_INDEX_RANGE,
     OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END,
     OP_MAP_GET_BY_INDEX_RANGE_TO_END,
-    OP_MAP_GET_BY_RANK_RANGE_TO_END
+    OP_MAP_GET_BY_RANK_RANGE_TO_END,
+    OP_MAP_CREATE
 };
 
 enum aerospike_bitwise_operations {
