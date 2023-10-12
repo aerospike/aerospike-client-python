@@ -211,6 +211,9 @@ class TestIndex(object):
         assert retobj == AerospikeStatus.AEROSPIKE_OK
 
     def test_create_blob_index(self):
+        if self.server_version < [7, 0]:
+            pytest.skip("Blob secondary indexes are only supported in server 7.0+")
+
         self.as_connection.index_blob_create(ns="test", set="demo", bin="bytes", name="bytes_index", policy={})
 
         ensure_dropped_index(self.as_connection, "test", "bytes_index")
