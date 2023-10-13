@@ -67,6 +67,8 @@ PyObject *AerospikeException_New(void)
 {
     PyObject *module = PyModule_Create(&moduledef);
 
+    PyState_AddModule(module, &moduledef);
+
     struct AerospikeException_State *exceptions_array =
         (struct AerospikeException_State *)PyModule_GetState(module);
 
