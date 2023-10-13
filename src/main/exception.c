@@ -593,8 +593,8 @@ void raise_exception(as_error *err)
     Py_ssize_t pos = 0;
     PyObject *py_aerospike_module = PyImport_ImportModule("aerospike");
     PyObject *py_exception_module =
-        PyObject_GetAttrString(py_aerospike_module, "exception")
-            PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
+        PyObject_GetAttrString(py_aerospike_module, "exception");
+    PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
     Py_DECREF(py_exception_module);
     Py_DECREF(py_aerospike_module);
 
@@ -670,8 +670,8 @@ PyObject *raise_exception_old(as_error *err)
     Py_ssize_t pos = 0;
     PyObject *py_aerospike_module = PyImport_ImportModule("aerospike");
     PyObject *py_exception_module =
-        PyObject_GetAttrString(py_aerospike_module, "exception")
-            PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
+        PyObject_GetAttrString(py_aerospike_module, "exception");
+    PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
     Py_DECREF(py_exception_module);
     Py_DECREF(py_aerospike_module);
 
