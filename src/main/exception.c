@@ -54,17 +54,17 @@ static int AerospikeException_Clear(PyObject *exception_module)
     return 0;
 }
 
+static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
+                                       "aerospike.exception",
+                                       "Exception objects",
+                                       sizeof(struct AerospikeException_State),
+                                       NULL,
+                                       NULL,
+                                       AerospikeException_Traverse,
+                                       AerospikeException_Clear};
+
 PyObject *AerospikeException_New(void)
 {
-    static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        "aerospike.exception",
-        "Exception objects",
-        sizeof(struct AerospikeException_State),
-        NULL,
-        NULL,
-        AerospikeException_Traverse,
-        AerospikeException_Clear};
     PyObject *module = PyModule_Create(&moduledef);
 
     struct AerospikeException_State *exceptions_array =
@@ -591,14 +591,12 @@ void raise_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_aerospike_module = PyImport_ImportModule("aerospike");
-    PyObject *py_exception_module =
-        PyObject_GetAttrString(py_aerospike_module, "exception");
+    bool found = false;
+
+    PyObject *py_exception_module = PyState_FindModule(&moduledef);
+    Py_INCREF(py_exception_module);
     PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
     Py_DECREF(py_exception_module);
-    Py_DECREF(py_aerospike_module);
-
-    bool found = false;
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
@@ -668,12 +666,10 @@ PyObject *raise_exception_old(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_aerospike_module = PyImport_ImportModule("aerospike");
-    PyObject *py_exception_module =
-        PyObject_GetAttrString(py_aerospike_module, "exception");
+    PyObject *py_exception_module = PyState_FindModule(&moduledef);
+    Py_INCREF(py_exception_module);
     PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
     Py_DECREF(py_exception_module);
-    Py_DECREF(py_aerospike_module);
 
     bool found = false;
 
