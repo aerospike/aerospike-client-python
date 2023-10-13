@@ -70,7 +70,7 @@ PyObject *AerospikeException_New(void)
     struct AerospikeException_State *exceptions_array =
         (struct AerospikeException_State *)PyModule_GetState(module);
 
-    memset(&exceptions_array, 0, sizeof(exceptions_array));
+    memset(exceptions_array, 0, sizeof(struct AerospikeException_State));
 
     struct server_exceptions_struct server_array = {
         {&exceptions_array->InvalidRequest, &exceptions_array->ServerFull,
