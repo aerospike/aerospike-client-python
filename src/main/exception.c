@@ -591,9 +591,12 @@ void raise_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module = PyImport_ImportModule("aerospike.exception");
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
-    Py_DECREF(py_module);
+    PyObject *py_aerospike_module = PyImport_ImportModule("aerospike");
+    PyObject *py_exception_module =
+        PyObject_GetAttrString(py_aerospike_module, "exception")
+            PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
+    Py_DECREF(py_exception_module);
+    Py_DECREF(py_aerospike_module);
 
     bool found = false;
 
@@ -665,9 +668,12 @@ PyObject *raise_exception_old(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module = PyImport_ImportModule("aerospike.exception");
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
-    Py_DECREF(py_module);
+    PyObject *py_aerospike_module = PyImport_ImportModule("aerospike");
+    PyObject *py_exception_module =
+        PyObject_GetAttrString(py_aerospike_module, "exception")
+            PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
+    Py_DECREF(py_exception_module);
+    Py_DECREF(py_aerospike_module);
 
     bool found = false;
 
