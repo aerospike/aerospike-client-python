@@ -586,6 +586,14 @@ PyObject *AerospikeException_New(void)
     PyObject_SetAttrString(exceptions_array->QueryTimeout, "code", py_code);
     Py_DECREF(py_code);
 
+    // We no longer need references to the exceptions in this method
+    // The module still holds references to the exceptions, though.
+    unsigned long exception_count = AerospikeException_Count();
+    for (unsigned long i = 0; i < exception_count; i++) {
+        PyObject *exception = AerospikeException_StateItem(exception_module, i);
+        Py_DECREF(exception);
+    }
+
     return module;
 }
 
