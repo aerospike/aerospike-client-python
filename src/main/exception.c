@@ -590,7 +590,7 @@ PyObject *AerospikeException_New(void)
     // The module still holds references to the exceptions, though.
     unsigned long exception_count = AerospikeException_Count();
     for (unsigned long i = 0; i < exception_count; i++) {
-        PyObject *exception = AerospikeException_StateItem(exception_module, i);
+        PyObject *exception = AerospikeException_StateItem(module, i);
         Py_DECREF(exception);
     }
 
