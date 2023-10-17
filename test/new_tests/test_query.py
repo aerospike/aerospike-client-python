@@ -72,7 +72,7 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            client.index_string_create("test", "demo", "blob", "blob_index")
+            client.index_blob_create("test", "demo", "blob", "blob_index")
         except e.IndexFoundError:
             pass
 
