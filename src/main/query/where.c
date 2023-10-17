@@ -166,6 +166,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             if (PyUnicode_Check(py_bin)) {
                 py_ubin = PyUnicode_AsUTF8String(py_bin);
                 bin = PyBytes_AsString(py_ubin);
+                bin = strdup(bin);
             }
             else {
                 rc = 1;
@@ -185,8 +186,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
             as_query_where_init(&self->query, 1);
             uint8_t *bin_uint8_ptr = (uint8_t *)bin;
-            // The bin string gets copied in the C client
-            // So we don't need to copy it here
             if (index_type == AS_INDEX_TYPE_DEFAULT) {
                 as_query_where_with_ctx(
                     &self->query, bin, pctx,
