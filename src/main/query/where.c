@@ -164,8 +164,14 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         else if (in_datatype == AS_INDEX_BLOB) {
             // TODO: Some of this code can be shared by all the other index data types
             if (PyUnicode_Check(py_bin)) {
-                py_ubin = PyUnicode_AsUTF8String(py_bin);
-                bin = PyBytes_AsString(py_ubin);
+                bin = (char*)PyUnicode_AsUTF8(py_bin);
+                // bin points to the internal buffer of bytes
+                // so we need to make a copy of the bin string
+                bin = strdup(bin);
+            }
+            else if (PyByteArray_Check(py_bin)) {
+                bin = PyByteArray_AsString(py_bin);
+                // TODO: fix
                 bin = strdup(bin);
             }
             else {
@@ -174,10 +180,18 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
 
             if (PyBytes_Check(py_val1)) {
-                val = strdup(PyBytes_AsString(py_val1));
+                val = PyBytes_AsString(py_val1);
+                Py_ssize_t bytes_size = PyBytes_Size(py_val1);
+                char *bytes_buffer = (char*)malloc(sizeof(char) * bytes_size);
+                memcpy(bytes_buffer, val, sizeof(char) * bytes_size);
+                val = bytes_buffer;
             }
             else if (PyByteArray_Check(py_val1)) {
-                val = strdup(PyByteArray_AsString(py_val1));
+                val = PyByteArray_AsString(py_val1);
+                Py_ssize_t bytearray_size = PyByteArray_Size(py_val1);
+                char *bytearray_buffer = (char*)malloc(sizeof(char) * bytearray_size);
+                memcpy(bytearray_buffer, val, sizeof(char) * bytearray_size);
+                val = bytearray_buffer;
             }
             else {
                 rc = 1;
