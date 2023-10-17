@@ -161,6 +161,60 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 py_ubin = NULL;
             }
         }
+        else if (in_datatype == AS_INDEX_BLOB) {
+            // TODO: Some of this code can be shared by all the other index data types
+            if (PyUnicode_Check(py_bin)) {
+                py_ubin = PyUnicode_AsUTF8String(py_bin);
+                bin = PyBytes_AsString(py_ubin);
+            }
+            else {
+                rc = 1;
+                break;
+            }
+
+            if (PyBytes_Check(py_val1)) {
+                val = strdup(PyBytes_AsString(py_val1));
+            }
+            else if (PyByteArray_Check(py_val1)) {
+                val = strdup(PyByteArray_AsString(py_val1));
+            }
+            else {
+                rc = 1;
+                break;
+            }
+
+            as_query_where_init(&self->query, 1);
+            uint8_t *bin_uint8_ptr = (uint8_t *)bin;
+            // The bin string gets copied in the C client
+            // So we don't need to copy it here
+            if (index_type == AS_INDEX_TYPE_DEFAULT) {
+                as_query_where_with_ctx(
+                    &self->query, bin, pctx,
+                    as_blob_equals(bin_uint8_ptr, val, true));
+            }
+            else if (index_type == AS_INDEX_TYPE_LIST) {
+                as_query_where_with_ctx(&self->query, bin, pctx,
+                                        as_contains(LIST, BLOB, val));
+            }
+            else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
+                as_query_where_with_ctx(&self->query, bin, pctx,
+                                        as_contains(MAPKEYS, BLOB, val));
+            }
+            else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
+                as_query_where_with_ctx(&self->query, bin, pctx,
+                                        as_contains(MAPVALUES, BLOB, val));
+            }
+            else {
+                rc = 1;
+                break;
+            }
+            if (py_ubin) {
+                Py_DECREF(py_ubin);
+                py_ubin = NULL;
+            }
+
+            self->query.where.entries[0].value.blob_val._free = true;
+        }
         else {
             // If it ain't expected, raise and error
             as_error_update(
@@ -212,6 +266,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 rc = 1;
                 break;
             }
+
             if (py_ubin) {
                 Py_DECREF(py_ubin);
                 py_ubin = NULL;
