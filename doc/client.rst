@@ -2296,11 +2296,6 @@ Map Policies
             |
             | Default: :data:`aerospike.MAP_UNORDERED`
 
-        * **persist_index** (:class:`bool`)
-            | If :py:obj:`True`, persist map index. A map index improves lookup performance,
-            | but requires more storage. A map index can be created for a top-level
-            | ordered map only. Nested and unordered map indexes are not supported.
-
     Example:
 
     .. code-block:: python
