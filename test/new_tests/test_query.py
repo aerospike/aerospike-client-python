@@ -72,6 +72,11 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
+            client.index_string_create("test", "demo", "blob", "blob_index")
+        except e.IndexFoundError:
+            pass
+
+        try:
             client.index_integer_create("test", "demo", "age1", "age_index1")
         except e.IndexFoundError:
             pass
@@ -217,6 +222,11 @@ class TestQuery(TestBaseClass):
         except e.IndexNotFound:
             pass
 
+        try:
+            client.index_remove("test", "blob_index", policy)
+        except e.IndexNotFound:
+            pass
+
         client.close()
 
     @pytest.fixture(autouse=True)
@@ -236,6 +246,7 @@ class TestQuery(TestBaseClass):
                 "test_age_none": 1,
                 "test_age": i,
                 "no": i,
+                "blob": int.to_bytes(i, 3)
             }
             as_connection.put(key, rec)
         for i in range(5, 10):
@@ -1046,3 +1057,20 @@ class TestQuery(TestBaseClass):
     def test_query_with_base64_cdt_ctx(self):
         bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
         assert bs_b4_cdt == "khAA"
+
+    def test_query_blob_bin(self):
+        query = self.as_connection.query("test", "demo")
+        query.where(p.equals("blob", 0b100))
+
+        records = []
+
+        def callback(input_tuple):
+            try:
+                records.append(input_tuple)
+            except Exception as ex:
+                print(ex)
+
+        query.foreach(callback)
+
+        assert records
+        assert len(records) == 1
