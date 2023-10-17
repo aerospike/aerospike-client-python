@@ -75,8 +75,8 @@ def map_create(bin_name: str, map_order: int, persist_index: bool, ctx: Optional
 
     Args:
         bin_name (str):	Bin name.
-        map_order (int): Map order.
-        persist_index (bool): If true, persist map index. A map index improves lookup performance,
+        map_order (int): See :ref:`aerospike_map_order` for possible values.
+        persist_index (bool): If :py:obj:`True`, persist map index. A map index improves lookup performance,
             but requires more storage. A map index can be created for a top-level
             ordered map only. Nested and unordered map indexes are not supported.
         ctx (Optional[dict]): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>`
