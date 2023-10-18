@@ -1080,3 +1080,9 @@ class TestQuery(TestBaseClass):
         assert len(records) == 1
 
         self.as_connection.index_remove("test", "blob_index")
+
+    # We need this test because the code for parsing bin names is handled in different code paths
+    # for each index value type
+    # TODO: remove this once we refactor the code so parsing bin names is handled the same for all index value types
+    def test_query_blob_bin_with_bytearray_binname(self):
+        p.equals(b'\0aa', b'12345')

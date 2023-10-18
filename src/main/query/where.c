@@ -164,15 +164,17 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         else if (in_datatype == AS_INDEX_BLOB) {
             // TODO: Some of this code can be shared by all the other index data types
             if (PyUnicode_Check(py_bin)) {
-                bin = (char*)PyUnicode_AsUTF8(py_bin);
+                bin = (char *)PyUnicode_AsUTF8(py_bin);
                 // bin points to the internal buffer of bytes
                 // so we need to make a copy of the bin string
                 bin = strdup(bin);
             }
             else if (PyByteArray_Check(py_bin)) {
                 bin = PyByteArray_AsString(py_bin);
-                // TODO: fix
-                bin = strdup(bin);
+                Py_ssize_t bytearray_size = PyByteArray_Size(py_bin);
+                char *new_bin_name = (char *)malloc(bytearray_size);
+                memcpy(new_bin_name, bin, bytearray_size);
+                bin = new_bin_name;
             }
             else {
                 rc = 1;
@@ -180,13 +182,13 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
             uint8_t *val = NULL;
             Py_ssize_t bytes_size;
-            
+
             if (PyBytes_Check(py_val1)) {
-                val = (uint8_t*)PyBytes_AsString(py_val1);
+                val = (uint8_t *)PyBytes_AsString(py_val1);
                 bytes_size = PyBytes_Size(py_val1);
             }
             else if (PyByteArray_Check(py_val1)) {
-                val = (uint8_t*)PyByteArray_AsString(py_val1);
+                val = (uint8_t *)PyByteArray_AsString(py_val1);
                 bytes_size = PyByteArray_Size(py_val1);
             }
             else {
@@ -194,15 +196,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 break;
             }
 
-            uint8_t *bytes_buffer = (uint8_t*)malloc(sizeof(uint8_t) * bytes_size);
+            uint8_t *bytes_buffer =
+                (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
             memcpy(bytes_buffer, val, sizeof(uint8_t) * bytes_size);
             val = bytes_buffer;
 
             as_query_where_init(&self->query, 1);
             if (index_type == AS_INDEX_TYPE_DEFAULT) {
-                as_query_where_with_ctx(
-                    &self->query, bin, pctx,
-                    as_blob_equals(val, bytes_size, true));
+                as_query_where_with_ctx(&self->query, bin, pctx,
+                                        as_blob_equals(val, bytes_size, true));
             }
             else if (index_type == AS_INDEX_TYPE_LIST) {
                 as_query_where_with_ctx(&self->query, bin, pctx,
