@@ -39,7 +39,7 @@ def maps_have_same_values(map1, map2):
 
 
 def sort_map(client, test_key, test_bin):
-    map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
+    map_policy = {"map_write_flags": aerospike.MAP_WRITE_FLAGS_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
     operations = [map_ops.map_set_policy(test_bin, map_policy)]
     client.operate(test_key, operations)
 
