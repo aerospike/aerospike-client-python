@@ -81,6 +81,10 @@ static PyObject *AerospikePredicates_Contains(PyObject *self, PyObject *args)
         return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_STRING,
                              py_bin, py_val, Py_None, index_type);
     }
+    else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
+        return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_BLOB,
+                             py_bin, py_val, Py_None, index_type);
+    }
 
 exit:
     Py_INCREF(Py_None);
