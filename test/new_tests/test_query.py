@@ -1085,4 +1085,5 @@ class TestQuery(TestBaseClass):
     # for each index value type
     # TODO: remove this once we refactor the code so parsing bin names is handled the same for all index value types
     def test_query_blob_bin_with_bytearray_binname(self):
-        p.equals(b'\0aa', b'12345')
+        query = self.as_connection.query("test", "demo")
+        query.where(p.equals(b'\0aa', 12345))
