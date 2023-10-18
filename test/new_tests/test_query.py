@@ -246,7 +246,7 @@ class TestQuery(TestBaseClass):
                 "test_age_none": 1,
                 "test_age": i,
                 "no": i,
-                "blob": i.to_bytes(length=3, byteorder='big')
+                "blob": i.to_bytes(length=1, byteorder='big')
             }
             as_connection.put(key, rec)
         for i in range(5, 10):
@@ -1060,7 +1060,7 @@ class TestQuery(TestBaseClass):
 
     def test_query_blob_bin(self):
         query = self.as_connection.query("test", "demo")
-        blob_val = int.to_bytes(4, length=3, byteorder='big')
+        blob_val = int.to_bytes(4, length=1, byteorder='big')
         query.where(p.equals("blob", blob_val))
 
         records = []

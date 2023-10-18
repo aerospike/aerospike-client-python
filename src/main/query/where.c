@@ -178,32 +178,31 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 rc = 1;
                 break;
             }
-
+            uint8_t *val = NULL;
+            Py_ssize_t bytes_size;
+            
             if (PyBytes_Check(py_val1)) {
-                val = PyBytes_AsString(py_val1);
-                Py_ssize_t bytes_size = PyBytes_Size(py_val1);
-                char *bytes_buffer = (char*)malloc(sizeof(char) * bytes_size);
-                memcpy(bytes_buffer, val, sizeof(char) * bytes_size);
-                val = bytes_buffer;
+                val = (uint8_t*)PyBytes_AsString(py_val1);
+                bytes_size = PyBytes_Size(py_val1);
             }
             else if (PyByteArray_Check(py_val1)) {
-                val = PyByteArray_AsString(py_val1);
-                Py_ssize_t bytearray_size = PyByteArray_Size(py_val1);
-                char *bytearray_buffer = (char*)malloc(sizeof(char) * bytearray_size);
-                memcpy(bytearray_buffer, val, sizeof(char) * bytearray_size);
-                val = bytearray_buffer;
+                val = (uint8_t*)PyByteArray_AsString(py_val1);
+                bytes_size = PyByteArray_Size(py_val1);
             }
             else {
                 rc = 1;
                 break;
             }
 
+            uint8_t *bytes_buffer = (uint8_t*)malloc(sizeof(uint8_t) * bytes_size);
+            memcpy(bytes_buffer, val, sizeof(uint8_t) * bytes_size);
+            val = bytes_buffer;
+
             as_query_where_init(&self->query, 1);
-            uint8_t *bin_uint8_ptr = (uint8_t *)bin;
             if (index_type == AS_INDEX_TYPE_DEFAULT) {
                 as_query_where_with_ctx(
                     &self->query, bin, pctx,
-                    as_blob_equals(bin_uint8_ptr, val, true));
+                    as_blob_equals(val, bytes_size, true));
             }
             else if (index_type == AS_INDEX_TYPE_LIST) {
                 as_query_where_with_ctx(&self->query, bin, pctx,
