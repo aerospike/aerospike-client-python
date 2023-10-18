@@ -79,10 +79,26 @@ class TestNewListOperationsHelpers(object):
         """
         Test setting map policy with an operation
         """
-        map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_VALUE_ORDERED}
+        map_policy = {
+            "map_write_mode": aerospike.MAP_CREATE_ONLY,
+            "map_order": aerospike.MAP_KEY_VALUE_ORDERED,
+            "persist_index": True
+        }
         operations = [map_ops.map_set_policy(self.test_bin, map_policy)]
 
         self.as_connection.operate(self.test_key, operations)
+
+    def test_map_policy_invalid_persist_index(self):
+        map_policy = {
+            "persist_index": 1
+        }
+        operations = [map_ops.map_set_policy(self.test_bin, map_policy)]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.test_key, operations)
+
+    # Default persist index value should be tested automatically
+    # from other tests that don't set the persist index option
 
     def test_map_put(self):
         operations = [map_ops.map_put(self.test_bin, "new", "map_put")]

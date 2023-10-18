@@ -1148,7 +1148,22 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
     }
 
     MAP_POLICY_SET_FIELD(map_write_mode);
-    as_map_policy_set(policy, map_order, map_write_mode);
+
+    PyObject *py_persist_index =
+        PyDict_GetItemString(py_policy, "persist_index");
+    bool persist_index;
+    if (!py_persist_index) {
+        // Default value if persist_index isn't set in policy
+        persist_index = false;
+    }
+    else if (!PyBool_Check(py_persist_index)) {
+        // persist_index value must be valid if it is set
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "persist_index is not a boolean");
+    }
+
+    persist_index = (bool)PyObject_IsTrue(py_persist_index);
+    as_map_policy_set_all(policy, map_order, map_write_mode, persist_index);
 
     return err->code;
 }
