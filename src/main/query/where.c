@@ -169,13 +169,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 // so we need to make a copy of the bin string
                 bin = strdup(bin);
             }
-            else if (PyByteArray_Check(py_bin)) {
-                bin = PyByteArray_AsString(py_bin);
-                Py_ssize_t bytearray_size = PyByteArray_Size(py_bin);
-                char *new_bin_name = (char *)malloc(bytearray_size);
-                memcpy(new_bin_name, bin, bytearray_size);
-                bin = new_bin_name;
-            }
             else {
                 rc = 1;
                 break;
