@@ -72,11 +72,6 @@ class TestQuery(TestBaseClass):
             pass
 
         try:
-            client.index_blob_create("test", "demo", "blob", "blob_index")
-        except e.IndexFoundError:
-            pass
-
-        try:
             client.index_integer_create("test", "demo", "age1", "age_index1")
         except e.IndexFoundError:
             pass
@@ -1059,6 +1054,14 @@ class TestQuery(TestBaseClass):
         assert bs_b4_cdt == "khAA"
 
     def test_query_blob_bin(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 0):
+            pytest.skip("Blob indexes are only supported in server 7.0+")
+
+        try:
+            self.as_connection.index_blob_create("test", "demo", "blob", "blob_index")
+        except e.IndexFoundError:
+            pass
+
         query = self.as_connection.query("test", "demo")
         blob_val = int.to_bytes(4, length=1, byteorder='big')
         query.where(p.equals("blob", blob_val))
@@ -1075,3 +1078,5 @@ class TestQuery(TestBaseClass):
 
         assert records
         assert len(records) == 1
+
+        self.as_connection.index_remove("test", "blob_index")
