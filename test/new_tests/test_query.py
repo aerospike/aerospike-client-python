@@ -1121,7 +1121,10 @@ class TestQuery(TestBaseClass):
 
         # Index creation is in the setup function
         query = self.as_connection.query("test", "demo")
+        # In the previous test, we passed in a bytes for the predicate's value parameter
+        # Now pass in a bytearray (which is also valid)
         blob_val = int.to_bytes(1, length=1, byteorder='big')
+        blob_val = bytearray(blob_val)
         query.where(p.contains(indexed_bin_name, index_type, blob_val))
 
         records = []
