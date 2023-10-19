@@ -1085,27 +1085,6 @@ Flags used by map write flag.
 
     Allow other valid map items to be committed if a map item is denied due to write flag constraints.
 
-.. _aerospike_map_write_mode:
-
-Map Write Mode
-^^^^^^^^^^^^^^
-
-Flags used by map *write mode*.
-
-.. note:: This should only be used for Server version < 4.3.0
-
-.. data:: MAP_UPDATE
-
-    Default. Allow create or update.
-
-.. data:: MAP_CREATE_ONLY
-
-    If the key already exists, the item will be denied. If the key does not exist, a new item will be created.
-
-.. data:: MAP_UPDATE_ONLY
-
-    If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied.
-
 .. _aerospike_map_order:
 
 Map Order

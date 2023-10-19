@@ -187,6 +187,7 @@ static AerospikeConstants aerospike_constants[] = {
     {OP_LIST_INCREMENT, "OP_LIST_INCREMENT"},
 
     {OP_MAP_SET_POLICY, "OP_MAP_SET_POLICY"},
+    {OP_MAP_CREATE, "OP_MAP_CREATE"},
     {OP_MAP_PUT, "OP_MAP_PUT"},
     {OP_MAP_PUT_ITEMS, "OP_MAP_PUT_ITEMS"},
     {OP_MAP_INCREMENT, "OP_MAP_INCREMENT"},
@@ -217,10 +218,6 @@ static AerospikeConstants aerospike_constants[] = {
     {AS_MAP_UNORDERED, "MAP_UNORDERED"},
     {AS_MAP_KEY_ORDERED, "MAP_KEY_ORDERED"},
     {AS_MAP_KEY_VALUE_ORDERED, "MAP_KEY_VALUE_ORDERED"},
-
-    {AS_MAP_UPDATE, "MAP_UPDATE"},
-    {AS_MAP_UPDATE_ONLY, "MAP_UPDATE_ONLY"},
-    {AS_MAP_CREATE_ONLY, "MAP_CREATE_ONLY"},
 
     {AS_MAP_RETURN_NONE, "MAP_RETURN_NONE"},
     {AS_MAP_RETURN_INDEX, "MAP_RETURN_INDEX"},
@@ -1121,33 +1118,28 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
     // Initialize Policy
     POLICY_INIT(as_map_policy);
 
+    // Defaults
     long map_order = AS_MAP_UNORDERED;
-    long map_write_mode = AS_MAP_UPDATE;
     uint32_t map_write_flags = AS_MAP_WRITE_DEFAULT;
+    bool persist_index = false;
 
     MAP_POLICY_SET_FIELD(map_order);
-    PyObject *mode_or_flags =
-        PyDict_GetItemString(py_policy, MAP_WRITE_FLAGS_KEY);
+    MAP_POLICY_SET_FIELD(map_write_flags);
 
-    /*
-	This only works for client >= 3.5.0 and server >= 4.3.0
-	If py_policy["map_write_flags"] is set, we use it
-	otherwise we use py_policy["map_write_mode"]
-	*/
-    if (mode_or_flags) {
-        if (PyLong_Check(mode_or_flags)) {
-            map_write_flags = (uint32_t)PyLong_AsLong(mode_or_flags);
-            as_map_policy_set_flags(policy, map_order, map_write_flags);
+    PyObject *py_persist_index =
+        PyDict_GetItemString(py_policy, "persist_index");
+    if (py_persist_index) {
+        if (PyBool_Check(py_persist_index)) {
+            persist_index = (bool)PyObject_IsTrue(py_persist_index);
         }
         else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "map write flags must be an integer");
+            // persist_index value must be valid if it is set
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "persist_index is not a boolean");
         }
-        return err->code;
     }
 
-    MAP_POLICY_SET_FIELD(map_write_mode);
-    as_map_policy_set(policy, map_order, map_write_mode);
+    as_map_policy_set_all(policy, map_order, map_write_flags, persist_index);
 
     return err->code;
 }

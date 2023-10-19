@@ -2264,20 +2264,10 @@ Map Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional map policies, which are applicable to map operations. Only one of ``map_write_mode`` or ``map_write_flags`` should
-    be provided. ``map_write_mode`` should be used for Aerospike Server versions < `4.3.0` and ``map_write_flags`` should be used for Aerospike server versions
-    greater than or equal to `4.3.0` .
+    A :class:`dict` of optional map policies, which are applicable to map operations.
 
     .. hlist::
         :columns: 1
-
-        * **map_write_mode**
-            | Write mode for the map operation.
-            | One of the :ref:`aerospike_map_write_mode` values such as :data:`aerospike.MAP_UPDATE`
-            |
-            | Default: :data:`aerospike.MAP_UPDATE`
-
-            .. note:: This should only be used for Server version < 4.3.0.
 
         * **map_write_flags**
             | Write flags for the map operation.
@@ -2296,6 +2286,11 @@ Map Policies
             |
             | Default: :data:`aerospike.MAP_UNORDERED`
 
+        * **persist_index** (:class:`bool`)
+            | If :py:obj:`True`, persist map index. A map index improves lookup performance,
+            | but requires more storage. A map index can be created for a top-level
+            | ordered map only. Nested and unordered map indexes are not supported.
+
     Example:
 
     .. code-block:: python
@@ -2304,12 +2299,6 @@ Map Policies
         map_policy = {
             'map_order': aerospike.MAP_UNORDERED,
             'map_write_flags': aerospike.MAP_WRITE_FLAGS_CREATE_ONLY
-        }
-
-        # Server < 4.3.0
-        map_policy = {
-            'map_order': aerospike.MAP_UNORDERED,
-            'map_write_mode': aerospike.MAP_CREATE_ONLY
         }
 
 .. _aerospike_bit_policies:

@@ -39,7 +39,7 @@ def maps_have_same_values(map1, map2):
 
 
 def sort_map(client, test_key, test_bin):
-    map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
+    map_policy = {"map_write_flags": aerospike.MAP_WRITE_FLAGS_CREATE_ONLY, "map_order": aerospike.MAP_KEY_ORDERED}
     operations = [map_ops.map_set_policy(test_bin, map_policy)]
     client.operate(test_key, operations)
 
@@ -79,10 +79,26 @@ class TestNewListOperationsHelpers(object):
         """
         Test setting map policy with an operation
         """
-        map_policy = {"map_write_mode": aerospike.MAP_CREATE_ONLY, "map_order": aerospike.MAP_KEY_VALUE_ORDERED}
+        map_policy = {
+            "map_write_flags": aerospike.MAP_WRITE_FLAGS_CREATE_ONLY,
+            "map_order": aerospike.MAP_KEY_VALUE_ORDERED,
+            "persist_index": True
+        }
         operations = [map_ops.map_set_policy(self.test_bin, map_policy)]
 
         self.as_connection.operate(self.test_key, operations)
+
+    def test_map_policy_invalid_persist_index(self):
+        map_policy = {
+            "persist_index": 1
+        }
+        operations = [map_ops.map_set_policy(self.test_bin, map_policy)]
+
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.test_key, operations)
+
+    # Default persist index value should be tested automatically
+    # from other tests that don't set the persist index option
 
     def test_map_put(self):
         operations = [map_ops.map_put(self.test_bin, "new", "map_put")]
@@ -394,3 +410,14 @@ class TestNewListOperationsHelpers(object):
         operations = [map_ops.map_get_by_rank_range(self.test_bin, 1, 2, return_type=aerospike.MAP_RETURN_EXISTS)]
         ret_vals = get_map_result_from_operation(self.as_connection, self.test_key, operations, self.test_bin)
         assert ret_vals is True
+
+    def test_map_create(self):
+        # This should create an empty dictionary
+        # map_create only works if a map does not already exist at the given bin and context path
+        operations = [
+            map_ops.map_create(bin_name="new_map", map_order=aerospike.MAP_KEY_ORDERED, persist_index=False, ctx=None)
+        ]
+        get_map_result_from_operation(self.as_connection, self.test_key, operations, "new_map")
+
+        res_map = self.as_connection.get(self.test_key)[2]["new_map"]
+        assert res_map == {}

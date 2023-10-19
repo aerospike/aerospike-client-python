@@ -96,7 +96,7 @@ Example::
         client.remove(key)
 
     bit_policy = {
-        'map_write_mode': aerospike.BIT_WRITE_DEFAULT,
+        'bit_write_flags': aerospike.BIT_WRITE_DEFAULT,
     }
     client.put(key, {five_one_bin: five_one_blob})
 
