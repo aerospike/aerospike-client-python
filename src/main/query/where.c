@@ -164,10 +164,10 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         else if (in_datatype == AS_INDEX_BLOB) {
             // TODO: Some of this code can be shared by all the other index data types
             if (PyUnicode_Check(py_bin)) {
-                bin = (char *)PyUnicode_AsUTF8(py_bin);
-                // bin points to the internal buffer of bytes
-                // so we need to make a copy of the bin string
-                bin = strdup(bin);
+                const char *py_bin_buffer = PyUnicode_AsUTF8(py_bin);
+                // bin points to the internal buffer of the Python string
+                // so we need to make a copy of the bin string in case the Python string gets garbage collected
+                bin = strdup(py_bin_buffer);
             }
             else {
                 rc = 1;
@@ -186,6 +186,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
             else {
                 rc = 1;
+                free(bin);
                 break;
             }
 
@@ -216,6 +217,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
             else {
                 rc = 1;
+                free(bin);
                 break;
             }
             if (py_ubin) {
@@ -224,6 +226,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
 
             self->query.where.entries[0].value.blob_val._free = true;
+
+            // Cleanup
+            free(bin);
         }
         else {
             // If it ain't expected, raise and error
