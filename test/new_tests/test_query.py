@@ -120,7 +120,7 @@ class TestQuery(TestBaseClass):
         except e.IndexFoundError:
             pass
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 0):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
             # These indexes are only used for server 7.0+ tests
             try:
                 client.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
