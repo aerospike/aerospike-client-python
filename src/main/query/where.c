@@ -200,16 +200,19 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                         as_blob_equals(val, bytes_size, true));
             }
             else if (index_type == AS_INDEX_TYPE_LIST) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(LIST, BLOB, val));
+                as_query_where_with_ctx(
+                    &self->query, bin, pctx,
+                    as_blob_contains(LIST, val, bytes_size, true));
             }
             else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(MAPKEYS, BLOB, val));
+                as_query_where_with_ctx(
+                    &self->query, bin, pctx,
+                    as_blob_contains(MAPKEYS, val, bytes_size, true));
             }
             else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(MAPVALUES, BLOB, val));
+                as_query_where_with_ctx(
+                    &self->query, bin, pctx,
+                    as_blob_contains(MAPVALUES, val, bytes_size, true));
             }
             else {
                 rc = 1;
