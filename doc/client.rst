@@ -907,6 +907,18 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+    .. method:: index_blob_create(ns, set, bin, name[, policy])
+
+        Create an blob index with index name *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of the bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
     .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
 
         Create an index named *name* for numeric, string or GeoJSON values \
@@ -916,7 +928,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -932,7 +944,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -948,7 +960,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.

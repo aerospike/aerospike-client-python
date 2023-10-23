@@ -120,6 +120,25 @@ class TestQuery(TestBaseClass):
         except e.IndexFoundError:
             pass
 
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+            # These indexes are only used for server 7.0+ tests
+            try:
+                client.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
+            except e.IndexFoundError:
+                pass
+
+            try:
+                client.index_map_keys_create("test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_keys_index")
+            except e.IndexFoundError:
+                pass
+
+            try:
+                client.index_map_values_create(
+                    "test", "demo", "blob_map", aerospike.INDEX_BLOB, "blob_map_values_index"
+                )
+            except e.IndexFoundError:
+                pass
+
         try:
             client.index_cdt_create(
                 "test",
@@ -217,6 +236,17 @@ class TestQuery(TestBaseClass):
         except e.IndexNotFound:
             pass
 
+        blob_index_names_to_remove = [
+            "blob_list_index",
+            "blob_map_keys_index",
+            "blob_map_values_index"
+        ]
+        for name in blob_index_names_to_remove:
+            try:
+                client.index_remove("test", name, policy)
+            except e.IndexNotFound:
+                pass
+
         client.close()
 
     @pytest.fixture(autouse=True)
@@ -233,9 +263,14 @@ class TestQuery(TestBaseClass):
                 "string_list": ["str" + str(i), "str" + str(i + 1), "str" + str(i + 2)],
                 "numeric_map": {"a": i, "b": i + 1, "c": i + 2},
                 "string_map": {"a": "a" + str(i), "b": "b" + str(i + 1), "c": "c" + str(i + 2)},
+                "blob_list": [i.to_bytes(length=1, byteorder='big')],
+                "blob_map": {
+                    i.to_bytes(length=1, byteorder='big'): i.to_bytes(length=1, byteorder='big')
+                },
                 "test_age_none": 1,
                 "test_age": i,
                 "no": i,
+                "blob": i.to_bytes(length=1, byteorder='big')
             }
             as_connection.put(key, rec)
         for i in range(5, 10):
@@ -1046,3 +1081,60 @@ class TestQuery(TestBaseClass):
     def test_query_with_base64_cdt_ctx(self):
         bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
         assert bs_b4_cdt == "khAA"
+
+    def test_query_blob_bin_equal(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 0):
+            pytest.skip("Blob indexes are only supported in server 7.0+")
+
+        self.as_connection.index_blob_create("test", "demo", "blob", "blob_index")
+
+        query = self.as_connection.query("test", "demo")
+        blob_val = int.to_bytes(4, length=1, byteorder='big')
+        query.where(p.equals("blob", blob_val))
+
+        records = []
+
+        def callback(input_tuple):
+            try:
+                records.append(input_tuple)
+            except Exception as ex:
+                print(ex)
+
+        query.foreach(callback)
+
+        assert records
+        assert len(records) == 1
+
+        self.as_connection.index_remove("test", "blob_index")
+
+    @pytest.mark.parametrize(
+        "indexed_bin_name, index_type",
+        [
+            ("blob_list", aerospike.INDEX_TYPE_LIST),
+            ("blob_map", aerospike.INDEX_TYPE_MAPKEYS),
+            ("blob_map", aerospike.INDEX_TYPE_MAPVALUES),
+        ]
+    )
+    def test_query_blob_bin_contains(self, indexed_bin_name, index_type):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 0):
+            pytest.skip("Blob indexes are only supported in server 7.0+")
+
+        # Index creation is in the setup function
+        query = self.as_connection.query("test", "demo")
+        # In the previous test, we passed in a bytes for the predicate's value parameter
+        # Now pass in a bytearray (which is also valid)
+        blob_val = int.to_bytes(1, length=1, byteorder='big')
+        blob_val = bytearray(blob_val)
+        query.where(p.contains(indexed_bin_name, index_type, blob_val))
+
+        records = []
+
+        def callback(input_tuple):
+            try:
+                records.append(input_tuple)
+            except Exception as ex:
+                print(ex)
+
+        query.foreach(callback)
+
+        assert len(records) == 1
