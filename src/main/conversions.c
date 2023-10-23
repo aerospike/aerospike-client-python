@@ -825,8 +825,8 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
     else if (PyBytes_Check(py_obj)) {
         char *py_obj_buffer = PyBytes_AsString(py_obj);
         Py_ssize_t b_len = PyBytes_Size(py_obj);
-        char *new_buffer = (char *)malloc(sizeof(char) * b_len);
-        memcpy(new_buffer, py_obj_buffer, sizeof(char) * b_len);
+        uint8_t *new_buffer = (uint8_t *)malloc(sizeof(uint8_t) * b_len);
+        memcpy(new_buffer, py_obj_buffer, sizeof(uint8_t) * b_len);
 
         as_bytes *bytes = as_bytes_new_wrap(new_buffer, b_len, true);
         if (bytes == NULL) {
