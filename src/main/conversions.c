@@ -827,7 +827,9 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
         as_bytes *bytes = as_bytes_new_wrap(b, b_len, false);
         if (bytes == NULL) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "Unable to convert Python bytes to C client's as_bytes");
+            return as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert Python bytes to C client's as_bytes");
         }
         *val = (as_val *)bytes;
 
