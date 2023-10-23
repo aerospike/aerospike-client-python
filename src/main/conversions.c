@@ -823,10 +823,14 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         Py_DECREF(py_ustr);
     }
     else if (PyBytes_Check(py_obj)) {
-        uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
-        uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
-        as_bytes *bytes = as_bytes_new_wrap(b, b_len, false);
+        char *py_obj_buffer = PyBytes_AsString(py_obj);
+        Py_ssize_t b_len = PyBytes_Size(py_obj);
+        char *new_buffer = (char *)malloc(sizeof(char) * b_len);
+        memcpy(new_buffer, py_obj_buffer, sizeof(char) * b_len);
+
+        as_bytes *bytes = as_bytes_new_wrap(new_buffer, b_len, true);
         if (bytes == NULL) {
+            free(new_buffer);
             return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Unable to convert Python bytes to C client's as_bytes");

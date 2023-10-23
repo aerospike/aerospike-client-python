@@ -487,32 +487,46 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             goto CLEANUP;
         }
         // Pass bytes object to new HLL class instance
-        PyObject *py_aerospike_module =
+        PyObject *py_aerospike_helpers_module =
             PyImport_ImportModule("aerospike_helpers");
-        if (py_aerospike_module == NULL) {
+        if (py_aerospike_helpers_module == NULL) {
+            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
+                            "Unable to import aerospike_helpers module");
+            goto HLL_CLEANUP1;
         }
 
         PyObject *py_hll_class =
-            PyObject_GetAttrString(py_aerospike_module, "HyperLogLog");
+            PyObject_GetAttrString(py_aerospike_helpers_module, "HyperLogLog");
+        if (py_hll_class == NULL) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to import HyperLogLog class from "
+                            "aerospike_helpers module");
+            goto HLL_CLEANUP2;
+        }
+
         if (!PyCallable_Check(py_hll_class)) {
             as_error_update(error_p, AEROSPIKE_ERR,
                             "Unable to create HyperLogLog instance; "
                             "HyperLogLog class is not callable");
-            goto HLL_CLEANUP;
+            goto HLL_CLEANUP3;
         }
-        // Apparently the HLL instance steals a reference to the Python bytes
-        // So we don't want to DECREF py_bytes
+
         PyObject *py_hll_instance =
             PyObject_CallFunctionObjArgs(py_hll_class, py_bytes, NULL);
         if (py_hll_instance == NULL) {
-            PyErr_Print();
+            // An exception has been thrown by calling the HLL constructor
+            // We want to show the original exception message
+            goto HLL_CLEANUP3;
         }
 
         *retval = py_hll_instance;
 
-    HLL_CLEANUP:
+    HLL_CLEANUP3:
         Py_DECREF(py_hll_class);
-        Py_DECREF(py_aerospike_module);
+    HLL_CLEANUP2:
+        Py_DECREF(py_aerospike_helpers_module);
+    HLL_CLEANUP1:
+        Py_DECREF(py_bytes);
         break;
     default: {
         // First try to return a raw byte array, if that fails raise an error
