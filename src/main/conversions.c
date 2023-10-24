@@ -1047,6 +1047,11 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 char *str = PyBytes_AsString(value);
                 as_bytes_set(bytes, 0, (const uint8_t *)str, str_len);
 
+                if (!strcmp(value->ob_type->tp_name,
+                            "aerospike_helpers.HyperLogLog")) {
+                    bytes->type = AS_BYTES_HLL;
+                }
+
                 ret_val = as_record_set_bytes(rec, name, bytes);
             }
             else if (PyByteArray_Check(value)) {

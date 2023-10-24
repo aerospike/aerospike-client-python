@@ -466,3 +466,20 @@ class TestHLL(object):
         ops = [hll_operations.hll_describe("mh_bin")]
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
         assert res["mh_bin"] == [6, 12]
+
+    def test_put_get_hll_list(self):
+        """
+        This is to cover putting nested HLLs in the server
+        Since the conversion for nested HLLs to the C client equivalent is separate from top-level HLLs
+        """
+        # Test setup to retrieve an HLL bin
+        _, _, rec = self.as_connection.get(self.test_keys[0])
+
+        self.as_connection.put(
+            self.test_keys[0],
+            {
+                "hll_list": [
+                    rec["hll_bin"]
+                ]
+            }
+        )
