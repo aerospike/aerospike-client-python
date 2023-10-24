@@ -476,7 +476,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             }
         }
     } break;
-    case AS_BYTES_HLL:
+    case AS_BYTES_HLL: {
         // Convert bytes to Python bytes object
         PyObject *py_bytes = PyBytes_FromStringAndSize(
             (const char *)bytes->value, (Py_ssize_t)bytes->size);
@@ -528,6 +528,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
     HLL_CLEANUP1:
         Py_DECREF(py_bytes);
         break;
+    }
     default: {
         // First try to return a raw byte array, if that fails raise an error
         uint32_t bval_size = as_bytes_size(bytes);
