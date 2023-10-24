@@ -515,7 +515,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             PyObject_CallFunctionObjArgs(py_hll_class, py_bytes, NULL);
         if (py_hll_instance == NULL) {
             // An exception has been thrown by calling the HLL constructor
-            // We want to show the original exception message
+            // We want to show the original exception instead of throwing our own exception
             goto HLL_CLEANUP3;
         }
 
