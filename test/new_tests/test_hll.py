@@ -483,3 +483,5 @@ class TestHLL(object):
                 ]
             }
         )
+        _, _, rec = self.as_connection.get(self.test_keys[0])
+        assert type(rec["hll_list"][0]) == HyperLogLog
