@@ -16,4 +16,7 @@
 
 class HyperLogLog(bytes):
     def __new__(cls, o) -> "HyperLogLog":
+        '''
+        Create a new HyperLogLog value. This can be returned from or sent to the server.
+        '''
         return super().__new__(cls, o)
