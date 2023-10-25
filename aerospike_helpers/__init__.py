@@ -15,8 +15,8 @@
 ##########################################################################
 
 class HyperLogLog(bytes):
+    """
+    Represents a HyperLogLog value. This can be returned from the server or created in order to be sent to the server.
+    """
     def __new__(cls, o) -> "HyperLogLog":
-        '''
-        Create a new HyperLogLog value. This can be returned from or sent to the server.
-        '''
         return super().__new__(cls, o)
