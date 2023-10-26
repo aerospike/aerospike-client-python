@@ -159,7 +159,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     const char version[] = "14.0.0-rc.8";
     // Makes things "thread-safe"
-    Py_Initialize();
+    // Py_Initialize();
     int i = 0;
 
     static struct PyModuleDef moduledef = {
