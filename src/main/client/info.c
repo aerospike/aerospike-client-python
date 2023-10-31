@@ -99,20 +99,12 @@ static bool AerospikeClient_InfoAll_each(as_error *err, const as_node *node,
 
 CLEANUP:
     if (udata_ptr->error.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&udata_ptr->error, &py_err);
-        PyObject *exception_type = raise_exception_old(&udata_ptr->error);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&udata_ptr->error);
         PyGILState_Release(gil_state);
         return false;
     }
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception_old(err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(err);
         PyGILState_Release(gil_state);
         return false;
     }
@@ -212,12 +204,7 @@ CLEANUP:
         Py_DECREF(py_ustr);
     }
     if (info_callback_udata.error.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&info_callback_udata.error, &py_err);
-        PyObject *exception_type =
-            raise_exception_old(&info_callback_udata.error);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&info_callback_udata.error);
         if (py_nodes) {
             Py_DECREF(py_nodes);
         }
