@@ -602,8 +602,7 @@ void raise_exception(as_error *err)
     raise_exception_base(err, NULL, NULL, NULL, NULL, NULL);
 }
 
-// This function steals a reference to any arguments that are provided (i.e non-NULL)
-void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
+void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
                           PyObject *py_name)
 {
@@ -652,11 +651,27 @@ void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
                 PyObject_SetAttrString(py_value, "in_doubt", py_attr);
                 Py_DECREF(py_attr);
 
-                break;
-
-                if (py_key && PyObject_HasAttrString(py_value, "key")) {
-                    PyObject_SetAttrString(py_value, "key", py_key);
+                if (py_as_key && PyObject_HasAttrString(py_value, "key")) {
+                    PyObject_SetAttrString(py_value, "key", py_as_key);
                 }
+
+                if (py_bin && PyObject_HasAttrString(py_value, "bin")) {
+                    PyObject_SetAttrString(py_value, "bin", py_bin);
+                }
+
+                if (py_module && PyObject_HasAttrString(py_value, "module")) {
+                    PyObject_SetAttrString(py_value, "module", py_module);
+                }
+
+                if (py_module && PyObject_HasAttrString(py_value, "func")) {
+                    PyObject_SetAttrString(py_value, "func", py_func);
+                }
+
+                if (py_name && PyObject_HasAttrString(py_value, "name")) {
+                    PyObject_SetAttrString(py_value, "name", py_name);
+                }
+
+                break;
             }
             Py_DECREF(py_code);
         }
