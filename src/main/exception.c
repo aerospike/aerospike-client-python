@@ -599,6 +599,14 @@ PyObject *AerospikeException_New(void)
 
 void raise_exception(as_error *err)
 {
+    raise_exception_base(err, NULL, NULL, NULL, NULL, NULL);
+}
+
+// This function steals a reference to any arguments that are provided (i.e non-NULL)
+void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
+                          PyObject *py_module, PyObject *py_func,
+                          PyObject *py_name)
+{
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
     bool found = false;
@@ -645,6 +653,10 @@ void raise_exception(as_error *err)
                 Py_DECREF(py_attr);
 
                 break;
+
+                if (py_key && PyObject_HasAttrString(py_value, "key")) {
+                    PyObject_SetAttrString(py_value, "key", py_key);
+                }
             }
             Py_DECREF(py_code);
         }
