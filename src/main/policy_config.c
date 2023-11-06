@@ -229,6 +229,11 @@ as_status set_write_policy(as_policy_write *write_policy, PyObject *py_policy)
         return status;
     }
 
+    status = set_optional_uint32_property(&write_policy->ttl, py_policy, "ttl");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     status = set_optional_uint32_property(
         (uint32_t *)&write_policy->compression_threshold, py_policy,
         "compression_threshold");
@@ -269,6 +274,11 @@ as_status set_apply_policy(as_policy_apply *apply_policy, PyObject *py_policy)
     }
 
     status = set_optional_replica(&apply_policy->replica, py_policy, "replica");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_uint32_property(&apply_policy->ttl, py_policy, "ttl");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -393,6 +403,11 @@ as_status set_scan_policy(as_policy_scan *scan_policy, PyObject *py_policy)
         return status;
     }
 
+    status = set_optional_uint32_property(&scan_policy->ttl, py_policy, "ttl");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     status = set_optional_replica(&scan_policy->replica, py_policy, "replica");
     if (status != AEROSPIKE_OK) {
         return status;
@@ -433,6 +448,12 @@ as_status set_operate_policy(as_policy_operate *operate_policy,
 
     status = set_optional_commit_level(&operate_policy->commit_level, py_policy,
                                        "commit_level");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status =
+        set_optional_uint32_property(&operate_policy->ttl, py_policy, "ttl");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -633,6 +654,12 @@ as_status set_batch_write_policy(as_policy_batch_write *batch_write_policy,
 
     status =
         set_optional_exists(&batch_write_policy->exists, py_policy, "exists");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_uint32_property(&batch_write_policy->ttl, py_policy,
+                                          "ttl");
     if (status != AEROSPIKE_OK) {
         return status;
     }

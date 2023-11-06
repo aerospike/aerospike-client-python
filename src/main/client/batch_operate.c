@@ -239,6 +239,11 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
                 ops.ttl = ttl;
             }
         }
+        else {
+            // If ttl in this transaction's batch write policy isn't set, use the client config's default batch write
+            // policy ttl
+            ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+        }
         Py_XDECREF(py_ttl);
     }
 

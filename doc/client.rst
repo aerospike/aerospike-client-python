@@ -1575,6 +1575,9 @@ Write Policies
             | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
             | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
+        * **ttl**
+            | The default time-to-live (expiration) of the record in seconds. This field will only be used if a write
+            | transaction's ``ttl`` option in the metadata dictionary is not set.
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
@@ -1740,6 +1743,9 @@ Operate Policies
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **ttl**
+            | The default time-to-live (expiration) of the record in seconds. This field will only be used if an operate
+            | transaction's ``ttl`` option in the metadata dictionary is not set.
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1843,6 +1849,9 @@ Apply Policies
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **ttl**
+            | The default time-to-live (expiration) of the record in seconds. This field will only be used if an apply
+            | transaction's ``ttl`` option in the apply policy is not set.
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |

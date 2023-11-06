@@ -236,6 +236,7 @@ static AerospikeConstants aerospike_constants[] = {
     {AS_RECORD_DEFAULT_TTL, "TTL_NAMESPACE_DEFAULT"},
     {AS_RECORD_NO_EXPIRE_TTL, "TTL_NEVER_EXPIRE"},
     {AS_RECORD_NO_CHANGE_TTL, "TTL_DONT_UPDATE"},
+    {AS_RECORD_CLIENT_DEFAULT_TTL, "TTL_CLIENT_DEFAULT"},
     {AS_AUTH_INTERNAL, "AUTH_INTERNAL"},
     {AS_AUTH_EXTERNAL, "AUTH_EXTERNAL"},
     {AS_AUTH_EXTERNAL_INSECURE, "AUTH_EXTERNAL_INSECURE"},
@@ -628,6 +629,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
         //POLICY_SET_FIELD(gen, as_policy_gen); removed
         POLICY_SET_FIELD(commit_level, as_policy_commit_level);
         POLICY_SET_FIELD(durable_delete, bool);
+        POLICY_SET_FIELD(ttl, uint32_t);
 
         // C client 5.0 new expressions
         POLICY_SET_EXPRESSIONS_BASE_FIELD();
@@ -882,6 +884,7 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(replica, as_policy_replica);
         POLICY_SET_FIELD(compression_threshold, uint32_t);
+        POLICY_SET_FIELD(ttl, uint32_t);
 
         // C client 5.0 new expressions
         POLICY_SET_EXPRESSIONS_BASE_FIELD();

@@ -556,6 +556,10 @@ Policies
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+        * **ttl**
+            | The default time-to-live (expiration) of the record in seconds. This field will only be
+            | used on background scan writes if the ``ttl`` parameter in :meth:`Scan.execute_background` is not
+            | set.
 
 .. _aerospike_scan_options:
 

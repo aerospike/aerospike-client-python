@@ -2205,6 +2205,9 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
     }
+    else if (py_meta == NULL) {
+        ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+    }
     return err->code;
 }
 
