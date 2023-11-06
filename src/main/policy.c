@@ -884,7 +884,6 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(replica, as_policy_replica);
         POLICY_SET_FIELD(compression_threshold, uint32_t);
-        POLICY_SET_FIELD(ttl, uint32_t);
 
         // C client 5.0 new expressions
         POLICY_SET_EXPRESSIONS_BASE_FIELD();

@@ -1137,6 +1137,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
             }
         }
+        else {
+            rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+        }
 
         if (err->code != AEROSPIKE_OK) {
             as_record_destroy(rec);
