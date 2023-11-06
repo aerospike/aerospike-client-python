@@ -42,6 +42,7 @@ Methods
 =======
 
 .. class:: Scan
+    :noindex:
 
     .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
