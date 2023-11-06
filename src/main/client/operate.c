@@ -868,10 +868,8 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     memset(&static_pool, 0, sizeof(static_pool));
     CHECK_CONNECTED(err);
 
-    if (py_meta) {
-        if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
+    if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
 
     for (i = 0; i < size; i++) {
@@ -1041,10 +1039,8 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
         }
     }
 
-    if (py_meta) {
-        if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
-            goto CLEANUP;
-        }
+    if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
 
     for (Py_ssize_t i = 0; i < ops_list_size; i++) {

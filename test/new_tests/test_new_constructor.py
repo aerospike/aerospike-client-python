@@ -4,6 +4,8 @@ import pytest
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers.operations import operations
+from aerospike_helpers.batch.records import Write, BatchRecords
 import copy
 
 gconfig = {}
@@ -201,3 +203,65 @@ def test_setting_batch_policies():
     for policy in policies:
         config["policies"][policy] = {}
     aerospike.client(config)
+
+
+class TestConfigTTL:
+    @pytest.fixture
+    def config_ttl_setup(self, policy_name: str):
+        config = copy.deepcopy(gconfig)
+        self.new_ttl = 9000
+        config["policies"][policy_name] = {
+            "ttl": self.new_ttl
+        }
+        self.client = aerospike.client(config)
+        self.key = ("test", "demo", 0)
+
+        yield
+
+        # Teardown
+        if policy_name == "apply":
+            self.client.udf_remove("test_record_udf.lua")
+
+    def check_ttl(self):
+        _, meta = self.client.exists(self.key)
+        clock_skew_tolerance_secs = 50
+        assert meta["ttl"] in range(self.new_ttl - clock_skew_tolerance_secs, self.new_ttl + clock_skew_tolerance_secs)
+
+    @pytest.mark.parametrize("policy_name", ["write"])
+    def test_setting_write_ttl(self, config_ttl_setup):
+        # Call without setting the ttl in the transaction metadata dict
+        self.client.put(self.key, bins={"a": 1})
+        self.check_ttl()
+
+    @pytest.mark.parametrize("policy_name", ["operate"])
+    def test_setting_operate_ttl(self, config_ttl_setup):
+        # Call without setting the ttl in the transaction metadata dict
+        ops = [
+            operations.write("a", 1)
+        ]
+        self.client.operate(self.key, ops)
+        self.check_ttl()
+
+    @pytest.mark.parametrize("policy_name", ["apply"])
+    def test_setting_apply_ttl(self, config_ttl_setup):
+        # Setup
+        self.client.udf_put("test_record_udf.lua")
+        self.client.put(self.key, {"bin": "a"})
+
+        # Call without setting the ttl in the transaction's apply policy
+        # Args: bin name, str
+        self.client.apply(self.key, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
+        self.check_ttl()
+
+    @pytest.mark.parametrize("policy_name", ["batch_write"])
+    def test_setting_batch_write_ttl(self, config_ttl_setup):
+        # Call without setting the ttl in the Write BatchRecord's metadata dict
+        ops = [
+            operations.write("bin", 1)
+        ]
+        batch_records = BatchRecords([
+            Write(self.key, ops=ops)
+        ])
+        self.client.batch_write(batch_records)
+
+        self.check_ttl()
