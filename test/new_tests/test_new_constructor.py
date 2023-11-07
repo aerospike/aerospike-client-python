@@ -223,8 +223,18 @@ class TestConfigTTL:
         yield
 
         # Teardown
+
         if "apply" in policy_name:
-            self.client.udf_remove("test_record_udf.lua")
+            try:
+                self.client.udf_remove("test_record_udf.lua")
+            except e.UDFError:
+                # In case UDF module does not exist
+                pass
+
+        try:
+            self.client.remove(self.key)
+        except e.RecordNotFound:
+            pass
 
     def check_ttl(self):
         _, meta = self.client.exists(self.key)
@@ -258,6 +268,7 @@ class TestConfigTTL:
 
     @pytest.mark.parametrize("policy_name", ["batch_write"])
     def test_setting_batch_write_ttl(self, config_ttl_setup):
+        # self.client.put(self.key, {"bin": "a"})
         # Call without setting the ttl in the Write BatchRecord's metadata dict
         ops = [
             operations.write("bin", 1)
@@ -265,7 +276,10 @@ class TestConfigTTL:
         batch_records = BatchRecords([
             Write(self.key, ops=ops)
         ])
-        self.client.batch_write(batch_records)
+        brs = self.client.batch_write(batch_records)
+        # assert brs.result == 0
+        for br in brs.batch_records:
+            assert br.result == 0
 
         self.check_ttl()
 
