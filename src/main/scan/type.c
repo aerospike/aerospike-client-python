@@ -100,7 +100,7 @@ static PyMethodDef AerospikeScan_Type_Methods[] = {
     {NULL}};
 
 static PyMemberDef AerospikeScan_Type_custom_members[] = {
-    {"ttl", T_UINT, offsetof(AerospikeScan, scan) + offsetof(as_query, ttl), 0,
+    {"ttl", T_UINT, offsetof(AerospikeScan, scan) + offsetof(as_scan, ttl), 0,
      "The time-to-live (expiration) of the record in seconds."},
     {NULL} /* Sentinel */
 };

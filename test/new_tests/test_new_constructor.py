@@ -6,6 +6,7 @@ import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
+from .test_scan_execute_background import wait_for_job_completion
 import copy
 
 gconfig = {}
@@ -216,10 +217,13 @@ class TestConfigTTL:
         self.client = aerospike.client(config)
         self.key = ("test", "demo", 0)
 
+        if "apply" in policy_name:
+            self.client.udf_put("test_record_udf.lua")
+
         yield
 
         # Teardown
-        if policy_name == "apply":
+        if "apply" in policy_name:
             self.client.udf_remove("test_record_udf.lua")
 
     def check_ttl(self):
@@ -245,7 +249,6 @@ class TestConfigTTL:
     @pytest.mark.parametrize("policy_name", ["apply"])
     def test_setting_apply_ttl(self, config_ttl_setup):
         # Setup
-        self.client.udf_put("test_record_udf.lua")
         self.client.put(self.key, {"bin": "a"})
 
         # Call without setting the ttl in the transaction's apply policy
@@ -263,5 +266,35 @@ class TestConfigTTL:
             Write(self.key, ops=ops)
         ])
         self.client.batch_write(batch_records)
+
+        self.check_ttl()
+
+    @pytest.mark.parametrize("policy_name", ["batch_apply"])
+    def test_setting_batch_apply_ttl(self, config_ttl_setup):
+        # Setup
+        self.client.put(self.key, {"bin": "a"})
+
+        # Call without setting the ttl in batch_apply()'s batch apply policy
+        keys = [
+            self.key
+        ]
+        self.client.batch_apply(keys, module="test_record_udf", function="bin_udf_operation_string", args=["bin", "a"])
+        self.check_ttl()
+
+    @pytest.mark.parametrize("policy_name", ["scan"])
+    def test_setting_scan_ttl(self, config_ttl_setup):
+        # Setup
+        self.client.put(self.key, {"bin": "a"})
+
+        # Tell scan to use client config's scan policy ttl
+        scan = self.client.scan("test", "demo")
+        scan.ttl = aerospike.TTL_CLIENT_DEFAULT
+        ops = [
+            operations.append("bin", "a")
+        ]
+        scan.add_ops(ops)
+        job_id = scan.execute_background()
+
+        wait_for_job_completion(self.client, job_id)
 
         self.check_ttl()
