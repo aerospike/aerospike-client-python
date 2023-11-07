@@ -354,7 +354,6 @@ jobs:
       strategy:
         matrix:
           debian-name: [
-            "buster",
             "bookworm"
           ]
       container:
