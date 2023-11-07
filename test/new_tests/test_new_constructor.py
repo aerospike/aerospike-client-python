@@ -282,7 +282,7 @@ class TestConfigTTL:
         [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}],
         ids=["no metadata", "metadata with special value"]
     )
-    def test_setting_batch_write_ttl(self, config_ttl_setup, meta):
+    def test_setting_batch_write_ttl_with_batch_write(self, config_ttl_setup, meta):
         ops = [
             operations.write("bin", 1)
         ]
@@ -290,6 +290,23 @@ class TestConfigTTL:
             Write(self.key, ops=ops, meta=meta)
         ])
         brs = self.client.batch_write(batch_records)
+        # assert brs.result == 0
+        for br in brs.batch_records:
+            assert br.result == 0
+
+        self.check_ttl()
+
+    @pytest.mark.parametrize("policy_name", ["batch_write"])
+    @pytest.mark.parametrize(
+        "ttl",
+        [None, aerospike.TTL_CLIENT_DEFAULT],
+    )
+    def test_setting_batch_write_ttl_with_batch_operate(self, ttl):
+        ops = [
+            operations.write("bin", 1)
+        ]
+        keys = [self.key]
+        brs = self.client.batch_operate(ops, keys, ttl=ttl)
         # assert brs.result == 0
         for br in brs.batch_records:
             assert br.result == 0
