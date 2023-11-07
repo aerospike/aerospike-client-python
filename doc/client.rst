@@ -2111,8 +2111,6 @@ Batch Write Policies
             | 1. Doesn't contain a metadata dictionary with a ``ttl`` value.
             | 2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
             |
-            | The ttl must be a 32-bit unsigned integer, or a :exc:`~aerospike.exception.ParamError` will be raised.
-            |
             | There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
             |
             | Default: ``0``
