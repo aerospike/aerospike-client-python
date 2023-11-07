@@ -126,7 +126,7 @@ class TestBatchOperate(TestBaseClass):
                 ],
                 {},
                 {},
-                200,
+                9000,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
@@ -171,6 +171,11 @@ class TestBatchOperate(TestBaseClass):
             assert batch_rec.record[2] == exp_rec[i]
             assert batch_rec.key[:3] == keys[i]  # checking key
             assert batch_rec.record[0][:3] == keys[i]  # checking key in record
+
+        if ttl is not None:
+            for key in keys:
+                _, meta = self.as_connection.exists(key)
+                assert meta["ttl"] in range(9000 - 50, 9000 + 50)
 
     def test_batch_operate_many_pos(self):
         """
