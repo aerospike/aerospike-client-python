@@ -29,7 +29,7 @@ Fields
 
     ttl (:class:`int`)
         The time-to-live (expiration) of the record in seconds. Note that ttl
-        is only used on background scan writes. This value must be a valid 32-bit unsigned integer.
+        is only used on background scan writes.
 
         See :ref:`TTL_CONSTANTS` for special values that can be set in the record ttl.
 
