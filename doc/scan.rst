@@ -31,6 +31,9 @@ Fields
         The time-to-live (expiration) of the record in seconds. Note that ttl
         is only used on background scan writes.
 
+        If this is set to :data:`aerospike.TTL_CLIENT_DEFAULT`, the scan will use the
+        client's default write policy ttl.
+
         See :ref:`TTL_CONSTANTS` for special values that can be set in the record ttl.
 
         Default: ``0`` (no limit)
