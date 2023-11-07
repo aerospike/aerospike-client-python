@@ -1508,7 +1508,7 @@ Metadata Dictionary
 
 The metadata dictionary has the following key-value pairs:
 
-    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS`.
+    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS` for possible special values.
     * ``"gen"`` (:class:`int`): record generation
 
 .. _aerospike_policies:
@@ -1576,8 +1576,12 @@ Write Policies
             |
             | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
         * **ttl**
-            | The default time-to-live (expiration) of the record in seconds. This field will only be used if a write
-            | transaction's ``ttl`` option in the metadata dictionary is not set.
+            | The default time-to-live (expiration) of the record in seconds. This field will only be used if the write
+            | transaction:
+            | 1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            | 2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+            |
+            | There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
@@ -1745,7 +1749,11 @@ Operate Policies
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **ttl**
             | The default time-to-live (expiration) of the record in seconds. This field will only be used if an operate
-            | transaction's ``ttl`` option in the metadata dictionary is not set.
+            | transaction:
+            | 1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            | 2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+            |
+            | There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1851,7 +1859,9 @@ Apply Policies
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
         * **ttl**
             | The default time-to-live (expiration) of the record in seconds. This field will only be used if an apply
-            | transaction's ``ttl`` option in the apply policy is not set.
+            | transaction doesn't have an apply policy with a ``ttl`` value that overrides this field.
+            |
+            | There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |
@@ -2095,9 +2105,15 @@ Batch Write Policies
             |
             | Default: None
         * **ttl** :class:`int`
-            | The time-to-live (expiration) in seconds to apply to every record in the batch.
+            | The time-to-live (expiration) in seconds to apply to every record in the batch. This field will only be
+            | used if a :meth:`~aerospike.Client.batch_write` call contains a :class:`~aerospike_helpers.batch.records.Write` that:
+            |
+            | 1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            | 2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
             |
             | The ttl must be a 32-bit unsigned integer, or a :exc:`~aerospike.exception.ParamError` will be raised.
+            |
+            | There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
             |
             | Default: ``0``
 
@@ -2124,20 +2140,11 @@ Batch Apply Policies
         * **ttl** int
             | Time to live (expiration) of the record in seconds.
             |
-            | 0 which means that the
-            | record will adopt the default TTL value from the namespace.
+            | See :ref:`TTL_CONSTANTS` for possible special values.
             |
-            | 0xFFFFFFFF (also, -1 in a signed 32 bit int)
-            | which means that the record
-            | will get an internal "void_time" of zero, and thus will never expire.
-            |
-            | 0xFFFFFFFE (also, -2 in a signed 32 bit int)
-            | which means that the record
-            |
-            | ttl will not change when the record is updated.
             | Note that the TTL value will be employed ONLY on write/update calls.
             |
-            | Default: 0
+            | Default: ``0``
         * **durable_delete** :class:`bool`
             | If the transaction results in a record deletion, leave a tombstone for the record. This prevents deleted records from reappearing after node failures. Valid for Aerospike Server Enterprise Edition only.
             |

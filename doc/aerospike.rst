@@ -858,10 +858,6 @@ Specifies the TTL constants.
 
     Do not change the current TTL of the record.
 
-.. data:: TTL_CLIENT_DEFAULT
-
-    For scans, use the client config's ``ttl`` value in the default scan policy.
-
 .. _auth_mode:
 
 Auth Mode Constants
