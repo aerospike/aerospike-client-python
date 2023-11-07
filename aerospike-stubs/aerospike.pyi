@@ -284,6 +284,7 @@ SERIALIZER_USER: Literal[3]
 TTL_DONT_UPDATE: Literal[0xFFFFFFFE]
 TTL_NAMESPACE_DEFAULT: Literal[0]
 TTL_NEVER_EXPIRE: Literal[0xFFFFFFFF]
+TTL_CLIENT_DEFAULT: Literal[0xFFFFFFFD]
 UDF_TYPE_LUA: Literal[0]
 
 @final
@@ -442,6 +443,7 @@ class Query:
     def where(self, predicate: tuple, ctx: list = ...) -> None: ...
 
 class Scan:
+    ttl: int
     def __init__(self, *args, **kwargs) -> None: ...
     def add_ops(self, ops: list) -> None: ...
     def apply(self, module: str, function: str, arguments: list = ...) -> Any: ...
