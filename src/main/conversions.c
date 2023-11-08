@@ -1118,6 +1118,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                                         "TTL should be an int or long");
                     }
                 }
+                else {
+                    rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+                }
 
                 if (py_gen) {
                     if (PyLong_Check(py_gen)) {
@@ -1136,6 +1139,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     }
                 }
             }
+        }
+        else {
+            rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
         }
 
         if (err->code != AEROSPIKE_OK) {
@@ -2183,6 +2189,10 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             }
             ops->ttl = ttl;
         }
+        else {
+            // Metadata dict was present, but ttl field did not exist
+            ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+        }
 
         if (py_gen) {
             if (PyLong_Check(py_gen)) {
@@ -2204,6 +2214,10 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
     else if (py_meta && (py_meta != Py_None)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
+    }
+    else {
+        // Metadata dict was not set by user
+        ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
     }
     return err->code;
 }

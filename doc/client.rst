@@ -358,7 +358,7 @@ Batch Operations
 
         .. note:: Requires server version >= 6.0.0.
 
-    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
+    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
 
         Perform the same read/write transactions on multiple keys.
 
@@ -366,6 +366,7 @@ Batch Operations
         :param list ops: List of operations to apply.
         :param dict policy_batch: See :ref:`aerospike_batch_policies`.
         :param dict policy_batch_write: See :ref:`aerospike_batch_write_policies`.
+        :param int ttl: The time-to-live (expiration) of each record in seconds.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
@@ -1508,7 +1509,7 @@ Metadata Dictionary
 
 The metadata dictionary has the following key-value pairs:
 
-    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS`.
+    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS` for possible special values.
     * ``"gen"`` (:class:`int`): record generation
 
 .. _aerospike_policies:
@@ -1575,6 +1576,14 @@ Write Policies
             | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
             | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
+        * **ttl**
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if
+            the write transaction:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
@@ -1740,6 +1749,14 @@ Operate Policies
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an
+            operate transaction:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1843,6 +1860,11 @@ Apply Policies
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an apply
+            transaction doesn't have an apply policy with a ``ttl`` value that overrides this field.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |
@@ -2086,11 +2108,21 @@ Batch Write Policies
             |
             | Default: None
         * **ttl** :class:`int`
-            | The time-to-live (expiration) in seconds to apply to every record in the batch.
-            |
-            | The ttl must be a 32-bit unsigned integer, or a :exc:`~aerospike.exception.ParamError` will be raised.
-            |
-            | Default: ``0``
+            The time-to-live (expiration) in seconds to apply to every record in the batch. This field will only be
+            used if:
+            1. A :meth:`~aerospike.Client.batch_write` call contains a :class:`~aerospike_helpers.batch.records.Write` that:
+
+               a. Doesn't contain a metadata dictionary with a ``ttl`` value.
+               b. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            2. A :meth:`~aerospike.Client.batch_operate` call:
+
+               a. Doesn't pass in a `ttl` argument.
+               b. Passes in `aerospike.TTL_CLIENT_DEFAULT` to the `ttl` parameter.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
+
+            Default: ``0``
 
 .. _aerospike_batch_apply_policies:
 
@@ -2115,20 +2147,11 @@ Batch Apply Policies
         * **ttl** int
             | Time to live (expiration) of the record in seconds.
             |
-            | 0 which means that the
-            | record will adopt the default TTL value from the namespace.
+            | See :ref:`TTL_CONSTANTS` for possible special values.
             |
-            | 0xFFFFFFFF (also, -1 in a signed 32 bit int)
-            | which means that the record
-            | will get an internal "void_time" of zero, and thus will never expire.
-            |
-            | 0xFFFFFFFE (also, -2 in a signed 32 bit int)
-            | which means that the record
-            |
-            | ttl will not change when the record is updated.
             | Note that the TTL value will be employed ONLY on write/update calls.
             |
-            | Default: 0
+            | Default: ``0``
         * **durable_delete** :class:`bool`
             | If the transaction results in a record deletion, leave a tombstone for the record. This prevents deleted records from reappearing after node failures. Valid for Aerospike Server Enterprise Edition only.
             |
