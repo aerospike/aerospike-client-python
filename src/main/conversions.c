@@ -2186,6 +2186,10 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             }
             ops->ttl = ttl;
         }
+        else {
+            // Metadata dict was present, but ttl field did not exist
+            ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+        }
 
         if (py_gen) {
             if (PyLong_Check(py_gen)) {
