@@ -576,7 +576,7 @@ Policies
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-        * **ttl**
+        * **ttl** (:class:`int`)
             | The default time-to-live (expiration) of the record in seconds. This field will only be
             | used on background scan writes if :py:attr:`aerospike.Scan.ttl` is set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
             |

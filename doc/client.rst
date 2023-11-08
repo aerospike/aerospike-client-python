@@ -1748,13 +1748,14 @@ Operate Policies
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
-        * **ttl**
-            | The default time-to-live (expiration) of the record in seconds. This field will only be used if an operate
-            | transaction:
-            | 1. Doesn't contain a metadata dictionary with a ``ttl`` value.
-            | 2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
-            |
-            | There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an operate
+            transaction:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1858,11 +1859,11 @@ Apply Policies
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
-        * **ttl**
-            | The default time-to-live (expiration) of the record in seconds. This field will only be used if an apply
-            | transaction doesn't have an apply policy with a ``ttl`` value that overrides this field.
-            |
-            | There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an apply
+            transaction doesn't have an apply policy with a ``ttl`` value that overrides this field.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |
@@ -2106,15 +2107,15 @@ Batch Write Policies
             |
             | Default: None
         * **ttl** :class:`int`
-            | The time-to-live (expiration) in seconds to apply to every record in the batch. This field will only be
-            | used if a :meth:`~aerospike.Client.batch_write` call contains a :class:`~aerospike_helpers.batch.records.Write` that:
-            |
-            | 1. Doesn't contain a metadata dictionary with a ``ttl`` value.
-            | 2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
-            |
-            | There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
-            |
-            | Default: ``0``
+            The time-to-live (expiration) in seconds to apply to every record in the batch. This field will only be
+            used if a :meth:`~aerospike.Client.batch_write` call contains a :class:`~aerospike_helpers.batch.records.Write` that:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
+
+            Default: ``0``
 
 .. _aerospike_batch_apply_policies:
 
