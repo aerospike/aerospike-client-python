@@ -862,7 +862,7 @@ Specifies the TTL constants.
 
     NOTE: only applies to the policies mentioned below.
 
-    Use the applicable client policy ttl in write, operate, batch write, and scan policies.
+    Use the applicable policy ttl in write, operate, batch write, and scan policies.
     If the policy is not defined for the transaction, use the default client-level policy's ttl.
 
 .. _auth_mode:
