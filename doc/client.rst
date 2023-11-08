@@ -358,7 +358,7 @@ Batch Operations
 
         .. note:: Requires server version >= 6.0.0.
 
-    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
+    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], []) -> BatchRecords
 
         Perform the same read/write transactions on multiple keys.
 
@@ -366,6 +366,7 @@ Batch Operations
         :param list ops: List of operations to apply.
         :param dict policy_batch: See :ref:`aerospike_batch_policies`.
         :param dict policy_batch_write: See :ref:`aerospike_batch_write_policies`.
+        :param int ttl: The time-to-live (expiration) of each record in seconds.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
