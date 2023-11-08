@@ -1118,6 +1118,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                                         "TTL should be an int or long");
                     }
                 }
+                else {
+                    rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+                }
 
                 if (py_gen) {
                     if (PyLong_Check(py_gen)) {

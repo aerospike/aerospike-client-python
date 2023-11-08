@@ -256,8 +256,11 @@ class TestConfigTTL:
     @pytest.mark.parametrize("policy_name", ["operate"])
     @pytest.mark.parametrize(
         "meta",
-        [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}],
-        ids=["no metadata", "metadata with special ttl value"]
+        # The reason we also test a metadata dict without ttl for operate()
+        # is the codepath that handles the metadata dict for operate() is different
+        # from that for put()
+        [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
+        ids=["no metadata", "metadata with special ttl value", "metadata without ttl"]
     )
     def test_setting_operate_ttl(self, config_ttl_setup, meta):
         ops = [
