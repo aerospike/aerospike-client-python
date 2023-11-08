@@ -243,7 +243,6 @@ class TestConfigTTL:
         assert meta["ttl"] in range(self.NEW_TTL - clock_skew_tolerance_secs, self.NEW_TTL + clock_skew_tolerance_secs)
 
     @pytest.mark.parametrize("policy_name", ["write"])
-    # The client's write policy ttl should be applied with no policy or a policy with the client default special value
     @pytest.mark.parametrize(
         "meta",
         [None, {"ttl": aerospike.TTL_CLIENT_DEFAULT}, {"gen": 10}],
