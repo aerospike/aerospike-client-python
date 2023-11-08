@@ -32,7 +32,7 @@ Fields
         is only used on background scan writes.
 
         If this is set to :data:`aerospike.TTL_CLIENT_DEFAULT`, the scan will use the
-        client's default write policy ttl.
+        client's default scan policy ttl.
 
         See :ref:`TTL_CONSTANTS` for special values that can be set in the record ttl.
 
