@@ -358,7 +358,7 @@ Batch Operations
 
         .. note:: Requires server version >= 6.0.0.
 
-    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], []) -> BatchRecords
+    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
 
         Perform the same read/write transactions on multiple keys.
 
