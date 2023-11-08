@@ -1577,12 +1577,13 @@ Write Policies
             |
             | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
         * **ttl**
-            | The default time-to-live (expiration) of the record in seconds. This field will only be used if the write
-            | transaction:
-            | 1. Doesn't contain a metadata dictionary with a ``ttl`` value.
-            | 2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
-            |
-            | There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if
+            the write transaction:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
@@ -1749,8 +1750,8 @@ Operate Policies
             |
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **ttl** (:class:`int`)
-            The default time-to-live (expiration) of the record in seconds. This field will only be used if an operate
-            transaction:
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an
+            operate transaction:
 
             1. Doesn't contain a metadata dictionary with a ``ttl`` value.
             2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
@@ -2108,10 +2109,16 @@ Batch Write Policies
             | Default: None
         * **ttl** :class:`int`
             The time-to-live (expiration) in seconds to apply to every record in the batch. This field will only be
-            used if a :meth:`~aerospike.Client.batch_write` call contains a :class:`~aerospike_helpers.batch.records.Write` that:
+            used if:
+            1. A :meth:`~aerospike.Client.batch_write` call contains a :class:`~aerospike_helpers.batch.records.Write` that:
 
-            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
-            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+               a. Doesn't contain a metadata dictionary with a ``ttl`` value.
+               b. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            2. A :meth:`~aerospike.Client.batch_operate` call:
+
+               a. Doesn't pass in a `ttl` argument.
+               b. Passes in `aerospike.TTL_CLIENT_DEFAULT` to the `ttl` parameter.
 
             There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
 
