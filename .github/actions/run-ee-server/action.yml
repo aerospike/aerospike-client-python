@@ -15,14 +15,6 @@ inputs:
   server-tag:
     required: true
     default: 'latest'
-  # Github Composite Actions can't access secrets
-  # so we need to pass them in as inputs
-  docker-hub-username:
-    required: false
-    type: string
-  docker-hub-password:
-    required: false
-    type: string
 
 runs:
   using: "composite"
