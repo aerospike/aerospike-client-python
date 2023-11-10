@@ -69,16 +69,16 @@ jobs:
         ]
       fail-fast: false
     steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
 
     - uses: actions/download-artifact@v3
       with:
@@ -143,6 +143,8 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v3
+
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
@@ -150,11 +152,9 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - uses: actions/checkout@v3
-
     - uses: actions/download-artifact@v3
       with:
-        name: ${{ matrix.python-version[1] }}-manylinux-${{ matrix.platform[0] }}
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform[0] == 'aarch64' }}
@@ -215,7 +215,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: ${{ matrix.python-version[1] }}-manylinux-${{ matrix.platform[0] }}
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
 
     - uses: ./.github/actions/run-ee-server
       with:
@@ -271,7 +271,7 @@ jobs:
     # Ubuntu 22.04 uses Python 3.10 by default
     - uses: actions/download-artifact@v3
       with:
-        name: cp310-manylinux-${{ matrix.platform[0] }}
+        name: cp310-manylinux_${{ matrix.platform[0] }}
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform[0] == 'aarch64' }}
