@@ -1,7 +1,6 @@
 name: Stage tests
 
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       use-server-rc:
