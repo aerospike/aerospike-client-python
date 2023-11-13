@@ -486,3 +486,6 @@ class TestHLL(object):
         # Verify we stored the HLL in the list as an HLL type
         _, _, rec = self.as_connection.get(self.test_keys[0])
         assert type(rec["hll_list"][0]) == HyperLogLog
+
+    def test_hll_superclass(self):
+        assert issubclass(HyperLogLog, bytes)
