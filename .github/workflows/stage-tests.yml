@@ -106,7 +106,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install *.tar.gz
 
     - name: Install test dependencies
-      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install -r requirements.txt
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install pytest -c requirements.txt
 
     - name: Run tests
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
@@ -179,7 +179,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install *.whl
 
     - name: Install test dependencies
-      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
 
     - name: Run tests
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
@@ -233,7 +233,7 @@ jobs:
         platforms: arm64
 
     - name: Run distro container
-      run: docker run --name python:${{ matrix.python-version[0] }}-${{ matrix.debian-name }} --platform ${{ matrix.platform[1] }} --detach ${{ matrix.debian-name }} tail -f /dev/null
+      run: docker run --name ${{ matrix.debian-name }} --platform ${{ matrix.platform[1] }} --detach python:${{ matrix.python-version[0] }}-${{ matrix.debian-name }} tail -f /dev/null
 
     - name: Copy repo to container
       run: docker cp . ${{ matrix.debian-name }}:/aerospike-client-python
@@ -245,7 +245,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/ ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install *.whl
 
     - name: Install test dependencies
-      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
 
     - name: Run tests
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
@@ -296,6 +296,12 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - name: Install python 3.10 that comes by default (step 1)
+      run: docker exec Ubuntu apt update
+
+    - name: Install python 3.10 that comes by default (step 2)
+      run: docker exec Ubuntu apt install python3 -y
+
     - name: Make sure pip is installed
       run: docker exec Ubuntu python3.10 -m ensurepip
 
@@ -303,7 +309,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/ Ubuntu python3.10 -m pip install *.whl
 
     - name: Install test dependencies
-      run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pip install -r requirements.txt
+      run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pip install pytest -c requirements.txt
 
     - name: Run tests
       run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
