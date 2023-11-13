@@ -112,6 +112,7 @@ jobs:
       run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version }} -m pytest new_tests/
 
     - uses: ./.github/actions/label-jfrog-build
+      if: ${{ github.event_name == 'workflow_call' }}
       with:
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
@@ -184,6 +185,7 @@ jobs:
       run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pytest new_tests/
 
     - uses: ./.github/actions/label-jfrog-build
+      if: ${{ github.event_name == 'workflow_call' }}
       with:
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
@@ -249,6 +251,7 @@ jobs:
       run: docker exec --name ${{ matrix.debian-name }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pytest new_tests/
 
     - uses: ./.github/actions/label-jfrog-build
+      if: ${{ github.event_name == 'workflow_call' }}
       with:
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
@@ -306,6 +309,7 @@ jobs:
       run: docker exec --name Ubuntu --workdir aerospike-client-python/test python3.10 -m pytest new_tests/
 
     - uses: ./.github/actions/label-jfrog-build
+      if: ${{ github.event_name == 'workflow_call' }}
       with:
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
