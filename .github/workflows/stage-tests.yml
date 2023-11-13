@@ -90,26 +90,26 @@ jobs:
       run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
 
     - name: Install python 3.11 if applicable
-      run: docker exec --name ${{ matrix.distros[1] }} yum install -y python3.11
+      run: docker exec ${{ matrix.distros[1] }} yum install -y python3.11
       if: ${{ matrix.python-version == '3.11' }}
 
     - name: Install build dependencies
-      run: docker exec --name ${{ matrix.distros[1] }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
+      run: docker exec ${{ matrix.distros[1] }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
 
     - name: Make sure pip is installed
-      run: docker exec --name ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m ensurepip
+      run: docker exec ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m ensurepip
 
     - name: Install more build dependencies using pip
-      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version }} -m pip install -r requirements.txt
+      run: docker exec ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version }} -m pip install -r requirements.txt
 
     - name: Install source distribution
-      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version }} -m pip install *.tar.gz
+      run: docker exec ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version }} -m pip install *.tar.gz
 
     - name: Install test dependencies
-      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version }} -m pip install -r requirements.txt
+      run: docker exec ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version }} -m pip install -r requirements.txt
 
     - name: Run tests
-      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version }} -m pytest new_tests/
+      run: docker exec ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version }} -m pytest new_tests/
 
     - uses: ./.github/actions/label-jfrog-build
       if: ${{ github.event_name == 'workflow_call' }}
@@ -169,20 +169,20 @@ jobs:
       run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
 
     - name: Install python 3.11 if applicable
-      run: docker exec --name ${{ matrix.distros[1] }} yum install -y python3.11
+      run: docker exec ${{ matrix.distros[1] }} yum install -y python3.11
       if: ${{ matrix.python-version[0] == '3.11' }}
 
     - name: Make sure pip is installed
-      run: docker exec --name ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m ensurepip
+      run: docker exec ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m ensurepip
 
     - name: Install wheel
-      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version[0] }} -m pip install *.whl
+      run: docker exec ${{ matrix.distros[1] }} --workdir aerospike-client-python/ python${{ matrix.python-version[0] }} -m pip install *.whl
 
     - name: Install test dependencies
-      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
+      run: docker exec ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
 
     - name: Run tests
-      run: docker exec --name ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pytest new_tests/
+      run: docker exec ${{ matrix.distros[1] }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pytest new_tests/
 
     - uses: ./.github/actions/label-jfrog-build
       if: ${{ github.event_name == 'workflow_call' }}
@@ -239,16 +239,16 @@ jobs:
       run: docker cp . ${{ matrix.debian-name }}:/aerospike-client-python
 
     - name: Make sure pip is installed
-      run: docker exec --name ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m ensurepip
+      run: docker exec ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m ensurepip
 
     - name: Install wheel
-      run: docker exec --name ${{ matrix.debian-name }} --workdir aerospike-client-python/ python${{ matrix.python-version[0] }} -m pip install *.whl
+      run: docker exec ${{ matrix.debian-name }} --workdir aerospike-client-python/ python${{ matrix.python-version[0] }} -m pip install *.whl
 
     - name: Install test dependencies
-      run: docker exec --name ${{ matrix.debian-name }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
+      run: docker exec ${{ matrix.debian-name }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
 
     - name: Run tests
-      run: docker exec --name ${{ matrix.debian-name }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pytest new_tests/
+      run: docker exec ${{ matrix.debian-name }} --workdir aerospike-client-python/test python${{ matrix.python-version[0] }} -m pytest new_tests/
 
     - uses: ./.github/actions/label-jfrog-build
       if: ${{ github.event_name == 'workflow_call' }}
@@ -297,16 +297,16 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Make sure pip is installed
-      run: docker exec --name Ubuntu python3.10 -m ensurepip
+      run: docker exec Ubuntu python3.10 -m ensurepip
 
     - name: Install wheel
-      run: docker exec --name Ubuntu --workdir aerospike-client-python/ python3.10 -m pip install *.whl
+      run: docker exec Ubuntu --workdir aerospike-client-python/ python3.10 -m pip install *.whl
 
     - name: Install test dependencies
-      run: docker exec --name Ubuntu --workdir aerospike-client-python/test python3.10 -m pip install -r requirements.txt
+      run: docker exec Ubuntu --workdir aerospike-client-python/test python3.10 -m pip install -r requirements.txt
 
     - name: Run tests
-      run: docker exec --name Ubuntu --workdir aerospike-client-python/test python3.10 -m pytest new_tests/
+      run: docker exec Ubuntu --workdir aerospike-client-python/test python3.10 -m pytest new_tests/
 
     - uses: ./.github/actions/label-jfrog-build
       if: ${{ github.event_name == 'workflow_call' }}
