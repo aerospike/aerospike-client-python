@@ -165,7 +165,7 @@ jobs:
         ref: ${{ github.ref_name }}
 
     - name: Set up QEMU for cross compiling arm64
-      uses: docker/setup-qemu-action@v2
+      uses: docker/setup-qemu-action@v3
       with:
         platforms: all
 
