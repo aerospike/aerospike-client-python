@@ -40,7 +40,7 @@ jobs:
       # added or changed files to the repository.
       contents: write
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -76,7 +76,7 @@ jobs:
     if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
     needs: update-version
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         # Use branch instead of hash that triggered workflow
@@ -130,7 +130,7 @@ jobs:
       if: ${{ !inputs.use-server-rc }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -159,7 +159,7 @@ jobs:
         ]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ github.ref_name }}
@@ -223,7 +223,7 @@ jobs:
         ]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ github.ref_name }}
@@ -272,7 +272,7 @@ jobs:
   manylinux_x86_64_no_test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 
@@ -316,7 +316,7 @@ jobs:
       steps:
       - run: dnf -y update
       - run: dnf -y install git
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           submodules: recursive
 
@@ -359,7 +359,7 @@ jobs:
       container:
         image: python:3.9-${{ matrix.debian-name }}
       steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v3
         with:
@@ -394,7 +394,7 @@ jobs:
             - 3001:3001
             - 3002:3002
       steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - uses: actions/download-artifact@v3
         with:
@@ -430,7 +430,7 @@ jobs:
         os: [macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ github.ref_name }}
@@ -484,7 +484,7 @@ jobs:
             "3.11"
         ]
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ github.ref_name }}
