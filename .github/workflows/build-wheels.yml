@@ -82,7 +82,7 @@ jobs:
         # Use branch instead of hash that triggered workflow
         ref: ${{ github.ref_name }}
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: 3.9
         architecture: 'x64'
@@ -401,7 +401,7 @@ jobs:
           name: manylinux-x86_64-cp39-distros
 
       - name: Set up Python 3.9
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: "3.9"
 
