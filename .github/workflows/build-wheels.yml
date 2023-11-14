@@ -63,7 +63,7 @@ jobs:
         echo -e "${{ env.NEW_TAG }}" > VERSION
 
     - name: Commit new version
-      uses: stefanzweifel/git-auto-commit-action@v4
+      uses: stefanzweifel/git-auto-commit-action@v5
       with:
         commit_message: Bump version to ${{ env.NEW_TAG }}
 
