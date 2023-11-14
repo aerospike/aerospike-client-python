@@ -15,6 +15,9 @@ inputs:
   server-tag:
     required: true
     default: 'latest'
+  network:
+    required: false
+    default: 'bridge'
 
 runs:
   using: "composite"
@@ -67,7 +70,7 @@ runs:
     shell: bash
 
   - name: Run enterprise edition server
-    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc --network ${{ inputs.network }} -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
     shell: bash
 
   - name: Create user in database for tests
