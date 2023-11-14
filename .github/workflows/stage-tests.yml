@@ -58,13 +58,11 @@ jobs:
           # Image name, build-<name> script and container name, JFrog label name
           # We do not officially support alpine linux
           # ["alpine", "alpine"],
-          # Both OS'es support Python 3.9 and 3.11 out of the box
           ["redhat/ubi9", "RHEL9"],
           ["amazonlinux:2023", "AmazonLinux2023"]
         ]
         python-version: [
           '3.9',
-          '3.11'
         ]
       fail-fast: false
     steps:
