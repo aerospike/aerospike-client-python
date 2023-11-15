@@ -316,3 +316,50 @@ jobs:
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         build-number: ${{ inputs.build-number }}
         property-name: 'cat2-ubuntu22.04'
+
+  macOS:
+    needs: build-artifacts
+    strategy:
+      matrix:
+        macos-version: [
+          'macos-11',
+          'macos-12',
+          'macos-13'
+        ]
+        python-version: [
+          ["3.8", "cp38"],
+          ["3.9", "cp39"],
+          ["3.10", "cp310"],
+          ["3.11", "cp311"]
+        ]
+      fail-fast: false
+    runs-on: ${{ matrix.macos-version }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ matrix.python-version[1] }}-macosx_x86_64
+
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version[0] }}
+
+    - name: Install wheel
+      run: python3 -m pip install *.whl
+  
+    - name: Install test dependencies
+      run: python3 -m pip install pytest -c requirements.txt
+      working-directory: test
+
+    - name: Run tests
+      run: python3 -m pytest new_tests/
+      working-directory: test
+
+    - uses: ./.github/actions/label-jfrog-build
+      if: ${{ github.event_name == 'workflow_call' }}
+      with:
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        build-number: ${{ inputs.build-number }}
+        property-name: 'cat2-${{ matrix.macos-version }}'
