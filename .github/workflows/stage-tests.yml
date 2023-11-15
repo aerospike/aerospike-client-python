@@ -345,9 +345,25 @@ jobs:
       with:
         python-version: ${{ matrix.python-version[0] }}
 
+    - name: Install Docker Engine
+      run: brew install colima
+
+    - name: Install Docker client
+      run: brew install docker
+
+    - name: Start Docker Engine
+      run: colima start
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: true
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
     - name: Install wheel
       run: python3 -m pip install *.whl
-  
+
     - name: Install test dependencies
       run: python3 -m pip install pytest -c requirements.txt
       working-directory: test
