@@ -284,15 +284,15 @@ jobs:
     - name: Run distro container
       run: docker run --name Ubuntu --platform ${{ matrix.platform[1] }} --network host --detach ubuntu:22.04 tail -f /dev/null
 
-    - name: Copy repo to container
-      run: docker cp . Ubuntu:/aerospike-client-python
-
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Copy repo to container
+      run: docker cp . Ubuntu:/aerospike-client-python
 
     - name: Install python 3.10 that comes by default (step 1)
       run: docker exec Ubuntu apt update
