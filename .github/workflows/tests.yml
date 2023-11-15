@@ -59,7 +59,7 @@ jobs:
       working-directory: aerospike-client-c/vs
 
     - name: Install build dependencies (pip packages)
-      run: python3 -m pip install build
+      run: python3 -m pip install build -c requirements.txt
 
     - name: Build client
       run: python3 -m build
