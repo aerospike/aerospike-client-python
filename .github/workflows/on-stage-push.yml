@@ -20,9 +20,21 @@ jobs:
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
+  build-rc-artifacts:
+    name: Build RC artifacts
+    needs: promote-dev-build-to-rc
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      server-tag: ${{ inputs.server-tag }}
+      run_tests: true
+      commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+
   upload-to-jfrog:
     name: Upload artifacts to JFrog
-    needs: promote-dev-build-to-rc
+    needs: [
+      build-rc-artifacts,
+      promote-dev-build-to-rc
+    ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       new_version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
@@ -31,7 +43,10 @@ jobs:
       JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
   run-stage-tests:
-    needs: promote-dev-build-to-rc
+    needs: [
+      upload-to-jfrog,
+      promote-dev-build-to-rc
+    ]
     uses: ./.github/workflows/stage-tests.yml
     with:
-      commit_sha: ${{ jobs.promote-dev-build-to-rc.outputs.bump_sha }}
+      commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
