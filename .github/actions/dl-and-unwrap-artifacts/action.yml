@@ -1,0 +1,18 @@
+# This must exist until this feature request is fulfilled:
+# https://github.com/actions/download-artifact/issues/141
+name: 'Unwrap all artifacts'
+description: 'Moves all Github Actions artifacts into a single folder called artifacts/'
+
+runs:
+  using: "composite"
+  steps:
+  - name: Download all artifacts that passed testing
+    uses: actions/download-artifact@v3
+
+  - name: Make folder to store artifacts
+    run: mkdir artifacts
+    shell: bash
+
+  - name: Reorganize artifacts
+    run: find . -type f -exec mv {} artifacts/ \;
+    shell: bash

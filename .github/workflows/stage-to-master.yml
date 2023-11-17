@@ -49,14 +49,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-artifacts
     steps:
-    # TODO: combine artifact download steps into a composite action
-    - uses: actions/download-artifact@v3
-
-    - name: Make folder to store artifacts
-      run: mkdir artifacts
-
-    - name: Reorganize artifacts
-      run: find . -type f -exec mv {} artifacts \;
+    - name: Download and store all artifacts to single folder
+      run: ./.github/actions/dl-and-unwrap-artifacts
 
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
