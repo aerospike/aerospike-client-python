@@ -49,32 +49,12 @@ jobs:
       test-latest-server-release,
       bump-dev-number
     ]
-    runs-on: ubuntu-latest
-    steps:
-    - name: Download all artifacts that passed testing
-      uses: actions/download-artifact@v3
-
-    - name: Make folder to store artifacts
-      run: mkdir artifacts
-
-    - name: Reorganize artifacts
-      run: find . -type f -exec mv {} artifacts \;
-
-    - name: Set up JFrog credentials
-      uses: jfrog/setup-jfrog-cli@v3
-      env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
-    - name: Upload passing builds to JFrog
-      # Source path must be in quotes if it contains an asterisk
-      # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name python-client --build-number $NEW_VERSION "artifacts/*" local-aerospike-client-python/aerospike/$NEW_VERSION/
-      env:
-        NEW_VERSION: ${{ needs.bump-dev-number.outputs.new_version }}
-
-    - name: Publish build info
-      run: jf rt build-publish python-client ${{ needs.bump-dev-number.outputs.new_version }}
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      new_version: ${{ needs.bump-dev-number.outputs.new_version }}
+    secrets:
+      JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+      JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
   test-artifacts-with-server-rc:
     if: ${{ inputs.server-tag == 'latest' }}

@@ -11,8 +11,8 @@ on:
         required: true
         options:
         - bump-dev-num
-        - promote-dev-to-rc
-        - promote-rc-to-release
+        - promote-dev-build-to-rc
+        - promote-rc-build-to-release
   workflow_call:
     inputs:
       change:
