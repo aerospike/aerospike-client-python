@@ -9,7 +9,6 @@ on:
       # Debugging option
       # Disable this to skip testing the wheel right after building it
       # This is useful if we need to debug later parts of the pipeline
-      # and are pressed on time
       run_server_release_tests:
         description: "Run server release tests"
         required: true
@@ -25,36 +24,11 @@ on:
 
 jobs:
   bump-dev-number:
-    name: Bump to next dev version
-    runs-on: ubuntu-latest
-    outputs:
-      new_version: ${{ steps.pass-new-version.outputs.new_version }}
-      bump_sha: ${{ steps.pass-bump-commit-sha.outputs.bump_sha }}
-    steps:
-    - uses: actions/checkout@v2
-
-    - run: pip install parver -c requirements.txt
-      working-directory: .github/workflows
-
-    - name: Bump to next release candidate version
-      run: echo NEW_TAG=$(python3 bump-dev-num.py) >> $GITHUB_ENV
-      working-directory: .github/workflows
-
-    - uses: ./.github/actions/bump-commit-version
-      with:
-        new_version: ${{ env.NEW_TAG }}
-        CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
-
-    - name: Pass new version to JFrog upload job
-      id: pass-new-version
-      run: echo "new_version=${{ env.NEW_TAG }}" >> $GITHUB_OUTPUT
-
-    # With the push event, the next job will checkout the commit that triggered the workflow
-    # instead of the bump commit that was just made
-    # So we need to pass the bump commit's hash to the next job so it checks out the right commit
-    - name: Pass SHA for bump commit to next job
-      id: pass-bump-commit-sha
-      run: echo "bump_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'bump-dev-num'
+    secrets:
+      CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
   test-latest-server-release:
     name: Build, install, and test artifacts against latest server release
@@ -103,7 +77,6 @@ jobs:
       run: jf rt build-publish python-client ${{ needs.bump-dev-number.outputs.new_version }}
 
   test-artifacts-with-server-rc:
-    # TODO: should we care about server RCs when backporting?
     if: ${{ inputs.server-tag == 'latest' }}
     needs: [
       upload-to-jfrog,
@@ -113,8 +86,7 @@ jobs:
     with:
       server-tag: ${{ inputs.server-tag }}
       build-number: ${{ needs.bump-dev-number.outputs.new_version }}
-      # We don't need to pass the bump commit hash here
-      # because the commit that the workflow was triggered on has up-to-date tests
+      commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets:
       JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
       JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}

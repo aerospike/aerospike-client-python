@@ -1,0 +1,73 @@
+# Takes in how to bump version as input
+# Commits changes to bump version and outputs the new version and commit hash as output
+
+name: Bump version
+on:
+  workflow_dispatch:
+    inputs:
+      change:
+        type: choice
+        description: Python script name to change version
+        required: true
+        options:
+        - bump-dev-num
+        - promote-dev-to-rc
+        - promote-rc-to-release
+  workflow_call:
+    inputs:
+      change:
+        type: string
+        description: Python script name to change version
+        required: true
+        # Since workflow_call doesn't support 'options' input type,
+        # we take in a string instead that must be one of the following values:
+        # - bump-dev-num
+        # - promote-dev-to-rc
+        # - promote-rc-to-release
+    secrets:
+      CLIENT_BOT_PAT:
+        required: true
+    outputs:
+      new_version: ${{ jobs.bump-version.outputs.new_version }}
+      bump_sha: ${{ jobs.bump-version.outputs.bump_sha }}
+
+jobs:
+  bump-version:
+    name: Bump version
+    runs-on: ubuntu-latest
+    outputs:
+      new_version: ${{ steps.pass-new-version.outputs.new_version }}
+      bump_sha: ${{ steps.pass-bump-commit-sha.outputs.bump_sha }}
+    steps:
+    - uses: actions/checkout@v2
+
+    - run: pip install parver -c requirements.txt
+      working-directory: .github/workflows
+
+    - name: Bump to next release candidate version
+      run: echo NEW_TAG=$(python3 ${{ inputs.change }}.py) >> $GITHUB_ENV
+      working-directory: .github/workflows
+
+    - name: Update __version__ in aerospike module
+      run: sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
+
+    - name: Update version in project metadata file
+      run: echo -e "${{ env.NEW_TAG }}" > VERSION
+
+    - name: Commit new version
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with:
+        commit_message: Auto-bump version to ${{ env.NEW_TAG }}
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
+
+    - name: Pass new version to JFrog upload job
+      id: pass-new-version
+      run: echo "new_version=${{ env.NEW_TAG }}" >> $GITHUB_OUTPUT
+
+    # With the push event, the next job will checkout the commit that triggered the workflow
+    # instead of the bump commit that was just made
+    # So we need to pass the bump commit's hash to the next job so it checks out the right commit
+    - name: Pass SHA for bump commit to next job
+      id: pass-bump-commit-sha
+      run: echo "bump_sha=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT

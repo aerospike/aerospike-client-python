@@ -4,6 +4,9 @@ run-name: Test cibuildwheel artifacts against server RC (server-tag=${{ inputs.s
 on:
   workflow_call:
     inputs:
+      commit_sha:
+        type: string
+        required: false
       # Override the default server version to test against
       # This is helpful if you need to create a backport from an older client major version
       # And that older client major version does not accomodate for breaking changes in the latest server version
@@ -48,6 +51,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        ref: ${{ inputs.commit_sha }}
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform == 'aarch64' }}
@@ -112,6 +117,8 @@ jobs:
     runs-on: macos-12
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.commit_sha }}
 
     - name: Install Docker Engine
       run: brew install colima
@@ -171,6 +178,8 @@ jobs:
       fail-fast: false
     steps:
     - uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.commit_sha }}
 
     - uses: actions/download-artifact@v3
       with:

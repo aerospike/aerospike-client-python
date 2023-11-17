@@ -14,23 +14,13 @@ on:
 
 jobs:
   promote-dev-build-to-rc:
-    # TODO: make sure bump commit is passed to next job
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v2
-
-    - run: pip install parver -c requirements.txt
-      working-directory: .github/workflows
-
-    - name: Bump to next release candidate version
-      run: echo NEW_TAG=$(python3 promote-dev-build-to-rc.py) >> $GITHUB_ENV
-      working-directory: .github/workflows
-
-    - uses: ./.github/actions/bump-commit-version
-      with:
-        new_version: ${{ env.NEW_TAG }}
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'promote-dev-build-to-rc'
+    secrets:
+      CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
     with:
-      run_tests: false
+      commit_sha: ${{ jobs.promote-dev-build-to-rc.outputs.bump_sha }}
