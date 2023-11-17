@@ -1,0 +1,101 @@
+name: Build and upload release artifacts to JFrog
+on:
+  workflow_dispatch:
+
+jobs:
+  fast_forward_master_to_stage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Fetch the whole history to prevent unrelated history errors
+          fetch-depth: '0'
+          # The branch you want to checkout (usually equal to `branchtomerge`)
+          ref: 'stage'
+      - name: Merge Fast Forward
+        uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
+        with:
+          # Branch to merge
+          branchtomerge: stage
+          # Branch that will be updated
+          branch: master
+        env:
+          GITHUB_TOKEN: ${{ secrets.CLIENT_BOT_PAT }}
+
+  promote-rc-build-to-release:
+    needs: fast_forward_master_to_stage
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: promote-rc-build-to-release
+
+  build-artifacts:
+    needs: promote-rc-build-to-release
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: false
+      commit_sha: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
+
+  upload-to-jfrog:
+    name: Upload artifacts to JFrog
+    needs: build-artifacts
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      new_version: ${{ needs.promote-rc-build-to-release.outputs.new_version }}
+    secrets:
+      JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+      JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+  publish-to-pypi:
+    runs-on: ubuntu-latest
+    needs: build-artifacts
+    steps:
+    # TODO: combine artifact download steps into a composite action
+    - uses: actions/download-artifact@v3
+
+    - name: Make folder to store artifacts
+      run: mkdir artifacts
+
+    - name: Reorganize artifacts
+      run: find . -type f -exec mv {} artifacts \;
+
+    - name: Publish package distributions to PyPI
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: artifacts/
+        password: ${{ secrets.PYPI_API_TOKEN }}
+
+  # TODO: rewrite this job
+  # bump-dev-branch-version:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #     with:
+  #       ref: stage
+
+  #   - run: pip install python-semantic-release==7.*
+
+  #   - name: Update stage branch's version
+  #     run: |
+  #       # Get next release version and turn it into a release candidate
+  #       # e.g If current version is 12.0.0 and next release is 13.0.0
+  #       # The new version should be 13.0.0-rc.1
+  #       current_version=$(cat VERSION)
+  #       new_version=$(pysemver bump ${{ inputs.bump }} $current_version)
+  #       new_version=$(pysemver bump prerelease $new_version)
+  #       echo "Bumping $current_version to $new_version"
+  #       echo "NEW_TAG=$new_version" >> $GITHUB_ENV
+
+  #   - name: Update version
+  #     run: |
+  #       sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
+  #       echo -e "${{ env.NEW_TAG }}" > VERSION
+
+  #   - name: Create Pull Request to bump version in stage
+  #     uses: peter-evans/create-pull-request@v5
+  #     with:
+  #       commit-message: Bump version to ${{ env.NEW_TAG }}
+  #       branch: bump-to-${{ env.NEW_TAG }}
+  #       base: stage
+  #       add-paths: VERSION, src/main/aerospike.c
+  #       delete-branch: true
+  #       title: Bump version to ${{ env.NEW_TAG }}

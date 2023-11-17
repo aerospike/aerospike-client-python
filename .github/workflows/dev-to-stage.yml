@@ -20,6 +20,12 @@ jobs:
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
+  run-stage-tests:
+    needs: promote-dev-build-to-rc
+    uses: ./.github/workflows/stage-tests.yml
+    with:
+      commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     needs: promote-dev-build-to-rc
@@ -29,9 +35,3 @@ jobs:
     secrets:
       JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
       JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
-  run-stage-tests:
-    needs: promote-dev-build-to-rc
-    uses: ./.github/workflows/stage-tests.yml
-    with:
-      commit_sha: ${{ jobs.promote-dev-build-to-rc.outputs.bump_sha }}
