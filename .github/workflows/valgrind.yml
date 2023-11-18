@@ -15,6 +15,9 @@ jobs:
   valgrind:
     runs-on: ubuntu-latest
     steps:
+    - name: Collect Workflow Telemetry
+      uses: runforesight/workflow-telemetry-action@v1
+
     - uses: actions/checkout@v2
       with:
         submodules: recursive
