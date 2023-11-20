@@ -81,20 +81,16 @@ class TestGetRole(TestBaseClass):
         """
         Incorrect role name
         """
-        try:
+        with pytest.raises(e.InvalidRole) as excinfo:
             self.client.admin_get_role("usr-sys-admin-test-non-existent")
-
-        except e.InvalidRole as exception:
-            assert exception.code == 70
-            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
+        assert excinfo.value.code == 70
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_admin_get_role_incorrect_role_type(self):
         """
         Incorrect role type
         """
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_get_role(None)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Role name should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Role name should be a string"
