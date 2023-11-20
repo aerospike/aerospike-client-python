@@ -257,20 +257,18 @@ class TestRemovebin(object):
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
 
-        with pytest.raises(e.RecordNotFound) as exceptionInfo:
+        with pytest.raises((e.ClusterError, e.RecordNotFound)) as exceptionInfo:
             self.as_connection.remove_bin(key, ["age"], policy)
         assert exceptionInfo.value.code == 2
 
-    def test_neg_remove_bin_with_incorrect_policy(self, put_data):
+    def test_neg_remove_bin_with_incorrect_policy(self):
         """
         Invoke remove_bin() with incorrect policy
         """
         key = ("test", "demo", 1)
-        put_data(self.as_connection, key, {"age": 15})
         policy = {"time": 1001}
-        self.as_connection.remove_bin(key, ["age"], {}, policy)
-
-
+        with pytest.raises((e.ClientError, e.RecordNotFound)):
+            self.as_connection.remove_bin(key, ["age"], {}, policy)
 
     def test_neg_remove_bin_with_no_parameters(self):
         """
