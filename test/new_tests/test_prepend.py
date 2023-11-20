@@ -353,11 +353,12 @@ class TestPrepend:
         Invoke prepend() with incorrect policy
         """
         key = ("test", "demo", 1)
+        policy = {"total_timeout": 0.5}
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.prepend(key, "name", "str", {}, policy)
 
         assert excinfo.value.code == -2
-        assert excinfo.value.msg == "timeout is invalid"
+        assert excinfo.value.msg == "total_timeout is invalid"
 
     @pytest.mark.parametrize(
         "key, bin, value, meta, policy, ex_code, ex_msg",
