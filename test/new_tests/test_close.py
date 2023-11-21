@@ -30,11 +30,10 @@ class TestClose:
         self.client = aerospike.client(config)
         self.client.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             self.closeobject = self.client.close()
 
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_neg_close(self):
         """
