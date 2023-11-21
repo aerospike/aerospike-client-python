@@ -112,15 +112,12 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install pytest -c requirements.txt
 
     - name: Run tests
+      id: test
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
 
-    - uses: ./.github/actions/label-jfrog-build
-      if: ${{ github.event_name == 'workflow_call' }}
-      with:
-        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        build-number: ${{ inputs.build-number }}
-        property-name: 'cat1-${{ matrix.distros[2] }}'
+    - name: Set output
+      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      run: echo "${{ github.job }}:${{ matrix.distros[1] }}=${{ steps.test.outcome }}"
 
 # We also run some wheel (QE test category 2) tests
 # because of the same reason we have some source distribution tests
@@ -187,15 +184,12 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
 
     - name: Run tests
+      id: test
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
-    - uses: ./.github/actions/label-jfrog-build
-      if: ${{ github.event_name == 'workflow_call' }}
-      with:
-        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        build-number: ${{ inputs.build-number }}
-        property-name: 'cat2-${{ matrix.distros[1] }}'
+    - name: Set output
+      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      run: echo "${{ github.job }}:${{ matrix.distros[1] }}=${{ steps.test.outcome }}"
 
   manylinux_x86_64_debian:
     needs: build-artifacts
@@ -255,15 +249,12 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
 
     - name: Run tests
+      id: test
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
-    - uses: ./.github/actions/label-jfrog-build
-      if: ${{ github.event_name == 'workflow_call' }}
-      with:
-        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        build-number: ${{ inputs.build-number }}
-        property-name: 'cat2-debian-${{ matrix.debian-name }}'
+    - name: Set output
+      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      run: echo "${{ github.job }}:${{ matrix.debian-name }}:${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}=${{ steps.test.outcome }}"
 
   manylinux_x86_64_ubuntu2204:
     needs: build-artifacts
@@ -318,15 +309,12 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pip install pytest -c requirements.txt
 
     - name: Run tests
+      id: test
       run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
 
-    - uses: ./.github/actions/label-jfrog-build
-      if: ${{ github.event_name == 'workflow_call' }}
-      with:
-        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        build-number: ${{ inputs.build-number }}
-        property-name: 'cat2-ubuntu22.04'
+    - name: Set output
+      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      run: echo "${{ github.job }}:cp310-manylinux_${{ matrix.platform[0] }}=${{ steps.test.outcome }}"
 
   macOS:
     needs: build-artifacts
@@ -384,10 +372,22 @@ jobs:
       run: python3 -m pytest new_tests/
       working-directory: test
 
-    - uses: ./.github/actions/label-jfrog-build
-      if: ${{ github.event_name == 'workflow_call' }}
-      with:
-        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        build-number: ${{ inputs.build-number }}
-        property-name: 'cat2-${{ matrix.macos-version }}'
+    # - uses: ./.github/actions/label-jfrog-build
+    #   if: ${{ github.event_name == 'workflow_call' }}
+    #   with:
+    #     JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+    #     JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+    #     build-number: ${{ inputs.build-number }}
+    #     property-name: 'cat2-${{ matrix.macos-version }}'
+
+  filter-artifacts:
+    needs: [
+      sdist-tests,
+      manylinux_x86_64_rhel_based,
+      manylinux_x86_64_debian,
+      manylinux_x86_64_ubuntu2204,
+      macOS
+    ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@v3
