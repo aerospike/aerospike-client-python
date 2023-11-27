@@ -709,12 +709,10 @@ class TestGetPut:
         policy = {"gen": aerospike.POLICY_GEN_GT}
         meta = {"gen": gen}
 
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.put(key, rec, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
-            assert exception.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
+        assert excinfo.value.code == 3
+        assert excinfo.value.msg == "AEROSPIKE_ERR_RECORD_GENERATION"
 
         (key, meta, bins) = self.as_connection.get(key)
         assert {"name": "John"} == bins
@@ -821,14 +819,11 @@ class TestGetPut:
 
         bins = {"no": 111111111111111111111111111111111111111111111}
 
-        try:
+        with pytest.raises((e.ParamError, SystemError)) as excinfo:
             assert 0 == self.as_connection.put(key, bins)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "integer value exceeds sys.maxsize"
-        except SystemError:
-            pass
+        if excinfo.type == e.ParamError:
+            assert excinfo.value.code == -2
+            assert excinfo.value.msg == "integer value exceeds sys.maxsize"
 
     def test_edge_put_with_key_as_an_integer_greater_than_maxsize(self):
         """

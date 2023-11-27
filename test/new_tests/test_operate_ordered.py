@@ -604,11 +604,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             key, meta, _ = self.as_connection.operate_ordered(key, llist, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
@@ -635,11 +633,9 @@ class TestOperateOrdered(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             (key, meta, _) = self.as_connection.operate_ordered(key, llist, meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
+        assert excinfo.value.code == 3
 
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
