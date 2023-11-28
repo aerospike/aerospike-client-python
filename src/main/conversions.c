@@ -771,7 +771,7 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static bool is_aerospike_hll_type(PyObject *obj)
+bool is_aerospike_hll_type(PyObject *obj)
 {
     if (strcmp(obj->ob_type->tp_name, "HyperLogLog")) {
         // Class name is not HyperLogLog

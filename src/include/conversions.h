@@ -227,3 +227,4 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          as_batch_result *bres,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist);
+bool is_aerospike_hll_type(PyObject *obj);

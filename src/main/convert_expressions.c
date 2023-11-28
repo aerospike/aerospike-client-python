@@ -564,6 +564,13 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
             as_exp_val((as_val *)as_val_reserve(&as_cmp_inf));
         *new_entry = tmp_entry;
     }
+    else if (is_aerospike_hll_type(py_obj)) {
+        as_bytes *bytes = NULL;
+        pyobject_to_val(self, err, py_obj, &bytes, static_pool,
+                        serializer_type);
+        as_exp_entry tmp_entry = as_exp_val(bytes);
+        *new_entry = tmp_entry;
+    }
     else {
         if (PyFloat_Check(py_obj)) {
             double d = PyFloat_AsDouble(py_obj);
