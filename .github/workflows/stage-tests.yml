@@ -219,23 +219,23 @@ jobs:
         platforms: arm64
 
     - name: Run distro container
-      run: docker run --name ${{ matrix.combos[0][0] }} --platform ${{ matrix.combos[2][1] }} --network host --detach python:${{ matrix.combos[1][0] }}-${{ matrix.combos[0][0] }} tail -f /dev/null
+      run: docker run --name ${{ matrix.combos[0] }} --platform ${{ matrix.combos[2][1] }} --network host --detach python:${{ matrix.combos[1][0] }}-${{ matrix.combos[0] }} tail -f /dev/null
 
     - name: Copy repo to container
-      run: docker cp . ${{ matrix.combos[0][0] }}:/aerospike-client-python
+      run: docker cp . ${{ matrix.combos[0] }}:/aerospike-client-python
 
     - name: Make sure pip is installed
-      run: docker exec ${{ matrix.combos[0][0] }} python${{ matrix.combos[1][0] }} -m ensurepip
+      run: docker exec ${{ matrix.combos[0] }} python${{ matrix.combos[1][0] }} -m ensurepip
 
     - name: Install wheel
-      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.combos[0][0] }} python${{ matrix.combos[1][0] }} -m pip install *.whl
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.combos[0] }} python${{ matrix.combos[1][0] }} -m pip install *.whl
 
     - name: Install test dependencies
-      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.combos[0][0] }} python${{ matrix.combos[1][0] }} -m pip install pytest -c requirements.txt
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.combos[0] }} python${{ matrix.combos[1][0] }} -m pip install pytest -c requirements.txt
 
     - name: Run tests
       id: test
-      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.combos[0][0] }} python${{ matrix.combos[1][0] }} -m pytest new_tests/
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.combos[0] }} python${{ matrix.combos[1][0] }} -m pytest new_tests/
 
     - uses: cloudposse/github-action-matrix-outputs-write@main
       id: out
