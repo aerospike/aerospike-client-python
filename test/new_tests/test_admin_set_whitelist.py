@@ -155,9 +155,9 @@ class TestSetWhitelist(TestBaseClass):
         Incorrect role type
         """
         with pytest.raises(e.ParamError) as excinfo:
-            self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=None)
+            self.client.admin_set_whitelist(role="usr-sys-admin-test", whitelist=1)
         assert excinfo.value.code == -2
-        assert excinfo.value.msg == "Whitelist must be a list of IP strings."
+        assert excinfo.value.msg == "Whitelist must be a list of IP strings, or None."
 
     def test_admin_set_whitelist_forbiden_host(self):
         """
