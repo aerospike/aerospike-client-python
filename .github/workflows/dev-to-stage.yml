@@ -26,9 +26,38 @@ jobs:
     with:
       commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
 
+  filter-artifacts:
+    needs: run-stage-tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download built artifacts and matrix outputs
+      uses: actions/download-artifact@v3
+
+    - name: Make folder to store artifacts
+      run: mkdir matrix-outputs
+      shell: bash
+
+    - name: Reorganize matrix outputs
+      run: find . -type f -path "*.txt" -exec mv {} matrix-outputs \;
+      shell: bash
+
+    - name: Filter artifacts
+      id: filter-output
+      run: echo bad_artifacts=$(python3 filter-artifacts.py) >> $GITHUB_OUTPUT
+
+    - name: Remove failed artifacts and matrix outputs
+      uses: geekyeggo/delete-artifact@v2
+      with:
+        name: |
+          ${{ steps.filter-output.outputs.bad_artifacts }}
+          *.txt
+
   upload-to-jfrog:
     name: Upload artifacts to JFrog
-    needs: promote-dev-build-to-rc
+    needs: [
+      promote-dev-build-to-rc,
+      filter-artifacts
+    ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       new_version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}

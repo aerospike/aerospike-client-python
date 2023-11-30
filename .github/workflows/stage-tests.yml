@@ -117,12 +117,15 @@ jobs:
 
     - name: Set output
       if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
-      run: echo "${{ github.job }}:${{ matrix.distros[1] }}=${{ steps.test.outcome }}"
+      uses: ./.github/actions/set-matrix-output
+      with:
+        file-name: sdist:${{ matrix.distros[1] }}.txt
+        test-outcome: ${{ steps.test.outcome }}
 
 # We also run some wheel (QE test category 2) tests
 # because of the same reason we have some source distribution tests
 
-  manylinux_x86_64_rhel_based:
+  manylinux_rhel_based:
     needs: build-artifacts
     strategy:
       matrix:
@@ -189,9 +192,12 @@ jobs:
 
     - name: Set output
       if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
-      run: echo "${{ github.job }}:${{ matrix.distros[1] }}=${{ steps.test.outcome }}"
+      uses: ./.github/actions/set-matrix-output
+      with:
+        file-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}:${{ matrix.distros[1] }}.txt
+        test-outcome: ${{ steps.test.outcome }}
 
-  manylinux_x86_64_debian:
+  manylinux_debian:
     needs: build-artifacts
     runs-on: ubuntu-latest
     strategy:
@@ -254,9 +260,12 @@ jobs:
 
     - name: Set output
       if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
-      run: echo "${{ github.job }}:${{ matrix.debian-name }}:${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}=${{ steps.test.outcome }}"
+      uses: ./.github/actions/set-matrix-output
+      with:
+        file-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}:${{ matrix.debian-name }}.txt
+        test-outcome: ${{ steps.test.outcome }}
 
-  manylinux_x86_64_ubuntu2204:
+  manylinux_ubuntu2204:
     needs: build-artifacts
     strategy:
       matrix:
@@ -314,7 +323,10 @@ jobs:
 
     - name: Set output
       if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
-      run: echo "${{ github.job }}:cp310-manylinux_${{ matrix.platform[0] }}=${{ steps.test.outcome }}"
+      uses: ./.github/actions/set-matrix-output
+      with:
+        file-name: cp310-manylinux_${{ matrix.platform[0] }}:ubuntu2204.txt
+        test-outcome: ${{ steps.test.outcome }}
 
   macOS:
     needs: build-artifacts
@@ -370,24 +382,12 @@ jobs:
 
     - name: Run tests
       run: python3 -m pytest new_tests/
+      id: test
       working-directory: test
 
-    # - uses: ./.github/actions/label-jfrog-build
-    #   if: ${{ github.event_name == 'workflow_call' }}
-    #   with:
-    #     JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-    #     JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-    #     build-number: ${{ inputs.build-number }}
-    #     property-name: 'cat2-${{ matrix.macos-version }}'
-
-  filter-artifacts:
-    needs: [
-      sdist-tests,
-      manylinux_x86_64_rhel_based,
-      manylinux_x86_64_debian,
-      manylinux_x86_64_ubuntu2204,
-      macOS
-    ]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/download-artifact@v3
+    - name: Set output
+      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      uses: ./.github/actions/set-matrix-output
+      with:
+        file-name: ${{ matrix.python-version[1] }}-macosx_x86_64:${{ matrix.macos-version }}.txt
+        test-outcome: ${{ steps.test.outcome }}
