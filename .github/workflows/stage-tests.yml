@@ -382,7 +382,7 @@ jobs:
     steps:
     - uses: actions/download-artifact@v3
 
-    - uses: cloudposse/github-action-matrix-outputs-read@v0.1.1
+    - uses: cloudposse/github-action-matrix-outputs-read@main
       id: read
       with:
         matrix-step-name: out
