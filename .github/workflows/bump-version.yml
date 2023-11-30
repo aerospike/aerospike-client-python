@@ -46,8 +46,8 @@ jobs:
     - run: pip install parver -c requirements.txt
       working-directory: .github/workflows
 
-    - name: Bump to next release candidate version
-      run: echo NEW_TAG=$(python3 ${{ inputs.change }}.py) >> $GITHUB_ENV
+    - name: Update version
+      run: echo NEW_TAG=$(python3 ${{ inputs.change }}.py $(cat VERSION)) >> $GITHUB_ENV
       working-directory: .github/workflows
 
     - name: Update __version__ in aerospike module
