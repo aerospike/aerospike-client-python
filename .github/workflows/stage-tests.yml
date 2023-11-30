@@ -186,14 +186,14 @@ jobs:
       matrix:
         # Debian name, Python version, [Artifact platform in file name, Docker platform]
         combos: [
-          ["bookworm", "3.8", "cp38", "x86_64", "linux/amd64"],
-          ["bookworm", "3.9", "cp39", "x86_64", "linux/amd64"],
-          ["bookworm", "3.10", "cp310", "x86_64", "linux/amd64"],
-          ["bookworm", "3.11", "cp311", "x86_64", "linux/amd64"],
-          ["bookworm", "3.8", "cp38", "aarch64", "linux/arm64"],
-          ["bookworm", "3.9", "cp39", "aarch64", "linux/arm64"],
-          ["bookworm", "3.10", "cp310", "aarch64", "linux/arm64"],
-          ["bookworm", "3.11", "cp311", "aarch64", "linux/arm64"],
+          ["bookworm", ["3.8", "cp38"], ["x86_64", "linux/amd64"]],
+          ["bookworm", ["3.9", "cp39"], ["x86_64", "linux/amd64"]],
+          ["bookworm", ["3.10", "cp310"], ["x86_64", "linux/amd64"]],
+          ["bookworm", ["3.11", "cp311"], ["x86_64", "linux/amd64"]],
+          ["bookworm", ["3.8", "cp38"], ["aarch64", "linux/arm64"]],
+          ["bookworm", ["3.9", "cp39"], ["aarch64", "linux/arm64"]],
+          ["bookworm", ["3.10", "cp310"], ["aarch64", "linux/arm64"]],
+          ["bookworm", ["3.11", "cp311"], ["aarch64", "linux/arm64"]],
         ]
       fail-fast: false
     steps:
