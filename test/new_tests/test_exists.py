@@ -92,15 +92,13 @@ class TestExists:
         """
         Invoke exists() for non-existent data.
         """
-        with pytest.raises(ex) as excinfo:
-            key, meta = self.as_connection.exists(key)
-            assert meta is None
-            """
-            We are making the api backward compatible. In case of RecordNotFound an
-            exception will not be raised. Instead Ok response is returned withe the
-            meta as None. This might change with further releases.
-            """
-        assert excinfo.value.code == ex_code
+        key, meta = self.as_connection.exists(key)
+        assert meta is None
+        """
+        We are making the api backward compatible. In case of RecordNotFound an
+        exception will not be raised. Instead Ok response is returned withe the
+        meta as None. This might change with further releases.
+        """
 
     def test_neg_exists_with_only_key_without_connection(self):
         """
