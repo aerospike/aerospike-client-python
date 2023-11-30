@@ -362,11 +362,8 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with non-existent data
         """
-        try:
+        with pytest.raises(e.RecordNotFound):
             self.as_connection.remove_bin(key, bin_for_removal)
-
-        except e.RecordNotFound:
-            pass
 
     def test_neg_remove_bin_with_extra_parameter(self):
         """
