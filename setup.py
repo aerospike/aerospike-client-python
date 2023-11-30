@@ -165,6 +165,11 @@ os.environ['CPATH'] = ':'.join(include_dirs)
 with io.open(os.path.join(CWD, 'README.rst'), "r", encoding='utf-8') as f:
     long_description = f.read()
 
+
+# Get the version from the relevant file
+with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
+    version = f.read()
+
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
@@ -218,6 +223,7 @@ class CClientClean(clean):
 
 
 setup(
+    version=version.strip(),
     # Data files
     ext_modules=[
         Extension(

@@ -47,14 +47,11 @@ jobs:
       working-directory: .github/workflows
 
     - name: Update version
-      run: echo NEW_TAG=$(python3 ${{ inputs.change }}.py $(cat VERSION)) >> $GITHUB_ENV
+      run: echo NEW_TAG=$(python3 ${{ inputs.change }}.py $(cat VERSION)) >> VERSION
       working-directory: .github/workflows
 
     - name: Update __version__ in aerospike module
       run: sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
-
-    - name: Update version in project metadata file
-      run: echo -e "${{ env.NEW_TAG }}" > VERSION
 
     - name: Commit new version
       uses: stefanzweifel/git-auto-commit-action@v4
