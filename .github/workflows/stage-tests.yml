@@ -17,7 +17,7 @@ on:
     inputs:
       commit_sha:
         type: string
-        required: false
+        required: true
       use-server-rc:
         type: boolean
         required: false
@@ -107,7 +107,9 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
 
     - name: Set output
-      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      # commit_sha would be empty if this was called by workflow_dispatch
+      # It must be set to a valid hash when called by workflow_call
+      if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         file-name: sdist:${{ matrix.distros[1] }}.txt
@@ -182,7 +184,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
     - name: Set output
-      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         file-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}:${{ matrix.distros[1] }}.txt
@@ -250,7 +252,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
     - name: Set output
-      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         file-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}:${{ matrix.debian-name }}.txt
@@ -313,7 +315,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
 
     - name: Set output
-      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         file-name: cp310-manylinux_${{ matrix.platform[0] }}:ubuntu2204.txt
@@ -377,7 +379,7 @@ jobs:
       working-directory: test
 
     - name: Set output
-      if: ${{ github.event_name == 'workflow_call' && !cancelled() }}
+      if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         file-name: ${{ matrix.python-version[1] }}-macosx_x86_64:${{ matrix.macos-version }}.txt
