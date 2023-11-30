@@ -28,8 +28,10 @@ on:
       CLIENT_BOT_PAT:
         required: true
     outputs:
-      new_version: ${{ jobs.bump-version.outputs.new_version }}
-      bump_sha: ${{ jobs.bump-version.outputs.bump_sha }}
+      new_version:
+        value: ${{ jobs.bump-version.outputs.new_version }}
+      bump_sha:
+        value: ${{ jobs.bump-version.outputs.bump_sha }}
 
 jobs:
   bump-version:
