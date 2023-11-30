@@ -225,8 +225,6 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
     as_cdt_ctx_destroy(&ctx);
 
-    return py_obj;
-
 CLEANUP:
     if (py_obj == NULL) {
         PyObject *py_err = NULL;
