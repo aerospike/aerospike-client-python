@@ -29,11 +29,6 @@ on:
         default: 'latest'
         description: 'Server docker image tag'
     secrets:
-      # Required for labelling the JFrog artifacts
-      JFROG_PLATFORM_URL:
-        required: true
-      JFROG_ACCESS_TOKEN:
-        required: true
       # Required for testing against a server RC
       DOCKER_HUB_BOT_USERNAME:
         required: true
