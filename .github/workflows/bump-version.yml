@@ -47,7 +47,7 @@ jobs:
       working-directory: .github/workflows
 
     - name: Update version
-      run: echo NEW_TAG=$(python3 .github/workflows/${{ inputs.change }}.py $(cat VERSION)) >> VERSION
+      run: echo NEW_TAG=$(python3 .github/workflows/${{ inputs.change }}.py $(cat VERSION)) >> $GITHUB_ENV
 
     - name: Update __version__ in aerospike module
       run: sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
