@@ -2,8 +2,8 @@ name: Stage tests
 
 on:
   push:
-    branches:
-    - 'stage'
+    # branches:
+    # - 'stage'
   workflow_dispatch:
     inputs:
       # For creating a backport client version
