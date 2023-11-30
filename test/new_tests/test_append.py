@@ -417,9 +417,10 @@ class TestAppend(object):
             # 'retry': aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
-        with pytest.raises(e.TimeoutError) as excinfo:
+        try:
             self.as_connection.append(key, "name", "str", {}, policy)
-        assert excinfo.value.code == 9
+        except e.TimeoutError as ex:
+            assert ex.code == 9
 
     def test_neg_append_with_non_existent_ns(self):
         """

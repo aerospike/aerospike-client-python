@@ -92,8 +92,12 @@ class TestExists:
         """
         Invoke exists() for non-existent data.
         """
-        key, meta = self.as_connection.exists(key)
-        assert meta is None
+        if ex == e.NamespaceNotFound:
+            with pytest.raises(ex):
+                key, meta = self.as_connection.exists(key)
+        elif ex == e.RecordNotFound:
+            key, meta = self.as_connection.exists(key)
+            assert meta is None
         """
         We are making the api backward compatible. In case of RecordNotFound an
         exception will not be raised. Instead Ok response is returned withe the
