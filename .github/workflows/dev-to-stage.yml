@@ -25,6 +25,7 @@ jobs:
     uses: ./.github/workflows/stage-tests.yml
     with:
       commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+    secrets: inherit
 
   filter-artifacts:
     needs: run-stage-tests
