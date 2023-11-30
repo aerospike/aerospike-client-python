@@ -112,7 +112,7 @@ jobs:
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
-        file-name: sdist:${{ matrix.distros[1] }}.txt
+        file-name: sdist.${{ matrix.distros[1] }}.txt
         test-outcome: ${{ steps.test.outcome }}
 
 # We also run some wheel (QE test category 2) tests
@@ -187,7 +187,7 @@ jobs:
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
-        file-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}:${{ matrix.distros[1] }}.txt
+        file-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.${{ matrix.distros[1] }}.txt
         test-outcome: ${{ steps.test.outcome }}
 
   manylinux_debian:
@@ -255,7 +255,7 @@ jobs:
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
-        file-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}:${{ matrix.debian-name }}.txt
+        file-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.${{ matrix.debian-name }}.txt
         test-outcome: ${{ steps.test.outcome }}
 
   manylinux_ubuntu2204:
@@ -318,7 +318,7 @@ jobs:
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
-        file-name: cp310-manylinux_${{ matrix.platform[0] }}:ubuntu2204.txt
+        file-name: cp310-manylinux_${{ matrix.platform[0] }}.ubuntu2204.txt
         test-outcome: ${{ steps.test.outcome }}
 
   macOS:
@@ -382,5 +382,5 @@ jobs:
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
-        file-name: ${{ matrix.python-version[1] }}-macosx_x86_64:${{ matrix.macos-version }}.txt
+        file-name: ${{ matrix.python-version[1] }}-macosx_x86_64.${{ matrix.macos-version }}.txt
         test-outcome: ${{ steps.test.outcome }}

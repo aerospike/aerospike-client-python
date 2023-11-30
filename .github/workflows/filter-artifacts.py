@@ -7,7 +7,8 @@ os.chdir("matrix-outputs")
 file_names = os.listdir()
 for file_name in file_names:
     # File name format:
-    artifact_name, distro_name = file_name.split(":")
+    # <Artifact name>.<distro name>.txt
+    artifact_name, distro_name = file_name.split(".")[0:2]
     if artifact_name not in artifact_tests:
         artifact_tests[artifact_name] = 1
     else:
