@@ -30,3 +30,4 @@ runs:
   - name: Delete empty directories
     run: find . -type d -delete
     working-directory: ${{ inputs.artifact-filter-pattern }}
+    shell: bash
