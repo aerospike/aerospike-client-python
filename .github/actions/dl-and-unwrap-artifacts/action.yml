@@ -2,17 +2,31 @@
 # https://github.com/actions/download-artifact/issues/141
 name: 'Unwrap all artifacts'
 description: 'Moves all Github Actions artifacts into a single folder called artifacts/'
+inputs:
+  output-folder-name:
+    required: false
+    default: artifacts
+  artifact-filter-pattern:
+    required: false
+    default: "*"
 
 runs:
   using: "composite"
   steps:
+  - name: Make folder to store artifacts
+    run: mkdir ${{ inputs.artifact-filter-pattern }}
+    shell: bash
+
   - name: Download all artifacts that passed testing
     uses: actions/download-artifact@v3
-
-  - name: Make folder to store artifacts
-    run: mkdir artifacts
-    shell: bash
+    with:
+      working-directory: ${{ inputs.artifact-filter-pattern }}
 
   - name: Reorganize artifacts
-    run: find . -type f -exec mv {} artifacts/ \;
+    run: find . -type f -path ${{ inputs.artifact-filter-pattern }} -exec mv {} . \;
+    working-directory: ${{ inputs.artifact-filter-pattern }}
     shell: bash
+
+  - name: Delete empty directories
+    run: find . -type d -delete
+    working-directory: ${{ inputs.artifact-filter-pattern }}

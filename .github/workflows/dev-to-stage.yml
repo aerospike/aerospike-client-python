@@ -35,16 +35,14 @@ jobs:
       with:
         sparse-checkout: |
           .github/workflows/filter-artifacts.py
+          .github/actions/dl-and-unwrap-artifacts
         sparse-checkout-cone-mode: false
 
-    - name: Download built artifacts and matrix outputs
-      uses: actions/download-artifact@v3
-
-    - name: Make folder to store artifacts
-      run: mkdir matrix-outputs
-
-    - name: Reorganize matrix outputs
-      run: find . -type f -path "*.txt" -exec mv {} matrix-outputs \;
+    - name: Get matrix outputs
+      uses: ./.github/actions/dl-and-unwrap-artifacts
+      with:
+        output-folder-name: matrix-outputs
+        artifact-filter-pattern: '*.txt'
 
     - name: Filter artifacts
       id: filter-output
