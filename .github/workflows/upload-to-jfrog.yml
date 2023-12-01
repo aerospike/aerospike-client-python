@@ -17,6 +17,11 @@ jobs:
     name: Upload artifacts to JFrog
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
+      with:
+        sparse-checkout: |
+          .github/actions/dl-and-unwrap-artifacts
+
     - name: Download and store all artifacts to single folder
       run: ./.github/actions/dl-and-unwrap-artifacts
 
