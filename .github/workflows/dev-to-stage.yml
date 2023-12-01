@@ -42,9 +42,11 @@ jobs:
       run: find . -type f -path "*.txt" -exec mv {} matrix-outputs \;
       shell: bash
 
+    - uses: actions/checkout@v2
+
     - name: Filter artifacts
       id: filter-output
-      run: echo bad_artifacts=$(python3 filter-artifacts.py) >> $GITHUB_OUTPUT
+      run: echo bad_artifacts=$(python3 ./.github/workflows/filter-artifacts.py) >> $GITHUB_OUTPUT
 
     - name: Remove failed artifacts and matrix outputs
       uses: geekyeggo/delete-artifact@v2

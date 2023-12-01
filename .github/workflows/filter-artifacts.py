@@ -25,8 +25,6 @@ for file_name in file_names:
             if artifact_name not in artifact_successes:
                 artifact_successes[artifact_name] = 0
 
-os.chdir("..")
-
 failed_artifact_names = [artifact_name for artifact_name in artifact_tests if artifact_tests[artifact_name] - artifact_successes[artifact_name] > 0]
 for name in failed_artifact_names:
     print(name)
