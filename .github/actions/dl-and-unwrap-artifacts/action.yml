@@ -23,7 +23,7 @@ runs:
       path: temp
 
   - name: Reorganize artifacts
-    run: find . -type f -path "${{ inputs.artifact-filter-pattern }}" -print -exec mv {} ../artifacts/ \;
+    run: find . -type f -path "${{ inputs.artifact-filter-pattern }}" -print -exec mv {} ../${{ inputs.output-folder-name }} \;
     working-directory: temp
     shell: bash
 
