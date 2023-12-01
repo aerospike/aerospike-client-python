@@ -40,7 +40,7 @@ jobs:
 
     - uses: ./.github/actions/dl-and-unwrap-artifacts
       with:
-        artifact-filter-pattern: '*.matrix-output'
+        artifact-filter-pattern: '*.txt'
         output-folder-name: matrix-outputs
 
     - name: Filter artifacts
