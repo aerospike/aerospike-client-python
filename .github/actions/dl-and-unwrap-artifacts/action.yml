@@ -23,7 +23,7 @@ runs:
       path: ${{ inputs.output-folder-name }}
 
   - name: Reorganize artifacts
-    run: find . -type f -path ${{ inputs.artifact-filter-pattern }} -exec mv {} . \;
+    run: find . -type f -path "${{ inputs.artifact-filter-pattern }}" -exec mv {} . \;
     working-directory: ${{ inputs.output-folder-name }}
     shell: bash
 
