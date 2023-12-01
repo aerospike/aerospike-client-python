@@ -23,7 +23,7 @@ jobs:
           .github/actions/dl-and-unwrap-artifacts
 
     - name: Download and store all artifacts to single folder
-      run: ./.github/actions/dl-and-unwrap-artifacts
+      uses: ./.github/actions/dl-and-unwrap-artifacts
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v3
