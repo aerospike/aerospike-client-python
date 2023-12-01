@@ -31,6 +31,12 @@ jobs:
     needs: run-stage-tests
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v2
+      with:
+        sparse-checkout: |
+          .github/workflows/filter-artifacts.py
+        sparse-checkout-cone-mode: false
+
     - name: Download built artifacts and matrix outputs
       uses: actions/download-artifact@v3
 
@@ -39,8 +45,6 @@ jobs:
 
     - name: Reorganize matrix outputs
       run: find . -type f -path "*.txt" -exec mv {} matrix-outputs \;
-
-    - uses: actions/checkout@v2
 
     - name: Filter artifacts
       id: filter-output
