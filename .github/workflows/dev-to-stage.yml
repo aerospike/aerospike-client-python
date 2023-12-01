@@ -46,7 +46,8 @@ jobs:
 
     - name: Filter artifacts
       id: filter-output
-      run: echo bad_artifacts=$(python3 ./.github/workflows/filter-artifacts.py) >> $GITHUB_OUTPUT
+      run: echo bad_artifacts=$(python3 filter-artifacts.py) >> $GITHUB_OUTPUT
+      working-directory: ./.github/workflows/
 
     - name: Remove failed artifacts and matrix outputs
       uses: geekyeggo/delete-artifact@v2

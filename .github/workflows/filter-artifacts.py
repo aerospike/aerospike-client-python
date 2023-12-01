@@ -1,9 +1,12 @@
+# Must be run in .github/workflows
 import os
 
 artifact_tests = {}
 artifact_successes = {}
 
-os.chdir("matrix-outputs")
+print(os.getcwd())
+
+os.chdir("../../matrix-outputs")
 file_names = os.listdir()
 for file_name in file_names:
     # File name format:
