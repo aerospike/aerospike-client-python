@@ -75,7 +75,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: sdist
+        name: sdist.build
 
     - name: Run distro container
       run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
@@ -152,7 +152,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.build
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform[0] == 'aarch64' }}
@@ -217,7 +217,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.build
 
     - uses: ./.github/actions/run-ee-server
       with:
@@ -277,7 +277,7 @@ jobs:
     # Ubuntu 22.04 uses Python 3.10 by default
     - uses: actions/download-artifact@v3
       with:
-        name: cp310-manylinux_${{ matrix.platform[0] }}
+        name: cp310-manylinux_${{ matrix.platform[0] }}.build
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform[0] == 'aarch64' }}
@@ -344,7 +344,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: ${{ matrix.python-version[1] }}-macosx_x86_64
+        name: ${{ matrix.python-version[1] }}-macosx_x86_64.build
 
     - uses: actions/setup-python@v4
       with:
