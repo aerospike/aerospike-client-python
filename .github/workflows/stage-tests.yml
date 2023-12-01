@@ -120,7 +120,7 @@ jobs:
 # because of the same reason we have some source distribution tests
 
   manylinux_rhel_based:
-    needs: build-artifacts
+    # needs: build-artifacts
     strategy:
       matrix:
         distros: [
@@ -193,7 +193,7 @@ jobs:
         test-outcome: ${{ steps.test.outcome }}
 
   manylinux_debian:
-    needs: build-artifacts
+    # needs: build-artifacts
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -262,7 +262,7 @@ jobs:
         test-outcome: ${{ steps.test.outcome }}
 
   manylinux_ubuntu2204:
-    needs: build-artifacts
+    # needs: build-artifacts
     strategy:
       matrix:
         platform: [
@@ -326,7 +326,7 @@ jobs:
         test-outcome: ${{ steps.test.outcome }}
 
   macOS:
-    needs: build-artifacts
+    # needs: build-artifacts
     strategy:
       matrix:
         macos-version: [
