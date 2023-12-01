@@ -45,7 +45,7 @@ jobs:
   # We run some source distribution (QE category 1) tests here
   # because QE doesn't have disk space for more Linux distros
   sdist-tests:
-    needs: build-artifacts
+    # needs: build-artifacts
     runs-on: ubuntu-latest
     strategy:
       matrix:
