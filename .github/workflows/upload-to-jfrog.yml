@@ -22,11 +22,10 @@ jobs:
         sparse-checkout: |
           .github/actions/dl-and-unwrap-artifacts
 
-    - uses: dawidd6/action-download-artifact@v2
+    - uses: ./.github/actions/dl-and-unwrap-artifacts
       with:
-        name: '/*.build/'
-        path: matrix-outputs
-        name_is_regexp: true
+        artifact-filter-pattern: '*.build'
+        output-folder-name: artifacts
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v3
