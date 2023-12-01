@@ -20,7 +20,7 @@ runs:
   - name: Download all artifacts that passed testing
     uses: actions/download-artifact@v3
     with:
-      working-directory: ${{ inputs.output-folder-name }}
+      path: ${{ inputs.output-folder-name }}
 
   - name: Reorganize artifacts
     run: find . -type f -path ${{ inputs.artifact-filter-pattern }} -exec mv {} . \;
