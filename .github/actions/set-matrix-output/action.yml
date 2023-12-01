@@ -1,7 +1,7 @@
 name: 'Set matrix output'
 description: 'Use artifacts as a workaround for matrix outputs not being supported'
 inputs:
-  file-name:
+  artifact-name:
     required: true
   test-outcome:
     required: true
@@ -10,11 +10,11 @@ runs:
   using: "composite"
   steps:
   - name: Save output file
-    run: echo ${{ inputs.test-outcome }} > ${{ inputs.file-name }}
+    run: echo ${{ inputs.test-outcome }} > ${{ inputs.artifact-name }}.txt
     shell: bash
 
   - name: Upload output file
     uses: actions/upload-artifact@v3
     with:
-      name: ${{ inputs.file-name }}
-      path: ${{ inputs.file-name }}
+      name: ${{ inputs.artifact-name }}
+      path: ${{ inputs.artifact-name }}.txt
