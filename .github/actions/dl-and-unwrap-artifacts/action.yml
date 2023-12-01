@@ -14,20 +14,20 @@ runs:
   using: "composite"
   steps:
   - name: Make folder to store artifacts
-    run: mkdir ${{ inputs.artifact-filter-pattern }}
+    run: mkdir ${{ inputs.output-folder-name }}
     shell: bash
 
   - name: Download all artifacts that passed testing
     uses: actions/download-artifact@v3
     with:
-      working-directory: ${{ inputs.artifact-filter-pattern }}
+      working-directory: ${{ inputs.output-folder-name }}
 
   - name: Reorganize artifacts
     run: find . -type f -path ${{ inputs.artifact-filter-pattern }} -exec mv {} . \;
-    working-directory: ${{ inputs.artifact-filter-pattern }}
+    working-directory: ${{ inputs.output-folder-name }}
     shell: bash
 
   - name: Delete empty directories
     run: find . -type d -delete
-    working-directory: ${{ inputs.artifact-filter-pattern }}
+    working-directory: ${{ inputs.output-folder-name }}
     shell: bash
