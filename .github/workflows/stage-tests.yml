@@ -61,10 +61,10 @@ jobs:
         ]
       fail-fast: false
     steps:
-    # - uses: actions/checkout@v2
-    #   with:
-    #     submodules: recursive
-    #     ref: ${{ inputs.commit_sha }}
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+        ref: ${{ inputs.commit_sha }}
 
     # - uses: ./.github/actions/run-ee-server
     #   with:
@@ -140,9 +140,9 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-    # - uses: actions/checkout@v3
-    #   with:
-    #     ref: ${{ inputs.commit_sha }}
+    - uses: actions/checkout@v3
+      with:
+        ref: ${{ inputs.commit_sha }}
 
     # - uses: ./.github/actions/run-ee-server
     #   with:
@@ -213,9 +213,9 @@ jobs:
         ]
       fail-fast: false
     steps:
-    # - uses: actions/checkout@v2
-    #   with:
-    #     ref: ${{ inputs.commit_sha }}
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ inputs.commit_sha }}
 
     # - uses: actions/download-artifact@v3
     #   with:
@@ -273,9 +273,9 @@ jobs:
       fail-fast: false
     runs-on: ubuntu-latest
     steps:
-    # - uses: actions/checkout@v2
-    #   with:
-    #     ref: ${{ inputs.commit_sha }}
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ inputs.commit_sha }}
 
     # # Ubuntu 22.04 uses Python 3.10 by default
     # - uses: actions/download-artifact@v3
@@ -342,9 +342,9 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.macos-version }}
     steps:
-    # - uses: actions/checkout@v2
-    #   with:
-    #     ref: ${{ inputs.commit_sha }}
+    - uses: actions/checkout@v2
+      with:
+        ref: ${{ inputs.commit_sha }}
 
     # - uses: actions/download-artifact@v3
     #   with:
