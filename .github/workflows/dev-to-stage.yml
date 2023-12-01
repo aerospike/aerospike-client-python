@@ -36,11 +36,9 @@ jobs:
 
     - name: Make folder to store artifacts
       run: mkdir matrix-outputs
-      shell: bash
 
     - name: Reorganize matrix outputs
       run: find . -type f -path "*.txt" -exec mv {} matrix-outputs \;
-      shell: bash
 
     - uses: actions/checkout@v2
 
