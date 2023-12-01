@@ -22,8 +22,11 @@ jobs:
         sparse-checkout: |
           .github/actions/dl-and-unwrap-artifacts
 
-    - name: Download and store all artifacts to single folder
-      uses: ./.github/actions/dl-and-unwrap-artifacts
+    - uses: dawidd6/action-download-artifact@v2
+      with:
+        name: '*.build'
+        path: matrix-outputs
+        name_is_regexp: true
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v3

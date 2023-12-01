@@ -38,23 +38,30 @@ jobs:
           .github/actions/dl-and-unwrap-artifacts
         sparse-checkout-cone-mode: false
 
-    - name: Get matrix outputs
-      uses: ./.github/actions/dl-and-unwrap-artifacts
+    - uses: dawidd6/action-download-artifact@v2
       with:
-        output-folder-name: matrix-outputs
-        artifact-filter-pattern: '*.txt'
+        name: '*.matrix-outputs'
+        path: matrix-outputs
+        name_is_regexp: true
+
+    - run: ls -R
+
+    # - name: Get matrix outputs
+    #   uses: ./.github/actions/dl-and-unwrap-artifacts
+    #   with:
+    #     output-folder-name: matrix-outputs
+    #     artifact-filter-pattern: '*.txt'
 
     - name: Filter artifacts
       id: filter-output
       run: echo bad_artifacts=$(python3 filter-artifacts.py) >> $GITHUB_OUTPUT
       working-directory: ./.github/workflows/
 
-    - name: Remove failed artifacts and matrix outputs
+    - name: Remove failed artifacts
       uses: geekyeggo/delete-artifact@v2
       with:
         name: |
           ${{ steps.filter-output.outputs.bad_artifacts }}
-          *.txt
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog

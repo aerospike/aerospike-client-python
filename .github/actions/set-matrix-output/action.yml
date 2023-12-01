@@ -16,5 +16,5 @@ runs:
   - name: Upload output file
     uses: actions/upload-artifact@v3
     with:
-      name: ${{ inputs.artifact-name }}
+      name: ${{ inputs.artifact-name }}.matrix-output
       path: ${{ inputs.artifact-name }}.txt
