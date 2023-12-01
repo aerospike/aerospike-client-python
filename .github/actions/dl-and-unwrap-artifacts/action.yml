@@ -28,6 +28,6 @@ runs:
     shell: bash
 
   - name: Delete artifact directories
-    run: find . -type d -print -delete
+    run: find . -type d -print -exec rm -r {} \;
     working-directory: ${{ inputs.output-folder-name }}
     shell: bash
