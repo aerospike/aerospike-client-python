@@ -295,6 +295,7 @@ class TestCreateRole(object):
         self.client.admin_create_role(
             "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         )
+        time.sleep(1)
         with pytest.raises(e.RoleExistsError) as excinfo:
             self.client.admin_create_role(
                 "usr-sys-admin-test", [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
@@ -302,7 +303,6 @@ class TestCreateRole(object):
         assert excinfo.value.code == 71
         assert excinfo.value.msg == "AEROSPIKE_ROLE_ALREADY_EXISTS"
 
-        time.sleep(1)
         status = self.client.admin_drop_role("usr-sys-admin-test")
 
         assert status == 0
