@@ -24,7 +24,7 @@ jobs:
 
     - uses: ./.github/actions/dl-and-unwrap-artifacts
       with:
-        artifact-filter-pattern: '*.build'
+        artifact-filter-pattern: '-path "*.tar.gz" -o -path "*.whl"'
         output-folder-name: artifacts
 
     - name: Set up JFrog credentials

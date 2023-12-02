@@ -6,9 +6,9 @@ inputs:
   output-folder-name:
     required: false
     default: artifacts
-  artifact-filter-pattern:
+  artifact-patterns:
     required: false
-    default: "*"
+    default: ''
 
 runs:
   using: "composite"
@@ -23,7 +23,7 @@ runs:
       path: temp
 
   - name: Reorganize artifacts
-    run: find . -type f -path "${{ inputs.artifact-filter-pattern }}" -print -exec mv {} ../${{ inputs.output-folder-name }} \;
+    run: find . -type f ${{ inputs.artifact-patterns }}" -print -exec mv {} ../${{ inputs.output-folder-name }} \;
     working-directory: temp
     shell: bash
 
