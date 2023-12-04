@@ -388,4 +388,4 @@ jobs:
       with:
         artifact-name: ${{ matrix.python-version[1] }}-macosx_x86_64.${{ matrix.macos-version }}
         # test-outcome: ${{ steps.test.outcome }}
-        test-outcome: success
+        test-outcome: failure
