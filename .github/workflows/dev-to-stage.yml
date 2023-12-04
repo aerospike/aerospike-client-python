@@ -47,7 +47,12 @@ jobs:
       run: python3 filter-artifacts.py
       working-directory: ./.github/workflows/
 
-    - run: echo "bad_artifacts=$(cat failed_artifacts.txt)" >> $GITHUB_OUTPUT
+    - run: |
+        {
+          echo 'bad_artifacts<<EOF'
+          cat failed_artifacts.txt
+          echo EOF
+        } >> $GITHUB_OUTPUT
       id: bad-artifacts
       working-directory: ./.github/workflows/
 
