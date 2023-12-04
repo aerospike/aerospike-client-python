@@ -19,9 +19,9 @@ for file_name in file_names:
         artifact_tests[artifact_name] += 1
 
     with open(file_name) as file:
-        test_outcome = file.read()
+        test_outcome = file.read().strip()
         # The file may end with a new line, so strip whitespace
-        print(f"{artifact_name}, {distro_name}: {test_outcome.strip()}")
+        print(f"{artifact_name}, {distro_name}: {test_outcome}")
         if test_outcome == "success":
             if artifact_name not in artifact_successes:
                 artifact_successes[artifact_name] = 1
