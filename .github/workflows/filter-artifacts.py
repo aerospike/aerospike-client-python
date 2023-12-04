@@ -1,5 +1,4 @@
 # Must be run in .github/workflows
-# NOTE: printing anything will break the workflow because the latter reads this script's output to remove failed artifacts
 import os
 
 artifact_tests = {}
@@ -7,6 +6,9 @@ artifact_successes = {}
 
 os.chdir("../../matrix-outputs")
 file_names = os.listdir()
+
+print("Files in matrix-outputs:", file_names)
+
 for file_name in file_names:
     # File name format:
     # <Artifact name>.<distro name>.txt
@@ -18,6 +20,7 @@ for file_name in file_names:
 
     with open(file_name) as file:
         test_outcome = file.read()
+        print(f"{artifact_name}, {distro_name}: {test_outcome}")
         if test_outcome == "success":
             if artifact_name not in artifact_successes:
                 artifact_successes[artifact_name] = 1
@@ -27,6 +30,7 @@ for file_name in file_names:
             if artifact_name not in artifact_successes:
                 artifact_successes[artifact_name] = 0
 
-failed_artifact_names = [artifact_name for artifact_name in artifact_tests if artifact_tests[artifact_name] - artifact_successes[artifact_name] > 0]
-for name in failed_artifact_names:
-    print(name)
+with open("failed_artifacts.txt", "w") as failed_artifacts_file:
+    failed_artifact_names = [artifact_name for artifact_name in artifact_tests if artifact_tests[artifact_name] - artifact_successes[artifact_name] > 0]
+    for name in failed_artifact_names:
+        failed_artifacts_file.write(f"{name}\n")

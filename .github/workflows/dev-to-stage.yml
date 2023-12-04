@@ -44,15 +44,18 @@ jobs:
         output-folder-name: matrix-outputs
 
     - name: Filter artifacts
-      id: filter-output
-      run: echo bad_artifacts=$(python3 filter-artifacts.py) >> $GITHUB_OUTPUT
+      run: python3 filter-artifacts.py
+      working-directory: ./.github/workflows/
+
+    - run: echo "bad_artifacts=$(cat failed_artifacts.txt)" >> $GITHUB_OUTPUT
+      id: bad-artifacts
       working-directory: ./.github/workflows/
 
     - name: Remove failed artifacts
       uses: geekyeggo/delete-artifact@v2
       with:
         name: |
-          ${{ steps.filter-output.outputs.bad_artifacts }}
+          ${{ steps.bad-artifacts.outputs.bad_artifacts }}
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
