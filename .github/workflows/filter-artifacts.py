@@ -1,14 +1,12 @@
 # Must be run in .github/workflows
+# NOTE: printing anything will break the workflow because the latter reads this script's output to remove failed artifacts
 import os
 
 artifact_tests = {}
 artifact_successes = {}
 
-print(os.getcwd())
-
 os.chdir("../../matrix-outputs")
 file_names = os.listdir()
-print(file_names)
 for file_name in file_names:
     # File name format:
     # <Artifact name>.<distro name>.txt
