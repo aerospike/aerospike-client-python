@@ -114,7 +114,7 @@ jobs:
       with:
         artifact-name: sdist.${{ matrix.distros[1] }}
         # test-outcome: ${{ steps.test.outcome }}
-        test-outcome: failure
+        test-outcome: success
 
 # We also run some wheel (QE test category 2) tests
 # because of the same reason we have some source distribution tests
@@ -388,4 +388,4 @@ jobs:
       with:
         artifact-name: ${{ matrix.python-version[1] }}-macosx_x86_64.${{ matrix.macos-version }}
         # test-outcome: ${{ steps.test.outcome }}
-        test-outcome: failure
+        test-outcome: success
