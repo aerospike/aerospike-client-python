@@ -8,6 +8,7 @@ print(os.getcwd())
 
 os.chdir("../../matrix-outputs")
 file_names = os.listdir()
+print(file_names)
 for file_name in file_names:
     # File name format:
     # <Artifact name>.<distro name>.txt
