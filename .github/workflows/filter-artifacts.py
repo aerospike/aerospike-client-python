@@ -31,9 +31,13 @@ for file_name in file_names:
             if artifact_name not in artifact_successes:
                 artifact_successes[artifact_name] = 0
 
+print(f"Artifact successful test count: {artifact_successes}")
+print(f"Artifact test count: {artifact_tests}")
+
 os.chdir("../.github/workflows")
 
 with open("failed_artifacts.txt", "w") as failed_artifacts_file:
-    failed_artifact_names = [artifact_name for artifact_name in artifact_tests if artifact_tests[artifact_name] - artifact_successes[artifact_name] > 0]
+    failed_artifact_names = [artifact_name for artifact_name in artifact_tests if artifact_successes[artifact_name] != artifact_tests[artifact_name]]
+    print(f"Failed artifacts: {failed_artifact_names}")
     for name in failed_artifact_names:
         failed_artifacts_file.write(f"{name}\n")
