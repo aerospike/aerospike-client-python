@@ -6,7 +6,6 @@ on:
     - 'dev'
   workflow_dispatch:
     inputs:
-      # Debugging option
       # Disable this to skip testing the wheel right after building it
       # This is useful if we need to debug later parts of the pipeline
       run_server_release_tests:
@@ -57,6 +56,7 @@ jobs:
       JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
   test-artifacts-with-server-rc:
+    # For backporting, we don't need to run server RC tests
     if: ${{ inputs.server-tag == 'latest' }}
     needs: [
       upload-to-jfrog,
