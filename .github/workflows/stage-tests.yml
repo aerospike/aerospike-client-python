@@ -380,7 +380,7 @@ jobs:
 
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
-      if: ${{ always() && steps.test.outcome == 'failure' }}
+      if: ${{ steps.test.outcome == 'failure' }}
 
     - name: Set output
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
