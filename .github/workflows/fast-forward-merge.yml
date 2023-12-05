@@ -1,5 +1,6 @@
 name: 'Fast forward merge'
 on:
+  pull_request: # TODO: REMOVE
   workflow_dispatch:
     inputs:
       action:
