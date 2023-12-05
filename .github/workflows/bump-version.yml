@@ -41,7 +41,9 @@ jobs:
       new_version: ${{ steps.pass-new-version.outputs.new_version }}
       bump_sha: ${{ steps.pass-bump-commit-sha.outputs.bump_sha }}
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.CLIENT_BOT_PAT }}
 
     - run: pip install parver -c requirements.txt
       working-directory: .github/workflows
@@ -56,7 +58,6 @@ jobs:
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: Auto-bump version to ${{ env.NEW_TAG }}
-        token: ${{ secrets.CLIENT_BOT_PAT }}
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
 
     - name: Pass new version to JFrog upload job
