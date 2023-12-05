@@ -28,6 +28,7 @@ jobs:
     secrets: inherit
 
   filter-artifacts:
+    if: ${{ !cancelled() }}
     needs: run-stage-tests
     runs-on: ubuntu-latest
     steps:
@@ -64,6 +65,7 @@ jobs:
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
+    if: ${{ !cancelled() }}
     needs: [
       promote-dev-build-to-rc,
       filter-artifacts
