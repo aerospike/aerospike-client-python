@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - 'dev'
+  pull_request:
   workflow_dispatch:
     inputs:
       # Disable this to skip testing the wheel right after building it
