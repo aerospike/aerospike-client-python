@@ -66,45 +66,45 @@ jobs:
         submodules: recursive
         ref: ${{ inputs.commit_sha }}
 
-    # - uses: ./.github/actions/run-ee-server
-    #   with:
-    #     use-server-rc: ${{ inputs.use-server-rc }}
-    #     server-tag: ${{ inputs.server-tag }}
-    #     docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-    #     docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     name: sdist
+    - uses: actions/download-artifact@v3
+      with:
+        name: sdist
 
-    # - name: Run distro container
-    #   run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
+    - name: Run distro container
+      run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
 
-    # - name: Copy repo to container
-    #   run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
 
-    # - name: Install python 3.11 if applicable
-    #   run: docker exec ${{ matrix.distros[1] }} yum install -y python3.11
-    #   if: ${{ matrix.python-version == '3.11' }}
+    - name: Install python 3.11 if applicable
+      run: docker exec ${{ matrix.distros[1] }} yum install -y python3.11
+      if: ${{ matrix.python-version == '3.11' }}
 
-    # - name: Install build dependencies
-    #   run: docker exec ${{ matrix.distros[1] }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
+    - name: Install build dependencies
+      run: docker exec ${{ matrix.distros[1] }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
 
-    # - name: Make sure pip is installed
-    #   run: docker exec ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m ensurepip
+    - name: Make sure pip is installed
+      run: docker exec ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m ensurepip
 
-    # - name: Install more build dependencies using pip
-    #   run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install -r requirements.txt
+    - name: Install more build dependencies using pip
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install -r requirements.txt
 
-    # - name: Install source distribution
-    #   run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install *.tar.gz
+    - name: Install source distribution
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install *.tar.gz
 
-    # - name: Install test dependencies
-    #   run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install pytest -c requirements.txt
+    - name: Install test dependencies
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pip install pytest -c requirements.txt
 
-    # - name: Run tests
-    #   id: test
-    #   run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
 
     - name: Set output
       # commit_sha would be empty if this was called by workflow_dispatch
@@ -113,8 +113,7 @@ jobs:
       uses: ./.github/actions/set-matrix-output
       with:
         artifact-name: sdist.${{ matrix.distros[1] }}
-        # test-outcome: ${{ steps.test.outcome }}
-        test-outcome: success
+        test-outcome: ${{ steps.test.outcome }}
 
 # We also run some wheel (QE test category 2) tests
 # because of the same reason we have some source distribution tests
@@ -144,53 +143,52 @@ jobs:
       with:
         ref: ${{ inputs.commit_sha }}
 
-    # - uses: ./.github/actions/run-ee-server
-    #   with:
-    #     use-server-rc: ${{ inputs.use-server-rc }}
-    #     server-tag: ${{ inputs.server-tag }}
-    #     docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-    #     docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
 
-    # - name: Set up QEMU for cross compiling arm64
-    #   if: ${{ matrix.platform[0] == 'aarch64' }}
-    #   uses: docker/setup-qemu-action@v2
-    #   with:
-    #     platforms: arm64
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
 
-    # - name: Run distro container
-    #   run: docker run --name ${{ matrix.distros[1] }} --platform ${{ matrix.platform[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
+    - name: Run distro container
+      run: docker run --name ${{ matrix.distros[1] }} --platform ${{ matrix.platform[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
 
-    # - name: Copy repo to container
-    #   run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.distros[1] }}:/aerospike-client-python
 
-    # - name: Install python 3.11 if applicable
-    #   run: docker exec ${{ matrix.distros[1] }} yum install -y python3.11
-    #   if: ${{ matrix.python-version[0] == '3.11' }}
+    - name: Install python 3.11 if applicable
+      run: docker exec ${{ matrix.distros[1] }} yum install -y python3.11
+      if: ${{ matrix.python-version[0] == '3.11' }}
 
-    # - name: Make sure pip is installed
-    #   run: docker exec ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m ensurepip
+    - name: Make sure pip is installed
+      run: docker exec ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m ensurepip
 
-    # - name: Install wheel
-    #   run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install *.whl
+    - name: Install wheel
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install *.whl
 
-    # - name: Install test dependencies
-    #   run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
+    - name: Install test dependencies
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
 
-    # - name: Run tests
-    #   id: test
-    #   run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
     - name: Set output
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         artifact-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.${{ matrix.distros[1] }}
-        # test-outcome: ${{ steps.test.outcome }}
-        test-outcome: success
+        test-outcome: ${{ steps.test.outcome }}
 
   manylinux_debian:
     needs: build-artifacts
@@ -217,49 +215,48 @@ jobs:
       with:
         ref: ${{ inputs.commit_sha }}
 
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
 
-    # - uses: ./.github/actions/run-ee-server
-    #   with:
-    #     use-server-rc: ${{ inputs.use-server-rc }}
-    #     server-tag: ${{ inputs.server-tag }}
-    #     docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-    #     docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    # - name: Set up QEMU for cross compiling arm64
-    #   if: ${{ matrix.platform[0] == 'aarch64' }}
-    #   uses: docker/setup-qemu-action@v2
-    #   with:
-    #     platforms: arm64
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
 
-    # - name: Run distro container
-    #   run: docker run --name ${{ matrix.debian-name }} --platform ${{ matrix.platform[1] }} --network host --detach python:${{ matrix.python-version[0] }}-${{ matrix.debian-name }} tail -f /dev/null
+    - name: Run distro container
+      run: docker run --name ${{ matrix.debian-name }} --platform ${{ matrix.platform[1] }} --network host --detach python:${{ matrix.python-version[0] }}-${{ matrix.debian-name }} tail -f /dev/null
 
-    # - name: Copy repo to container
-    #   run: docker cp . ${{ matrix.debian-name }}:/aerospike-client-python
+    - name: Copy repo to container
+      run: docker cp . ${{ matrix.debian-name }}:/aerospike-client-python
 
-    # - name: Make sure pip is installed
-    #   run: docker exec ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m ensurepip
+    - name: Make sure pip is installed
+      run: docker exec ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m ensurepip
 
-    # - name: Install wheel
-    #   run: docker exec --workdir /aerospike-client-python/ ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install *.whl
+    - name: Install wheel
+      run: docker exec --workdir /aerospike-client-python/ ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install *.whl
 
-    # - name: Install test dependencies
-    #   run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
+    - name: Install test dependencies
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pip install pytest -c requirements.txt
 
-    # - name: Run tests
-    #   id: test
-    #   run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
+    - name: Run tests
+      id: test
+      run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
     - name: Set output
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         artifact-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.${{ matrix.debian-name }}
-        # test-outcome: ${{ steps.test.outcome }}
-        test-outcome: success
+        test-outcome: ${{ steps.test.outcome }}
 
   manylinux_ubuntu2204:
     needs: build-artifacts
@@ -277,46 +274,45 @@ jobs:
       with:
         ref: ${{ inputs.commit_sha }}
 
-    # # Ubuntu 22.04 uses Python 3.10 by default
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     name: cp310-manylinux_${{ matrix.platform[0] }}
+    # Ubuntu 22.04 uses Python 3.10 by default
+    - uses: actions/download-artifact@v3
+      with:
+        name: cp310-manylinux_${{ matrix.platform[0] }}
 
-    # - name: Set up QEMU for cross compiling arm64
-    #   if: ${{ matrix.platform[0] == 'aarch64' }}
-    #   uses: docker/setup-qemu-action@v2
-    #   with:
-    #     platforms: arm64
+    - name: Set up QEMU for cross compiling arm64
+      if: ${{ matrix.platform[0] == 'aarch64' }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
 
-    # - name: Run distro container
-    #   run: docker run --name Ubuntu --platform ${{ matrix.platform[1] }} --network host --detach ubuntu:22.04 tail -f /dev/null
+    - name: Run distro container
+      run: docker run --name Ubuntu --platform ${{ matrix.platform[1] }} --network host --detach ubuntu:22.04 tail -f /dev/null
 
-    # - uses: ./.github/actions/run-ee-server
-    #   with:
-    #     use-server-rc: ${{ inputs.use-server-rc }}
-    #     server-tag: ${{ inputs.server-tag }}
-    #     docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-    #     docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    # - name: Copy repo to container
-    #   run: docker cp . Ubuntu:/aerospike-client-python
+    - name: Copy repo to container
+      run: docker cp . Ubuntu:/aerospike-client-python
 
-    # - name: Install python 3.10 that comes by default (step 1)
-    #   run: docker exec Ubuntu apt update
+    - name: Install python 3.10 that comes by default (step 1)
+      run: docker exec Ubuntu apt update
 
-    # - name: Install python 3.10 that comes by default (step 2)
-    #   run: docker exec Ubuntu apt install python3 python3-pip -y
+    - name: Install python 3.10 that comes by default (step 2)
+      run: docker exec Ubuntu apt install python3 python3-pip -y
 
-    # - name: Install wheel
-    #   run: docker exec --workdir /aerospike-client-python/ Ubuntu python3.10 -m pip install *.whl
+    - name: Install wheel
+      run: docker exec --workdir /aerospike-client-python/ Ubuntu python3.10 -m pip install *.whl
 
-    # - name: Install test dependencies
-    #   run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pip install pytest -c requirements.txt
+    - name: Install test dependencies
+      run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pip install pytest -c requirements.txt
 
     - name: Run tests
       id: test
-      # run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
-      run: asdf
+      run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
 
     - name: Set output
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
@@ -324,7 +320,6 @@ jobs:
       with:
         artifact-name: cp310-manylinux_${{ matrix.platform[0] }}.ubuntu2204
         test-outcome: ${{ steps.test.outcome }}
-        # test-outcome: success
 
   macOS:
     needs: build-artifacts
@@ -347,46 +342,45 @@ jobs:
       with:
         ref: ${{ inputs.commit_sha }}
 
-    # - uses: actions/download-artifact@v3
-    #   with:
-    #     name: ${{ matrix.python-version[1] }}-macosx_x86_64
+    - uses: actions/download-artifact@v3
+      with:
+        name: ${{ matrix.python-version[1] }}-macosx_x86_64
 
-    # - uses: actions/setup-python@v4
-    #   with:
-    #     python-version: ${{ matrix.python-version[0] }}
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version[0] }}
 
-    # - name: Install Docker Engine
-    #   run: brew install colima
+    - name: Install Docker Engine
+      run: brew install colima
 
-    # - name: Install Docker client
-    #   run: brew install docker
+    - name: Install Docker client
+      run: brew install docker
 
-    # - name: Start Docker Engine
-    #   run: colima start
+    - name: Start Docker Engine
+      run: colima start
 
-    # - uses: ./.github/actions/run-ee-server
-    #   with:
-    #     use-server-rc: true
-    #     server-tag: ${{ inputs.server-tag }}
-    #     docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-    #     docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: true
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    # - name: Install wheel
-    #   run: python3 -m pip install *.whl
+    - name: Install wheel
+      run: python3 -m pip install *.whl
 
-    # - name: Install test dependencies
-    #   run: python3 -m pip install pytest -c requirements.txt
-    #   working-directory: test
+    - name: Install test dependencies
+      run: python3 -m pip install pytest -c requirements.txt
+      working-directory: test
 
-    # - name: Run tests
-    #   run: python3 -m pytest new_tests/
-    #   id: test
-    #   working-directory: test
+    - name: Run tests
+      run: python3 -m pytest new_tests/
+      id: test
+      working-directory: test
 
     - name: Set output
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         artifact-name: ${{ matrix.python-version[1] }}-macosx_x86_64.${{ matrix.macos-version }}
-        # test-outcome: ${{ steps.test.outcome }}
-        test-outcome: success
+        test-outcome: ${{ steps.test.outcome }}
