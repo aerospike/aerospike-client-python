@@ -313,17 +313,18 @@ jobs:
     # - name: Install test dependencies
     #   run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pip install pytest -c requirements.txt
 
-    # - name: Run tests
-    #   id: test
-    #   run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
+    - name: Run tests
+      id: test
+      # run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
+      run: asdf
 
     - name: Set output
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
       with:
         artifact-name: cp310-manylinux_${{ matrix.platform[0] }}.ubuntu2204
-        # test-outcome: ${{ steps.test.outcome }}
-        test-outcome: success
+        test-outcome: ${{ steps.test.outcome }}
+        # test-outcome: success
 
   macOS:
     needs: build-artifacts
