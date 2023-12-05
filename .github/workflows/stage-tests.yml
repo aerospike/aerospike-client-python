@@ -378,6 +378,10 @@ jobs:
       id: test
       working-directory: test
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ steps.test.outcome == 'failure' }}
+
     - name: Set output
       if: ${{ inputs.commit_sha != '' && !cancelled() }}
       uses: ./.github/actions/set-matrix-output
