@@ -3,13 +3,13 @@ run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inp
 
 # Builds manylinux wheels and source distribution
 # If running tests, publish results in commit status
-# Publishes wheels and source distribution as Github Actions if no tests are run or tests pass
+# Publishes wheels and source distribution on Github Actions if no tests are run or tests pass
 
 on:
   workflow_call:
     inputs:
       # The dev tests test the artifacts against a server release
-      # The stage tests only need to build the artifacts
+      # The stage tests and release workflow only need to build the artifacts
       run_tests:
         description: "Run integration tests"
         required: true
