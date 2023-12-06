@@ -24,6 +24,12 @@ on:
       commit_sha:
         type: string
         required: false
+      # Calling workflow doesn't actually use this
+      # But we need to set this to be true for workflow calls
+      use-server-rc:
+        required: false
+        default: true
+        type: boolean
     secrets:
       # For running a server RC
       # Not necessary when using a server release

@@ -1,6 +1,7 @@
 name: 'Run EE Server'
 description: 'Run EE server'
 inputs:
+  # All inputs in composite actions are strings
   use-server-rc:
     required: true
     default: false
@@ -8,10 +9,8 @@ inputs:
   # so we need to pass them in as inputs
   docker-hub-username:
     required: false
-    type: string
   docker-hub-password:
     required: false
-    type: string
   server-tag:
     required: true
     default: 'latest'
