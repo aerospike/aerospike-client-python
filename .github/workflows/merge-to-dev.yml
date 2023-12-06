@@ -17,14 +17,15 @@ on:
       # Override the default server version to test against
       # This is helpful if you need to create a backport from an older client major version
       # And that older client major version does not accomodate for breaking changes in the latest server version
-      server-tag:
+      server-release-tag:
         required: true
         default: 'latest'
-        description: 'Server docker image tag'
-      run_server_rc_tests:
+        description: 'Server release docker image tag'
+      # In case the latest server RC is faulty for some reason
+      server-rc-tag:
         required: true
-        type: boolean
-        default: true
+        default: 'latest'
+        description: 'Server RC docker image tag'
 
 jobs:
   bump-dev-number:
@@ -39,8 +40,8 @@ jobs:
     needs: bump-dev-number
     uses: ./.github/workflows/build-wheels.yml
     with:
-      server-tag: ${{ inputs.server-tag }}
-      run_tests: ${{ inputs.run_server_release_tests }}
+      server-tag: ${{ github.event == 'workflow_dispatch' && inputs.server-release-tag || 'latest' }}
+      run_tests: ${{ github.event == 'workflow_dispatch' && inputs.run_server_release_tests || true }}
       commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets:
       DOCKER_HUB_BOT_USERNAME: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
@@ -62,14 +63,14 @@ jobs:
       JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
   test-artifacts-with-server-rc:
-    if: ${{ !cancelled() && inputs.run_server_rc_tests }}
+    if: ${{ !cancelled() }}
     needs: [
       upload-to-jfrog,
       bump-dev-number
     ]
     uses: ./.github/workflows/test-server-rc.yml
     with:
-      server-tag: ${{ inputs.server-tag }}
+      server-tag: ${{ github.event == 'workflow_dispatch' && inputs.server-rc-tag || 'latest' }}
       build-number: ${{ needs.bump-dev-number.outputs.new_version }}
       commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets:
