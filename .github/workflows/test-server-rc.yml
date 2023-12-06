@@ -7,7 +7,7 @@ on:
       commit_sha:
         type: string
         required: false
-      # TODO: Not using the following secrets for workflow_call
+      # TODO: Not using the following input for workflow_call
       server-tag:
         type: string
         required: false
