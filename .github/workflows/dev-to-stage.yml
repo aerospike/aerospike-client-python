@@ -4,6 +4,9 @@ on:
   push:
     branches:
     - 'stage'
+    # This is to make sure this workflow doesn't get triggered after a bump commit
+    tags-ignore:
+    - '*rc*'
   workflow_dispatch:
     inputs:
       # For creating a backport client version
