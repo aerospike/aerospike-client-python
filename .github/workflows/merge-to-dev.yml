@@ -6,6 +6,8 @@ on:
     - closed
     branches:
     - 'dev'
+  # For testing only
+  workflow_dispatch:
 
 jobs:
   bump-dev-number:
