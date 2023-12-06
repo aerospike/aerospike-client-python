@@ -20,6 +20,10 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+      run_server_rc_tests:
+        required: true
+        type: boolean
+        default: true
 
 jobs:
   bump-dev-number:
@@ -44,6 +48,7 @@ jobs:
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
+    if: ${{ !cancelled() }}
     needs: [
       test-latest-server-release,
       bump-dev-number
@@ -56,8 +61,7 @@ jobs:
       JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
   test-artifacts-with-server-rc:
-    # For backporting, we don't need to run server RC tests
-    if: ${{ inputs.server-tag == 'latest' }}
+    if: ${{ !cancelled() && inputs.run_server_rc_tests }}
     needs: [
       upload-to-jfrog,
       bump-dev-number
