@@ -4,6 +4,7 @@ on:
   push:
     branches:
     - 'dev'
+    - 'CLIENT-1837-cicd-autobump' # TODO: remove
   workflow_dispatch:
     inputs:
       # Disable this to skip testing the wheel right after building it
