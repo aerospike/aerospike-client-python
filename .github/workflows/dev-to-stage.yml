@@ -8,17 +8,6 @@ on:
     # This is to make sure this workflow doesn't get triggered after a bump commit
     tags-ignore:
     - '*rc*'
-  workflow_dispatch:
-    inputs:
-      # For creating a backport client version
-      server-tag:
-        required: true
-        default: 'latest'
-        description: 'Server docker image tag'
-      use-server-rc:
-        required: true
-        default: false
-        type: boolean
 
 jobs:
   promote-dev-build-to-rc:
@@ -32,8 +21,7 @@ jobs:
     needs: promote-dev-build-to-rc
     uses: ./.github/workflows/stage-tests.yml
     with:
-      server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
-      use-server-rc: ${{ github.event_name == 'workflow_dispatch' && inputs.use-server-rc || false }}
+      use-server-rc: false
       commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
     secrets: inherit
 

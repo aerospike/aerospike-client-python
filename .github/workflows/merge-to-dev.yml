@@ -6,27 +6,6 @@ on:
     - closed
     branches:
     - 'dev'
-  workflow_dispatch:
-    inputs:
-      # Disable this to skip testing the wheel right after building it
-      # This is useful if we need to debug later parts of the pipeline
-      run_server_release_tests:
-        description: "Run server release tests"
-        required: true
-        type: boolean
-        default: true
-      # Override the default server version to test against
-      # This is helpful if you need to create a backport from an older client major version
-      # And that older client major version does not accomodate for breaking changes in the latest server version
-      server-release-tag:
-        required: true
-        default: 'latest'
-        description: 'Server release docker image tag'
-      # In case the latest server RC is faulty for some reason
-      server-rc-tag:
-        required: true
-        default: 'latest'
-        description: 'Server RC docker image tag'
 
 jobs:
   bump-dev-number:
@@ -42,8 +21,6 @@ jobs:
     needs: bump-dev-number
     uses: ./.github/workflows/build-wheels.yml
     with:
-      server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-release-tag || 'latest' }}
-      run_tests: ${{ github.event_name == 'workflow_dispatch' && inputs.run_server_release_tests || true }}
       commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets:
       DOCKER_HUB_BOT_USERNAME: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
@@ -72,7 +49,6 @@ jobs:
     ]
     uses: ./.github/workflows/test-server-rc.yml
     with:
-      server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-rc-tag || 'latest' }}
       build-number: ${{ needs.bump-dev-number.outputs.new_version }}
       commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets:
