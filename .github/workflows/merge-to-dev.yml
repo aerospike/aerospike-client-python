@@ -42,8 +42,8 @@ jobs:
     needs: bump-dev-number
     uses: ./.github/workflows/build-wheels.yml
     with:
-      server-tag: ${{ github.event == 'workflow_dispatch' && inputs.server-release-tag || 'latest' }}
-      run_tests: ${{ github.event == 'workflow_dispatch' && inputs.run_server_release_tests || true }}
+      server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-release-tag || 'latest' }}
+      run_tests: ${{ github.event_name == 'workflow_dispatch' && inputs.run_server_release_tests || true }}
       commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets:
       DOCKER_HUB_BOT_USERNAME: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
@@ -72,7 +72,7 @@ jobs:
     ]
     uses: ./.github/workflows/test-server-rc.yml
     with:
-      server-tag: ${{ github.event == 'workflow_dispatch' && inputs.server-rc-tag || 'latest' }}
+      server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-rc-tag || 'latest' }}
       build-number: ${{ needs.bump-dev-number.outputs.new_version }}
       commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets:

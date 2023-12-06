@@ -15,6 +15,9 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+      use-server-rc:
+        required: true
+        default: false
 
 jobs:
   promote-dev-build-to-rc:
@@ -28,6 +31,8 @@ jobs:
     needs: promote-dev-build-to-rc
     uses: ./.github/workflows/stage-tests.yml
     with:
+      server-tag: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
+      use-server-rc: ${{ github.event_name == 'workflow_dispatch' && inputs.use-server-rc || false }}
       commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
     secrets: inherit
 
