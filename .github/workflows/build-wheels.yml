@@ -485,7 +485,7 @@ jobs:
             "3.9",
             "3.10",
             "3.11",
-          # TODO: Python 3.12 not available on brew
+            "3.12",
         ]
     steps:
     - uses: actions/checkout@v3
