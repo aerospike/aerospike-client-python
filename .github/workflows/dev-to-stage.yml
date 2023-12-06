@@ -18,6 +18,7 @@ on:
       use-server-rc:
         required: true
         default: false
+        type: boolean
 
 jobs:
   promote-dev-build-to-rc:
