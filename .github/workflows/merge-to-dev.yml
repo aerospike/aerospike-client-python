@@ -1,7 +1,9 @@
 name: Bump version, build wheels, and upload RCs to JFrog
 
 on:
-  push:
+  pull_request_target:
+    types:
+    - closed
     branches:
     - 'dev'
   workflow_dispatch:
@@ -28,6 +30,7 @@ on:
 
 jobs:
   bump-dev-number:
+    if: ${{ github.event.pull_request.merged == true }}
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
