@@ -1,20 +1,28 @@
 name: Stage tests
 
 on:
-  push:
-    branches:
-    - 'stage'
-    # This is to make sure this workflow doesn't get triggered after a bump commit
-    tags-ignore:
-    - '*rc*'
-  # For testing only
+  # push:
+  #   branches:
+  #   - 'stage'
+  #   # This is to make sure this workflow doesn't get triggered after a bump commit
+  #   tags-ignore:
+  #   - '*rc*'
+  # # For testing only
   workflow_dispatch:
 
 jobs:
+  fast-forward-stage-to-dev:
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      branch_to_merge: dev
+      base_branch: stage
+
   promote-dev-build-to-rc:
+    needs: fast-forward-stage-to-dev
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
+      commit_sha: stage
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
