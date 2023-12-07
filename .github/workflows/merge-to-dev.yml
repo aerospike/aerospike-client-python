@@ -15,8 +15,7 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
-    secrets:
-      CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
+    secrets: inherit
 
   test-latest-server-release:
     name: Build, install, and test artifacts against latest server release
@@ -24,10 +23,7 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
     with:
       commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
-    secrets:
-      DOCKER_HUB_BOT_USERNAME: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-      DOCKER_HUB_BOT_PW: ${{ secrets.DOCKER_HUB_BOT_PW }}
-      MAC_M1_SELF_HOSTED_RUNNER_PW: ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+    secrets: inherit
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
@@ -39,9 +35,7 @@ jobs:
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       new_version: ${{ needs.bump-dev-number.outputs.new_version }}
-    secrets:
-      JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-      JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+    secrets: inherit
 
   test-artifacts-with-server-rc:
     if: ${{ !cancelled() }}
@@ -53,9 +47,4 @@ jobs:
     with:
       build-number: ${{ needs.bump-dev-number.outputs.new_version }}
       commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
-    secrets:
-      JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-      JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-      DOCKER_HUB_BOT_USERNAME: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-      DOCKER_HUB_BOT_PW: ${{ secrets.DOCKER_HUB_BOT_PW }}
-      MAC_M1_SELF_HOSTED_RUNNER_PW: ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+    secrets: inherit
