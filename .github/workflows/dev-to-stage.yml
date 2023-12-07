@@ -18,6 +18,14 @@ jobs:
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
+  set-new-rc-and-dev-number-in-dev:
+    needs: promote-dev-build-to-rc
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'set-new-rc-and-dev-number-in-dev'
+      commit_sha: dev
+    secrets: inherit
+
   run-stage-tests:
     needs: promote-dev-build-to-rc
     uses: ./.github/workflows/stage-tests.yml

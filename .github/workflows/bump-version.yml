@@ -16,14 +16,17 @@ on:
   workflow_call:
     inputs:
       change:
+        # Since workflow_call doesn't support 'options' input type,
+        # we take in a string instead that must be a valid python script name (excluding the .py part)
+        # Example: bump-dev-num for bump-dev-num.py
         type: string
         description: Python script name to change version
         required: true
-        # Since workflow_call doesn't support 'options' input type,
-        # we take in a string instead that must be one of the following values:
-        # bump-dev-num
-        # promote-dev-to-rc
-        # promote-rc-to-release
+      commit_sha:
+        required: false
+        description: Commit to bump off of
+        default: ''
+        type: string
     secrets:
       CLIENT_BOT_PAT:
         required: true
@@ -44,6 +47,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         token: ${{ secrets.CLIENT_BOT_PAT }}
+        ref: ${{ inputs.commit_sha }}
 
     - run: pip install parver -c requirements.txt
       working-directory: .github/workflows
