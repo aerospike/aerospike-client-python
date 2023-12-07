@@ -1,13 +1,14 @@
 name: 'Fast forward merge'
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
-      branch_to_merge:
+      action:
+        type: choice
+        options:
+        - dev-to-stage
+        - stage-to-master
+        default: dev-to-stage
         required: true
-        type: string
-      base_branch:
-        required: true
-        type: string
 
 jobs:
   merge:
@@ -19,7 +20,13 @@ jobs:
           # Fetch the whole history to prevent unrelated history errors
           fetch-depth: '0'
           # The branch you want to checkout (usually equal to `branchtomerge`)
-          ref: ${{ inputs.branch_to_merge }}
+          ref: 'master'
+
+      - name: Parse input
+        id: parse
+        run: |
+          echo "base_branch=$(echo ${{ inputs.action }} | cut -f 1 -d - -)" >> $GITHUB_OUTPUT
+          echo "target_branch=$(echo ${{ inputs.action }} | cut -f 3 -d - -)" >> $GITHUB_OUTPUT
 
       - name: Merge Fast Forward
         uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0

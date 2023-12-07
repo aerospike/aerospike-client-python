@@ -4,10 +4,23 @@ on:
 
 jobs:
   fast_forward_master_to_stage:
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      branch_to_merge: stage
-      base_branch: master
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          # Fetch the whole history to prevent unrelated history errors
+          fetch-depth: '0'
+          # The branch you want to checkout (usually equal to `branchtomerge`)
+          ref: 'stage'
+      - name: Merge Fast Forward
+        uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
+        with:
+          # Branch to merge
+          branchtomerge: stage
+          # Branch that will be updated
+          branch: master
+        env:
+          GITHUB_TOKEN: ${{ secrets.CLIENT_BOT_PAT }}
 
   promote-rc-build-to-release:
     needs: fast_forward_master_to_stage

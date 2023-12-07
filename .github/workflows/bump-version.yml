@@ -44,7 +44,7 @@ jobs:
       new_version: ${{ steps.pass-new-version.outputs.new_version }}
       bump_sha: ${{ steps.pass-bump-commit-sha.outputs.bump_sha }}
     steps:
-    # The code to get the new version should be from the branch where we called the workflow
+    # The code to get the new version should be from the stage branch, where we called the workflow
     - uses: actions/checkout@v4
 
     - run: pip install parver -c requirements.txt
