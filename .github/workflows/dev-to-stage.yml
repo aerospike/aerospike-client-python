@@ -74,10 +74,17 @@ jobs:
       new_version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
     secrets: inherit
 
-  bump-rc-and-reset-dev-number-in-dev:
+  fast-forward-dev-to-stage:
     needs: upload-to-jfrog
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      branch_to_merge: stage
+      base_branch: dev
+
+  bump-version-in-dev:
+    needs: fast-forward-dev-to-stage
     uses: ./.github/workflows/bump-version.yml
     with:
-      change: 'bump-rc-and-reset-dev-number-in-dev'
+      change: 'bump-rc-and-reset-dev-number'
       commit_sha: dev
     secrets: inherit

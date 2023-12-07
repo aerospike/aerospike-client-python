@@ -6,6 +6,7 @@ on:
     # This is to make sure this workflow doesn't get triggered after a bump commit
     tags-ignore:
     - '*'
+  # For testing only
   workflow_dispatch:
 
 jobs:
@@ -42,10 +43,24 @@ jobs:
         packages-dir: artifacts/
         password: ${{ secrets.PYPI_API_TOKEN }}
 
-  set-new-rc-and-dev-number-in-dev:
-    needs: upload-to-jfrog
+  fast-forward-stage-to-master:
+    needs: publish-to-pypi
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      branch_to_merge: master
+      base_branch: stage
+
+  fast-forward-dev-to-master:
+    needs: publish-to-pypi
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      branch_to_merge: master
+      base_branch: dev
+
+  bump-version-in-dev:
+    needs: fast-forward-dev-to-master
     uses: ./.github/workflows/bump-version.yml
     with:
-      change: 'set-new-rc-and-dev-number-in-dev'
+      change: 'bump-to-next-minor-version-and-reset-rc-and-dev'
       commit_sha: dev
     secrets: inherit
