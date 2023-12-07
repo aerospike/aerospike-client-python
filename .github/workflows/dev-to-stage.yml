@@ -18,14 +18,6 @@ jobs:
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
-  set-new-rc-and-dev-number-in-dev:
-    needs: promote-dev-build-to-rc
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'set-new-rc-and-dev-number-in-dev'
-      commit_sha: dev
-    secrets: inherit
-
   run-stage-tests:
     needs: promote-dev-build-to-rc
     uses: ./.github/workflows/stage-tests.yml
@@ -83,3 +75,11 @@ jobs:
     secrets:
       JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
       JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+  bump-rc-and-reset-dev-number-in-dev:
+    needs: upload-to-jfrog
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'bump-rc-and-reset-dev-number-in-dev'
+      commit_sha: dev
+    secrets: inherit

@@ -43,3 +43,11 @@ jobs:
       with:
         packages-dir: artifacts/
         password: ${{ secrets.PYPI_API_TOKEN }}
+
+  set-new-rc-and-dev-number-in-dev:
+    needs: upload-to-jfrog
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'set-new-rc-and-dev-number-in-dev'
+      commit_sha: dev
+    secrets: inherit
