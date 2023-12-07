@@ -6,8 +6,6 @@ on:
     # This is to make sure this workflow doesn't get triggered after a bump commit
     tags-ignore:
     - '*'
-  # For testing only
-  workflow_dispatch:
 
 jobs:
   promote-rc-build-to-release:

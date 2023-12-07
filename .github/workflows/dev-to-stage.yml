@@ -7,8 +7,6 @@ on:
     # This is to make sure this workflow doesn't get triggered after a bump commit
     tags-ignore:
     - '*rc*'
-  # For testing only
-  workflow_dispatch:
 
 jobs:
   promote-dev-build-to-rc:
