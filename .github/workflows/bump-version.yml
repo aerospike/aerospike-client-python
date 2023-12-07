@@ -44,16 +44,20 @@ jobs:
       new_version: ${{ steps.pass-new-version.outputs.new_version }}
       bump_sha: ${{ steps.pass-bump-commit-sha.outputs.bump_sha }}
     steps:
+    # The code to get the new version should be from the stage branch, where we called the workflow
     - uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.CLIENT_BOT_PAT }}
-        ref: ${{ inputs.commit_sha }}
 
     - run: pip install parver -c requirements.txt
       working-directory: .github/workflows
 
-    - name: Update version
+    - name: Get new version
       run: echo NEW_TAG=$(python3 .github/workflows/${{ inputs.change }}.py $(cat VERSION)) >> $GITHUB_ENV
+
+    # Now checkout the branch we want to bump the new version
+    - uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        ref: ${{ inputs.commit_sha }}
 
     - name: Update __version__ in aerospike module
       run: sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
