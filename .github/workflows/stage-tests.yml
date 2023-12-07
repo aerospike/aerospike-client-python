@@ -328,7 +328,6 @@ jobs:
       matrix:
         macos-version: [
           'macos-11',
-          'macos-13'
         ]
         python-version: [
           ["3.8", "cp38"],
