@@ -6,6 +6,7 @@ on:
     - closed
     branches:
     - 'dev'
+  push:
 
 jobs:
   bump-dev-number:
