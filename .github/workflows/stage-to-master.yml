@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - 'master'
+    - 'master-dev'
     # This is to make sure this workflow doesn't get triggered after a bump commit
     tags-ignore:
     - '*'
