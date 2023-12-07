@@ -73,7 +73,7 @@ jobs:
     secrets: inherit
 
   fast-forward-dev-to-stage:
-    needs: upload-to-jfrog
+    needs: promote-dev-build-to-rc
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
       branch_to_merge: stage
