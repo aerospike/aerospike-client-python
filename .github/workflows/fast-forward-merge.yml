@@ -25,8 +25,8 @@ jobs:
         uses: MaximeHeckel/github-action-merge-fast-forward@v1.1.0
         with:
           # Branch to merge
-          branchtomerge: ${{ inputs.branch_to_merge }}
+          branchtomerge: ${{ steps.parse.outputs.base_branch }}
           # Branch that will be updated
-          branch: ${{ inputs.base_branch }}
+          branch: ${{ steps.parse.outputs.target_branch }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
