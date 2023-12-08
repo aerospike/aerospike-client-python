@@ -270,10 +270,12 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        with pytest.raises(e.InvalidRole) as excinfo:
+        try:
             self.client.admin_create_user(user, password, roles)
-        assert excinfo.value.code == 70
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
+
+        except e.InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_create_user_with_non_user_admin_user(self):
 

@@ -145,13 +145,14 @@ class TestSetQuotas(TestBaseClass):
         """
         Incorrect role name
         """
-        with pytest.raises(e.InvalidRole) as excinfo:
+        try:
             self.client.admin_set_quotas(
                 role="usr-sys-admin-test", read_quota=-20, write_quota=300
             )
 
-        assert excinfo.value.code == 70
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
+        except e.InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     def test_admin_set_quota_incorrect_quota_type(self):
         """

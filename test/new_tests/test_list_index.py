@@ -267,17 +267,14 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         assert excinfo.value.code == -2
         assert excinfo.value.msg == "Set should be string, unicode or None"
 
-    def test_neg_listindex_with_set_is_none(self):
+    def test_listindex_with_set_is_none(self):
         """
         Invoke createindex() with set is None
         """
         policy = {}
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.index_list_create(
-                "test", None, "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
-            )
-        assert excinfo.value.code == -2
-        assert excinfo.value.msg == "Set should be a string"
+        self.as_connection.index_list_create(
+            "test", None, "string_list", aerospike.INDEX_STRING, "test_string_list_index", policy
+        )
         self.as_connection.index_remove("test", "test_string_list_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_index")
 

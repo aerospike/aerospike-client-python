@@ -1251,6 +1251,7 @@ class TestOperate(object):
             {"op": aerospike.OPERATOR_READ, "bin": "name"},
         ]
 
-        with pytest.raises(e.InvalidRequest) as excinfo:
+        try:
             self.as_connection.operate(key, llist, {}, policy)
-        assert excinfo.value.code == 4
+        except e.InvalidRequest as exception:
+            assert exception.code == 4

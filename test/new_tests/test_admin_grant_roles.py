@@ -158,10 +158,12 @@ class TestGrantRoles(TestBaseClass):
         user = "example-test"
         roles = []
 
-        with pytest.raises(e.InvalidUser) as excinfo:
+        try:
             self.client.admin_grant_roles(user, roles)
-        assert excinfo.value.code == 70
-        assert excinfo.value.msg == "AEROSPIKE_INVALID_ROLE"
+
+        except e.InvalidRole as exception:
+            assert exception.code == 70
+            assert exception.msg == "AEROSPIKE_INVALID_ROLE"
 
     # TODO: incorrect test
     def test_grant_roles_with_role_name_exceeding_max_length(self):

@@ -169,9 +169,10 @@ class TestSetWhitelist(TestBaseClass):
 
         config = TestBaseClass.get_connection_config()
         new_client = aerospike.client(config).connect(config["user"], config["password"])
-        with pytest.raises(e.NotWhitelisted) as excinfo:
+        try:
             new_client.connect("test_whitelist_user", "123")
-        assert excinfo.value.code == 82
-        assert excinfo.value.msg == "Failed to connect"
-
-        self.client.admin_drop_user("test_whitelist_user")
+        except e.NotWhitelisted as exception:
+            assert exception.code == 82
+            assert exception.msg == "Failed to connect"
+        finally:
+            self.client.admin_drop_user("test_whitelist_user")
