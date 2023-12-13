@@ -27,6 +27,7 @@ on:
         options:
           - rc
           - release
+          - none
         default: 'rc'
         required: true
         description: 'If bumping version, what type of bump?'
@@ -51,7 +52,7 @@ jobs:
         # If creating release wheels, bump rc version to release version
         if [[ ${{ inputs.bump-rc-or-release }} == "rc" ]]; then
           new_tag=$(pysemver bump prerelease $latest_tag)
-        else
+        elif [[ ${{ inputs.bump-rc-or-release }} == "release" ]]; then
           new_tag=$(pysemver nextver $latest_tag patch)
         fi
         echo "NEW_TAG=$new_tag" >> $GITHUB_ENV
