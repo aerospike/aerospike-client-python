@@ -505,7 +505,7 @@ jobs:
         echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
         echo STATIC_SSL=1 >> $GITHUB_ENV
 
-    - run: python${{ matrix.python-version }} -m pip install build delocate==0.10.4
+    - run: python${{ matrix.python-version }} -m pip install --break-system-packages build delocate==0.10.4
 
     # Self-hosted runner only
     # Need to be able to save Docker Hub credentials to keychain
