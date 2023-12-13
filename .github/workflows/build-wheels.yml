@@ -59,13 +59,13 @@ jobs:
         echo "The new tag for this build is $new_tag"
 
     - name: Update version
-      if: ${{ inputs.bump-rc-or-release == 'none' }}
+      if: ${{ inputs.bump-rc-or-release != 'none' }}
       run: |
         sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ env.NEW_TAG }}\";/" src/main/aerospike.c
         echo -e "${{ env.NEW_TAG }}" > VERSION
 
     - name: Commit new version
-      if: ${{ inputs.bump-rc-or-release == 'none' }}
+      if: ${{ inputs.bump-rc-or-release != 'none' }}
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
         commit_message: Bump version to ${{ env.NEW_TAG }}
