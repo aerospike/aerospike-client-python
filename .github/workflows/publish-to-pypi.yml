@@ -17,8 +17,7 @@ jobs:
     steps:
     - name: Get latest release version
       run: |
-        python3 -m pip install aerospike --index-url ${{ secrets.JFROG_PYTHON_CLIENT_REPO_SIMPLE_URL }}
-        echo LATEST_VERSION=$(python3 -c "import aerospike;print(aerospike.__version__)") >> $GITHUB_ENV
+        echo LATEST_VERSION=14.1.0b1 >> $GITHUB_ENV
 
     - uses: jfrog/setup-jfrog-cli@v3
       env:
@@ -37,6 +36,7 @@ jobs:
         password: ${{ secrets.PYPI_API_TOKEN }}
 
   next-release-version:
+    if: ${{ false }}
     needs: publish
     runs-on: ubuntu-latest
     steps:
