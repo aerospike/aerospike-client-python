@@ -54,11 +54,3 @@ jobs:
     with:
       branch_to_merge: master
       base_branch: dev
-
-  bump-version-in-dev:
-    needs: fast-forward-dev-to-master
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'bump-to-next-minor-version-and-reset-rc-and-dev'
-      commit_sha: dev
-    secrets: inherit

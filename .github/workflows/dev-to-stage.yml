@@ -78,11 +78,3 @@ jobs:
     with:
       branch_to_merge: stage
       base_branch: dev
-
-  bump-version-in-dev:
-    needs: fast-forward-dev-to-stage
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'bump-rc-and-reset-dev-number'
-      commit_sha: dev
-    secrets: inherit
