@@ -323,15 +323,16 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
 				 * Refer: AER-3589 for more details.
 				 */
         if (PyByteArray_Check(value)) {
-            uint8_t *bytes_array = (uint8_t *)PyByteArray_AsString(value);
-            uint32_t bytes_array_len = (uint32_t)PyByteArray_Size(value);
-            set_as_bytes(bytes, bytes_array, bytes_array_len, AS_BYTES_BLOB,
-                         error_p);
+            uint8_t *str = (uint8_t *)PyByteArray_AsString(value);
+            uint32_t str_len = (uint32_t)PyByteArray_Size(value);
+            as_bytes_init_wrap(*bytes, str, str_len, false);
+            as_bytes_set_type(*bytes, AS_BYTES_BLOB);
         }
         else if (PyBytes_Check(value)) {
-            uint8_t *my_bytes = (uint8_t *)PyBytes_AsString(value);
-            uint32_t my_bytes_len = (uint32_t)PyBytes_Size(value);
-            set_as_bytes(bytes, my_bytes, my_bytes_len, AS_BYTES_BLOB, error_p);
+            uint8_t *b = (uint8_t *)PyBytes_AsString(value);
+            uint32_t b_len = (uint32_t)PyBytes_Size(value);
+            as_bytes_init_wrap(*bytes, b, b_len, false);
+            as_bytes_set_type(*bytes, AS_BYTES_BLOB);
         }
         else {
             as_error_update(error_p, AEROSPIKE_ERR_CLIENT,

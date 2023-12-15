@@ -54,6 +54,8 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
+    as_dynamic_pool dynamic_pool;
+    BYTES_POOLS(&dynamic_pool) = NULL;
     static char *kwlist[] = {"ctx", NULL};
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:get_cdtctx_base64", kwlist,
                                     &py_cdtctx) == false) {
@@ -72,8 +74,6 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
 
     // Convert Python cdt_ctx to C version
     // Pass in ctx into a dict so we can use helper function
@@ -91,7 +91,7 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
             "unable to convert Python cdtctx to it's C client counterpart");
         goto CLEANUP;
     }
-    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &static_pool,
+    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &dynamic_pool,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -122,7 +122,9 @@ CLEANUP:
     if (base64 != NULL) {
         cf_free(base64);
     }
-
+    if(BYTES_POOLS(&dynamic_pool) != NULL){
+        POOL_DESTROY(&dynamic_pool, false);
+    }
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;

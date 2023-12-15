@@ -37,7 +37,7 @@
 
 extern as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                         as_vector *unicodeStrVector,
-                        as_static_pool *static_pool, as_operations *ops,
+                        as_dynamic_pool *as_dynamic_pool, as_operations *ops,
                         long *op, long *ret_type);
 
 // Struct for Python User-Data for the Callback
@@ -144,14 +144,14 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
         }
     }
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
+    as_dynamic_pool dynamic_pool;
+    BYTES_POOLS(&dynamic_pool) = NULL;
 
     for (int i = 0; i < ops_size; i++) {
         PyObject *py_val = PyList_GetItem(py_ops, i);
 
         if (PyDict_Check(py_val)) {
-            if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops,
+            if (add_op(self, err, py_val, unicodeStrVector, &dynamic_pool, &ops,
                        &operation, &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
@@ -213,6 +213,9 @@ CLEANUP:
 
     as_batch_destroy(&batch);
 
+    if(BYTES_POOLS(&dynamic_pool) != NULL){
+        POOL_DESTROY(&dynamic_pool, false);
+    }
     return py_results;
 }
 
