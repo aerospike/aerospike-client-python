@@ -2,7 +2,6 @@ import socket
 import time
 import os
 import sys
-from distutils.version import LooseVersion
 
 import pytest
 from _pytest.terminal import TerminalReporter  # noqa: F401
@@ -84,6 +83,8 @@ if test_memleak == 1:
         consumed_tracemalloc_log.append(tmlog_entry)
 
 
+# Comment this out because nowhere in the repository is using it
+'''
 def compare_server_versions(version1, version2):
     """
     Compare two strings version1 and version 2
@@ -116,6 +117,7 @@ def compare_server_versions(version1, version2):
         return -1
 
     return 1
+'''
 
 
 def wait_for_port(address, port, interval=0.1, timeout=60):

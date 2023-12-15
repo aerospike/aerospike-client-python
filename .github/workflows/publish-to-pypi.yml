@@ -37,6 +37,7 @@ jobs:
         password: ${{ secrets.PYPI_API_TOKEN }}
 
   next-release-version:
+    if: ${{ false }}
     needs: publish
     runs-on: ubuntu-latest
     steps:
