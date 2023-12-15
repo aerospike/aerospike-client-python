@@ -39,23 +39,23 @@ static as_status get_map_return_type(as_error *err, PyObject *op_dict,
 
 static as_status add_op_map_remove_by_value_rel_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type);
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type);
 
 static as_status add_op_map_get_by_value_rel_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type);
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type);
 
 static as_status add_op_map_remove_by_key_rel_index_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type);
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type);
 
 static as_status add_op_map_get_by_key_rel_index_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type);
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type);
 
 as_status add_new_map_op(AerospikeClient *self, as_error *err,
                          PyObject *op_dict, as_vector *unicodeStrVector,
-                         as_static_pool *static_pool, as_operations *ops,
+                         as_dynamic_pool *dynamic_pool, as_operations *ops,
                          long operation_code, long *ret_type,
                          int serializer_type)
 
@@ -70,22 +70,22 @@ as_status add_new_map_op(AerospikeClient *self, as_error *err,
 
     case OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: {
         return add_op_map_remove_by_value_rel_rank_range(
-            self, err, bin, op_dict, ops, static_pool, serializer_type);
+            self, err, bin, op_dict, ops, dynamic_pool, serializer_type);
     }
 
     case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL: {
         return add_op_map_get_by_value_rel_rank_range(
-            self, err, bin, op_dict, ops, static_pool, serializer_type);
+            self, err, bin, op_dict, ops, dynamic_pool, serializer_type);
     }
 
     case OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL: {
         return add_op_map_remove_by_key_rel_index_range(
-            self, err, bin, op_dict, ops, static_pool, serializer_type);
+            self, err, bin, op_dict, ops, dynamic_pool, serializer_type);
     }
 
     case OP_MAP_GET_BY_KEY_INDEX_RANGE_REL: {
         return add_op_map_get_by_key_rel_index_range(
-            self, err, bin, op_dict, ops, static_pool, serializer_type);
+            self, err, bin, op_dict, ops, dynamic_pool, serializer_type);
     }
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
@@ -97,7 +97,7 @@ as_status add_new_map_op(AerospikeClient *self, as_error *err,
 
 static as_status add_op_map_remove_by_value_rel_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type)
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     bool count_present = false;
     int64_t count;
@@ -120,12 +120,12 @@ static as_status add_op_map_remove_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, static_pool,
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, dynamic_pool,
                   serializer_type, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
                     serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -160,7 +160,7 @@ static as_status add_op_map_remove_by_value_rel_rank_range(
 
 static as_status add_op_map_get_by_value_rel_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type)
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     bool count_present = false;
     int64_t count;
@@ -183,12 +183,12 @@ static as_status add_op_map_get_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, static_pool,
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, dynamic_pool,
                   serializer_type, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
                     serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -223,7 +223,7 @@ static as_status add_op_map_get_by_value_rel_rank_range(
 
 static as_status add_op_map_remove_by_key_rel_index_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type)
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     bool count_present = false;
     int64_t count;
@@ -246,12 +246,12 @@ static as_status add_op_map_remove_by_key_rel_index_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_MAP_KEY_KEY, op_dict, &key, static_pool,
+    if (get_asval(self, err, AS_PY_MAP_KEY_KEY, op_dict, &key, dynamic_pool,
                   serializer_type, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
                     serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -285,7 +285,7 @@ static as_status add_op_map_remove_by_key_rel_index_range(
 
 static as_status add_op_map_get_by_key_rel_index_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type)
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     bool count_present = false;
     int64_t count;
@@ -308,12 +308,12 @@ static as_status add_op_map_get_by_key_rel_index_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_MAP_KEY_KEY, op_dict, &key, static_pool,
+    if (get_asval(self, err, AS_PY_MAP_KEY_KEY, op_dict, &key, dynamic_pool,
                   serializer_type, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
                     serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }

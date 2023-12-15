@@ -98,6 +98,31 @@ class TestGetPut:
         (key, _, _) = self.as_connection.get(_input, policy={"key": _policy})
         assert key[2] == _expected
 
+    def test_pos_get_with_large_number_of_bytes(self, put_data):
+        """
+        Invoke get() for a record with POLICY_KEY_DIGEST
+        """
+        rec = {}
+        for x in range(2049):
+            rec[str(x)] = bytearray([0])
+
+        put_data(self.as_connection, ("test", "demo", 13), rec)
+        
+        (_, _, bins) = self.as_connection.get(("test", "demo", 13))
+        assert len(bins) == 2049
+    def test_pos_get_with_large_number_of_bytes_in_list(self, put_data):
+        """
+        Invoke get() for a record with POLICY_KEY_DIGEST
+        """
+        rec = {}
+        for x in range(2055):
+            rec[str(x)] = [bytearray([0])]
+
+        put_data(self.as_connection, ("test", "demo", 13), rec)
+        
+        (_, _, bins) = self.as_connection.get(("test", "demo", 13))
+        assert len(bins) == 2055
+
     def test_pos_get_initkey_with_policy_send(self, put_data):
         """
         Invoke get() for a record having string data.
