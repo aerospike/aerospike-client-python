@@ -120,7 +120,7 @@ class TestQuery(TestBaseClass):
         except e.IndexFoundError:
             pass
 
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+        if (int(TestBaseClass.major_ver), int(TestBaseClass.minor_ver)) >= (7, 0):
             # These indexes are only used for server 7.0+ tests
             try:
                 client.index_list_create("test", "demo", "blob_list", aerospike.INDEX_BLOB, "blob_list_index")
@@ -147,7 +147,7 @@ class TestQuery(TestBaseClass):
                 aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "numeric_list_cdt_index",
-                {"ctx": ctx_list_index},
+                ctx_list_index,
             )
         except e.IndexFoundError:
             pass
@@ -160,7 +160,7 @@ class TestQuery(TestBaseClass):
                 aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_NUMERIC,
                 "numeric_map_cdt_index",
-                {"ctx": ctx_map_index},
+                ctx_map_index,
             )
         except e.IndexFoundError:
             pass
