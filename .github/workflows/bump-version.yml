@@ -71,6 +71,8 @@ jobs:
         commit_message: Auto-bump version to ${{ env.NEW_TAG }}
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         tagging_message: ${{ env.NEW_TAG }}
+        # Be explicit about branch name since this action doesn't always checkout the correct branch
+        branch: ${{ github.ref }}
 
     - name: Pass new version to JFrog upload job
       id: pass-new-version
