@@ -33,13 +33,13 @@ jobs:
       with:
         sparse-checkout: |
           .github/workflows/filter-artifacts.py
-          .github/actions/dl-and-unwrap-artifacts
         sparse-checkout-cone-mode: false
 
-    - uses: ./.github/actions/dl-and-unwrap-artifacts
+    - uses: actions/download-artifact@v4
       with:
-        artifact-patterns: '-path "*.txt"'
-        output-folder-name: matrix-outputs
+        pattern: '*.txt'
+        path: matrix-outputs
+        merge-multiple: true
 
     - name: Filter artifacts
       run: python3 filter-artifacts.py
