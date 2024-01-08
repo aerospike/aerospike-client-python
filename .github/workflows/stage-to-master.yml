@@ -2,7 +2,7 @@ name: Build and upload release artifacts to JFrog
 on:
   push:
     branches:
-    - 'master'
+    - 'master*'
     # This is to make sure this workflow doesn't get triggered after a bump commit
     tags-ignore:
     - '*'
@@ -48,12 +48,12 @@ jobs:
     needs: publish-to-pypi
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: master
-      base_branch: stage
+      branch_to_merge: master-test
+      base_branch: stage-test
 
   fast-forward-dev-to-master:
     needs: publish-to-pypi
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: master
-      base_branch: dev
+      branch_to_merge: master-test
+      base_branch: dev-test

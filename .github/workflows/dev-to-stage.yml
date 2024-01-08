@@ -3,7 +3,7 @@ name: Stage tests
 on:
   push:
     branches:
-    - 'stage'
+    - 'stage*'
     # This is to make sure this workflow doesn't get triggered after a bump commit
     tags-ignore:
     - '*rc*'
@@ -76,5 +76,5 @@ jobs:
     needs: promote-dev-build-to-rc
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: stage
-      base_branch: dev
+      branch_to_merge: stage-test
+      base_branch: dev-test
