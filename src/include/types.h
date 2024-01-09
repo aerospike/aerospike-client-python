@@ -25,7 +25,7 @@
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_operations.h>
-#include "dynamic_pool.h"
+#include "dynamic_pool.hpp"
 
 // Bin names can be of type Unicode in Python
 // DB supports 32767 maximum number of bins
