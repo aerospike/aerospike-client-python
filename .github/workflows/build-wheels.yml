@@ -178,7 +178,7 @@ jobs:
           "cp310",
           "cp311"
         ]
-    runs-on: macos-12
+    runs-on: macos-12-large
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
