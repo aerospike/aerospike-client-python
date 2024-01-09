@@ -21,6 +21,7 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         pattern: '*.build'
+        merge-multiple: true
         path: artifacts
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v3

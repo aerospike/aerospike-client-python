@@ -75,7 +75,7 @@ jobs:
       run: python3 -m build --sdist
 
     - name: Upload source distribution to GitHub
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         path: ./dist/*.tar.gz
         name: sdist.build
@@ -155,7 +155,7 @@ jobs:
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
     - name: Upload wheels to GitHub
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         path: ./wheelhouse/*.whl
         name: ${{ matrix.python }}-manylinux_${{ matrix.platform }}.build
@@ -229,7 +229,7 @@ jobs:
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
     - name: Save macOS wheel
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.python }}-macosx_x86_64.build
         path: wheelhouse/*.whl
@@ -333,7 +333,7 @@ jobs:
       if: ${{ !inputs.run_tests }}
 
     - name: Save macOS wheel
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.python-version }}-macosx_arm64.build
         path: wheelhouse/*.whl

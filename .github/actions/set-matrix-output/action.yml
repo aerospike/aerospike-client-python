@@ -14,7 +14,7 @@ runs:
     shell: bash
 
   - name: Upload output file
-    uses: actions/upload-artifact@v3
+    uses: actions/upload-artifact@v4
     with:
       name: ${{ inputs.artifact-name }}.matrix-output
       path: ${{ inputs.artifact-name }}.txt
