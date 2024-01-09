@@ -67,7 +67,7 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ matrix.python[1] }}-manylinux_${{ matrix.platform }}
         path: ./
@@ -134,7 +134,7 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ matrix.python[1] }}-macosx_x86_64
         path: ./
@@ -179,7 +179,7 @@ jobs:
       with:
         ref: ${{ inputs.commit_sha }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ matrix.python-version[1] }}-macosx_x86_64
         path: ./

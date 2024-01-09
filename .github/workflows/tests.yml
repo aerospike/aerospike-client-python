@@ -80,7 +80,7 @@ jobs:
         python-version: "3.8"
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-3.8
 
@@ -209,7 +209,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
@@ -237,7 +237,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
@@ -281,7 +281,7 @@ jobs:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ matrix.py-version }}
 
@@ -326,7 +326,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
@@ -362,7 +362,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 

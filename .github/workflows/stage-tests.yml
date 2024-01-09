@@ -74,7 +74,7 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: sdist
 
@@ -151,7 +151,7 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
 
@@ -216,7 +216,7 @@ jobs:
       with:
         ref: ${{ inputs.commit_sha }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}
 
@@ -276,7 +276,7 @@ jobs:
         ref: ${{ inputs.commit_sha }}
 
     # Ubuntu 22.04 uses Python 3.10 by default
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: cp310-manylinux_${{ matrix.platform[0] }}
 
@@ -342,7 +342,7 @@ jobs:
       with:
         ref: ${{ inputs.commit_sha }}
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: ${{ matrix.python-version[1] }}-macosx_x86_64
 
