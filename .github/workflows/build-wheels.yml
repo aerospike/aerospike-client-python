@@ -78,7 +78,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         path: ./dist/*.tar.gz
-        name: sdist
+        name: sdist.build
 
   manylinux:
     runs-on: ubuntu-latest
@@ -158,7 +158,7 @@ jobs:
       uses: actions/upload-artifact@v3
       with:
         path: ./wheelhouse/*.whl
-        name: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
+        name: ${{ matrix.python }}-manylinux_${{ matrix.platform }}.build
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -231,7 +231,7 @@ jobs:
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.python }}-macosx_x86_64
+        name: ${{ matrix.python }}-macosx_x86_64.build
         path: wheelhouse/*.whl
 
     - name: Set final commit status
@@ -335,7 +335,7 @@ jobs:
     - name: Save macOS wheel
       uses: actions/upload-artifact@v3
       with:
-        name: ${{ matrix.python-version }}-macosx_arm64
+        name: ${{ matrix.python-version }}-macosx_arm64.build
         path: wheelhouse/*.whl
 
     - name: Stop server
