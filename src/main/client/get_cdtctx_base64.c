@@ -74,7 +74,6 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-
     // Convert Python cdt_ctx to C version
     // Pass in ctx into a dict so we can use helper function
     op_dict = PyDict_New();
@@ -122,8 +121,8 @@ CLEANUP:
     if (base64 != NULL) {
         cf_free(base64);
     }
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, false);
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
     }
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

@@ -129,11 +129,10 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
                                           as_dynamic_pool *dynamic_pool,
                                           int serializer_type);
 
-static as_status
-add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_vector *unicodeStrVector,
-                               as_operations *ops, as_dynamic_pool *dynamic_pool,
-                               int serializer_type);
+static as_status add_op_list_get_by_index_range(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_vector *unicodeStrVector, as_operations *ops,
+    as_dynamic_pool *dynamic_pool, int serializer_type);
 
 static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
                                          char *bin, PyObject *op_dict,
@@ -160,11 +159,10 @@ add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
                               as_operations *ops, as_dynamic_pool *dynamic_pool,
                               int serializer_type);
 
-static as_status
-add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_vector *unicodeStrVector,
-                               as_operations *ops, as_dynamic_pool *dynamic_pool,
-                               int serializer_type);
+static as_status add_op_list_get_by_value_range(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_vector *unicodeStrVector, as_operations *ops,
+    as_dynamic_pool *dynamic_pool, int serializer_type);
 
 /* remove by*/
 
@@ -324,8 +322,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     case OP_LIST_GET_BY_RANK_RANGE: {
         return add_op_list_get_by_rank_range(self, err, bin, op_dict,
-                                             unicodeStrVector, ops, dynamic_pool,
-                                             serializer_type);
+                                             unicodeStrVector, ops,
+                                             dynamic_pool, serializer_type);
     }
 
     case OP_LIST_GET_BY_VALUE: {
@@ -335,8 +333,8 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     case OP_LIST_GET_BY_VALUE_LIST: {
         return add_op_list_get_by_value_list(self, err, bin, op_dict,
-                                             unicodeStrVector, ops, dynamic_pool,
-                                             serializer_type);
+                                             unicodeStrVector, ops,
+                                             dynamic_pool, serializer_type);
     }
 
     case OP_LIST_GET_BY_VALUE_RANGE: {
@@ -453,11 +451,10 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static as_status
-add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_vector *unicodeStrVector,
-                               as_operations *ops, as_dynamic_pool *dynamic_pool,
-                               int serializer_type)
+static as_status add_op_list_get_by_index_range(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_vector *unicodeStrVector, as_operations *ops,
+    as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     int64_t index;
     int64_t count;
@@ -684,11 +681,10 @@ add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
     return err->code;
 }
 
-static as_status
-add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_vector *unicodeStrVector,
-                               as_operations *ops, as_dynamic_pool *dynamic_pool,
-                               int serializer_type)
+static as_status add_op_list_get_by_value_range(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_vector *unicodeStrVector, as_operations *ops,
+    as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     as_val *val_begin = NULL;
     as_val *val_end = NULL;

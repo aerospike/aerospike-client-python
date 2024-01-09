@@ -531,8 +531,8 @@ CLEANUP4:
 
     as_vector_destroy(unicodeStrVector);
 
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, false);
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
     }
     if (exp_list_p != NULL) {
         as_exp_destroy(exp_list_p);

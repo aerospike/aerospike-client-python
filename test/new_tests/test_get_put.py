@@ -107,9 +107,10 @@ class TestGetPut:
             rec[str(x)] = bytearray([0])
 
         put_data(self.as_connection, ("test", "demo", 13), rec)
-        
+
         (_, _, bins) = self.as_connection.get(("test", "demo", 13))
         assert len(bins) == 2049
+
     def test_pos_get_with_large_number_of_bytes_in_list(self, put_data):
         """
         Invoke get() for a record with POLICY_KEY_DIGEST
@@ -119,7 +120,7 @@ class TestGetPut:
             rec[str(x)] = [bytearray([0])]
 
         put_data(self.as_connection, ("test", "demo", 13), rec)
-        
+
         (_, _, bins) = self.as_connection.get(("test", "demo", 13))
         assert len(bins) == 2055
 

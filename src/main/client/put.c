@@ -66,13 +66,12 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_record_init(&rec, 0);
     record_initialised = true;
 
-
     // Initialize error
     as_error_init(&err);
 
     as_dynamic_pool dynamic_pool;
     BYTES_POOLS(&dynamic_pool) = NULL;
-    
+
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
         goto CLEANUP;
@@ -128,10 +127,10 @@ CLEANUP:
         as_record_destroy(&rec);
     }
 
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, false);
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
     }
-    
+
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;

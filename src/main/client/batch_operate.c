@@ -311,8 +311,8 @@ CLEANUP:
     as_vector_destroy(unicodeStrVector);
     as_operations_destroy(&ops);
     as_batch_destroy(&batch);
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, false);
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
     }
     if (tmp_keys_p) {
         as_vector_destroy(tmp_keys_p);

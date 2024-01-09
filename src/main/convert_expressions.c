@@ -563,14 +563,15 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
         }
         else {
             as_bytes bytesval;
-            as_bytes* bytes = &bytesval;
+            as_bytes *bytes = &bytesval;
             if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(self, serializer_type,
                                                          &bytes, py_obj,
                                                          err) != AEROSPIKE_OK) {
                     return err->code;
                 }
-                as_exp_entry tmp_entry = as_exp_bytes(bytes->value, bytes->size);
+                as_exp_entry tmp_entry =
+                    as_exp_bytes(bytes->value, bytes->size);
                 *new_entry = tmp_entry;
             }
         }
@@ -1774,9 +1775,10 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         goto CLEANUP;
     }
 
-    if (add_expr_macros(self, &dynamic_pool, SERIALIZER_PYTHON, unicodeStrVector,
-                        &intermediate_expr_queue, &c_expr_entries, &bottom,
-                        (int *)&size, err) != AEROSPIKE_OK) {
+    if (add_expr_macros(self, &dynamic_pool, SERIALIZER_PYTHON,
+                        unicodeStrVector, &intermediate_expr_queue,
+                        &c_expr_entries, &bottom, (int *)&size,
+                        err) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -1804,10 +1806,10 @@ CLEANUP:
     }
 
     as_vector_destroy(unicodeStrVector);
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, true);
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, true);
     }
-    
+
     return err->code;
 }
 

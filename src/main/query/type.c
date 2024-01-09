@@ -237,13 +237,13 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
         as_vector_destroy(self->unicodeStrVector);
     }
 
-    if(self->dynamic_pool != NULL){
-        if(BYTES_POOLS(self->dynamic_pool) != NULL){
-            POOL_DESTROY(self->dynamic_pool, false);
+    if (self->dynamic_pool != NULL) {
+        if (BYTES_POOLS(self->dynamic_pool) != NULL) {
+            pool_destroy(self->dynamic_pool, false);
         }
         cf_free(self->dynamic_pool);
     }
-    
+
     Py_CLEAR(self->client);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
