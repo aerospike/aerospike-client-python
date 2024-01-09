@@ -86,7 +86,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
-
     // Initialize error
     as_error_init(&err);
 
@@ -234,9 +233,9 @@ CLEANUP:
     if (is_scan_init) {
         as_scan_destroy(&scan);
     }
-    
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, false);
+
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
     }
 
     if (err.code != AEROSPIKE_OK) {

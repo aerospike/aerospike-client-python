@@ -372,8 +372,8 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     }
 
     if (isBitOp(operation)) {
-        return add_new_bit_op(self, err, py_val, unicodeStrVector,
-                              ops, operation, ret_type, SERIALIZER_PYTHON);
+        return add_new_bit_op(self, err, py_val, unicodeStrVector, ops,
+                              operation, ret_type, SERIALIZER_PYTHON);
     }
 
     if (isHllOp(operation)) {
@@ -920,8 +920,8 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, false);
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
     }
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);
@@ -1051,8 +1051,9 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
         py_current_op = PyList_GetItem(py_list, i);
 
         if (PyDict_Check(py_current_op)) {
-            if (add_op(self, err, py_current_op, unicodeStrVector, &dynamic_pool,
-                       &ops, &operation, &return_type) != AEROSPIKE_OK) {
+            if (add_op(self, err, py_current_op, unicodeStrVector,
+                       &dynamic_pool, &ops, &operation,
+                       &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
         }
@@ -1133,9 +1134,9 @@ CLEANUP:
     }
 
     as_operations_destroy(&ops);
-    
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, false);
+
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
     }
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);

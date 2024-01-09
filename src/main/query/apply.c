@@ -50,14 +50,14 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         return NULL;
     }
 
-
     // Aerospike error object
     as_error err;
     // Initialize error object
     as_error_init(&err);
 
-    if(self->dynamic_pool == NULL){
-        self->dynamic_pool = (as_dynamic_pool *) cf_malloc(sizeof(as_dynamic_pool));
+    if (self->dynamic_pool == NULL) {
+        self->dynamic_pool =
+            (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
         BYTES_POOLS(self->dynamic_pool) = NULL;
     }
 
@@ -117,8 +117,8 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
             for (int i = 0; i < size; i++) {
                 PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
                 as_val *val = NULL;
-                pyobject_to_val(self->client, &err, py_val, &val, self->dynamic_pool,
-                                SERIALIZER_PYTHON);
+                pyobject_to_val(self->client, &err, py_val, &val,
+                                self->dynamic_pool, SERIALIZER_PYTHON);
                 if (err.code != AEROSPIKE_OK) {
                     as_error_update(&err, err.code, NULL);
                     as_arraylist_destroy(arglist);

@@ -555,7 +555,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with prepend command on a new record
         """
         llist = []
-        if not llist:  
+        if not llist:
             for x in range(2049):
                 llist.append({"op": aerospike.OPERATOR_APPEND, "bin": "byteincr_bin", "val": bytearray([1])})
             llist.append({"op": aerospike.OPERATOR_READ, "bin": "byteincr_bin"})
@@ -564,7 +564,7 @@ class TestOperateOrdered(object):
         except Exception:
             pass
         _, _, bins = TestOperateOrdered.client_no_typechecks.operate_ordered(("test", "demo", "byteincr_key"), llist)
-        
+
         assert len(bins[0][1]) == 2049
 
         try:

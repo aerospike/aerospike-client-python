@@ -67,7 +67,6 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
-
     // Initialisation flags
     bool key_initialised = false;
 
@@ -76,7 +75,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
 
     as_dynamic_pool dynamic_pool;
     BYTES_POOLS(&dynamic_pool) = NULL;
-    
+
     if (!PyList_Check(py_arglist)) {
         PyErr_SetString(PyExc_TypeError,
                         "expected UDF method arguments in a 'list'");
@@ -169,8 +168,8 @@ CLEANUP:
     }
     as_list_destroy(arglist);
     as_val_destroy(result);
-    if(BYTES_POOLS(&dynamic_pool) != NULL){
-        POOL_DESTROY(&dynamic_pool, false);
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
     }
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;

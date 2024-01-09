@@ -45,23 +45,19 @@ static as_status add_op_hll_add(AerospikeClient *self, as_error *err, char *bin,
 
 static as_status add_op_hll_init(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
-                                 as_operations *ops,
-                                 int serializer_type);
+                                 as_operations *ops, int serializer_type);
 
 static as_status add_op_hll_get_count(AerospikeClient *self, as_error *err,
                                       char *bin, PyObject *op_dict,
-                                      as_operations *ops,
-                                      int serializer_type);
+                                      as_operations *ops, int serializer_type);
 
 static as_status add_op_hll_describe(AerospikeClient *self, as_error *err,
                                      char *bin, PyObject *op_dict,
-                                     as_operations *ops,
-                                     int serializer_type);
+                                     as_operations *ops, int serializer_type);
 
 static as_status add_op_hll_fold(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
-                                 as_operations *ops,
-                                 int serializer_type);
+                                 as_operations *ops, int serializer_type);
 
 static as_status add_op_hll_get_intersect_count(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
@@ -114,8 +110,7 @@ as_status add_new_hll_op(AerospikeClient *self, as_error *err,
                               serializer_type);
 
     case OP_HLL_INIT:
-        return add_op_hll_init(self, err, bin, op_dict, ops,
-                               serializer_type);
+        return add_op_hll_init(self, err, bin, op_dict, ops, serializer_type);
 
     case OP_HLL_GET_COUNT:
         return add_op_hll_get_count(self, err, bin, op_dict, ops,
@@ -126,8 +121,7 @@ as_status add_new_hll_op(AerospikeClient *self, as_error *err,
                                    serializer_type);
 
     case OP_HLL_FOLD:
-        return add_op_hll_fold(self, err, bin, op_dict, ops,
-                               serializer_type);
+        return add_op_hll_fold(self, err, bin, op_dict, ops, serializer_type);
 
     case OP_HLL_GET_INTERSECT_COUNT:
         return add_op_hll_get_intersect_count(self, err, bin, op_dict, ops,
@@ -227,8 +221,7 @@ cleanup:
 
 static as_status add_op_hll_init(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
-                                 as_operations *ops,
-                                 int serializer_type)
+                                 as_operations *ops, int serializer_type)
 {
     as_hll_policy hll_policy;
     int index_bit_count;
@@ -273,8 +266,7 @@ cleanup:
 
 static as_status add_op_hll_get_count(AerospikeClient *self, as_error *err,
                                       char *bin, PyObject *op_dict,
-                                      as_operations *ops,
-                                      int serializer_type)
+                                      as_operations *ops, int serializer_type)
 {
     if (!as_operations_hll_get_count(ops, bin, NULL)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -288,8 +280,7 @@ cleanup:
 
 static as_status add_op_hll_describe(AerospikeClient *self, as_error *err,
                                      char *bin, PyObject *op_dict,
-                                     as_operations *ops,
-                                     int serializer_type)
+                                     as_operations *ops, int serializer_type)
 {
     if (!as_operations_hll_describe(ops, bin, NULL)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -303,8 +294,7 @@ cleanup:
 
 static as_status add_op_hll_fold(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
-                                 as_operations *ops,
-                                 int serializer_type)
+                                 as_operations *ops, int serializer_type)
 {
     int index_bit_count;
 
@@ -323,10 +313,9 @@ cleanup:
     return err->code;
 }
 
-static as_status
-add_op_hll_get_intersect_count(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_operations *ops,
-                               as_dynamic_pool *dynamic_pool, int serializer_type)
+static as_status add_op_hll_get_intersect_count(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type)
 {
     as_list *value_list = NULL;
 
