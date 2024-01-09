@@ -203,6 +203,9 @@ jobs:
     - name: Run server RC
       run: docker run -d -p 3000:3000 --name aerospike ${{ vars.SERVER_RC_REPO_LINK }}
 
+    - name: Wait for server to be ready
+      run: sleep 5
+
     - run: python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
       working-directory: test
 
