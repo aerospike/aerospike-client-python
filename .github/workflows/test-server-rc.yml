@@ -67,6 +67,9 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - name: Wait for server to be ready
+      run: sleep 5
+
     - uses: actions/download-artifact@v4
       with:
         name: ${{ matrix.python[1] }}-manylinux_${{ matrix.platform }}.build
@@ -133,6 +136,9 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Wait for server to be ready
+      run: sleep 5
 
     - uses: actions/download-artifact@v4
       with:

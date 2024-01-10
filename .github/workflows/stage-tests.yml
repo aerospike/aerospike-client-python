@@ -366,6 +366,9 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - name: Wait for server to be ready
+      run: sleep 5
+
     - name: Install wheel
       run: python3 -m pip install *.whl
 
