@@ -86,3 +86,4 @@ jobs:
     with:
       branch_to_merge: stage-test
       base_branch: dev-test
+    secrets: inherit
