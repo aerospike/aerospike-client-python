@@ -48,7 +48,7 @@ jobs:
         ]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.commit_sha }}
 
@@ -114,7 +114,7 @@ jobs:
         ]
     runs-on: macos-12-large
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.commit_sha }}
 
@@ -175,13 +175,13 @@ jobs:
         ]
       fail-fast: false
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         ref: ${{ inputs.commit_sha }}
 
     - uses: actions/download-artifact@v4
       with:
-        name: ${{ matrix.python-version[1] }}-macosx_x86_64.build
+        name: ${{ matrix.python-version[1] }}-macosx_arm64.build
         path: ./
 
     # Update dependencies if needed

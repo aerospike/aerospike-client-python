@@ -63,7 +63,7 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ inputs.commit_sha }}
@@ -104,7 +104,7 @@ jobs:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ inputs.commit_sha }}
@@ -186,7 +186,7 @@ jobs:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ inputs.commit_sha }}
@@ -264,7 +264,7 @@ jobs:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python-version }}-macosx_arm64)"
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ inputs.commit_sha }}
