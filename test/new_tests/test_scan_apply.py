@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
 import time
+import pickle
 from .as_status_codes import AerospikeStatus
 from aerospike_helpers import expressions as exp
+from aerospike_helpers.operations import operations
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
@@ -407,3 +409,42 @@ class TestScanApply(object):
         with pytest.raises(TypeError) as typeError:
             self.as_connection.scan_apply()
         assert "argument 'ns' (pos 1)" in str(typeError.value)
+
+    def test_fail_if_operations_exist_before_apply(self):
+        """
+        Invoke query.apply() with a stream udf.
+        arguments contain a serialized set.
+        """
+        ops = [
+            operations.increment("testBinName", 1)
+        ]
+
+        scan = self.as_connection.scan("test", "demo")
+        scan.add_ops(ops)
+
+        with pytest.raises(e.ParamError) as excinfo:
+            scan.apply(
+                "query_apply_parameters",
+                "query_params",
+                [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
+            )
+        assert excinfo.value.msg == "Scan can have either a UDF or operations, not both"
+
+    def test_fail_if_UDF_exists_before_add_ops(self):
+        """
+        Invoke query.apply() with a stream udf.
+        arguments contain a serialized set.
+        """
+        ops = [
+            operations.increment("testBinName", 1)
+        ]
+        scan = self.as_connection.scan("test", "demo")
+        scan.apply(
+            "query_apply_parameters",
+            "query_params",
+            [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
+        )
+
+        with pytest.raises(e.ParamError) as excinfo:
+            scan.add_ops(ops)
+        assert excinfo.value.msg == "Scan can have either a UDF or operations, not both"
