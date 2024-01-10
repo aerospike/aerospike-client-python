@@ -8,6 +8,9 @@ on:
       base_branch:
         type: string
         required: true
+    secrets:
+      CLIENT_BOT_PAT:
+        required: true
   workflow_dispatch:
     inputs:
       branch_to_merge:
@@ -37,4 +40,4 @@ jobs:
           # Branch that will be updated
           branch: ${{ inputs.base_branch }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.CLIENT_BOT_PAT }}
