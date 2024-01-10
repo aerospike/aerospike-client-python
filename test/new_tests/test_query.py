@@ -809,7 +809,7 @@ class TestQuery(TestBaseClass):
 
     def test_query_with_results_fail_with_operations(self):
         """
-        Invoke query() with multple results() call on same query object
+        Invoke query.results() after adding operations
         """
         ops = [
             operations.increment("testBinName", 1)
