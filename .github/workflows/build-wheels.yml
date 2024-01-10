@@ -251,10 +251,10 @@ jobs:
     strategy:
       matrix:
         python-version: [
-          "3.8",
-          "3.9",
-          "3.10",
-          "3.11"
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+          ["cp310", "3.10"],
+          ["cp311", "3.11"]
         ]
       fail-fast: false
     steps:
@@ -262,7 +262,7 @@ jobs:
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
         sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python-version }}-macosx_arm64)"
+        context: "Build wheels (${{ matrix.python-version[1] }}-macosx_arm64)"
 
     - uses: actions/checkout@v4
       with:
@@ -274,7 +274,7 @@ jobs:
       run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
 
     - name: Install or upgrade Python
-      run: brew install python@${{ matrix.python-version }}
+      run: brew install python@${{ matrix.python-version[1] }}
 
     - name: Install or upgrade OpenSSL 1.1
       run: brew install openssl@1.1
@@ -287,7 +287,7 @@ jobs:
         echo STATIC_SSL=1 >> $GITHUB_ENV
 
     - name: Install pip build packages
-      run: python${{ matrix.python-version }} -m pip install -r requirements.txt
+      run: python${{ matrix.python-version[1] }} -m pip install -r requirements.txt
 
     # Self-hosted runner only
     # Need to be able to save Docker Hub credentials to keychain
@@ -312,30 +312,30 @@ jobs:
       if: ${{ inputs.run_tests }}
       run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
 
-    - run: python${{ matrix.python-version }} -m build
+    - run: python${{ matrix.python-version[1] }} -m build
 
     - name: Install delocate
-      run: python${{ matrix.python-version }} -m pip install delocate -c requirements.txt
+      run: python${{ matrix.python-version[1] }} -m pip install delocate -c requirements.txt
       working-directory: .github/workflows
 
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
-    - run: python${{ matrix.python-version }} -m pip install --find-links=wheelhouse/ --no-index --force-reinstall aerospike
+    - run: python${{ matrix.python-version[1] }} -m pip install --find-links=wheelhouse/ --no-index --force-reinstall aerospike
 
-    - run: python${{ matrix.python-version }} -m pip install -r requirements.txt
+    - run: python${{ matrix.python-version[1] }} -m pip install -r requirements.txt
       if: ${{ inputs.run_tests }}
       working-directory: test
 
-    - run: python${{ matrix.python-version }} -m pytest new_tests/
+    - run: python${{ matrix.python-version[1] }} -m pytest new_tests/
       if: ${{ inputs.run_tests }}
       working-directory: test
 
-    - run: python${{ matrix.python-version }} -c "import aerospike"
+    - run: python${{ matrix.python-version[1] }} -c "import aerospike"
       if: ${{ !inputs.run_tests }}
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v4
       with:
-        name: ${{ matrix.python-version }}-macosx_arm64.build
+        name: ${{ matrix.python-version[0] }}-macosx_arm64.build
         path: wheelhouse/*.whl
 
     - name: Stop server
@@ -350,4 +350,4 @@ jobs:
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
-        context: "Build wheels (${{ matrix.python-version }}-macosx_arm64)"
+        context: "Build wheels (${{ matrix.python-version[0] }}-macosx_arm64)"
