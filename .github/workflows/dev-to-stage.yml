@@ -9,7 +9,14 @@ on:
     - '*rc*'
 
 jobs:
+  fast-forward-stage-to-dev:
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      branch_to_merge: dev-test
+      base_branch: stage-test
+
   promote-dev-build-to-rc:
+    needs: fast-forward-stage-to-dev
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
