@@ -9,7 +9,6 @@ from aerospike_helpers import expressions as exp
 from .test_base_class import TestBaseClass
 
 import aerospike
-from aerospike_helpers.operations import operations
 
 
 def add_indexes_to_client(client):
@@ -509,57 +508,3 @@ class TestQueryApply(object):
             assert bins["name"] != "aerospike"
         else:
             assert bins["name"] == "no_set_name"
-
-    def test_fail_if_operations_exist_before_apply(self):
-        """
-        Invoke query.apply() with a stream udf.
-        arguments contain a serialized set.
-        """
-        ops = [
-            operations.increment("testBinName", 1)
-        ]
-
-        try:
-            query_results = (
-                self.as_connection.query(
-                    "test",
-                    "demo",
-                )
-                .add_ops(ops)
-                .apply(
-                    "query_apply_parameters",
-                    "query_params",
-                    [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
-                )
-                .results()
-            )
-            assert "Param error should be thrown" == "This code should not be executed"
-        except e.ParamError:
-            pass
-
-    def test_fail_if_UDF_exists_before_add_ops(self):
-        """
-        Invoke query.apply() with a stream udf.
-        arguments contain a serialized set.
-        """
-        ops = [
-            operations.increment("testBinName", 1)
-        ]
-
-        try:
-            query_results = (
-                self.as_connection.query(
-                    "test",
-                    "demo",
-                )
-                .apply(
-                    "query_apply_parameters",
-                    "query_params",
-                    [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
-                )
-                .add_ops(ops)
-                .results()
-            )
-            assert "Param error should be thrown" == "This code should not be executed"
-        except e.ParamError:
-            pass

@@ -176,7 +176,7 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
                         "No connection to aerospike cluster");
         goto CLEANUP;
     }
-    
+
     if (self->query.ops) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "No operations can be used with query.foreach");
