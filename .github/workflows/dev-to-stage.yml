@@ -1,35 +1,29 @@
 name: Stage tests
 
 on:
-  push:
-    branches:
-    - 'stage*'
-    # This is to make sure this workflow doesn't get triggered after a bump commit
-    tags-ignore:
-    - '*rc*'
+  # Should be run from the dev branch usually
+  workflow_dispatch:
 
 jobs:
-  fast-forward-stage-to-dev:
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      branch_to_merge: dev-test
-      base_branch: stage-test
-    secrets: inherit
-
-  promote-dev-build-to-rc:
-    needs: fast-forward-stage-to-dev
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'promote-dev-build-to-rc'
-    secrets:
-      CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
+  get-latest-tag:
+    outputs:
+      latest-dev-version: ${{ steps.get-dev-version.outputs.latest-dev-version }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # Get all tags
+        fetch-depth: 0
+    - name: Get latest dev version
+      run: echo latest-dev-version=$(git describe --abbrev=0) >> $GITHUB_OUTPUT
+      id: get-dev-version
 
   run-stage-tests:
-    needs: promote-dev-build-to-rc
     uses: ./.github/workflows/stage-tests.yml
+    needs: get-latest-tag
     with:
       use-server-rc: false
-      commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+      commit_sha: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
     secrets: inherit
 
   filter-artifacts:
@@ -68,13 +62,30 @@ jobs:
         name: |
           ${{ steps.bad-artifacts.outputs.bad_artifacts }}
 
+  fast-forward-stage-to-dev:
+    name: Fast forward stage to tested commit in dev
+    needs: [
+      filter-artifacts,
+      get-latest-tag
+    ]
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      branch_to_merge: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
+      base_branch: stage-test
+    secrets: inherit
+
+  promote-dev-build-to-rc:
+    needs: fast-forward-stage-to-dev
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'promote-dev-build-to-rc'
+    secrets:
+      CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
+
   upload-to-jfrog:
+    needs: promote-dev-build-to-rc
     name: Upload artifacts to JFrog
     if: ${{ !cancelled() }}
-    needs: [
-      promote-dev-build-to-rc,
-      filter-artifacts
-    ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       new_version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}

@@ -15,10 +15,6 @@ on:
         description: 'Server docker image tag'
   workflow_call:
     inputs:
-      commit_sha:
-        type: string
-        required: true
-      # Default values for workflow_call to use
       use-server-rc:
         type: boolean
         required: false
@@ -41,7 +37,6 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
     with:
       run_tests: false
-      commit_sha: ${{ inputs.commit_sha }}
 
   # We run some source distribution (QE category 1) tests here
   # because QE doesn't have disk space for more Linux distros
