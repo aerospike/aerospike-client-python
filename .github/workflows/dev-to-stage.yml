@@ -44,7 +44,21 @@ jobs:
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
+  delete-dev-artifacts:
+    needs: promote-dev-build-to-rc
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # We can't upload to the same artifact name with upload-artifact@v4
+      # So we must delete the artifacts produced by stage-tests.yml
+      # Before rebuilding the artifacts with the new RC version
+      - name: Remove artifacts with dev version
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: '*.build'
+
   rebuild-artifacts-with-rc-version:
+    needs: delete-dev-artifacts
     uses: ./.github/workflows/build-wheels.yml
     with:
       run_tests: false
@@ -52,7 +66,7 @@ jobs:
 
   filter-artifacts:
     if: ${{ !cancelled() }}
-    needs: run-stage-tests
+    needs: rebuild-artifacts-with-rc-version
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -80,14 +94,19 @@ jobs:
       id: bad-artifacts
       working-directory: ./.github/workflows/
 
-    - name: Remove failed artifacts
+    # We don't need matrix output files anymore after this job
+    - name: Remove failed artifacts and matrix outputs
       uses: geekyeggo/delete-artifact@v2
       with:
         name: |
           ${{ steps.bad-artifacts.outputs.bad_artifacts }}
+          *.matrix-output
 
   upload-to-jfrog:
-    needs: promote-dev-build-to-rc
+    needs: [
+      promote-dev-build-to-rc,
+      filter-artifacts
+    ]
     name: Upload artifacts to JFrog
     if: ${{ !cancelled() }}
     uses: ./.github/workflows/upload-to-jfrog.yml
@@ -96,7 +115,7 @@ jobs:
     secrets: inherit
 
   check-for-dev-changes:
-    needs: promote-dev-build-to-rc
+    needs: upload-to-jfrog
     runs-on: ubuntu-latest
     outputs:
       no-dev-changes-detected: ${{ steps.check-new-changes.outcome == 'success' }}
@@ -117,7 +136,7 @@ jobs:
         id: check-new-changes
         run: test $TESTED_VERSION_COMMIT = $LATEST_DEV_COMMIT
 
-      - name: If new changes in dev, force merge stage's version into dev
+      - name: If new changes in dev, force merge stage's RC version into dev
         if: ${{ steps.check-new-changes.outcome == 'failure' }}
         run: git merge -X theirs stage-test
 
@@ -125,11 +144,23 @@ jobs:
         if: ${{ steps.check-new-changes.outcome == 'failure' }}
         run: git push
 
-  ff-dev-to-stage:
+  bump-to-new-dev-version:
     needs: check-for-dev-changes
+    if: ${{ needs.check-for-dev-changes.outputs.no-dev-changes-detected == 'false' }}
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'bump-dev-num'
+      commit_sha: dev-test
+    secrets: inherit
+
+  ff-dev-to-stage:
+    needs: [
+      check-for-dev-changes,
+      promote-dev-build-to-rc
+    ]
     if: ${{ needs.check-for-dev-changes.outputs.no-dev-changes-detected == 'true' }}
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
-      base_branch: stage-test
+      branch_to_merge: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+      base_branch: dev-test
     secrets: inherit
