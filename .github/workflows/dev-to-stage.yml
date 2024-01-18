@@ -1,7 +1,7 @@
 name: Stage tests
 
 on:
-  # Should be run from the dev branch usually
+  # This workflow manipulates the stage and dev branches regardless of the branch this workflow is run from
   workflow_dispatch:
 
 jobs:
@@ -14,6 +14,8 @@ jobs:
       with:
         # Get all tags
         fetch-depth: 0
+        ref: dev-test
+
     - name: Get latest dev version
       run: echo latest-dev-version=$(git describe --abbrev=0) >> $GITHUB_OUTPUT
       id: get-dev-version
