@@ -26,6 +26,30 @@ jobs:
       commit_sha: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
     secrets: inherit
 
+  fast-forward-stage-to-dev:
+    name: Fast forward stage to tested commit in dev
+    needs: get-latest-tag
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      branch_to_merge: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
+      base_branch: stage-test
+    secrets: inherit
+
+  promote-dev-build-to-rc:
+    needs: fast-forward-stage-to-dev
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'promote-dev-build-to-rc'
+      commit_sha: stage-test
+    secrets:
+      CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
+
+  rebuild-artifacts-with-rc-version:
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: false
+      commit_sha: ${{ inputs.commit_sha }}
+
   filter-artifacts:
     if: ${{ !cancelled() }}
     needs: run-stage-tests
@@ -39,7 +63,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        pattern: '*.txt'
+        pattern: '*.matrix-output'
         path: matrix-outputs
         merge-multiple: true
 
@@ -61,27 +85,6 @@ jobs:
       with:
         name: |
           ${{ steps.bad-artifacts.outputs.bad_artifacts }}
-
-  fast-forward-stage-to-dev:
-    name: Fast forward stage to tested commit in dev
-    needs: [
-      filter-artifacts,
-      get-latest-tag
-    ]
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      branch_to_merge: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
-      base_branch: dev-test
-    secrets: inherit
-
-  promote-dev-build-to-rc:
-    needs: fast-forward-stage-to-dev
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'promote-dev-build-to-rc'
-      commit_sha: dev-test
-    secrets:
-      CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
   upload-to-jfrog:
     needs: promote-dev-build-to-rc

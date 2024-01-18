@@ -17,7 +17,7 @@ jobs:
     name: Upload artifacts to JFrog
     runs-on: ubuntu-latest
     steps:
-    - name: Download source distribution
+    - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
         pattern: '*.build'

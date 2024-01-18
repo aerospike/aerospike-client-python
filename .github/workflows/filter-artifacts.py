@@ -40,4 +40,5 @@ with open("failed_artifacts.txt", "w") as failed_artifacts_file:
     failed_artifact_names = [artifact_name for artifact_name in artifact_tests if artifact_successes[artifact_name] != artifact_tests[artifact_name]]
     print(f"Failed artifacts: {failed_artifact_names}")
     for name in failed_artifact_names:
-        failed_artifacts_file.write(f"{name}\n")
+        # Artifact names end with .build
+        failed_artifacts_file.write(f"{name}.build\n")

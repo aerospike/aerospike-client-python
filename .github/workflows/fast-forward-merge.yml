@@ -31,12 +31,10 @@ jobs:
           fetch-depth: '0'
           # The branch you want to checkout (usually equal to `branchtomerge`)
           ref: ${{ inputs.branch_to_merge }}
+          token: ${{ secrets.CLIENT_BOT_PAT }}
 
-      - name: Merge Fast Forward
-        uses: alexrogalskiy/github-action-git-operation@master
-        with:
-          mode: 'merge-fast-forward'
-          sourceBranch: ${{ inputs.branch_to_merge }}
-          targetBranch: ${{ inputs.base_branch }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.CLIENT_BOT_PAT }}
+      - name: Fast forward
+        run: git merge --ff-only ${{ inputs.base_branch }}
+
+      - name: Upload changes to remote head branch
+        run: git push
