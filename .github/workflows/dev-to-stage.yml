@@ -28,7 +28,7 @@ jobs:
 
   fast-forward-stage-to-dev:
     name: Fast forward stage to tested commit in dev
-    needs: get-latest-tag
+    needs: run-stage-tests
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
       branch_to_merge: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
