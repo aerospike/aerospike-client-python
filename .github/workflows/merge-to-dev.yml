@@ -8,28 +8,36 @@ on:
     - 'dev*'
 
 jobs:
+  test-latest-server-release:
+    name: Build, install, and test artifacts against latest server release
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: true
+    secrets: inherit
+
   bump-dev-number:
-    if: ${{ github.event.pull_request.merged == true }}
+    if: ${{ !cancelled() }}
+    needs: test-latest-server-release
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
     secrets: inherit
 
-  test-latest-server-release:
-    name: Build, install, and test artifacts against latest server release
+  rebuild-artifacts-with-new-dev-num:
     needs: bump-dev-number
+    name: Build, install, and test artifacts against latest server release
     uses: ./.github/workflows/build-wheels.yml
     with:
-      run_tests: true
-      commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
+      run_tests: false
+      rebuilding-passing-artifacts: true
     secrets: inherit
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
     if: ${{ !cancelled() }}
     needs: [
-      test-latest-server-release,
-      bump-dev-number
+      bump-dev-number,
+      rebuild-artifacts-with-new-dev-num
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:

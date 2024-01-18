@@ -30,6 +30,10 @@ on:
         required: false
         default: true
         type: boolean
+      rebuilding-passing-artifacts:
+        required: false
+        default: false
+        type: boolean
     secrets:
       # For running a server RC
       # Not necessary when using a server release
@@ -63,6 +67,10 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
+    - uses: ./.github/actions/check-and-delete-artifact
+      with:
+        artifact-name: sdist
+
     - uses: actions/checkout@v4
       with:
         submodules: recursive
@@ -98,6 +106,10 @@ jobs:
         ]
 
     steps:
+    - uses: ./.github/actions/check-and-delete-artifact
+      with:
+        artifact-name: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
+
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
@@ -180,6 +192,10 @@ jobs:
         ]
     runs-on: macos-12-large
     steps:
+    - uses: ./.github/actions/check-and-delete-artifact
+      with:
+        artifact-name: ${{ matrix.python }}-macosx_x86_64
+
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
@@ -258,6 +274,10 @@ jobs:
         ]
       fail-fast: false
     steps:
+    - uses: ./.github/actions/check-and-delete-artifact
+      with:
+        artifact-name: ${{ matrix.python-version[1] }}-macosx_arm64
+
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:

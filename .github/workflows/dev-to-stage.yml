@@ -20,6 +20,9 @@ jobs:
       run: echo latest-dev-version=$(git describe --abbrev=0) >> $GITHUB_OUTPUT
       id: get-dev-version
 
+    - name: Output latest dev version
+      run: echo ${{ steps.get-dev-version.outputs.latest-dev-version }}
+
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
     needs: get-latest-tag
