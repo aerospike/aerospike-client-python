@@ -16,25 +16,37 @@ jobs:
     secrets: inherit
 
   bump-dev-number:
-    if: ${{ !cancelled() }}
+    # All tests must pass in order to bump dev num
     needs: test-latest-server-release
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
     secrets: inherit
 
-  rebuild-artifacts-with-new-dev-num:
+  delete-tested-artifacts:
     needs: bump-dev-number
-    name: Build, install, and test artifacts against latest server release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # We can't upload to the same artifact name with upload-artifact@v4
+      # So we must delete the artifacts produced by build-wheels.yml
+      # Before rebuilding the artifacts with the new RC version
+      # If the tests failed, we may want to access the artifacts that failed
+      - name: Remove artifacts with dev version
+        uses: geekyeggo/delete-artifact@v4
+        with:
+          name: '*.build'
+
+  rebuild-artifacts-with-new-dev-num:
+    needs: delete-tested-artifacts
+    name: Rebuild artifacts with new dev number
     uses: ./.github/workflows/build-wheels.yml
     with:
       run_tests: false
-      rebuilding-passing-artifacts: true
     secrets: inherit
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
-    if: ${{ !cancelled() }}
     needs: [
       bump-dev-number,
       rebuild-artifacts-with-new-dev-num
@@ -45,7 +57,6 @@ jobs:
     secrets: inherit
 
   test-artifacts-with-server-rc:
-    if: ${{ !cancelled() }}
     needs: [
       upload-to-jfrog,
       bump-dev-number
@@ -53,5 +64,4 @@ jobs:
     uses: ./.github/workflows/test-server-rc.yml
     with:
       build-number: ${{ needs.bump-dev-number.outputs.new_version }}
-      commit_sha: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets: inherit

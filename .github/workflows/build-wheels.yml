@@ -30,10 +30,6 @@ on:
         required: false
         default: true
         type: boolean
-      rebuilding-passing-artifacts:
-        required: false
-        default: false
-        type: boolean
     secrets:
       # For running a server RC
       # Not necessary when using a server release
@@ -67,9 +63,11 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-latest
     steps:
-    - uses: ./.github/actions/check-and-delete-artifact
-      with:
-        artifact-name: sdist
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@v2.0.0
+    #   with:
+    #     sha: ${{ github.sha }}
+    #     context: "Build wheels (sdist)"
 
     - uses: actions/checkout@v4
       with:
@@ -87,6 +85,14 @@ jobs:
       with:
         path: ./dist/*.tar.gz
         name: sdist.build
+
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@v2.0.0
+    #   if: always()
+    #   with:
+    #     sha: ${{ github.sha }}
+    #     status: ${{ job.status }}
+    #     context: "Build wheels (sdist)"
 
   manylinux:
     runs-on: ubuntu-latest
@@ -106,15 +112,11 @@ jobs:
         ]
 
     steps:
-    - uses: ./.github/actions/check-and-delete-artifact
-      with:
-        artifact-name: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
-
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      with:
-        sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@v2.0.0
+    #   with:
+    #     sha: ${{ github.sha }}
+    #     context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
 
     - uses: actions/checkout@v4
       with:
@@ -172,13 +174,13 @@ jobs:
         path: ./wheelhouse/*.whl
         name: ${{ matrix.python }}-manylinux_${{ matrix.platform }}.build
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
-      with:
-        sha: ${{ github.sha }}
-        status: ${{ job.status }}
-        context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@v2.0.0
+    #   if: always()
+    #   with:
+    #     sha: ${{ github.sha }}
+    #     status: ${{ job.status }}
+    #     context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
 
   macOS-x86:
     strategy:
@@ -192,15 +194,11 @@ jobs:
         ]
     runs-on: macos-12-large
     steps:
-    - uses: ./.github/actions/check-and-delete-artifact
-      with:
-        artifact-name: ${{ matrix.python }}-macosx_x86_64
-
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      with:
-        sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@v2.0.0
+    #   with:
+    #     sha: ${{ github.sha }}
+    #     context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
 
     - uses: actions/checkout@v4
       with:
@@ -250,13 +248,13 @@ jobs:
         name: ${{ matrix.python }}-macosx_x86_64.build
         path: wheelhouse/*.whl
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
-      with:
-        status: ${{ job.status }}
-        sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@v2.0.0
+    #   if: always()
+    #   with:
+    #     status: ${{ job.status }}
+    #     sha: ${{ github.sha }}
+    #     context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
 
   macOS-m1:
     runs-on: [
@@ -274,15 +272,11 @@ jobs:
         ]
       fail-fast: false
     steps:
-    - uses: ./.github/actions/check-and-delete-artifact
-      with:
-        artifact-name: ${{ matrix.python-version[1] }}-macosx_arm64
-
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      with:
-        sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python-version[1] }}-macosx_arm64)"
+    # - name: Show job status for commit
+    #   uses: myrotvorets/set-commit-status-action@v2.0.0
+    #   with:
+    #     sha: ${{ github.sha }}
+    #     context: "Build wheels (${{ matrix.python-version[1] }}-macosx_arm64)"
 
     - uses: actions/checkout@v4
       with:
@@ -364,10 +358,10 @@ jobs:
         docker container stop aerospike
         docker container prune -f
 
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
-      with:
-        sha: ${{ github.sha }}
-        status: ${{ job.status }}
-        context: "Build wheels (${{ matrix.python-version[0] }}-macosx_arm64)"
+    # - name: Set final commit status
+    #   uses: myrotvorets/set-commit-status-action@v2.0.0
+    #   if: always()
+    #   with:
+    #     sha: ${{ github.sha }}
+    #     status: ${{ job.status }}
+    #     context: "Build wheels (${{ matrix.python-version[0] }}-macosx_arm64)"
