@@ -4,6 +4,10 @@ on:
   # Should be run from the dev branch usually
   workflow_dispatch:
 
+env:
+  STAGE_BRANCH_NAME: stage-test
+  DEV_BRANCH_NAME: dev-test
+
 jobs:
   get-latest-tag:
     outputs:
@@ -71,7 +75,7 @@ jobs:
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
       branch_to_merge: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
-      base_branch: stage-test
+      base_branch: ${{ env.DEV_BRANCH_NAME }}
     secrets: inherit
 
   promote-dev-build-to-rc:
@@ -79,6 +83,7 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
+      commit_sha: ${{ env.DEV_BRANCH_NAME }}
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
@@ -91,10 +96,41 @@ jobs:
       new_version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
     secrets: inherit
 
-  fast-forward-dev-to-stage:
+  check-for-dev-changes:
     needs: promote-dev-build-to-rc
+    runs-on: ubuntu-latest
+    outputs:
+      no-dev-changes-detected: ${{ steps.check-new-changes.outcome == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.DEV_BRANCH_NAME }}
+          token: ${{ secrets.CLIENT_BOT_PAT }}
+          fetch-depth: '0'
+
+      - name: Get commit hash of tested version
+        run: echo TESTED_VERSION_COMMIT=$(git rev-list -n 1 ${{ needs.get-latest-tag.outputs.latest-dev-version }}) >> $GITHUB_ENV
+
+      - name: Get latest commit hash of dev
+        run: echo LATEST_DEV_COMMIT=$(git log -n 1 ${{ env.DEV_BRANCH_NAME }}) >> $GITHUB_ENV
+
+      - name: Check for new changes since tested version in dev
+        id: check-new-changes
+        run: test $TESTED_VERSION_COMMIT = $LATEST_DEV_COMMIT
+
+      - name: If new changes in dev, force merge stage's version into dev
+        if: ${{ steps.check-new-changes.outcome == 'failure' }}
+        run: git merge -X theirs ${{ env.STAGE_BRANCH_NAME }}
+
+      - name: Push changes to remote dev
+        if: ${{ steps.check-new-changes.outcome == 'failure' }}
+        run: git push
+
+  ff-dev-to-stage:
+    needs: check-for-dev-changes
+    if: ${{ needs.check-for-dev-changes.outputs.no-dev-changes-detected == 'true' }}
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: stage-test
-      base_branch: dev-test
+      branch_to_merge: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
+      base_branch: ${{ env.STAGE_BRANCH_NAME }}
     secrets: inherit
