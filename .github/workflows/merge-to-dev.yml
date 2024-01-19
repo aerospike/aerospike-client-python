@@ -1,4 +1,4 @@
-name: Dev tests
+name: Dev workflow (part 2)
 
 on:
   push:

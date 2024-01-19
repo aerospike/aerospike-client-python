@@ -1,4 +1,4 @@
-name: On PR to dev branch marked as ready for review
+name: Dev workflow (part 1)
 
 on:
   pull_request:
