@@ -4,6 +4,8 @@ on:
   push:
     branches:
     - 'dev*'
+    tags-ignore:
+    - '*'
 
 # 1. When a PR is marked as ready for review, run tests
 # 2. If all of the tests pass, allow the PR to be merged into `dev`
