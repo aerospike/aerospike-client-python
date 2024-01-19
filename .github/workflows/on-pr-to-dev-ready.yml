@@ -3,7 +3,7 @@ name: Dev workflow (part 1)
 on:
   pull_request:
     types:
-      - ready_for_review
+      - review_requested
     branches:
       - dev*
 
