@@ -1,0 +1,23 @@
+name: On PR to dev branch marked as ready for review
+
+on:
+  pull_request:
+    types:
+      - ready_for_review
+    branches:
+      - dev*
+
+jobs:
+  test-with-server-release:
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: true
+    secrets: inherit
+
+  test-with-server-rc:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: true
+      use-server-rc: true
+    secrets: inherit

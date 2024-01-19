@@ -1,44 +1,23 @@
-name: Bump version, build wheels, and upload RCs to JFrog
+name: Dev tests
 
 on:
-  pull_request_target:
-    types:
-    - closed
+  push:
     branches:
     - 'dev*'
 
-jobs:
-  test-latest-server-release:
-    name: Build, install, and test artifacts against latest server release
-    uses: ./.github/workflows/build-wheels.yml
-    with:
-      run_tests: true
-    secrets: inherit
+# 1. When a PR is marked as ready for review, run tests
+# 2. If all of the tests pass, allow the PR to be merged into `dev`
+# 3. Whenever a new commit is pushed to `dev`, bump version number in `dev` (this can be disabled manually)
 
+jobs:
   bump-dev-number:
-    # All tests must pass in order to bump dev num
-    needs: test-latest-server-release
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
     secrets: inherit
 
-  delete-tested-artifacts:
-    needs: bump-dev-number
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      # We can't upload to the same artifact name with upload-artifact@v4
-      # So we must delete the artifacts produced by build-wheels.yml
-      # Before rebuilding the artifacts with the new RC version
-      # If the tests failed, we may want to access the artifacts that failed
-      - name: Remove artifacts with dev version
-        uses: geekyeggo/delete-artifact@v4
-        with:
-          name: '*.build'
-
   rebuild-artifacts-with-new-dev-num:
-    needs: delete-tested-artifacts
+    needs: bump-dev-number
     name: Rebuild artifacts with new dev number
     uses: ./.github/workflows/build-wheels.yml
     with:
@@ -54,14 +33,4 @@ jobs:
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       new_version: ${{ needs.bump-dev-number.outputs.new_version }}
-    secrets: inherit
-
-  test-artifacts-with-server-rc:
-    needs: [
-      upload-to-jfrog,
-      bump-dev-number
-    ]
-    uses: ./.github/workflows/test-server-rc.yml
-    with:
-      build-number: ${{ needs.bump-dev-number.outputs.new_version }}
     secrets: inherit
