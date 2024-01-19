@@ -15,9 +15,7 @@ jobs:
     secrets: inherit
 
   test-with-server-rc:
+    needs: test-with-server-release
     if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-    uses: ./.github/workflows/build-wheels.yml
-    with:
-      run_tests: true
-      use-server-rc: true
+    uses: ./.github/workflows/test-server-rc.yml
     secrets: inherit
