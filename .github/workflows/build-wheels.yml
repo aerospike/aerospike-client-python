@@ -15,20 +15,19 @@ on:
         required: true
         type: boolean
         default: true
-      server-tag:
-        type: string
-        required: false
-        default: 'latest'
-        description: 'Server docker image tag'
       commit_sha:
         type: string
         required: false
-      # Calling workflow doesn't actually use this
-      # But we need to set this to be true for workflow calls
+      # Calling workflow doesn't actually use these 2 options
+      # But we need to set default values for workflow calls
       use-server-rc:
         required: false
         default: true
         type: boolean
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
     secrets:
       # For running a server RC
       # Not necessary when using a server release
