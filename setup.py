@@ -234,8 +234,10 @@ class CClientBuild(build):
         if WINDOWS:
             global dlls
             dll_folder = AEROSPIKE_C_TARGET + "/vs/x64/Release/"
+            # Output folder to store dlls
+            os.mkdir("./aerospike-dlls/")
             for dll in dlls:
-                shutil.copy(dll_folder + dll, "./")
+                shutil.copy(dll_folder + dll, "./aerospike-dlls/")
 
         build.run(self)
 
@@ -365,14 +367,17 @@ setup(
             "aerospike.pyi",
             "exception.pyi",
             "predicates.pyi",
-        ]
+        ],
+        "aerospike-dlls": dlls
     },
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions',
-              'aerospike-stubs'],
-    data_files=[
-        ("", dlls)
-    ],
+              'aerospike-stubs',
+              'aerospike-dlls'
+              ],
+    # data_files=[
+    #     ("", dlls)
+    # ],
 #    package_data={
 #        # DLLs must be included for Python wheel so it can be used anywhere the DLLs aren't installed
 #        # Store in aerospike folder inside wheel so Windows can automatically find the DLLs
