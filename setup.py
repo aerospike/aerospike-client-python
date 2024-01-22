@@ -155,7 +155,7 @@ elif WINDOWS:
 #    libraries.append("pthreads")
     libraries.clear()
     extra_compile_args.append("-DAS_SHARED_IMPORT")
-    include_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.1/build/native/include")
+    include_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.2/build/native/include")
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
@@ -170,7 +170,7 @@ if not WINDOWS:
         AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
     ]
 else:
-    library_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.1/build/native/lib/x64/Release")
+    library_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.2/build/native/lib/x64/Release")
     # Needed for linking the Python client with the C client
     extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
 
