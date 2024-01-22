@@ -193,6 +193,9 @@ BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 dlls = ["aerospike.dll", "pthreadVC2.dll", "zlib.dll", "libeay32.dll", "ssleay32.dll"]
+# Output folder to store dlls
+os.mkdir("./aerospike-dlls/")
+
 class CClientBuild(build):
 
     def run(self):
@@ -234,8 +237,6 @@ class CClientBuild(build):
         if WINDOWS:
             global dlls
             dll_folder = AEROSPIKE_C_TARGET + "/vs/x64/Release/"
-            # Output folder to store dlls
-            os.mkdir("./aerospike-dlls/")
             for dll in dlls:
                 shutil.copy(dll_folder + dll, "./aerospike-dlls/")
 
