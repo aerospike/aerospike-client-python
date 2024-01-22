@@ -29,8 +29,6 @@ on:
         required: false
         default: 'latest'
     secrets:
-      # For running a server RC
-      # Not necessary when using a server release
       DOCKER_HUB_BOT_USERNAME:
         required: false
       DOCKER_HUB_BOT_PW:
