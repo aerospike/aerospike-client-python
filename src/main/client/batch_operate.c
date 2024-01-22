@@ -375,7 +375,7 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
 
     if (py_ttl && py_ttl != Py_None && !PyLong_Check(py_ttl)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "ttl should be an integer");
-        goto ERROR;
+        goto error;
     }
 
     py_results = AerospikeClient_Batch_Operate_Invoke(
