@@ -194,7 +194,10 @@ CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 dlls = ["aerospike.dll", "pthreadVC2.dll", "zlib.dll", "libeay32.dll", "ssleay32.dll"]
 # Output folder to store dlls
-os.mkdir("./aerospike-dlls/")
+try:
+    os.mkdir("./aerospike-dlls/")
+except FileExistsError:
+    pass
 
 class CClientBuild(build):
 
