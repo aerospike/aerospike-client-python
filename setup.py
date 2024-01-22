@@ -192,7 +192,7 @@ with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
-dlls = ["aerospike.dll", "pthreadVC2.dll", "lua51.dll", "zlib.dll", "libeay32.dll", "ssleay32.dll"]
+dlls = ["aerospike.dll", "pthreadVC2.dll", "zlib.dll", "libeay32.dll", "ssleay32.dll"]
 class CClientBuild(build):
 
     def run(self):
