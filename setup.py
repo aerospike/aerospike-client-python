@@ -195,7 +195,7 @@ CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 dlls = ["aerospike.dll", "pthreadVC2.dll", "zlib.dll", "libeay32.dll", "ssleay32.dll"]
 # Output folder to store dlls
 try:
-    os.mkdir("./aerospike-dlls/")
+    os.mkdir("./aerospike/")
 except FileExistsError:
     pass
 
@@ -241,7 +241,7 @@ class CClientBuild(build):
             global dlls
             dll_folder = AEROSPIKE_C_TARGET + "/vs/x64/Release/"
             for dll in dlls:
-                shutil.copy(dll_folder + dll, "./aerospike-dlls/")
+                shutil.copy(dll_folder + dll, "./aerospike/")
 
         build.run(self)
 
@@ -372,12 +372,12 @@ setup(
             "exception.pyi",
             "predicates.pyi",
         ],
-        "aerospike-dlls": dlls
+        "aerospike": dlls
     },
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions',
               'aerospike-stubs',
-              'aerospike-dlls'
+              'aerospike'
               ],
     # data_files=[
     #     ("", dlls)
