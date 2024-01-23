@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  get-latest-tag:
+  get-latest-dev-tag:
     outputs:
       latest-dev-version: ${{ steps.get-dev-version.outputs.latest-dev-version }}
     runs-on: ubuntu-latest
@@ -25,20 +25,27 @@ jobs:
 
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
-    needs: get-latest-tag
+    needs: get-latest-dev-tag
     with:
       use-server-rc: false
-      commit_sha: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
+      commit_sha: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
     secrets: inherit
 
-  fast-forward-stage-to-dev:
-    name: Fast forward stage to tested commit in dev
+  merge-dev-into-stage:
     needs: run-stage-tests
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      branch_to_merge: ${{ needs.get-latest-tag.outputs.latest-dev-version }}
+    runs-on: ubuntu-latest
+    steps:
+    - run: actions/checkout@v4
+    - name: Merge development -> staging
+      uses: devmasx/merge-branch@master
+      with:
+        type: now
+        from_branch: development
+        target_branch: staging
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      branch_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
       base_branch: stage-test
-    secrets: inherit
 
   promote-dev-build-to-rc:
     needs: fast-forward-stage-to-dev
@@ -132,7 +139,7 @@ jobs:
           fetch-depth: '0'
 
       - name: Get commit hash of tested version
-        run: echo TESTED_VERSION_COMMIT=$(git rev-list -n 1 ${{ needs.get-latest-tag.outputs.latest-dev-version }}) >> $GITHUB_ENV
+        run: echo TESTED_VERSION_COMMIT=$(git rev-list -n 1 ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}) >> $GITHUB_ENV
 
       - name: Get latest commit hash of dev
         run: echo LATEST_DEV_COMMIT=$(git log -n 1 dev-test) >> $GITHUB_ENV
