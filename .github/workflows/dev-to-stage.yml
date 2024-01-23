@@ -31,8 +31,11 @@ jobs:
       commit_sha: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
     secrets: inherit
 
-  merge-dev-into-stage:
-    needs: run-stage-tests
+  merge-dev-tag-into-stage:
+    needs: [
+      run-stage-tests,
+      get-latest-dev-tag
+    ]
     runs-on: ubuntu-latest
     steps:
     - run: actions/checkout@v4
@@ -40,15 +43,12 @@ jobs:
       uses: devmasx/merge-branch@master
       with:
         type: now
-        from_branch: development
-        target_branch: staging
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      branch_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
-      base_branch: stage-test
+        from_branch: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+        target_branch: stage
+        github_token: ${{ secrets.CLIENT_BOT_PAT }}
 
   promote-dev-build-to-rc:
-    needs: fast-forward-stage-to-dev
+    needs: merge-dev-tag-into-stage
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
@@ -70,11 +70,14 @@ jobs:
           name: '*.build'
 
   rebuild-artifacts-with-rc-version:
-    needs: delete-dev-artifacts
+    needs: [
+      delete-dev-artifacts,
+      promote-dev-build-to-rc
+    ]
     uses: ./.github/workflows/build-wheels.yml
     with:
       run_tests: false
-      commit_sha: ${{ inputs.commit_sha }}
+      commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
 
   filter-artifacts:
     if: ${{ !cancelled() }}
@@ -156,23 +159,27 @@ jobs:
         if: ${{ steps.check-new-changes.outcome == 'failure' }}
         run: git push
 
+  merge-stage-to-dev:
+    needs: upload-to-jfrog
+    runs-on: ubuntu-latest
+    steps:
+    - run: actions/checkout@v4
+    - name: Merge development -> staging
+      uses: devmasx/merge-branch@master
+      with:
+        type: now
+        from_branch: stage
+        target_branch: dev
+        github_token: ${{ secrets.CLIENT_BOT_PAT }}
+
   bump-to-new-dev-version:
-    needs: check-for-dev-changes
+    needs: [
+      merge-stage-to-dev,
+      check-for-dev-changes
+    ]
     if: ${{ needs.check-for-dev-changes.outputs.no-dev-changes-detected == 'false' }}
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
       commit_sha: dev-test
-    secrets: inherit
-
-  ff-dev-to-stage:
-    needs: [
-      check-for-dev-changes,
-      promote-dev-build-to-rc
-    ]
-    if: ${{ needs.check-for-dev-changes.outputs.no-dev-changes-detected == 'true' }}
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      branch_to_merge: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
-      base_branch: dev-test
     secrets: inherit
