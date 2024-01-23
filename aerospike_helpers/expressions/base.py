@@ -471,6 +471,9 @@ class DeviceSize(_BaseExpr):
     """Create an expression that returns record size on disk. If server storage-engine is
     memory, then zero is returned. This expression usually evaluates quickly
     because record meta data is cached in memory.
+
+    This expression should only be used for server versions less than 7.0. Use
+    :py:class:`RecordSize` for server version 7.0+.
     """
 
     _op = _ExprOp.META_DEVICE_SIZE
@@ -490,6 +493,9 @@ class DeviceSize(_BaseExpr):
 class MemorySize(_BaseExpr):
     """Returns the records memory size in bytes as an integer when either the namespace
     is configured data-in-memory true or storage-engine memory, otherwise returns 0.
+
+    Requires server version between 5.3 inclusive and 7.0 exclusive.
+    Use :py:class:`RecordSize` for server version 7.0+.
     """
 
     _op = _ExprOp.META_MEMORY_SIZE
@@ -497,6 +503,24 @@ class MemorySize(_BaseExpr):
 
     def __init__(self):
         """:return: (integer value)
+        """
+        super().__init__()
+
+
+class RecordSize(_BaseExpr):
+    """
+    Create expression that returns the record size. This expression usually evaluates
+    quickly because record meta data is cached in memory.
+
+    Requires server version 7.0+. This expression replaces :py:class:`DeviceSize()` and
+    :py:class:`MemorySize()`.
+    """
+    _op = _ExprOp.META_RECORD_SIZE
+    _rt = ResultType.INTEGER
+
+    def __init__(self):
+        """
+        :return: (integer value) Record size in bytes
         """
         super().__init__()
 

@@ -46,29 +46,21 @@ Data Mappings
 
 The following table shows which Python types map directly to Aerospike server types.
 
-+---------------------------------+------------------------+
-|   Python Type                   | Server type            |
-+=================================+========================+
-|:class:`int`                     |`integer`_              |
-+---------------------------------+------------------------+
-|:class:`bool`                    |depends on send_bool_as |
-+---------------------------------+------------------------+
-|:class:`str`                     |`string`_               |
-+---------------------------------+------------------------+
-|:class:`unicode`                 |`string`_               |
-+---------------------------------+------------------------+
-|:class:`float`                   |`double`_               |
-+---------------------------------+------------------------+
-|:class:`dict`                    |`map`_                  |
-+---------------------------------+------------------------+
-|:class:`aerospike.KeyOrderedDict`|`key ordered map`_      |
-+---------------------------------+------------------------+
-|:class:`list`                    |`list`_                 |
-+---------------------------------+------------------------+
-|:class:`bytes`                   |`blob`_                 |
-+---------------------------------+------------------------+
-|:class:`aerospike.GeoJSON`       |`GeoJSON`_              |
-+---------------------------------+------------------------+
+ ======================================== =========================
+  Python Type                              Server type
+ ======================================== =========================
+  :class:`int`                             `integer`_
+  :class:`bool`                            depends on send_bool_as
+  :class:`str`                             `string`_
+  :class:`unicode`                         `string`_
+  :class:`float`                           `double`_
+  :class:`dict`                            `map`_
+  :class:`aerospike.KeyOrderedDict`        `key ordered map`_
+  :class:`list`                            `list`_
+  :class:`bytes`                           `blob`_
+  :class:`aerospike.GeoJSON`               `GeoJSON`_
+  :class:`aerospike_helpers.HyperLogLog`   `HyperLogLog`_
+ ======================================== =========================
 
 .. note::
 
@@ -86,3 +78,4 @@ as a value.
 .. _list: https://docs.aerospike.com/server/guide/data-types/cdt-list
 .. _blob: https://docs.aerospike.com/server/guide/data-types/blob
 .. _GeoJSON: https://docs.aerospike.com/server/guide/data-types/geospatial
+.. _HyperLogLog: https://docs.aerospike.com/server/guide/data-types/hll

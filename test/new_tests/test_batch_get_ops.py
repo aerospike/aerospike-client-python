@@ -122,7 +122,7 @@ class TestBatchExpressionsOperations(TestBaseClass):
         # pp = pprint.PrettyPrinter(2, 80)
         policy = {"key": aerospike.POLICY_KEY_SEND}
         map_policy = {
-            "map_write_mode": aerospike.MAP_UPDATE,
+            "map_write_flags": aerospike.MAP_WRITE_FLAGS_UPDATE_ONLY,
             "map_order": aerospike.MAP_KEY_ORDERED,
         }
 

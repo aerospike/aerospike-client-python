@@ -80,20 +80,10 @@ Fields
         Default: ``0`` (no limit)
 
     ttl (:class:`int`)
-        The time-to-live (expiration) of the record in seconds.
+        The time-to-live (expiration) of the record in seconds. If set to :data:`aerospike.TTL_CLIENT_DEFAULT`, use the
+        client's default write policy ttl.
 
-        There are also special values that can be set in the record TTL:
-
-            ``0`` (``TTL_NAMESPACE_DEFAULT``)
-                Which means that the record will adopt the default TTL value from the namespace.
-
-            ``0xFFFFFFFF`` (``TTL_NEVER_EXPIRE``)
-                (also, ``-1`` in a signed 32 bit int) Which means that the record will never expire.
-
-            ``0xFFFFFFFE`` (``TTL_DONT_UPDATE``)
-                (also, ``-2`` in a signed 32 bit int)
-                Which means that the record ttl will not change when the record is
-                updated.
+        See :ref:`TTL_CONSTANTS` for more possible special values.
 
         .. note::
             Note that the TTL value will be employed ONLY on background query writes.

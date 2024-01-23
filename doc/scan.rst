@@ -22,10 +22,30 @@ bins returned can be filtered using :meth:`select`.
     `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
     `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
 
+Fields
+======
+
+.. class:: Scan
+
+    ttl (:class:`int`)
+        The time-to-live (expiration) of the record in seconds. Note that ttl
+        is only used on background scan writes.
+
+        If this is set to :data:`aerospike.TTL_CLIENT_DEFAULT`, the scan will use the
+        client's default scan policy ttl.
+
+        See :ref:`TTL_CONSTANTS` for special values that can be set in the record ttl.
+
+        Default: ``0`` (no limit)
+
+        .. note::
+            Requires server version >= 6.0.0
+
 Methods
 =======
 
 .. class:: Scan
+    :noindex:
 
     .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
@@ -556,6 +576,12 @@ Policies
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used on
+            background scan writes if :py:attr:`aerospike.Scan.ttl` is set to
+            :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
 
 .. _aerospike_scan_options:
 

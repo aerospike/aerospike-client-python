@@ -771,6 +771,41 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+static bool is_aerospike_hll_type(PyObject *obj)
+{
+    if (strcmp(obj->ob_type->tp_name, "HyperLogLog")) {
+        // Class name is not HyperLogLog
+        return false;
+    }
+
+    PyObject *py_module_name =
+        PyDict_GetItemString(obj->ob_type->tp_dict, "__module__");
+    if (!py_module_name) {
+        // Class does not belong to any module
+        return false;
+    }
+
+    bool retval = true;
+
+    Py_INCREF(py_module_name);
+    if (!PyUnicode_Check(py_module_name)) {
+        // Invalid module name
+        retval = false;
+        goto CLEANUP;
+    }
+
+    const char *module_name = PyUnicode_AsUTF8(py_module_name);
+    if (strcmp(module_name, "aerospike_helpers")) {
+        // Class belongs to the wrong module
+        retval = false;
+        goto CLEANUP;
+    }
+
+CLEANUP:
+    Py_DECREF(py_module_name);
+    return retval;
+}
+
 as_status pyobject_to_val(AerospikeClient *self, as_error *err,
                           PyObject *py_obj, as_val **val,
                           as_static_pool *static_pool, int serializer_type)
@@ -823,9 +858,23 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         Py_DECREF(py_ustr);
     }
     else if (PyBytes_Check(py_obj)) {
-        uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
-        uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
-        *val = (as_val *)as_bytes_new_wrap(b, b_len, false);
+        char *py_obj_buffer = PyBytes_AsString(py_obj);
+        Py_ssize_t b_len = PyBytes_Size(py_obj);
+        uint8_t *new_buffer = (uint8_t *)malloc(sizeof(uint8_t) * b_len);
+        memcpy(new_buffer, py_obj_buffer, sizeof(uint8_t) * b_len);
+
+        as_bytes *bytes = as_bytes_new_wrap(new_buffer, b_len, true);
+        if (bytes == NULL) {
+            free(new_buffer);
+            return as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert Python bytes to C client's as_bytes");
+        }
+        *val = (as_val *)bytes;
+
+        if (is_aerospike_hll_type(py_obj)) {
+            bytes->type = AS_BYTES_HLL;
+        }
     }
     else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
@@ -1032,6 +1081,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 char *str = PyBytes_AsString(value);
                 as_bytes_set(bytes, 0, (const uint8_t *)str, str_len);
 
+                if (is_aerospike_hll_type(value)) {
+                    bytes->type = AS_BYTES_HLL;
+                }
                 ret_val = as_record_set_bytes(rec, name, bytes);
             }
             else if (PyByteArray_Check(value)) {
@@ -1118,6 +1170,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                                         "TTL should be an int or long");
                     }
                 }
+                else {
+                    rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+                }
 
                 if (py_gen) {
                     if (PyLong_Check(py_gen)) {
@@ -1136,6 +1191,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     }
                 }
             }
+        }
+        else {
+            rec->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
         }
 
         if (err->code != AEROSPIKE_OK) {
@@ -2183,6 +2241,10 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             }
             ops->ttl = ttl;
         }
+        else {
+            // Metadata dict was present, but ttl field did not exist
+            ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
+        }
 
         if (py_gen) {
             if (PyLong_Check(py_gen)) {
@@ -2204,6 +2266,10 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
     else if (py_meta && (py_meta != Py_None)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
+    }
+    else {
+        // Metadata dict was not set by user
+        ops->ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
     }
     return err->code;
 }

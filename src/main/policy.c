@@ -155,6 +155,7 @@ static AerospikeConstants aerospike_constants[] = {
     {AS_INDEX_STRING, "INDEX_STRING"},
     {AS_INDEX_NUMERIC, "INDEX_NUMERIC"},
     {AS_INDEX_GEO2DSPHERE, "INDEX_GEO2DSPHERE"},
+    {AS_INDEX_BLOB, "INDEX_BLOB"},
     {AS_INDEX_TYPE_DEFAULT, "INDEX_TYPE_DEFAULT"},
     {AS_INDEX_TYPE_LIST, "INDEX_TYPE_LIST"},
     {AS_INDEX_TYPE_MAPKEYS, "INDEX_TYPE_MAPKEYS"},
@@ -187,6 +188,7 @@ static AerospikeConstants aerospike_constants[] = {
     {OP_LIST_INCREMENT, "OP_LIST_INCREMENT"},
 
     {OP_MAP_SET_POLICY, "OP_MAP_SET_POLICY"},
+    {OP_MAP_CREATE, "OP_MAP_CREATE"},
     {OP_MAP_PUT, "OP_MAP_PUT"},
     {OP_MAP_PUT_ITEMS, "OP_MAP_PUT_ITEMS"},
     {OP_MAP_INCREMENT, "OP_MAP_INCREMENT"},
@@ -218,10 +220,6 @@ static AerospikeConstants aerospike_constants[] = {
     {AS_MAP_KEY_ORDERED, "MAP_KEY_ORDERED"},
     {AS_MAP_KEY_VALUE_ORDERED, "MAP_KEY_VALUE_ORDERED"},
 
-    {AS_MAP_UPDATE, "MAP_UPDATE"},
-    {AS_MAP_UPDATE_ONLY, "MAP_UPDATE_ONLY"},
-    {AS_MAP_CREATE_ONLY, "MAP_CREATE_ONLY"},
-
     {AS_MAP_RETURN_NONE, "MAP_RETURN_NONE"},
     {AS_MAP_RETURN_INDEX, "MAP_RETURN_INDEX"},
     {AS_MAP_RETURN_REVERSE_INDEX, "MAP_RETURN_REVERSE_INDEX"},
@@ -238,6 +236,7 @@ static AerospikeConstants aerospike_constants[] = {
     {AS_RECORD_DEFAULT_TTL, "TTL_NAMESPACE_DEFAULT"},
     {AS_RECORD_NO_EXPIRE_TTL, "TTL_NEVER_EXPIRE"},
     {AS_RECORD_NO_CHANGE_TTL, "TTL_DONT_UPDATE"},
+    {AS_RECORD_CLIENT_DEFAULT_TTL, "TTL_CLIENT_DEFAULT"},
     {AS_AUTH_INTERNAL, "AUTH_INTERNAL"},
     {AS_AUTH_EXTERNAL, "AUTH_EXTERNAL"},
     {AS_AUTH_EXTERNAL_INSECURE, "AUTH_EXTERNAL_INSECURE"},
@@ -630,6 +629,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
         //POLICY_SET_FIELD(gen, as_policy_gen); removed
         POLICY_SET_FIELD(commit_level, as_policy_commit_level);
         POLICY_SET_FIELD(durable_delete, bool);
+        POLICY_SET_FIELD(ttl, uint32_t);
 
         // C client 5.0 new expressions
         POLICY_SET_EXPRESSIONS_BASE_FIELD();
@@ -1121,33 +1121,28 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
     // Initialize Policy
     POLICY_INIT(as_map_policy);
 
+    // Defaults
     long map_order = AS_MAP_UNORDERED;
-    long map_write_mode = AS_MAP_UPDATE;
     uint32_t map_write_flags = AS_MAP_WRITE_DEFAULT;
+    bool persist_index = false;
 
     MAP_POLICY_SET_FIELD(map_order);
-    PyObject *mode_or_flags =
-        PyDict_GetItemString(py_policy, MAP_WRITE_FLAGS_KEY);
+    MAP_POLICY_SET_FIELD(map_write_flags);
 
-    /*
-	This only works for client >= 3.5.0 and server >= 4.3.0
-	If py_policy["map_write_flags"] is set, we use it
-	otherwise we use py_policy["map_write_mode"]
-	*/
-    if (mode_or_flags) {
-        if (PyLong_Check(mode_or_flags)) {
-            map_write_flags = (uint32_t)PyLong_AsLong(mode_or_flags);
-            as_map_policy_set_flags(policy, map_order, map_write_flags);
+    PyObject *py_persist_index =
+        PyDict_GetItemString(py_policy, "persist_index");
+    if (py_persist_index) {
+        if (PyBool_Check(py_persist_index)) {
+            persist_index = (bool)PyObject_IsTrue(py_persist_index);
         }
         else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "map write flags must be an integer");
+            // persist_index value must be valid if it is set
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "persist_index is not a boolean");
         }
-        return err->code;
     }
 
-    MAP_POLICY_SET_FIELD(map_write_mode);
-    as_map_policy_set(policy, map_order, map_write_mode);
+    as_map_policy_set_all(policy, map_order, map_write_flags, persist_index);
 
     return err->code;
 }

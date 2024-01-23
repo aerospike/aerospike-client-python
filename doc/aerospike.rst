@@ -858,6 +858,13 @@ Specifies the TTL constants.
 
     Do not change the current TTL of the record.
 
+.. data:: TTL_CLIENT_DEFAULT
+
+    NOTE: only applies to the policies mentioned below.
+
+    Use the applicable policy ttl in write, operate, batch write, and scan policies.
+    If the policy is not defined for the transaction, use the default client-level policy's ttl.
+
 .. _auth_mode:
 
 Auth Mode Constants
@@ -1084,27 +1091,6 @@ Flags used by map write flag.
 .. data:: MAP_WRITE_FLAGS_PARTIAL
 
     Allow other valid map items to be committed if a map item is denied due to write flag constraints.
-
-.. _aerospike_map_write_mode:
-
-Map Write Mode
-^^^^^^^^^^^^^^
-
-Flags used by map *write mode*.
-
-.. note:: This should only be used for Server version < 4.3.0
-
-.. data:: MAP_UPDATE
-
-    Default. Allow create or update.
-
-.. data:: MAP_CREATE_ONLY
-
-    If the key already exists, the item will be denied. If the key does not exist, a new item will be created.
-
-.. data:: MAP_UPDATE_ONLY
-
-    If the key already exists, the item will be overwritten. If the key does not exist, the item will be denied.
 
 .. _aerospike_map_order:
 
@@ -1437,6 +1423,10 @@ Miscellaneous
 .. data:: INDEX_NUMERIC
 
     An index whose values are of the aerospike integer data type.
+
+.. data:: INDEX_BLOB
+
+    An index whose values are of the aerospike blob data type.
 
 .. data:: INDEX_GEO2DSPHERE
 

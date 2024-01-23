@@ -277,10 +277,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             ops = as_operations_new(py_ops_size);
             garb->ops_to_free = ops;
 
-            if (py_meta) {
-                if (check_and_set_meta(py_meta, ops, err) != AEROSPIKE_OK) {
-                    goto CLEANUP0;
-                }
+            if (check_and_set_meta(py_meta, ops, err) != AEROSPIKE_OK) {
+                goto CLEANUP0;
             }
 
             for (Py_ssize_t i = 0; i < py_ops_size; i++) {
