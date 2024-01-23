@@ -151,14 +151,6 @@ jobs:
         id: check-new-changes
         run: test $TESTED_VERSION_COMMIT = $LATEST_DEV_COMMIT
 
-      - name: If new changes in dev, force merge stage's RC version into dev
-        if: ${{ steps.check-new-changes.outcome == 'failure' }}
-        run: git merge -X theirs stage-test
-
-      - name: Push changes to remote dev
-        if: ${{ steps.check-new-changes.outcome == 'failure' }}
-        run: git push
-
   merge-stage-to-dev:
     needs: upload-to-jfrog
     runs-on: ubuntu-latest
@@ -177,7 +169,7 @@ jobs:
       merge-stage-to-dev,
       check-for-dev-changes
     ]
-    if: ${{ needs.check-for-dev-changes.outputs.no-dev-changes-detected == 'false' }}
+    if: ${{ !cancelled() && needs.check-for-dev-changes.outputs.no-dev-changes-detected == 'false' }}
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
