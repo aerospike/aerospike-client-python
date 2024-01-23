@@ -24,7 +24,64 @@ class TestLog(object):
 
         assert response == 0
 
-    def test_enable_log_handler_correct(self):
+    def test_enable_log_handler_correct_no_callback(self):
+        """
+        Test log handler with correct parameters
+        """
+
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.set_log_handler()
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
+    def test_enable_log_handler_correct_with_callback(self):
+        """
+        Test log handler with correct parameters
+        """
+        def log_callback(level, func, path, line, msg):
+            print("[{}] {}".format(func, msg))
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.set_log_handler(log_callback)
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
+    def test_enable_log_handler_correct_with_none(self):
+        """
+        Test log handler with correct parameters
+        """
+
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+        aerospike.set_log_handler(None)
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
+    def test_enable_log_handler_correct_with_LOG_LEVEL_OFF(self):
+        """
+        Test log handler with correct parameters
+        """
+
+        response = aerospike.set_log_level(aerospike.LOG_LEVEL_OFF)
+        aerospike.set_log_handler()
+
+        # Forces an event to be logged
+        client = TestBaseClass.get_new_connection()
+
+        assert response == 0
+        client.close()
+
+    def test_enable_log_handler_correct_with_LOG_LEVEL_DEBUG(self):
         """
         Test log handler with correct parameters
         """
