@@ -622,6 +622,7 @@ jobs:
       manylinux_arm64,
       macOS-x86,
       macOS-m1,
+      windows
     ]
     runs-on: ubuntu-latest
     steps:
