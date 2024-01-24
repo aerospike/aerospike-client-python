@@ -574,12 +574,7 @@ jobs:
         run: nuget restore
         working-directory: aerospike-client-c/vs
 
-      - uses: ./.github/actions/run-ee-server
-        with:
-          use-server-rc: ${{ inputs.use-server-rc }}
-          server-tag: ${{ inputs.server-tag }}
-          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+      - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
 
       - name: Connect to Docker container on remote machine with Docker daemon
         # DOCKER_HOST contains the IP address of the remote machine
