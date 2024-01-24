@@ -576,6 +576,10 @@ jobs:
 
       - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
       - name: Connect to Docker container on remote machine with Docker daemon
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
