@@ -547,6 +547,60 @@ jobs:
         docker container stop aerospike
         docker container prune -f
 
+  windows:
+    needs: update-version
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+          ["cp310", "3.10"],
+          ["cp311", "3.11"],
+          ["cp312", "3.12"]
+        ]
+    runs-on: [self-hosted, Windows]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Install C client deps
+        run: nuget restore
+        working-directory: aerospike-client-c/vs
+
+      - uses: ./.github/actions/run-ee-server
+        with:
+          use-server-rc: ${{ inputs.use-server-rc }}
+          server-tag: ${{ inputs.server-tag }}
+          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+      - name: Get IP address of Docker container from remote Docker daemon
+        run: |
+          pip install crudini==0.9.4
+          sed -i "s/127.0.0.1:3000//" config.conf
+          crudini --set config.conf enterprise-edition hosts ${DOCKER_HOST}:3000
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.16.2
+        with:
+          CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
+          CIBW_BUILD_FRONTEND: build
+          CIBW_ARCHS: "auto64"
+          CIBW_TEST_COMMAND: >
+            cd {project}/test/ &&
+            pip install -r requirements.txt &&
+            python -m pytest new_tests/
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+
   upload-artifacts-to-jfrog:
     if: ${{ inputs.should-bump-version }}
     needs: [

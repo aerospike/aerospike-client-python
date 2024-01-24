@@ -73,6 +73,15 @@ jobs:
   test-windows:
     needs: temp-build-win
     runs-on: [self-hosted, Windows]
+    strategy:
+      matrix:
+        python: [
+          '3.8',
+          '3.9',
+          '3.10',
+          '3.11',
+          '3.12'
+        ]
     steps:
     - uses: actions/checkout@v2
 
@@ -83,20 +92,7 @@ jobs:
     - name: Install client
       run: python -m pip install aerospike --find-links=./ --no-index --force-reinstall --user
 
-    - name: Install SSH key
-      uses: shimataro/ssh-key-action@v2
-      with:
-        key: ${{ secrets.WINDOWS_WORKFLOW_LINUX_PK }}
-        known_hosts: ${{ secrets.WINDOWS_WORKFLOW_KNOWN_HOSTS }}
-
-    # - uses: webfactory/ssh-agent@v0.8.0
-    #   with:
-    #     ssh-private-key: ${{ secrets.WINDOWS_WORKFLOW_LINUX_PK }}
-
-    - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} echo test
-      id: first-connection
-
-    - run: ssh -o ConnectTimeout=10 ${{ secrets.WINDOWS_WORKFLOW_LINUX_USER }}@${{ secrets.WINDOWS_WORKFLOW_LINUX_IP }} docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+    - run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
     - run: python -m pip install --user crudini
 
