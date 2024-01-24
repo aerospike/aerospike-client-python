@@ -604,6 +604,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Cleanup
+        if: ${{ always() }}
         run: |
           docker stop aerospike
           docker container rm aerospike
