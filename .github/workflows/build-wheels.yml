@@ -562,6 +562,7 @@ jobs:
         ]
     runs-on: [self-hosted, Windows]
     steps:
+      - run: echo $env:PATH
       - uses: actions/checkout@v4
         with:
           submodules: true
