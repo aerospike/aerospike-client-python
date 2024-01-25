@@ -598,7 +598,7 @@ jobs:
           ["cp310", "3.10"],
           ["cp311", "3.11"],
         ]
-    runs-on: [self-hosted, Windows]
+    runs-on: [self-hosted, Windows, X64]
     steps:
       - uses: actions/checkout@v4
       - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
