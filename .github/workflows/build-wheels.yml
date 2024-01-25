@@ -599,6 +599,8 @@ jobs:
           ["cp311", "3.11"],
         ]
     runs-on: [self-hosted, Windows, X64]
+    # Workaround for a bug where skipped ancestor job will also skip this job
+    if: ${{ !cancelled() && needs.windows-build.result == 'success' }}
     steps:
       - uses: actions/checkout@v4
       - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
