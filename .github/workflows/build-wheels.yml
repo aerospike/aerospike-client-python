@@ -615,8 +615,8 @@ jobs:
         run: |
           python${{ matrix.python[1] }} -m pip install crudini==0.9.4
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          python${{ matrix.python[1] }} --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-          python${{ matrix.python[1] }} --set config.conf community-edition hosts ''
+          python${{ matrix.python[1] }} -m crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
+          python${{ matrix.python[1] }} -m crudini --set config.conf community-edition hosts ''
 
       - run: python${{ matrix.python[1] }} -m pip install -r requirements.txt
         working-directory: test
