@@ -617,6 +617,7 @@ jobs:
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
           python${{ matrix.python[1] }} -m crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
           python${{ matrix.python[1] }} -m crudini --set config.conf community-edition hosts ''
+        working-directory: test
 
       - run: python${{ matrix.python[1] }} -m pip install pytest -c requirements.txt
         working-directory: test
