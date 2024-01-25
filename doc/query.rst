@@ -405,6 +405,7 @@ Assume this boilerplate code is run before all examples below:
         `UDF <https://aerospike.com/docs/database/learn/architecture/udf/#stream-udfs>`_. If no \
         predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
         will aggregate over all the records in the specified set.
+        This method cannot be used in combination with :meth:`~aerospike.Query.add_ops`.
 
         This function can also be used to apply a record UDF.
 
@@ -492,6 +493,7 @@ Assume this boilerplate code is run before all examples below:
         server version, using a non-basic read operation will raise a :exc:`~aerospike.exception.ParamError`.
 
         If no predicate is attached to the Query it will apply ops to all the records in the specified set.
+        This method cannot be used in combination with :meth:`~aerospike.Query.apply`.
 
         If there are selected bins in this Query object via :meth:`~Query.select`, those selected bins will be ignored
         during the query.
