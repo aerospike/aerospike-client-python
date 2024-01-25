@@ -609,7 +609,7 @@ jobs:
         with:
           name: ${{ matrix.python[0] }}-win_amd64
       - name: Install wheel
-        run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=${{ matrix.python[0] }}-win_amd64/
+        run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
       - name: Connect to Docker container on remote machine with Docker daemon
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
