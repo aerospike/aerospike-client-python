@@ -622,6 +622,7 @@ jobs:
         working-directory: test
 
       - run: python${{ matrix.python[1] }} -m pytest new_tests/
+        working-directory: test
 
       - name: Cleanup
         if: ${{ always() }}
