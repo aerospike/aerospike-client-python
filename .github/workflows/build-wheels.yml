@@ -558,7 +558,6 @@ jobs:
           ["cp39", "3.9"],
           ["cp310", "3.10"],
           ["cp311", "3.11"],
-          ["cp312", "3.12"]
         ]
     runs-on: windows-2022
     # runs-on: [self-hosted, Windows]
@@ -598,7 +597,6 @@ jobs:
           ["cp39", "3.9"],
           ["cp310", "3.10"],
           ["cp311", "3.11"],
-          ["cp312", "3.12"]
         ]
     runs-on: [self-hosted, Windows]
     steps:
