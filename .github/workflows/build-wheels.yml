@@ -576,24 +576,29 @@ jobs:
 
       - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
 
+      - name: Build
+        run: python${{ matrix.python[1] }} -m build
+
+      - name: Repair
+        run: |
+          python${{ matrix.python[1] }} -m pip install delvewheel
+          python${{ matrix.python[1] }} -m delvewheel repair -v
+
+      - name: Install
+        run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=wheelhouse/
+
       - name: Connect to Docker container on remote machine with Docker daemon
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
-          python3.11 -m pip install crudini==0.9.4
+          python${{ matrix.python[1] }} -m pip install crudini==0.9.4
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          python3.11 -m crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-          python3.11 -m crudini --set config.conf community-edition hosts ''
+          python${{ matrix.python[1] }} --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
+          python${{ matrix.python[1] }} --set config.conf community-edition hosts ''
 
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.2
-        with:
-          CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
-          CIBW_BUILD_FRONTEND: build
-          CIBW_ARCHS: "auto64"
-          CIBW_TEST_COMMAND: >
-            cd {project}/test/ &&
-            pip install -r requirements.txt &&
-            python -m pytest new_tests/
+      - run: python${{ matrix.python[1] }} -m pip install -r requirements.txt
+        working-directory: test
+
+      - run: python${{ matrix.python[1] }} -m pytest new_tests/
 
       - uses: actions/upload-artifact@v3
         with:
