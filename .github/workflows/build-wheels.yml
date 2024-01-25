@@ -581,7 +581,7 @@ jobs:
           CIBW_BUILD_FRONTEND: build
           CIBW_ARCHS: auto64
           CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_REPAIR_WHEEL_COMMAND: "delvewheel repair -w {dest_dir} {wheel}"
+          CIBW_REPAIR_WHEEL_COMMAND: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
 
       - uses: actions/upload-artifact@v3
         with:
