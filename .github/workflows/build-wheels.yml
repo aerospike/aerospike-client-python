@@ -576,6 +576,9 @@ jobs:
 
       - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
 
+      - name: Install build dependencies
+        run: python${{ matrix.python[1] }} -m pip install -r requirements.txt
+
       - name: Build
         run: python${{ matrix.python[1] }} -m build
 
