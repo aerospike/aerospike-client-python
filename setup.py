@@ -192,7 +192,7 @@ with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
-dlls = ["aerospike.dll", "pthreadVC2.dll", "zlib.dll", "libeay32.dll", "ssleay32.dll"]
+# dlls = ["aerospike.dll", "pthreadVC2.dll", "zlib.dll", "libeay32.dll", "ssleay32.dll"]
 
 class CClientBuild(build):
 
@@ -232,11 +232,11 @@ class CClientBuild(build):
         self.execute(compile, [], 'Compiling core aerospike-client-c')
         # run original c-extension build code
 
-        if WINDOWS:
-            global dlls
-            dll_folder = AEROSPIKE_C_TARGET + "/vs/x64/Release/"
-            for dll in dlls:
-                shutil.copy(dll_folder + dll, "./aerospike/")
+        # if WINDOWS:
+        #     global dlls
+        #     dll_folder = AEROSPIKE_C_TARGET + "/vs/x64/Release/"
+        #     for dll in dlls:
+        #         shutil.copy(dll_folder + dll, "./aerospike/")
 
         build.run(self)
 
@@ -263,7 +263,7 @@ setup(
     ext_modules=[
         Extension(
             # Extension Name
-            'aerospike.aerospike',
+            'aerospike',
 
             # Source Files
             [
@@ -367,12 +367,12 @@ setup(
             "exception.pyi",
             "predicates.pyi",
         ],
-        "aerospike": dlls
+        # "aerospike": dlls
     },
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions',
               'aerospike-stubs',
-              'aerospike'
+            #   'aerospike'
               ],
     # data_files=[
     #     ("", dlls)
