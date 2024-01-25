@@ -581,8 +581,8 @@ jobs:
         run: |
           python3.11 -m pip install crudini==0.9.4
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-          crudini --set config.conf community-edition hosts ''
+          python3.11 -m crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
+          python3.11 -m crudini --set config.conf community-edition hosts ''
 
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.16.2
