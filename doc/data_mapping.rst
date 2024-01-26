@@ -10,7 +10,7 @@ Default Behavior
 ----------------
 
 By default, the :py:class:`~aerospike.Client` maps the supported Python types to Aerospike server \
-`types <https://docs.aerospike.com/server/guide/data-types/overview>`_. \
+`types <https://aerospike.com/docs/server/guide/data-types/overview>`_. \
 When an unsupported type is encountered by the module:
 
 1. When sending data to the server, it does not serialize the type and will throw an error.
@@ -78,11 +78,11 @@ The following table shows which Python types map directly to Aerospike server ty
 It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list
 as a value.
 
-.. _integer: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#integer
-.. _string: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#string
-.. _double: https://docs.aerospike.com/server/guide/data-types/scalar-data-types#double
-.. _map: https://docs.aerospike.com/server/guide/data-types/cdt-map
-.. _key ordered map: https://docs.aerospike.com/server/guide/data-types/cdt-map
-.. _list: https://docs.aerospike.com/server/guide/data-types/cdt-list
-.. _blob: https://docs.aerospike.com/server/guide/data-types/blob
-.. _GeoJSON: https://docs.aerospike.com/server/guide/data-types/geospatial
+.. _integer: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#integer
+.. _string: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#string
+.. _double: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#double
+.. _map: https://aerospike.com/docs/server/guide/data-types/cdt-map
+.. _key ordered map: https://aerospike.com/docs/server/guide/data-types/cdt-map
+.. _list: https://aerospike.com/docs/server/guide/data-types/cdt-list
+.. _blob: https://aerospike.com/docs/server/guide/data-types/blob
+.. _GeoJSON: https://aerospike.com/docs/server/guide/data-types/geospatial

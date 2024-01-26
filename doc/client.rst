@@ -20,8 +20,8 @@ a cluster-tending thread.
 
 .. seealso::
     `Client Architecture
-    <https://www.aerospike.com/docs/architecture/clients.html>`_ and
-    `Data Distribution <https://www.aerospike.com/docs/architecture/data-distribution.html>`_.
+    <https://aerospike.com/docs/server/architecture/clients.html>`_ and
+    `Data Distribution <https://aerospike.com/docs/server/architecture/data-distribution.html>`_.
 
 Boilerplate Code For Examples
 -----------------------------
@@ -71,7 +71,7 @@ Connection
             Python client 5.0.0 and up will fail to connect to Aerospike server 4.8.x or older.
             If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
 
-        .. seealso:: `Security features article <https://docs.aerospike.com/server/guide/security/index.html>`_.
+        .. seealso:: `Security features article <https://aerospike.com/docs/server/guide/security/index.html>`_.
 
     .. method:: is_connected()
 
@@ -310,7 +310,7 @@ Batch Operations
             - The record was not found
 
     Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
-    an `as_status <https://docs.aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
+    an `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
 
     In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
     and each batch record contains the result of that transaction.
@@ -671,8 +671,8 @@ User Defined Functions
                  :class:`int`, :class:`float`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `Record UDF <https://docs.aerospike.com/server/guide/record_udf>`_ \
-          and `Developing Record UDFs <https://developer.aerospike.com/udf/developing_record_udfs>`_.
+        .. seealso:: `Record UDF <https://aerospike.com/docs/server/guide/record_udf>`_ \
+          and `Developing Record UDFs <https://aerospike.com/developer/udf/developing_record_udfs>`_.
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
@@ -773,7 +773,7 @@ Info Operations
 
         Send an info *command* to a single node specified by *host name*.
 
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
         :param str host: a node name. Example: 'BCER199932C'
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
@@ -787,7 +787,7 @@ Info Operations
 
         If any of the individual requests fail, this will raise an exception.
 
-        :param str command: see `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: see `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -804,7 +804,7 @@ Info Operations
 
         Send an info *command* to a single random node.
 
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -823,7 +823,7 @@ Info Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `xdr-set-filter Info Command Reference <https://docs.aerospike.com/reference/info#xdr-set-filter>`_.
+        .. seealso:: `xdr-set-filter Info Command Reference <https://aerospike.com/docs/server/reference/info#xdr-set-filter>`_.
 
         .. versionchanged:: 5.0.0
 
@@ -854,7 +854,7 @@ Info Operations
         Remove all records in the namespace / set whose last updated time is older than the given time.
 
         This method is many orders of magnitude faster than deleting records one at a time.
-        See `Truncate command reference <https://docs.aerospike.com/reference/info#truncate>`_.
+        See `Truncate command reference <https://aerospike.com/docs/server/reference/info#truncate>`_.
 
         This asynchronous server call may return before the truncation is complete.  The user can still
         write new records after the server returns because new records will have last update times
@@ -1071,7 +1071,7 @@ user\'s roles. Users are assigned roles, which are collections of \
         print("Error [{0}]: {1}".format(e.code, e.msg))
     client.close()
 
-.. seealso:: `Security features article <https://docs.aerospike.com/server/guide/security/index.html>`_.
+.. seealso:: `Security features article <https://aerospike.com/docs/server/guide/security/index.html>`_.
 
 .. class:: Client
     :noindex:
@@ -1434,7 +1434,7 @@ Key Tuple
         client.remove(keyTuple)
         client.close()
 
-    .. seealso:: `Data Model: Keys and Digests <https://docs.aerospike.com/server/architecture/data-model#records>`_.
+    .. seealso:: `Data Model: Keys and Digests <https://aerospike.com/docs/server/architecture/data-model#records>`_.
 
 .. _aerospike_record_tuple:
 
@@ -1500,7 +1500,7 @@ Record Tuple
             client.remove(keyTuple)
             client.close()
 
-    .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
+    .. seealso:: `Data Model: Record <https://aerospike.com/docs/server/architecture/data-model.html#records>`_.
 
 .. _metadata_dict:
 

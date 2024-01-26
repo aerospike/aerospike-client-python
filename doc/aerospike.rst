@@ -77,7 +77,7 @@ Client
         tls_host_tuple = (tls_ip, tls_port, tls_name)
         hosts = [tls_host_tuple]
 
-        # Example configuration which will use TLS with the specifed cafile
+        # Example configuration which will use TLS with the specified cafile
         tls_config = {
             "cafile": "/path/to/cacert.pem",
             "enable": True
@@ -462,7 +462,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
-                    `Per-Transaction Consistency Guarantees <http://www.aerospike.com/docs/architecture/consistency.html>`_.
+                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/server/architecture/consistency.html>`_.
 
         * **shm** (:class:`dict`)
             Contains optional shared-memory cluster tending parameters
@@ -498,7 +498,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default: ``0xA9000000``
 
                 .. seealso::
-                    `Shared Memory <https://developer.aerospike.com/client/c/shm>`_
+                    `Shared Memory <https://aerospike.com/developer/client/shm>`_
 
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process.
@@ -507,7 +507,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://www.aerospike.com/docs/guide/security/tls.html>`_.
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/server/guide/security/tls.html>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not.
@@ -1432,7 +1432,7 @@ Miscellaneous
 
     An index whose values are of the aerospike GetJSON data type.
 
-.. seealso:: `Data Types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
+.. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
 
 .. data:: INDEX_TYPE_DEFAULT
 
