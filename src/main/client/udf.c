@@ -35,10 +35,10 @@
 
 // Unistd isn't available on windows
 #ifdef _WIN32
-#define F_OK 0
-#define access _access
+    #define F_OK 0
+    #define access _access
 #else
-#include <unistd.h>
+    #include <unistd.h>
 #endif
 
 /**
@@ -236,7 +236,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     int numBytesRead = fread(buff, 1, fileSize, file_p);
     if (numBytesRead != fileSize) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to send lua file to server");
+                        "Unable to send lua file to server. %d != %d",
+                        numBytesRead, fileSize);
         goto CLEANUP;
     }
 
