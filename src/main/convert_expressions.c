@@ -106,19 +106,6 @@ enum expr_ops {
     VAL = 200
 };
 
-// RESULT TYPES
-enum result_types {
-    BOOLEAN = 1,
-    INTEGER = 2,
-    STRING = 3,
-    LIST = 4,
-    MAP = 5,
-    BLOB = 6,
-    FLOAT = 7,
-    GEOJSON = 8,
-    HLL = 9
-};
-
 // VIRTUAL OPS
 enum virtual_ops {
     END_VA_ARGS = 150,
