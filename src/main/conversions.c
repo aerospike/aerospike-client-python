@@ -145,8 +145,7 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
 }
 
 as_status strArray_to_py_list(as_error *err, int num_elements, int element_size,
-                              char** str_array_ptr,
-                              PyObject *py_list)
+                              char **str_array_ptr, PyObject *py_list)
 {
     as_error_reset(err);
 
@@ -1287,7 +1286,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             Py_DECREF(py_ustr);
         }
         else if (PyLong_Check(py_key)) {
-            int64_t k = (int64_t)PyLong_AsLong(py_key);
+            int64_t k = (int64_t)PyLong_AsLongLong(py_key);
             if (-1 == k && PyErr_Occurred()) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "integer value for KEY exceeds sys.maxsize");
