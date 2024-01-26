@@ -19,7 +19,6 @@ from __future__ import print_function
 import os
 import platform
 import sys
-import shutil
 from subprocess import Popen
 from subprocess import call
 from setuptools import setup, Extension
@@ -162,7 +161,7 @@ else:
 
 include_dirs = include_dirs + [
     '/usr/local/opt/openssl/include',
-    AEROSPIKE_C_TARGET + '/src/include',
+    AEROSPIKE_C_TARGET + '/include',
 
 ]
 if not WINDOWS:
