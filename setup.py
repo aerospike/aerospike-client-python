@@ -161,14 +161,15 @@ else:
 
 include_dirs = include_dirs + [
     '/usr/local/opt/openssl/include',
-    AEROSPIKE_C_TARGET + '/include',
 
 ]
 if not WINDOWS:
+    include_dirs.append(AEROSPIKE_C_TARGET + '/include')
     extra_objects = extra_objects + [
         AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
     ]
 else:
+    include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
     library_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.2/build/native/lib/x64/Release")
     # Needed for linking the Python client with the C client
     extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
