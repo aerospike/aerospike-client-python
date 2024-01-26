@@ -746,7 +746,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
     }
 
-    //as_policies_init(&config.policies);
+    as_policies_init(&config.policies);
     //Set default value of use_batch_direct
 
     PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
