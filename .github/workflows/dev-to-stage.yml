@@ -17,7 +17,7 @@ jobs:
         ref: dev-test
 
     - name: Get latest dev version
-      run: echo latest-dev-version=$(git describe --abbrev=0) >> $GITHUB_OUTPUT
+      run: echo latest-dev-version=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
       id: get-dev-version
 
     - name: Output latest dev version
