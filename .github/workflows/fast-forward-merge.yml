@@ -11,14 +11,6 @@ on:
     secrets:
       CLIENT_BOT_PAT:
         required: true
-  workflow_dispatch:
-    inputs:
-      branch_to_merge:
-        type: string
-        required: true
-      base_branch:
-        type: string
-        required: true
 
 jobs:
   merge:
@@ -29,12 +21,11 @@ jobs:
         with:
           # Fetch the whole history to prevent unrelated history errors
           fetch-depth: '0'
-          # The branch you want to checkout (usually equal to `branchtomerge`)
-          ref: ${{ inputs.branch_to_merge }}
+          ref: ${{ inputs.base_branch }}
           token: ${{ secrets.CLIENT_BOT_PAT }}
 
       - name: Fast forward
-        run: git merge --ff-only ${{ inputs.base_branch }}
+        run: git merge --ff-only ${{ inputs.branch_to_merge }}
 
       - name: Upload changes to remote head branch
         run: git push

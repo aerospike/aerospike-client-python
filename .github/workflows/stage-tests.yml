@@ -107,15 +107,6 @@ jobs:
       id: test
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
 
-    - name: Set output
-      # commit_sha would be empty if this was called by workflow_dispatch
-      # It must be set to a valid hash when called by workflow_call
-      if: ${{ inputs.commit_sha != '' && !cancelled() }}
-      uses: ./.github/actions/set-matrix-output
-      with:
-        artifact-name: sdist.${{ matrix.distros[1] }}
-        test-outcome: ${{ steps.test.outcome }}
-
 # We also run some wheel (QE test category 2) tests
 # because of the same reason we have some source distribution tests
 
@@ -184,13 +175,6 @@ jobs:
       id: test
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
-    - name: Set output
-      if: ${{ inputs.commit_sha != '' && !cancelled() }}
-      uses: ./.github/actions/set-matrix-output
-      with:
-        artifact-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.${{ matrix.distros[1] }}
-        test-outcome: ${{ steps.test.outcome }}
-
   manylinux_debian:
     needs: build-artifacts
     runs-on: ubuntu-latest
@@ -252,13 +236,6 @@ jobs:
       id: test
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
-    - name: Set output
-      if: ${{ inputs.commit_sha != '' && !cancelled() }}
-      uses: ./.github/actions/set-matrix-output
-      with:
-        artifact-name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.${{ matrix.debian-name }}
-        test-outcome: ${{ steps.test.outcome }}
-
   manylinux_ubuntu2204:
     needs: build-artifacts
     strategy:
@@ -314,13 +291,6 @@ jobs:
     - name: Run tests
       id: test
       run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
-
-    - name: Set output
-      if: ${{ inputs.commit_sha != '' && !cancelled() }}
-      uses: ./.github/actions/set-matrix-output
-      with:
-        artifact-name: cp310-manylinux_${{ matrix.platform[0] }}.ubuntu2204
-        test-outcome: ${{ steps.test.outcome }}
 
   macOS:
     needs: build-artifacts
@@ -380,10 +350,3 @@ jobs:
       run: python3 -m pytest new_tests/
       id: test
       working-directory: test
-
-    - name: Set output
-      if: ${{ inputs.commit_sha != '' && !cancelled() }}
-      uses: ./.github/actions/set-matrix-output
-      with:
-        artifact-name: ${{ matrix.python-version[1] }}-macosx_x86_64.${{ matrix.macos-version }}
-        test-outcome: ${{ steps.test.outcome }}

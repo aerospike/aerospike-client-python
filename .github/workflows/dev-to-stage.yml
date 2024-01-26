@@ -31,24 +31,19 @@ jobs:
       commit_sha: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
     secrets: inherit
 
-  merge-dev-tag-into-stage:
+  ff-stage-to-dev-tag:
     needs: [
       run-stage-tests,
       get-latest-dev-tag
     ]
-    runs-on: ubuntu-latest
-    steps:
-    - run: actions/checkout@v4
-    - name: Merge development -> staging
-      uses: devmasx/merge-branch@master
-      with:
-        type: now
-        from_branch: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
-        target_branch: stage
-        github_token: ${{ secrets.CLIENT_BOT_PAT }}
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      branch_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+      base_branch: stage-test
+    secrets: inherit
 
   promote-dev-build-to-rc:
-    needs: merge-dev-tag-into-stage
+    needs: ff-stage-to-dev-tag
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
@@ -65,7 +60,7 @@ jobs:
       # So we must delete the artifacts produced by stage-tests.yml
       # Before rebuilding the artifacts with the new RC version
       - name: Remove artifacts with dev version
-        uses: geekyeggo/delete-artifact@v2
+        uses: geekyeggo/delete-artifact@v4
         with:
           name: '*.build'
 
@@ -79,99 +74,21 @@ jobs:
       run_tests: false
       commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
 
-  filter-artifacts:
-    if: ${{ !cancelled() }}
-    needs: rebuild-artifacts-with-rc-version
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        sparse-checkout: |
-          .github/workflows/filter-artifacts.py
-        sparse-checkout-cone-mode: false
-
-    - uses: actions/download-artifact@v4
-      with:
-        pattern: '*.matrix-output'
-        path: matrix-outputs
-        merge-multiple: true
-
-    - name: Filter artifacts
-      run: python3 filter-artifacts.py
-      working-directory: ./.github/workflows/
-
-    - run: |
-        {
-          echo 'bad_artifacts<<EOF'
-          cat failed_artifacts.txt
-          echo EOF
-        } >> $GITHUB_OUTPUT
-      id: bad-artifacts
-      working-directory: ./.github/workflows/
-
-    # We don't need matrix output files anymore after this job
-    - name: Remove failed artifacts and matrix outputs
-      uses: geekyeggo/delete-artifact@v2
-      with:
-        name: |
-          ${{ steps.bad-artifacts.outputs.bad_artifacts }}
-          *.matrix-output
-
   upload-to-jfrog:
-    needs: [
-      promote-dev-build-to-rc,
-      filter-artifacts
-    ]
+    needs: promote-dev-build-to-rc
     name: Upload artifacts to JFrog
-    if: ${{ !cancelled() }}
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       new_version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
     secrets: inherit
 
-  check-for-dev-changes:
-    needs: upload-to-jfrog
-    runs-on: ubuntu-latest
-    outputs:
-      no-dev-changes-detected: ${{ steps.check-new-changes.outcome == 'success' }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: dev-test
-          token: ${{ secrets.CLIENT_BOT_PAT }}
-          fetch-depth: '0'
-
-      - name: Get commit hash of tested version
-        run: echo TESTED_VERSION_COMMIT=$(git rev-list -n 1 ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}) >> $GITHUB_ENV
-
-      - name: Get latest commit hash of dev
-        run: echo LATEST_DEV_COMMIT=$(git log -n 1 dev-test) >> $GITHUB_ENV
-
-      - name: Check for new changes since tested version in dev
-        id: check-new-changes
-        run: test $TESTED_VERSION_COMMIT = $LATEST_DEV_COMMIT
-
-  merge-stage-to-dev:
-    needs: upload-to-jfrog
-    runs-on: ubuntu-latest
-    steps:
-    - run: actions/checkout@v4
-    - name: Merge development -> staging
-      uses: devmasx/merge-branch@master
-      with:
-        type: now
-        from_branch: stage
-        target_branch: dev
-        github_token: ${{ secrets.CLIENT_BOT_PAT }}
-
-  bump-to-new-dev-version:
+  ff-stage-to-dev:
     needs: [
-      merge-stage-to-dev,
-      check-for-dev-changes
+      get-latest-dev-tag,
+      upload-to-jfrog
     ]
-    if: ${{ !cancelled() && needs.check-for-dev-changes.outputs.no-dev-changes-detected == 'false' }}
-    uses: ./.github/workflows/bump-version.yml
+    uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      change: 'bump-dev-num'
-      commit_sha: dev-test
+      branch_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+      base_branch: stage-test
     secrets: inherit
