@@ -35,10 +35,10 @@
 
 // Unistd isn't available on windows
 #ifdef _WIN32
-#define F_OK 0
-#define access _access
+    #define F_OK 0
+    #define access _access
 #else
-#include <unistd.h>
+    #include <unistd.h>
 #endif
 
 /**

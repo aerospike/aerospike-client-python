@@ -30,7 +30,6 @@
 #include "conversions.h"
 #include "exceptions.h"
 
-
 typedef struct foreach_callback_info_udata_t {
     PyObject *udata_p;
     PyObject *host_lookup_p;
