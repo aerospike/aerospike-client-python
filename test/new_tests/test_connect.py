@@ -210,5 +210,9 @@ class TestConnect(object):
         with pytest.raises(err) as err_info:
             self.client = aerospike.client(config).connect()
 
-        assert err_info.value.code == err_code
+        # Errors that throw -10 can also throw 9
+        if err_code != -10:
+            assert err_info.value.code == err_code
+        else:
+            assert err_info.value.code == err_code or err_info.value.code == 9
         assert err_info.value.msg == err_msg
