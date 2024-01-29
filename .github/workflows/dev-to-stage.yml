@@ -75,7 +75,10 @@ jobs:
       commit_sha: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
 
   upload-to-jfrog:
-    needs: rebuild-artifacts-with-rc-version
+    needs: [
+      rebuild-artifacts-with-rc-version,
+      promote-dev-build-to-rc
+    ]
     name: Upload artifacts to JFrog
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
