@@ -325,7 +325,7 @@ jobs:
     - run: python${{ matrix.python-version[1] }} -m build
 
     - name: Install delocate
-      run: python${{ matrix.python-version[1] }} -m pip install delocate -c requirements.txt
+      run: python${{ matrix.python-version[1] }} -m pip install delocate -c ./requirements.txt
       working-directory: .github/workflows
 
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
