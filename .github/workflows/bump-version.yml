@@ -23,9 +23,9 @@ on:
         description: Python script name to change version
         required: true
       commit_sha:
+        default: ''
         required: false
         description: Commit to bump off of
-        default: ''
         type: string
     secrets:
       CLIENT_BOT_PAT:
@@ -44,7 +44,7 @@ jobs:
       new_version: ${{ steps.pass-new-version.outputs.new_version }}
       bump_sha: ${{ steps.pass-bump-commit-sha.outputs.bump_sha }}
     steps:
-    # The code to get the new version should be from the stage branch, where we called the workflow
+    # The code to get the new version should be from where we called the workflow
     - uses: actions/checkout@v4
 
     - run: pip install parver -c requirements.txt
@@ -71,8 +71,7 @@ jobs:
         commit_message: Auto-bump version to ${{ env.NEW_TAG }}
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         tagging_message: ${{ env.NEW_TAG }}
-        # Be explicit about branch name since this action doesn't always checkout the correct branch
-        branch: ${{ github.ref }}
+        branch: ${{ inputs.commit_sha != '' && inputs.commit_sha || github.ref }}
 
     - name: Pass new version to JFrog upload job
       id: pass-new-version
