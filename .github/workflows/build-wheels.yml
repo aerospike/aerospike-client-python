@@ -186,7 +186,7 @@ jobs:
       working-directory: test
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_BUILD: ${{ matrix.python }}-manylinux_aarch64
         CIBW_BUILD_FRONTEND: build
@@ -248,7 +248,7 @@ jobs:
       working-directory: test
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_BUILD: ${{ matrix.python[0] }}-manylinux_x86_64
         CIBW_BUILD_FRONTEND: build
@@ -277,7 +277,7 @@ jobs:
         submodules: recursive
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_BUILD: cp39-manylinux_x86_64
         CIBW_BUILD_FRONTEND: build
@@ -452,7 +452,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.11.2
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_x86_64
         CIBW_BUILD_FRONTEND: build
