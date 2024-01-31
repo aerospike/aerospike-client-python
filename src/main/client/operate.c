@@ -228,7 +228,7 @@ static inline bool isListOp(int op)
         op == OP_LIST_REMOVE_BY_VALUE_LIST ||
         op == OP_LIST_REMOVE_BY_VALUE_RANGE || op == OP_LIST_SET_ORDER ||
         op == OP_LIST_SORT || op == OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL ||
-        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL);
+        op == OP_LIST_GET_BY_VALUE_RANK_RANGE_REL || op == OP_LIST_CREATE);
 }
 
 static inline bool isNewMapOp(int op)
@@ -284,7 +284,7 @@ bool opRequiresValue(int op)
             op != OP_MAP_REMOVE_BY_RANK && op != OP_MAP_GET_BY_KEY &&
             op != OP_MAP_GET_BY_INDEX && op != OP_MAP_GET_BY_KEY_RANGE &&
             op != OP_MAP_GET_BY_RANK && op != AS_OPERATOR_DELETE &&
-            op != OP_MAP_CREATE);
+            op != OP_MAP_CREATE && op != OP_LIST_CREATE);
 }
 
 bool opRequiresRange(int op)
@@ -350,6 +350,9 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     PyObject *py_return_type = NULL;
     // For map_create operation
     PyObject *py_map_order = NULL;
+    // For list_create operation
+    PyObject *py_list_order = NULL;
+    // For both map and list create operations
     PyObject *py_persist_index = NULL;
 
     Py_ssize_t pos = 0;

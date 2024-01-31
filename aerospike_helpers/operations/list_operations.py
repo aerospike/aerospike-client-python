@@ -44,6 +44,37 @@ VALUE_LIST_KEY = "value_list"
 LIST_ORDER_KEY = "list_order"
 SORT_FLAGS_KEY = "sort_flags"
 CTX_KEY = "ctx"
+PAD_KEY = "pad"
+PERSIST_INDEX_KEY = "persist_index"
+
+
+def list_create(bin_name: str, list_order: int, pad: bool, persist_index: bool, ctx: Optional[list] = None):
+    """
+    Create list create operation.
+
+    Server creates list at given context level.
+
+    Args:
+        bin_name (str):	Bin name.
+        list_order (int): See :ref:`aerospike_list_order` for possible values.
+        persist_index (bool): If :py:obj:`True`, persist list index. A list index improves lookup performance,
+            but requires more storage. A list index can be created for a top-level
+            ordered list only. Nested and unordered list indexes are not supported.
+        ctx (Optional[dict]): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>`
+            specifying the path to nested list. If not defined, the top-level list is used.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_CREATE,
+        BIN_KEY: bin_name,
+        LIST_ORDER_KEY: list_order,
+        PAD_KEY: pad,
+        PERSIST_INDEX_KEY: persist_index
+    }
+
+    if ctx is not None:
+        op_dict[CTX_KEY] = ctx
+
+    return op_dict
 
 
 def list_append(bin_name: str, value, policy: Optional[dict] = None, ctx: Optional[list] = None):

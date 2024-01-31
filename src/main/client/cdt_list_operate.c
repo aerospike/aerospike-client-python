@@ -30,6 +30,12 @@
 #include "cdt_list_operations.h"
 #include "cdt_operation_utils.h"
 
+static as_status add_op_list_create(AerospikeClient *self, as_error *err,
+                                    char *bin, PyObject *op_dict,
+                                    as_operations *ops,
+                                    as_static_pool *static_pool,
+                                    int serializer_type);
+
 static as_status add_op_list_append(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
@@ -404,6 +410,11 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL: {
         return add_add_op_list_get_by_value_rel_rank_range(
             self, err, bin, op_dict, ops, static_pool, serializer_type);
+    }
+
+    case OP_LIST_CREATE: {
+        return add_op_list_create(self, err, bin, op_dict, ops, static_pool,
+                                  serializer_type);
     }
 
     default:
@@ -1131,6 +1142,51 @@ static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
         as_cdt_ctx_destroy(&ctx);
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to add list_sort operation");
+    }
+
+    if (ctx_in_use) {
+        as_cdt_ctx_destroy(&ctx);
+    }
+
+    return AEROSPIKE_OK;
+}
+
+static as_status add_op_list_create(AerospikeClient *self, as_error *err,
+                                    char *bin, PyObject *op_dict,
+                                    as_operations *ops,
+                                    as_static_pool *static_pool,
+                                    int serializer_type)
+{
+    int64_t order_type_int;
+    as_cdt_ctx ctx;
+    bool ctx_in_use = false;
+    bool pad, persist_index;
+
+    if (get_int64_t(err, AS_PY_LIST_ORDER, op_dict, &order_type_int) !=
+        AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_bool_from_pyargs(err, AS_PY_PAD, op_dict, &pad) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_bool_from_pyargs(err, AS_PY_PERSIST_INDEX, op_dict, &pad) !=
+        AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+                    serializer_type) != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    if (!as_operations_list_create_all(ops, bin, (ctx_in_use ? &ctx : NULL),
+                                       (as_list_order)order_type_int, pad,
+                                       persist_index)) {
+        as_cdt_ctx_destroy(&ctx);
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_create operation");
     }
 
     if (ctx_in_use) {

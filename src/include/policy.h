@@ -91,6 +91,7 @@ enum Aerospike_list_operations {
     OP_LIST_REMOVE_BY_REL_RANK_RANGE,
     OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END,
     OP_LIST_REMOVE_BY_RANK_RANGE_TO_END,
+    OP_LIST_CREATE
 };
 
 enum Aerospike_map_operations {

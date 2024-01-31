@@ -277,6 +277,7 @@ static AerospikeConstants aerospike_constants[] = {
      "OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL"},
     {OP_LIST_GET_BY_VALUE_RANK_RANGE_REL,
      "OP_LIST_GET_BY_VALUE_RANK_RANGE_REL"},
+    {OP_LIST_CREATE, "OP_LIST_CREATE"},
 
     /* CDT operations for use with expressions, new in 5.0 */
     {OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL,
