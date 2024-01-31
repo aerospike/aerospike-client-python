@@ -1171,8 +1171,8 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_bool_from_pyargs(err, AS_PY_PERSIST_INDEX, op_dict, &pad) !=
-        AEROSPIKE_OK) {
+    if (get_bool_from_pyargs(err, AS_PY_PERSIST_INDEX, op_dict,
+                             &persist_index) != AEROSPIKE_OK) {
         return err->code;
     }
 
