@@ -350,9 +350,6 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     PyObject *py_return_type = NULL;
     // For map_create operation
     PyObject *py_map_order = NULL;
-    // For list_create operation
-    PyObject *py_list_order = NULL;
-    // For both map and list create operations
     PyObject *py_persist_index = NULL;
 
     Py_ssize_t pos = 0;
