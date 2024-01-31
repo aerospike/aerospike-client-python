@@ -435,6 +435,6 @@ class TestNewListOperationsHelpers(object):
     def test_map_create(self):
         operation = list_operations.list_create(bin_name="new_list", list_order=aerospike.LIST_ORDERED, pad=False,
                                                 persist_index=False, ctx=None)
-        self.as_connection.operate("new_list", [operation])
+        self.as_connection.operate(self.test_key, [operation])
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins["new_list"] == []
