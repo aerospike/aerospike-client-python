@@ -7,8 +7,8 @@
 #include "policy.h"
 #include "conversions.h"
 
-static as_status get_bool_from_pyargs(as_error *err, char *key,
-                                      PyObject *op_dict, bool *boolean)
+as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
+                               bool *boolean)
 {
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
     if (!py_val) {
