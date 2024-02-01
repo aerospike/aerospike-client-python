@@ -440,7 +440,7 @@ class TestNewListOperationsHelpers(object):
         assert bins["new_list"] == []
 
     @pytest.mark.parametrize("list_order, pad, persist_index", [
-            (True, False, False),
+            ("string", False, False),
             (aerospike.LIST_ORDERED, 1, False),
             (aerospike.LIST_ORDERED, False, 1)
         ]
