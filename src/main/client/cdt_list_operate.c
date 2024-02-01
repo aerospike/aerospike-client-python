@@ -1181,19 +1181,21 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (!as_operations_list_create_all(ops, bin, (ctx_in_use ? &ctx : NULL),
-                                       (as_list_order)order_type_int, pad,
-                                       persist_index)) {
-        as_cdt_ctx_destroy(&ctx);
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Failed to add list_create operation");
-    }
+    bool add_op_successful = as_operations_list_create_all(
+        ops, bin, (ctx_in_use ? &ctx : NULL), (as_list_order)order_type_int,
+        pad, persist_index);
 
     if (ctx_in_use) {
         as_cdt_ctx_destroy(&ctx);
     }
 
-    return AEROSPIKE_OK;
+    if (add_op_successful) {
+        return AEROSPIKE_OK;
+    }
+    else {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to add list_create operation");
+    }
 }
 
 static as_status add_op_list_append(AerospikeClient *self, as_error *err,
