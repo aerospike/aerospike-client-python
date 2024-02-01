@@ -2,6 +2,7 @@
 import pytest
 from aerospike import exception as e
 from aerospike_helpers.operations import hll_operations
+from aerospike_helpers import HyperLogLog
 from math import sqrt
 
 
@@ -451,3 +452,40 @@ class TestHLL(object):
         _, _, res = self.as_connection.operate(self.test_keys[0], ops)
 
         assert res["hll_bine"] == 3
+
+    def test_get_put_operate_hll(self):
+        """
+        Can you read and write HLL bins to the server and still perform HLL operations on those bins?
+        """
+        _, _, rec = self.as_connection.get(self.test_keys[0])
+        assert type(rec["mh_bin"]) == HyperLogLog
+
+        self.as_connection.put(self.test_keys[0], {"mh_bin": rec["mh_bin"]})
+
+        # mh_bin should return the same results as before reading and rewritting the bin
+        ops = [hll_operations.hll_describe("mh_bin")]
+        _, _, res = self.as_connection.operate(self.test_keys[0], ops)
+        assert res["mh_bin"] == [6, 12]
+
+    def test_put_get_hll_list(self):
+        """
+        This is to cover putting nested HLLs in the server
+        Since the conversion for nested HLLs to the C client equivalent is separate from top-level HLLs
+        """
+        # Test setup to retrieve an HLL bin
+        _, _, rec = self.as_connection.get(self.test_keys[0])
+
+        self.as_connection.put(
+            self.test_keys[0],
+            {
+                "hll_list": [
+                    rec["hll_bin"]
+                ]
+            }
+        )
+        # Verify we stored the HLL in the list as an HLL type
+        _, _, rec = self.as_connection.get(self.test_keys[0])
+        assert type(rec["hll_list"][0]) == HyperLogLog
+
+    def test_hll_superclass(self):
+        assert issubclass(HyperLogLog, bytes)

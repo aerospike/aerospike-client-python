@@ -427,7 +427,7 @@ jobs:
           ["cp310", "3.10"],
           ["cp311", "3.11"]
         ]
-        os: [macos-latest]
+        os: [macos-12-large]
     runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3

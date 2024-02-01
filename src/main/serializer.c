@@ -476,6 +476,59 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
             }
         }
     } break;
+    case AS_BYTES_HLL: {
+        // Convert bytes to Python bytes object
+        PyObject *py_bytes = PyBytes_FromStringAndSize(
+            (const char *)bytes->value, (Py_ssize_t)bytes->size);
+        if (py_bytes == NULL) {
+            as_error_update(
+                error_p, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert C client's as_bytes to Python bytes");
+            goto CLEANUP;
+        }
+        // Pass bytes object to new HLL class instance
+        PyObject *py_aerospike_helpers_module =
+            PyImport_ImportModule("aerospike_helpers");
+        if (py_aerospike_helpers_module == NULL) {
+            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
+                            "Unable to import aerospike_helpers module");
+            goto HLL_CLEANUP1;
+        }
+
+        PyObject *py_hll_class =
+            PyObject_GetAttrString(py_aerospike_helpers_module, "HyperLogLog");
+        if (py_hll_class == NULL) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to import HyperLogLog class from "
+                            "aerospike_helpers module");
+            goto HLL_CLEANUP2;
+        }
+
+        if (!PyCallable_Check(py_hll_class)) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to create HyperLogLog instance; "
+                            "HyperLogLog class is not callable");
+            goto HLL_CLEANUP3;
+        }
+
+        PyObject *py_hll_instance =
+            PyObject_CallFunctionObjArgs(py_hll_class, py_bytes, NULL);
+        if (py_hll_instance == NULL) {
+            // An exception has been thrown by calling the HLL constructor
+            // We want to show the original exception instead of throwing our own exception
+            goto HLL_CLEANUP3;
+        }
+
+        *retval = py_hll_instance;
+
+    HLL_CLEANUP3:
+        Py_DECREF(py_hll_class);
+    HLL_CLEANUP2:
+        Py_DECREF(py_aerospike_helpers_module);
+    HLL_CLEANUP1:
+        Py_DECREF(py_bytes);
+        break;
+    }
     default: {
         // First try to return a raw byte array, if that fails raise an error
         uint32_t bval_size = as_bytes_size(bytes);
