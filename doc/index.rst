@@ -23,9 +23,9 @@ Records are uniquely identified by their key, and record metadata is contained
 in an in-memory primary index.
 
 .. seealso::
-    `Architecture Overview <http://www.aerospike.com/docs/architecture/index.html>`_
+    `Architecture Overview <https://aerospike.com/docs/server/architecture/overview>`_
     and `Aerospike Data Model
-    <http://www.aerospike.com/docs/architecture/data-model.html>`_ for more
+    <https://aerospike.com/docs/server/architecture/data-model.html>`_ for more
     information about Aerospike.
 
 Layout
@@ -64,7 +64,7 @@ Class                                Description
 In addition, the :ref:`Data_Mapping` page explains how **Python** types map to **Aerospike Server** types.
 
 .. seealso::
-    The `Python Client Manual <https://developer.aerospike.com/client/python/>`_
+    The `Python Client Manual <https://aerospike.com/developer/client/install?client=python>`_
     for a quick guide.
 
 Content
