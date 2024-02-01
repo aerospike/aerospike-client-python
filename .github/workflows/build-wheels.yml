@@ -228,7 +228,7 @@ jobs:
         submodules: recursive
         ref: ${{ github.ref_name }}
 
-    - uses: citrusleaf/aerospike-actions/run-ee-server@feat/run-ee-server
+    - uses: citrusleaf/aerospike-actions/Starters/run-ee-server@feat/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
