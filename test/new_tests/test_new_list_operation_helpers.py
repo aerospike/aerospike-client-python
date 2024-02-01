@@ -432,9 +432,20 @@ class TestNewListOperationsHelpers(object):
         _, _, bins = self.as_connection.get(sort_key)
         assert bins[self.test_bin] == [2, 5]
 
-    def test_map_create(self):
+    def test_map_create_pos(self):
         operation = list_operations.list_create(bin_name="new_list", list_order=aerospike.LIST_ORDERED, pad=False,
                                                 persist_index=False, ctx=None)
         self.as_connection.operate(self.test_key, [operation])
         _, _, bins = self.as_connection.get(self.test_key)
         assert bins["new_list"] == []
+
+    @pytest.mark.parametrize("pad, persist_index", [
+            (1, False),
+            (False, 1)
+        ]
+    )
+    def test_map_create_neg(self, pad: bool, persist_index: bool):
+        operation = list_operations.list_create(bin_name="new_list", list_order=aerospike.LIST_ORDERED, pad=pad,
+                                                persist_index=persist_index, ctx=None)
+        with pytest.raises(e.ParamError):
+            self.as_connection.operate(self.test_key, [operation])
