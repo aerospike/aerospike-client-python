@@ -213,7 +213,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     if(PyList_Check(py_ctx)){
         py_ctx_dict = PyDict_New();
         PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
-        bool new_dict_in_use = true;
+        new_dict_in_use = true;
     }
     else{
         py_ctx_dict = py_ctx;
