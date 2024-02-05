@@ -181,8 +181,10 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
     PyObject *py_datatype = NULL;
     PyObject *py_name = NULL;
     PyObject *py_ctx = NULL;
+    PyObject *py_ctx_dict = NULL;
     as_cdt_ctx ctx;
     bool ctx_in_use = false;
+    bool new_dict_in_use = false;
     PyObject *py_obj = NULL;
     as_index_datatype data_type;
     as_index_type index_type;
@@ -208,10 +210,19 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
+    if(PyList_Check(py_ctx)){
+        py_ctx_dict = PyDict_New();
+        PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
+        bool new_dict_in_use = true;
+    }
+    else{
+        py_ctx_dict = py_ctx;
+    }
+
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
-    if (get_cdt_ctx(self, &err, &ctx, py_ctx, &ctx_in_use, &static_pool,
+    if (get_cdt_ctx(self, &err, &ctx, py_ctx_dict, &ctx_in_use, &static_pool,
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -237,6 +248,9 @@ CLEANUP:
         }
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);
+        if(new_dict_in_use){
+            Py_XDECREF(py_ctx_dict);            
+        }
         return NULL;
     }
 

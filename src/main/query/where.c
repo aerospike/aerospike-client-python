@@ -52,6 +52,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     PyObject *py_ubin = NULL;
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
+    bool new_dict_in_use = false;
+    PyObject *py_ctx_dict = NULL;
     int rc = 0;
 
     if (py_ctx) {
@@ -59,9 +61,23 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         memset(&static_pool, 0, sizeof(static_pool));
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
-        if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use,
+        if(PyList_Check(py_ctx)){
+            py_ctx_dict = PyDict_New();
+            PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
+            new_dict_in_use = true;
+        }
+        else{
+            py_ctx_dict = py_ctx;
+        }
+        if (get_cdt_ctx(self->client, &err, pctx, py_ctx_dict, &ctx_in_use,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+            if(new_dict_in_use){
+                Py_XDECREF(py_ctx_dict);            
+            }
             return err.code;
+        }
+        if(new_dict_in_use){
+            Py_XDECREF(py_ctx_dict);            
         }
         if (!ctx_in_use) {
             cf_free(pctx);
