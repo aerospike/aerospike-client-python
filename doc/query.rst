@@ -25,8 +25,8 @@ In this case, if the set is initialized to :py:obj:`None`, then the query will o
 
 .. note::
     The secondary index filters in :mod:`aerospike.predicates` are **not** the same as
-    the deprecated `predicate expressions <https://docs.aerospike.com/server/guide/predicate>`_.
-    For more details, read this `guide <https://docs.aerospike.com/server/guide/query>`_.
+    the deprecated `predicate expressions <https://aerospike.com/docs/server/guide/predicate>`_.
+    For more details, read this `guide <https://aerospike.com/docs/server/guide/query>`_.
 
 Writing Using Query
 -------------------
@@ -38,7 +38,7 @@ See available write operations at :mod:`aerospike_helpers.operations`.
 Query Aggregations
 ------------------
 
-A `stream UDF <https://developer.aerospike.com/udf/developing_stream_udfs>`_ \
+A `stream UDF <https://aerospike.com/developer/udf/developing_stream_udfs>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
@@ -54,8 +54,8 @@ Finally, the query is invoked using one of these methods:
 - :meth:`~aerospike.Query.execute_background`
 
 .. seealso::
-    `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
-    `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
+    `Queries <https://aerospike.com/docs/server/guide/query.html>`_ and \
+    `Managing Queries <https://aerospike.com/docs/server/operations/manage/queries/>`_.
 
 Fields
 ======
@@ -215,17 +215,17 @@ Assume this boilerplate code is run before all examples below:
     .. method:: apply(module, function[, arguments])
 
         Aggregate the :meth:`results` using a stream \
-        `UDF <http://www.aerospike.com/docs/guide/udf.html>`_. If no \
+        `UDF <https://aerospike.com/docs/server/guide/udf.html>`_. If no \
         predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
         will aggregate over all the records in the specified set.
         This method cannot be used in combination with :meth:`~aerospike.Query.add_ops`.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
-        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
 
-        .. seealso:: `Developing Stream UDFs <https://developer.aerospike.com/udf/developing_stream_udfs>`_
+        .. seealso:: `Developing Stream UDFs <https://aerospike.com/developer/udf/developing_stream_udfs>`_
 
         Example: find the first name distribution of users who are 21 or older using \
         a query aggregation:
