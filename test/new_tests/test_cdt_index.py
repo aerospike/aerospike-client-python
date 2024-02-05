@@ -111,6 +111,7 @@ class TestCDTIndex(object):
         ensure_dropped_index(self.as_connection, "test", "test_string_list_cdt_index")
 
         assert retobj == 0
+
     def test_pos_cdtindex_dict_with_correct_parameters(self):
         """
         Invoke index_cdt_create() with correct arguments

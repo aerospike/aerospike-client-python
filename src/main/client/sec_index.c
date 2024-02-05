@@ -210,12 +210,12 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    if(PyList_Check(py_ctx)){
+    if (PyList_Check(py_ctx)) {
         py_ctx_dict = PyDict_New();
         PyDict_SetItemString(py_ctx_dict, "ctx", py_ctx);
         new_dict_in_use = true;
     }
-    else{
+    else {
         py_ctx_dict = py_ctx;
     }
 
@@ -248,8 +248,8 @@ CLEANUP:
         }
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);
-        if(new_dict_in_use){
-            Py_XDECREF(py_ctx_dict);            
+        if (new_dict_in_use) {
+            Py_XDECREF(py_ctx_dict);
         }
         return NULL;
     }
