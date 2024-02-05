@@ -281,12 +281,16 @@ If we read the data for each record using ``aql``, it outputs the following data
 
 Logging
 -------
+The following example shows several different methods to configuring logging for the Aerospike Python Client:
+
+.. include:: examples/log.py
+    :code: python
 
 .. py:function:: set_log_handler(callback)
 
     Enables aerospike log handler
 
-    :param optional callable callback: the function used as the logging handler.
+    :param optional callable callback: the function used as the logging handler. When callback is None, the saved log handler is cleared and logging is disabled.
 
     .. note:: The callback function must have the five parameters (level, func, path, line, msg)
 

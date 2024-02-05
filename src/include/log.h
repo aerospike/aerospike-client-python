@@ -36,9 +36,11 @@ typedef enum Aerospike_log_level_e {
 /*
  * Structure to hold user's log_callback object
  */
-typedef struct Aerospike_log_callback {
+typedef struct Aerospike_log_data {
     PyObject *callback;
-} AerospikeLogCallback;
+    aerospike_log_level level;
+    bool logToConsole;
+} AerospikeLogData;
 
 /**
  * Add log level constants to aerospike module
