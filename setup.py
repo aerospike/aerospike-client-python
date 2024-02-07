@@ -27,6 +27,7 @@ from distutils.command.clean import clean
 from multiprocessing import cpu_count
 import time
 import io
+import xml.etree.ElementTree as ET
 
 ################################################################################
 # ENVIRONMENT VARIABLES
@@ -42,6 +43,8 @@ AEROSPIKE_C_TARGET = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
+WINDOWS = 'Windows' in PLATFORM
+
 CWD = os.path.abspath(os.path.dirname(__file__))
 STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
@@ -59,11 +62,15 @@ include_dirs = ['src/include'] + \
     ['aerospike-client-c/modules/common/src/include']
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
-    '-fno-common', '-fno-strict-aliasing', '-Wno-strict-prototypes',
+    '-fno-common', '-fno-strict-aliasing',
     '-D_FILE_OFFSET_BITS=64', '-D_REENTRANT',
     '-DMARCH_' + machine,
-    '-Wno-implicit-function-declaration'
 ]
+
+if not WINDOWS:
+    # Windows does not have this flag
+    extra_compile_args.append("-Wno-strict-prototypes")
+    extra_compile_args.append('-Wno-implicit-function-declaration')
 
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
@@ -123,6 +130,13 @@ if STATIC_SSL:
 # PLATFORM SPECIFIC BUILD SETTINGS
 ################################################################################
 
+if WINDOWS:
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME
+    tree = ET.parse(f"{AEROSPIKE_C_TARGET}/vs/aerospike/packages.config")
+    packages = tree.getroot()
+    package = packages[0]
+    c_client_dependencies_version = package.attrib["version"]
+
 if DARWIN:
     # ---------------------------------------------------------------------------
     # Mac Specific Compiler and Linker Settings
@@ -142,17 +156,28 @@ elif LINUX:
     ]
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
+elif WINDOWS:
+    libraries.clear()
+    extra_compile_args.append("-DAS_SHARED_IMPORT")
+    include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/include")
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
 include_dirs = include_dirs + [
     '/usr/local/opt/openssl/include',
-    AEROSPIKE_C_TARGET + '/include'
-    ]
-extra_objects = extra_objects + [
-    AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
+
 ]
+if not WINDOWS:
+    include_dirs.append(AEROSPIKE_C_TARGET + '/include')
+    extra_objects = extra_objects + [
+        AEROSPIKE_C_TARGET + '/lib/libaerospike.a'
+    ]
+else:
+    include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
+    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/Release")
+    # Needed for linking the Python client with the C client
+    extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
 
 os.putenv('CPATH', ':'.join(include_dirs))
 os.environ['CPATH'] = ':'.join(include_dirs)
@@ -171,6 +196,7 @@ with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
 
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
+
 
 class CClientBuild(build):
 
@@ -191,10 +217,17 @@ class CClientBuild(build):
         os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
         os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
         # build core client
-        cmd = [
-            'make',
-            'V=' + str(self.verbose),
-        ]
+        if WINDOWS:
+            cmd = [
+                'msbuild',
+                'vs/aerospike.sln',
+                '/property:Configuration=Release'
+            ]
+        else:
+            cmd = [
+                'make',
+                'V=' + str(self.verbose),
+            ]
 
         def compile():
             print(cmd, library_dirs, libraries)
@@ -259,7 +292,6 @@ setup(
                 'src/main/client/remove.c',
                 'src/main/client/scan.c',
                 'src/main/client/select.c',
-                'src/main/client/tls_info_host.c',
                 'src/main/client/truncate.c',
                 'src/main/client/admin.c',
                 'src/main/client/udf.c',
@@ -336,7 +368,6 @@ setup(
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions',
               'aerospike-stubs'],
-
     cmdclass={
         'build': CClientBuild,
         'clean': CClientClean

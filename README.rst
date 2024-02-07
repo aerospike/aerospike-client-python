@@ -19,6 +19,7 @@ The Python client for Aerospike works with Python 3.8 - 3.11 and supports the fo
 * Amazon Linux 2023
 * Debian 11 and 12
 * Ubuntu 20.04 and 22.04
+* Windows (x64)
 
 The client is also verified to run on these operating systems, but we do not officially support them (i.e we don't distribute wheels or prioritize fixing bugs for these OSes):
 

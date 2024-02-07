@@ -33,6 +33,14 @@
 #include "exceptions.h"
 #include "policy.h"
 
+// Unistd isn't available on windows
+#ifdef _WIN32
+    #define F_OK 0
+    #define access _access
+#else
+    #include <unistd.h>
+#endif
+
 /**
  *******************************************************************************************************
  * Registers a UDF module with the Aerospike DB.
@@ -115,7 +123,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
 
     // Convert lua file to content
     as_bytes content;
-    file_p = fopen(filename, "r");
+    // Read in binary mode to avoid converting Windows newlines to UNIX newlines
+    file_p = fopen(filename, "rb");
 
     // Make this equal to twice the path size, so the path and the filename
     // may be 255 characters each. The max size should then be 255 + 255 + 1 + 1
