@@ -192,6 +192,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
 static bool free_temp_expr(intermediate_expr *temp_expr, as_error *err,
                            bool is_ctx_initialized);
 
+// This is to improve readability when many as_exp_nils() are used
+#define NIL as_exp_nil()
+
 /*
 * get_expr_size 
 * Sets `size_to_alloc` to the byte count required to fit the array of as_exp_entry that will be allocated
@@ -208,19 +211,19 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         [VAL] = EXP_SZ(as_exp_val(
             NULL)), // NOTE if I don't count vals I don't need to subtract from other ops // MUST count these for expressions with var args.
-        [EQ] = EXP_SZ(as_exp_cmp_eq(
-            as_exp_nil(),
-            as_exp_nil())), // ^ TODO implement a less wastefull solution.
-        [NE] = EXP_SZ(as_exp_cmp_ne(as_exp_nil(), as_exp_nil())),
-        [GT] = EXP_SZ(as_exp_cmp_gt(as_exp_nil(), as_exp_nil())),
-        [GE] = EXP_SZ(as_exp_cmp_ge(as_exp_nil(), as_exp_nil())),
-        [LT] = EXP_SZ(as_exp_cmp_lt(as_exp_nil(), as_exp_nil())),
-        [LE] = EXP_SZ(as_exp_cmp_le(as_exp_nil(), as_exp_nil())),
-        [CMP_REGEX] = EXP_SZ(as_exp_cmp_regex(0, "", as_exp_nil())),
-        [CMP_GEO] = EXP_SZ(as_exp_cmp_geo(as_exp_nil(), as_exp_nil())),
-        [AND] = EXP_SZ(as_exp_and(as_exp_nil())),
-        [OR] = EXP_SZ(as_exp_or(as_exp_nil())),
-        [NOT] = EXP_SZ(as_exp_not(as_exp_nil())),
+        [EQ] = EXP_SZ(
+            as_exp_cmp_eq(NIL,
+                          NIL)), // ^ TODO implement a less wastefull solution.
+        [NE] = EXP_SZ(as_exp_cmp_ne(NIL, NIL)),
+        [GT] = EXP_SZ(as_exp_cmp_gt(NIL, NIL)),
+        [GE] = EXP_SZ(as_exp_cmp_ge(NIL, NIL)),
+        [LT] = EXP_SZ(as_exp_cmp_lt(NIL, NIL)),
+        [LE] = EXP_SZ(as_exp_cmp_le(NIL, NIL)),
+        [CMP_REGEX] = EXP_SZ(as_exp_cmp_regex(0, "", NIL)),
+        [CMP_GEO] = EXP_SZ(as_exp_cmp_geo(NIL, NIL)),
+        [AND] = EXP_SZ(as_exp_and(NIL)),
+        [OR] = EXP_SZ(as_exp_or(NIL)),
+        [NOT] = EXP_SZ(as_exp_not(NIL)),
         [END_VA_ARGS] = EXP_SZ({.op = _AS_EXP_CODE_END_OF_VA_ARGS}),
         [META_DIGEST_MOD] = EXP_SZ(as_exp_digest_modulo(0)),
         [META_DEVICE_SIZE] = EXP_SZ(as_exp_device_size()),
@@ -235,255 +238,204 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
             as_exp_key_int()), // this covers as_exp_key_int() -> as_exp_key_blob
         [BIN_TYPE] = EXP_SZ(as_exp_bin_type("")),
         [BIN_EXISTS] = EXP_SZ(as_exp_bin_exists("")),
-        [OP_LIST_GET_BY_INDEX] = EXP_SZ(
-            as_exp_list_get_by_index(NULL, 0, 0, as_exp_nil(), as_exp_nil())),
-        [OP_LIST_SIZE] = EXP_SZ(as_exp_list_size(NULL, as_exp_nil())),
-        [OP_LIST_GET_BY_VALUE] = EXP_SZ(
-            as_exp_list_get_by_value(NULL, 0, as_exp_nil(), as_exp_nil())),
-        [OP_LIST_GET_BY_VALUE_RANGE] = EXP_SZ(as_exp_list_get_by_value_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_GET_BY_VALUE_LIST] = EXP_SZ(
-            as_exp_list_get_by_value_list(NULL, 0, as_exp_nil(), as_exp_nil())),
-        [OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END] =
-            EXP_SZ(as_exp_list_get_by_rel_rank_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_GET_BY_VALUE_RANK_RANGE_REL] =
-            EXP_SZ(as_exp_list_get_by_rel_rank_range(NULL, 0, as_exp_nil(),
-                                                     as_exp_nil(), as_exp_nil(),
-                                                     as_exp_nil())),
+        [OP_LIST_GET_BY_INDEX] =
+            EXP_SZ(as_exp_list_get_by_index(NULL, 0, 0, NIL, NIL)),
+        [OP_LIST_SIZE] = EXP_SZ(as_exp_list_size(NULL, NIL)),
+        [OP_LIST_GET_BY_VALUE] =
+            EXP_SZ(as_exp_list_get_by_value(NULL, 0, NIL, NIL)),
+        [OP_LIST_GET_BY_VALUE_RANGE] =
+            EXP_SZ(as_exp_list_get_by_value_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_LIST_GET_BY_VALUE_LIST] =
+            EXP_SZ(as_exp_list_get_by_value_list(NULL, 0, NIL, NIL)),
+        [OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END] = EXP_SZ(
+            as_exp_list_get_by_rel_rank_range_to_end(NULL, 0, NIL, NIL, NIL)),
+        [OP_LIST_GET_BY_VALUE_RANK_RANGE_REL] = EXP_SZ(
+            as_exp_list_get_by_rel_rank_range(NULL, 0, NIL, NIL, NIL, NIL)),
         [OP_LIST_GET_BY_INDEX_RANGE_TO_END] =
-            EXP_SZ(as_exp_list_get_by_index_range_to_end(NULL, 0, as_exp_nil(),
-                                                         as_exp_nil())),
-        [OP_LIST_GET_BY_INDEX_RANGE] = EXP_SZ(as_exp_list_get_by_index_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_GET_BY_RANK] = EXP_SZ(
-            as_exp_list_get_by_rank(NULL, 0, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_list_get_by_index_range_to_end(NULL, 0, NIL, NIL)),
+        [OP_LIST_GET_BY_INDEX_RANGE] =
+            EXP_SZ(as_exp_list_get_by_index_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_LIST_GET_BY_RANK] =
+            EXP_SZ(as_exp_list_get_by_rank(NULL, 0, 0, NIL, NIL)),
         [OP_LIST_GET_BY_RANK_RANGE_TO_END] =
-            EXP_SZ(as_exp_list_get_by_rank_range_to_end(NULL, 0, as_exp_nil(),
-                                                        as_exp_nil())),
-        [OP_LIST_GET_BY_RANK_RANGE] = EXP_SZ(as_exp_list_get_by_rank_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_APPEND] =
-            EXP_SZ(as_exp_list_append(NULL, NULL, as_exp_nil(), as_exp_nil())),
-        [OP_LIST_APPEND_ITEMS] = EXP_SZ(
-            as_exp_list_append_items(NULL, NULL, as_exp_nil(), as_exp_nil())),
-        [OP_LIST_INSERT] = EXP_SZ(as_exp_list_insert(
-            NULL, NULL, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_INSERT_ITEMS] = EXP_SZ(as_exp_list_insert_items(
-            NULL, NULL, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_INCREMENT] = EXP_SZ(as_exp_list_increment(
-            NULL, NULL, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_SET] = EXP_SZ(as_exp_list_set(NULL, NULL, as_exp_nil(),
-                                               as_exp_nil(), as_exp_nil())),
-        [OP_LIST_CLEAR] = EXP_SZ(as_exp_list_clear(NULL, as_exp_nil())),
-        [OP_LIST_SORT] = EXP_SZ(as_exp_list_sort(NULL, 0, as_exp_nil())),
-        [OP_LIST_REMOVE_BY_VALUE] = EXP_SZ(
-            as_exp_list_remove_by_value(NULL, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_list_get_by_rank_range_to_end(NULL, 0, NIL, NIL)),
+        [OP_LIST_GET_BY_RANK_RANGE] =
+            EXP_SZ(as_exp_list_get_by_rank_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_LIST_APPEND] = EXP_SZ(as_exp_list_append(NULL, NULL, NIL, NIL)),
+        [OP_LIST_APPEND_ITEMS] =
+            EXP_SZ(as_exp_list_append_items(NULL, NULL, NIL, NIL)),
+        [OP_LIST_INSERT] =
+            EXP_SZ(as_exp_list_insert(NULL, NULL, NIL, NIL, NIL)),
+        [OP_LIST_INSERT_ITEMS] =
+            EXP_SZ(as_exp_list_insert_items(NULL, NULL, NIL, NIL, NIL)),
+        [OP_LIST_INCREMENT] =
+            EXP_SZ(as_exp_list_increment(NULL, NULL, NIL, NIL, NIL)),
+        [OP_LIST_SET] = EXP_SZ(as_exp_list_set(NULL, NULL, NIL, NIL, NIL)),
+        [OP_LIST_CLEAR] = EXP_SZ(as_exp_list_clear(NULL, NIL)),
+        [OP_LIST_SORT] = EXP_SZ(as_exp_list_sort(NULL, 0, NIL)),
+        [OP_LIST_REMOVE_BY_VALUE] =
+            EXP_SZ(as_exp_list_remove_by_value(NULL, 0, NIL, NIL)),
         [OP_LIST_REMOVE_BY_VALUE_LIST] =
-            EXP_SZ(as_exp_list_remove_by_value_list(NULL, 0, as_exp_nil(),
-                                                    as_exp_nil())),
+            EXP_SZ(as_exp_list_remove_by_value_list(NULL, 0, NIL, NIL)),
         [OP_LIST_REMOVE_BY_VALUE_RANGE] =
-            EXP_SZ(as_exp_list_remove_by_value_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_list_remove_by_value_range(NULL, 0, NIL, NIL, NIL)),
         [OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END] =
-            EXP_SZ(as_exp_list_remove_by_rel_rank_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_REMOVE_BY_REL_RANK_RANGE] =
-            EXP_SZ(as_exp_list_remove_by_rel_rank_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil(),
-                as_exp_nil())),
-        [OP_LIST_REMOVE_BY_INDEX] = EXP_SZ(
-            as_exp_list_remove_by_index(NULL, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_list_remove_by_rel_rank_range_to_end(NULL, 0, NIL,
+                                                               NIL, NIL)),
+        [OP_LIST_REMOVE_BY_REL_RANK_RANGE] = EXP_SZ(
+            as_exp_list_remove_by_rel_rank_range(NULL, 0, NIL, NIL, NIL, NIL)),
+        [OP_LIST_REMOVE_BY_INDEX] =
+            EXP_SZ(as_exp_list_remove_by_index(NULL, NIL, NIL)),
         [OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END] =
-            EXP_SZ(as_exp_list_remove_by_index_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_list_remove_by_index_range_to_end(NULL, 0, NIL, NIL)),
         [OP_LIST_REMOVE_BY_INDEX_RANGE] =
-            EXP_SZ(as_exp_list_remove_by_index_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_LIST_REMOVE_BY_RANK] = EXP_SZ(
-            as_exp_list_remove_by_rank(NULL, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_list_remove_by_index_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_LIST_REMOVE_BY_RANK] =
+            EXP_SZ(as_exp_list_remove_by_rank(NULL, NIL, NIL)),
         [OP_LIST_REMOVE_BY_RANK_RANGE_TO_END] =
-            EXP_SZ(as_exp_list_remove_by_rank_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_list_remove_by_rank_range_to_end(NULL, 0, NIL, NIL)),
         [OP_LIST_REMOVE_BY_RANK_RANGE] =
-            EXP_SZ(as_exp_list_remove_by_rank_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_MAP_PUT] = EXP_SZ(as_exp_map_put(NULL, NULL, as_exp_nil(),
-                                             as_exp_nil(), as_exp_nil())),
-        [OP_MAP_PUT_ITEMS] = EXP_SZ(
-            as_exp_map_put_items(NULL, NULL, as_exp_nil(), as_exp_nil())),
-        [OP_MAP_INCREMENT] = EXP_SZ(as_exp_map_increment(
-            NULL, NULL, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_MAP_CLEAR] = EXP_SZ(as_exp_map_clear(NULL, as_exp_nil())),
+            EXP_SZ(as_exp_list_remove_by_rank_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_MAP_PUT] = EXP_SZ(as_exp_map_put(NULL, NULL, NIL, NIL, NIL)),
+        [OP_MAP_PUT_ITEMS] = EXP_SZ(as_exp_map_put_items(NULL, NULL, NIL, NIL)),
+        [OP_MAP_INCREMENT] =
+            EXP_SZ(as_exp_map_increment(NULL, NULL, NIL, NIL, NIL)),
+        [OP_MAP_CLEAR] = EXP_SZ(as_exp_map_clear(NULL, NIL)),
         [OP_MAP_REMOVE_BY_KEY] =
-            EXP_SZ(as_exp_map_remove_by_key(NULL, as_exp_nil(), as_exp_nil())),
-        [OP_MAP_REMOVE_BY_KEY_LIST] = EXP_SZ(
-            as_exp_map_remove_by_key_list(NULL, 0, as_exp_nil(), as_exp_nil())),
-        [OP_MAP_REMOVE_BY_KEY_RANGE] = EXP_SZ(as_exp_map_remove_by_key_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_key(NULL, NIL, NIL)),
+        [OP_MAP_REMOVE_BY_KEY_LIST] =
+            EXP_SZ(as_exp_map_remove_by_key_list(NULL, 0, NIL, NIL)),
+        [OP_MAP_REMOVE_BY_KEY_RANGE] =
+            EXP_SZ(as_exp_map_remove_by_key_range(NULL, 0, NIL, NIL, NIL)),
         [OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END] =
-            EXP_SZ(as_exp_map_remove_by_key_rel_index_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_key_rel_index_range_to_end(NULL, 0, NIL,
+                                                                   NIL, NIL)),
         [OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE] =
-            EXP_SZ(as_exp_map_remove_by_key_rel_index_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil(),
-                as_exp_nil())),
-        [OP_MAP_REMOVE_BY_VALUE] = EXP_SZ(
-            as_exp_map_remove_by_value(NULL, 0, as_exp_nil(), as_exp_nil())),
-        [OP_MAP_REMOVE_BY_VALUE_LIST] = EXP_SZ(as_exp_map_remove_by_value_list(
-            NULL, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_key_rel_index_range(NULL, 0, NIL, NIL,
+                                                            NIL, NIL)),
+        [OP_MAP_REMOVE_BY_VALUE] =
+            EXP_SZ(as_exp_map_remove_by_value(NULL, 0, NIL, NIL)),
+        [OP_MAP_REMOVE_BY_VALUE_LIST] =
+            EXP_SZ(as_exp_map_remove_by_value_list(NULL, 0, NIL, NIL)),
         [OP_MAP_REMOVE_BY_VALUE_RANGE] =
-            EXP_SZ(as_exp_map_remove_by_value_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_value_range(NULL, 0, NIL, NIL, NIL)),
         [OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END] =
             EXP_SZ(as_exp_map_remove_by_value_rel_rank_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
+                NULL, 0, NIL, NIL, NIL)),
         [OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE] =
-            EXP_SZ(as_exp_map_remove_by_value_rel_rank_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil(),
-                as_exp_nil())),
-        [OP_MAP_REMOVE_BY_INDEX] = EXP_SZ(
-            as_exp_map_remove_by_index(NULL, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_value_rel_rank_range(NULL, 0, NIL, NIL,
+                                                             NIL, NIL)),
+        [OP_MAP_REMOVE_BY_INDEX] =
+            EXP_SZ(as_exp_map_remove_by_index(NULL, NIL, NIL)),
         [OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END] =
-            EXP_SZ(as_exp_map_remove_by_index_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_index_range_to_end(NULL, 0, NIL, NIL)),
         [OP_MAP_REMOVE_BY_INDEX_RANGE] =
-            EXP_SZ(as_exp_map_remove_by_index_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_index_range(NULL, 0, NIL, NIL, NIL)),
         [OP_MAP_REMOVE_BY_RANK] =
-            EXP_SZ(as_exp_map_remove_by_rank(NULL, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_rank(NULL, NIL, NIL)),
         [OP_MAP_REMOVE_BY_RANK_RANGE_TO_END] =
-            EXP_SZ(as_exp_map_remove_by_rank_range_to_end(NULL, 0, as_exp_nil(),
-                                                          as_exp_nil())),
-        [OP_MAP_REMOVE_BY_RANK_RANGE] = EXP_SZ(as_exp_map_remove_by_rank_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_MAP_SIZE] = EXP_SZ(as_exp_map_size(NULL, as_exp_nil())),
-        [OP_MAP_GET_BY_KEY] = EXP_SZ(
-            as_exp_map_get_by_key(NULL, 0, 0, as_exp_nil(), as_exp_nil())),
-        [OP_MAP_GET_BY_KEY_RANGE] = EXP_SZ(as_exp_map_get_by_key_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_MAP_GET_BY_KEY_LIST] = EXP_SZ(
-            as_exp_map_get_by_key_list(NULL, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_remove_by_rank_range_to_end(NULL, 0, NIL, NIL)),
+        [OP_MAP_REMOVE_BY_RANK_RANGE] =
+            EXP_SZ(as_exp_map_remove_by_rank_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_MAP_SIZE] = EXP_SZ(as_exp_map_size(NULL, NIL)),
+        [OP_MAP_GET_BY_KEY] =
+            EXP_SZ(as_exp_map_get_by_key(NULL, 0, 0, NIL, NIL)),
+        [OP_MAP_GET_BY_KEY_RANGE] =
+            EXP_SZ(as_exp_map_get_by_key_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_MAP_GET_BY_KEY_LIST] =
+            EXP_SZ(as_exp_map_get_by_key_list(NULL, 0, NIL, NIL)),
         [OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END] =
-            EXP_SZ(as_exp_map_get_by_key_rel_index_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_MAP_GET_BY_KEY_REL_INDEX_RANGE] =
-            EXP_SZ(as_exp_map_get_by_key_rel_index_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil(),
-                as_exp_nil())),
-        [OP_MAP_GET_BY_VALUE] = EXP_SZ(
-            as_exp_map_get_by_value(NULL, 0, as_exp_nil(), as_exp_nil())),
-        [OP_MAP_GET_BY_VALUE_RANGE] = EXP_SZ(as_exp_map_get_by_value_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_MAP_GET_BY_VALUE_LIST] = EXP_SZ(
-            as_exp_map_get_by_value_list(NULL, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_get_by_key_rel_index_range_to_end(NULL, 0, NIL,
+                                                                NIL, NIL)),
+        [OP_MAP_GET_BY_KEY_REL_INDEX_RANGE] = EXP_SZ(
+            as_exp_map_get_by_key_rel_index_range(NULL, 0, NIL, NIL, NIL, NIL)),
+        [OP_MAP_GET_BY_VALUE] =
+            EXP_SZ(as_exp_map_get_by_value(NULL, 0, NIL, NIL)),
+        [OP_MAP_GET_BY_VALUE_RANGE] =
+            EXP_SZ(as_exp_map_get_by_value_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_MAP_GET_BY_VALUE_LIST] =
+            EXP_SZ(as_exp_map_get_by_value_list(NULL, 0, NIL, NIL)),
         [OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END] =
-            EXP_SZ(as_exp_map_get_by_value_rel_rank_range_to_end(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_get_by_value_rel_rank_range_to_end(NULL, 0, NIL,
+                                                                 NIL, NIL)),
         [OP_MAP_GET_BY_VALUE_RANK_RANGE_REL] =
-            EXP_SZ(as_exp_map_get_by_value_rel_rank_range(
-                NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil(),
-                as_exp_nil())),
-        [OP_MAP_GET_BY_INDEX] = EXP_SZ(
-            as_exp_map_get_by_index(NULL, 0, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_get_by_value_rel_rank_range(NULL, 0, NIL, NIL,
+                                                          NIL, NIL)),
+        [OP_MAP_GET_BY_INDEX] =
+            EXP_SZ(as_exp_map_get_by_index(NULL, 0, 0, NIL, NIL)),
         [OP_MAP_GET_BY_INDEX_RANGE_TO_END] =
-            EXP_SZ(as_exp_map_get_by_index_range_to_end(NULL, 0, as_exp_nil(),
-                                                        as_exp_nil())),
-        [OP_MAP_GET_BY_INDEX_RANGE] = EXP_SZ(as_exp_map_get_by_index_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_MAP_GET_BY_RANK] = EXP_SZ(
-            as_exp_map_get_by_rank(NULL, 0, 0, as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_get_by_index_range_to_end(NULL, 0, NIL, NIL)),
+        [OP_MAP_GET_BY_INDEX_RANGE] =
+            EXP_SZ(as_exp_map_get_by_index_range(NULL, 0, NIL, NIL, NIL)),
+        [OP_MAP_GET_BY_RANK] =
+            EXP_SZ(as_exp_map_get_by_rank(NULL, 0, 0, NIL, NIL)),
         [OP_MAP_GET_BY_RANK_RANGE_TO_END] =
-            EXP_SZ(as_exp_map_get_by_rank_range_to_end(NULL, 0, as_exp_nil(),
-                                                       as_exp_nil())),
-        [OP_MAP_GET_BY_RANK_RANGE] = EXP_SZ(as_exp_map_get_by_rank_range(
-            NULL, 0, as_exp_nil(), as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_map_get_by_rank_range_to_end(NULL, 0, NIL, NIL)),
+        [OP_MAP_GET_BY_RANK_RANGE] =
+            EXP_SZ(as_exp_map_get_by_rank_range(NULL, 0, NIL, NIL, NIL)),
         [_AS_EXP_BIT_FLAGS] = 0, //EXP_SZ(as_exp_uint(0)),
-        [OP_BIT_RESIZE] =
-            EXP_SZ(as_exp_bit_resize(NULL, as_exp_nil(), 0, as_exp_nil())),
-        [OP_BIT_INSERT] = EXP_SZ(
-            as_exp_bit_insert(NULL, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_BIT_REMOVE] = EXP_SZ(
-            as_exp_bit_remove(NULL, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_BIT_SET] = EXP_SZ(as_exp_bit_set(NULL, as_exp_nil(), as_exp_nil(),
-                                             as_exp_nil(), as_exp_nil())),
-        [OP_BIT_OR] = EXP_SZ(as_exp_bit_or(NULL, as_exp_nil(), as_exp_nil(),
-                                           as_exp_nil(), as_exp_nil())),
-        [OP_BIT_XOR] = EXP_SZ(as_exp_bit_xor(NULL, as_exp_nil(), as_exp_nil(),
-                                             as_exp_nil(), as_exp_nil())),
-        [OP_BIT_AND] = EXP_SZ(as_exp_bit_and(NULL, as_exp_nil(), as_exp_nil(),
-                                             as_exp_nil(), as_exp_nil())),
-        [OP_BIT_NOT] = EXP_SZ(
-            as_exp_bit_not(NULL, as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_BIT_LSHIFT] = EXP_SZ(as_exp_bit_lshift(
-            NULL, as_exp_nil(), as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_BIT_RSHIFT] = EXP_SZ(as_exp_bit_rshift(
-            NULL, as_exp_nil(), as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_BIT_ADD] = EXP_SZ(as_exp_bit_add(NULL, as_exp_nil(), as_exp_nil(),
-                                             as_exp_nil(), 0, as_exp_nil())),
-        [OP_BIT_SUBTRACT] = EXP_SZ(as_exp_bit_subtract(
-            NULL, as_exp_nil(), as_exp_nil(), as_exp_nil(), 0, as_exp_nil())),
-        [OP_BIT_SET_INT] = EXP_SZ(as_exp_bit_set_int(
-            NULL, as_exp_nil(), as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_BIT_GET] =
-            EXP_SZ(as_exp_bit_get(as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_BIT_COUNT] =
-            EXP_SZ(as_exp_bit_count(as_exp_nil(), as_exp_nil(), as_exp_nil())),
-        [OP_BIT_LSCAN] = EXP_SZ(as_exp_bit_lscan(as_exp_nil(), as_exp_nil(),
-                                                 as_exp_nil(), as_exp_nil())),
-        [OP_BIT_RSCAN] = EXP_SZ(as_exp_bit_rscan(as_exp_nil(), as_exp_nil(),
-                                                 as_exp_nil(), as_exp_nil())),
-        [OP_BIT_GET_INT] = EXP_SZ(
-            as_exp_bit_get_int(as_exp_nil(), as_exp_nil(), 0, as_exp_nil())),
-        [OP_HLL_INIT] = EXP_SZ(as_exp_hll_init_mh(NULL, 0, 0, as_exp_nil())),
-        [OP_HLL_ADD] =
-            EXP_SZ(as_exp_hll_add_mh(NULL, as_exp_nil(), 0, 0, as_exp_nil())),
-        [OP_HLL_GET_COUNT] =
-            EXP_SZ(as_exp_hll_update(NULL, as_exp_nil(), as_exp_nil())),
-        [OP_HLL_GET_UNION] =
-            EXP_SZ(as_exp_hll_get_union(as_exp_nil(), as_exp_nil())),
-        [OP_HLL_GET_UNION_COUNT] =
-            EXP_SZ(as_exp_hll_get_union_count(as_exp_nil(), as_exp_nil())),
+        [OP_BIT_RESIZE] = EXP_SZ(as_exp_bit_resize(NULL, NIL, 0, NIL)),
+        [OP_BIT_INSERT] = EXP_SZ(as_exp_bit_insert(NULL, NIL, NIL, NIL)),
+        [OP_BIT_REMOVE] = EXP_SZ(as_exp_bit_remove(NULL, NIL, NIL, NIL)),
+        [OP_BIT_SET] = EXP_SZ(as_exp_bit_set(NULL, NIL, NIL, NIL, NIL)),
+        [OP_BIT_OR] = EXP_SZ(as_exp_bit_or(NULL, NIL, NIL, NIL, NIL)),
+        [OP_BIT_XOR] = EXP_SZ(as_exp_bit_xor(NULL, NIL, NIL, NIL, NIL)),
+        [OP_BIT_AND] = EXP_SZ(as_exp_bit_and(NULL, NIL, NIL, NIL, NIL)),
+        [OP_BIT_NOT] = EXP_SZ(as_exp_bit_not(NULL, NIL, NIL, NIL)),
+        [OP_BIT_LSHIFT] = EXP_SZ(as_exp_bit_lshift(NULL, NIL, NIL, NIL, NIL)),
+        [OP_BIT_RSHIFT] = EXP_SZ(as_exp_bit_rshift(NULL, NIL, NIL, NIL, NIL)),
+        [OP_BIT_ADD] = EXP_SZ(as_exp_bit_add(NULL, NIL, NIL, NIL, 0, NIL)),
+        [OP_BIT_SUBTRACT] =
+            EXP_SZ(as_exp_bit_subtract(NULL, NIL, NIL, NIL, 0, NIL)),
+        [OP_BIT_SET_INT] = EXP_SZ(as_exp_bit_set_int(NULL, NIL, NIL, NIL, NIL)),
+        [OP_BIT_GET] = EXP_SZ(as_exp_bit_get(NIL, NIL, NIL)),
+        [OP_BIT_COUNT] = EXP_SZ(as_exp_bit_count(NIL, NIL, NIL)),
+        [OP_BIT_LSCAN] = EXP_SZ(as_exp_bit_lscan(NIL, NIL, NIL, NIL)),
+        [OP_BIT_RSCAN] = EXP_SZ(as_exp_bit_rscan(NIL, NIL, NIL, NIL)),
+        [OP_BIT_GET_INT] = EXP_SZ(as_exp_bit_get_int(NIL, NIL, 0, NIL)),
+        [OP_HLL_INIT] = EXP_SZ(as_exp_hll_init_mh(NULL, 0, 0, NIL)),
+        [OP_HLL_ADD] = EXP_SZ(as_exp_hll_add_mh(NULL, NIL, 0, 0, NIL)),
+        [OP_HLL_GET_COUNT] = EXP_SZ(as_exp_hll_update(NULL, NIL, NIL)),
+        [OP_HLL_GET_UNION] = EXP_SZ(as_exp_hll_get_union(NIL, NIL)),
+        [OP_HLL_GET_UNION_COUNT] = EXP_SZ(as_exp_hll_get_union_count(NIL, NIL)),
         [OP_HLL_GET_INTERSECT_COUNT] =
-            EXP_SZ(as_exp_hll_get_intersect_count(as_exp_nil(), as_exp_nil())),
-        [OP_HLL_GET_SIMILARITY] =
-            EXP_SZ(as_exp_hll_get_similarity(as_exp_nil(), as_exp_nil())),
-        [OP_HLL_DESCRIBE] = EXP_SZ(as_exp_hll_describe(as_exp_nil())),
-        [OP_HLL_MAY_CONTAIN] =
-            EXP_SZ(as_exp_hll_may_contain(as_exp_nil(), as_exp_nil())),
+            EXP_SZ(as_exp_hll_get_intersect_count(NIL, NIL)),
+        [OP_HLL_GET_SIMILARITY] = EXP_SZ(as_exp_hll_get_similarity(NIL, NIL)),
+        [OP_HLL_DESCRIBE] = EXP_SZ(as_exp_hll_describe(NIL)),
+        [OP_HLL_MAY_CONTAIN] = EXP_SZ(as_exp_hll_may_contain(NIL, NIL)),
         [_AS_EXP_CODE_CDT_LIST_CRMOD] = 0, //EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_CODE_CDT_LIST_MOD] = 0,   //EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_CODE_CDT_MAP_CRMOD] = 0,  //EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_CODE_CDT_MAP_CR] = 0,     //EXP_SZ(as_exp_val(NULL)),
         [_AS_EXP_CODE_CDT_MAP_MOD] = 0,    //EXP_SZ(as_exp_val(NULL)),
-        [EXCLUSIVE] = EXP_SZ(as_exp_exclusive(as_exp_nil())),
-        [ADD] = EXP_SZ(as_exp_add(as_exp_nil())),
-        [SUB] = EXP_SZ(as_exp_sub(as_exp_nil())),
-        [MUL] = EXP_SZ(as_exp_mul(as_exp_nil())),
-        [DIV] = EXP_SZ(as_exp_div(as_exp_nil())),
-        [POW] = EXP_SZ(as_exp_pow(as_exp_nil(), as_exp_nil())),
-        [LOG] = EXP_SZ(as_exp_log(as_exp_nil(), as_exp_nil())),
-        [MOD] = EXP_SZ(as_exp_mod(as_exp_nil(), as_exp_nil())),
-        [ABS] = EXP_SZ(as_exp_abs(as_exp_nil())),
-        [FLOOR] = EXP_SZ(as_exp_floor(as_exp_nil())),
-        [CEIL] = EXP_SZ(as_exp_ceil(as_exp_nil())),
-        [TO_INT] = EXP_SZ(as_exp_to_int(as_exp_nil())),
-        [TO_FLOAT] = EXP_SZ(as_exp_to_float(as_exp_nil())),
-        [INT_AND] = EXP_SZ(as_exp_int_and(as_exp_nil())),
-        [INT_OR] = EXP_SZ(as_exp_int_or(as_exp_nil())),
-        [INT_XOR] = EXP_SZ(as_exp_int_xor(as_exp_nil())),
-        [INT_NOT] = EXP_SZ(as_exp_int_not(as_exp_nil())),
-        [INT_LSHIFT] = EXP_SZ(as_exp_int_lshift(as_exp_nil(), as_exp_nil())),
-        [INT_RSHIFT] = EXP_SZ(as_exp_int_rshift(as_exp_nil(), as_exp_nil())),
-        [INT_ARSHIFT] = EXP_SZ(as_exp_int_arshift(as_exp_nil(), as_exp_nil())),
-        [INT_COUNT] = EXP_SZ(as_exp_int_count(as_exp_nil())),
-        [INT_LSCAN] = EXP_SZ(as_exp_int_lscan(as_exp_nil(), as_exp_nil())),
-        [INT_RSCAN] = EXP_SZ(as_exp_int_rscan(as_exp_nil(), as_exp_nil())),
-        [MIN] = EXP_SZ(as_exp_min(as_exp_nil())),
-        [MAX] = EXP_SZ(as_exp_max(as_exp_nil())),
-        [COND] = EXP_SZ(as_exp_cond(as_exp_nil())),
-        [LET] = EXP_SZ(as_exp_let(as_exp_nil())),
-        [DEF] = EXP_SZ(as_exp_def("", as_exp_nil())),
+        [EXCLUSIVE] = EXP_SZ(as_exp_exclusive(NIL)),
+        [ADD] = EXP_SZ(as_exp_add(NIL)),
+        [SUB] = EXP_SZ(as_exp_sub(NIL)),
+        [MUL] = EXP_SZ(as_exp_mul(NIL)),
+        [DIV] = EXP_SZ(as_exp_div(NIL)),
+        [POW] = EXP_SZ(as_exp_pow(NIL, NIL)),
+        [LOG] = EXP_SZ(as_exp_log(NIL, NIL)),
+        [MOD] = EXP_SZ(as_exp_mod(NIL, NIL)),
+        [ABS] = EXP_SZ(as_exp_abs(NIL)),
+        [FLOOR] = EXP_SZ(as_exp_floor(NIL)),
+        [CEIL] = EXP_SZ(as_exp_ceil(NIL)),
+        [TO_INT] = EXP_SZ(as_exp_to_int(NIL)),
+        [TO_FLOAT] = EXP_SZ(as_exp_to_float(NIL)),
+        [INT_AND] = EXP_SZ(as_exp_int_and(NIL)),
+        [INT_OR] = EXP_SZ(as_exp_int_or(NIL)),
+        [INT_XOR] = EXP_SZ(as_exp_int_xor(NIL)),
+        [INT_NOT] = EXP_SZ(as_exp_int_not(NIL)),
+        [INT_LSHIFT] = EXP_SZ(as_exp_int_lshift(NIL, NIL)),
+        [INT_RSHIFT] = EXP_SZ(as_exp_int_rshift(NIL, NIL)),
+        [INT_ARSHIFT] = EXP_SZ(as_exp_int_arshift(NIL, NIL)),
+        [INT_COUNT] = EXP_SZ(as_exp_int_count(NIL)),
+        [INT_LSCAN] = EXP_SZ(as_exp_int_lscan(NIL, NIL)),
+        [INT_RSCAN] = EXP_SZ(as_exp_int_rscan(NIL, NIL)),
+        [MIN] = EXP_SZ(as_exp_min(NIL)),
+        [MAX] = EXP_SZ(as_exp_max(NIL)),
+        [COND] = EXP_SZ(as_exp_cond(NIL)),
+        [LET] = EXP_SZ(as_exp_let(NIL)),
+        [DEF] = EXP_SZ(as_exp_def("", NIL)),
         [VAR] = EXP_SZ(as_exp_var("")),
         [UNKNOWN] = EXP_SZ(as_exp_unknown())};
 
@@ -699,22 +651,22 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(0, tmp_expr);
             break;
         case EQ:
-            APPEND_ARRAY(2, as_exp_cmp_eq(as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_cmp_eq(NIL, NIL));
             break;
         case NE:
-            APPEND_ARRAY(2, as_exp_cmp_ne(as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_cmp_ne(NIL, NIL));
             break;
         case GT:
-            APPEND_ARRAY(2, as_exp_cmp_gt(as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_cmp_gt(NIL, NIL));
             break;
         case GE:
-            APPEND_ARRAY(2, as_exp_cmp_ge(as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_cmp_ge(NIL, NIL));
             break;
         case LT:
-            APPEND_ARRAY(2, as_exp_cmp_lt(as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_cmp_lt(NIL, NIL));
             break;
         case LE:
-            APPEND_ARRAY(2, as_exp_cmp_le(as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_cmp_le(NIL, NIL));
             break;
         case CMP_REGEX:
             if (get_int64_t(err, REGEX_OPTIONS_KEY, temp_expr->pydict,
@@ -736,19 +688,19 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                        "regex_str must be a string.");
             }
 
-            APPEND_ARRAY(1, as_exp_cmp_regex(lval1, regex_str, as_exp_nil()));
+            APPEND_ARRAY(1, as_exp_cmp_regex(lval1, regex_str, NIL));
             break;
         case CMP_GEO:
-            APPEND_ARRAY(2, as_exp_cmp_geo(as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_cmp_geo(NIL, NIL));
             break;
         case AND:
-            APPEND_ARRAY(2, as_exp_and(as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_and(NIL));
             break;
         case OR:
-            APPEND_ARRAY(2, as_exp_or(as_exp_nil()));
+            APPEND_ARRAY(2, as_exp_or(NIL));
             break;
         case NOT:
-            APPEND_ARRAY(1, as_exp_not(as_exp_nil()));
+            APPEND_ARRAY(1, as_exp_not(NIL));
             break;
         case END_VA_ARGS:
             APPEND_ARRAY(
@@ -824,12 +776,12 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_list_get_by_index(
-                                temp_expr->ctx, lval1, lval2, as_exp_nil(),
-                                as_exp_nil())); // - 2 for index, bin
+            APPEND_ARRAY(
+                2, as_exp_list_get_by_index(temp_expr->ctx, lval1, lval2, NIL,
+                                            NIL)); // - 2 for index, bin
             break;
         case OP_LIST_SIZE:
-            APPEND_ARRAY(1, as_exp_list_size(temp_expr->ctx, as_exp_nil()));
+            APPEND_ARRAY(1, as_exp_list_size(temp_expr->ctx, NIL));
             break;
         case OP_LIST_GET_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -837,9 +789,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_list_get_by_value(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for value, bin
+            APPEND_ARRAY(2,
+                         as_exp_list_get_by_value(temp_expr->ctx, lval1, NIL,
+                                                  NIL)); // - 2 for value, bin
             break;
         case OP_LIST_GET_BY_VALUE_RANGE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -847,10 +799,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_list_get_by_value_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for begin, end, bin
+            APPEND_ARRAY(3, as_exp_list_get_by_value_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for begin, end, bin
             break;
         case OP_LIST_GET_BY_VALUE_LIST:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -858,9 +809,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_list_get_by_value_list(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for value, bin
+            APPEND_ARRAY(
+                2, as_exp_list_get_by_value_list(temp_expr->ctx, lval1, NIL,
+                                                 NIL)); // - 2 for value, bin
             break;
         case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -868,10 +819,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_list_get_by_rel_rank_range_to_end(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for value, rank, bin
+            APPEND_ARRAY(3, as_exp_list_get_by_rel_rank_range_to_end(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for value, rank, bin
             break;
         case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -879,11 +829,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(4,
-                         as_exp_list_get_by_rel_rank_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil(),
-                             as_exp_nil())); // - 4 for value, rank, count, bin
+            APPEND_ARRAY(4, as_exp_list_get_by_rel_rank_range(
+                                temp_expr->ctx, lval1, NIL, NIL, NIL,
+                                NIL)); // - 4 for value, rank, count, bin
             break;
         case OP_LIST_GET_BY_INDEX_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -892,8 +840,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
 
             APPEND_ARRAY(2, as_exp_list_get_by_index_range_to_end(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for index, bin
+                                temp_expr->ctx, lval1, NIL,
+                                NIL)); // - 2 for index, bin
             break;
         case OP_LIST_GET_BY_INDEX_RANGE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -901,10 +849,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_list_get_by_index_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for index, count, bin
+            APPEND_ARRAY(3, as_exp_list_get_by_index_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for index, count, bin
             break;
         case OP_LIST_GET_BY_RANK:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -917,9 +864,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_list_get_by_rank(
-                                temp_expr->ctx, lval1, lval2, as_exp_nil(),
-                                as_exp_nil())); // - 2 for rank, bin
+            APPEND_ARRAY(2, as_exp_list_get_by_rank(temp_expr->ctx, lval1,
+                                                    lval2, NIL,
+                                                    NIL)); // - 2 for rank, bin
             break;
         case OP_LIST_GET_BY_RANK_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -928,8 +875,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
 
             APPEND_ARRAY(2, as_exp_list_get_by_rank_range_to_end(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for rank, bin
+                                temp_expr->ctx, lval1, NIL,
+                                NIL)); // - 2 for rank, bin
             break;
         case OP_LIST_GET_BY_RANK_RANGE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -937,46 +884,44 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_list_get_by_rank_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for rank, count, bin
+            APPEND_ARRAY(3, as_exp_list_get_by_rank_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for rank, count, bin
             break;
         case OP_LIST_APPEND:
             APPEND_ARRAY(
-                3,
-                as_exp_list_append(
-                    temp_expr->ctx, temp_expr->list_policy, as_exp_nil(),
-                    as_exp_nil())); // -3 for val, _AS_EXP_CODE_CDT_LIST_CRMOD, bin
+                3, as_exp_list_append(
+                       temp_expr->ctx, temp_expr->list_policy, NIL,
+                       NIL)); // -3 for val, _AS_EXP_CODE_CDT_LIST_CRMOD, bin
             break;
         case OP_LIST_APPEND_ITEMS:
-            APPEND_ARRAY(3, as_exp_list_append_items(
-                                temp_expr->ctx, temp_expr->list_policy,
-                                as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(3, as_exp_list_append_items(temp_expr->ctx,
+                                                     temp_expr->list_policy,
+                                                     NIL, NIL));
             break;
         case OP_LIST_INSERT:
-            APPEND_ARRAY(4, as_exp_list_insert(
-                                temp_expr->ctx, temp_expr->list_policy,
-                                as_exp_nil(), as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_list_insert(temp_expr->ctx,
+                                               temp_expr->list_policy, NIL, NIL,
+                                               NIL));
             break;
         case OP_LIST_INSERT_ITEMS:
-            APPEND_ARRAY(4, as_exp_list_insert_items(
-                                temp_expr->ctx, temp_expr->list_policy,
-                                as_exp_nil(), as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_list_insert_items(temp_expr->ctx,
+                                                     temp_expr->list_policy,
+                                                     NIL, NIL, NIL));
             break;
         case OP_LIST_INCREMENT:
-            APPEND_ARRAY(4, as_exp_list_increment(
-                                temp_expr->ctx, temp_expr->list_policy,
-                                as_exp_nil(), as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_list_increment(temp_expr->ctx,
+                                                  temp_expr->list_policy, NIL,
+                                                  NIL, NIL));
             break;
         case OP_LIST_SET:
-            APPEND_ARRAY(
-                4, as_exp_list_set(temp_expr->ctx, temp_expr->list_policy,
-                                   as_exp_nil(), as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(4,
+                         as_exp_list_set(temp_expr->ctx, temp_expr->list_policy,
+                                         NIL, NIL, NIL));
             break;
         case OP_LIST_CLEAR:
             APPEND_ARRAY(1, as_exp_list_clear(temp_expr->ctx,
-                                              as_exp_nil())); // -1 for bin
+                                              NIL)); // -1 for bin
             break;
         case OP_LIST_SORT:
             if (get_int64_t(err, LIST_ORDER_KEY, temp_expr->pydict, &lval1) !=
@@ -985,61 +930,57 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
 
             APPEND_ARRAY(1, as_exp_list_sort(temp_expr->ctx, lval1,
-                                             as_exp_nil())); // -1 for bin
+                                             NIL)); // -1 for bin
             break;
         case OP_LIST_REMOVE_BY_VALUE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(2, as_exp_list_remove_by_value(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // -2 for bin and val
+            APPEND_ARRAY(
+                2, as_exp_list_remove_by_value(temp_expr->ctx, lval1, NIL,
+                                               NIL)); // -2 for bin and val
             break;
         case OP_LIST_REMOVE_BY_VALUE_LIST:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(2, as_exp_list_remove_by_value_list(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // -2 for bin and val
+            APPEND_ARRAY(
+                2, as_exp_list_remove_by_value_list(temp_expr->ctx, lval1, NIL,
+                                                    NIL)); // -2 for bin and val
             break;
         case OP_LIST_REMOVE_BY_VALUE_RANGE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_list_remove_by_value_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for begin, end, val
+            APPEND_ARRAY(3, as_exp_list_remove_by_value_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for begin, end, val
             break;
         case OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_list_remove_by_rel_rank_range_to_end(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // -3 for value, rank, bin
+            APPEND_ARRAY(3, as_exp_list_remove_by_rel_rank_range_to_end(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // -3 for value, rank, bin
             break;
         case OP_LIST_REMOVE_BY_REL_RANK_RANGE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(4,
-                         as_exp_list_remove_by_rel_rank_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil(),
-                             as_exp_nil())); // -4 for value, rank, count, bin
+            APPEND_ARRAY(4, as_exp_list_remove_by_rel_rank_range(
+                                temp_expr->ctx, lval1, NIL, NIL, NIL,
+                                NIL)); // -4 for value, rank, count, bin
             break;
         case OP_LIST_REMOVE_BY_INDEX:
-            APPEND_ARRAY(2, as_exp_list_remove_by_index(
-                                temp_expr->ctx, as_exp_nil(),
-                                as_exp_nil())); // -2 for index, bin
+            APPEND_ARRAY(2,
+                         as_exp_list_remove_by_index(temp_expr->ctx, NIL,
+                                                     NIL)); // -2 for index, bin
             break;
         case OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -1047,23 +988,22 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
             APPEND_ARRAY(2, as_exp_list_remove_by_index_range_to_end(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // -2 for index, bin
+                                temp_expr->ctx, lval1, NIL,
+                                NIL)); // -2 for index, bin
             break;
         case OP_LIST_REMOVE_BY_INDEX_RANGE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_list_remove_by_index_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for index, count, bin
+            APPEND_ARRAY(3, as_exp_list_remove_by_index_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for index, count, bin
             break;
         case OP_LIST_REMOVE_BY_RANK:
-            APPEND_ARRAY(2, as_exp_list_remove_by_rank(
-                                temp_expr->ctx, as_exp_nil(),
-                                as_exp_nil())); // -2 for rank, bin
+            APPEND_ARRAY(2,
+                         as_exp_list_remove_by_rank(temp_expr->ctx, NIL,
+                                                    NIL)); // -2 for rank, bin
             break;
         case OP_LIST_REMOVE_BY_RANK_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
@@ -1071,120 +1011,112 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
             APPEND_ARRAY(2, as_exp_list_remove_by_rank_range_to_end(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for rank, bin
+                                temp_expr->ctx, lval1, NIL,
+                                NIL)); // - 2 for rank, bin
             break;
         case OP_LIST_REMOVE_BY_RANK_RANGE:
             if (get_int64_t(err, AS_PY_LIST_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_list_remove_by_rank_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for rank, count, bin
+            APPEND_ARRAY(3, as_exp_list_remove_by_rank_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for rank, count, bin
             break;
         case OP_MAP_PUT:
-            APPEND_ARRAY(4, as_exp_map_put(temp_expr->ctx,
-                                           temp_expr->map_policy, as_exp_nil(),
-                                           as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(4,
+                         as_exp_map_put(temp_expr->ctx, temp_expr->map_policy,
+                                        NIL, NIL, NIL));
             break;
         case OP_MAP_PUT_ITEMS:
-            APPEND_ARRAY(3, as_exp_map_put_items(temp_expr->ctx,
-                                                 temp_expr->map_policy,
-                                                 as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(3,
+                         as_exp_map_put_items(temp_expr->ctx,
+                                              temp_expr->map_policy, NIL, NIL));
             break;
         case OP_MAP_INCREMENT:
-            APPEND_ARRAY(4, as_exp_map_increment(
-                                temp_expr->ctx, temp_expr->map_policy,
-                                as_exp_nil(), as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_map_increment(temp_expr->ctx,
+                                                 temp_expr->map_policy, NIL,
+                                                 NIL, NIL));
             break;
         case OP_MAP_CLEAR:
             APPEND_ARRAY(1, as_exp_map_clear(temp_expr->ctx,
-                                             as_exp_nil())); // - 1 for bin
+                                             NIL)); // - 1 for bin
             break;
         case OP_MAP_REMOVE_BY_KEY:
-            APPEND_ARRAY(
-                2, as_exp_map_remove_by_key(temp_expr->ctx, as_exp_nil(),
-                                            as_exp_nil())); // - 2 for key, bin
+            APPEND_ARRAY(2, as_exp_map_remove_by_key(temp_expr->ctx, NIL,
+                                                     NIL)); // - 2 for key, bin
             break;
         case OP_MAP_REMOVE_BY_KEY_LIST:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(2, as_exp_map_remove_by_key_list(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for key, bin
+            APPEND_ARRAY(
+                2, as_exp_map_remove_by_key_list(temp_expr->ctx, lval1, NIL,
+                                                 NIL)); // - 2 for key, bin
             break;
         case OP_MAP_REMOVE_BY_KEY_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_map_remove_by_key_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for begin, end, bin
+            APPEND_ARRAY(3, as_exp_map_remove_by_key_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for begin, end, bin
             break;
         case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_map_remove_by_key_rel_index_range_to_end(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for key, index, bin
+            APPEND_ARRAY(3, as_exp_map_remove_by_key_rel_index_range_to_end(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for key, index, bin
             break;
         case OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(4,
-                         as_exp_map_remove_by_key_rel_index_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil(),
-                             as_exp_nil())); // - 4 for key, index, count, bin
+            APPEND_ARRAY(4, as_exp_map_remove_by_key_rel_index_range(
+                                temp_expr->ctx, lval1, NIL, NIL, NIL,
+                                NIL)); // - 4 for key, index, count, bin
             break;
         case OP_MAP_REMOVE_BY_VALUE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(2, as_exp_map_remove_by_value(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for val, bin
+            APPEND_ARRAY(2,
+                         as_exp_map_remove_by_value(temp_expr->ctx, lval1, NIL,
+                                                    NIL)); // - 2 for val, bin
             break;
         case OP_MAP_REMOVE_BY_VALUE_LIST:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(2, as_exp_map_remove_by_value_list(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for values, bin
+            APPEND_ARRAY(
+                2, as_exp_map_remove_by_value_list(temp_expr->ctx, lval1, NIL,
+                                                   NIL)); // - 2 for values, bin
             break;
         case OP_MAP_REMOVE_BY_VALUE_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_map_remove_by_value_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for begin, end, bin
+            APPEND_ARRAY(3, as_exp_map_remove_by_value_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for begin, end, bin
             break;
         case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_map_remove_by_value_rel_rank_range_to_end(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for val, rank, bin
+            APPEND_ARRAY(3, as_exp_map_remove_by_value_rel_rank_range_to_end(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for val, rank, bin
             break;
         case OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1192,14 +1124,13 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
             APPEND_ARRAY(4, as_exp_map_remove_by_value_rel_rank_range(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil(), as_exp_nil(),
-                                as_exp_nil())); // - 4 for val, rank, count, bin
+                                temp_expr->ctx, lval1, NIL, NIL, NIL,
+                                NIL)); // - 4 for val, rank, count, bin
             break;
         case OP_MAP_REMOVE_BY_INDEX:
-            APPEND_ARRAY(2, as_exp_map_remove_by_index(
-                                temp_expr->ctx, as_exp_nil(),
-                                as_exp_nil())); // - 2 for index, bin
+            APPEND_ARRAY(2,
+                         as_exp_map_remove_by_index(temp_expr->ctx, NIL,
+                                                    NIL)); // - 2 for index, bin
             break;
         case OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1207,23 +1138,22 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
             APPEND_ARRAY(2, as_exp_map_remove_by_index_range_to_end(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for index, bin
+                                temp_expr->ctx, lval1, NIL,
+                                NIL)); // - 2 for index, bin
             break;
         case OP_MAP_REMOVE_BY_INDEX_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_map_remove_by_index_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for index, count, bin
+            APPEND_ARRAY(3, as_exp_map_remove_by_index_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for index, count, bin
             break;
         case OP_MAP_REMOVE_BY_RANK:
-            APPEND_ARRAY(2, as_exp_map_remove_by_rank(
-                                temp_expr->ctx, as_exp_nil(),
-                                as_exp_nil())); // - 2 for rank, bin
+            APPEND_ARRAY(2,
+                         as_exp_map_remove_by_rank(temp_expr->ctx, NIL,
+                                                   NIL)); // - 2 for rank, bin
             break;
         case OP_MAP_REMOVE_BY_RANK_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1231,22 +1161,21 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
             APPEND_ARRAY(2, as_exp_map_remove_by_rank_range_to_end(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for rank, bin
+                                temp_expr->ctx, lval1, NIL,
+                                NIL)); // - 2 for rank, bin
             break;
         case OP_MAP_REMOVE_BY_RANK_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
                             &lval1) != AEROSPIKE_OK) {
                 return err->code;
             }
-            APPEND_ARRAY(3,
-                         as_exp_map_remove_by_rank_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for rank, count, bin
+            APPEND_ARRAY(3, as_exp_map_remove_by_rank_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for rank, count, bin
             break;
         case OP_MAP_SIZE:
             APPEND_ARRAY(1, as_exp_map_size(temp_expr->ctx,
-                                            as_exp_nil())); // - 1 for bin
+                                            NIL)); // - 1 for bin
             break;
         case OP_MAP_GET_BY_KEY:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1259,9 +1188,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_map_get_by_key(
-                                temp_expr->ctx, lval1, lval2, as_exp_nil(),
-                                as_exp_nil())); // - 2 for key, bin
+            APPEND_ARRAY(2, as_exp_map_get_by_key(temp_expr->ctx, lval1, lval2,
+                                                  NIL,
+                                                  NIL)); // - 2 for key, bin
             break;
         case OP_MAP_GET_BY_KEY_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1269,10 +1198,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_map_get_by_key_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for begin, end, bin
+            APPEND_ARRAY(
+                3, as_exp_map_get_by_key_range(temp_expr->ctx, lval1, NIL, NIL,
+                                               NIL)); // - 3 for begin, end, bin
             break;
         case OP_MAP_GET_BY_KEY_LIST:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1280,9 +1208,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_map_get_by_key_list(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for keys, bin
+            APPEND_ARRAY(2,
+                         as_exp_map_get_by_key_list(temp_expr->ctx, lval1, NIL,
+                                                    NIL)); // - 2 for keys, bin
             break;
         case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1290,10 +1218,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_map_get_by_key_rel_index_range_to_end(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for key, index, bin
+            APPEND_ARRAY(3, as_exp_map_get_by_key_rel_index_range_to_end(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for key, index, bin
             break;
         case OP_MAP_GET_BY_KEY_REL_INDEX_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1301,11 +1228,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(4,
-                         as_exp_map_get_by_key_rel_index_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil(),
-                             as_exp_nil())); // - 4 for key, index, count, bin
+            APPEND_ARRAY(4, as_exp_map_get_by_key_rel_index_range(
+                                temp_expr->ctx, lval1, NIL, NIL, NIL,
+                                NIL)); // - 4 for key, index, count, bin
             break;
         case OP_MAP_GET_BY_VALUE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1313,9 +1238,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(
-                2, as_exp_map_get_by_value(temp_expr->ctx, lval1, as_exp_nil(),
-                                           as_exp_nil())); // - 2 for value, bin
+            APPEND_ARRAY(2, as_exp_map_get_by_value(temp_expr->ctx, lval1, NIL,
+                                                    NIL)); // - 2 for value, bin
             break;
         case OP_MAP_GET_BY_VALUE_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1323,10 +1247,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_map_get_by_value_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for begin, end, bin
+            APPEND_ARRAY(3, as_exp_map_get_by_value_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for begin, end, bin
             break;
         case OP_MAP_GET_BY_VALUE_LIST:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1334,9 +1257,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_map_get_by_value_list(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for value, bin
+            APPEND_ARRAY(
+                2, as_exp_map_get_by_value_list(temp_expr->ctx, lval1, NIL,
+                                                NIL)); // - 2 for value, bin
             break;
         case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1344,10 +1267,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_map_get_by_value_rel_rank_range_to_end(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for value, rank, bin
+            APPEND_ARRAY(3, as_exp_map_get_by_value_rel_rank_range_to_end(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for value, rank, bin
             break;
         case OP_MAP_GET_BY_VALUE_RANK_RANGE_REL:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1355,11 +1277,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(4,
-                         as_exp_map_get_by_value_rel_rank_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil(),
-                             as_exp_nil())); // - 4 for value, rank, count, bin
+            APPEND_ARRAY(4, as_exp_map_get_by_value_rel_rank_range(
+                                temp_expr->ctx, lval1, NIL, NIL, NIL,
+                                NIL)); // - 4 for value, rank, count, bin
             break;
         case OP_MAP_GET_BY_INDEX:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1372,9 +1292,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_map_get_by_index(
-                                temp_expr->ctx, lval1, lval2, as_exp_nil(),
-                                as_exp_nil())); // - 2 for index, bin
+            APPEND_ARRAY(2, as_exp_map_get_by_index(temp_expr->ctx, lval1,
+                                                    lval2, NIL,
+                                                    NIL)); // - 2 for index, bin
             break;
         case OP_MAP_GET_BY_INDEX_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1383,8 +1303,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
 
             APPEND_ARRAY(2, as_exp_map_get_by_index_range_to_end(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for index, bin
+                                temp_expr->ctx, lval1, NIL,
+                                NIL)); // - 2 for index, bin
             break;
         case OP_MAP_GET_BY_INDEX_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1392,10 +1312,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_map_get_by_index_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for index, count, bin
+            APPEND_ARRAY(3, as_exp_map_get_by_index_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for index, count, bin
             break;
         case OP_MAP_GET_BY_RANK:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1408,9 +1327,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(2, as_exp_map_get_by_rank(
-                                temp_expr->ctx, lval1, lval2, as_exp_nil(),
-                                as_exp_nil())); // - 2 for rank, bin
+            APPEND_ARRAY(2, as_exp_map_get_by_rank(temp_expr->ctx, lval1, lval2,
+                                                   NIL,
+                                                   NIL)); // - 2 for rank, bin
             break;
         case OP_MAP_GET_BY_RANK_RANGE_TO_END:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1419,8 +1338,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             }
 
             APPEND_ARRAY(2, as_exp_map_get_by_rank_range_to_end(
-                                temp_expr->ctx, lval1, as_exp_nil(),
-                                as_exp_nil())); // - 2 for rank, bin
+                                temp_expr->ctx, lval1, NIL,
+                                NIL)); // - 2 for rank, bin
             break;
         case OP_MAP_GET_BY_RANK_RANGE:
             if (get_int64_t(err, AS_PY_MAP_RETURN_KEY, temp_expr->pydict,
@@ -1428,10 +1347,9 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 return err->code;
             }
 
-            APPEND_ARRAY(3,
-                         as_exp_map_get_by_rank_range(
-                             temp_expr->ctx, lval1, as_exp_nil(), as_exp_nil(),
-                             as_exp_nil())); // - 3 for rank, count, bin
+            APPEND_ARRAY(3, as_exp_map_get_by_rank_range(
+                                temp_expr->ctx, lval1, NIL, NIL,
+                                NIL)); // - 3 for rank, count, bin
             break;
         case _AS_EXP_BIT_FLAGS:
             if (get_int64_t(err, AS_PY_VAL_KEY, temp_expr->pydict, &lval1) !=
@@ -1442,262 +1360,224 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             APPEND_ARRAY(0, as_exp_uint((uint64_t)lval1));
             break;
         case OP_BIT_RESIZE:
-            APPEND_ARRAY(
-                4, as_exp_bit_resize(
-                       NULL, as_exp_nil(), NO_BIT_FLAGS,
-                       as_exp_nil())); // - 4 for byte_size, policy, flags, bin
+            APPEND_ARRAY(4, as_exp_bit_resize(
+                                NULL, NIL, NO_BIT_FLAGS,
+                                NIL)); // - 4 for byte_size, policy, flags, bin
             break;
         case OP_BIT_INSERT:
-            APPEND_ARRAY(4, as_exp_bit_insert(NULL, as_exp_nil(), as_exp_nil(),
-                                              as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_bit_insert(NULL, NIL, NIL, NIL));
             break;
         case OP_BIT_REMOVE:
-            APPEND_ARRAY(4, as_exp_bit_remove(NULL, as_exp_nil(), as_exp_nil(),
-                                              as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_bit_remove(NULL, NIL, NIL, NIL));
             break;
         case OP_BIT_SET:
-            APPEND_ARRAY(5, as_exp_bit_set(NULL, as_exp_nil(), as_exp_nil(),
-                                           as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(5, as_exp_bit_set(NULL, NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_OR:
-            APPEND_ARRAY(5, as_exp_bit_or(NULL, as_exp_nil(), as_exp_nil(),
-                                          as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(5, as_exp_bit_or(NULL, NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_XOR:
-            APPEND_ARRAY(5, as_exp_bit_xor(NULL, as_exp_nil(), as_exp_nil(),
-                                           as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(5, as_exp_bit_xor(NULL, NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_AND:
-            APPEND_ARRAY(5, as_exp_bit_and(NULL, as_exp_nil(), as_exp_nil(),
-                                           as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(5, as_exp_bit_and(NULL, NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_NOT:
-            APPEND_ARRAY(4, as_exp_bit_not(NULL, as_exp_nil(), as_exp_nil(),
-                                           as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_bit_not(NULL, NIL, NIL, NIL));
             break;
         case OP_BIT_LSHIFT:
-            APPEND_ARRAY(5, as_exp_bit_lshift(NULL, as_exp_nil(), as_exp_nil(),
-                                              as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(5, as_exp_bit_lshift(NULL, NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_RSHIFT:
-            APPEND_ARRAY(5, as_exp_bit_rshift(NULL, as_exp_nil(), as_exp_nil(),
-                                              as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(5, as_exp_bit_rshift(NULL, NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_ADD:
-            APPEND_ARRAY(6, as_exp_bit_add(NULL, as_exp_nil(), as_exp_nil(),
-                                           as_exp_nil(), NO_BIT_FLAGS,
-                                           as_exp_nil()));
+            APPEND_ARRAY(
+                6, as_exp_bit_add(NULL, NIL, NIL, NIL, NO_BIT_FLAGS, NIL));
             break;
         case OP_BIT_SUBTRACT:
-            APPEND_ARRAY(6, as_exp_bit_subtract(NULL, as_exp_nil(),
-                                                as_exp_nil(), as_exp_nil(),
-                                                NO_BIT_FLAGS, as_exp_nil()));
+            APPEND_ARRAY(
+                6, as_exp_bit_subtract(NULL, NIL, NIL, NIL, NO_BIT_FLAGS, NIL));
             break;
         case OP_BIT_SET_INT:
-            APPEND_ARRAY(5, as_exp_bit_set_int(NULL, as_exp_nil(), as_exp_nil(),
-                                               as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(5, as_exp_bit_set_int(NULL, NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_GET:
             APPEND_ARRAY(
-                3, as_exp_bit_get(
-                       as_exp_nil(), as_exp_nil(),
-                       as_exp_nil())); // - 3 for bit_offset, bit_size, bin
+                3, as_exp_bit_get(NIL, NIL,
+                                  NIL)); // - 3 for bit_offset, bit_size, bin
             break;
         case OP_BIT_COUNT:
             APPEND_ARRAY(
-                3, as_exp_bit_count(
-                       as_exp_nil(), as_exp_nil(),
-                       as_exp_nil())); // - 3 for bit_offset, bit_size, bin
+                3, as_exp_bit_count(NIL, NIL,
+                                    NIL)); // - 3 for bit_offset, bit_size, bin
             break;
         case OP_BIT_LSCAN:
-            APPEND_ARRAY(4, as_exp_bit_lscan(as_exp_nil(), as_exp_nil(),
-                                             as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_bit_lscan(NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_RSCAN:
-            APPEND_ARRAY(4, as_exp_bit_rscan(as_exp_nil(), as_exp_nil(),
-                                             as_exp_nil(), as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_bit_rscan(NIL, NIL, NIL, NIL));
             break;
         case OP_BIT_GET_INT:
-            APPEND_ARRAY(4, as_exp_bit_get_int(as_exp_nil(), as_exp_nil(), 0,
-                                               as_exp_nil()));
+            APPEND_ARRAY(4, as_exp_bit_get_int(NIL, NIL, 0, NIL));
             break;
         case OP_HLL_INIT: // NOTE: this case covers HLLInit and HLLInitMH.
             APPEND_ARRAY(
                 4,
                 as_exp_hll_init_mh(
                     NULL, 0, 0,
-                    as_exp_nil())); // - 4 for index_bit_count, mh_bit_count, policy, bin
+                    NIL)); // - 4 for index_bit_count, mh_bit_count, policy, bin
             break;
         case OP_HLL_ADD: // NOTE: this case covers HLLAddMH, HLLAdd, and HLLUpdate
             APPEND_ARRAY(
-                5,
-                as_exp_hll_add_mh(
-                    NULL, as_exp_nil(), 0, 0,
-                    as_exp_nil())); // - 5 for list, index_bit_count, -1, policy, bin
+                5, as_exp_hll_add_mh(
+                       NULL, NIL, 0, 0,
+                       NIL)); // - 5 for list, index_bit_count, -1, policy, bin
             break;
         case OP_HLL_GET_COUNT:
-            APPEND_ARRAY(1, as_exp_hll_get_count(as_exp_nil())); // - 1 for bin
+            APPEND_ARRAY(1, as_exp_hll_get_count(NIL)); // - 1 for bin
             break;
         case OP_HLL_GET_UNION:
-            APPEND_ARRAY(
-                2, as_exp_hll_get_union(as_exp_nil(),
-                                        as_exp_nil())); // - 2 for list, bin
+            APPEND_ARRAY(2, as_exp_hll_get_union(NIL,
+                                                 NIL)); // - 2 for list, bin
             break;
         case OP_HLL_GET_UNION_COUNT:
-            APPEND_ARRAY(2,
-                         as_exp_hll_get_union_count(
-                             as_exp_nil(), as_exp_nil())); // - 2 for list, bin
+            APPEND_ARRAY(
+                2, as_exp_hll_get_union_count(NIL, NIL)); // - 2 for list, bin
             break;
         case OP_HLL_GET_INTERSECT_COUNT:
-            APPEND_ARRAY(2,
-                         as_exp_hll_get_intersect_count(
-                             as_exp_nil(), as_exp_nil())); // - 2 for list, bin
+            APPEND_ARRAY(2, as_exp_hll_get_intersect_count(
+                                NIL, NIL)); // - 2 for list, bin
             break;
         case OP_HLL_GET_SIMILARITY:
-            APPEND_ARRAY(2,
-                         as_exp_hll_get_similarity(
-                             as_exp_nil(), as_exp_nil())); // - 2 for list, bin
+            APPEND_ARRAY(
+                2, as_exp_hll_get_similarity(NIL, NIL)); // - 2 for list, bin
             break;
         case OP_HLL_DESCRIBE:
-            APPEND_ARRAY(1, as_exp_hll_describe(as_exp_nil())); // - 1 for bin
+            APPEND_ARRAY(1, as_exp_hll_describe(NIL)); // - 1 for bin
             break;
         case OP_HLL_MAY_CONTAIN:
-            APPEND_ARRAY(
-                2, as_exp_hll_may_contain(as_exp_nil(),
-                                          as_exp_nil())); // - 2 for list, bin
+            APPEND_ARRAY(2, as_exp_hll_may_contain(NIL,
+                                                   NIL)); // - 2 for list, bin
             break;
         case EXCLUSIVE:
             APPEND_ARRAY(
                 2,
                 as_exp_exclusive(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case ADD:
             APPEND_ARRAY(
                 2,
-                as_exp_add(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                as_exp_add(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case SUB:
             APPEND_ARRAY(
                 2,
-                as_exp_sub(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                as_exp_sub(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case MUL:
             APPEND_ARRAY(
                 2,
-                as_exp_mul(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                as_exp_mul(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case DIV:
             APPEND_ARRAY(
                 2,
-                as_exp_div(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                as_exp_div(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case POW:
-            APPEND_ARRAY(
-                2, as_exp_pow(as_exp_nil(),
-                              as_exp_nil())); // - 2 for __base, __exponent
+            APPEND_ARRAY(2, as_exp_pow(NIL,
+                                       NIL)); // - 2 for __base, __exponent
             break;
         case LOG:
-            APPEND_ARRAY(2, as_exp_log(as_exp_nil(),
-                                       as_exp_nil())); // - 2 for __base, __base
+            APPEND_ARRAY(2, as_exp_log(NIL,
+                                       NIL)); // - 2 for __base, __base
             break;
         case MOD:
-            APPEND_ARRAY(
-                2,
-                as_exp_mod(as_exp_nil(),
-                           as_exp_nil())); // - 2 for __numerator, __denominator
+            APPEND_ARRAY(2,
+                         as_exp_mod(NIL,
+                                    NIL)); // - 2 for __numerator, __denominator
             break;
         case ABS:
-            APPEND_ARRAY(1, as_exp_abs(as_exp_nil())); // - 1 for __value
+            APPEND_ARRAY(1, as_exp_abs(NIL)); // - 1 for __value
             break;
         case FLOOR:
-            APPEND_ARRAY(1, as_exp_floor(as_exp_nil())); // - 1 for __num
+            APPEND_ARRAY(1, as_exp_floor(NIL)); // - 1 for __num
             break;
         case CEIL:
-            APPEND_ARRAY(1, as_exp_ceil(as_exp_nil())); // - 1 for __num
+            APPEND_ARRAY(1, as_exp_ceil(NIL)); // - 1 for __num
             break;
         case TO_INT:
-            APPEND_ARRAY(1, as_exp_to_int(as_exp_nil())); // - 1 for __num
+            APPEND_ARRAY(1, as_exp_to_int(NIL)); // - 1 for __num
             break;
         case TO_FLOAT:
-            APPEND_ARRAY(1, as_exp_to_float(as_exp_nil())); // - 1 for __num
+            APPEND_ARRAY(1, as_exp_to_float(NIL)); // - 1 for __num
             break;
         case INT_AND:
             APPEND_ARRAY(
                 2,
                 as_exp_int_and(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case INT_OR:
             APPEND_ARRAY(
                 2,
                 as_exp_int_or(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case INT_XOR:
             APPEND_ARRAY(
                 2,
                 as_exp_int_xor(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case INT_NOT:
-            APPEND_ARRAY(1, as_exp_int_not(as_exp_nil())); // - 1 for __expr
+            APPEND_ARRAY(1, as_exp_int_not(NIL)); // - 1 for __expr
             break;
         case INT_LSHIFT:
-            APPEND_ARRAY(
-                2, as_exp_int_lshift(as_exp_nil(),
-                                     as_exp_nil())); // - 2 for __value, __shift
+            APPEND_ARRAY(2, as_exp_int_lshift(NIL,
+                                              NIL)); // - 2 for __value, __shift
             break;
         case INT_RSHIFT:
-            APPEND_ARRAY(
-                2, as_exp_int_rshift(as_exp_nil(),
-                                     as_exp_nil())); // - 2 for __value, __shift
+            APPEND_ARRAY(2, as_exp_int_rshift(NIL,
+                                              NIL)); // - 2 for __value, __shift
             break;
         case INT_ARSHIFT:
             APPEND_ARRAY(
-                2, as_exp_int_arshift(
-                       as_exp_nil(), as_exp_nil())); // - 2 for __value, __shift
+                2, as_exp_int_arshift(NIL, NIL)); // - 2 for __value, __shift
             break;
         case INT_COUNT:
-            APPEND_ARRAY(1, as_exp_int_count(as_exp_nil())); // - 1 for __expr
+            APPEND_ARRAY(1, as_exp_int_count(NIL)); // - 1 for __expr
             break;
         case INT_LSCAN:
-            APPEND_ARRAY(
-                2, as_exp_int_lscan(as_exp_nil(),
-                                    as_exp_nil())); // - 2 for __value, __search
+            APPEND_ARRAY(2, as_exp_int_lscan(NIL,
+                                             NIL)); // - 2 for __value, __search
             break;
         case INT_RSCAN:
-            APPEND_ARRAY(
-                2, as_exp_int_rscan(as_exp_nil(),
-                                    as_exp_nil())); // - 2 for __value, __search
+            APPEND_ARRAY(2, as_exp_int_rscan(NIL,
+                                             NIL)); // - 2 for __value, __search
             break;
         case MIN:
             APPEND_ARRAY(
                 2,
-                as_exp_min(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                as_exp_min(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case MAX:
             APPEND_ARRAY(
                 2,
-                as_exp_max(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                as_exp_max(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case COND:
             APPEND_ARRAY(
                 2,
                 as_exp_cond(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                    NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case LET:
             APPEND_ARRAY(
                 2,
-                as_exp_let(
-                    as_exp_nil())); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
+                as_exp_let(NIL)); // - 2 for va_args, AS_EXP_CODE_END_OF_VA_ARGS
             break;
         case DEF:;
             py_val_from_dict =
@@ -1711,8 +1591,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                                        "regex_str must be a string.");
             }
 
-            APPEND_ARRAY(
-                1, as_exp_def(def_var_name, as_exp_nil())); // - 1 for __expr
+            APPEND_ARRAY(1, as_exp_def(def_var_name, NIL)); // - 1 for __expr
             break;
         case VAR:;
             py_val_from_dict =
