@@ -27,6 +27,7 @@ from distutils.command.clean import clean
 from multiprocessing import cpu_count
 import time
 import io
+import xml.etree.ElementTree as ET
 
 ################################################################################
 # ENVIRONMENT VARIABLES
@@ -129,6 +130,13 @@ if STATIC_SSL:
 # PLATFORM SPECIFIC BUILD SETTINGS
 ################################################################################
 
+if WINDOWS:
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME
+    tree = ET.parse(f"{AEROSPIKE_C_TARGET}/vs/aerospike/packages.config")
+    packages = tree.getroot()
+    package = packages[0]
+    c_client_dependencies_version = package.attrib["version"]
+
 if DARWIN:
     # ---------------------------------------------------------------------------
     # Mac Specific Compiler and Linker Settings
@@ -149,10 +157,9 @@ elif LINUX:
     libraries = libraries + ['rt']
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME
     libraries.clear()
     extra_compile_args.append("-DAS_SHARED_IMPORT")
-    include_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.2/build/native/include")
+    include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/include")
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
@@ -168,7 +175,7 @@ if not WINDOWS:
     ]
 else:
     include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
-    library_dirs.append(AEROSPIKE_C_TARGET + "/vs/packages/aerospike-client-c-dependencies.1.0.2/build/native/lib/x64/Release")
+    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/Release")
     # Needed for linking the Python client with the C client
     extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
 
