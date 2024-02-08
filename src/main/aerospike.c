@@ -159,7 +159,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     PyTypeObject *client = AerospikeClient_Ready();
     Py_INCREF(client);
-    retval = PyModule_AddObject(aerospike, "Client", (PyObject *)client);
+    int retval = PyModule_AddObject(aerospike, "Client", (PyObject *)client);
     if (retval == -1) {
         goto CLEANUP;
     }
