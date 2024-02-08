@@ -382,7 +382,8 @@ setup(
         Extension(
             name="aerospike.exception",
             sources=[
-                'src/main/exception.c'
+                'src/main/exception.c',
+                'src/main/conversions.c'
             ],
             # Compile
             include_dirs=include_dirs,
@@ -397,7 +398,8 @@ setup(
         Extension(
             name="aerospike.predicates",
             sources=[
-                'src/main/predicates.c'
+                'src/main/predicates.c',
+                'src/main/exception.c'
             ],
             # Compile
             include_dirs=include_dirs,
