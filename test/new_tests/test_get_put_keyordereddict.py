@@ -12,13 +12,30 @@ class TestGetPutOrderedDict:
         except e.AerospikeError:
             pass
 
-    def test_get_put_keyordereddict(self):
+    @pytest.mark.parametrize(
+        "bin_value",
+        [
+            KeyOrderedDict({"f": 6, "e": 5, "d": 4}),
+            [
+                KeyOrderedDict({"f": 6, "e": 5, "d": 4})
+            ]
+        ],
+        ids=[
+            "bin-level",
+            "nested"
+        ]
+    )
+    def test_get_put_keyordereddict(self, bin_value):
         bins = {
-            "dict": KeyOrderedDict({"f": 6, "e": 5, "d": 4})
+            "dict": bin_value
         }
         self.key = ("test", "demo", 1)
         self.as_connection.put(self.key, bins)
 
         _, _, res = self.as_connection.get(self.key)
-        assert res["dict"] == KeyOrderedDict({"f": 6, "e": 5, "d": 4})
-        assert type(res["dict"]) == KeyOrderedDict
+
+        assert res["dict"] == bin_value
+        if type(res["dict"]) == list:
+            assert type(res["dict"][0]) == KeyOrderedDict
+        else:
+            assert type(res["dict"]) == KeyOrderedDict
