@@ -1665,7 +1665,8 @@ as_status map_to_pyobject(AerospikeClient *self, as_error *err,
     // as_orderedmap has flags set to 1
     if (map->flags == 1) {
         PyObject *key_ordered_dict_class = AerospikeKeyOrderedDict_Get_Type();
-        *py_map = PyObject_CallFunctionObjArgs(key_ordered_dict_class, *py_map);
+        *py_map =
+            PyObject_CallFunctionObjArgs(key_ordered_dict_class, *py_map, NULL);
     }
 
     if (!*py_map) {
