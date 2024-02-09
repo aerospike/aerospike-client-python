@@ -582,7 +582,7 @@ jobs:
         working-directory: aerospike-client-c/vs
 
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.11.2
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
           CIBW_BUILD_FRONTEND: build
