@@ -41,7 +41,7 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
     with:
       run_tests: false
-      commit_sha: ${{ inputs.commit_sha }}
+      ref: ${{ inputs.commit_sha }}
 
   # We run some source distribution (QE category 1) tests here
   # because QE doesn't have disk space for more Linux distros

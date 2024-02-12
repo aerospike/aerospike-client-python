@@ -23,7 +23,7 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
     with:
       run_tests: false
-      commit_sha: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
+      ref: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog

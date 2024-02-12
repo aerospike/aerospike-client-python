@@ -3,38 +3,9 @@ run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inp
 
 # Builds manylinux wheels and source distribution
 # If running tests, publish results in commit status
-# Publishes wheels and source distribution on Github Actions if no tests are run or tests pass
+# For each build, upload to Github as an artifact if it passes testing or does not need to run tests
 
 on:
-  workflow_call:
-    inputs:
-      # The dev tests test the artifacts against a server release
-      # The stage tests and release workflow only need to build the artifacts
-      run_tests:
-        description: "Run integration tests"
-        required: true
-        type: boolean
-        default: true
-      commit_sha:
-        type: string
-        required: false
-      # Calling workflow doesn't actually use these 2 options
-      # But we need to set default values for workflow calls
-      use-server-rc:
-        required: false
-        default: true
-        type: boolean
-      server-tag:
-        type: string
-        required: false
-        default: 'latest'
-    secrets:
-      DOCKER_HUB_BOT_USERNAME:
-        required: false
-      DOCKER_HUB_BOT_PW:
-        required: false
-      MAC_M1_SELF_HOSTED_RUNNER_PW:
-        required: false
   workflow_dispatch:
     inputs:
       # If we only want to check that the builds pass on an arbitrary branch
@@ -53,6 +24,35 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+  workflow_call:
+    inputs:
+      # The "dev" tests test the artifacts against a server release
+      # The "stage" tests and release workflow only need to build the artifacts, not test them
+      run_tests:
+        description: "Run integration tests"
+        required: true
+        type: boolean
+        default: true
+      ref:
+        type: string
+        required: false
+      # Calling workflow doesn't actually use the 2 options below
+      # But we need to set default values for workflow calls to use
+      use-server-rc:
+        required: false
+        default: true
+        type: boolean
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
+    secrets:
+      DOCKER_HUB_BOT_USERNAME:
+        required: false
+      DOCKER_HUB_BOT_PW:
+        required: false
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: false
 
 jobs:
   build-sdist:
@@ -68,7 +68,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ inputs.commit_sha }}
+        ref: ${{ inputs.ref }}
 
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
@@ -117,7 +117,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ inputs.commit_sha }}
+        ref: ${{ inputs.ref }}
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform == 'aarch64' }}
@@ -199,7 +199,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ inputs.commit_sha }}
+        ref: ${{ inputs.ref }}
 
     - name: Install Docker Engine
       if: ${{ inputs.run_tests }}
@@ -277,7 +277,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ inputs.commit_sha }}
+        ref: ${{ inputs.ref }}
 
     # Update dependencies if needed
     - name: Add brew to path
