@@ -25,7 +25,6 @@ runs:
       server-tag: ${{ inputs.server-tag }}
       docker-hub-username: ${{ inputs.DOCKER_HUB_BOT_USERNAME }}
       docker-hub-password: ${{ inputs.DOCKER_HUB_BOT_PW }}
-    shell: bash
 
   - name: Get IP address of Docker container hosting server
     run: export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
