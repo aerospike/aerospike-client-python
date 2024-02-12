@@ -32,7 +32,7 @@ static PyMethodDef AerospikeKeyOrderedDict_Type_Methods[] = {{NULL}};
 static int AerospikeKeyOrderedDict_Type_Init(PyObject *self, PyObject *args,
                                              PyObject *kwds)
 {
-    return PyDict_Type.tp_init((PyObject *)self, args, kwds);
+    return PyDict_Type.tp_init(self, args, kwds);
 }
 
 /*******************************************************************************
