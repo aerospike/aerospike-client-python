@@ -40,7 +40,7 @@ jobs:
 
     - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform }} tail -f /dev/null
 
-    - uses: ./.github/actions/run-ee-server
+    - uses: ./.github/actions/run-ee-server-for-ext-container
       with:
         use-server-rc: true
         server-tag: latest
@@ -54,16 +54,6 @@ jobs:
       with:
         name: ${{ matrix.python[1] }}-manylinux_${{ matrix.platform }}.build
         path: ./
-
-    - name: Set config.conf to use Docker IP address of Aerospike server
-      # config.conf should be copied into the cibuildwheel Docker container
-      run: |
-        export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
-        # Install crudini
-        pip install crudini -c ../.github/workflows/requirements.txt
-        sed -i "s/127.0.0.1:3000//" config.conf
-        crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
-      working-directory: test
 
     - name: Copy repo and wheel into manylinux container
       run: docker cp ../aerospike-client-python manylinux:/

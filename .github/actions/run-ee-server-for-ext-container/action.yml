@@ -1,0 +1,36 @@
+name: 'Run EE server for another Docker container'
+description: 'Run EE server and configure tests to connect to it from another Docker container'
+inputs:
+  # All inputs in composite actions are strings
+  use-server-rc:
+    required: true
+    default: false
+  server-tag:
+    required: true
+    default: 'latest'
+  # Github Composite Actions can't access secrets
+  # so we need to pass them in as inputs
+  docker-hub-username:
+    required: false
+  docker-hub-password:
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+  - name: Run EE server
+    uses: ./.github/actions/run-ee-server
+    with:
+      use-server-rc: ${{ inputs.use-server-rc }}
+      server-tag: ${{ inputs.server-tag }}
+      docker-hub-username: ${{ inputs.DOCKER_HUB_BOT_USERNAME }}
+      docker-hub-password: ${{ inputs.DOCKER_HUB_BOT_PW }}
+    shell: bash
+
+  - name: Get IP address of Docker container hosting server
+    run: export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
+    shell: bash
+
+  - name: Configure tests to connect to that Docker container
+    run: crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+    shell: bash
