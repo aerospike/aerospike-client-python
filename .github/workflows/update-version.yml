@@ -36,7 +36,7 @@ on:
 jobs:
   update-version-in-repo:
     name: Update version in repo
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     outputs:
       bump_sha: ${{ steps.get-bump-commit-sha.outputs.bump_sha }}
     steps:

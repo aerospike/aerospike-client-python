@@ -37,7 +37,7 @@ jobs:
     secrets: inherit
 
   publish-to-pypi:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: upload-to-jfrog
     steps:
     - name: Download and store all artifacts to single folder

@@ -57,7 +57,7 @@ on:
 jobs:
   build-sdist:
     name: Build source distribution
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -91,7 +91,7 @@ jobs:
         context: "Build wheels (sdist)"
 
   manylinux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
