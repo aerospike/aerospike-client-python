@@ -14,7 +14,7 @@ jobs:
       with:
         # Get all tags
         fetch-depth: 0
-        ref: dev-test
+        ref: ${{ vars.DEV_BRANCH_NAME }}
 
     - name: Get latest dev version
       run: echo latest-dev-version=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
@@ -39,7 +39,7 @@ jobs:
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
       branch_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
-      base_branch: stage-test
+      base_branch: ${{ vars.STAGE_BRANCH_NAME }}
     secrets: inherit
 
   promote-dev-build-to-rc:
@@ -47,7 +47,7 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
-      ref: stage-test
+      ref: ${{ vars.STAGE_BRANCH_NAME }}
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
@@ -92,6 +92,6 @@ jobs:
     ]
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: origin/stage-test
-      base_branch: dev-test
+      branch_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
+      base_branch: ${{ vars.DEV_BRANCH_NAME }}
     secrets: inherit

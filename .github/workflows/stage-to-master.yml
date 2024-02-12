@@ -6,8 +6,8 @@ jobs:
   ff-master-to-stage:
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: origin/stage-test
-      base_branch: master-test
+      branch_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
+      base_branch: ${{ vars.MASTER_BRANCH_NAME }}
     secrets: inherit
 
   promote-rc-build-to-release:
@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: promote-rc-build-to-release
-      ref: master-test
+      ref: ${{ vars.MASTER_BRANCH_NAME }}
     secrets: inherit
 
   build-artifacts:
@@ -58,14 +58,14 @@ jobs:
     needs: publish-to-pypi
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: master-test
-      base_branch: stage-test
+      branch_to_merge: ${{ vars.MASTER_BRANCH_NAME }}
+      base_branch: ${{ vars.STAGE_BRANCH_NAME }}
     secrets: inherit
 
   fast-forward-dev-to-master:
     needs: publish-to-pypi
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: master-test
-      base_branch: dev-test
+      branch_to_merge: ${{ vars.MASTER_BRANCH_NAME }}
+      base_branch: ${{ vars.DEV_BRANCH_NAME }}
     secrets: inherit
