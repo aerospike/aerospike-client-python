@@ -144,9 +144,9 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
     return err->code;
 }
 
-as_status strArray_to_py_list(as_error *err, int num_elements, int element_size,
-                              char str_array_ptr[][element_size],
-                              PyObject *py_list)
+as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
+                                        char str_array_ptr[][AS_ROLE_SIZE],
+                                        PyObject *py_list)
 {
     as_error_reset(err);
 
@@ -179,8 +179,8 @@ as_status as_user_array_to_pyobject(as_error *err, as_user **users,
 
         PyObject *py_user = PyUnicode_FromString(users[i]->name);
         PyObject *py_roles = PyList_New(0);
-        strArray_to_py_list(err, users[i]->roles_size, AS_ROLE_SIZE,
-                            users[i]->roles, py_roles);
+        str_array_of_roles_to_py_list(err, users[i]->roles_size,
+                                      users[i]->roles, py_roles);
         if (err->code != AEROSPIKE_OK) {
             break;
         }
@@ -447,8 +447,7 @@ as_status as_user_to_pyobject(as_error *err, as_user *user,
 
     PyObject *py_roles = PyList_New(0);
 
-    strArray_to_py_list(err, user->roles_size, AS_ROLE_SIZE, user->roles,
-                        py_roles);
+    str_array_of_roles_to_py_list(err, user->roles_size, user->roles, py_roles);
     if (err->code != AEROSPIKE_OK) {
         goto END;
     }
@@ -467,8 +466,7 @@ as_status as_user_info_to_pyobject(as_error *err, as_user *user,
     PyObject *py_info = PyDict_New();
     PyObject *py_roles = PyList_New(0);
 
-    strArray_to_py_list(err, user->roles_size, AS_ROLE_SIZE, user->roles,
-                        py_roles);
+    str_array_of_roles_to_py_list(err, user->roles_size, user->roles, py_roles);
     if (err->code != AEROSPIKE_OK) {
         Py_DECREF(py_roles);
         Py_DECREF(py_info);
@@ -1235,7 +1233,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             Py_DECREF(py_ustr);
         }
         else if (PyLong_Check(py_key)) {
-            int64_t k = (int64_t)PyLong_AsLong(py_key);
+            int64_t k = (int64_t)PyLong_AsLongLong(py_key);
             if (-1 == k && PyErr_Occurred()) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "integer value for KEY exceeds sys.maxsize");

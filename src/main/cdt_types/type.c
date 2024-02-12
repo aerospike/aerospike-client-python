@@ -17,7 +17,6 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
-#include <unistd.h>
 #include "types.h"
 #include "cdt_types.h"
 

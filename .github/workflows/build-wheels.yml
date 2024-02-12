@@ -554,6 +554,91 @@ jobs:
         docker container stop aerospike
         docker container prune -f
 
+  windows-build:
+    needs: update-version
+    if: ${{ !cancelled() && (needs.update-version.result == 'skipped' || needs.update-version.result == 'success') }}
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+          ["cp310", "3.10"],
+          ["cp311", "3.11"],
+          ["cp312", "3.12"],
+        ]
+    runs-on: windows-2022
+    # runs-on: [self-hosted, Windows]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+
+      - name: Install C client deps
+        run: nuget restore
+        working-directory: aerospike-client-c/vs
+
+      - name: Build wheel
+        uses: pypa/cibuildwheel@v2.16.5
+        env:
+          CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
+          CIBW_BUILD_FRONTEND: build
+          CIBW_ARCHS: auto64
+          CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
+          CIBW_REPAIR_WHEEL_COMMAND: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
+
+      - uses: actions/upload-artifact@v3
+        with:
+          path: ./wheelhouse/*.whl
+          name: ${{ matrix.python[0] }}-win_amd64
+
+  test-windows:
+    needs: windows-build
+    strategy:
+      fail-fast: false
+      matrix:
+        python: [
+          ["cp38", "3.8"],
+          ["cp39", "3.9"],
+          ["cp310", "3.10"],
+          ["cp311", "3.11"],
+          ["cp312", "3.12"],
+        ]
+    runs-on: [self-hosted, Windows, X64]
+    # Workaround for a bug where skipped ancestor job will also skip this job
+    if: ${{ !cancelled() && needs.windows-build.result == 'success' }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
+      - name: Download wheel
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.python[0] }}-win_amd64
+      - name: Install wheel
+        run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
+      - name: Connect to Docker container on remote machine with Docker daemon
+        # DOCKER_HOST contains the IP address of the remote machine
+        run: |
+          python${{ matrix.python[1] }} -m pip install crudini==0.9.4
+          $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
+          python${{ matrix.python[1] }} -m crudini --set config.conf community-edition hosts ${env:DOCKER_HOST_IP}:3000
+        working-directory: test
+
+      - run: python${{ matrix.python[1] }} -m pip install pytest -c requirements.txt
+        working-directory: test
+
+      - run: python${{ matrix.python[1] }} -m pytest new_tests/
+        working-directory: test
+
+      - name: Cleanup
+        if: ${{ always() }}
+        run: |
+          docker stop aerospike
+          docker container rm aerospike
+
   upload-artifacts-to-jfrog:
     if: ${{ inputs.should-bump-version }}
     needs: [
@@ -568,6 +653,7 @@ jobs:
       manylinux_arm64,
       macOS-x86,
       macOS-m1,
+      test-windows
     ]
     runs-on: ubuntu-latest
     steps:
