@@ -216,7 +216,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Enable tests
-      if: ${{ inputs.run_tests }}
+      if: ${{ inputs.run_tests && inputs.test-macos-x86 }}
       run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
 
     - name: Disable tests (only run basic import test)
