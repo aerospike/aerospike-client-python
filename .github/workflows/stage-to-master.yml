@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: promote-rc-build-to-release
-      commit_sha: master-test
+      ref: master-test
     secrets: inherit
 
   build-artifacts:

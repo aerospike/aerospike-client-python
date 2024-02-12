@@ -47,7 +47,7 @@ jobs:
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
-      commit_sha: stage-test
+      ref: stage-test
     secrets:
       CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
 
