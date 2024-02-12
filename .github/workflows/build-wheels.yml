@@ -24,6 +24,11 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+      test-macos-x86:
+        required: true
+        type: boolean
+        default: false
+        description: 'Test macOS x86 wheels (unstable)'
   workflow_call:
     inputs:
       # The "dev" tests test the artifacts against a server release
@@ -215,7 +220,7 @@ jobs:
       run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
 
     - name: Disable tests (only run basic import test)
-      if: ${{ !inputs.run_tests }}
+      if: ${{ !inputs.run_tests || !inputs.test-macos-x86 }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
     - name: Build wheel
