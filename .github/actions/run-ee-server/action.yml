@@ -23,8 +23,9 @@ runs:
     working-directory: .github/workflows
     shell: bash
 
-  - name: Add enterprise edition config to config.conf
+  - name: Use enterprise edition instead of community edition in config.conf
     run: |
+      crudini --set config.conf enterprise-edition hosts ''
       crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
       crudini --set config.conf enterprise-edition user superuser
       crudini --set config.conf enterprise-edition password superuser
