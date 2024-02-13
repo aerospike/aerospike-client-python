@@ -13,6 +13,11 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+      test-macos-x86:
+        required: true
+        type: boolean
+        default: false
+        description: 'Test macOS x86 wheels (unstable)'
   workflow_call:
     inputs:
       ref:
@@ -30,6 +35,11 @@ on:
         required: false
         default: 'latest'
         description: 'Server docker image tag'
+      test-macos-x86:
+        required: false
+        type: boolean
+        default: false
+        description: 'Test macOS x86 wheels (unstable)'
     secrets:
       # Required for testing against a server RC
       DOCKER_HUB_BOT_USERNAME:
@@ -292,6 +302,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test Ubuntu python3.10 -m pytest new_tests/
 
   macOS:
+    if: ${{ inputs.test-macos-x86 }}
     needs: build-artifacts
     strategy:
       matrix:
