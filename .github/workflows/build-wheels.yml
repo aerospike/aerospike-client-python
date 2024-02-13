@@ -128,6 +128,9 @@ jobs:
         submodules: recursive
         ref: ${{ inputs.ref }}
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform == 'aarch64' }}
       uses: docker/setup-qemu-action@v2
