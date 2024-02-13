@@ -27,9 +27,10 @@ runs:
       docker-hub-password: ${{ inputs.DOCKER_HUB_BOT_PW }}
 
   - name: Get IP address of Docker container hosting server
-    run: export SERVER_DOCKER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike)
+    id: get-server-ip-address
+    run: echo server-ip=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_OUTPUT
     shell: bash
 
   - name: Configure tests to connect to that Docker container
-    run: crudini --set config.conf enterprise-edition hosts ${SERVER_DOCKER_IP}:3000
+    run: crudini --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000
     shell: bash
