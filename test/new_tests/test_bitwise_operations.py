@@ -400,7 +400,7 @@ class TestBitwiseOperations(object):
         """
         ops = [
             bitwise_operations.bit_set_int(
-                bin_name=self.zero_one_blob,
+                bin_name=self.zero_one_bin,
                 bit_offset=0,
                 bit_size=8,
                 # 127 = 0111 1111
