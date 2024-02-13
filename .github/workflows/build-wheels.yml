@@ -1,5 +1,5 @@
 name: Build wheels
-run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
 
 # Builds manylinux wheels and source distribution
 # If running tests, publish results in commit status
