@@ -44,7 +44,7 @@ jobs:
     name: Get new version string
     runs-on: ubuntu-22.04
     outputs:
-      current_version: ${{ steps.get-new-version.outputs.current_version }}
+      current_version: ${{ steps.get-current-version.outputs.current_version }}
     steps:
     # Checkout the branch where we want to bump the new version
     - uses: actions/checkout@v4
@@ -53,6 +53,7 @@ jobs:
         ref: ${{ inputs.ref }}
 
     - name: Get current version
+      id: get-current-version
       run: echo current_version=$(cat VERSION) >> $GITHUB_OUTPUT
 
   get-new-version:
@@ -69,11 +70,8 @@ jobs:
       working-directory: .github/workflows
 
     - name: Get new version
-      run: echo NEW_TAG=$(python3 .github/workflows/${{ inputs.change }}.py ${{ needs.get-current-version.outputs.current_version }} >> $GITHUB_ENV
-
-    - name: Output new version
       id: get-new-version
-      run: echo "new_version=${{ env.NEW_TAG }}" >> $GITHUB_OUTPUT
+      run: echo new_version=$(python3 .github/workflows/${{ inputs.change }}.py ${{ needs.get-current-version.outputs.current_version }} >> $GITHUB_OUTPUT
 
   update-version-in-repo:
     needs: get-new-version

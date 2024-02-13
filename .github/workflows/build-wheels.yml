@@ -51,6 +51,10 @@ on:
         type: string
         required: false
         default: 'latest'
+      test-macos-x86:
+        required: false
+        type: boolean
+        default: false
     secrets:
       DOCKER_HUB_BOT_USERNAME:
         required: false

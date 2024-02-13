@@ -20,15 +20,14 @@ jobs:
       run: echo latest-dev-version=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
       id: get-dev-version
 
-    - name: Output latest dev version
+    - name: Output latest dev version (for debugging)
       run: echo ${{ steps.get-dev-version.outputs.latest-dev-version }}
 
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
     needs: get-latest-dev-tag
     with:
-      use-server-rc: false
-      commit_sha: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+      ref: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
     secrets: inherit
 
   ff-stage-to-dev-tag:
