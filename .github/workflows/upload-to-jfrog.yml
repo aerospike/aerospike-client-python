@@ -3,7 +3,7 @@ name: Upload to JFrog
 on:
   workflow_call:
     inputs:
-      new_version:
+      version:
         type: string
         required: true
     secrets:
@@ -34,7 +34,7 @@ jobs:
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
       run: jf rt upload --build-name python-client --build-number $NEW_VERSION "artifacts/*" local-aerospike-client-python/aerospike/$NEW_VERSION/
       env:
-        NEW_VERSION: ${{ inputs.new_version }}
+        NEW_VERSION: ${{ inputs.version }}
 
     - name: Publish build info
-      run: jf rt build-publish python-client ${{ inputs.new_version }}
+      run: jf rt build-publish python-client ${{ inputs.version }}

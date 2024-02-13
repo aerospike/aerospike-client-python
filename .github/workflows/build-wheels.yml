@@ -35,9 +35,9 @@ on:
       # The "stage" tests and release workflow only need to build the artifacts, not test them
       run_tests:
         description: "Run integration tests"
-        required: true
+        required: false
         type: boolean
-        default: true
+        default: false
       ref:
         type: string
         required: false

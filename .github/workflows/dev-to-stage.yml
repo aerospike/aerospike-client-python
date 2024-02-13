@@ -37,7 +37,7 @@ jobs:
     ]
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+      ref_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
       base_branch: ${{ vars.STAGE_BRANCH_NAME }}
     secrets: inherit
 
@@ -47,8 +47,7 @@ jobs:
     with:
       change: 'promote-dev-build-to-rc'
       ref: ${{ vars.STAGE_BRANCH_NAME }}
-    secrets:
-      CLIENT_BOT_PAT: ${{ secrets.CLIENT_BOT_PAT }}
+    secrets: inherit
 
   delete-dev-artifacts:
     needs: promote-dev-build-to-rc
@@ -70,7 +69,6 @@ jobs:
     ]
     uses: ./.github/workflows/build-wheels.yml
     with:
-      run_tests: false
       ref: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
 
   upload-to-jfrog:
@@ -81,7 +79,7 @@ jobs:
     name: Upload artifacts to JFrog
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      new_version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
+      version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
     secrets: inherit
 
   ff-dev-to-stage:
@@ -91,6 +89,6 @@ jobs:
     ]
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
+      ref_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
       base_branch: ${{ vars.DEV_BRANCH_NAME }}
     secrets: inherit

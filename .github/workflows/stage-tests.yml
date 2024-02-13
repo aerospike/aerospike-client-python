@@ -51,7 +51,6 @@ jobs:
   build-artifacts:
     uses: ./.github/workflows/build-wheels.yml
     with:
-      run_tests: false
       ref: ${{ inputs.ref }}
 
   # We run some source distribution (QE category 1) tests here

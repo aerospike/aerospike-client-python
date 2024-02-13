@@ -6,7 +6,7 @@ jobs:
   ff-master-to-stage:
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
+      ref_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
       base_branch: ${{ vars.MASTER_BRANCH_NAME }}
     secrets: inherit
 
@@ -22,7 +22,6 @@ jobs:
     needs: promote-rc-build-to-release
     uses: ./.github/workflows/build-wheels.yml
     with:
-      run_tests: false
       ref: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
 
   upload-to-jfrog:
@@ -47,18 +46,20 @@ jobs:
         merge-multiple: true
 
     - name: Publish package distributions to PyPI
-      # TODO: change to production
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
+        # TODO: change to production by removing the line below
+        # and switching to the other password line
         repository-url: https://test.pypi.org/legacy/
         packages-dir: artifacts/
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        # password: ${{ secrets.PYPI_API_TOKEN }}
 
   fast-forward-stage-to-master:
     needs: publish-to-pypi
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: ${{ vars.MASTER_BRANCH_NAME }}
+      ref_to_merge: ${{ vars.MASTER_BRANCH_NAME }}
       base_branch: ${{ vars.STAGE_BRANCH_NAME }}
     secrets: inherit
 
@@ -66,6 +67,6 @@ jobs:
     needs: publish-to-pypi
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      branch_to_merge: ${{ vars.MASTER_BRANCH_NAME }}
+      ref_to_merge: ${{ vars.MASTER_BRANCH_NAME }}
       base_branch: ${{ vars.DEV_BRANCH_NAME }}
     secrets: inherit

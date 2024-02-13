@@ -20,7 +20,6 @@ jobs:
     name: Rebuild artifacts with new dev number
     uses: ./.github/workflows/build-wheels.yml
     with:
-      run_tests: false
       # On pull_request_target, the bump version commit will be ignored
       # So we must pass it manually to the workflow
       ref: ${{ needs.bump-dev-number.outputs.bump_sha }}

@@ -1,9 +1,12 @@
+# As of this writing, there are no Github Actions in the marketplace
+# that allow fast forwarding using a personal access token
+# So we need to use this for now
 name: 'Fast forward merge'
 on:
   workflow_call:
     inputs:
       # If another branch, it must be origin/<branch>
-      branch_to_merge:
+      ref_to_merge:
         type: string
         required: true
       base_branch:
@@ -26,7 +29,7 @@ jobs:
           token: ${{ secrets.CLIENT_BOT_PAT }}
 
       - name: Fast forward
-        run: git merge --ff-only ${{ inputs.branch_to_merge }}
+        run: git merge --ff-only ${{ inputs.ref_to_merge }}
 
       - name: Upload changes to remote head branch
         run: git push
