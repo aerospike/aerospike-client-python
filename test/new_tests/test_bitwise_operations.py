@@ -394,6 +394,32 @@ class TestBitwiseOperations(object):
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
 
+    def test_bit_set_int(self):
+        """
+        Perform a bit_set_int op.
+        """
+        ops = [
+            bitwise_operations.bit_set_int(
+                bin_name=self.zero_one_blob,
+                bit_offset=0,
+                bit_size=8,
+                # 127 = 0111 1111
+                value=127,
+                policy=None
+            )
+        ]
+        # 00 0001 1111
+        # ^ offset 0
+        # Setting 127 (8 bits):
+        # 01 1111 11
+        # Result:
+        # 01 1111 1111
+        self.as_connection.operate(self.test_key, ops)
+
+        _, _, bins = self.as_connection.get(self.test_key)
+        expected_result = bytearray([0] * 1 + [1] * 9)
+        assert bins[self.zero_one_blob] == expected_result
+
     def test_bit_count_seven(self):
         """
         Perform a bitwise count op.
