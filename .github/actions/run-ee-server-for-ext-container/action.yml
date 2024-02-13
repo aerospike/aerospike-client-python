@@ -23,8 +23,8 @@ runs:
     with:
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
-      docker-hub-username: ${{ inputs.DOCKER_HUB_BOT_USERNAME }}
-      docker-hub-password: ${{ inputs.DOCKER_HUB_BOT_PW }}
+      docker-hub-username: ${{ inputs.docker-hub-username }}
+      docker-hub-password: ${{ inputs.docker-hub-password }}
 
   - name: Get IP address of Docker container hosting server
     id: get-server-ip-address
