@@ -47,19 +47,17 @@ static int AerospikeKeyOrderedDict_Type_Init(PyObject *self, PyObject *args,
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject
-    AerospikeKeyOrderedDict_Type =
-        {PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.KeyOrderedDict",
-         .tp_basicsize = sizeof(AerospikeKeyOrderedDict),
-         .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-         .tp_doc =
-             "The KeyOrderedDict class is a dictionary that directly maps\n"
-             "to a key ordered map on the Aerospike server.\n"
-             "This assists in matching key ordered maps\n"
-             "through various read operations.\n",
-         .tp_methods = AerospikeKeyOrderedDict_Type_Methods,
-         .tp_init = (initproc)AerospikeKeyOrderedDict_Type_Init},
-    .tp_traverse = local_traverse;
+static PyTypeObject AerospikeKeyOrderedDict_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.KeyOrderedDict",
+    .tp_basicsize = sizeof(AerospikeKeyOrderedDict),
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_doc = "The KeyOrderedDict class is a dictionary that directly maps\n"
+              "to a key ordered map on the Aerospike server.\n"
+              "This assists in matching key ordered maps\n"
+              "through various read operations.\n",
+    .tp_methods = AerospikeKeyOrderedDict_Type_Methods,
+    .tp_init = (initproc)AerospikeKeyOrderedDict_Type_Init,
+    .tp_traverse = local_traverse};
 
 PyTypeObject *AerospikeKeyOrderedDict_Ready()
 {
