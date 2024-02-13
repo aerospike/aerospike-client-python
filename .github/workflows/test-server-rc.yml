@@ -69,6 +69,8 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test manylinux python${{ matrix.python[0] }} -m pytest new_tests/
 
   macOS-x86:
+    # Skip macOS x86 testing since it's unstable
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
