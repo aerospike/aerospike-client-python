@@ -25,10 +25,10 @@ runs:
 
   - name: Use enterprise edition instead of community edition in config.conf
     run: |
-      crudini --set config.conf enterprise-edition hosts ''
-      crudini --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --set config.conf enterprise-edition user superuser
-      crudini --set config.conf enterprise-edition password superuser
+      crudini --existing=param --set config.conf enterprise-edition hosts ''
+      crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
+      crudini --existing=param --set config.conf enterprise-edition user superuser
+      crudini --existing=param --set config.conf enterprise-edition password superuser
     working-directory: test
     shell: bash
 

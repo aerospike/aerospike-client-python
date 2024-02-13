@@ -32,6 +32,6 @@ runs:
     shell: bash
 
   - name: Configure tests to connect to that Docker container
-    run: crudini --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000
+    run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000
     working-directory: test
     shell: bash
