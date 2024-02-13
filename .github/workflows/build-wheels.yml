@@ -13,7 +13,7 @@ on:
         description: "Run integration tests"
         required: true
         type: boolean
-        default: true
+        default: false
       use-server-rc:
         type: boolean
         required: true
