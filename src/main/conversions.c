@@ -1662,17 +1662,21 @@ as_status map_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_map *map, PyObject **py_map)
 {
     *py_map = PyDict_New();
-    // as_orderedmap has flags set to 1
-    if (map->flags == 1) {
-        PyObject *key_ordered_dict_class = AerospikeKeyOrderedDict_Get_Type();
-        *py_map =
-            PyObject_CallFunctionObjArgs(key_ordered_dict_class, *py_map, NULL);
-        Py_DECREF(*py_map);
-    }
-
     if (!*py_map) {
         return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                "Failed to allocate memory for dictionary.");
+    }
+
+    // as_orderedmap has flags set to 1
+    if (map->flags == 1) {
+        PyObject *key_ordered_dict_class = AerospikeKeyOrderedDict_Get_Type();
+        PyObject *py_keyordereddict =
+            PyObject_CallFunctionObjArgs(key_ordered_dict_class, *py_map, NULL);
+        if (py_keyordereddict == NULL) {
+            Py_DECREF(*py_map);
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Failed to create KeyOrderedDict instance.");
+        }
     }
 
     conversion_data convd = {
