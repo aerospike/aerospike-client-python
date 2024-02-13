@@ -413,6 +413,7 @@ jobs:
 
   test-windows:
     needs: windows-build
+    if: ${{ inputs.run_tests }}
     strategy:
       fail-fast: false
       matrix:
