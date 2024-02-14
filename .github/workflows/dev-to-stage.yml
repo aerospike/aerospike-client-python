@@ -1,4 +1,4 @@
-name: Stage tests
+name: Dev to stage
 
 on:
   # This workflow manipulates the stage and dev branches regardless of the branch this workflow is run from
