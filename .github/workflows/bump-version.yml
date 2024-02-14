@@ -3,6 +3,7 @@
 
 name: Bump version
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       change:
@@ -41,6 +42,7 @@ on:
 
 jobs:
   get-current-version:
+    if: ${{ false }}
     name: Get new version string
     runs-on: ubuntu-22.04
     outputs:
