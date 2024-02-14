@@ -294,7 +294,11 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will be modified.
         bit_size (int): How many bits of value to and.
-        value_byte_size (int): Length of value in bytes.
+        value_byte_size (int):
+            Length of value in bytes.
+            .. deprecated:: 15.0.0
+                This parameter no longer does anything. The number of bytes in the value is calculated automatically
+                now.
         value (bytes, bytearray): Bytes to be used in and operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
