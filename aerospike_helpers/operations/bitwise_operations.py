@@ -290,15 +290,14 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     Creates a bit and operation. Server performs an and op with value and bitmap in bin
     at bit_offset for bit_size. Server returns nothing.
 
+    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
+    now.
+
     Args:
         bin_name (str): The name of the bin containing the map.
         bit_offset (int): The offset where the bits will be modified.
         bit_size (int): How many bits of value to and.
-        value_byte_size (int):
-            Length of value in bytes.
-            .. deprecated:: 15.0.0
-                This parameter no longer does anything. The number of bytes in the value is calculated automatically
-                now.
+        value_byte_size (int): Deprecated. Length of value in bytes.
         value (bytes, bytearray): Bytes to be used in and operation.
         policy (dict): The :ref:`bit_policy <aerospike_bit_policies>` dictionary. default: None.
 
