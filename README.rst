@@ -1,4 +1,4 @@
-Aerospike Python Client
+Aerospike Python Clientt
 =======================
 |Build| |Release| |Wheel| |Downloads| |License|
 
