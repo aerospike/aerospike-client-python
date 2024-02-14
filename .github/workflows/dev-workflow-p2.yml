@@ -33,5 +33,5 @@ jobs:
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      new_version: ${{ needs.bump-dev-number.outputs.new_version }}
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
     secrets: inherit
