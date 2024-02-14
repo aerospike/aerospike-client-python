@@ -3,6 +3,14 @@
 # So we need to use this for now
 name: 'Fast forward merge'
 on:
+  workflow_dispatch:
+    inputs:
+      ref_to_merge:
+        type: string
+        required: true
+      base_branch:
+        type: string
+        required: true
   workflow_call:
     inputs:
       # If another branch, it must be origin/<branch>
