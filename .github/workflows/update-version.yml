@@ -3,7 +3,6 @@
 
 name: Update version in repo
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       new_version:
@@ -36,7 +35,6 @@ on:
 
 jobs:
   update-version-in-repo:
-    if: ${{ false }}
     name: Update version in repo
     runs-on: ubuntu-22.04
     outputs:
