@@ -417,7 +417,7 @@ class TestBitwiseOperations(object):
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
-        expected_result = bytearray([0] * 1 + [1] * 9)
+        expected_result = bytes([0] * 1 + [1] * 9)
         assert bins[self.zero_one_blob] == expected_result
 
     def test_bit_count_seven(self):
