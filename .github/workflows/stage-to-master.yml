@@ -1,4 +1,4 @@
-name: Build and upload release artifacts to JFrog
+name: Stage to master
 on:
   workflow_dispatch:
 
@@ -32,7 +32,7 @@ jobs:
     ]
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
-      new_version: ${{ needs.promote-rc-build-to-release.outputs.new_version }}
+      version: ${{ needs.promote-rc-build-to-release.outputs.new_version }}
     secrets: inherit
 
   publish-to-pypi:

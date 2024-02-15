@@ -32,7 +32,7 @@ jobs:
     - name: Upload passing builds to JFrog
       # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload --build-name python-client --build-number $NEW_VERSION "artifacts/*" local-aerospike-client-python/aerospike/$NEW_VERSION/
+      run: jf rt upload --build-name python-client --build-number $NEW_VERSION "artifacts/*" ${{ vars.JFROG_REPO_NAME }}/aerospike/$NEW_VERSION/
       env:
         NEW_VERSION: ${{ inputs.version }}
 
