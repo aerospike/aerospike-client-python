@@ -1672,11 +1672,12 @@ as_status map_to_pyobject(AerospikeClient *self, as_error *err,
         PyObject *key_ordered_dict_class = AerospikeKeyOrderedDict_Get_Type();
         PyObject *py_keyordereddict =
             PyObject_CallFunctionObjArgs(key_ordered_dict_class, *py_map, NULL);
+        Py_DECREF(*py_map);
         if (py_keyordereddict == NULL) {
-            Py_DECREF(*py_map);
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "Failed to create KeyOrderedDict instance.");
         }
+        *py_map = py_keyordereddict;
     }
 
     conversion_data convd = {
