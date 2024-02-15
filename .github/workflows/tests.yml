@@ -21,6 +21,11 @@ on:
       unlabeled
     ]
   workflow_dispatch:
+    inputs:
+      test-server-rc:
+        type: boolean
+        default: false
+        required: true
 
 jobs:
   lint:
