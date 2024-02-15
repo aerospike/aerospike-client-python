@@ -1,0 +1,25 @@
+name: Dev workflow (part 1)
+
+# 1. When a PR review is requested, run tests on that PR
+# 2. If all of the tests pass, allow the PR to be merged into `dev`
+# 3. Whenever a PR is merged to `dev`, bump version number in `dev`
+
+on:
+  pull_request:
+    types:
+      - review_requested
+    branches:
+      - dev*
+
+jobs:
+  test-with-server-release:
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      run_tests: true
+    secrets: inherit
+
+  test-with-server-rc:
+    needs: test-with-server-release
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+    uses: ./.github/workflows/test-server-rc.yml
+    secrets: inherit

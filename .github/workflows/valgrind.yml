@@ -8,14 +8,16 @@ on:
         required: false
         default: ""
       use-server-rc:
+        type: boolean
+        description: 'Use server release candidate?'
         required: true
         default: false
 
 jobs:
   valgrind:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
 

@@ -1,0 +1,94 @@
+name: Dev to stage
+
+on:
+  # This workflow manipulates the stage and dev branches regardless of the branch this workflow is run from
+  workflow_dispatch:
+
+jobs:
+  get-latest-dev-tag:
+    outputs:
+      latest-dev-version: ${{ steps.get-dev-version.outputs.latest-dev-version }}
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # Get all tags
+        fetch-depth: 0
+        ref: ${{ vars.DEV_BRANCH_NAME }}
+
+    - name: Get latest dev version
+      run: echo latest-dev-version=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
+      id: get-dev-version
+
+    - name: Output latest dev version (for debugging)
+      run: echo ${{ steps.get-dev-version.outputs.latest-dev-version }}
+
+  run-stage-tests:
+    uses: ./.github/workflows/stage-tests.yml
+    needs: get-latest-dev-tag
+    with:
+      ref: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+    secrets: inherit
+
+  ff-stage-to-dev-tag:
+    needs: [
+      run-stage-tests,
+      get-latest-dev-tag
+    ]
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      ref_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+      base_branch: ${{ vars.STAGE_BRANCH_NAME }}
+    secrets: inherit
+
+  promote-dev-build-to-rc:
+    needs: ff-stage-to-dev-tag
+    uses: ./.github/workflows/bump-version.yml
+    with:
+      change: 'promote-dev-build-to-rc'
+      ref: ${{ vars.STAGE_BRANCH_NAME }}
+    secrets: inherit
+
+  delete-dev-artifacts:
+    needs: promote-dev-build-to-rc
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      # We can't upload to the same artifact name with upload-artifact@v4
+      # So we must delete the artifacts produced by stage-tests.yml
+      # Before rebuilding the artifacts with the new RC version
+      - name: Remove artifacts with dev version
+        uses: geekyeggo/delete-artifact@v4
+        with:
+          name: '*.build'
+
+  rebuild-artifacts-with-rc-version:
+    needs: [
+      delete-dev-artifacts,
+      promote-dev-build-to-rc
+    ]
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      ref: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+
+  upload-to-jfrog:
+    needs: [
+      rebuild-artifacts-with-rc-version,
+      promote-dev-build-to-rc
+    ]
+    name: Upload artifacts to JFrog
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
+    secrets: inherit
+
+  ff-dev-to-stage:
+    needs: [
+      get-latest-dev-tag,
+      upload-to-jfrog
+    ]
+    uses: ./.github/workflows/fast-forward-merge.yml
+    with:
+      ref_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
+      base_branch: ${{ vars.DEV_BRANCH_NAME }}
+    secrets: inherit
