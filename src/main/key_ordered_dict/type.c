@@ -25,14 +25,6 @@
 
 static PyMethodDef AerospikeKeyOrderedDict_Type_Methods[] = {{NULL}};
 
-static int local_traverse(PyObject *self, visitproc visit, void *arg)
-{
-    AerospikeKeyOrderedDict *self_keyordereddict =
-        (AerospikeKeyOrderedDict *)self;
-    Py_VISIT(&self_keyordereddict->dict);
-    return 0;
-}
-
 /*******************************************************************************
  * PYTHON TYPE HOOKS
  ******************************************************************************/
@@ -56,8 +48,7 @@ static PyTypeObject AerospikeKeyOrderedDict_Type = {
               "This assists in matching key ordered maps\n"
               "through various read operations.\n",
     .tp_methods = AerospikeKeyOrderedDict_Type_Methods,
-    .tp_init = (initproc)AerospikeKeyOrderedDict_Type_Init,
-    .tp_traverse = local_traverse};
+    .tp_init = (initproc)AerospikeKeyOrderedDict_Type_Init};
 
 PyTypeObject *AerospikeKeyOrderedDict_Ready()
 {
