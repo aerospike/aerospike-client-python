@@ -2,7 +2,6 @@ import socket
 import time
 import os
 import sys
-from distutils.version import LooseVersion
 
 import pytest
 
@@ -12,6 +11,8 @@ from .test_base_class import TestBaseClass
 aerospike = pytest.importorskip("aerospike")
 
 
+# Comment this out because nowhere in the repository is using it
+'''
 def compare_server_versions(version1, version2):
     """
     Compare two strings version1 and version 2
@@ -44,6 +45,7 @@ def compare_server_versions(version1, version2):
         return -1
 
     return 1
+'''
 
 
 def wait_for_port(address, port, interval=0.1, timeout=60):
