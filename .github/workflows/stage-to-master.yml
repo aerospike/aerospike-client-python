@@ -59,7 +59,7 @@ jobs:
     needs: publish-to-pypi
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      ref_to_merge: ${{ vars.MASTER_BRANCH_NAME }}
+      ref_to_merge: origin/${{ vars.MASTER_BRANCH_NAME }}
       base_branch: ${{ vars.STAGE_BRANCH_NAME }}
     secrets: inherit
 
@@ -67,6 +67,6 @@ jobs:
     needs: publish-to-pypi
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      ref_to_merge: ${{ vars.MASTER_BRANCH_NAME }}
+      ref_to_merge: origin/${{ vars.MASTER_BRANCH_NAME }}
       base_branch: ${{ vars.DEV_BRANCH_NAME }}
     secrets: inherit
