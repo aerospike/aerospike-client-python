@@ -48,12 +48,8 @@ jobs:
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        # TODO: change to production by removing the line below
-        # and switching to the other password line
-        repository-url: https://test.pypi.org/legacy/
         packages-dir: artifacts/
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
-        # password: ${{ secrets.PYPI_API_TOKEN }}
+        password: ${{ secrets.PYPI_API_TOKEN }}
 
   fast-forward-stage-to-master:
     needs: build-artifacts
