@@ -22,7 +22,8 @@ jobs:
           ["3.8", "cp38"],
           ["3.9", "cp39"],
           ["3.10", "cp310"],
-          ["3.11", "cp311"]
+          ["3.11", "cp311"],
+          ["3.12", "cp312"]
         ]
         platform: [
           "x86_64",
@@ -78,7 +79,8 @@ jobs:
           ["3.8", "cp38"],
           ["3.9", "cp39"],
           ["3.10", "cp310"],
-          ["3.11", "cp311"]
+          ["3.11", "cp311"],
+          ["3.12", "cp312"]
         ]
     runs-on: macos-12-large
     steps:
@@ -122,6 +124,7 @@ jobs:
       working-directory: test
 
   macOS-m1:
+    # TODO: this shares a lot of steps as in the build wheels workflow
     runs-on: [
       self-hosted,
       macOS,
@@ -133,7 +136,8 @@ jobs:
           ["3.8", "cp38"],
           ["3.9", "cp39"],
           ["3.10", "cp310"],
-          ["3.11", "cp311"]
+          ["3.11", "cp311"],
+          ["3.12", "cp312"]
         ]
       fail-fast: false
     steps:
@@ -166,7 +170,7 @@ jobs:
     - name: Wait for server to be ready
       run: sleep 5
 
-    - run: python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
+    - run: python${{ matrix.python-version[0] }} -m pip install --break-system-packages -r requirements.txt
       working-directory: test
 
     - run: python${{ matrix.python-version[0] }} -m pytest new_tests/

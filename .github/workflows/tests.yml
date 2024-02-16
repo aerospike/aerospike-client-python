@@ -5,12 +5,12 @@ env:
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
-# 2. Commits are pushed directly to the stage or master branch
+# 2. Commits are pushed directly to the dev, stage or master branch
 on:
   push:
-    branches: ["stage", "master"]
+    branches: ["dev", "stage", "master", "v*-backport"]
   pull_request:
-    branches: ["stage"]
+    branches: ["dev", "stage", "v*-backport"]
     types: [
       # Default triggers
       opened,
@@ -21,6 +21,11 @@ on:
       unlabeled
     ]
   workflow_dispatch:
+    inputs:
+      test-server-rc:
+        type: boolean
+        default: false
+        required: true
 
 jobs:
   lint:
@@ -39,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: ["3.8", "3.9", "3.10", "3.11"]
+        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
       fail-fast: false
 
     steps:
@@ -281,7 +286,8 @@ jobs:
           "3.8",
           "3.9",
           "3.10",
-          "3.11"
+          "3.11",
+          "3.12"
         ]
       fail-fast: false
 
