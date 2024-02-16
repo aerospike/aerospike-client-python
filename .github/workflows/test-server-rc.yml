@@ -124,6 +124,7 @@ jobs:
       working-directory: test
 
   macOS-m1:
+    # TODO: this shares a lot of steps as in the build wheels workflow
     runs-on: [
       self-hosted,
       macOS,
@@ -169,7 +170,7 @@ jobs:
     - name: Wait for server to be ready
       run: sleep 5
 
-    - run: python${{ matrix.python-version[0] }} -m pip install -r requirements.txt
+    - run: python${{ matrix.python-version[0] }} -m pip install --break-system-packages -r requirements.txt
       working-directory: test
 
     - run: python${{ matrix.python-version[0] }} -m pytest new_tests/
