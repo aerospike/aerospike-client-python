@@ -84,10 +84,7 @@ def as_connection(request):
             wait_for_port(a, p)
     # We are using tls otherwise, so rely on the server being ready
 
-    if config["user"] is None and config["password"] is None:
-        as_client = aerospike.client(config).connect()
-    else:
-        as_client = aerospike.client(config).connect(config["user"], config["password"])
+    as_client = aerospike.client(config).connect()
 
     request.cls.skip_old_server = True
     request.cls.server_version = []

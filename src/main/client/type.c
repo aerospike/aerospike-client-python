@@ -48,7 +48,8 @@ enum {
     INIT_DESERIALIZE_ERR,
     INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
-    INIT_INVALID_AUTHMODE_ERR
+    INIT_INVALID_AUTHMODE_ERR,
+    INIT_CONFIG_VALUE_TYPE_ERR
 };
 
 /*******************************************************************************
@@ -537,6 +538,19 @@ static PyObject *AerospikeClient_Type_New(PyTypeObject *type, PyObject *args,
     return (PyObject *)self;
 }
 
+#define MAX_ERR_MSG_SIZE 250
+
+static void initialize_config_value_type_err(
+    char error_msg[MAX_ERR_MSG_SIZE],
+    // config_keys should look like ["lua"]["user_path"]
+    const char *config_keys, const char *expected_type_name,
+    int *error_code_ptr)
+{
+    snprintf(error_msg, MAX_ERR_MSG_SIZE, "config%s must be a %s", config_keys,
+             expected_type_name);
+    *error_code_ptr = INIT_CONFIG_VALUE_TYPE_ERR;
+}
+
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
@@ -567,11 +581,25 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     bool lua_user_path = false;
 
+    char config_value_type_error_msg[MAX_ERR_MSG_SIZE];
+
     PyObject *py_lua = PyDict_GetItemString(py_config, "lua");
-    if (py_lua && PyDict_Check(py_lua)) {
+    if (py_lua) {
+        if (!PyDict_Check(py_lua)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"lua\"]", "dict", &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
 
         PyObject *py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
-        if (py_lua_user_path && PyUnicode_Check(py_lua_user_path)) {
+        if (py_lua_user_path) {
+            if (!PyUnicode_Check(py_lua_user_path)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"lua\"][\"user_path\"]",
+                                                 "str", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
+
             lua_user_path = true;
             if (strnlen((char *)PyUnicode_AsUTF8(py_lua_user_path),
                         AS_CONFIG_PATH_MAX_SIZE) > AS_CONFIG_PATH_MAX_LEN) {
@@ -595,8 +623,23 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_tls = PyDict_GetItemString(py_config, "tls");
-    if (py_tls && PyDict_Check(py_tls)) {
-        setup_tls_config(&config, py_tls);
+    if (py_tls) {
+        if (!PyDict_Check(py_tls)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"tls\"]", "dict", &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
+        as_error_type_info *err_info = setup_tls_config(&config, py_tls);
+        if (err_info) {
+            char tls_keys_with_invalid_value[100];
+            snprintf(tls_keys_with_invalid_value, 100, "[\"tls\"][\"%s\"]",
+                     err_info->tls_key);
+            initialize_config_value_type_err(
+                config_value_type_error_msg, tls_keys_with_invalid_value,
+                err_info->expected_type, &error_code);
+            free(err_info);
+            goto CONSTRUCTOR_ERROR;
+        }
     }
 
     PyObject *py_hosts = PyDict_GetItemString(py_config, "hosts");
@@ -620,12 +663,29 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 if (PyUnicode_Check(py_addr)) {
                     addr = strdup((char *)PyUnicode_AsUTF8(py_addr));
                 }
+                else {
+                    // ["hosts"][<10 chars max>][0]
+                    // 1234567890123456789012345678
+                    // 0        10        20    + 1 = 29
+                    char keys_str[29];
+                    snprintf(keys_str, 29, "[\"hosts\"][%d][0]", i);
+                    initialize_config_value_type_err(
+                        config_value_type_error_msg, keys_str, "str",
+                        &error_code);
+                    goto CONSTRUCTOR_ERROR;
+                }
+
                 py_port = PyTuple_GetItem(py_host, 1);
-                if (PyLong_Check(py_port)) {
+                if (PyLong_CheckExact(py_port)) {
                     port = (uint16_t)PyLong_AsLong(py_port);
                 }
                 else {
-                    port = 0;
+                    char keys_str[29];
+                    snprintf(keys_str, 29, "[\"hosts\"][%d][1]", i);
+                    initialize_config_value_type_err(
+                        config_value_type_error_msg, keys_str, "int",
+                        &error_code);
+                    goto CONSTRUCTOR_ERROR;
                 }
                 // Set TLS Name if provided
                 if (PyTuple_Size(py_host) == 3) {
@@ -633,6 +693,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                     if (PyUnicode_Check(py_tls_name)) {
                         tls_name =
                             strdup((char *)PyUnicode_AsUTF8(py_tls_name));
+                    }
+                    else {
+                        char keys_str[29];
+                        snprintf(keys_str, 29, "[\"hosts\"][%d][2]", i);
+                        initialize_config_value_type_err(
+                            config_value_type_error_msg, keys_str, "str",
+                            &error_code);
+                        goto CONSTRUCTOR_ERROR;
                     }
                 }
             }
@@ -644,6 +712,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                     port = (uint16_t)atoi(temp);
                 }
             }
+
             if (addr) {
                 if (tls_name) {
                     as_config_tls_add_host(&config, addr, tls_name, port);
@@ -666,7 +735,12 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_shm = PyDict_GetItemString(py_config, "shm");
-    if (py_shm && PyDict_Check(py_shm)) {
+    if (py_shm) {
+        if (!PyDict_Check(py_shm)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"shm\"]", "dict", &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
 
         config.use_shm = true;
 
@@ -677,8 +751,15 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
             config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
         }
+
         py_shm_max_nodes = PyDict_GetItemString(py_shm, "max_nodes");
-        if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
+        if (py_shm_max_nodes) {
+            if (!PyLong_CheckExact(py_shm_max_nodes)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"shm\"][\"max_nodes\"]",
+                                                 "int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
             config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
         }
 
@@ -690,7 +771,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
         }
         py_shm_max_namespaces = PyDict_GetItemString(py_shm, "max_namespaces");
-        if (py_shm_max_namespaces && PyLong_Check(py_shm_max_namespaces)) {
+        if (py_shm_max_namespaces) {
+            if (!PyLong_CheckExact(py_shm_max_namespaces)) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg,
+                    "[\"shm\"][\"max_namespaces\"]", "int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
             config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
         }
 
@@ -705,14 +792,26 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
         py_shm_takeover_threshold_sec =
             PyDict_GetItemString(py_shm, "takeover_threshold_sec");
-        if (py_shm_takeover_threshold_sec &&
-            PyLong_Check(py_shm_takeover_threshold_sec)) {
+        if (py_shm_takeover_threshold_sec) {
+            if (!PyLong_CheckExact(py_shm_takeover_threshold_sec)) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg,
+                    "[\"shm\"][\"takeover_threshold_sec\"]", "int",
+                    &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
             config.shm_takeover_threshold_sec =
                 PyLong_AsLong(py_shm_takeover_threshold_sec);
         }
 
         PyObject *py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
-        if (py_shm_cluster_key && PyLong_Check(py_shm_cluster_key)) {
+        if (py_shm_cluster_key) {
+            if (!PyLong_CheckExact(py_shm_cluster_key)) {
+                initialize_config_value_type_err(config_value_type_error_msg,
+                                                 "[\"shm\"][\"shm_key\"]",
+                                                 "int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
             user_shm_key = true;
             config.shm_key = PyLong_AsLong(py_shm_cluster_key);
         }
@@ -723,7 +822,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->user_deserializer_call_info.callback = NULL;
     PyObject *py_serializer_option =
         PyDict_GetItemString(py_config, "serialization");
-    if (py_serializer_option && PyTuple_Check(py_serializer_option)) {
+    if (py_serializer_option) {
+        if (!PyTuple_Check(py_serializer_option)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"serialization\"]", "tuple",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
+
         PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
         if (py_serializer && py_serializer != Py_None) {
             if (!PyCallable_Check(py_serializer)) {
@@ -749,7 +855,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     //Set default value of use_batch_direct
 
     PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
-    if (py_policies && PyDict_Check(py_policies)) {
+    if (py_policies) {
+        if (!PyDict_Check(py_policies)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"policies\"]", "dict",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
+
         //global defaults setting
         PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
         if (py_key_policy && PyLong_Check(py_key_policy)) {
@@ -866,7 +979,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         //  but leave it for now for customers who may be using it
         PyObject *py_thread_pool_size =
             PyDict_GetItemString(py_policies, "thread_pool_size");
-        if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
+        if (py_thread_pool_size) {
+            if (!PyLong_Check(py_thread_pool_size)) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg,
+                    "[\"policies\"][\"thread_pool_size\"]", "int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
             config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
         }
 
@@ -886,7 +1005,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
         PyObject *py_login_timeout =
             PyDict_GetItemString(py_policies, "login_timeout_ms");
-        if (py_login_timeout && PyLong_Check(py_login_timeout)) {
+        if (py_login_timeout) {
+            if (!PyLong_CheckExact(py_login_timeout)) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg,
+                    "[\"policies\"][\"login_timeout_ms\"]", "int", &error_code);
+                goto CONSTRUCTOR_ERROR;
+            }
             config.login_timeout_ms = PyLong_AsLong(py_login_timeout);
         }
 
@@ -916,26 +1041,50 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     // thread_pool_size
     PyObject *py_thread_pool_size =
         PyDict_GetItemString(py_config, "thread_pool_size");
-    if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
+    if (py_thread_pool_size) {
+        if (!PyLong_CheckExact(py_thread_pool_size)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"thread_pool_size\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
     }
 
     // max_threads (backward compatibility)
     PyObject *py_max_threads = PyDict_GetItemString(py_config, "max_threads");
-    if (py_max_threads && PyLong_Check(py_max_threads)) {
+    if (py_max_threads) {
+        if (!PyLong_CheckExact(py_max_threads)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"max_threads\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.max_conns_per_node = PyLong_AsLong(py_max_threads);
     }
 
     PyObject *py_min_conns_per_node =
         PyDict_GetItemString(py_config, "min_conns_per_node");
-    if (py_min_conns_per_node && PyLong_Check(py_min_conns_per_node)) {
+    if (py_min_conns_per_node) {
+        if (!PyLong_CheckExact(py_min_conns_per_node)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"min_conns_per_node\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.min_conns_per_node = PyLong_AsLong(py_min_conns_per_node);
     }
 
     // max_conns_per_node
     PyObject *py_max_conns =
         PyDict_GetItemString(py_config, "max_conns_per_node");
-    if (py_max_conns && PyLong_Check(py_max_conns)) {
+    if (py_max_conns) {
+        if (!PyLong_CheckExact(py_max_conns)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"max_conns_per_node\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.max_conns_per_node = PyLong_AsLong(py_max_conns);
     }
 
@@ -943,7 +1092,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_max_error_rate =
         PyDict_GetItemString(py_config, "max_error_rate");
     Py_XINCREF(py_max_error_rate);
-    if (py_max_error_rate && PyLong_Check(py_max_error_rate)) {
+    if (py_max_error_rate) {
+        if (!PyLong_CheckExact(py_max_error_rate)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"max_error_rate\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.max_error_rate = PyLong_AsLong(py_max_error_rate);
     }
     Py_XDECREF(py_max_error_rate);
@@ -952,7 +1107,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_error_rate_window =
         PyDict_GetItemString(py_config, "error_rate_window");
     Py_XINCREF(py_error_rate_window);
-    if (py_error_rate_window && PyLong_Check(py_error_rate_window)) {
+    if (py_error_rate_window) {
+        if (!PyLong_CheckExact(py_error_rate_window)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"error_rate_window\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.error_rate_window = PyLong_AsLong(py_error_rate_window);
     }
     Py_XDECREF(py_error_rate_window);
@@ -960,7 +1121,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     //conn_timeout_ms
     PyObject *py_connect_timeout =
         PyDict_GetItemString(py_config, "connect_timeout");
-    if (py_connect_timeout && PyLong_Check(py_connect_timeout)) {
+    if (py_connect_timeout) {
+        if (!PyLong_CheckExact(py_connect_timeout)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"connect_timeout\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.conn_timeout_ms = PyLong_AsLong(py_connect_timeout);
     }
 
@@ -968,11 +1135,23 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_share_connect =
         PyDict_GetItemString(py_config, "use_shared_connection");
     if (py_share_connect) {
+        if (!PyBool_Check(py_share_connect)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"use_shared_connection\"]",
+                                             "bool", &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         self->use_shared_connection = PyObject_IsTrue(py_share_connect);
     }
 
     PyObject *py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
-    if (py_send_bool_as != NULL && PyLong_Check(py_send_bool_as)) {
+    if (py_send_bool_as != NULL) {
+        if (!PyLong_CheckExact(py_send_bool_as)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"send_bool_as\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         int send_bool_as_temp = PyLong_AsLong(py_send_bool_as);
         if (send_bool_as_temp >= SEND_BOOL_AS_INTEGER &&
             send_bool_as_temp <= SEND_BOOL_AS_AS_BOOL) {
@@ -983,7 +1162,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     //compression_threshold
     PyObject *py_compression_threshold =
         PyDict_GetItemString(py_config, "compression_threshold");
-    if (py_compression_threshold && PyLong_Check(py_compression_threshold)) {
+    if (py_compression_threshold) {
+        if (!PyLong_CheckExact(py_compression_threshold)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"compression_threshold\"]",
+                                             "int", &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         int compression_value = PyLong_AsLong(py_compression_threshold);
         if (compression_value >= 0) {
             config.policies.write.compression_threshold = compression_value;
@@ -996,12 +1181,24 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_tend_interval =
         PyDict_GetItemString(py_config, "tend_interval");
-    if (py_tend_interval && PyLong_Check(py_tend_interval)) {
+    if (py_tend_interval) {
+        if (!PyLong_CheckExact(py_tend_interval)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"tend_interval\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.tender_interval = PyLong_AsLong(py_tend_interval);
     }
 
     PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
-    if (py_cluster_name && PyUnicode_Check(py_cluster_name)) {
+    if (py_cluster_name) {
+        if (!PyUnicode_Check(py_cluster_name)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"cluster_name\"]", "str",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         as_config_set_cluster_name(
             &config, strdup((char *)PyUnicode_AsUTF8(py_cluster_name)));
     }
@@ -1026,7 +1223,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_max_socket_idle = NULL;
     py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
-    if (py_max_socket_idle && PyLong_Check(py_max_socket_idle)) {
+    if (py_max_socket_idle) {
+        if (!PyLong_CheckExact(py_max_socket_idle)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"max_socket_idle\"]", "int",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         long max_socket_idle = PyLong_AsLong(py_max_socket_idle);
         if (max_socket_idle >= 0) {
             config.max_socket_idle = (uint32_t)max_socket_idle;
@@ -1035,15 +1238,37 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_fail_if_not_connected =
         PyDict_GetItemString(py_config, "fail_if_not_connected");
-    if (py_fail_if_not_connected && PyBool_Check(py_fail_if_not_connected)) {
+    if (py_fail_if_not_connected) {
+        if (!PyBool_Check(py_fail_if_not_connected)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"fail_if_not_connected\"]",
+                                             "bool", &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
         config.fail_if_not_connected =
             PyObject_IsTrue(py_fail_if_not_connected);
     }
 
     PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
+    if (py_user_name) {
+        if (!PyUnicode_Check(py_user_name)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"user\"]", "str", &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
+    }
+
     PyObject *py_user_pwd = PyDict_GetItemString(py_config, "password");
-    if (py_user_name && PyUnicode_Check(py_user_name) && py_user_pwd &&
-        PyUnicode_Check(py_user_pwd)) {
+    if (py_user_pwd) {
+        if (!PyUnicode_Check(py_user_pwd)) {
+            initialize_config_value_type_err(config_value_type_error_msg,
+                                             "[\"password\"]", "str",
+                                             &error_code);
+            goto CONSTRUCTOR_ERROR;
+        }
+    }
+
+    if (py_user_name && py_user_pwd) {
         char *username = (char *)PyUnicode_AsUTF8(py_user_name);
         char *password = (char *)PyUnicode_AsUTF8(py_user_pwd);
         as_config_set_user(&config, username, password);
@@ -1074,6 +1299,11 @@ CONSTRUCTOR_ERROR:
     case INIT_CONFIG_TYPE_ERR: {
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                         "Config must be a dict");
+        break;
+    }
+    case INIT_CONFIG_VALUE_TYPE_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        config_value_type_error_msg);
         break;
     }
     case INIT_LUA_USER_ERR: {
@@ -1152,7 +1382,7 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
 
     py_config_value = PyDict_GetItemString(config_dict, "rack_id");
     if (py_config_value) {
-        if (PyLong_Check(py_config_value)) {
+        if (PyLong_CheckExact(py_config_value)) {
             rack_id = PyLong_AsLong(py_config_value);
         }
         else {
@@ -1188,7 +1418,7 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         }
 
         Py_INCREF(rack_id_pyobj);
-        if (PyLong_Check(rack_id_pyobj) == false) {
+        if (PyLong_CheckExact(rack_id_pyobj) == false) {
             Py_DECREF(rack_id_pyobj);
             goto PARAM_ERROR;
         }

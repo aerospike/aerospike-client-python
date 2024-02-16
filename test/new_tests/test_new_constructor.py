@@ -362,3 +362,68 @@ class TestConfigTTL:
         wait_for_job_completion(self.client, job_id)
 
         self.check_ttl()
+
+    # Helper function for the test below
+    # Example: {"lua": {"user_path": 1}} -> ["lua"]["user_path"]
+    def get_err_msg_keys(self, dict_to_traverse: dict):
+        keys = []
+        curr_value = dict_to_traverse
+        while type(curr_value) is dict:
+            key = list(curr_value.keys())[0]
+            keys.append(key)
+            curr_value = curr_value[key]
+        keys = ["[\"{0}\"]".format(key) for key in keys]
+        keys = "".join(keys)
+        return keys
+
+    @pytest.mark.parametrize("invalid_config, expected_type", [
+        ({"lua": 1}, dict),
+        ({"lua": {"user_path": 1}}, str),
+        ({"tls": 1}, dict),
+        ({"tls": {"enable": 1}}, bool),
+        ({"tls": {"cafile": 1}}, str),
+        ({"tls": {"capath": 1}}, str),
+        ({"tls": {"protocols": 1}}, str),
+        ({"tls": {"cipher_suite": 1}}, str),
+        ({"tls": {"keyfile": 1}}, str),
+        ({"tls": {"keyfile_pw": 1}}, str),
+        ({"tls": {"cert_blacklist": 1}}, str),
+        ({"tls": {"certfile": 1}}, str),
+        ({"tls": {"crl_check": 1}}, bool),
+        ({"tls": {"crl_check_all": 1}}, bool),
+        ({"tls": {"log_session_info": 1}}, bool),
+        ({"tls": {"for_login_only": 1}}, bool),
+        ({"shm": 1}, dict),
+        ({"shm": {"max_nodes": True}}, int),
+        ({"shm": {"max_namespaces": True}}, int),
+        ({"shm": {"takeover_threshold_sec": True}}, int),
+        ({"shm": {"shm_key": True}}, int),
+        ({"serialization": 1}, tuple),
+        ({"policies": 1}, dict),
+        ({"policies": {"login_timeout_ms": True}}, int),
+        ({"thread_pool_size": True}, int),
+        ({"max_threads": True}, int),
+        ({"min_conns_per_node": True}, int),
+        ({"max_conns_per_node": True}, int),
+        ({"max_error_rate": True}, int),
+        ({"error_rate_window": True}, int),
+        ({"connect_timeout": True}, int),
+        ({"use_shared_connection": 1}, bool),
+        ({"send_bool_as": True}, int),
+        ({"compression_threshold": True}, int),
+        ({"tend_interval": True}, int),
+        ({"cluster_name": 1}, str),
+        ({"max_socket_idle": True}, int),
+        ({"fail_if_not_connected": 1}, bool),
+        ({"user": 1}, str),
+        ({"password": 1}, str),
+    ])
+    def test_client_config_invalid_value_types(self, invalid_config: dict, expected_type: type):
+        # Hosts key is required so just copy it from gconfig
+        config = copy.deepcopy(gconfig)
+        config.update(invalid_config)
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+
+        err_msg_keys = self.get_err_msg_keys(invalid_config)
+        assert excinfo.value.msg == f"config{err_msg_keys} must be a {expected_type.__name__}"

@@ -22,4 +22,9 @@
 
 #include "macros.h"
 
-void setup_tls_config(as_config *config, PyObject *tls_config);
+typedef struct {
+    char *tls_key;
+    char *expected_type;
+} as_error_type_info;
+
+as_error_type_info *setup_tls_config(as_config *config, PyObject *tls_config);

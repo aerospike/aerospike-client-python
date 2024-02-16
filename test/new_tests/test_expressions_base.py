@@ -286,7 +286,7 @@ class TestExpressions(TestBaseClass):
 
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = aerospike.AS_BOOL
-        test_client = aerospike.client(config).connect(config["user"], config["password"])
+        test_client = aerospike.client(config).connect()
 
         expr = BoolBin("t")
         ops = [operations.write("t", True), expressions.expression_read("test", expr.compile())]
@@ -301,7 +301,7 @@ class TestExpressions(TestBaseClass):
 
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = aerospike.AS_BOOL
-        test_client = aerospike.client(config).connect(config["user"], config["password"])
+        test_client = aerospike.client(config).connect()
 
         expr = Not(BoolBin("t"))
         ops = [operations.write("t", True), expressions.expression_read("test", expr.compile())]
@@ -371,7 +371,7 @@ class TestExpressions(TestBaseClass):
         # Configure client to encode and send booleans as the server boolean type
         config = TestBaseClass.get_connection_config()
         config["send_bool_as"] = aerospike.AS_BOOL
-        test_client = aerospike.client(config).connect(config["user"], config["password"])
+        test_client = aerospike.client(config).connect()
 
         # Override record 0's "t" bin to be a server bool instead of a python bool
         key = ("test", "demo", 0)

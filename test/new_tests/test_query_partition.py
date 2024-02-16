@@ -639,3 +639,22 @@ class TestQueryPartition(TestBaseClass):
             query_obj.foreach(callback, policy)
 
         assert msg in exc.value.msg
+
+    @pytest.mark.parametrize("p_filter, err_msg", [
+        ({"digest": 1}, "partition_filter[\"digest\"] must be a dict"),
+        ({"digest": {"init": 1}}, "partition_filter[\"digest\"][\"init\"] must be a bool"),
+        ({"digest": {"init": True, "value": 1}}, "partition_filter[\"digest\"][\"value\"] must be a bytearray")
+    ])
+    def test_partition_filter_invalid_values(self, p_filter: dict, err_msg: str):
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        policy = {"partition_filter": p_filter}
+        with pytest.raises(e.ParamError) as excinfo:
+            query_obj.results(policy)
+        assert excinfo.value.msg == err_msg
+
+    def test_partition_filter_digest_invalid_size(self):
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        policy = {"partition_filter": {"digest": {"init": True, "value": bytearray(b'1')}}}
+        with pytest.raises(e.ParamError) as excinfo:
+            query_obj.results(policy)
+        assert excinfo.value.msg == "partition_filter[\"digest\"][\"value\"] must be 20 bytes long"
