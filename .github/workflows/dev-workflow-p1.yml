@@ -12,12 +12,17 @@ on:
       - dev*
   # So we can test changes to the test-server-rc workflow
   workflow_dispatch:
+    inputs:
+      run_server_release_tests:
+        description: 'DEBUG: Run server release tests in build-wheels workflow?'
+        type: boolean
+        default: false
 
 jobs:
   test-with-server-release:
     uses: ./.github/workflows/build-wheels.yml
     with:
-      run_tests: true
+      run_tests: ${{ github.event_name == 'workflow_dispatch' && inputs.run_server_release_tests || true }}
     secrets: inherit
 
   test-with-server-rc:
