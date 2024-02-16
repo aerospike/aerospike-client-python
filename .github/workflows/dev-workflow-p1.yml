@@ -10,6 +10,8 @@ on:
       - review_requested
     branches:
       - dev*
+  # So we can test changes to the test-server-rc workflow
+  workflow_dispatch:
 
 jobs:
   test-with-server-release:
@@ -20,6 +22,6 @@ jobs:
 
   test-with-server-rc:
     needs: test-with-server-release
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
     uses: ./.github/workflows/test-server-rc.yml
     secrets: inherit
