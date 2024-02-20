@@ -1,5 +1,5 @@
 name: Build wheels
-run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
+run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }}, build-for-debugging=${{ inputs.build-for-debugging }})
 
 # Builds manylinux wheels and source distribution
 # If running tests, publish results in commit status
@@ -29,6 +29,11 @@ on:
         type: boolean
         default: false
         description: 'Test macOS x86 wheels (unstable)'
+      build-for-debugging:
+        required: true
+        type: boolean
+        default: false
+        description: 'Apply -O0 when building C client and Python client? (Linux)'
   workflow_call:
     inputs:
       # The "dev" tests test the artifacts against a server release
@@ -41,7 +46,7 @@ on:
       ref:
         type: string
         required: false
-      # Calling workflow doesn't actually use the 2 options below
+      # Calling workflow doesn't actually use the options below
       # But we need to set default values for workflow calls to use
       use-server-rc:
         required: false
@@ -52,6 +57,10 @@ on:
         required: false
         default: 'latest'
       test-macos-x86:
+        required: false
+        type: boolean
+        default: false
+      build-for-debugging:
         required: false
         type: boolean
         default: false
@@ -151,9 +160,24 @@ jobs:
       if: ${{ !inputs.run_tests }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
+    - name: Get current version if building a debug wheel
+      if: ${{ inputs.build-for-debugging }}
+      run: echo DEBUG_VERSION="$(cat VERSION)+unoptimized" >> $GITHUB_ENV
+
+    - name: Label version for debugging
+      if: ${{ inputs.build-for-debugging }}
+      uses: ./.github/actions/update-version
+      with:
+        new_version: ${{ env.DEBUG_VERSION }}
+
+    - name: Build without optimizations
+      if: ${{ inputs.build-for-debugging }}
+      run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.15.0
       env:
+        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.build-for-debugging && 'UNOPTIMIZED' || '' }}
         CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
