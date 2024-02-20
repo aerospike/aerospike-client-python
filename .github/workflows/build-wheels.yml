@@ -428,7 +428,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
-          name: ${{ matrix.python[0] }}-win_amd64
+          name: ${{ matrix.python[0] }}-win_amd64.build
 
       - name: Set final commit status
         uses: myrotvorets/set-commit-status-action@v2.0.0
@@ -462,7 +462,7 @@ jobs:
       - name: Download wheel
         uses: actions/download-artifact@v3
         with:
-          name: ${{ matrix.python[0] }}-win_amd64
+          name: ${{ matrix.python[0] }}-win_amd64.build
       - name: Install wheel
         run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
       - name: Connect to Docker container on remote machine with Docker daemon
