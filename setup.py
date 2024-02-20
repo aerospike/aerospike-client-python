@@ -52,6 +52,9 @@ SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 # Not for developers to use, unless you know what the workflow is doing!
 COVERAGE = os.getenv('COVERAGE')
 
+# Applies no optimizations on both the C client and Python client
+UNOPTIMIZED = os.getenv('UNOPTIMIZED')
+
 ################################################################################
 # GENERIC BUILD SETTINGS
 ################################################################################
@@ -107,13 +110,8 @@ if COVERAGE:
     extra_compile_args.append('-ftest-coverage')
     extra_link_args.append('-lgcov')
 
-# TODO: this conflicts with the C client's DEBUG mode when building it
-# DEBUG = os.getenv('DEBUG')
-# if DEBUG:
-#     extra_compile_args.append("-O0")
-# else:
-#     # Release build
-#     extra_compile_args.append("-O1")
+if UNOPTIMIZED:
+    extra_compile_args.append('-O0')
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -228,6 +226,8 @@ class CClientBuild(build):
                 'make',
                 'V=' + str(self.verbose),
             ]
+            if UNOPTIMIZED:
+                cmd.append('O=0')
 
         def compile():
             print(cmd, library_dirs, libraries)
