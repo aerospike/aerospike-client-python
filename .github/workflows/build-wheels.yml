@@ -408,6 +408,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
+          ref: ${{ inputs.ref }}
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -458,6 +459,9 @@ jobs:
           sha: ${{ github.sha }}
           context: "Test Windows (${{ matrix.python[0] }}-win_amd64)"
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+
       - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
       - name: Download wheel
         uses: actions/download-artifact@v3
