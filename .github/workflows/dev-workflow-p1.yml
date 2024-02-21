@@ -9,7 +9,7 @@ on:
     types:
       - review_requested
     branches:
-      - dev*
+      - 'dev*'
   # So we can test changes to the test-server-rc workflow
   workflow_dispatch:
     inputs:

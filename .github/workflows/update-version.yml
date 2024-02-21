@@ -53,7 +53,7 @@ jobs:
     - name: Commit new version
       uses: stefanzweifel/git-auto-commit-action@v4
       with:
-        commit_message: Auto-bump version to ${{ inputs.new_version }}
+        commit_message: 'Auto-bump version to ${{ inputs.new_version }} [skip ci]'
         commit_author: github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>
         tagging_message: ${{ inputs.new_version }}
         branch: ${{ inputs.is_workflow_call && inputs.ref || github.ref }}

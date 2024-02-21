@@ -6,10 +6,11 @@ on:
     - 'dev*'
     types:
       - closed
+  workflow_dispatch:
 
 jobs:
   bump-dev-number:
-    if: ${{ github.event.pull_request.merged == true }}
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.pull_request.merged == true }}
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'bump-dev-num'
