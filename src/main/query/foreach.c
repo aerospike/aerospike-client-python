@@ -255,7 +255,7 @@ CLEANUP:
             exception_type = raise_exception_old(&data.error);
         }
         if (PyObject_HasAttrString(exception_type, "name")) {
-            PyObject_SetAttrString(exception_type, "name", Py_None);
+            PyObject_SetAttrStringSafe(exception_type, "name", Py_None);
         }
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);
