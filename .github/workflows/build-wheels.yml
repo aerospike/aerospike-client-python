@@ -175,7 +175,7 @@ jobs:
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.15.0
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.build-for-debugging && 'UNOPTIMIZED' || '' }}
         CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
@@ -254,7 +254,7 @@ jobs:
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.15.0
+      uses: pypa/cibuildwheel@v2.16.5
       env:
         CIBW_BUILD: ${{ matrix.python }}-macosx_x86_64
         CIBW_BUILD_FRONTEND: build
@@ -419,7 +419,7 @@ jobs:
         working-directory: aerospike-client-c/vs
 
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
           CIBW_BUILD_FRONTEND: build
