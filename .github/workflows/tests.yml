@@ -10,7 +10,7 @@ on:
   push:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
     # Ignore all bump commits
-    tags-ignore: ["*"]
+    tags-ignore: ["**"]
   pull_request:
     branches: ["dev*", "stage*", "v*-backport*"]
     types: [
