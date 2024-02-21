@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "pypy3.10"]
       fail-fast: false
 
     steps:
@@ -52,7 +52,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
@@ -289,7 +289,8 @@ jobs:
           "3.9",
           "3.10",
           "3.11",
-          "3.12"
+          "3.12",
+          "pypy3.10"
         ]
       fail-fast: false
 
