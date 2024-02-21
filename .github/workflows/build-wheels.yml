@@ -396,6 +396,7 @@ jobs:
           ["cp39", "3.9"],
           ["cp310", "3.10"],
           ["cp311", "3.11"],
+          ["cp312", "3.12"]
         ]
     runs-on: windows-2022
     steps:
@@ -418,7 +419,7 @@ jobs:
         working-directory: aerospike-client-c/vs
 
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.11.2
+        uses: pypa/cibuildwheel@v2.15.0
         env:
           CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
           CIBW_BUILD_FRONTEND: build
@@ -450,6 +451,7 @@ jobs:
           ["cp39", "3.9"],
           ["cp310", "3.10"],
           ["cp311", "3.11"],
+          ["cp312", "3.12"]
         ]
     runs-on: [self-hosted, Windows, X64]
     steps:
