@@ -33,7 +33,7 @@
 static as_status add_op_list_create(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
+                                    as_dynamic_pool *dynamic_pool,
                                     int serializer_type);
 
 static as_status add_op_list_append(AerospikeClient *self, as_error *err,
@@ -411,7 +411,7 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
     }
 
     case OP_LIST_CREATE: {
-        return add_op_list_create(self, err, bin, op_dict, ops, static_pool,
+        return add_op_list_create(self, err, bin, op_dict, ops, dynamic_pool,
                                   serializer_type);
     }
 
@@ -1150,7 +1150,7 @@ static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
 static as_status add_op_list_create(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
+                                    as_dynamic_pool *dynamic_pool,
                                     int serializer_type)
 {
     int64_t order_type_int;
