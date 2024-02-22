@@ -1172,7 +1172,7 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
                     serializer_type) != AEROSPIKE_OK) {
         return err->code;
     }
