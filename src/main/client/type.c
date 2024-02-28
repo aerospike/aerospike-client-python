@@ -754,13 +754,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
         py_shm_max_nodes = PyDict_GetItemString(py_shm, "max_nodes");
         if (py_shm_max_nodes) {
-            if (!PyLong_CheckExact(py_shm_max_nodes)) {
-                initialize_config_value_type_err(config_value_type_error_msg,
-                                                 "[\"shm\"][\"max_nodes\"]",
-                                                 "int", &error_code);
+            as_status return_code =
+                get_uint32_value(py_shm_max_nodes, &config.shm_max_nodes);
+            if (return_code != AEROSPIKE_OK) {
+                initialize_config_value_type_err(
+                    config_value_type_error_msg, "[\"shm\"][\"max_nodes\"]",
+                    "32-bit unsigned int", &error_code);
                 goto CONSTRUCTOR_ERROR;
             }
-            config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
         }
 
         // This does not match documentation (wrong name and location in dict),
@@ -772,13 +773,15 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
         py_shm_max_namespaces = PyDict_GetItemString(py_shm, "max_namespaces");
         if (py_shm_max_namespaces) {
-            if (!PyLong_CheckExact(py_shm_max_namespaces)) {
+            as_status return_code = get_uint32_value(
+                py_shm_max_namespaces, &config.shm_max_namespaces);
+            if (return_code != AEROSPIKE_OK) {
                 initialize_config_value_type_err(
                     config_value_type_error_msg,
-                    "[\"shm\"][\"max_namespaces\"]", "int", &error_code);
+                    "[\"shm\"][\"max_namespaces\"]", "32-bit unsigned int",
+                    &error_code);
                 goto CONSTRUCTOR_ERROR;
             }
-            config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
         }
 
         // This does not match documentation (wrong name and location in dict),
@@ -793,15 +796,16 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         py_shm_takeover_threshold_sec =
             PyDict_GetItemString(py_shm, "takeover_threshold_sec");
         if (py_shm_takeover_threshold_sec) {
-            if (!PyLong_CheckExact(py_shm_takeover_threshold_sec)) {
+            as_status return_code =
+                get_uint32_value(py_shm_takeover_threshold_sec,
+                                 &config.shm_takeover_threshold_sec);
+            if (return_code != AEROSPIKE_OK) {
                 initialize_config_value_type_err(
                     config_value_type_error_msg,
-                    "[\"shm\"][\"takeover_threshold_sec\"]", "int",
-                    &error_code);
+                    "[\"shm\"][\"takeover_threshold_sec\"]",
+                    "32-bit unsigned int", &error_code);
                 goto CONSTRUCTOR_ERROR;
             }
-            config.shm_takeover_threshold_sec =
-                PyLong_AsLong(py_shm_takeover_threshold_sec);
         }
 
         PyObject *py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
@@ -1000,13 +1004,15 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_login_timeout =
             PyDict_GetItemString(py_policies, "login_timeout_ms");
         if (py_login_timeout) {
-            if (!PyLong_CheckExact(py_login_timeout)) {
+            as_status return_code =
+                get_uint32_value(py_login_timeout, &config.login_timeout_ms);
+            if (return_code != AEROSPIKE_OK) {
                 initialize_config_value_type_err(
                     config_value_type_error_msg,
-                    "[\"policies\"][\"login_timeout_ms\"]", "int", &error_code);
+                    "[\"policies\"][\"login_timeout_ms\"]",
+                    "32-bit unsigned int", &error_code);
                 goto CONSTRUCTOR_ERROR;
             }
-            config.login_timeout_ms = PyLong_AsLong(py_login_timeout);
         }
 
         PyObject *py_auth_mode = PyDict_GetItemString(py_policies, "auth_mode");
@@ -1036,50 +1042,47 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_thread_pool_size =
         PyDict_GetItemString(py_config, "thread_pool_size");
     if (py_thread_pool_size) {
-        if (!PyLong_CheckExact(py_thread_pool_size)) {
-            initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"thread_pool_size\"]", "int",
-                                             &error_code);
+        as_status return_code =
+            get_uint32_value(py_thread_pool_size, &config.thread_pool_size);
+        if (return_code != AEROSPIKE_OK) {
+            initialize_config_value_type_err(
+                config_value_type_error_msg, "[\"thread_pool_size\"]",
+                "32-bit unsigned int", &error_code);
             goto CONSTRUCTOR_ERROR;
         }
-        config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
     }
 
     // max_threads (backward compatibility)
     PyObject *py_max_threads = PyDict_GetItemString(py_config, "max_threads");
-    if (py_max_threads) {
-        if (!PyLong_CheckExact(py_max_threads)) {
-            initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"max_threads\"]", "int",
-                                             &error_code);
-            goto CONSTRUCTOR_ERROR;
-        }
+    if (py_max_threads && PyLong_Check(py_max_threads)) {
         config.max_conns_per_node = PyLong_AsLong(py_max_threads);
     }
 
     PyObject *py_min_conns_per_node =
         PyDict_GetItemString(py_config, "min_conns_per_node");
     if (py_min_conns_per_node) {
-        if (!PyLong_CheckExact(py_min_conns_per_node)) {
-            initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"min_conns_per_node\"]", "int",
-                                             &error_code);
+        as_status return_code =
+            get_uint32_value(py_min_conns_per_node, &config.min_conns_per_node);
+        if (return_code != AEROSPIKE_OK) {
+            initialize_config_value_type_err(
+                config_value_type_error_msg, "[\"min_conns_per_node\"]",
+                "32-bit unsigned int", &error_code);
             goto CONSTRUCTOR_ERROR;
         }
-        config.min_conns_per_node = PyLong_AsLong(py_min_conns_per_node);
     }
 
     // max_conns_per_node
     PyObject *py_max_conns =
         PyDict_GetItemString(py_config, "max_conns_per_node");
     if (py_max_conns) {
-        if (!PyLong_CheckExact(py_max_conns)) {
-            initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"max_conns_per_node\"]", "int",
-                                             &error_code);
+        as_status return_code =
+            get_uint32_value(py_max_conns, &config.max_conns_per_node);
+        if (return_code != AEROSPIKE_OK) {
+            initialize_config_value_type_err(
+                config_value_type_error_msg, "[\"max_conns_per_node\"]",
+                "32-bit unsigned int", &error_code);
             goto CONSTRUCTOR_ERROR;
         }
-        config.max_conns_per_node = PyLong_AsLong(py_max_conns);
     }
 
     // max_error_rate
@@ -1087,13 +1090,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyDict_GetItemString(py_config, "max_error_rate");
     Py_XINCREF(py_max_error_rate);
     if (py_max_error_rate) {
-        if (!PyLong_CheckExact(py_max_error_rate)) {
-            initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"max_error_rate\"]", "int",
-                                             &error_code);
+        as_status return_code =
+            get_uint32_value(py_max_error_rate, &config.max_error_rate);
+        if (return_code != AEROSPIKE_OK) {
+            initialize_config_value_type_err(
+                config_value_type_error_msg, "[\"max_error_rate\"]",
+                "32-bit unsigned int", &error_code);
             goto CONSTRUCTOR_ERROR;
         }
-        config.max_error_rate = PyLong_AsLong(py_max_error_rate);
     }
     Py_XDECREF(py_max_error_rate);
 
@@ -1102,13 +1106,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyDict_GetItemString(py_config, "error_rate_window");
     Py_XINCREF(py_error_rate_window);
     if (py_error_rate_window) {
-        if (!PyLong_CheckExact(py_error_rate_window)) {
-            initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"error_rate_window\"]", "int",
-                                             &error_code);
+        as_status return_code =
+            get_uint32_value(py_error_rate_window, &config.error_rate_window);
+        if (return_code != AEROSPIKE_OK) {
+            initialize_config_value_type_err(
+                config_value_type_error_msg, "[\"error_rate_window\"]",
+                "32-bit unsigned int", &error_code);
             goto CONSTRUCTOR_ERROR;
         }
-        config.error_rate_window = PyLong_AsLong(py_error_rate_window);
     }
     Py_XDECREF(py_error_rate_window);
 
@@ -1116,13 +1121,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_connect_timeout =
         PyDict_GetItemString(py_config, "connect_timeout");
     if (py_connect_timeout) {
-        if (!PyLong_CheckExact(py_connect_timeout)) {
-            initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"connect_timeout\"]", "int",
-                                             &error_code);
+        as_status return_code =
+            get_uint32_value(py_connect_timeout, &config.conn_timeout_ms);
+        if (return_code != AEROSPIKE_OK) {
+            initialize_config_value_type_err(
+                config_value_type_error_msg, "[\"connect_timeout\"]",
+                "32-bit unsigned int", &error_code);
             goto CONSTRUCTOR_ERROR;
         }
-        config.conn_timeout_ms = PyLong_AsLong(py_connect_timeout);
     }
 
     //Whether to utilize shared connection
@@ -1176,13 +1182,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_tend_interval =
         PyDict_GetItemString(py_config, "tend_interval");
     if (py_tend_interval) {
-        if (!PyLong_CheckExact(py_tend_interval)) {
-            initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"tend_interval\"]", "int",
-                                             &error_code);
-            goto CONSTRUCTOR_ERROR;
+        as_status return_code =
+            get_uint32_value(py_tend_interval, &config.tender_interval);
+        if (return_code != AEROSPIKE_OK) {
+            initialize_config_value_type_err(
+                config_value_type_error_msg, "[\"tend_interval\"]",
+                "32-bit unsigned int", &error_code);
         }
-        config.tender_interval = PyLong_AsLong(py_tend_interval);
     }
 
     PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
