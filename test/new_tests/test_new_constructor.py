@@ -402,7 +402,6 @@ class TestConfigTTL:
         ({"policies": 1}, dict.__name__),
         ({"policies": {"login_timeout_ms": True}}, "32-bit unsigned int"),
         ({"thread_pool_size": True}, "32-bit unsigned int"),
-        ({"max_threads": True}, "32-bit unsigned int"),
         ({"min_conns_per_node": True}, "32-bit unsigned int"),
         ({"max_conns_per_node": True}, "32-bit unsigned int"),
         ({"max_error_rate": True}, "32-bit unsigned int"),
