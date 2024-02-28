@@ -412,7 +412,7 @@ class TestConfigTTL:
         ({"compression_threshold": True}, "32-bit unsigned int"),
         ({"tend_interval": True}, "32-bit unsigned int"),
         ({"cluster_name": 1}, str.__name__),
-        ({"max_socket_idle": True}, "32-bit unsigned int"),
+        ({"max_socket_idle": True}, "int"),
         ({"fail_if_not_connected": 1}, bool.__name__),
         ({"user": 1}, str.__name__),
         ({"password": 1}, str.__name__),

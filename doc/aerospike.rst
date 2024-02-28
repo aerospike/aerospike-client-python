@@ -588,7 +588,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``16``
         * **max_socket_idle** (:class:`int`)
-            Maximum socket idle in seconds. (32-bit unsigned integer)
+            Maximum socket idle in seconds.
             Connection pools will discard sockets that have been idle longer than the maximum.
 
             Connection pools are now implemented by a LIFO stack.
