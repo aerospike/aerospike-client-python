@@ -979,13 +979,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         //  but leave it for now for customers who may be using it
         PyObject *py_thread_pool_size =
             PyDict_GetItemString(py_policies, "thread_pool_size");
-        if (py_thread_pool_size) {
-            if (!PyLong_Check(py_thread_pool_size)) {
-                initialize_config_value_type_err(
-                    config_value_type_error_msg,
-                    "[\"policies\"][\"thread_pool_size\"]", "int", &error_code);
-                goto CONSTRUCTOR_ERROR;
-            }
+        if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
             config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
         }
 
