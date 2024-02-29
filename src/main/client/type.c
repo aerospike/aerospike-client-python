@@ -1188,6 +1188,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             initialize_config_value_type_err(
                 config_value_type_error_msg, "[\"tend_interval\"]",
                 "32-bit unsigned int", &error_code);
+            goto CONSTRUCTOR_ERROR;
         }
     }
 
