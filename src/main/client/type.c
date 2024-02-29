@@ -685,6 +685,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                     initialize_config_value_type_err(
                         config_value_type_error_msg, keys_str, "int",
                         &error_code);
+                    free(addr);
                     goto CONSTRUCTOR_ERROR;
                 }
                 // Set TLS Name if provided
@@ -700,6 +701,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                         initialize_config_value_type_err(
                             config_value_type_error_msg, keys_str, "str",
                             &error_code);
+                        free(addr);
                         goto CONSTRUCTOR_ERROR;
                     }
                 }
