@@ -409,7 +409,7 @@ class TestConfigTTL:
         ({"connect_timeout": True}, "32-bit unsigned int"),
         ({"use_shared_connection": 1}, bool.__name__),
         ({"send_bool_as": True}, "int"),
-        ({"compression_threshold": True}, "32-bit unsigned int"),
+        ({"compression_threshold": True}, "int"),
         ({"tend_interval": True}, "32-bit unsigned int"),
         ({"cluster_name": 1}, str.__name__),
         ({"max_socket_idle": True}, "int"),
