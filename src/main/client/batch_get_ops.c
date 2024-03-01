@@ -80,6 +80,7 @@ static bool batch_read_operate_cb(const as_batch_read *results, uint32_t n,
             bins_to_pyobject(data->client, &err, rec, &py_rec_bins, false);
         }
         else {
+            // TODO: stop using old method
             py_rec_meta = raise_exception_old(&err);
             Py_INCREF(Py_None);
             py_rec_bins = Py_None;
