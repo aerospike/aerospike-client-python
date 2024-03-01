@@ -22,3 +22,10 @@ PyObject *AerospikeException_New(void);
 void raise_exception(as_error *err);
 PyObject *raise_exception_old(as_error *err);
 void remove_exception(as_error *err);
+void error_to_pyobject(const as_error *err, PyObject **obj);
+
+#define PY_EXCEPTION_CODE 0
+#define PY_EXCEPTION_MSG 1
+#define PY_EXCEPTION_FILE 2
+#define PY_EXCEPTION_LINE 3
+#define AS_PY_EXCEPTION_IN_DOUBT 4

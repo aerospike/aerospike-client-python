@@ -19,12 +19,10 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_status.h>
 
-#include "conversions.h"
 #include <string.h>
 #include <stdlib.h>
 #include "exceptions.h"
 #include "exception_types.h"
-#include "macros.h"
 
 static PyObject *module;
 
@@ -692,4 +690,38 @@ PyObject *raise_exception_old(as_error *err)
         }
     }
     return py_value;
+}
+
+void error_to_pyobject(const as_error *err, PyObject **obj)
+{
+    PyObject *py_file = NULL;
+    if (err->file) {
+        py_file = PyUnicode_FromString(err->file);
+    }
+    else {
+        Py_INCREF(Py_None);
+        py_file = Py_None;
+    }
+    PyObject *py_line = NULL;
+    if (err->line > 0) {
+        py_line = PyLong_FromLong(err->line);
+    }
+    else {
+        Py_INCREF(Py_None);
+        py_line = Py_None;
+    }
+
+    PyObject *py_code = PyLong_FromLongLong(err->code);
+    PyObject *py_message = PyUnicode_FromString(err->message);
+
+    PyObject *py_in_doubt = err->in_doubt ? Py_True : Py_False;
+    Py_INCREF(py_in_doubt);
+
+    PyObject *py_err = PyTuple_New(5);
+    PyTuple_SetItem(py_err, PY_EXCEPTION_CODE, py_code);
+    PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
+    PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
+    PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
+    PyTuple_SetItem(py_err, AS_PY_EXCEPTION_IN_DOUBT, py_in_doubt);
+    *obj = py_err;
 }
