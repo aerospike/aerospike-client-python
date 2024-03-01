@@ -379,7 +379,7 @@ static PyMethodDef AerospikePredicates_Methods[] = {
      METH_VARARGS, "Create a geo_contains_geojson_point predicate"},
     {NULL, NULL, 0, NULL}};
 
-PyObject *AerospikePredicates_New(void)
+PyObject *PyInit_predicates(void)
 {
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
                                            "aerospike.predicates",

@@ -24,7 +24,6 @@
 #include "geo.h"
 #include "scan.h"
 #include "key_ordered_dict.h"
-#include "predicates.h"
 #include "exceptions.h"
 #include "policy.h"
 #include "log.h"

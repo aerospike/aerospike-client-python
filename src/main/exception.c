@@ -26,7 +26,7 @@
 
 static PyObject *module;
 
-PyObject *AerospikeException_New(void)
+PyObject *PyInit_exception(void)
 {
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
                                            "aerospike.exception",
