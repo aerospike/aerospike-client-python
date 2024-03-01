@@ -398,7 +398,8 @@ setup(
             name="aerospike.predicates",
             sources=[
                 'src/main/predicates.c',
-                'src/main/exception.c'
+                'src/main/exception.c',
+                'src/main/geospatial/dumps.c'
             ],
             # Compile
             include_dirs=include_dirs,

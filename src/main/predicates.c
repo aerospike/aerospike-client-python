@@ -24,9 +24,8 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_error.h>
 
-#include "conversions.h"
 #include "exceptions.h"
-#include "geo.h"
+#include "geo_dumps.h"
 
 static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
 {

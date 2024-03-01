@@ -362,3 +362,36 @@ PyObject *AerospikeGeospatial_New(as_error *err, PyObject *value)
     Py_XINCREF(self->geo_data);
     return (PyObject *)self;
 }
+
+PyObject *AerospikeGeospatial_Dumps(AerospikeGeospatial *self, PyObject *args,
+                                    PyObject *kwds)
+{
+
+    PyObject *initresult = NULL;
+    // Aerospike error object
+    as_error err;
+    // Initialize error object
+    as_error_init(&err);
+
+    if (!self) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial data");
+        goto CLEANUP;
+    }
+
+    initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
+    if (!initresult) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to call dumps function");
+        goto CLEANUP;
+    }
+
+CLEANUP:
+
+    // If an error occurred, tell Python.
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+
+    return initresult;
+}
