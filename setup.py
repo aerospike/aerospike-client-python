@@ -383,7 +383,6 @@ setup(
             name="aerospike.exception",
             sources=[
                 'src/main/exception.c',
-                'src/main/conversions.c'
             ],
             # Compile
             include_dirs=include_dirs,
