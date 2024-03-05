@@ -1461,6 +1461,12 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
         as_geojson *gp = as_geojson_fromval(val);
         char *locstr = as_geojson_get(gp);
         PyObject *py_locstr = PyUnicode_FromString(locstr);
+        if (!py_locstr) {
+            // An invalid C string was passed (cannot be parsed into unicode)
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to parse GeoJSON string");
+            return err->code;
+        }
         PyObject *py_loads = AerospikeGeospatial_DoLoads(py_locstr, err);
         Py_DECREF(py_locstr);
         if (err->code != AEROSPIKE_OK) {
