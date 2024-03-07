@@ -229,3 +229,6 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          bool checking_if_records_exist);
 
 bool is_aerospike_helpers_type(PyObject *obj, const char *type_name);
+PyObject *create_aerospike_helpers_type_instance(as_error *error_p,
+                                                 const char *class_name,
+                                                 PyObject *py_arg);

@@ -37,6 +37,7 @@
 #include <aerospike/as_double.h>
 #include <aerospike/as_record_iterator.h>
 #include <aerospike/as_msgpack_ext.h>
+#include <aerospike/as_cluster.h>
 
 #include "conversions.h"
 #include "geo.h"
@@ -767,6 +768,90 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     }
 
     return err->code;
+}
+
+void as_node_to_py_node(as_error *error_p, struct as_node_s *node,
+                        PyObject *py_node)
+{
+}
+
+void as_cluster_to_py_cluster(as_error *error_p, struct as_cluster_s *cluster,
+                              PyObject *py_cluster)
+{
+    PyObject *py_cluster_name = PyUnicode_FromString(cluster->cluster_name);
+    PyObject_SetAttrString(py_cluster, "cluster_name", py_cluster_name);
+    Py_DECREF(py_cluster_name);
+
+    PyObject *py_invalid_node_count =
+        PyLong_FromLong(cluster->invalid_node_count);
+    PyObject_SetAttrString(py_cluster, "invalid_node_count",
+                           py_invalid_node_count);
+    Py_DECREF(py_invalid_node_count);
+
+    PyObject *py_transaction_count = PyLong_FromLong(cluster->tran_count);
+    PyObject_SetAttrString(py_cluster, "transaction_count",
+                           py_transaction_count);
+    Py_DECREF(py_transaction_count);
+
+    PyObject *py_retry_count = PyLong_FromLong(cluster->retry_count);
+    PyObject_SetAttrString(py_cluster, "retry_count", py_retry_count);
+    Py_DECREF(py_retry_count);
+
+    PyObject *py_node_list = PyList_New(cluster->nodes->size);
+    for (uint32_t i = 0; i < cluster->nodes->size; i++) {
+        PyObject *py_node =
+            create_aerospike_helpers_type_instance(error_p, "Node", NULL);
+        if (!py_node) {
+            return;
+        }
+        as_node_to_py_node(error_p, cluster->nodes->array[i], py_node);
+    }
+}
+
+PyObject *create_aerospike_helpers_type_instance(as_error *error_p,
+                                                 const char *class_name,
+                                                 PyObject *py_arg)
+{
+    PyObject *py_aerospike_helpers_module =
+        PyImport_ImportModule("aerospike_helpers");
+    if (py_aerospike_helpers_module == NULL) {
+        as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
+                        "Unable to import aerospike_helpers module");
+        return NULL;
+    }
+
+    PyObject *py_class =
+        PyObject_GetAttrString(py_aerospike_helpers_module, class_name);
+    if (py_class == NULL) {
+        as_error_update(error_p, AEROSPIKE_ERR,
+                        "Unable to import %s class from "
+                        "aerospike_helpers module",
+                        class_name);
+        goto CLEANUP1;
+    }
+
+    if (!PyCallable_Check(py_class)) {
+        as_error_update(error_p, AEROSPIKE_ERR,
+                        "Unable to create HyperLogLog instance; "
+                        "HyperLogLog class is not callable");
+        goto CLEANUP2;
+    }
+
+    PyObject *py_instance =
+        PyObject_CallFunctionObjArgs(py_class, py_arg, NULL);
+    if (py_instance == NULL) {
+        // An exception has been thrown by calling the HLL constructor
+        // We want to show the original exception instead of throwing our own exception
+        goto CLEANUP2;
+    }
+
+    return py_instance;
+
+CLEANUP2:
+    Py_DECREF(py_class);
+CLEANUP1:
+    Py_DECREF(py_aerospike_helpers_module);
+    return NULL;
 }
 
 bool is_aerospike_helpers_type(PyObject *obj, const char *type_name)

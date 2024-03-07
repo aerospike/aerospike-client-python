@@ -29,6 +29,7 @@
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
 #include <aerospike/as_metrics.h>
+#include <aerospike/as_cluster.h>
 
 #include "conversions.h"
 #include "policy.h"
@@ -1238,14 +1239,73 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     return AEROSPIKE_OK;
 }
 
-as_status enable_listener_wrapper(as_error *err, void *udata)
+#define ENABLE_LISTENER_INDEX 0
+#define DISABLE_LISTENER_INDEX 1
+#define NODE_CLOSE_LISTENER_INDEX 2
+#define SNAPSHOT_LISTENER_INDEX 3
+
+typedef struct {
+    const char *listener_name;
+    PyObject *py_callback;
+} PyListenerData;
+
+as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
+                           PyListenerData py_listener_data[4],
+                           PyObject *py_args)
 {
-    //
+    PyObject *py_result = PyObject_CallObject(
+        py_listener_data[py_listener_data_index].py_callback, py_args);
+    if (!py_result) {
+        // Python callback threw an exception
+        return as_error_update(
+            err, AEROSPIKE_ERR, "Python callback %s threw an exception",
+            py_listener_data[py_listener_data_index].listener_name);
+    }
+
+    Py_DECREF(py_result);
+    return AEROSPIKE_OK;
+}
+
+as_status enable_listener_wrapper(as_error *err, void *py_listener_data)
+{
+    return call_py_callback(err, ENABLE_LISTENER_INDEX, py_listener_data, NULL);
+}
+
+as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
+                                   void *py_listener_data)
+{
+    PyListenerData callbacks[4] = py_listener_data;
+    PyObject *py_args = PyTuple_New(1);
+    if (!py_args) {
+        return as_error_update(
+            err, AEROSPIKE_ERR,
+            "Unable to construct list of arguments for Python callback %s",
+            callbacks[DISABLE_LISTENER_INDEX].listener_name);
+    }
+    PyObject *py_cluster_instance =
+        create_aerospike_helpers_type_instance(err, "Cluster", NULL);
+    if (!py_cluster_instance) {
+        return err->code;
+    }
+
+    return call_py_callback(err, DISABLE_LISTENER_INDEX, callbacks, py_args);
+}
+
+as_status node_close_listener_wrapper(as_error *err, struct as_node_s *node,
+                                      void *py_listener_data)
+{
+    return call_py_callback(err, NODE_CLOSE_LISTENER_INDEX, py_listener_data);
+}
+
+as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
+                                    void *py_listener_data)
+{
+    return call_py_callback(err, SNAPSHOT_LISTENER_INDEX, py_listener_data);
 }
 
 as_status pyobject_to_metricslisteners_instance(as_error *err,
                                                 PyObject *py_metricslisteners,
-                                                as_metrics_listener *listener)
+                                                as_metrics_listeners *listeners)
 {
     if (!is_aerospike_helpers_type(py_metricslisteners, "MetricsListeners")) {
         as_error_update(
@@ -1254,23 +1314,51 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
         return AEROSPIKE_ERR_PARAM;
     }
 
-    PyObject *py_enable_listener =
-        PyObject_GetAttrString(py_metricslisteners, "enable_listener");
-    if (!py_enable_listener) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Unable to fetch enable_listener attribute from "
-                        "MetricsListeners instance");
-        return AEROSPIKE_ERR_PARAM;
-    }
+    PyListenerData py_listener_data[4] = malloc(sizeof(PyListenerData) * 4);
+    py_listener_data[0] = (PyListenerData){
+        "enable_listener",
+        NULL,
+    };
+    py_listener_data[1] = (PyListenerData){
+        "disable_listener",
+        NULL,
+    };
+    py_listener_data[2] = (PyListenerData){
+        "node_close_listener",
+        NULL,
+    };
+    py_listener_data[3] = (PyListenerData){
+        "snapshot_listener",
+        NULL,
+    };
 
-    if (!PyCallable_Check(py_enable_listener)) {
-        as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "MetricsListener.enable_listener attribute must be callable");
-        return AEROSPIKE_ERR_PARAM;
+    for (unsigned long i = 0;
+         sizeof(py_listener_data) / sizeof(py_listener_data[0]); i++) {
+        PyObject *py_listener = PyObject_GetAttrString(
+            py_metricslisteners, py_listener_data[i].listener_name);
+        if (!py_listener) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Unable to fetch %s attribute from "
+                            "MetricsListeners instance",
+                            py_listener_data[i].listener_name);
+            return AEROSPIKE_ERR_PARAM;
+        }
+
+        if (!PyCallable_Check(py_listener)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "MetricsListener.%s attribute must be callable",
+                            py_listener_data[i].listener_name);
+            return AEROSPIKE_ERR_PARAM;
+        }
+
+        py_listener_data[i].py_callback = py_listener;
     }
 
     listeners->enable_listener = enable_listener_wrapper;
+    listeners->disable_listener = disable_listener_wrapper;
+    listeners->node_close_listener = node_close_listener_wrapper;
+    listeners->snapshot_listener = snapshot_listener_wrapper;
+    listeners->udata = py_listener_data;
 }
 
 as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
