@@ -28,6 +28,7 @@
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
+#include <aerospike/as_metrics.h>
 
 #include "conversions.h"
 #include "policy.h"
@@ -1233,6 +1234,70 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     }
 
     as_hll_policy_set_write_flags(hll_policy, flags);
+
+    return AEROSPIKE_OK;
+}
+
+as_status enable_listener_wrapper(as_error *err, void *udata)
+{
+    //
+}
+
+as_status pyobject_to_metricslisteners_instance(as_error *err,
+                                                PyObject *py_metricslisteners)
+{
+    as_metrics_listeners listeners;
+
+    if (!is_aerospike_helpers_type(py_metricslisteners, "MetricsListeners")) {
+        as_error_update(
+            &err, AEROSPIKE_ERR_PARAM,
+            "MetricsPolicy.metrics_listeners must be a MetricsListeners type");
+        return AEROSPIKE_ERR_PARAM;
+    }
+
+    PyObject *py_enable_listener =
+        PyObject_GetAttrString(py_metricslisteners, "enable_listener");
+    if (!py_enable_listener) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Unable to fetch enable_listener attribute from "
+                        "MetricsListeners instance");
+        return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (!PyCallable_Check(py_enable_listener)) {
+        as_error_update(
+            &err, AEROSPIKE_ERR_PARAM,
+            "MetricsListener.enable_listener attribute must be callable");
+        return AEROSPIKE_ERR_PARAM;
+    }
+
+    listeners.enable_listener = enable_listener_wrapper;
+}
+
+as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
+                                     as_metrics_policy *metrics_policy)
+{
+    as_metrics_policy_init(&metrics_policy);
+
+    if (!py_metrics_policy || py_metrics_policy == Py_None) {
+        return AEROSPIKE_OK;
+    }
+
+    if (!is_aerospike_helpers_type(py_metrics_policy, "MetricsPolicy")) {
+        as_error_update(
+            &err, AEROSPIKE_ERR_PARAM,
+            "policy parameter must be an aerospike_helpers.MetricsPolicy type");
+        return AEROSPIKE_ERR_PARAM;
+    }
+
+    PyObject *py_metrics_listeners =
+        PyObject_GetAttrString(py_metrics_policy, "metrics_listeners");
+    if (!py_metrics_listeners) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Unable to fetch metrics_listener attribute from "
+                        "MetricsPolicy instance");
+        return AEROSPIKE_ERR_PARAM;
+    }
 
     return AEROSPIKE_OK;
 }

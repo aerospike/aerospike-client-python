@@ -31,6 +31,7 @@
 #include "exceptions.h"
 #include "tls_config.h"
 #include "policy_config.h"
+#include "metrics.h"
 
 static int set_rack_aware_config(as_config *conf, PyObject *config_dict);
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict);
@@ -343,6 +344,13 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Checks current connection state."},
     {"shm_key", (PyCFunction)AerospikeClient_shm_key,
      METH_VARARGS | METH_KEYWORDS, "Get the shm key of the cluster"},
+
+    // METRICS
+
+    {"enable_metrics", (PyCFunction)AerospikeClient_EnableMetrics,
+     METH_VARARGS | METH_KEYWORDS, NULL},
+    {"disable_metrics", (PyCFunction)AerospikeClient_DisableMetrics,
+     METH_VARARGS | METH_KEYWORDS, NULL},
 
     // ADMIN OPERATIONS
 

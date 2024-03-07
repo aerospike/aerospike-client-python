@@ -769,9 +769,9 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static bool is_aerospike_hll_type(PyObject *obj)
+bool is_aerospike_helpers_type(PyObject *obj, const char *type_name)
 {
-    if (strcmp(obj->ob_type->tp_name, "HyperLogLog")) {
+    if (strcmp(obj->ob_type->tp_name, type_name)) {
         // Class name is not HyperLogLog
         return false;
     }
@@ -870,7 +870,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         }
         *val = (as_val *)bytes;
 
-        if (is_aerospike_hll_type(py_obj)) {
+        if (is_aerospike_helpers_type(py_obj, "HyperLogLog")) {
             bytes->type = AS_BYTES_HLL;
         }
     }
@@ -1079,7 +1079,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 char *str = PyBytes_AsString(value);
                 as_bytes_set(bytes, 0, (const uint8_t *)str, str_len);
 
-                if (is_aerospike_hll_type(value)) {
+                if (is_aerospike_helpers_type(value, "HyperLogLog")) {
                     bytes->type = AS_BYTES_HLL;
                 }
                 ret_val = as_record_set_bytes(rec, name, bytes);
