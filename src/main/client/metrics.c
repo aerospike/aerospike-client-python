@@ -37,7 +37,20 @@ error:
     return NULL;
 }
 
-PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args,
-                                         PyObject *kwargs)
+PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
 {
+    as_error err;
+    as_error_init(&err);
+
+    aerospike_disable_metrics(self->as, &err);
+    if (err.code != AEROSPIKE_OK) {
+        goto error;
+    }
+
+    Py_INCREF(Py_None);
+    return Py_None;
+
+error:
+    raise_exception(&err);
+    return NULL;
 }
