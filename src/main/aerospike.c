@@ -203,17 +203,6 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
     Aerospike_State(aerospike)->kdict = kdict;
 
-    PyTypeObject *cluster = AerospikeCluster_Ready();
-    if (!cluster) {
-        goto CLEANUP;
-    }
-    Py_INCREF(cluster);
-    retval = PyModule_AddObject(aerospike, "Cluster", (PyObject *)cluster);
-    if (retval == -1) {
-        Py_DECREF(cluster);
-        goto CLEANUP;
-    }
-
     /*
 	 * Add constants to module.
 	 */
