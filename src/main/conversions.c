@@ -38,6 +38,7 @@
 #include <aerospike/as_record_iterator.h>
 #include <aerospike/as_msgpack_ext.h>
 #include <aerospike/as_cluster.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "conversions.h"
 #include "geo.h"
@@ -776,6 +777,25 @@ void as_node_to_py_node(as_error *error_p, struct as_node_s *node,
     PyObject *py_name = PyUnicode_FromString(node->name);
     PyObject_SetAttrString(py_node, "name", py_name);
     Py_DECREF(py_name);
+
+    // Get address short name (reused code from C client's metr)
+    as_address *address = as_node_get_address(node);
+    struct sockaddr *addr = (struct sockaddr *)&address->addr;
+    char address_name[AS_IP_ADDRESS_SIZE];
+    as_address_short_name(addr, address_name, sizeof(address_name));
+
+    PyObject *py_address = PyUnicode_FromString(address_name);
+    PyObject_SetAttrString(py_node, "address", py_address);
+    Py_DECREF(py_address);
+
+    uint16_t port = as_address_port(addr);
+    PyObject *py_port = PyLong_FromLong(port);
+    PyObject_SetAttrString(py_node, "port", py_port);
+    Py_DECREF(py_port);
+
+    struct as_conn_stats_s sync;
+    as_conn_stats_init(&sync);
+    as_metrics_get_node_sync_conn_stats(node, &sync);
 }
 
 void as_cluster_to_py_cluster(as_error *error_p, struct as_cluster_s *cluster,
