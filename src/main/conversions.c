@@ -773,6 +773,9 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
 void as_node_to_py_node(as_error *error_p, struct as_node_s *node,
                         PyObject *py_node)
 {
+    PyObject *py_name = PyUnicode_FromString(node->name);
+    PyObject_SetAttrString(py_node, "name", py_name);
+    Py_DECREF(py_name);
 }
 
 void as_cluster_to_py_cluster(as_error *error_p, struct as_cluster_s *cluster,

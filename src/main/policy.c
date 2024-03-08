@@ -34,6 +34,7 @@
 #include "conversions.h"
 #include "policy.h"
 #include "macros.h"
+#include "policy_config.h"
 
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"
@@ -1361,29 +1362,143 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
     listeners->udata = py_listener_data;
 }
 
+#define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
+
+as_status get_uint32_from_class_field(as_error *err, PyObject *py_cls_instance,
+                                      const char *field_name,
+                                      uint32_t *uint32_ptr)
+{
+    PyObject *py_field_value =
+        PyObject_GetAttrString(py_cls_instance, field_name);
+    if (!py_field_value) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               field_name);
+    }
+
+    const char *class_name = py_cls_instance->ob_type->tp_name;
+    if (!PyLong_CheckExact(py_field_value)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s.%s must be an int",
+                               class_name, field_name);
+    }
+
+    long field_value = PyLong_AsLong(py_field_value);
+    if (field_value == -1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "%s.%s must be an unsigned 32-bit integer",
+                               class_name, field_name);
+    }
+
+    if (field_value < 0 || field_value > UINT32_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "%s.%s must be an unsigned 32-bit integer",
+                               class_name, field_name);
+    }
+
+    *uint32_ptr = (uint32_t)field_value;
+    return AEROSPIKE_OK;
+}
+
+as_status get_uint64_from_class_field(as_error *err, PyObject *py_cls_instance,
+                                      const char *field_name,
+                                      uint64_t *uint64_ptr)
+{
+    PyObject *py_field_value =
+        PyObject_GetAttrString(py_cls_instance, field_name);
+    if (!py_field_value) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               field_name);
+    }
+
+    const char *class_name = py_cls_instance->ob_type->tp_name;
+    if (!PyLong_CheckExact(py_field_value)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s.%s must be an int",
+                               class_name, field_name);
+    }
+
+    long long field_value = PyLong_AsLongLong(py_field_value);
+    if (field_value == -1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "%s.%s must be an unsigned 64-bit integer",
+                               class_name, field_name);
+    }
+
+    if (field_value < 0 || field_value > UINT64_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "%s.%s must be an unsigned 64-bit integer",
+                               class_name, field_name);
+    }
+
+    *uint64_ptr = (uint64_t)field_value;
+    return AEROSPIKE_OK;
+}
+
 as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                      as_metrics_policy *metrics_policy)
 {
-    as_metrics_policy_init(&metrics_policy);
+    as_metrics_policy_init(metrics_policy);
 
     if (!py_metrics_policy || py_metrics_policy == Py_None) {
+        // Use default metrics policy
         return AEROSPIKE_OK;
     }
 
     if (!is_aerospike_helpers_type(py_metrics_policy, "MetricsPolicy")) {
-        as_error_update(
+        return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "policy parameter must be an aerospike_helpers.MetricsPolicy type");
-        return AEROSPIKE_ERR_PARAM;
     }
 
     PyObject *py_metrics_listeners =
         PyObject_GetAttrString(py_metrics_policy, "metrics_listeners");
     if (!py_metrics_listeners) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Unable to fetch metrics_listener attribute from "
-                        "MetricsPolicy instance");
-        return AEROSPIKE_ERR_PARAM;
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               "metrics_listener");
+    }
+
+    as_status result = pyobject_to_metricslisteners_instance(
+        err, py_metrics_listeners, &metrics_policy->metrics_listeners);
+    if (result != AEROSPIKE_OK) {
+        return result;
+    }
+
+    PyObject *py_report_dir =
+        PyObject_GetAttrString(py_metrics_policy, "report_dir");
+    if (!py_report_dir) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               "report_dir");
+    }
+    if (!PyUnicode_Check(py_report_dir)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "MetricsPolicy.report_dir must be a str");
+    }
+    const char *report_dir = PyUnicode_AsUTF8(py_report_dir);
+    if (strlen(report_dir) >= sizeof(metrics_policy->report_dir)) {
+        return as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "MetricsPolicy.report_dir must be less than 256 chars");
+    }
+    strcpy(metrics_policy->report_dir, report_dir);
+
+    get_uint64_from_class_field(err, py_metrics_policy, "report_size_limit",
+                                &metrics_policy->report_size_limit);
+    if (err->code != AEROSPIKE_OK) {
+        return err->code;
+    }
+
+    const char *uint32_fields[] = {"interval", "latency_columns",
+                                   "latency_shift"};
+    uint32_t *uint32_ptrs[] = {&metrics_policy->interval,
+                               &metrics_policy->latency_columns,
+                               &metrics_policy->latency_shift};
+    for (unsigned long i = 0;
+         i < sizeof(uint32_fields) / sizeof(uint32_fields[0]); i++) {
+        get_uint32_from_class_field(err, py_metrics_policy, uint32_fields[i],
+                                    uint32_ptrs[i]);
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
+        }
     }
 
     return AEROSPIKE_OK;
