@@ -63,6 +63,13 @@ def add_geo_indexes(connection):
         pass
 
     try:
+        connection.index_map_keys_create(
+            "test", "demo", "geo_loc_mk", aerospike.INDEX_GEO2DSPHERE, "geo_loc_map_key_index"
+        )
+    except (e.IndexFoundError):
+        pass
+
+    try:
         connection.index_map_values_create(
             "test", "demo", "geo_loc_mv", aerospike.INDEX_GEO2DSPHERE, "geo_loc_map_val_index"
         )
@@ -102,12 +109,14 @@ def add_geo_data(connection):
     )
 
     geo_loc_list = [geo_object_polygon]
+    geo_loc_mk = {geo_object_polygon: 1}
     geo_loc_mv = {2: geo_object_polygon}
     connection.put(
         key,
         {
             "loc_polygon": geo_object_polygon,
             "geo_loc_list": geo_loc_list,
+            "geo_loc_mk": geo_loc_mk,
             "geo_loc_mv": geo_loc_mv,
         },
     )
@@ -129,12 +138,14 @@ def add_geo_data(connection):
     )
 
     geo_loc_list = [geo_object_polygon]
+    geo_loc_mk = {geo_object_polygon: 1}
     geo_loc_mv = {2: geo_object_polygon}
     connection.put(
         key,
         {
             "loc_polygon": geo_object_polygon,
             "geo_loc_list": geo_loc_list,
+            "geo_loc_mk": geo_loc_mk,
             "geo_loc_mv": geo_loc_mv,
         },
     )
@@ -168,6 +179,11 @@ def remove_geo_indexes(connection):
 
     try:
         connection.index_remove("test", "geo_loc_list_index")
+    except Exception:
+        pass
+
+    try:
+        connection.index_remove("test", "geo_loc_map_key_index")
     except Exception:
         pass
 
@@ -1050,6 +1066,7 @@ class TestGeospatial(object):
         "bin_name, idx_type",
         (
             ("geo_loc_list", aerospike.INDEX_TYPE_LIST),
+            ("geo_loc_mk", aerospike.INDEX_TYPE_MAPKEYS),
             ("geo_loc_mv", aerospike.INDEX_TYPE_MAPVALUES),
         ),
     )
@@ -1075,6 +1092,7 @@ class TestGeospatial(object):
         "bin_name, idx_type",
         (
             ("geo_loc_list", aerospike.INDEX_TYPE_LIST),
+            ("geo_loc_mk", aerospike.INDEX_TYPE_MAPKEYS),
             ("geo_loc_mv", aerospike.INDEX_TYPE_MAPVALUES),
         ),
     )
