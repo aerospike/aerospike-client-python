@@ -50,12 +50,13 @@ def add_geo_indexes(connection):
     except (e.IndexFoundError):
         pass
 
-    try:
-        connection.index_map_keys_create(
-            "test", "demo", "geo_map_keys", aerospike.INDEX_GEO2DSPHERE, "geo_map_key_index"
-        )
-    except (e.IndexFoundError):
-        pass
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+        try:
+            connection.index_map_keys_create(
+                "test", "demo", "geo_map_keys", aerospike.INDEX_GEO2DSPHERE, "geo_map_key_index"
+            )
+        except (e.IndexFoundError):
+            pass
 
     try:
         connection.index_map_values_create(
@@ -69,12 +70,13 @@ def add_geo_indexes(connection):
     except (e.IndexFoundError):
         pass
 
-    try:
-        connection.index_map_keys_create(
-            "test", "demo", "geo_loc_mk", aerospike.INDEX_GEO2DSPHERE, "geo_loc_map_key_index"
-        )
-    except (e.IndexFoundError):
-        pass
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+        try:
+            connection.index_map_keys_create(
+                "test", "demo", "geo_loc_mk", aerospike.INDEX_GEO2DSPHERE, "geo_loc_map_key_index"
+            )
+        except (e.IndexFoundError):
+            pass
 
     try:
         connection.index_map_values_create(
@@ -94,11 +96,15 @@ def add_geo_data(connection):
         s = "{0}: [-{1}.{2}, {3}.{4}{5}".format(pre, (lng // 10), (lng % 10), (lat // 10), (lat % 10), suf)
         geo_object = aerospike.geojson(s)
         geo_list = [geo_object]
-        geo_map_key = {geo_object: i}
         geo_map_val = {i: geo_object}
         connection.put(
-            key, {"loc": geo_object, "geo_list": geo_list, "geo_map_keys": geo_map_key, "geo_map_vals": geo_map_val}
+            key, {"loc": geo_object, "geo_list": geo_list, "geo_map_vals": geo_map_val}
         )
+        geo_map_key = {geo_object: i}
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+            connection.put(
+                key, {"geo_map_keys": geo_map_key}
+            )
 
     key = ("test", "demo", "polygon")
     geo_object_polygon = aerospike.GeoJSON(
@@ -117,17 +123,24 @@ def add_geo_data(connection):
     )
 
     geo_loc_list = [geo_object_polygon]
-    geo_loc_mk = {geo_object_polygon: 1}
     geo_loc_mv = {2: geo_object_polygon}
     connection.put(
         key,
         {
             "loc_polygon": geo_object_polygon,
             "geo_loc_list": geo_loc_list,
-            "geo_loc_mk": geo_loc_mk,
             "geo_loc_mv": geo_loc_mv,
         },
     )
+
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+        geo_loc_mk = {geo_object_polygon: 1}
+        connection.put(
+            key,
+            {
+                "geo_loc_mk": geo_loc_mk,
+            },
+        )
 
     key = ("test", "demo", "polygon2")
     geo_object_polygon = aerospike.GeoJSON(
@@ -146,17 +159,23 @@ def add_geo_data(connection):
     )
 
     geo_loc_list = [geo_object_polygon]
-    geo_loc_mk = {geo_object_polygon: 1}
     geo_loc_mv = {2: geo_object_polygon}
     connection.put(
         key,
         {
             "loc_polygon": geo_object_polygon,
             "geo_loc_list": geo_loc_list,
-            "geo_loc_mk": geo_loc_mk,
             "geo_loc_mv": geo_loc_mv,
         },
     )
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+        geo_loc_mk = {geo_object_polygon: 1}
+        connection.put(
+            key,
+            {
+                "geo_loc_mk": geo_loc_mk,
+            },
+        )
 
 
 def remove_geo_indexes(connection):
@@ -987,6 +1006,8 @@ class TestGeospatial(object):
         ),
     )
     def test_geospatial_within_radius_pred(self, bin_name, idx_type):
+        if bin_name == "geo_map_keys" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
+            pytest.skip("GeoJSON map keys are no longer supported in server 7.1 and higher")
 
         records = []
         query = self.as_connection.query("test", "demo")
@@ -1011,6 +1032,8 @@ class TestGeospatial(object):
         ),
     )
     def test_geospatial_within_geojson_region_pred(self, bin_name, idx_type):
+        if bin_name == "geo_map_keys" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
+            pytest.skip("GeoJSON map keys are no longer supported in server 7.1 and higher")
 
         records = []
         query = self.as_connection.query("test", "demo")
@@ -1086,6 +1109,8 @@ class TestGeospatial(object):
         ),
     )
     def test_geospatial_contains_point_pred(self, bin_name, idx_type):
+        if bin_name == "geo_loc_mk" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
+            pytest.skip("GeoJSON map keys are no longer supported in server 7.1 and higher")
 
         records = []
         query = self.as_connection.query("test", "demo")
@@ -1112,6 +1137,8 @@ class TestGeospatial(object):
         ),
     )
     def test_geospatial_contains_json_point_pred(self, bin_name, idx_type):
+        if bin_name == "geo_loc_mk" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
+            pytest.skip("GeoJSON map keys are no longer supported in server 7.1 and higher")
 
         records = []
         query = self.as_connection.query("test", "demo")

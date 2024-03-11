@@ -807,7 +807,10 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
 .. data:: POLICY_KEY_SEND
 
-    Send the key in addition to the digest. This policy causes a write operation to store the key on the server
+    Send the key in addition to the digest. This policy causes a write operation to store the key on the server.
+
+    .. note:: This option instructs the server to validate the digest by calculating it again from the key sent by the
+        client. Unless this is the explicit intent of the developer, this should be avoided.
 
 .. _POLICY_REPLICA:
 
