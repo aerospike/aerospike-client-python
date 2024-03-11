@@ -1251,11 +1251,26 @@ typedef struct {
 } PyListenerData;
 
 as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
-                           PyListenerData py_listener_data[4],
-                           PyObject *py_args)
+                           PyListenerData py_listener_data[4], PyObject *py_arg)
 {
+    PyObject *py_args = PyTuple_New(1);
+    if (!py_arg) {
+        return as_error_update(
+            err, AEROSPIKE_ERR,
+            "Unable to construct list of arguments for Python callback %s",
+            py_listener_data[py_listener_data_index].listener_name);
+    }
+    int result = PyTuple_SetItem(py_arg, 0, py_arg);
+    if (result == -1) {
+        PyErr_Clear();
+        return as_error_update(
+            err, AEROSPIKE_ERR,
+            "Unable to pass Python Cluster object to Python callback %s",
+            py_listener_data[DISABLE_LISTENER_INDEX].listener_name);
+    }
+
     PyObject *py_result = PyObject_CallObject(
-        py_listener_data[py_listener_data_index].py_callback, py_args);
+        py_listener_data[py_listener_data_index].py_callback, py_arg);
     if (!py_result) {
         // Python callback threw an exception
         return as_error_update(
@@ -1275,21 +1290,12 @@ as_status enable_listener_wrapper(as_error *err, void *py_listener_data)
 as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                                    void *py_listener_data)
 {
-    PyListenerData callbacks[4] = py_listener_data;
-    PyObject *py_args = PyTuple_New(1);
-    if (!py_args) {
-        return as_error_update(
-            err, AEROSPIKE_ERR,
-            "Unable to construct list of arguments for Python callback %s",
-            callbacks[DISABLE_LISTENER_INDEX].listener_name);
-    }
-    PyObject *py_cluster_instance =
-        create_aerospike_helpers_type_instance(err, "Cluster", NULL);
-    if (!py_cluster_instance) {
+    PyObject *py_cluster = as_cluster_to_py_cluster(err, cluster);
+    if (!py_cluster) {
         return err->code;
     }
-
-    return call_py_callback(err, DISABLE_LISTENER_INDEX, callbacks, py_args);
+    return call_py_callback(err, DISABLE_LISTENER_INDEX, py_listener_data,
+                            py_cluster);
 }
 
 as_status node_close_listener_wrapper(as_error *err, struct as_node_s *node,

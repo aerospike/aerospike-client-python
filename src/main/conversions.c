@@ -882,9 +882,15 @@ error:
     return NULL;
 }
 
-void as_cluster_to_py_cluster(as_error *error_p, struct as_cluster_s *cluster,
-                              PyObject *py_cluster)
+PyObject *as_cluster_to_py_cluster(as_error *error_p,
+                                   struct as_cluster_s *cluster)
 {
+    PyObject *py_cluster =
+        create_aerospike_helpers_type_instance(error_p, "Cluster", NULL);
+    if (!py_cluster) {
+        return NULL;
+    }
+
     PyObject *py_cluster_name = PyUnicode_FromString(cluster->cluster_name);
     PyObject_SetAttrString(py_cluster, "cluster_name", py_cluster_name);
     Py_DECREF(py_cluster_name);
