@@ -1286,11 +1286,20 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
     return AEROSPIKE_OK;
 }
 
+// This is called by
+// client.enable_metrics() -> aerospike_enable_metrics() -> as_cluster_enable_metrics()
+// While client.enable_metrics() is called, the GIL is already held
+// So we don't need to ensure it is locked
 as_status enable_listener_wrapper(as_error *err, void *py_listener_data)
 {
     return call_py_callback(err, ENABLE_LISTENER_INDEX, py_listener_data, NULL);
 }
 
+// This is called by
+// 1. client.disable_metrics() -> aerospike_disable_metrics() -> as_cluster_disable_metrics()
+// 2. client.enable_metrics() -> aerospike_enable_metrics() -> as_cluster_enable_metrics()
+// In both scenarios, the GIL is held
+// So we don't need to ensure it is locked
 as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                                    void *py_listener_data)
 {
@@ -1302,26 +1311,36 @@ as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                             py_cluster);
 }
 
+// This is called by
+// as_cluster_tend() -> as_cluster_remove_nodes()
+// This is called by the C client's tend thread, so we need to make sure the GIL is held
 as_status node_close_listener_wrapper(as_error *err, struct as_node_s *node,
                                       void *py_listener_data)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
     PyObject *py_node = as_node_to_py_node(err, node);
     if (!py_node) {
         return err->code;
     }
     return call_py_callback(err, NODE_CLOSE_LISTENER_INDEX, py_listener_data,
                             py_node);
+    PyGILState_Release(state);
 }
 
+// This is called by
+// as_cluster_tend() -> as_cluster_manage()
+// This is called by the C client's tend thread, so we need to make sure the GIL is held
 as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                                     void *py_listener_data)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
     PyObject *py_cluster = as_cluster_to_py_cluster(err, cluster);
     if (!py_cluster) {
         return err->code;
     }
     return call_py_callback(err, SNAPSHOT_LISTENER_INDEX, py_listener_data,
                             py_cluster);
+    PyGILState_Release(state);
 }
 
 as_status pyobject_to_metricslisteners_instance(as_error *err,
