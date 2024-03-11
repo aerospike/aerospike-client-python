@@ -70,6 +70,10 @@ The following table shows which Python types map directly to Aerospike server ty
 It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list
 as a value.
 
+.. note::
+
+    For server 7.1 and higher, map keys can only be of type string, bytes, and integer.
+
 .. _integer: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#integer
 .. _string: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#string
 .. _double: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#double
