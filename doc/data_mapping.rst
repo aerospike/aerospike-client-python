@@ -62,6 +62,8 @@ The following table shows which Python types map directly to Aerospike server ty
   :class:`aerospike_helpers.HyperLogLog`   `HyperLogLog`_
  ======================================== =========================
 
+For server 7.1 and higher, map keys can only be of type string, bytes, and integer.
+
 .. note::
 
     :ref:`KeyOrderedDict <aerospike.KeyOrderedDict>` is a special case. Like :class:`dict`, :class:`~aerospike.KeyOrderedDict` maps to the Aerospike map data type. \
@@ -69,10 +71,6 @@ The following table shows which Python types map directly to Aerospike server ty
 
 It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list
 as a value.
-
-.. note::
-
-    For server 7.1 and higher, map keys can only be of type string, bytes, and integer.
 
 .. _integer: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#integer
 .. _string: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#string
