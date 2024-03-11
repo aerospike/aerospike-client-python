@@ -230,6 +230,7 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
 
 PyObject *as_cluster_to_py_cluster(as_error *error_p,
                                    struct as_cluster_s *cluster);
+PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node);
 
 bool is_aerospike_helpers_type(PyObject *obj, const char *type_name);
 PyObject *create_aerospike_helpers_type_instance(as_error *error_p,

@@ -1251,26 +1251,30 @@ typedef struct {
 } PyListenerData;
 
 as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
-                           PyListenerData py_listener_data[4], PyObject *py_arg)
+                           void *udata, PyObject *py_arg)
 {
-    PyObject *py_args = PyTuple_New(1);
-    if (!py_arg) {
-        return as_error_update(
-            err, AEROSPIKE_ERR,
-            "Unable to construct list of arguments for Python callback %s",
-            py_listener_data[py_listener_data_index].listener_name);
-    }
-    int result = PyTuple_SetItem(py_arg, 0, py_arg);
-    if (result == -1) {
-        PyErr_Clear();
-        return as_error_update(
-            err, AEROSPIKE_ERR,
-            "Unable to pass Python Cluster object to Python callback %s",
-            py_listener_data[DISABLE_LISTENER_INDEX].listener_name);
+    PyListenerData py_listener_data[4] = (PyListenerData *)udata;
+    PyObject *py_args = NULL;
+    if (py_arg) {
+        py_args = PyTuple_New(1);
+        if (!py_args) {
+            return as_error_update(
+                err, AEROSPIKE_ERR,
+                "Unable to construct list of arguments for Python callback %s",
+                py_listener_data[py_listener_data_index].listener_name);
+        }
+        int result = PyTuple_SetItem(py_arg, 0, py_arg);
+        if (result == -1) {
+            PyErr_Clear();
+            return as_error_update(
+                err, AEROSPIKE_ERR,
+                "Unable to pass Python Cluster object to Python callback %s",
+                py_listener_data[py_listener_data_index].listener_name);
+        }
     }
 
     PyObject *py_result = PyObject_CallObject(
-        py_listener_data[py_listener_data_index].py_callback, py_arg);
+        py_listener_data[py_listener_data_index].py_callback, py_args);
     if (!py_result) {
         // Python callback threw an exception
         return as_error_update(
@@ -1301,13 +1305,23 @@ as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
 as_status node_close_listener_wrapper(as_error *err, struct as_node_s *node,
                                       void *py_listener_data)
 {
-    return call_py_callback(err, NODE_CLOSE_LISTENER_INDEX, py_listener_data);
+    PyObject *py_node = as_node_to_py_node(err, node);
+    if (!py_node) {
+        return err->code;
+    }
+    return call_py_callback(err, NODE_CLOSE_LISTENER_INDEX, py_listener_data,
+                            py_node);
 }
 
 as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                                     void *py_listener_data)
 {
-    return call_py_callback(err, SNAPSHOT_LISTENER_INDEX, py_listener_data);
+    PyObject *py_cluster = as_cluster_to_py_cluster(err, cluster);
+    if (!py_cluster) {
+        return err->code;
+    }
+    return call_py_callback(err, SNAPSHOT_LISTENER_INDEX, py_listener_data,
+                            py_cluster);
 }
 
 as_status pyobject_to_metricslisteners_instance(as_error *err,
