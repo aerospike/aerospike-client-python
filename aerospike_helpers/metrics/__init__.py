@@ -5,6 +5,14 @@ class ConnectionStats:
     closed: int
 
 
+class NodeMetrics:
+    conn_latency: list[int]
+    write_latency: list[int]
+    read_latency: list[int]
+    batch_latency: list[int]
+    query_latency: list[int]
+
+
 class Node:
     name: str
     address: str
@@ -12,7 +20,7 @@ class Node:
     conns: ConnectionStats
     error_count: int
     timeout_count: int
-    buckets: list[int]
+    metrics: NodeMetrics
 
 
 class Cluster:

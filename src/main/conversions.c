@@ -771,8 +771,36 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-void as_node_to_py_node(as_error *error_p, struct as_node_s *node,
-                        PyObject *py_node)
+as_status as_conn_stats_to_py_conn_stats(as_error *error_p,
+                                         struct as_conn_stats_s *stats,
+                                         PyObject *py_connstats)
+{
+    const char *field_names[] = {"in_use", "in_pool", "opened", "closed"};
+    uint32_t conn_stats[] = {stats->in_use, stats->in_pool, stats->opened,
+                             stats->closed};
+    for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
+         i++) {
+        PyObject *py_value = PyLong_FromLong(conn_stats[i]);
+        if (!py_value) {
+            return as_error_update(error_p, AEROSPIKE_ERR,
+                                   "Unable to get ConnectionStats field %s",
+                                   field_names[i]);
+        }
+        int result =
+            PyObject_SetAttrString(py_connstats, field_names[i], py_value);
+        if (result == -1) {
+            PyErr_Clear();
+            return as_error_update(error_p, AEROSPIKE_ERR,
+                                   "Unable to set ConnectionStats field %s",
+                                   field_names[i]);
+        }
+        Py_DECREF(py_value);
+    }
+    return AEROSPIKE_OK;
+}
+
+as_status as_node_to_py_node(as_error *error_p, struct as_node_s *node,
+                             PyObject *py_node)
 {
     PyObject *py_name = PyUnicode_FromString(node->name);
     PyObject_SetAttrString(py_node, "name", py_name);
@@ -794,8 +822,51 @@ void as_node_to_py_node(as_error *error_p, struct as_node_s *node,
     Py_DECREF(py_port);
 
     struct as_conn_stats_s sync;
-    as_conn_stats_init(&sync);
-    as_metrics_get_node_sync_conn_stats(node, &sync);
+    aerospike_node_stats(node, &sync);
+    PyObject *py_connstats = PyObject_GetAttrString(py_node, "conns");
+    if (!py_connstats) {
+        return as_error_update(
+            error_p, AEROSPIKE_ERR,
+            "Unable to retrieve conns attribute from Node instance");
+    }
+    as_status result =
+        as_conn_stats_to_py_conn_stats(error_p, &sync, py_connstats);
+    if (result != AEROSPIKE_OK) {
+        return result;
+    }
+
+    PyObject *py_error_count = PyLong_FromLong(node->error_count);
+    PyObject_SetAttrString(py_node, "error_count", py_error_count);
+    Py_DECREF(py_error_count);
+
+    PyObject *py_timeout_count = PyLong_FromLong(node->timeout_count);
+    PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
+    Py_DECREF(py_timeout_count);
+
+    PyObject *py_metrics = PyObject_GetAttrString(py_node, "metrics");
+    if (!py_metrics) {
+        return as_error_update(
+            error_p, AEROSPIKE_ERR,
+            "Unable to retrieve conns attribute from Node instance");
+    }
+    as_status result =
+        as_conn_stats_to_py_conn_stats(error_p, &sync, py_connstats);
+    if (result != AEROSPIKE_OK) {
+        return result;
+    }
+    as_node_metrics *node_metrics = node->metrics;
+    uint32_t max = AS_LATENCY_TYPE_NONE;
+    for (uint32_t i = 0; i < max; i++) {
+        PyObject *py_buckets = PyList_New(0);
+        // Get latency buckets for a latency type
+        as_latency_buckets *buckets = &node_metrics->latency[i];
+        uint32_t bucket_max = buckets->latency_columns;
+        for (uint32_t j = 0; j < bucket_max; j++) {
+            uint64_t bucket = as_latency_get_bucket(buckets, j);
+            PyObject *py_bucket = PyLong_FromLong(bucket);
+            PyList_Append(py_buckets, py_bucket);
+        }
+    }
 }
 
 void as_cluster_to_py_cluster(as_error *error_p, struct as_cluster_s *cluster,
