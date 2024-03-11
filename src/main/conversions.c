@@ -799,9 +799,14 @@ as_status as_conn_stats_to_py_conn_stats(as_error *error_p,
     return AEROSPIKE_OK;
 }
 
-as_status as_node_to_py_node(as_error *error_p, struct as_node_s *node,
-                             PyObject *py_node)
+PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
 {
+    PyObject *py_node =
+        create_aerospike_helpers_type_instance(error_p, "Node", NULL);
+    if (!py_node) {
+        return NULL;
+    }
+
     PyObject *py_name = PyUnicode_FromString(node->name);
     PyObject_SetAttrString(py_node, "name", py_name);
     Py_DECREF(py_name);
@@ -825,14 +830,15 @@ as_status as_node_to_py_node(as_error *error_p, struct as_node_s *node,
     aerospike_node_stats(node, &sync);
     PyObject *py_connstats = PyObject_GetAttrString(py_node, "conns");
     if (!py_connstats) {
-        return as_error_update(
+        as_error_update(
             error_p, AEROSPIKE_ERR,
             "Unable to retrieve conns attribute from Node instance");
+        goto error;
     }
     as_status result =
         as_conn_stats_to_py_conn_stats(error_p, &sync, py_connstats);
     if (result != AEROSPIKE_OK) {
-        return result;
+        goto error;
     }
 
     PyObject *py_error_count = PyLong_FromLong(node->error_count);
@@ -845,15 +851,15 @@ as_status as_node_to_py_node(as_error *error_p, struct as_node_s *node,
 
     PyObject *py_metrics = PyObject_GetAttrString(py_node, "metrics");
     if (!py_metrics) {
-        return as_error_update(
+        as_error_update(
             error_p, AEROSPIKE_ERR,
-            "Unable to retrieve conns attribute from Node instance");
+            "Unable to retrieve metrics attribute from Node instance");
+        goto error;
     }
-    as_status result =
-        as_conn_stats_to_py_conn_stats(error_p, &sync, py_connstats);
-    if (result != AEROSPIKE_OK) {
-        return result;
-    }
+    const char *node_metrics_fields[] = {"conn_latency", "write_latency",
+                                         "read_latency", "batch_latency",
+                                         "query_latency"};
+
     as_node_metrics *node_metrics = node->metrics;
     uint32_t max = AS_LATENCY_TYPE_NONE;
     for (uint32_t i = 0; i < max; i++) {
@@ -866,7 +872,14 @@ as_status as_node_to_py_node(as_error *error_p, struct as_node_s *node,
             PyObject *py_bucket = PyLong_FromLong(bucket);
             PyList_Append(py_buckets, py_bucket);
         }
+        PyObject_SetAttrString(py_metrics, node_metrics_fields[i], py_buckets);
+        Py_DECREF(py_buckets);
     }
+
+    return py_node;
+error:
+    Py_DECREF(py_node);
+    return NULL;
 }
 
 void as_cluster_to_py_cluster(as_error *error_p, struct as_cluster_s *cluster,
@@ -894,11 +907,10 @@ void as_cluster_to_py_cluster(as_error *error_p, struct as_cluster_s *cluster,
     PyObject *py_node_list = PyList_New(cluster->nodes->size);
     for (uint32_t i = 0; i < cluster->nodes->size; i++) {
         PyObject *py_node =
-            create_aerospike_helpers_type_instance(error_p, "Node", NULL);
+            as_node_to_py_node(error_p, cluster->nodes->array[i]);
         if (!py_node) {
             return;
         }
-        as_node_to_py_node(error_p, cluster->nodes->array[i], py_node);
     }
 }
 
