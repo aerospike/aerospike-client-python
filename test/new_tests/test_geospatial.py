@@ -50,6 +50,14 @@ def add_geo_indexes(connection):
     except (e.IndexFoundError):
         pass
 
+    if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+        try:
+            connection.index_map_keys_create(
+                "test", "demo", "geo_map_keys", aerospike.INDEX_GEO2DSPHERE, "geo_map_key_index"
+            )
+        except (e.IndexFoundError):
+            pass
+
     try:
         connection.index_map_values_create(
             "test", "demo", "geo_map_vals", aerospike.INDEX_GEO2DSPHERE, "geo_map_val_index"
@@ -92,6 +100,11 @@ def add_geo_data(connection):
         connection.put(
             key, {"loc": geo_object, "geo_list": geo_list, "geo_map_vals": geo_map_val}
         )
+        geo_map_key = {geo_object: i}
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+            connection.put(
+                key, {"geo_map_keys": geo_map_key}
+            )
 
     key = ("test", "demo", "polygon")
     geo_object_polygon = aerospike.GeoJSON(
@@ -183,6 +196,11 @@ def remove_geo_indexes(connection):
 
     try:
         connection.index_remove("test", "geo_list_index")
+    except Exception:
+        pass
+
+    try:
+        connection.index_remove("test", "geo_map_key_index")
     except Exception:
         pass
 
@@ -983,10 +1001,13 @@ class TestGeospatial(object):
         "bin_name, idx_type",
         (
             ("geo_list", aerospike.INDEX_TYPE_LIST),
+            ("geo_map_keys", aerospike.INDEX_TYPE_MAPKEYS),
             ("geo_map_vals", aerospike.INDEX_TYPE_MAPVALUES),
         ),
     )
     def test_geospatial_within_radius_pred(self, bin_name, idx_type):
+        if bin_name == "geo_map_keys" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
+            pytest.skip("GeoJSON map keys are no longer supported in server 7.1 and higher")
 
         records = []
         query = self.as_connection.query("test", "demo")
@@ -1006,10 +1027,13 @@ class TestGeospatial(object):
         "bin_name, idx_type",
         (
             ("geo_list", aerospike.INDEX_TYPE_LIST),
+            ("geo_map_keys", aerospike.INDEX_TYPE_MAPKEYS),
             ("geo_map_vals", aerospike.INDEX_TYPE_MAPVALUES),
         ),
     )
     def test_geospatial_within_geojson_region_pred(self, bin_name, idx_type):
+        if bin_name == "geo_map_keys" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
+            pytest.skip("GeoJSON map keys are no longer supported in server 7.1 and higher")
 
         records = []
         query = self.as_connection.query("test", "demo")
