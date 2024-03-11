@@ -29,6 +29,11 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
         goto error;
     }
 
+    aerospike_enable_metrics(self->as, &err, &metrics_policy);
+    if (err.code != AEROSPIKE_OK) {
+        goto error;
+    }
+
     Py_INCREF(Py_None);
     return Py_None;
 
