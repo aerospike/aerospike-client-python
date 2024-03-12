@@ -2392,11 +2392,6 @@ HyperLogLog Policies
             'flags': aerospike.HLL_WRITE_UPDATE_ONLY
         }
 
-.. _aerospike_metrics_policies:
-
-Metrics Policies
-----------------
-
 
 
 Misc
