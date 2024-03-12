@@ -1,14 +1,11 @@
-from typing import Callable
-
-
 class ConnectionStats:
     """
     in_use (int): Connections actively being used in database transactions on this node.
         There can be multiple pools per node. This value is a summary of those pools on this node.
     in_pool (int): Connections residing in pool(s) on this node.
         There can be multiple pools per node. This value is a summary of those pools on this node.
-    opened (int):
-    closed (int):
+    opened (int): Total number of node connections opened since node creation.
+    closed (int): Total number of node connections closed since node creation.
     """
     pass
 
@@ -47,24 +44,56 @@ class Node:
 
 
 class Cluster:
-    cluster_name: str
-    invalid_node_count: int
-    transaction_count: int
-    retry_count: int
-    nodes: list[Node]
+    """Cluster of server nodes.
+
+    Attributes:
+        cluster_name (Optional[str]): Expected cluster name for all nodes. May be :py:obj:`None`.
+        invalid_node_count (int): Count of add node failures in the most recent cluster tend iteration.
+        tran_count (int): Transaction count. The value is cumulative and not reset per metrics interval.
+        retry_count (int): Transaction retry count. There can be multiple retries for a single transaction.
+            The value is cumulative and not reset per metrics interval.
+        nodes (list[:py:class:`Node`]): Active nodes in cluster.
+    """
+    pass
 
 
 class MetricsListeners:
-    enable_listener: Callable[[], None]
-    snapshot_listener: Callable[[Cluster], None]
-    node_close_listener: Callable[[Node], None]
-    disable_listener: Callable[[Cluster], None]
+    """Metrics listener callbacks.
+
+    Attributes:
+        enable_listener (Callable[[], None]): Periodic extended metrics has been enabled for the given cluster.
+        snapshot_listener (Callable[[Cluster], None]): A metrics snapshot has been requested for the given cluster.
+        node_close_listener (Callable[[Node], None]): A node is being dropped from the cluster.
+        disable_listener (Callable[[Cluster], None]): Periodic extended metrics has been disabled for the given cluster.
+    """
+    pass
 
 
 class MetricsPolicy:
-    metrics_listeners: MetricsListeners
-    report_dir: str
-    report_size_limit: int
-    interval: int
-    latency_columns: int
-    latency_shift: int
+    """
+    metrics_listeners (:py:class:`MetricsListeners`): Listeners that handles metrics notification events.
+        The default listener implementation writes the metrics snapshot to a file which will later be read and forwarded
+        to OpenTelemetry by a separate offline application.
+
+        The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
+    report_dir (str): Directory path to write metrics log files for listeners that write logs.
+    report_size_limit (int): Metrics file size soft limit in bytes for listeners that write logs.
+        When report_size_limit is reached or exceeded, the current metrics file is closed and a new
+        metrics file is created with a new timestamp. If report_size_limit is zero, the metrics file
+        size is unbounded and the file will only be closed when :py:meth:`~aerospike.Client.disable_metrics` or
+        :py:meth:`~aerospike.Client.close()` is called.
+    interval (int): Number of cluster tend iterations between metrics notification events. One tend iteration
+        is defined as `"tend_interval"` in the client config plus the time to tend all nodes.
+    latency_columns (int): Number of elapsed time range buckets in latency histograms.
+    latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
+        The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
+
+        Example::
+
+            # latencyColumns=7 latencyShift=1
+            # <=1ms >1ms >2ms >4ms >8ms >16ms >32ms
+
+            # latencyColumns=5 latencyShift=3
+            # <=1ms >1ms >8ms >64ms >512ms
+    """
+    pass
