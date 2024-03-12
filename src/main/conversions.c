@@ -77,6 +77,11 @@ as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
     *py_file = PyDict_New();
 
     PyObject *py_name = PyUnicode_FromString(entry->name);
+    if (!py_name) {
+        Py_XDECREF(py_file);
+        return as_error_update(err, AEROSPIKE_ERR,
+                               "Unable to parse UDF file name");
+    }
     PyDict_SetItemString(*py_file, "name", py_name);
     Py_DECREF(py_name);
 
@@ -178,6 +183,11 @@ as_status as_user_array_to_pyobject(as_error *err, as_user **users,
     for (i = 0; i < users_size; i++) {
 
         PyObject *py_user = PyUnicode_FromString(users[i]->name);
+        if (!py_user) {
+            Py_XDECREF(py_users);
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   "Unable to parse user name at index %d", i);
+        }
         PyObject *py_roles = PyList_New(0);
         str_array_of_roles_to_py_list(err, users[i]->roles_size,
                                       users[i]->roles, py_roles);
@@ -296,6 +306,11 @@ as_status as_role_array_to_pyobject_old(as_error *err, as_role **roles,
     for (i = 0; i < roles_size; i++) {
 
         PyObject *py_role = PyUnicode_FromString(roles[i]->name);
+        if (!py_role) {
+            Py_XDECREF(py_roles);
+            return as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                                   "Unable to parse role name at index %d", i);
+        }
         PyObject *py_privileges = PyList_New(0);
 
         as_privilege_to_pyobject(err, roles[i]->privileges, py_privileges,
@@ -630,7 +645,18 @@ as_status as_privilege_to_pyobject(as_error *err, as_privilege privileges[],
     PyObject *py_code = NULL;
     for (int i = 0; i < privilege_size; i++) {
         py_ns = PyUnicode_FromString(privileges[i].ns);
+        if (!py_ns) {
+            return as_error_update(
+                err, AEROSPIKE_ERR,
+                "Unable to parse namespace for privilege at index %d", i);
+        }
         py_set = PyUnicode_FromString(privileges[i].set);
+        if (!py_set) {
+            Py_DECREF(py_ns);
+            return as_error_update(
+                err, AEROSPIKE_ERR,
+                "Unable to parse set for privilege at index %d", i);
+        }
         py_code = PyLong_FromLong(privileges[i].code);
 
         PyObject *py_privilege = PyDict_New();
