@@ -1359,8 +1359,9 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
         return AEROSPIKE_ERR_PARAM;
     }
 
+    const int num_listeners = 4;
     PyListenerData *py_listener_data =
-        (PyListenerData *)malloc(sizeof(PyListenerData) * 4);
+        (PyListenerData *)malloc(sizeof(PyListenerData) * num_listeners);
     py_listener_data[0] = (PyListenerData){
         "enable_listener",
         NULL,
@@ -1379,7 +1380,8 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
     };
 
     for (unsigned long i = 0;
-         sizeof(py_listener_data) / sizeof(py_listener_data[0]); i++) {
+         sizeof(PyObject *) * num_listeners / sizeof(py_listener_data[0]);
+         i++) {
         PyObject *py_listener = PyObject_GetAttrString(
             py_metricslisteners, py_listener_data[i].listener_name);
         if (!py_listener) {
