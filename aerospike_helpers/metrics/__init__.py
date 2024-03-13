@@ -1,3 +1,6 @@
+from typing import Optional, Callable
+
+
 class ConnectionStats:
     """
     in_use (int): Connections actively being used in database transactions on this node.
@@ -66,7 +69,17 @@ class MetricsListeners:
         node_close_listener (Callable[[Node], None]): A node is being dropped from the cluster.
         disable_listener (Callable[[Cluster], None]): Periodic extended metrics has been disabled for the given cluster.
     """
-    pass
+    def __init__(
+            self,
+            enable_listener: Callable[[], None],
+            snapshot_listener: Callable[[Cluster], None],
+            node_close_listener: Callable[[Node], None],
+            disable_listener: Callable[[Cluster], None]
+    ):
+        self.enable_listener = enable_listener
+        self.snapshot_listener = snapshot_listener
+        self.node_close_listener = node_close_listener
+        self.disable_listener = disable_listener
 
 
 class MetricsPolicy:
@@ -96,4 +109,18 @@ class MetricsPolicy:
             # latencyColumns=5 latencyShift=3
             # <=1ms >1ms >8ms >64ms >512ms
     """
-    pass
+    def __init__(
+            self,
+            metrics_listeners: Optional[MetricsListeners] = None,
+            report_dir: str = ".",
+            report_size_limit: int = 0,
+            interval: int = 30,
+            latency_columns: int = 7,
+            latency_shift: int = 1
+    ):
+        self.metrics_listeners = metrics_listeners
+        self.report_dir = report_dir
+        self.report_size_limit = report_size_limit
+        self.interval = interval
+        self.latency_columns = latency_columns
+        self.latency_shift = latency_shift
