@@ -1471,7 +1471,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
     }
     unsigned long long report_size_limit =
         PyLong_AsUnsignedLongLong(py_report_size_limit);
-    if (report_size_limit == -1 && PyErr_Occurred()) {
+    if (report_size_limit == (unsigned long long)-1 && PyErr_Occurred()) {
         PyErr_Clear();
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "MetricsPolicy.report_size_limit must be an "
@@ -1507,7 +1507,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
         }
 
         unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
-        if (field_value == -1 && PyErr_Occurred()) {
+        if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
             PyErr_Clear();
             return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
