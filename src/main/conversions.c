@@ -1006,8 +1006,9 @@ bool is_pyobj_type_in_aerospike_helpers(PyObject *obj, const char *type_name)
     }
 
     const char *module_name = PyUnicode_AsUTF8(py_module_name);
+    char *module_name_cpy = strdup(module_name);
     const char *delimiters = ".";
-    char *token = strtok(module_name, delimiters);
+    char *token = strtok(module_name_cpy, delimiters);
     if (strcmp(token, "aerospike_helpers")) {
         // Class does not belong in aerospike_helpers or any of its submodules
         retval = false;
@@ -1015,6 +1016,7 @@ bool is_pyobj_type_in_aerospike_helpers(PyObject *obj, const char *type_name)
     }
 
 CLEANUP:
+    free(module_name_cpy);
     Py_DECREF(py_module_name);
     return retval;
 }
