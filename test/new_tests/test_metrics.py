@@ -1,21 +1,32 @@
-from aerospike import Client
+from aerospike import exception as e
 from aerospike_helpers.metrics import MetricsPolicy, MetricsListeners, Cluster, Node
 import pytest
+import os
 
 
 class TestMetrics:
-    def test_enable_metrics(self, as_connection: Client):
-        as_connection.enable_metrics()
+    # @pytest.fixture(scope="class")
+    # def metrics_cleanup(self):
+    #     yield
+    #     os.remove()
 
-    def test_enable_metrics_invalid_args(self, as_connection: Client):
+    def test_enable_metrics(self):
+        retval = self.as_connection.enable_metrics()
+        assert retval is None
+
+        os.remove("./metrics-*.log")
+
+    def test_enable_metrics_invalid_args(self):
         with pytest.raises(TypeError):
-            as_connection.enable_metrics(1)
+            self.as_connection.enable_metrics(1)
 
-    def test_enable_metrics_with_default_metrics_policy(self, as_connection: Client):
-        policy = MetricsPolicy()
-        as_connection.enable_metrics(policy=policy)
+    def test_enable_metrics_with_default_metrics_policy(self):
+        self.policy = MetricsPolicy()
+        self.as_connection.enable_metrics(policy=self.policy)
 
-    def test_enable_metrics_with_metrics_policy_custom_settings(self, as_connection: Client):
+        os.remove("./metrics-*.log")
+
+    def test_enable_metrics_with_metrics_policy_custom_settings(self):
         def enable():
             pass
 
@@ -34,7 +45,7 @@ class TestMetrics:
             node_close_listener=node_close,
             snapshot_listener=snapshot
         )
-        policy = MetricsPolicy(
+        self.policy = MetricsPolicy(
             metrics_listeners=listeners,
             report_dir="./metrics-logs",
             report_size_limit=1000,
@@ -42,4 +53,24 @@ class TestMetrics:
             latency_columns=5,
             latency_shift=2
         )
-        as_connection.enable_metrics(policy=policy)
+        self.as_connection.enable_metrics(policy=self.policy)
+
+        # Cleanup
+        os.remove("./metrics-logs")
+
+    @pytest.mark.parametrize(
+        "policy", [
+            MetricsPolicy(metrics_listeners=1),
+            MetricsPolicy(metrics_listeners=MetricsListeners(
+                enable_listener=1
+            )),
+            MetricsPolicy(report_dir=1),
+            MetricsPolicy(report_size_limit=True),
+            MetricsPolicy(interval=True),
+            MetricsPolicy(latency_columns=True),
+            MetricsPolicy(latency_shift=True)
+        ]
+    )
+    def test_enable_metrics_invalid_policy_args(self, policy):
+        with pytest.raises(e.ParamError):
+            self.as_connection.enable_metrics(policy=policy)
