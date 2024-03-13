@@ -1002,7 +1002,7 @@ bool is_pyobj_type_in_aerospike_helpers(PyObject *obj, const char *type_name)
     if (!PyUnicode_Check(py_module_name)) {
         // Invalid module name
         retval = false;
-        goto CLEANUP;
+        goto CLEANUP1;
     }
 
     const char *module_name = PyUnicode_AsUTF8(py_module_name);
@@ -1012,11 +1012,12 @@ bool is_pyobj_type_in_aerospike_helpers(PyObject *obj, const char *type_name)
     if (strcmp(token, "aerospike_helpers")) {
         // Class does not belong in aerospike_helpers or any of its submodules
         retval = false;
-        goto CLEANUP;
+        goto CLEANUP2;
     }
 
-CLEANUP:
+CLEANUP2:
     free(module_name_cpy);
+CLEANUP1:
     Py_DECREF(py_module_name);
     return retval;
 }
