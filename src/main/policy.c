@@ -1407,6 +1407,8 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
     listeners->node_close_listener = node_close_listener_wrapper;
     listeners->snapshot_listener = snapshot_listener_wrapper;
     listeners->udata = py_listener_data;
+
+    return AEROSPIKE_OK;
 }
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
