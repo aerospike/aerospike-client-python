@@ -1359,7 +1359,8 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
         return AEROSPIKE_ERR_PARAM;
     }
 
-    PyListenerData py_listener_data[4] = malloc(sizeof(PyListenerData) * 4);
+    PyListenerData *py_listener_data =
+        (PyListenerData *)malloc(sizeof(PyListenerData) * 4);
     py_listener_data[0] = (PyListenerData){
         "enable_listener",
         NULL,
@@ -1466,7 +1467,8 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                "MetricsPolicy.report_size_limit must be an "
                                "unsigned 64-bit integer");
     }
-    long long report_size_limit = PyLong_AsLongLong(py_report_size_limit);
+    unsigned long long report_size_limit =
+        PyLong_AsUnsignedLongLong(py_report_size_limit);
     if (report_size_limit == -1 && PyErr_Occurred()) {
         PyErr_Clear();
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -1502,7 +1504,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                 uint32_fields[i]);
         }
 
-        long field_value = PyLong_AsLong(py_field_value);
+        unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
         if (field_value == -1 && PyErr_Occurred()) {
             PyErr_Clear();
             return as_error_update(
