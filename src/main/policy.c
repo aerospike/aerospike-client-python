@@ -1477,7 +1477,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                "MetricsPolicy.report_size_limit must be an "
                                "unsigned 64-bit integer");
     }
-    if (report_size_limit < 0 || report_size_limit > UINT64_MAX) {
+    if (report_size_limit > UINT64_MAX) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "MetricsPolicy.report_size_limit must be an "
                                "unsigned 64-bit integer");
@@ -1515,7 +1515,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                 uint32_fields[i]);
         }
 
-        if (field_value < 0 || field_value > UINT32_MAX) {
+        if (field_value > UINT32_MAX) {
             return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "MetricsPolicy.%s must be an unsigned 32-bit integer",
