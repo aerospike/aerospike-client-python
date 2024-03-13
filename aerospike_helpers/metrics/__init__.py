@@ -118,7 +118,7 @@ class MetricsPolicy:
     """
     def __init__(
             self,
-            metrics_listeners: Optional[MetricsListeners],
+            metrics_listeners: Optional[MetricsListeners] = None,
             report_dir: str = ".",
             report_size_limit: int = 0,
             interval: int = 30,
