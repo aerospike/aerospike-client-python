@@ -1253,7 +1253,7 @@ typedef struct {
 as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
                            void *udata, PyObject *py_arg)
 {
-    PyListenerData py_listener_data[4] = (PyListenerData *)udata;
+    PyListenerData *py_listener_data = (PyListenerData *)udata;
     PyObject *py_args = NULL;
     if (py_arg) {
         py_args = PyTuple_New(1);
