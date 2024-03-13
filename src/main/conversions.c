@@ -771,10 +771,15 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status as_conn_stats_to_py_conn_stats(as_error *error_p,
-                                         struct as_conn_stats_s *stats,
-                                         PyObject *py_connstats)
+PyObject *as_conn_stats_to_py_conn_stats(as_error *error_p,
+                                         struct as_conn_stats_s *stats)
 {
+    PyObject *py_conn_stats = create_aerospike_helpers_type_instance(
+        error_p, "ConnectionStats", NULL);
+    if (!py_conn_stats) {
+        return NULL;
+    }
+
     const char *field_names[] = {"in_use", "in_pool", "opened", "closed"};
     uint32_t conn_stats[] = {stats->in_use, stats->in_pool, stats->opened,
                              stats->closed};
@@ -782,21 +787,25 @@ as_status as_conn_stats_to_py_conn_stats(as_error *error_p,
          i++) {
         PyObject *py_value = PyLong_FromLong(conn_stats[i]);
         if (!py_value) {
-            return as_error_update(error_p, AEROSPIKE_ERR,
-                                   "Unable to get ConnectionStats field %s",
-                                   field_names[i]);
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to get ConnectionStats field %s",
+                            field_names[i]);
+            goto error;
         }
         int result =
-            PyObject_SetAttrString(py_connstats, field_names[i], py_value);
+            PyObject_SetAttrString(py_conn_stats, field_names[i], py_value);
         if (result == -1) {
             PyErr_Clear();
-            return as_error_update(error_p, AEROSPIKE_ERR,
-                                   "Unable to set ConnectionStats field %s",
-                                   field_names[i]);
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to set ConnectionStats field %s",
+                            field_names[i]);
+            goto error;
         }
         Py_DECREF(py_value);
     }
-    return AEROSPIKE_OK;
+error:
+    Py_DECREF(py_conn_stats);
+    return NULL;
 }
 
 PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
@@ -811,7 +820,7 @@ PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
     PyObject_SetAttrString(py_node, "name", py_name);
     Py_DECREF(py_name);
 
-    // Get address short name (reused code from C client's metr)
+    // Get address short name (reused code from C client's metrics writer code)
     as_address *address = as_node_get_address(node);
     struct sockaddr *addr = (struct sockaddr *)&address->addr;
     char address_name[AS_IP_ADDRESS_SIZE];
@@ -828,18 +837,12 @@ PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
 
     struct as_conn_stats_s sync;
     aerospike_node_stats(node, &sync);
-    PyObject *py_connstats = PyObject_GetAttrString(py_node, "conns");
-    if (!py_connstats) {
-        as_error_update(
-            error_p, AEROSPIKE_ERR,
-            "Unable to retrieve conns attribute from Node instance");
+    PyObject *py_conn_stats = as_conn_stats_to_py_conn_stats(error_p, &sync);
+    if (py_conn_stats == NULL) {
         goto error;
     }
-    as_status result =
-        as_conn_stats_to_py_conn_stats(error_p, &sync, py_connstats);
-    if (result != AEROSPIKE_OK) {
-        goto error;
-    }
+    PyObject_SetAttrString(py_node, "conns", py_conn_stats);
+    Py_DECREF(py_conn_stats);
 
     PyObject *py_error_count = PyLong_FromLong(node->error_count);
     PyObject_SetAttrString(py_node, "error_count", py_error_count);
@@ -849,13 +852,12 @@ PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
     PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
     Py_DECREF(py_timeout_count);
 
-    PyObject *py_metrics = PyObject_GetAttrString(py_node, "metrics");
-    if (!py_metrics) {
-        as_error_update(
-            error_p, AEROSPIKE_ERR,
-            "Unable to retrieve metrics attribute from Node instance");
-        goto error;
+    PyObject *py_node_metrics =
+        create_aerospike_helpers_type_instance(error_p, "NodeMetrics", NULL);
+    if (!py_node_metrics) {
+        return NULL;
     }
+
     const char *node_metrics_fields[] = {"conn_latency", "write_latency",
                                          "read_latency", "batch_latency",
                                          "query_latency"};
@@ -872,9 +874,12 @@ PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
             PyObject *py_bucket = PyLong_FromLong(bucket);
             PyList_Append(py_buckets, py_bucket);
         }
-        PyObject_SetAttrString(py_metrics, node_metrics_fields[i], py_buckets);
+        PyObject_SetAttrString(py_node_metrics, node_metrics_fields[i],
+                               py_buckets);
         Py_DECREF(py_buckets);
     }
+    PyObject_SetAttrString(py_node, "metrics", py_node_metrics);
+    Py_DECREF(py_node_metrics);
 
     return py_node;
 error:

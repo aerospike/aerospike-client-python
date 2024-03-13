@@ -1347,6 +1347,11 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
                                                 PyObject *py_metricslisteners,
                                                 as_metrics_listeners *listeners)
 {
+    if (!py_metricslisteners || py_metricslisteners == Py_None) {
+        // Use default metrics writer callbacks that were set when initializing metrics policy
+        return AEROSPIKE_OK;
+    }
+
     if (!is_aerospike_helpers_type(py_metricslisteners, "MetricsListeners")) {
         as_error_update(
             err, AEROSPIKE_ERR_PARAM,
@@ -1520,6 +1525,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
     }
     strcpy(metrics_policy->report_dir, report_dir);
 
+    // TODO: refactor
     get_uint64_from_class_field(err, py_metrics_policy, "report_size_limit",
                                 &metrics_policy->report_size_limit);
     if (err->code != AEROSPIKE_OK) {

@@ -65,6 +65,8 @@ class Cluster:
 class MetricsListeners:
     """Metrics listener callbacks.
 
+    All callbacks must be set.
+
     Attributes:
         enable_listener (Callable[[], None]): Periodic extended metrics has been enabled for the given cluster.
         snapshot_listener (Callable[[Cluster], None]): A metrics snapshot has been requested for the given cluster.
@@ -88,9 +90,10 @@ class MetricsPolicy:
     """Client periodic metrics configuration.
 
     Attributes:
-        metrics_listeners (:py:class:`MetricsListeners`): Listeners that handles metrics notification events.
-            The default listener implementation writes the metrics snapshot to a file which will later be read and
-            forwarded to OpenTelemetry by a separate offline application.
+        metrics_listeners (Optional[:py:class:`MetricsListeners`]): Listeners that handles metrics notification events.
+            If set to :py:obj:`None`, the default listener implementation will be used, which writes the metrics
+            snapshot to a file which will later be read and forwarded to OpenTelemetry by a separate offline
+            application. Otherwise, use all listeners set in the class instance.
 
             The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
         report_dir (str): Directory path to write metrics log files for listeners that write logs.
@@ -115,7 +118,7 @@ class MetricsPolicy:
     """
     def __init__(
             self,
-            metrics_listeners: Optional[MetricsListeners] = None,
+            metrics_listeners: Optional[MetricsListeners],
             report_dir: str = ".",
             report_size_limit: int = 0,
             interval: int = 30,
