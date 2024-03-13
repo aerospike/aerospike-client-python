@@ -971,6 +971,7 @@ PyObject *create_aerospike_helpers_type_instance(as_error *error_p,
         // We want to show the original exception instead of throwing our own exception
         goto CLEANUP2;
     }
+    Py_XDECREF(py_arg);
 
     return py_instance;
 

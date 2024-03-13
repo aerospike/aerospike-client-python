@@ -489,8 +489,6 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         *retval = create_aerospike_helpers_type_instance(error_p, "HyperLogLog",
                                                          py_bytes);
 
-    HLL_CLEANUP1:
-        Py_DECREF(py_bytes);
         break;
     }
     default: {
