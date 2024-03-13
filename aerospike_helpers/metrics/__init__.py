@@ -2,13 +2,15 @@ from typing import Optional, Callable
 
 
 class ConnectionStats:
-    """
-    in_use (int): Connections actively being used in database transactions on this node.
-        There can be multiple pools per node. This value is a summary of those pools on this node.
-    in_pool (int): Connections residing in pool(s) on this node.
-        There can be multiple pools per node. This value is a summary of those pools on this node.
-    opened (int): Total number of node connections opened since node creation.
-    closed (int): Total number of node connections closed since node creation.
+    """Connection statistics.
+
+    Attributes:
+        in_use (int): Connections actively being used in database transactions on this node.
+            There can be multiple pools per node. This value is a summary of those pools on this node.
+        in_pool (int): Connections residing in pool(s) on this node.
+            There can be multiple pools per node. This value is a summary of those pools on this node.
+        opened (int): Total number of node connections opened since node creation.
+        closed (int): Total number of node connections closed since node creation.
     """
     pass
 
@@ -83,31 +85,33 @@ class MetricsListeners:
 
 
 class MetricsPolicy:
-    """
-    metrics_listeners (:py:class:`MetricsListeners`): Listeners that handles metrics notification events.
-        The default listener implementation writes the metrics snapshot to a file which will later be read and forwarded
-        to OpenTelemetry by a separate offline application.
+    """Client periodic metrics configuration.
 
-        The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
-    report_dir (str): Directory path to write metrics log files for listeners that write logs.
-    report_size_limit (int): Metrics file size soft limit in bytes for listeners that write logs.
-        When report_size_limit is reached or exceeded, the current metrics file is closed and a new
-        metrics file is created with a new timestamp. If report_size_limit is zero, the metrics file
-        size is unbounded and the file will only be closed when :py:meth:`~aerospike.Client.disable_metrics` or
-        :py:meth:`~aerospike.Client.close()` is called.
-    interval (int): Number of cluster tend iterations between metrics notification events. One tend iteration
-        is defined as `"tend_interval"` in the client config plus the time to tend all nodes.
-    latency_columns (int): Number of elapsed time range buckets in latency histograms.
-    latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
-        The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
+    Attributes:
+        metrics_listeners (:py:class:`MetricsListeners`): Listeners that handles metrics notification events.
+            The default listener implementation writes the metrics snapshot to a file which will later be read and
+            forwarded to OpenTelemetry by a separate offline application.
 
-        Example::
+            The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
+        report_dir (str): Directory path to write metrics log files for listeners that write logs.
+        report_size_limit (int): Metrics file size soft limit in bytes for listeners that write logs.
+            When report_size_limit is reached or exceeded, the current metrics file is closed and a new
+            metrics file is created with a new timestamp. If report_size_limit is zero, the metrics file
+            size is unbounded and the file will only be closed when :py:meth:`~aerospike.Client.disable_metrics` or
+            :py:meth:`~aerospike.Client.close()` is called.
+        interval (int): Number of cluster tend iterations between metrics notification events. One tend iteration
+            is defined as `"tend_interval"` in the client config plus the time to tend all nodes.
+        latency_columns (int): Number of elapsed time range buckets in latency histograms.
+        latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
+            The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
 
-            # latencyColumns=7 latencyShift=1
-            # <=1ms >1ms >2ms >4ms >8ms >16ms >32ms
+            Example::
 
-            # latencyColumns=5 latencyShift=3
-            # <=1ms >1ms >8ms >64ms >512ms
+                # latencyColumns=7 latencyShift=1
+                # <=1ms >1ms >2ms >4ms >8ms >16ms >32ms
+
+                # latencyColumns=5 latencyShift=3
+                # <=1ms >1ms >8ms >64ms >512ms
     """
     def __init__(
             self,
