@@ -1352,7 +1352,8 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
         return AEROSPIKE_OK;
     }
 
-    if (!is_aerospike_helpers_type(py_metricslisteners, "MetricsListeners")) {
+    if (!is_pyobj_type_in_aerospike_helpers(py_metricslisteners,
+                                            "MetricsListeners")) {
         as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "MetricsPolicy.metrics_listeners must be a MetricsListeners type");
@@ -1423,7 +1424,8 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
         return AEROSPIKE_OK;
     }
 
-    if (!is_aerospike_helpers_type(py_metrics_policy, "MetricsPolicy")) {
+    if (!is_pyobj_type_in_aerospike_helpers(py_metrics_policy,
+                                            "MetricsPolicy")) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "policy parameter must be an aerospike_helpers.MetricsPolicy type");

@@ -982,10 +982,10 @@ CLEANUP1:
     return NULL;
 }
 
-bool is_aerospike_helpers_type(PyObject *obj, const char *type_name)
+bool is_pyobj_type_in_aerospike_helpers(PyObject *obj, const char *type_name)
 {
     if (strcmp(obj->ob_type->tp_name, type_name)) {
-        // Class name is not HyperLogLog
+        // Expected class name does not match actual class name
         return false;
     }
 
@@ -1006,8 +1006,10 @@ bool is_aerospike_helpers_type(PyObject *obj, const char *type_name)
     }
 
     const char *module_name = PyUnicode_AsUTF8(py_module_name);
-    if (strcmp(module_name, "aerospike_helpers")) {
-        // Class belongs to the wrong module
+    const char *delimiters = ".";
+    char *token = strtok(module_name, delimiters);
+    if (strcmp(token, "aerospike_helpers")) {
+        // Class does not belong in aerospike_helpers or any of its submodules
         retval = false;
         goto CLEANUP;
     }
@@ -1083,7 +1085,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         }
         *val = (as_val *)bytes;
 
-        if (is_aerospike_helpers_type(py_obj, "HyperLogLog")) {
+        if (is_pyobj_type_in_aerospike_helpers(py_obj, "HyperLogLog")) {
             bytes->type = AS_BYTES_HLL;
         }
     }
@@ -1292,7 +1294,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 char *str = PyBytes_AsString(value);
                 as_bytes_set(bytes, 0, (const uint8_t *)str, str_len);
 
-                if (is_aerospike_helpers_type(value, "HyperLogLog")) {
+                if (is_pyobj_type_in_aerospike_helpers(value, "HyperLogLog")) {
                     bytes->type = AS_BYTES_HLL;
                 }
                 ret_val = as_record_set_bytes(rec, name, bytes);
