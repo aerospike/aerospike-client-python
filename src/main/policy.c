@@ -1408,76 +1408,6 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
-as_status get_uint32_from_class_field(as_error *err, PyObject *py_cls_instance,
-                                      const char *field_name,
-                                      uint32_t *uint32_ptr)
-{
-    PyObject *py_field_value =
-        PyObject_GetAttrString(py_cls_instance, field_name);
-    if (!py_field_value) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                               field_name);
-    }
-
-    const char *class_name = py_cls_instance->ob_type->tp_name;
-    if (!PyLong_CheckExact(py_field_value)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s.%s must be an int",
-                               class_name, field_name);
-    }
-
-    long field_value = PyLong_AsLong(py_field_value);
-    if (field_value == -1 && PyErr_Occurred()) {
-        PyErr_Clear();
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s.%s must be an unsigned 32-bit integer",
-                               class_name, field_name);
-    }
-
-    if (field_value < 0 || field_value > UINT32_MAX) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s.%s must be an unsigned 32-bit integer",
-                               class_name, field_name);
-    }
-
-    *uint32_ptr = (uint32_t)field_value;
-    return AEROSPIKE_OK;
-}
-
-as_status get_uint64_from_class_field(as_error *err, PyObject *py_cls_instance,
-                                      const char *field_name,
-                                      uint64_t *uint64_ptr)
-{
-    PyObject *py_field_value =
-        PyObject_GetAttrString(py_cls_instance, field_name);
-    if (!py_field_value) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                               field_name);
-    }
-
-    const char *class_name = py_cls_instance->ob_type->tp_name;
-    if (!PyLong_CheckExact(py_field_value)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s.%s must be an int",
-                               class_name, field_name);
-    }
-
-    long long field_value = PyLong_AsLongLong(py_field_value);
-    if (field_value == -1 && PyErr_Occurred()) {
-        PyErr_Clear();
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s.%s must be an unsigned 64-bit integer",
-                               class_name, field_name);
-    }
-
-    if (field_value < 0 || field_value > UINT64_MAX) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "%s.%s must be an unsigned 64-bit integer",
-                               class_name, field_name);
-    }
-
-    *uint64_ptr = (uint64_t)field_value;
-    return AEROSPIKE_OK;
-}
-
 as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                      as_metrics_policy *metrics_policy)
 {
@@ -1525,12 +1455,31 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
     }
     strcpy(metrics_policy->report_dir, report_dir);
 
-    // TODO: refactor
-    get_uint64_from_class_field(err, py_metrics_policy, "report_size_limit",
-                                &metrics_policy->report_size_limit);
-    if (err->code != AEROSPIKE_OK) {
-        return err->code;
+    PyObject *py_report_size_limit =
+        PyObject_GetAttrString(py_metrics_policy, "report_size_limit");
+    if (!py_report_size_limit) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               "report_size_limit");
     }
+    if (!PyLong_CheckExact(py_report_size_limit)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "MetricsPolicy.report_size_limit must be an "
+                               "unsigned 64-bit integer");
+    }
+    long long report_size_limit = PyLong_AsLongLong(py_report_size_limit);
+    if (report_size_limit == -1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "MetricsPolicy.report_size_limit must be an "
+                               "unsigned 64-bit integer");
+    }
+    if (report_size_limit < 0 || report_size_limit > UINT64_MAX) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "MetricsPolicy.report_size_limit must be an "
+                               "unsigned 64-bit integer");
+    }
+
+    metrics_policy->report_size_limit = (uint64_t)report_size_limit;
 
     const char *uint32_fields[] = {"interval", "latency_columns",
                                    "latency_shift"};
@@ -1539,8 +1488,37 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                &metrics_policy->latency_shift};
     for (unsigned long i = 0;
          i < sizeof(uint32_fields) / sizeof(uint32_fields[0]); i++) {
-        get_uint32_from_class_field(err, py_metrics_policy, uint32_fields[i],
-                                    uint32_ptrs[i]);
+        PyObject *py_field_value =
+            PyObject_GetAttrString(py_metrics_policy, uint32_fields[i]);
+        if (!py_field_value) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                                   uint32_fields[i]);
+        }
+
+        if (!PyLong_CheckExact(py_field_value)) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "MetricsPolicy.%s must be an unsigned 32-bit integer",
+                uint32_fields[i]);
+        }
+
+        long field_value = PyLong_AsLong(py_field_value);
+        if (field_value == -1 && PyErr_Occurred()) {
+            PyErr_Clear();
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "MetricsPolicy.%s must be an unsigned 32-bit integer",
+                uint32_fields[i]);
+        }
+
+        if (field_value < 0 || field_value > UINT32_MAX) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "MetricsPolicy.%s must be an unsigned 32-bit integer",
+                uint32_fields[i]);
+        }
+
+        *uint32_ptrs[i] = (uint32_t)field_value;
         if (err->code != AEROSPIKE_OK) {
             return err->code;
         }
