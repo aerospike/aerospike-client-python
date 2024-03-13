@@ -835,8 +835,9 @@ PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
     PyObject_SetAttrString(py_node, "port", py_port);
     Py_DECREF(py_port);
 
-    struct as_conn_stats_s sync;
-    aerospike_node_stats(node, &sync);
+    as_node_stats node_stats;
+    aerospike_node_stats(node, &node_stats);
+    as_conn_stats *sync = &node_stats.sync;
     PyObject *py_conn_stats = as_conn_stats_to_py_conn_stats(error_p, &sync);
     if (py_conn_stats == NULL) {
         goto error;
