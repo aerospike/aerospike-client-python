@@ -1,7 +1,6 @@
 #include <aerospike/as_metrics.h>
 
 #include "metrics.h"
-#include "types.h"
 #include "conversions.h"
 #include "policy.h"
 
