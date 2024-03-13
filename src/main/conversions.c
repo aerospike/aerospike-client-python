@@ -917,13 +917,22 @@ PyObject *as_cluster_to_py_cluster(as_error *error_p,
     Py_DECREF(py_retry_count);
 
     PyObject *py_node_list = PyList_New(cluster->nodes->size);
+    if (!py_node_list) {
+        goto error;
+    }
+
     for (uint32_t i = 0; i < cluster->nodes->size; i++) {
         PyObject *py_node =
             as_node_to_py_node(error_p, cluster->nodes->array[i]);
         if (!py_node) {
-            return;
+            Py_DECREF(py_node_list);
+            goto error;
         }
     }
+
+error:
+    Py_DECREF(py_cluster);
+    return NULL;
 }
 
 PyObject *create_aerospike_helpers_type_instance(as_error *error_p,
