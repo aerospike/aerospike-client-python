@@ -100,7 +100,7 @@ class MetricsPolicy:
             size is unbounded and the file will only be closed when :py:meth:`~aerospike.Client.disable_metrics` or
             :py:meth:`~aerospike.Client.close()` is called.
         interval (int): Number of cluster tend iterations between metrics notification events. One tend iteration
-            is defined as `"tend_interval"` in the client config plus the time to tend all nodes.
+            is defined as ``"tend_interval"`` in the client config plus the time to tend all nodes.
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
             The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".

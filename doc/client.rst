@@ -1295,7 +1295,7 @@ Metrics
 
         Enable extended periodic cluster and node latency metrics.
 
-        :param :py:class:`~aerospike_helpers.metrics.MetricsPolicy` policy: Optional metrics policy
+        :param MetricsPolicy policy: Optional metrics policy
 
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
