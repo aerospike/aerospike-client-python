@@ -67,13 +67,14 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
     // Initialisation flags
     bool key_initialised = false;
 
     // Initialize error
     as_error_init(&err);
+
+    as_dynamic_pool dynamic_pool;
+    BYTES_POOLS(&dynamic_pool) = NULL;
 
     if (!PyList_Check(py_arglist)) {
         PyErr_SetString(PyExc_TypeError,
@@ -102,7 +103,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     // Convert python list to as_list
-    pyobject_to_list(self, &err, py_arglist, &arglist, &static_pool,
+    pyobject_to_list(self, &err, py_arglist, &arglist, &dynamic_pool,
                      SERIALIZER_PYTHON);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -148,6 +149,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
 CLEANUP:
+
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
     }
@@ -166,7 +168,9 @@ CLEANUP:
     }
     as_list_destroy(arglist);
     as_val_destroy(result);
-
+    if (BYTES_POOLS(&dynamic_pool) != NULL) {
+        pool_destroy(&dynamic_pool, false);
+    }
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
