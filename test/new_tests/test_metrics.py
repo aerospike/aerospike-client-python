@@ -5,16 +5,16 @@ import os
 
 
 class TestMetrics:
-    # @pytest.fixture(scope="class")
-    # def metrics_cleanup(self):
-    #     yield
-    #     os.remove()
+    @pytest.fixture(scope="class")
+    def metrics_cleanup(self):
+        # Set defaults (in case overwritten by a test)
+        self.metrics_log_path = "./metrics-*.log"
+        yield
+        os.remove(self.metrics_log_path)
 
     def test_enable_metrics(self):
         retval = self.as_connection.enable_metrics()
         assert retval is None
-
-        os.remove("./metrics-*.log")
 
     def test_enable_metrics_invalid_args(self):
         with pytest.raises(TypeError):
@@ -23,8 +23,6 @@ class TestMetrics:
     def test_enable_metrics_with_default_metrics_policy(self):
         self.policy = MetricsPolicy()
         self.as_connection.enable_metrics(policy=self.policy)
-
-        os.remove("./metrics-*.log")
 
     def test_enable_metrics_with_metrics_policy_custom_settings(self):
         def enable():
@@ -39,6 +37,8 @@ class TestMetrics:
         def snapshot(cluster: Cluster):
             pass
 
+        self.metrics_log_path = "./metrics-logs"
+
         listeners = MetricsListeners(
             enable_listener=enable,
             disable_listener=disable,
@@ -47,16 +47,13 @@ class TestMetrics:
         )
         self.policy = MetricsPolicy(
             metrics_listeners=listeners,
-            report_dir="./metrics-logs",
+            report_dir=self.metrics_log_path,
             report_size_limit=1000,
             interval=2,
             latency_columns=5,
             latency_shift=2
         )
         self.as_connection.enable_metrics(policy=self.policy)
-
-        # Cleanup
-        os.remove("./metrics-logs")
 
     @pytest.mark.parametrize(
         "policy", [
