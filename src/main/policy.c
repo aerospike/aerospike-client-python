@@ -1287,28 +1287,33 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
 }
 
 // This is called by
-// client.enable_metrics() -> aerospike_enable_metrics() -> as_cluster_enable_metrics()
-// While client.enable_metrics() is called, the GIL is already held
-// So we don't need to ensure it is locked
+// client.enable_metrics() -> release GIL and call aerospike_enable_metrics() -> as_cluster_enable_metrics()
+// We need to reacquire the GIL in this callback
 as_status enable_listener_wrapper(as_error *err, void *py_listener_data)
 {
-    return call_py_callback(err, ENABLE_LISTENER_INDEX, py_listener_data, NULL);
+    PyGILState_STATE state = PyGILState_Ensure();
+    as_status status =
+        call_py_callback(err, ENABLE_LISTENER_INDEX, py_listener_data, NULL);
+    PyGILState_Release(state);
+    return status;
 }
 
-// This is called by
-// 1. client.disable_metrics() -> aerospike_disable_metrics() -> as_cluster_disable_metrics()
-// 2. client.enable_metrics() -> aerospike_enable_metrics() -> as_cluster_enable_metrics()
-// In both scenarios, the GIL is held
-// So we don't need to ensure it is locked
+// This can be called by
+// client.close() -> releases GIL and calls aerospike_close() -> aerospike_disable_metrics()
+// ... -> as_cluster_disable_metrics()
+// Need to ensure GIL is held
 as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                                    void *py_listener_data)
 {
+    PyGILState_STATE state = PyGILState_Ensure();
     PyObject *py_cluster = as_cluster_to_py_cluster(err, cluster);
     if (!py_cluster) {
         return err->code;
     }
-    return call_py_callback(err, DISABLE_LISTENER_INDEX, py_listener_data,
-                            py_cluster);
+    as_status status = call_py_callback(err, DISABLE_LISTENER_INDEX,
+                                        py_listener_data, py_cluster);
+    PyGILState_Release(state);
+    return status;
 }
 
 // This is called by
@@ -1322,9 +1327,10 @@ as_status node_close_listener_wrapper(as_error *err, struct as_node_s *node,
     if (!py_node) {
         return err->code;
     }
-    return call_py_callback(err, NODE_CLOSE_LISTENER_INDEX, py_listener_data,
-                            py_node);
+    as_status status = call_py_callback(err, NODE_CLOSE_LISTENER_INDEX,
+                                        py_listener_data, py_node);
     PyGILState_Release(state);
+    return status;
 }
 
 // This is called by
@@ -1338,9 +1344,10 @@ as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
     if (!py_cluster) {
         return err->code;
     }
-    return call_py_callback(err, SNAPSHOT_LISTENER_INDEX, py_listener_data,
-                            py_cluster);
+    as_status status = call_py_callback(err, SNAPSHOT_LISTENER_INDEX,
+                                        py_listener_data, py_cluster);
     PyGILState_Release(state);
+    return status;
 }
 
 as_status pyobject_to_metricslisteners_instance(as_error *err,
@@ -1381,7 +1388,7 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
     };
 
     for (unsigned long i = 0;
-         sizeof(PyObject *) * num_listeners / sizeof(py_listener_data[0]);
+         i < sizeof(PyObject *) * num_listeners / sizeof(py_listener_data[0]);
          i++) {
         PyObject *py_listener = PyObject_GetAttrString(
             py_metricslisteners, py_listener_data[i].listener_name);
