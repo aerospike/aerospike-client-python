@@ -897,9 +897,14 @@ PyObject *as_cluster_to_py_cluster(as_error *error_p,
         return NULL;
     }
 
-    PyObject *py_cluster_name = PyUnicode_FromString(cluster->cluster_name);
-    PyObject_SetAttrString(py_cluster, "cluster_name", py_cluster_name);
-    Py_DECREF(py_cluster_name);
+    if (cluster->cluster_name) {
+        PyObject *py_cluster_name = PyUnicode_FromString(cluster->cluster_name);
+        PyObject_SetAttrString(py_cluster, "cluster_name", py_cluster_name);
+        Py_DECREF(py_cluster_name);
+    }
+    else {
+        PyObject_SetAttrString(py_cluster, "cluster_name", Py_None);
+    }
 
     PyObject *py_invalid_node_count =
         PyLong_FromLong(cluster->invalid_node_count);
