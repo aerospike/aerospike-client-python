@@ -774,8 +774,8 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
 PyObject *as_conn_stats_to_py_conn_stats(as_error *error_p,
                                          struct as_conn_stats_s *stats)
 {
-    PyObject *py_conn_stats = create_aerospike_helpers_type_instance(
-        error_p, "ConnectionStats", NULL);
+    PyObject *py_conn_stats = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "ConnectionStats", NULL);
     if (!py_conn_stats) {
         return NULL;
     }
@@ -810,8 +810,8 @@ error:
 
 PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
 {
-    PyObject *py_node =
-        create_aerospike_helpers_type_instance(error_p, "Node", NULL);
+    PyObject *py_node = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "Node", NULL);
     if (!py_node) {
         return NULL;
     }
@@ -853,8 +853,8 @@ PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
     PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
     Py_DECREF(py_timeout_count);
 
-    PyObject *py_node_metrics =
-        create_aerospike_helpers_type_instance(error_p, "NodeMetrics", NULL);
+    PyObject *py_node_metrics = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "NodeMetrics", NULL);
     if (!py_node_metrics) {
         return NULL;
     }
@@ -891,8 +891,8 @@ error:
 PyObject *as_cluster_to_py_cluster(as_error *error_p,
                                    struct as_cluster_s *cluster)
 {
-    PyObject *py_cluster =
-        create_aerospike_helpers_type_instance(error_p, "Cluster", NULL);
+    PyObject *py_cluster = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "Cluster", NULL);
     if (!py_cluster) {
         return NULL;
     }
@@ -935,15 +935,15 @@ error:
     return NULL;
 }
 
-PyObject *create_aerospike_helpers_type_instance(as_error *error_p,
-                                                 const char *class_name,
-                                                 PyObject *py_arg)
+PyObject *create_class_instance_from_module(as_error *error_p,
+                                            const char *module_name,
+                                            const char *class_name,
+                                            PyObject *py_arg)
 {
-    PyObject *py_aerospike_helpers_module =
-        PyImport_ImportModule("aerospike_helpers");
+    PyObject *py_aerospike_helpers_module = PyImport_ImportModule(module_name);
     if (py_aerospike_helpers_module == NULL) {
         as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                        "Unable to import aerospike_helpers module");
+                        "Unable to import %s module", module_name);
         return NULL;
     }
 

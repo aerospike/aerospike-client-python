@@ -486,8 +486,8 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                 "Unable to convert C client's as_bytes to Python bytes");
             goto CLEANUP;
         }
-        *retval = create_aerospike_helpers_type_instance(error_p, "HyperLogLog",
-                                                         py_bytes);
+        *retval = create_class_instance_from_module(
+            error_p, "aerospike_helpers", "HyperLogLog", py_bytes);
 
         break;
     }
