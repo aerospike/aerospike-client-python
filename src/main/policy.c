@@ -1380,7 +1380,7 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
     // When a MetricsListeners object is defined with callbacks
     // Pass those Python callbacks to C client "wrapper" callbacks using udata
     // Then in those wrapper callbacks, call those Python callbacks
-    const int num_listeners = 4;
+    const unsigned int num_listeners = 4;
     PyListenerData *py_listener_data =
         (PyListenerData *)malloc(sizeof(PyListenerData) * num_listeners);
     py_listener_data[ENABLE_LISTENER_INDEX] = (PyListenerData){
