@@ -50,8 +50,8 @@ class TestMetrics:
 
         def teardown():
             # Remove all metrics log files
-            self.metrics_log_files = f"{self.metrics_log_folder}/metrics-*.log"
-            for item in glob.glob(self.metrics_log_files):
+            metrics_log_files = f"{self.metrics_log_folder}/metrics-*.log"
+            for item in glob.glob(metrics_log_files):
                 print(f"Removing {item}")
                 os.remove(item)
             # Remove folder containing log files if we used one

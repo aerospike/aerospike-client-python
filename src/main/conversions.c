@@ -971,15 +971,16 @@ PyObject *create_class_instance_from_module(as_error *error_p,
 
     if (!PyCallable_Check(py_class)) {
         as_error_update(error_p, AEROSPIKE_ERR,
-                        "Unable to create HyperLogLog instance; "
-                        "HyperLogLog class is not callable");
+                        "Unable to create %s instance; "
+                        "%s class is not callable",
+                        class_name, class_name);
         goto CLEANUP2;
     }
 
     PyObject *py_instance =
         PyObject_CallFunctionObjArgs(py_class, py_arg, NULL);
     if (py_instance == NULL) {
-        // An exception has been thrown by calling the HLL constructor
+        // An exception has been thrown by calling the constructor
         // We want to show the original exception instead of throwing our own exception
         goto CLEANUP2;
     }
