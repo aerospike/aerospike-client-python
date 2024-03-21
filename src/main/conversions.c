@@ -952,6 +952,7 @@ PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *class_name,
                                             PyObject *py_arg)
 {
+    PyObject *py_instance = NULL;
     PyObject *py_aerospike_helpers_module = PyImport_ImportModule(module_name);
     if (py_aerospike_helpers_module == NULL) {
         as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
@@ -977,22 +978,19 @@ PyObject *create_class_instance_from_module(as_error *error_p,
         goto CLEANUP2;
     }
 
-    PyObject *py_instance =
-        PyObject_CallFunctionObjArgs(py_class, py_arg, NULL);
+    py_instance = PyObject_CallFunctionObjArgs(py_class, py_arg, NULL);
     if (py_instance == NULL) {
         // An exception has been thrown by calling the constructor
         // We want to show the original exception instead of throwing our own exception
         goto CLEANUP2;
     }
-    Py_XDECREF(py_arg);
-
-    return py_instance;
 
 CLEANUP2:
     Py_DECREF(py_class);
 CLEANUP1:
     Py_DECREF(py_aerospike_helpers_module);
-    return NULL;
+
+    return py_instance;
 }
 
 bool is_pyobj_type_in_aerospike_helpers(PyObject *obj, const char *type_name)
