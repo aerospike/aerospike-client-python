@@ -1389,9 +1389,7 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
         NULL,
     };
 
-    for (unsigned long i = 0; i < sizeof(PyListenerData) * num_listeners /
-                                      sizeof(py_listener_data[0]);
-         i++) {
+    for (unsigned int i = 0; i < num_listeners; i++) {
         PyObject *py_listener = PyObject_GetAttrString(
             py_metricslisteners, py_listener_data[i].listener_name);
         if (!py_listener) {
