@@ -1263,7 +1263,7 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
                 "Unable to construct list of arguments for Python callback %s",
                 py_listener_data[py_listener_data_index].listener_name);
         }
-        int result = PyTuple_SetItem(py_arg, 0, py_arg);
+        int result = PyTuple_SetItem(py_args, 0, py_arg);
         if (result == -1) {
             PyErr_Clear();
             return as_error_update(
