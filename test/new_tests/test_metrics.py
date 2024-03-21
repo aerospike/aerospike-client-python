@@ -96,6 +96,18 @@ class TestMetrics:
     def test_enable_metrics_with_valid_arg_types(self, policy):
         self.as_connection.enable_metrics(policy=policy)
 
+    def test_metrics_writer(self):
+        policy = MetricsPolicy(
+            interval=1
+        )
+        self.as_connection.enable_metrics(policy)
+        time.sleep(3)
+        self.as_connection.disable_metrics()
+
+        # A metrics log file should've been created
+        metrics_log_filenames = glob.glob("./metrics-*.log")
+        assert len(metrics_log_filenames) > 0
+
     def test_setting_metrics_policy_custom_settings(self):
         self.metrics_log_folder = "./metrics-logs"
 
