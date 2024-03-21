@@ -76,6 +76,10 @@ PyObject *AerospikeClient_GetExpressionBase64(AerospikeClient *self,
     base64_filter = as_exp_compile_b64(exp_list_p);
 
     py_response = PyUnicode_FromString((const char *)base64_filter);
+    if (!py_response) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to parse base64 string");
+    }
 
 CLEANUP:
 
