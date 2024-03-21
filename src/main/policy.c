@@ -1350,6 +1350,8 @@ as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
     return status;
 }
 
+#define INVALID_ATTR_TYPE_ERROR_MSG "MetricsPolicy.%s must be a %s type"
+
 as_status pyobject_to_metricslisteners_instance(as_error *err,
                                                 PyObject *py_metricslisteners,
                                                 as_metrics_listeners *listeners)
@@ -1361,9 +1363,9 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
 
     if (!is_pyobj_type_in_aerospike_helpers(py_metricslisteners,
                                             "MetricsListeners")) {
-        as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "MetricsPolicy.metrics_listeners must be a MetricsListeners type");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "metrics_listeners",
+                        "aerospike_helpers.metrics.MetricsListeners");
         return AEROSPIKE_ERR_PARAM;
     }
 
@@ -1401,9 +1403,10 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
         }
 
         if (!PyCallable_Check(py_listener)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "MetricsListener.%s attribute must be callable",
-                            py_listener_data[i].listener_name);
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "MetricsPolicy.metrics_listeners.%s must be a callable type",
+                py_listener_data[i].listener_name);
             return AEROSPIKE_ERR_PARAM;
         }
 
@@ -1459,7 +1462,8 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
     }
     if (!PyUnicode_Check(py_report_dir)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "MetricsPolicy.report_dir must be a str");
+                               INVALID_ATTR_TYPE_ERROR_MSG, "report_dir",
+                               "str");
     }
     const char *report_dir = PyUnicode_AsUTF8(py_report_dir);
     if (strlen(report_dir) >= sizeof(metrics_policy->report_dir)) {
@@ -1477,7 +1481,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
     }
     if (!PyLong_CheckExact(py_report_size_limit)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "MetricsPolicy.report_size_limit must be an "
+                               INVALID_ATTR_TYPE_ERROR_MSG, "report_size_limit",
                                "unsigned 64-bit integer");
     }
     unsigned long long report_size_limit =
@@ -1485,12 +1489,12 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
     if (report_size_limit == (unsigned long long)-1 && PyErr_Occurred()) {
         PyErr_Clear();
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "MetricsPolicy.report_size_limit must be an "
+                               INVALID_ATTR_TYPE_ERROR_MSG, "report_size_limit",
                                "unsigned 64-bit integer");
     }
     if (report_size_limit > UINT64_MAX) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "MetricsPolicy.report_size_limit must be an "
+                               INVALID_ATTR_TYPE_ERROR_MSG, "report_size_limit",
                                "unsigned 64-bit integer");
     }
 
@@ -1511,26 +1515,23 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
         }
 
         if (!PyLong_CheckExact(py_field_value)) {
-            return as_error_update(
-                err, AEROSPIKE_ERR_PARAM,
-                "MetricsPolicy.%s must be an unsigned 32-bit integer",
-                uint32_fields[i]);
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   INVALID_ATTR_TYPE_ERROR_MSG,
+                                   uint32_fields[i], "unsigned 32-bit integer");
         }
 
         unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
         if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
             PyErr_Clear();
-            return as_error_update(
-                err, AEROSPIKE_ERR_PARAM,
-                "MetricsPolicy.%s must be an unsigned 32-bit integer",
-                uint32_fields[i]);
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   INVALID_ATTR_TYPE_ERROR_MSG,
+                                   uint32_fields[i], "unsigned 32-bit integer");
         }
 
         if (field_value > UINT32_MAX) {
-            return as_error_update(
-                err, AEROSPIKE_ERR_PARAM,
-                "MetricsPolicy.%s must be an unsigned 32-bit integer",
-                uint32_fields[i]);
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   INVALID_ATTR_TYPE_ERROR_MSG,
+                                   uint32_fields[i], "unsigned 32-bit integer");
         }
 
         *uint32_ptrs[i] = (uint32_t)field_value;

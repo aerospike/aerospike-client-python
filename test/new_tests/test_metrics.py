@@ -67,13 +67,19 @@ class TestMetrics:
         retval = self.as_connection.enable_metrics()
         assert retval is None
 
-    def test_enable_metrics_invalid_args(self):
+    def test_enable_metrics_extra_args(self):
         with pytest.raises(TypeError):
             self.as_connection.enable_metrics(None, 1)
 
-    def test_enable_metrics_with_default_metrics_policy(self):
-        self.policy = MetricsPolicy()
-        self.as_connection.enable_metrics(policy=self.policy)
+    @pytest.mark.parametrize(
+        "policy",
+        [
+            MetricsPolicy(),
+            None
+        ]
+    )
+    def test_enable_metrics_with_valid_arg_types(self, policy):
+        self.as_connection.enable_metrics(policy=policy)
 
     def test_enable_metrics_with_metrics_policy_custom_settings(self):
         self.metrics_log_folder = "./metrics-logs"
@@ -86,7 +92,7 @@ class TestMetrics:
         )
         # Save bucket count for testing later
         bucket_count = 5
-        self.policy = MetricsPolicy(
+        policy = MetricsPolicy(
             metrics_listeners=listeners,
             report_dir=self.metrics_log_folder,
             report_size_limit=1000,
@@ -103,7 +109,7 @@ class TestMetrics:
         assert disable_triggered is False
         assert snapshot_triggered is False
 
-        self.as_connection.enable_metrics(policy=self.policy)
+        self.as_connection.enable_metrics(policy=policy)
         time.sleep(3)
         self.as_connection.disable_metrics()
 
@@ -150,7 +156,7 @@ class TestMetrics:
                     for bucket in buckets:
                         assert type(bucket) == int
 
-    def test_enable_metrics_with_enable_listener_throwing_exception(self):
+    def test_enable_listener_throwing_exception(self):
         listeners = MetricsListeners(
             enable_listener=MyMetricsListeners.enable_throw_exc,
             disable_listener=MyMetricsListeners.disable,
@@ -164,21 +170,58 @@ class TestMetrics:
             self.as_connection.enable_metrics(policy=policy)
 
     @pytest.mark.parametrize(
-        "policy", [
-            MetricsPolicy(metrics_listeners=1),
-            MetricsPolicy(metrics_listeners=MetricsListeners(
-                enable_listener=1,
-                disable_listener=MyMetricsListeners.disable,
-                node_close_listener=MyMetricsListeners.node_close,
-                snapshot_listener=MyMetricsListeners.snapshot
-            )),
-            MetricsPolicy(report_dir=1),
-            MetricsPolicy(report_size_limit=True),
-            MetricsPolicy(interval=True),
-            MetricsPolicy(latency_columns=True),
-            MetricsPolicy(latency_shift=True)
+        "policy, field_name, expected_field_type", [
+            (
+                MetricsPolicy(metrics_listeners=1),
+                "metrics_listeners",
+                "aerospike_helpers.metrics.MetricsListeners"
+            ),
+            (
+                MetricsPolicy(
+                    metrics_listeners=MetricsListeners(
+                        enable_listener=1,
+                        disable_listener=MyMetricsListeners.disable,
+                        node_close_listener=MyMetricsListeners.node_close,
+                        snapshot_listener=MyMetricsListeners.snapshot
+                    )
+                ),
+                "metrics_listeners.enable_listener",
+                "callable"
+            ),
+            (
+                MetricsPolicy(report_dir=1),
+                "report_dir",
+                "str"
+            ),
+            (
+                MetricsPolicy(report_size_limit=True),
+                "report_size_limit",
+                "unsigned 64-bit integer"
+            ),
+            (
+                MetricsPolicy(interval=True),
+                "interval",
+                "unsigned 32-bit integer"
+            ),
+            (
+                MetricsPolicy(latency_columns=True),
+                "latency_columns",
+                "unsigned 32-bit integer"
+            ),
+            (
+                MetricsPolicy(latency_shift=True),
+                "latency_shift",
+                "unsigned 32-bit integer"
+            )
         ]
     )
-    def test_enable_metrics_invalid_policy_args(self, policy):
-        with pytest.raises(e.ParamError):
+    def test_metrics_policy_invalid_args(self, policy, field_name, expected_field_type):
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == f"MetricsPolicy.{field_name} must be a {expected_field_type} type"
+
+    def test_metrics_policy_report_dir_too_long(self):
+        policy = MetricsPolicy(report_dir=str('.' * 257))
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
