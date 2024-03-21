@@ -1370,25 +1370,25 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
     const int num_listeners = 4;
     PyListenerData *py_listener_data =
         (PyListenerData *)malloc(sizeof(PyListenerData) * num_listeners);
-    py_listener_data[0] = (PyListenerData){
+    py_listener_data[ENABLE_LISTENER_INDEX] = (PyListenerData){
         "enable_listener",
         NULL,
     };
-    py_listener_data[1] = (PyListenerData){
+    py_listener_data[DISABLE_LISTENER_INDEX] = (PyListenerData){
         "disable_listener",
         NULL,
     };
-    py_listener_data[2] = (PyListenerData){
+    py_listener_data[NODE_CLOSE_LISTENER_INDEX] = (PyListenerData){
         "node_close_listener",
         NULL,
     };
-    py_listener_data[3] = (PyListenerData){
+    py_listener_data[SNAPSHOT_LISTENER_INDEX] = (PyListenerData){
         "snapshot_listener",
         NULL,
     };
 
-    for (unsigned long i = 0;
-         i < sizeof(PyObject *) * num_listeners / sizeof(py_listener_data[0]);
+    for (unsigned long i = 0; i < sizeof(PyListenerData) * num_listeners /
+                                      sizeof(py_listener_data[0]);
          i++) {
         PyObject *py_listener = PyObject_GetAttrString(
             py_metricslisteners, py_listener_data[i].listener_name);
