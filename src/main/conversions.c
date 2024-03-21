@@ -771,8 +771,8 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-PyObject *as_conn_stats_to_py_conn_stats(as_error *error_p,
-                                         struct as_conn_stats_s *stats)
+PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
+                                                  struct as_conn_stats_s *stats)
 {
     PyObject *py_conn_stats = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "ConnectionStats", NULL);
@@ -803,12 +803,14 @@ PyObject *as_conn_stats_to_py_conn_stats(as_error *error_p,
         }
         Py_DECREF(py_value);
     }
+    return py_conn_stats;
+
 error:
     Py_DECREF(py_conn_stats);
     return NULL;
 }
 
-PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
+PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
 {
     PyObject *py_node = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "Node", NULL);
@@ -838,7 +840,8 @@ PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node)
     as_node_stats node_stats;
     aerospike_node_stats(node, &node_stats);
     as_conn_stats *sync = &node_stats.sync;
-    PyObject *py_conn_stats = as_conn_stats_to_py_conn_stats(error_p, sync);
+    PyObject *py_conn_stats =
+        create_py_conn_stats_from_as_conn_stats(error_p, sync);
     if (py_conn_stats == NULL) {
         goto error;
     }
@@ -888,8 +891,8 @@ error:
     return NULL;
 }
 
-PyObject *as_cluster_to_py_cluster(as_error *error_p,
-                                   struct as_cluster_s *cluster)
+PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
+                                            struct as_cluster_s *cluster)
 {
     PyObject *py_cluster = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "Cluster", NULL);
@@ -928,12 +931,14 @@ PyObject *as_cluster_to_py_cluster(as_error *error_p,
 
     for (uint32_t i = 0; i < cluster->nodes->size; i++) {
         PyObject *py_node =
-            as_node_to_py_node(error_p, cluster->nodes->array[i]);
+            create_py_node_from_as_node(error_p, cluster->nodes->array[i]);
         if (!py_node) {
             Py_DECREF(py_node_list);
             goto error;
         }
     }
+
+    return py_cluster;
 
 error:
     Py_DECREF(py_cluster);

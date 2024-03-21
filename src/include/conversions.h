@@ -228,9 +228,10 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist);
 
-PyObject *as_cluster_to_py_cluster(as_error *error_p,
-                                   struct as_cluster_s *cluster);
-PyObject *as_node_to_py_node(as_error *error_p, struct as_node_s *node);
+PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
+                                            struct as_cluster_s *cluster);
+PyObject *create_py_node_from_as_node(as_error *error_p,
+                                      struct as_node_s *node);
 
 bool is_pyobj_type_in_aerospike_helpers(PyObject *obj, const char *type_name);
 PyObject *create_class_instance_from_module(as_error *error_p,

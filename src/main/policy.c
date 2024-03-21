@@ -1306,7 +1306,7 @@ as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                                    void *py_listener_data)
 {
     PyGILState_STATE state = PyGILState_Ensure();
-    PyObject *py_cluster = as_cluster_to_py_cluster(err, cluster);
+    PyObject *py_cluster = create_py_cluster_from_as_cluster(err, cluster);
     if (!py_cluster) {
         return err->code;
     }
@@ -1323,7 +1323,7 @@ as_status node_close_listener_wrapper(as_error *err, struct as_node_s *node,
                                       void *py_listener_data)
 {
     PyGILState_STATE state = PyGILState_Ensure();
-    PyObject *py_node = as_node_to_py_node(err, node);
+    PyObject *py_node = create_py_node_from_as_node(err, node);
     if (!py_node) {
         return err->code;
     }
@@ -1340,7 +1340,7 @@ as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                                     void *py_listener_data)
 {
     PyGILState_STATE state = PyGILState_Ensure();
-    PyObject *py_cluster = as_cluster_to_py_cluster(err, cluster);
+    PyObject *py_cluster = create_py_cluster_from_as_cluster(err, cluster);
     if (!py_cluster) {
         return err->code;
     }
