@@ -916,8 +916,7 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
     Py_DECREF(py_invalid_node_count);
 
     PyObject *py_transaction_count = PyLong_FromLong(cluster->tran_count);
-    PyObject_SetAttrString(py_cluster, "transaction_count",
-                           py_transaction_count);
+    PyObject_SetAttrString(py_cluster, "tran_count", py_transaction_count);
     Py_DECREF(py_transaction_count);
 
     PyObject *py_retry_count = PyLong_FromLong(cluster->retry_count);
@@ -928,6 +927,8 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
     if (!py_node_list) {
         goto error;
     }
+    PyObject_SetAttrString(py_cluster, "nodes", py_node_list);
+    Py_DECREF(py_node_list);
 
     for (uint32_t i = 0; i < cluster->nodes->size; i++) {
         PyObject *py_node =
@@ -936,6 +937,7 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
             Py_DECREF(py_node_list);
             goto error;
         }
+        PyList_SetItem(py_node_list, i, py_node);
     }
 
     return py_cluster;
