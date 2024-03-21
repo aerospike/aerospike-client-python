@@ -1246,10 +1246,13 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
 #define SNAPSHOT_LISTENER_INDEX 3
 
 typedef struct {
+    // Use listener name for error messages
     const char *listener_name;
     PyObject *py_callback;
 } PyListenerData;
 
+// Call Python callback defined in udata at index "py_listener_data_index"
+// If py_arg is NULL, pass no arguments to the Python callback
 as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
                            void *udata, PyObject *py_arg)
 {
@@ -1282,6 +1285,7 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
             py_listener_data[py_listener_data_index].listener_name);
     }
 
+    // We don't care about the return value of the callback. It should be None as defined in the API
     Py_DECREF(py_result);
     return AEROSPIKE_OK;
 }
@@ -1301,7 +1305,7 @@ as_status enable_listener_wrapper(as_error *err, void *py_listener_data)
 // This can be called by
 // client.close() -> releases GIL and calls aerospike_close() -> aerospike_disable_metrics()
 // ... -> as_cluster_disable_metrics()
-// Need to ensure GIL is held
+// We need to reacquire the GIL in this callback
 as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
                                    void *py_listener_data)
 {
@@ -1352,6 +1356,10 @@ as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
 
 #define INVALID_ATTR_TYPE_ERROR_MSG "MetricsPolicy.%s must be a %s type"
 
+// Define this conversion function here instead of conversions.c
+// because it is only used to convert a PyObject to a C client metrics policy
+// C client metrics policy "listeners" must already be declared (i.e in as_metrics_policy).
+// It will be initialized here
 as_status pyobject_to_metricslisteners_instance(as_error *err,
                                                 PyObject *py_metricslisteners,
                                                 as_metrics_listeners *listeners)
@@ -1361,14 +1369,17 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
         return AEROSPIKE_OK;
     }
 
-    if (!is_pyobj_type_in_aerospike_helpers(py_metricslisteners,
-                                            "MetricsListeners")) {
+    if (!is_pyobj_correct_as_helpers_type(py_metricslisteners, "metrics",
+                                          "MetricsListeners")) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         "metrics_listeners",
                         "aerospike_helpers.metrics.MetricsListeners");
         return AEROSPIKE_ERR_PARAM;
     }
 
+    // When a MetricsListeners object is defined with callbacks
+    // Pass those Python callbacks to C client "wrapper" callbacks using udata
+    // Then in those wrapper callbacks, call those Python callbacks
     const int num_listeners = 4;
     PyListenerData *py_listener_data =
         (PyListenerData *)malloc(sizeof(PyListenerData) * num_listeners);
@@ -1397,7 +1408,7 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
                             "Unable to fetch %s attribute from "
                             "MetricsListeners instance",
                             py_listener_data[i].listener_name);
-            return AEROSPIKE_ERR_PARAM;
+            goto error;
         }
 
         if (!PyCallable_Check(py_listener)) {
@@ -1405,7 +1416,8 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
                 err, AEROSPIKE_ERR_PARAM,
                 "MetricsPolicy.metrics_listeners.%s must be a callable type",
                 py_listener_data[i].listener_name);
-            return AEROSPIKE_ERR_PARAM;
+            Py_DECREF(py_listener);
+            goto error;
         }
 
         py_listener_data[i].py_callback = py_listener;
@@ -1418,10 +1430,15 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
     listeners->udata = py_listener_data;
 
     return AEROSPIKE_OK;
+error:
+    free(py_listener_data);
+    return AEROSPIKE_ERR_PARAM;
 }
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
+// metrics_policy must be declared already
+// It will be initialized here using py_metrics_policy
 as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                      as_metrics_policy *metrics_policy)
 {
@@ -1432,8 +1449,8 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
         return AEROSPIKE_OK;
     }
 
-    if (!is_pyobj_type_in_aerospike_helpers(py_metrics_policy,
-                                            "MetricsPolicy")) {
+    if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
+                                          "MetricsPolicy")) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "policy parameter must be an aerospike_helpers.MetricsPolicy type");
@@ -1443,7 +1460,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
         PyObject_GetAttrString(py_metrics_policy, "metrics_listeners");
     if (!py_metrics_listeners) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                               "metrics_listener");
+                               "metrics_listeners");
     }
 
     as_status result = pyobject_to_metricslisteners_instance(

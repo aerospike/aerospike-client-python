@@ -233,7 +233,9 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
 PyObject *create_py_node_from_as_node(as_error *error_p,
                                       struct as_node_s *node);
 
-bool is_pyobj_type_in_aerospike_helpers(PyObject *obj, const char *type_name);
+bool is_pyobj_correct_as_helpers_type(PyObject *obj,
+                                      const char *expected_submodule_name,
+                                      const char *expected_type_name);
 PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *module_name,
                                             const char *class_name,

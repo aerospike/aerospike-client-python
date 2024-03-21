@@ -1,5 +1,9 @@
 from typing import Optional, Callable
 
+# Some of these classes do not have a constructor
+# That is because they are not meant to be created by the user
+# They are only automatically returned from a callback function
+
 
 class ConnectionStats:
     """Connection statistics.

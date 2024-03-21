@@ -28,7 +28,10 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
         goto error;
     }
 
+    Py_BEGIN_ALLOW_THREADS
     aerospike_enable_metrics(self->as, &err, &metrics_policy);
+    Py_END_ALLOW_THREADS
+
     if (err.code != AEROSPIKE_OK) {
         goto error;
     }
@@ -46,7 +49,10 @@ PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
     as_error err;
     as_error_init(&err);
 
+    Py_BEGIN_ALLOW_THREADS
     aerospike_disable_metrics(self->as, &err);
+    Py_END_ALLOW_THREADS
+
     if (err.code != AEROSPIKE_OK) {
         goto error;
     }
