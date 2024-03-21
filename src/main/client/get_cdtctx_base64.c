@@ -112,6 +112,10 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     }
 
     py_response = PyUnicode_FromString((const char *)base64);
+    if (!py_response) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to parse base64 string");
+    }
 
 CLEANUP:
 

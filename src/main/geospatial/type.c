@@ -172,6 +172,10 @@ CLEANUP:
     }
 
     py_return = PyUnicode_FromString(new_repr_str);
+    if (!py_return) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to parse GeoJSON string into a unicode object");
+    }
     Py_XDECREF(initresult);
     free(new_repr_str);
     return py_return;

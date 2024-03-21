@@ -308,7 +308,7 @@ as_status as_role_array_to_pyobject_old(as_error *err, as_role **roles,
         PyObject *py_role = PyUnicode_FromString(roles[i]->name);
         if (!py_role) {
             Py_XDECREF(py_roles);
-            return as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+            return as_error_update(err, AEROSPIKE_ERR_CLUSTER,
                                    "Unable to parse role name at index %d", i);
         }
         PyObject *py_privileges = PyList_New(0);
@@ -1855,10 +1855,19 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
 
     if (strlen(key->ns) > 0) {
         py_namespace = PyUnicode_FromString(key->ns);
+        if (!py_namespace) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to parse key namespace");
+        }
     }
 
     if (strlen(key->set) > 0) {
         py_set = PyUnicode_FromString(key->set);
+        if (!py_set) {
+            Py_DECREF(py_namespace);
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to parse key namespace");
+        }
     }
 
     if (key->valuep) {
