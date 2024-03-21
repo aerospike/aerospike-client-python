@@ -8,11 +8,13 @@ import time
 from typing import Optional
 
 
+# Flags for testing callbacks
 enable_triggered = False
 disable_triggered = False
 node_close_triggered = False
 snapshot_triggered = False
 
+# Cluster objects returned from callbacks
 cluster_from_disable_listener: Optional[Cluster] = None
 cluster_from_snapshot_listener: Optional[Cluster] = None
 
@@ -38,13 +40,28 @@ class MyMetricsListeners:
         global cluster_from_snapshot_listener
         cluster_from_snapshot_listener = cluster
 
-    def enable_throw_exc():
+    def throw_exc():
         raise Exception()
 
 
 class TestMetrics:
     @pytest.fixture(autouse=True)
     def setup(self, as_connection, request):
+        # Clear results from previous tests
+        global enable_triggered
+        global disable_triggered
+        global node_close_triggered
+        global snapshot_triggered
+        enable_triggered = False
+        disable_triggered = False
+        node_close_triggered = False
+        snapshot_triggered = False
+
+        global cluster_from_disable_listener
+        global cluster_from_snapshot_listener
+        cluster_from_disable_listener = None
+        cluster_from_snapshot_listener = None
+
         # Set defaults (in case they were overwritten by a test)
         self.metrics_log_folder = "."
 
@@ -52,11 +69,9 @@ class TestMetrics:
             # Remove all metrics log files
             metrics_log_files = f"{self.metrics_log_folder}/metrics-*.log"
             for item in glob.glob(metrics_log_files):
-                print(f"Removing {item}")
                 os.remove(item)
             # Remove folder containing log files if we used one
             if self.metrics_log_folder != '.' and os.path.exists(self.metrics_log_folder):
-                print(f"Removing {self.metrics_log_folder}")
                 shutil.rmtree(self.metrics_log_folder)
 
             self.as_connection.disable_metrics()
@@ -81,7 +96,7 @@ class TestMetrics:
     def test_enable_metrics_with_valid_arg_types(self, policy):
         self.as_connection.enable_metrics(policy=policy)
 
-    def test_enable_metrics_with_metrics_policy_custom_settings(self):
+    def test_setting_metrics_policy_custom_settings(self):
         self.metrics_log_folder = "./metrics-logs"
 
         listeners = MetricsListeners(
@@ -100,14 +115,6 @@ class TestMetrics:
             latency_columns=bucket_count,
             latency_shift=2
         )
-
-        # Ensure that callbacks haven't been called yet
-        global enable_triggered
-        global disable_triggered
-        global snapshot_triggered
-        assert enable_triggered is False
-        assert disable_triggered is False
-        assert snapshot_triggered is False
 
         self.as_connection.enable_metrics(policy=policy)
         time.sleep(3)
@@ -141,6 +148,7 @@ class TestMetrics:
                 assert type(node.conns.closed) == int
                 assert type(node.error_count) == int
                 assert type(node.timeout_count) == int
+                # Check NodeMetrics
                 assert type(node.metrics) == NodeMetrics
                 metrics = node.metrics
                 latency_buckets = [
@@ -158,7 +166,7 @@ class TestMetrics:
 
     def test_enable_listener_throwing_exception(self):
         listeners = MetricsListeners(
-            enable_listener=MyMetricsListeners.enable_throw_exc,
+            enable_listener=MyMetricsListeners.throw_exc,
             disable_listener=MyMetricsListeners.disable,
             node_close_listener=MyMetricsListeners.node_close,
             snapshot_listener=MyMetricsListeners.snapshot
@@ -166,10 +174,13 @@ class TestMetrics:
         policy = MetricsPolicy(
             listeners,
         )
-        with pytest.raises(e.AerospikeError):
+        with pytest.raises(e.AerospikeError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
+        assert excinfo.value.msg == "Python callback enable_listener threw an exception"
 
     @pytest.mark.parametrize(
+        # Policy containing field with invalid type
+        # The last 2 parameters are for the expected error message
         "policy, field_name, expected_field_type", [
             (
                 MetricsPolicy(metrics_listeners=1),
@@ -225,3 +236,27 @@ class TestMetrics:
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
+
+    def test_disable_metrics(self):
+        retval = self.as_connection.disable_metrics()
+        assert retval is None
+
+    def test_disable_metrics_invalid_args(self):
+        with pytest.raises(TypeError):
+            self.as_connection.disable_metrics(1)
+
+    def test_disable_metrics_throwing_exc(self):
+        listeners = MetricsListeners(
+            enable_listener=MyMetricsListeners.enable,
+            disable_listener=MyMetricsListeners.throw_exc,
+            node_close_listener=MyMetricsListeners.node_close,
+            snapshot_listener=MyMetricsListeners.snapshot
+        )
+        policy = MetricsPolicy(
+            listeners,
+        )
+        self.as_connection.enable_metrics(policy=policy)
+
+        with pytest.raises(e.AerospikeError) as excinfo:
+            self.as_connection.disable_metrics()
+        assert excinfo.value.msg == "Python callback disable_listener threw an exception"
