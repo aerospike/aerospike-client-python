@@ -4,20 +4,31 @@ import pytest
 import shutil
 import glob
 import os
+import time
+
+
+enable_triggered = False
+disable_triggered = False
+node_close_triggered = False
+snapshot_triggered = False
 
 
 class MyMetricsListeners:
     def enable():
-        pass
+        global enable_triggered
+        enable_triggered = True
 
     def disable(cluster: Cluster):
-        pass
+        global disable_triggered
+        disable_triggered = True
 
     def node_close(node: Node):
-        pass
+        global node_close_triggered
+        node_close_triggered = True
 
     def snapshot(cluster: Cluster):
-        pass
+        global snapshot_triggered
+        snapshot_triggered = True
 
 
 class TestMetrics:
@@ -70,7 +81,23 @@ class TestMetrics:
             latency_columns=5,
             latency_shift=2
         )
+
+        # Ensure that callbacks haven't been called yet
+        global enable_triggered
+        global disable_triggered
+        global snapshot_triggered
+        assert enable_triggered is False
+        assert disable_triggered is False
+        assert snapshot_triggered is False
+
         self.as_connection.enable_metrics(policy=self.policy)
+        time.sleep(3)
+        self.as_connection.disable_metrics()
+
+        # These callbacks should've been called
+        assert enable_triggered is True
+        assert disable_triggered is True
+        assert snapshot_triggered is True
 
     @pytest.mark.parametrize(
         "policy", [
