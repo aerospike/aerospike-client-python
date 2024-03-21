@@ -1085,23 +1085,33 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
     const char *module_name = PyUnicode_AsUTF8(py_module_name);
     char *module_name_cpy = strdup(module_name);
     const char *delimiters = ".";
-    char *first_module = strtok(module_name_cpy, delimiters);
-    if (strcmp(first_module, "aerospike_helpers")) {
+    char *pyobj_parent_module = strtok(module_name_cpy, delimiters);
+    if (strcmp(pyobj_parent_module, "aerospike_helpers")) {
         // Class does not belong in aerospike_helpers or any of its submodules
         retval = false;
         goto CLEANUP2;
     }
-    char *second_module = strtok(NULL, delimiters);
-    if (!second_module && expected_submodule_name) {
-        // Class belongs in aerospike_helpers
-        // but it doesn't belong in the expected submodule
-        retval = false;
-        goto CLEANUP2;
+    char *pyobj_submodule = strtok(NULL, delimiters);
+    if (pyobj_submodule) {
+        // Python object belongs in a aerospike_helpers submodule
+        if (!expected_submodule_name) {
+            // But it is expected to only belong in the parent package
+            retval = false;
+            goto CLEANUP2;
+        }
+        else if (strcmp(pyobj_submodule, expected_submodule_name)) {
+            // But it doesn't match the expected submodule
+            retval = false;
+            goto CLEANUP2;
+        }
     }
-    else if (strcmp(second_module, expected_submodule_name)) {
-        // Submodules don't match
-        retval = false;
-        goto CLEANUP2;
+    else {
+        // Python object belongs in the aerospike_helpers parent submodule
+        if (expected_submodule_name) {
+            // But it is expected to belong to an aerospike_helpers submodule
+            retval = false;
+            goto CLEANUP2;
+        }
     }
 
 CLEANUP2:
