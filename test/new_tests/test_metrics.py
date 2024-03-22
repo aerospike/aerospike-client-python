@@ -66,6 +66,9 @@ class TestMetrics:
         self.metrics_log_folder = "."
 
         def teardown():
+            # Close any file descriptors for metrics logs before we remove the files
+            self.as_connection.disable_metrics()
+
             # Remove all metrics log files
             metrics_log_files = f"{self.metrics_log_folder}/metrics-*.log"
             for item in glob.glob(metrics_log_files):
@@ -73,8 +76,6 @@ class TestMetrics:
             # Remove folder containing log files if we used one
             if self.metrics_log_folder != '.' and os.path.exists(self.metrics_log_folder):
                 shutil.rmtree(self.metrics_log_folder)
-
-            self.as_connection.disable_metrics()
 
         request.addfinalizer(teardown)
 
