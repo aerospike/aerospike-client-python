@@ -82,13 +82,14 @@ try:
     filtered_list_of_nodes = filter(get_first_node, list_of_nodes)
     first_node = list(filtered_list_of_nodes)[0]
     first_node_port = int(first_node["DockerExposePorts"])
+    HOST_NAME = "127.0.0.1"
 
     config = {
         "hosts": [
-            ("127.0.0.1", first_node_port)
+            (HOST_NAME, first_node_port)
         ]
     }
-    print("Connecting to server using Python client...")
+    print(f"Connecting to {HOST_NAME}:{first_node_port} using Python client...")
     c = aerospike.client(config)
     try:
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
