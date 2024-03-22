@@ -52,6 +52,7 @@ def disable(_: Cluster):
 
 
 def node_close(node: Node):
+    print("Node close listener is running")
     global node_close_called
     node_close_called = True
 
