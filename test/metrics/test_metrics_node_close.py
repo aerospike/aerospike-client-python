@@ -78,6 +78,8 @@ try:
     try:
         print("Connecting to server using Python client...")
         c = aerospike.client(config)
+        print("Waiting for client to collect all information about cluster nodes...")
+        time.sleep(5)
         listeners = MetricsListeners(
             enable_listener=enable,
             disable_listener=disable,
@@ -94,8 +96,8 @@ try:
         # Run with --force or else it will ask to confirm
         subprocess.run(["aerolab", "cluster", "destroy", "--nodes=1", "--force"], check=True)
 
-        # Give client time to run the node_close listener
-        time.sleep(5)
+        print("Giving client time to run the node_close listener...")
+        time.sleep(33)
 
         assert node_close_called is True
     finally:
