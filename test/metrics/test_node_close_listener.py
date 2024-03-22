@@ -69,7 +69,7 @@ print(f"Creating {NODE_COUNT} node cluster...")
 subprocess.run(["aerolab", "cluster", "create", f"--count={NODE_COUNT}"], check=True)
 
 try:
-    print("Wait for server to fully start up")
+    print("Wait for server to fully start up...")
     time.sleep(5)
 
     # Connect to the first node
@@ -87,11 +87,13 @@ try:
     config = {
         "hosts": [
             (HOST_NAME, first_node_port)
-        ]
+        ],
+        "use_services_alternate": True
     }
     print(f"Connecting to {HOST_NAME}:{first_node_port} using Python client...")
     c = aerospike.client(config)
     try:
+        # Show logs to confirm that node is removed from the client's perspective
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
         aerospike.set_log_handler()
         print("Waiting for client to collect all information about cluster nodes...")
@@ -113,7 +115,7 @@ try:
         subprocess.run(["aerolab", "cluster", "destroy", f"--nodes={NODE_TO_CLOSE}", "--force"], check=True)
 
         print("Giving client time to run the node_close listener...")
-        time.sleep(33)
+        time.sleep(10)
 
         assert node_close_called is True
     finally:
