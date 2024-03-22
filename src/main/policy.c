@@ -1529,6 +1529,10 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                    uint32_fields[i]);
         }
 
+        // There's a helper function in the Python client wrapper code called
+        // get_uint32_value
+        // But we don't use it because it doesn't set which exact line
+        // an error occurs. It only returns an error code when it happens
         if (!PyLong_CheckExact(py_field_value)) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    INVALID_ATTR_TYPE_ERROR_MSG,

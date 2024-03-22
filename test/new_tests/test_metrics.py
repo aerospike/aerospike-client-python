@@ -97,6 +97,11 @@ class TestMetrics:
     def test_enable_metrics_with_valid_arg_types(self, policy):
         self.as_connection.enable_metrics(policy=policy)
 
+    def test_enable_metrics_with_invalid_arg(self):
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.enable_metrics(1)
+        assert excinfo.value.msg == "policy parameter must be an aerospike_helpers.MetricsPolicy type"
+
     def test_metrics_writer(self):
         policy = MetricsPolicy(
             interval=1
@@ -234,6 +239,12 @@ class TestMetrics:
             ),
             (
                 MetricsPolicy(latency_shift=True),
+                "latency_shift",
+                "unsigned 32-bit integer"
+            ),
+            # Pass in an integer larger than allowed for an unsigned 32-bit integer
+            (
+                MetricsPolicy(latency_shift=2**32),
                 "latency_shift",
                 "unsigned 32-bit integer"
             )
