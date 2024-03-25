@@ -782,8 +782,6 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
         return NULL;
     }
 
-    PyObject *py_retval = NULL;
-
     const char *field_names[] = {"in_use", "in_pool", "opened", "closed"};
     uint32_t conn_stats[] = {stats->in_use, stats->in_pool, stats->opened,
                              stats->closed};
@@ -794,7 +792,7 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
             as_error_update(error_p, AEROSPIKE_ERR,
                             "Unable to get ConnectionStats field %s",
                             field_names[i]);
-            goto CLEANUP;
+            goto error;
         }
         int result =
             PyObject_SetAttrString(py_conn_stats, field_names[i], py_value);
@@ -805,13 +803,15 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
             as_error_update(error_p, AEROSPIKE_ERR,
                             "Unable to set ConnectionStats field %s",
                             field_names[i]);
-            goto CLEANUP;
+            goto error;
         }
     }
 
-CLEANUP:
+    return py_conn_stats;
+
+error:
     Py_DECREF(py_conn_stats);
-    return py_retval;
+    return NULL;
 }
 
 // Creates and returns a Python client NodeMetrics object from a C client's as_node_metrics struct
