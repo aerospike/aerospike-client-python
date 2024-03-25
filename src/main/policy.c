@@ -1278,6 +1278,7 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
 
     PyObject *py_result = PyObject_CallObject(
         py_listener_data[py_listener_data_index].py_callback, py_args);
+    Py_XDECREF(py_args);
     if (!py_result) {
         // Python callback threw an exception
         return as_error_update(
