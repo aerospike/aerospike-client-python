@@ -88,6 +88,10 @@ try:
         "hosts": [
             (HOST_NAME, first_node_port)
         ],
+        # The nodes use internal Docker IP addresses as their access addresses
+        # But we cannot connect to those from the host
+        # But the nodes use localhost as the alternate address
+        # So we can connect to that instead
         "use_services_alternate": True
     }
     print(f"Connecting to {HOST_NAME}:{first_node_port} using Python client...")
