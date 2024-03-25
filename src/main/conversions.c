@@ -853,12 +853,12 @@ create_py_node_metrics_from_as_node_metrics(as_error *error_p,
             }
 
             int result = PyList_Append(py_buckets, py_bucket);
+            Py_DECREF(py_bucket);
             if (result == -1) {
                 PyErr_Clear();
                 as_error_update(error_p, AEROSPIKE_ERR,
                                 "Failed to append bucket at index %d for %s", j,
                                 node_metrics_fields[i]);
-                Py_DECREF(py_bucket);
                 Py_DECREF(py_buckets);
                 goto error;
             }
