@@ -1317,6 +1317,10 @@ as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
     as_status status = call_py_callback(err, DISABLE_LISTENER_INDEX,
                                         py_listener_data, py_cluster);
     PyGILState_Release(state);
+
+    // When this C callback is called, we are done using the current Python MetricsListeners callbacks
+    // When re-enabling metrics, a new PyListenerData array will be heap allocated with new MetricsListeners callbacks
+    free(py_listener_data);
     return status;
 }
 
