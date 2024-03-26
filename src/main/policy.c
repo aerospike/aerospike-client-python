@@ -1303,6 +1303,16 @@ as_status enable_listener_wrapper(as_error *err, void *py_listener_data)
     return status;
 }
 
+const unsigned int num_listeners = 4;
+
+void free_py_listener_data(PyListenerData *py_listener_data)
+{
+    for (unsigned int i = 0; i < num_listeners; i++) {
+        Py_CLEAR(py_listener_data[i].py_callback);
+    }
+    free(py_listener_data);
+}
+
 // This can be called by
 // client.close() -> releases GIL and calls aerospike_close() -> aerospike_disable_metrics()
 // ... -> as_cluster_disable_metrics()
@@ -1385,7 +1395,6 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
     // When a MetricsListeners object is defined with callbacks
     // Pass those Python callbacks to C client "wrapper" callbacks using udata
     // Then in those wrapper callbacks, call those Python callbacks
-    const unsigned int num_listeners = 4;
     PyListenerData *py_listener_data =
         (PyListenerData *)malloc(sizeof(PyListenerData) * num_listeners);
     py_listener_data[ENABLE_LISTENER_INDEX] = (PyListenerData){
@@ -1436,7 +1445,7 @@ as_status pyobject_to_metricslisteners_instance(as_error *err,
 
     return AEROSPIKE_OK;
 error:
-    free(py_listener_data);
+    free_py_listener_data(py_listener_data);
     return AEROSPIKE_ERR_PARAM;
 }
 
