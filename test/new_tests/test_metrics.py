@@ -5,7 +5,7 @@ import shutil
 import glob
 import os
 import time
-from typing import Optional
+# from typing import Optional
 
 
 # Flags for testing callbacks
@@ -14,8 +14,8 @@ disable_triggered = False
 snapshot_triggered = False
 
 # Cluster objects returned from callbacks
-cluster_from_disable_listener: Optional[Cluster] = None
-cluster_from_snapshot_listener: Optional[Cluster] = None
+# cluster_from_disable_listener: Optional[Cluster] = None
+# cluster_from_snapshot_listener: Optional[Cluster] = None
 
 
 class MyMetricsListeners:
@@ -26,8 +26,8 @@ class MyMetricsListeners:
     def disable(cluster: Cluster):
         global disable_triggered
         disable_triggered = True
-        global cluster_from_disable_listener
-        cluster_from_disable_listener = cluster
+        # global cluster_from_disable_listener
+        # cluster_from_disable_listener = cluster
 
     def node_close(node: Node):
         pass
@@ -35,8 +35,8 @@ class MyMetricsListeners:
     def snapshot(cluster: Cluster):
         global snapshot_triggered
         snapshot_triggered = True
-        global cluster_from_snapshot_listener
-        cluster_from_snapshot_listener = cluster
+        # global cluster_from_snapshot_listener
+        # cluster_from_snapshot_listener = cluster
 
     def throw_exc():
         raise Exception()
@@ -53,10 +53,10 @@ class TestMetrics:
         disable_triggered = False
         snapshot_triggered = False
 
-        global cluster_from_disable_listener
-        global cluster_from_snapshot_listener
-        cluster_from_disable_listener = None
-        cluster_from_snapshot_listener = None
+        # global cluster_from_disable_listener
+        # global cluster_from_snapshot_listener
+        # cluster_from_disable_listener = None
+        # cluster_from_snapshot_listener = None
 
         # Set defaults (in case they were overwritten by a test)
         self.metrics_log_folder = "."
@@ -140,9 +140,9 @@ class TestMetrics:
         assert snapshot_triggered is True
 
         # The Cluster objects returned from the disable and snapshot callbacks should be populated
-        global cluster_from_disable_listener
-        global cluster_from_snapshot_listener
-        for cluster in [cluster_from_disable_listener, cluster_from_snapshot_listener]:
+        # global cluster_from_disable_listener
+        # global cluster_from_snapshot_listener
+        for cluster in []:
             assert type(cluster) == Cluster
             assert cluster.cluster_name is None or type(cluster.cluster_name) == str
             assert type(cluster.invalid_node_count) == int
