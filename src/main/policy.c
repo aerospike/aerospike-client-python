@@ -1263,6 +1263,7 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
         int result = PyTuple_SetItem(py_args, 0, py_arg);
         if (result == -1) {
             PyErr_Clear();
+            Py_DECREF(py_args);
             return as_error_update(
                 err, AEROSPIKE_ERR,
                 "Unable to pass Python Cluster object to Python callback %s",
