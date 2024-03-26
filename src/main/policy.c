@@ -1559,6 +1559,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
                             "unsigned 32-bit integer");
+            Py_DECREF(py_field_value);
             goto error;
         }
 
@@ -1568,6 +1569,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
                             "unsigned 32-bit integer");
+            Py_DECREF(py_field_value);
             goto error;
         }
 
@@ -1575,6 +1577,7 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
                             "unsigned 32-bit integer");
+            Py_DECREF(py_field_value);
             goto error;
         }
 
