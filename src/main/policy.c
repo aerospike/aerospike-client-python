@@ -1378,10 +1378,10 @@ as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
 // Define this conversion function here instead of conversions.c
 // because it is only used to convert a PyObject to a C client metrics policy
 // C client metrics policy "listeners" must already be declared (i.e in as_metrics_policy).
-// It will be initialized here
-as_status pyobject_to_metricslisteners_instance(as_error *err,
-                                                PyObject *py_metricslisteners,
-                                                as_metrics_listeners *listeners)
+as_status
+set_as_metrics_listeners_using_pyobject(as_error *err,
+                                        PyObject *py_metricslisteners,
+                                        as_metrics_listeners *listeners)
 {
     if (!py_metricslisteners || py_metricslisteners == Py_None) {
         // Use default metrics writer callbacks that were set when initializing metrics policy
@@ -1456,9 +1456,10 @@ error:
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
 // metrics_policy must be declared already
-// It will be initialized here using py_metrics_policy
-as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
-                                     as_metrics_policy *metrics_policy)
+as_status
+init_and_set_as_metrics_policy_using_pyobject(as_error *err,
+                                              PyObject *py_metrics_policy,
+                                              as_metrics_policy *metrics_policy)
 {
     as_metrics_policy_init(metrics_policy);
 
@@ -1481,8 +1482,9 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                "metrics_listeners");
     }
 
-    as_status result = pyobject_to_metricslisteners_instance(
+    as_status result = set_as_metrics_listeners_using_pyobject(
         err, py_metrics_listeners, &metrics_policy->metrics_listeners);
+    Py_DECREF(py_metrics_listeners);
     if (result != AEROSPIKE_OK) {
         return result;
     }

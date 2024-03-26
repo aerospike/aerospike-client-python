@@ -22,8 +22,8 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    as_status status =
-        pyobject_to_metrics_policy(&err, py_metrics_policy, &metrics_policy);
+    as_status status = init_and_set_as_metrics_policy_using_pyobject(
+        &err, py_metrics_policy, &metrics_policy);
     if (status != AEROSPIKE_OK) {
         goto error;
     }
