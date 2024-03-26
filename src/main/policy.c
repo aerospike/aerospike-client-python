@@ -1486,45 +1486,48 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
     PyObject *py_report_dir =
         PyObject_GetAttrString(py_metrics_policy, "report_dir");
     if (!py_report_dir) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                               "report_dir");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        "report_dir");
+        // Need to deallocate metrics listeners' udata
+        goto error;
     }
     if (!PyUnicode_Check(py_report_dir)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               INVALID_ATTR_TYPE_ERROR_MSG, "report_dir",
-                               "str");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "report_dir", "str");
+        goto error;
     }
     const char *report_dir = PyUnicode_AsUTF8(py_report_dir);
     if (strlen(report_dir) >= sizeof(metrics_policy->report_dir)) {
-        return as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "MetricsPolicy.report_dir must be less than 256 chars");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "MetricsPolicy.report_dir must be less than 256 chars");
+        goto error;
     }
     strcpy(metrics_policy->report_dir, report_dir);
 
     PyObject *py_report_size_limit =
         PyObject_GetAttrString(py_metrics_policy, "report_size_limit");
     if (!py_report_size_limit) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                               "report_size_limit");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        "report_size_limit");
+        goto error;
     }
     if (!PyLong_CheckExact(py_report_size_limit)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               INVALID_ATTR_TYPE_ERROR_MSG, "report_size_limit",
-                               "unsigned 64-bit integer");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "report_size_limit", "unsigned 64-bit integer");
+        goto error;
     }
     unsigned long long report_size_limit =
         PyLong_AsUnsignedLongLong(py_report_size_limit);
     if (report_size_limit == (unsigned long long)-1 && PyErr_Occurred()) {
         PyErr_Clear();
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               INVALID_ATTR_TYPE_ERROR_MSG, "report_size_limit",
-                               "unsigned 64-bit integer");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "report_size_limit", "unsigned 64-bit integer");
+        goto error;
     }
     if (report_size_limit > UINT64_MAX) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               INVALID_ATTR_TYPE_ERROR_MSG, "report_size_limit",
-                               "unsigned 64-bit integer");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "report_size_limit", "unsigned 64-bit integer");
+        goto error;
     }
 
     metrics_policy->report_size_limit = (uint64_t)report_size_limit;
@@ -1539,8 +1542,9 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
         PyObject *py_field_value =
             PyObject_GetAttrString(py_metrics_policy, uint32_fields[i]);
         if (!py_field_value) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                                   uint32_fields[i]);
+            as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                            uint32_fields[i]);
+            goto error;
         }
 
         // There's a helper function in the Python client wrapper code called
@@ -1548,30 +1552,38 @@ as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
         // But we don't use it because it doesn't set which exact line
         // an error occurs. It only returns an error code when it happens
         if (!PyLong_CheckExact(py_field_value)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   INVALID_ATTR_TYPE_ERROR_MSG,
-                                   uint32_fields[i], "unsigned 32-bit integer");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
+                            "unsigned 32-bit integer");
+            goto error;
         }
 
         unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
         if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
             PyErr_Clear();
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   INVALID_ATTR_TYPE_ERROR_MSG,
-                                   uint32_fields[i], "unsigned 32-bit integer");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
+                            "unsigned 32-bit integer");
+            goto error;
         }
 
         if (field_value > UINT32_MAX) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   INVALID_ATTR_TYPE_ERROR_MSG,
-                                   uint32_fields[i], "unsigned 32-bit integer");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
+                            "unsigned 32-bit integer");
+            goto error;
         }
 
         *uint32_ptrs[i] = (uint32_t)field_value;
-        if (err->code != AEROSPIKE_OK) {
-            return err->code;
-        }
     }
 
     return AEROSPIKE_OK;
+
+error:
+    // udata would've been allocated if MetricsListener was successfully converted to C code
+    if (py_metrics_listeners && py_metrics_listeners != Py_None) {
+        free_py_listener_data(
+            (PyListenerData *)metrics_policy->metrics_listeners.udata);
+    }
+    return err->code;
 }
