@@ -11,7 +11,6 @@ from typing import Optional
 # Flags for testing callbacks
 enable_triggered = False
 disable_triggered = False
-node_close_triggered = False
 snapshot_triggered = False
 
 # Cluster objects returned from callbacks
@@ -31,8 +30,7 @@ class MyMetricsListeners:
         cluster_from_disable_listener = cluster
 
     def node_close(node: Node):
-        global node_close_triggered
-        node_close_triggered = True
+        pass
 
     def snapshot(cluster: Cluster):
         global snapshot_triggered
@@ -50,11 +48,9 @@ class TestMetrics:
         # Clear results from previous tests
         global enable_triggered
         global disable_triggered
-        global node_close_triggered
         global snapshot_triggered
         enable_triggered = False
         disable_triggered = False
-        node_close_triggered = False
         snapshot_triggered = False
 
         global cluster_from_disable_listener
