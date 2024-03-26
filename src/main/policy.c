@@ -1254,12 +1254,18 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
     PyObject *py_args = NULL;
     if (py_arg) {
         py_args = PyTuple_New(1);
-        if (!py_args) {
-            return as_error_update(
-                err, AEROSPIKE_ERR,
-                "Unable to construct list of arguments for Python callback %s",
-                py_listener_data[py_listener_data_index].listener_name);
-        }
+    }
+    else {
+        py_args = PyTuple_New(0);
+    }
+    if (!py_args) {
+        return as_error_update(
+            err, AEROSPIKE_ERR,
+            "Unable to construct list of arguments for Python callback %s",
+            py_listener_data[py_listener_data_index].listener_name);
+    }
+
+    if (py_arg) {
         int result = PyTuple_SetItem(py_args, 0, py_arg);
         if (result == -1) {
             PyErr_Clear();
@@ -1271,9 +1277,9 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
         }
     }
 
-    PyObject *py_result = PyObject_CallObject(
-        py_listener_data[py_listener_data_index].py_callback, py_args);
-    Py_XDECREF(py_args);
+    PyObject *py_result = PyObject_Call(
+        py_listener_data[py_listener_data_index].py_callback, py_args, NULL);
+    Py_DECREF(py_args);
     if (!py_result) {
         // Python callback threw an exception
         return as_error_update(
