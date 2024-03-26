@@ -1245,12 +1245,6 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
 #define NODE_CLOSE_LISTENER_INDEX 2
 #define SNAPSHOT_LISTENER_INDEX 3
 
-typedef struct {
-    // Use listener name for error messages
-    const char *listener_name;
-    PyObject *py_callback;
-} PyListenerData;
-
 // Call Python callback defined in udata at index "py_listener_data_index"
 // If py_arg is NULL, pass no arguments to the Python callback
 as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,

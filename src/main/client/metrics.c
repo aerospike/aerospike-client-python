@@ -33,6 +33,8 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
     if (err.code != AEROSPIKE_OK) {
+        free_py_listener_data(
+            (PyListenerData *)metrics_policy.metrics_listeners.udata);
         goto error;
     }
 

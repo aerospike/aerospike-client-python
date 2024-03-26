@@ -313,3 +313,11 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
 
 as_status pyobject_to_metrics_policy(as_error *err, PyObject *py_metrics_policy,
                                      as_metrics_policy *metrics_policy);
+
+typedef struct {
+    // Use listener name for error messages
+    const char *listener_name;
+    PyObject *py_callback;
+} PyListenerData;
+
+void free_py_listener_data(PyListenerData *py_listener_data);
