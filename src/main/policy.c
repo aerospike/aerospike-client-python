@@ -1331,7 +1331,7 @@ as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
 
     // When this C callback is called, we are done using the current Python MetricsListeners callbacks
     // When re-enabling metrics, a new PyListenerData array will be heap allocated with new MetricsListeners callbacks
-    free(py_listener_data);
+    free_py_listener_data((PyListenerData *)py_listener_data);
     return status;
 }
 
