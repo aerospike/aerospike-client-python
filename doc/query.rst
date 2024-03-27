@@ -473,7 +473,18 @@ Policies
             | Set to `False` for backup programs that just need access to raw bytes.
             |
             | Default: ``True``
+        * **expected_duration**
+            | Expected query duration. The server treats the query in different ways depending on the expected duration.
+            | This field is ignored for aggregation queries, background queries and server versions < 6.0.
+            |
+            | Default: :data:`aerospike.QUERY_DURATION_LONG`
         * **short_query** :class:`bool`
+            | **Deprecated**: Use ``"expected_duration"`` instead.
+            |
+            | For backwards compatibility: If ``"short_query"`` is true, the query is treated as a short query and
+            | ``"expected_duration"`` is ignored. If ``"short_query"`` is false, ``"expected_duration"`` is used
+            | and defaults to :data:`aerospike.QUERY_DURATION_LONG`.
+            |
             | Is query expected to return less than 100 records.
             | If True, the server will optimize the query for a small record set.
             | This field is ignored for aggregation queries, background queries

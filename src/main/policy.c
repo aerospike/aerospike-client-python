@@ -449,7 +449,11 @@ static AerospikeConstants aerospike_constants[] = {
     {REGEX_EXTENDED, "REGEX_EXTENDED"},
     {REGEX_ICASE, "REGEX_ICASE"},
     {REGEX_NOSUB, "REGEX_NOSUB"},
-    {REGEX_NEWLINE, "REGEX_NEWLINE"}};
+    {REGEX_NEWLINE, "REGEX_NEWLINE"},
+
+    {AS_QUERY_DURATION_LONG, "QUERY_DURATION_LONG"},
+    {AS_QUERY_DURATION_LONG_RELAX_AP, "QUERY_DURATION_LONG_RELAX_AP"},
+    {AS_QUERY_DURATION_SHORT, "QUERY_DURATION_SHORT"}};
 
 static AerospikeJobConstants aerospike_job_constants[] = {
     {"scan", "JOB_SCAN"}, {"query", "JOB_QUERY"}};
@@ -708,6 +712,8 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 
         // C client 6.0.0
         POLICY_SET_FIELD(short_query, bool);
+
+        POLICY_SET_FIELD(expected_duration, as_query_duration);
     }
 
     // Update the policy
