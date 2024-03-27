@@ -1147,9 +1147,18 @@ class TestQuery(TestBaseClass):
             aerospike.QUERY_DURATION_LONG_RELAX_AP
         ]
     )
-    def test_query_duration_options(self, duration: int):
+    def test_query_expected_duration(self, duration: int):
         query: aerospike.Query = self.as_connection.query("test", "demo")
         policy = {
             "expected_duration": duration
         }
         query.results(policy=policy)
+
+    def test_query_invalid_expected_duration(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        policy = {
+            "expected_duration": "t"
+        }
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results(policy=policy)
+        assert excinfo.value.msg == "expected_duration is invalid"
