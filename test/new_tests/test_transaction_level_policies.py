@@ -47,7 +47,8 @@ class TestReadTouchTTLPercent:
 
     def test_get(self):
         time.sleep(self.delay)
-        # By this time, the record's ttl should be 2 seconds left
+        # By this time, the record's ttl should be less than 1 second left
+        # Reset record TTL
         self.as_connection.get(self.key, policy=self.policy)
         time.sleep(self.delay)
         # Record should not have expired
