@@ -376,4 +376,4 @@ class TestConfigTTL:
         config["policies"][policy_name]["read_touch_ttl_percent"] = "fail"
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
-        assert excinfo.value.msg == "read_touch_ttl_percent is invalid"
+        assert excinfo.value.msg == "Invalid Policy setting value"
