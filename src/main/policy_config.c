@@ -32,6 +32,9 @@ as_status set_optional_gen(as_policy_gen *target_ptr, PyObject *py_policy,
 as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
                               const char *name);
 as_status get_uint32_value(PyObject *py_policy_val, uint32_t *return_uint32);
+as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
+                                    const char *field_name);
+
 /*
  * py_policies must exist, and be a dictionary
  */
@@ -178,6 +181,12 @@ as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy)
 
     status = set_optional_sc_read_mode(&read_policy->read_mode_sc, py_policy,
                                        "read_mode_sc");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_int_property(&read_policy->read_touch_ttl_percent,
+                                       py_policy, "read_touch_ttl_percent");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -489,6 +498,12 @@ as_status set_operate_policy(as_policy_operate *operate_policy,
         return status;
     }
 
+    status = set_optional_int_property(&operate_policy->read_touch_ttl_percent,
+                                       py_policy, "read_touch_ttl_percent");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     return AEROSPIKE_OK;
 }
 
@@ -539,6 +554,12 @@ as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy)
         return status;
     }
     status = set_optional_replica(&batch_policy->replica, py_policy, "replica");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_int_property(&batch_policy->read_touch_ttl_percent,
+                                       py_policy, "read_touch_ttl_percent");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -1022,5 +1043,21 @@ as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
         return status;
     }
     *target_ptr = (as_policy_exists)out_uint32;
+    return AEROSPIKE_OK;
+}
+
+as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
+                                    const char *field_name)
+{
+    PyObject *py_field = PyDict_GetItemString(py_policy, field_name);
+    if (py_field) {
+        if (PyLong_Check(py_field)) {
+            *property_ptr = (int)PyLong_AsLong(py_field);
+        }
+        else {
+            return AEROSPIKE_ERR_PARAM;
+        }
+    }
+
     return AEROSPIKE_OK;
 }
