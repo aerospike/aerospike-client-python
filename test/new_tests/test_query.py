@@ -1138,3 +1138,18 @@ class TestQuery(TestBaseClass):
         query.foreach(callback)
 
         assert len(records) == 1
+
+    @pytest.mark.parametrize(
+        "duration",
+        [
+            aerospike.QUERY_DURATION_LONG,
+            aerospike.QUERY_DURATION_SHORT,
+            aerospike.QUERY_DURATION_LONG_RELAX_AP
+        ]
+    )
+    def test_query_duration_options(self, duration: int):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        policy = {
+            "expected_duration": duration
+        }
+        query.results(policy=policy)
