@@ -1285,6 +1285,26 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
 
+Metrics
+-------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
+
+        Enable extended periodic cluster and node latency metrics.
+
+        :param MetricsPolicy policy: Optional metrics policy
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+    .. method:: disable_metrics()
+
+        Disable extended periodic cluster and node latency metrics.
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
 .. _admin_user_dict:
 
 User Dictionary
