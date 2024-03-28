@@ -235,7 +235,7 @@ jobs:
 
     - name: Start Docker Engine
       if: ${{ inputs.run_tests }}
-      run: colima start
+      run: colima start --memory 8
 
     - uses: ./.github/actions/run-ee-server
       if: ${{ inputs.run_tests }}
