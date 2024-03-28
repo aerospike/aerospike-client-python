@@ -1,8 +1,11 @@
-from typing import Optional, Callable
+"""Classes used for metrics.
 
-# Some of these classes do not have a constructor
-# That is because they are not meant to be created by the user
-# They are only automatically returned from a callback function
+:class:`ConnectionStats`, :class:`NodeMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
+because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
+callbacks for reading data about the server and client.
+"""
+
+from typing import Optional, Callable
 
 
 class ConnectionStats:
