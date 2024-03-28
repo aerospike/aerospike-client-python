@@ -470,3 +470,37 @@ class TestBatchWrite(TestBaseClass):
         with pytest.raises(exp_res):
             bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
             bad_client.batch_write(batch_records)
+
+    def test_global_batch_write_with_write_cls(self):
+        config = TestBaseClass.get_connection_config()
+        config["policies"]["batch_write"] = {
+            "key": aerospike.POLICY_KEY_SEND
+        }
+        c = aerospike.client(config)
+        batch_records = br.BatchRecords(
+            batch_records=[
+                br.Write(
+                    key=self.keys[0],
+                    ops=[
+                        op.write(bin_name="a", write_item=1)
+                    ]
+                )
+            ]
+        )
+        c.batch_write(batch_records)
+
+        query = self.as_connection.query(self.test_ns, self.test_set)
+        records = query.results()
+        # Only the record with primary key 0 should have its PK returned from the query
+        # The other records should not have a PK returned from the server
+        for record_tuple in records:
+            key_tuple = record_tuple[0]
+            pk = key_tuple[2]
+            # Use count bin to identify record's PK
+            bins = record_tuple[2]
+            if bins["count"] == 0:
+                # Get key tuple with PK 0
+                expected_key_tuple = self.keys[0]
+                assert pk == expected_key_tuple[2]
+            else:
+                assert pk is None
