@@ -1691,6 +1691,7 @@ Read Policies
             recent write) will result in a touch, resetting the TTL to another 10 hours.
 
             Values:
+
             * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
             * ``-1`` : Do not reset record TTL on reads.
             * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
@@ -1786,6 +1787,7 @@ Operate Policies
             recent write) will result in a touch, resetting the TTL to another 10 hours.
 
             Values:
+
             * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
             * ``-1`` : Do not reset record TTL on reads.
             * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
@@ -2068,6 +2070,7 @@ Batch Policies
             recent write) will result in a touch, resetting the TTL to another 10 hours.
 
             Values:
+
             * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
             * ``-1`` : Do not reset record TTL on reads.
             * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
@@ -2285,6 +2288,7 @@ Batch Read Policies
             recent write) will result in a touch, resetting the TTL to another 10 hours.
 
             Values:
+
             * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
             * ``-1`` : Do not reset record TTL on reads.
             * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
