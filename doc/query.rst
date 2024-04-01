@@ -492,7 +492,7 @@ Policies
             This field is ignored for aggregation queries, background queries
             and server versions less than 6.0.0.
 
-            Mututally exclusive with records_per_second
+            Mutually exclusive with records_per_second
 
             Default: ``False``
         * **expressions** :class:`list`
