@@ -1575,5 +1575,6 @@ Query Duration
      * Allow server timeouts. The default server timeout for a short query is 1 second.
 
 .. data:: QUERY_DURATION_LONG_RELAX_AP
+
      Treat query as a LONG query, but relax read consistency for AP namespaces.
      This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
