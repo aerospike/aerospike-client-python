@@ -487,4 +487,4 @@ class TestBatchWrite(TestBaseClass):
         )
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.batch_write(batch_records)
-        assert excinfo.value.msg == "read_touch_ttl_percent is invalid"
+        assert excinfo.value.msg == "batch_type: Read, failed to convert policy"
