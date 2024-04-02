@@ -70,7 +70,13 @@ Client Errors
 
     Exception class for client-side errors, often due to misconfiguration or misuse of the API methods.
 
+    Error code: ``-1``
+
 .. py:exception:: InvalidHostError
+
+    Host name could not be found in DNS lookup.
+
+    Error code: ``-4``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -78,11 +84,15 @@ Client Errors
 
     The operation was not performed because of invalid parameters.
 
+    Error code: ``-2``
+
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
 .. py:exception:: MaxErrorRateExceeded
 
     The operation was not performed because the maximum error rate has been exceeded.
+
+    Error code: ``-14``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -90,11 +100,15 @@ Client Errors
 
     Query or scan was aborted in user's callback.
 
+    Error code: ``-5``
+
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
 .. py:exception:: InvalidNodeError
 
     Node invalid or could not be found.
+
+    Error code: ``-8``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -102,11 +116,15 @@ Client Errors
 
     TLS error occurred.
 
+    Error code: ``-9``
+
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
 .. py:exception:: MaxRetriesExceeded
 
     Max retries limit reached.
+
+    Error code: ``-12``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -114,11 +132,15 @@ Client Errors
 
     No response received from server.
 
+    Error code: ``-15``
+
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
 .. py:exception:: BatchFailed
 
     One or more keys failed in a batch.
+
+    Error code: ``-16``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -126,11 +148,7 @@ Client Errors
 
     Synchronous connection error.
 
-    Subclass of :py:exc:`~aerospike.exception.ClientError`.
-
-.. py:exception:: QueryAbortedError
-
-    Query was aborted.
+    Error code: ``-10``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -141,9 +159,13 @@ Server Errors
 
     The parent class for all errors returned from the cluster.
 
+    Error code: ``1``
+
 .. py:exception:: InvalidRequest
 
     Protocol-level error.
+
+    Error code: ``4``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -151,11 +173,15 @@ Server Errors
 
     The operation cannot be applied to the current bin value on the server.
 
+    Error code: ``26``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: FilteredOut
 
     The transaction was not performed because the expression was false.
+
+    Error code: ``27``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -164,11 +190,15 @@ Server Errors
     The server node is running out of memory and/or storage device space
     reserved for the specified namespace.
 
+    Error code: ``8``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: AlwaysForbidden
 
     Operation not allowed in current configuration.
+
+    Error code: ``10``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -176,11 +206,15 @@ Server Errors
 
     Encountered an unimplemented server feature.
 
+    Error code: ``16``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: DeviceOverload
 
     The server node's storage device(s) can't keep up with the write load.
+
+    Error code: ``18``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -188,11 +222,15 @@ Server Errors
 
     Namespace in request not found on server.
 
+    Error code: ``20``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: ForbiddenError
 
     Operation not allowed at this time.
+
+    Error code: ``22``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -200,17 +238,23 @@ Server Errors
 
     Raised when trying to alter a map key which already exists, when using a ``create_only`` policy.
 
+    Error code: ``23``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: ElementNotFoundError
 
     Raised when trying to alter a map key which does not exist, when using an ``update_only`` policy.
 
+    Error code: ``24``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: BatchQueueFullError
 
     All batch queues are full.
+
+    Error code: ````
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -322,6 +366,14 @@ Record Errors
     Bin already exists on a create-only operation.
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
+
+.. py:exception:: QueryAbortedError
+
+    Query was aborted.
+
+    Error code: ````
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
 Index Errors
 ------------
