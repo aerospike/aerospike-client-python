@@ -170,7 +170,10 @@ jobs:
     - name: Wait for server to be ready
       run: sleep 5
 
-    - run: python${{ matrix.python-version[0] }} -m pip install --break-system-packages -r requirements.txt
+    - name: Install wheel
+      run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall *.whl
+
+    - run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages -r requirements.txt
       working-directory: test
 
     - run: python${{ matrix.python-version[0] }} -m pytest new_tests/
