@@ -1698,6 +1698,8 @@ Read Policies
 
             Default: ``0``
 
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1793,6 +1795,8 @@ Operate Policies
             * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
 
             Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
 
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
@@ -2077,6 +2081,8 @@ Batch Policies
 
             Default: ``0``
 
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -2294,6 +2300,8 @@ Batch Read Policies
             * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
 
             Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
 
 .. _aerospike_info_policies:
 
