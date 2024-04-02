@@ -4,11 +4,14 @@ import time
 
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch import records as br
+from .test_base_class import TestBaseClass
 
 
 class TestReadTouchTTLPercent:
     @pytest.fixture(autouse=True)
     def setup(self, as_connection):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+            pytest.skip("read_touch_ttl_percent only supported on server 7.1 or higher")
         self.key = ("test", "demo", 1)
         ttl = 2
         self.as_connection.put(self.key, bins={"a": 1}, meta={"ttl": ttl})
@@ -18,7 +21,8 @@ class TestReadTouchTTLPercent:
         self.invalid_policy = {
             "read_touch_ttl_percent": "1"
         }
-        self.delay = ttl / 2 + 0.001
+        self.delay = ttl / 2 + 0.1
+        print(ttl, self.delay)
 
         yield
 
