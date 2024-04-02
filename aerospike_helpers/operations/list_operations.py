@@ -475,9 +475,9 @@ def list_get_by_index_range(bin_name: str, index, return_type, count=None, inver
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
         index (int): The index of the first item to be returned.
-        count (int): The number of list items to be selected.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values.
+        count (int): The number of list items to be selected.
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items outside of the specified range will be returned.
             Default: `False`
@@ -540,14 +540,14 @@ def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverte
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
         rank (int): The rank of the first items to be returned.
-        count (int): A positive number indicating number of items to be returned.
         return_type (int): Value specifying what should be returned from the operation.  This should be one of the
             :ref:`list_return_types` values
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
-            objects.
+        count (int): A positive number indicating number of items to be returned.
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items outside of the specified rank range will be returned.
             Default: `False`
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
 
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -654,10 +654,10 @@ def list_get_by_value_range(
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        value_begin: The start of the value range.
-        value_end: The end of the value range.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
+        value_begin: The start of the value range.
+        value_end: The end of the value range.
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items not included in the specified range will be returned.
             Default: `False`
@@ -733,9 +733,9 @@ def list_remove_by_index_range(
     Args:
         bin_name (str): The name of the bin containing the list to remove items from.
         index (int): The index of the first item to be removed.
-        count (int): The number of items to be removed
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values.
+        count (int): The number of items to be removed
         inverted (bool): Optional bool specifying whether to invert the operation.
             If set to `True`, all items outside of the specified range will be removed.
             Default: `False`
@@ -803,9 +803,9 @@ def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inve
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
         rank (int): The rank of the first item to removed.
-        count (int): A positive number indicating number of items to be removed.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
+        count (int): A positive number indicating number of items to be removed.
         inverted (bool): Optional bool specifying whether to invert the operation.
             If set to `True`, all items outside of the specified rank range will be removed.
             Default: `False`
@@ -914,10 +914,10 @@ def list_remove_by_value_range(
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        value_begin: The start of the value range.
-        value_end: The end of the value range.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
+        value_begin: The start of the value range.
+        value_end: The end of the value range.
         inverted (bool): Optional bool specifying whether to invert the operation.
             If set to `True`, all items not included in the specified range will be removed.
             Default: `False`
@@ -1083,6 +1083,8 @@ def list_remove_by_value_rank_range_relative(
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(found_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`list_return_types` values
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted, and items outside of the specified
