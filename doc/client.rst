@@ -362,6 +362,9 @@ Batch Operations
 
         Perform the same read/write transactions on multiple keys.
 
+        .. note:: There is a bug in Python client < 14.0.0 where only passing read operations does not work. This bug
+            is fixed in Python client 14.0.0.
+
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.
         :param dict policy_batch: See :ref:`aerospike_batch_policies`.
