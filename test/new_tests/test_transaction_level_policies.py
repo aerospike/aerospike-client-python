@@ -6,12 +6,12 @@ from aerospike_helpers.operations import operations
 from aerospike_helpers.batch import records as br
 from .test_base_class import TestBaseClass
 
+SKIP_MSG = "read_touch_ttl_percent only supported on server 7.1 or higher"
+
 
 class TestReadTouchTTLPercent:
     @pytest.fixture(autouse=True)
     def setup(self, as_connection):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
-            pytest.skip("read_touch_ttl_percent only supported on server 7.1 or higher")
         self.key = ("test", "demo", 1)
         ttl = 2
         self.as_connection.put(self.key, bins={"a": 1}, meta={"ttl": ttl})
@@ -22,7 +22,6 @@ class TestReadTouchTTLPercent:
             "read_touch_ttl_percent": "1"
         }
         self.delay = ttl / 2 + 0.1
-        print(ttl, self.delay)
 
         yield
 
@@ -50,6 +49,8 @@ class TestReadTouchTTLPercent:
         assert excinfo.value.msg == "read_touch_ttl_percent is invalid"
 
     def test_get(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+            pytest.skip(SKIP_MSG)
         time.sleep(self.delay)
         # By this time, the record's ttl should be less than 1 second left
         # Reset record TTL
@@ -59,6 +60,8 @@ class TestReadTouchTTLPercent:
         self.as_connection.get(self.key)
 
     def test_operate(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+            pytest.skip(SKIP_MSG)
         time.sleep(self.delay)
         ops = [
             operations.read("a")
@@ -68,6 +71,8 @@ class TestReadTouchTTLPercent:
         self.as_connection.get(self.key)
 
     def test_batch(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+            pytest.skip(SKIP_MSG)
         time.sleep(self.delay)
         keys = [
             self.key
@@ -77,6 +82,8 @@ class TestReadTouchTTLPercent:
         self.as_connection.get(self.key)
 
     def test_batch_write(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
+            pytest.skip(SKIP_MSG)
         batch_records = br.BatchRecords(
             [
                 br.Read(
