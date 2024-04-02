@@ -171,7 +171,7 @@ jobs:
       run: sleep 5
 
     - name: Install wheel
-      run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall *.whl
+      run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages *.whl
 
     - run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages -r requirements.txt
       working-directory: test
