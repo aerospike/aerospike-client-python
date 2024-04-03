@@ -370,3 +370,18 @@ class TestConfigTTL:
         wait_for_job_completion(self.client, job_id)
 
         self.check_ttl()
+
+    @pytest.mark.parametrize(
+        "policy_name",
+        [
+            "read",
+            "operate",
+            "batch",
+        ]
+    )
+    def test_invalid_read_touch_ttl_percent(self, policy_name: str):
+        config = copy.deepcopy(gconfig)
+        config["policies"][policy_name]["read_touch_ttl_percent"] = "fail"
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+        assert excinfo.value.msg == "Invalid Policy setting value"

@@ -1680,6 +1680,26 @@ Read Policies
 
             .. versionadded:: 3.7.0
 
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1751,12 +1771,33 @@ Operate Policies
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **ttl** (:class:`int`)
             The default time-to-live (expiration) of the record in seconds. This field will only be used if an
-            operate transaction:
+            operate transaction contains a write operation and either:
 
             1. Doesn't contain a metadata dictionary with a ``ttl`` value.
             2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
 
             There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
+
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -2022,6 +2063,26 @@ Batch Policies
 
             .. versionadded:: 3.7.0
 
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -2222,6 +2283,25 @@ Batch Read Policies
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
 
 .. _aerospike_info_policies:
 
