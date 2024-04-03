@@ -225,6 +225,9 @@ Batch Operations
 
     .. method:: get_many(keys[, policy: dict]) -> [(key, meta, bins)]
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
         Batch-read multiple records, and return them as a :class:`list`.
 
         Any record that does not exist will have a :py:obj:`None` value for metadata \
@@ -240,10 +243,10 @@ Batch Operations
         .. include:: examples/get_many.py
             :code: python
 
+    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
+
         .. deprecated:: 12.0.0
             Use :meth:`batch_read` instead.
-
-    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys.
 
@@ -258,10 +261,10 @@ Batch Operations
         .. include:: examples/exists_many.py
             :code: python
 
+    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
+
         .. deprecated:: 12.0.0
             Use :meth:`batch_read` instead.
-
-    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read specific bins from multiple records.
 
@@ -276,10 +279,10 @@ Batch Operations
         .. include:: examples/select_many.py
             :code: python
 
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
     .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
+
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_operate` instead.
 
         Batch-read multiple records, and return them as a :class:`list`.
 
@@ -296,9 +299,6 @@ Batch Operations
 
         .. include:: examples/batch_get_ops.py
             :code: python
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_operate` instead.
 
     The following batch methods will return a :class:`BatchRecords` object with
     a ``result`` value of ``0`` if one of the following is true:
@@ -1264,6 +1264,8 @@ user\'s roles. Users are assigned roles, which are collections of \
 
     .. method:: admin_query_user (username[, policy: dict]) -> []
 
+        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
+
         Return the list of roles granted to the specified user.
 
         :param str username: the username of the user.
@@ -1273,17 +1275,15 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
-
     .. method:: admin_query_users ([policy: dict]) -> {}
+
+        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
 
         Get the roles of all users.
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
 
 .. _admin_user_dict:
 
