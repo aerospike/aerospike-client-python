@@ -285,11 +285,11 @@ jobs:
     strategy:
       matrix:
         python-version: [
-          ["cp38", "3.8"],
-          ["cp39", "3.9"],
-          ["cp310", "3.10"],
-          ["cp311", "3.11"],
-          ["cp312", "3.12"]
+          "cp38",
+          "cp39",
+          "cp310",
+          "cp311",
+          "cp312"
         ]
       fail-fast: false
     steps:
@@ -307,33 +307,7 @@ jobs:
     # Update dependencies if needed
     - name: Add brew to path
       run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
-
-    - name: Install or upgrade Python
-      run: brew install python@${{ matrix.python-version[1] }}
-
-    - name: Install or upgrade OpenSSL 1.1
-      run: brew install openssl@1.1
-
-    - name: Set environment variables for building
-      run: |
-        openssl_path=$(brew --prefix openssl@1.1)
-        echo SSL_LIB_PATH="$openssl_path/lib/" >> $GITHUB_ENV
-        echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
-        echo STATIC_SSL=1 >> $GITHUB_ENV
-
-    - name: Install pip build packages
-      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall -r requirements.txt
-
-    # Self-hosted runner only
-    # Need to be able to save Docker Hub credentials to keychain
-    - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-      if: ${{ inputs.run_tests && inputs.use-server-rc }}
-
-    - if: ${{ inputs.run_tests && inputs.use-server-rc }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    - run: brew install openssl@1.1
 
     - name: Use server rc
       if: ${{ inputs.run_tests && inputs.use-server-rc }}
@@ -347,25 +321,17 @@ jobs:
       if: ${{ inputs.run_tests }}
       run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
 
-    - run: python${{ matrix.python-version[1] }} -m build
-
-    - name: Install delocate
-      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall delocate -c ./requirements.txt
-      working-directory: .github/workflows
-
-    - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
-    - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --find-links=wheelhouse/ --no-index --force-reinstall aerospike
-
-    - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall -r requirements.txt
-      if: ${{ inputs.run_tests }}
-      working-directory: test
-
-    - run: python${{ matrix.python-version[1] }} -m pytest new_tests/
-      if: ${{ inputs.run_tests }}
-      working-directory: test
-
-    - run: python${{ matrix.python-version[1] }} -c "import aerospike"
-      if: ${{ !inputs.run_tests }}
+    - name: Build wheel
+      uses: pypa/cibuildwheel@v2.11.2
+      env:
+        CIBW_BUILD: ${{ matrix.python-version[0] }}-macosx_arm64
+        CIBW_BUILD_FRONTEND: build
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        CIBW_BEFORE_TEST: >
+          pip install --force-reinstall -r test/requirements.txt
+        CIBW_TEST_COMMAND: >
+          cd {project}/test/ &&
+          python -m pytest new_tests/
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v4
