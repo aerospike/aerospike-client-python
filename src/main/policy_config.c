@@ -386,6 +386,16 @@ as_status set_query_policy(as_policy_query *query_policy, PyObject *py_policy)
         return status;
     }
 
+    PyObject *py_expected_duration =
+        PyDict_GetItemString(py_policy, "expected_duration");
+    if (py_expected_duration) {
+        if (!PyLong_CheckExact(py_expected_duration)) {
+            return AEROSPIKE_ERR_PARAM;
+        }
+        query_policy->expected_duration =
+            (as_query_duration)PyLong_AsLong(py_expected_duration);
+    }
+
     return AEROSPIKE_OK;
 }
 
