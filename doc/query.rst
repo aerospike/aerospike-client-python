@@ -477,6 +477,8 @@ Policies
             | Expected query duration. The server treats the query in different ways depending on the expected duration.
             | This field is ignored for aggregation queries, background queries and server versions < 6.0.
             |
+            | See :ref:`query_duration_constants` for possible values.
+            |
             | Default: :data:`aerospike.QUERY_DURATION_LONG`
         * **short_query** :class:`bool`
             **Deprecated**: Use ``"expected_duration"`` instead.
