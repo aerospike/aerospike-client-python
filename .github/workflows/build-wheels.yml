@@ -322,7 +322,7 @@ jobs:
         echo STATIC_SSL=1 >> $GITHUB_ENV
 
     - name: Install pip build packages
-      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages -r requirements.txt
+      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall -r requirements.txt
 
     # Self-hosted runner only
     # Need to be able to save Docker Hub credentials to keychain
@@ -350,13 +350,13 @@ jobs:
     - run: python${{ matrix.python-version[1] }} -m build
 
     - name: Install delocate
-      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages delocate -c ./requirements.txt
+      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall delocate -c ./requirements.txt
       working-directory: .github/workflows
 
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
     - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --find-links=wheelhouse/ --no-index --force-reinstall aerospike
 
-    - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages -r requirements.txt
+    - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall -r requirements.txt
       if: ${{ inputs.run_tests }}
       working-directory: test
 

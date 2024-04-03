@@ -452,7 +452,11 @@ static AerospikeConstants aerospike_constants[] = {
     {REGEX_EXTENDED, "REGEX_EXTENDED"},
     {REGEX_ICASE, "REGEX_ICASE"},
     {REGEX_NOSUB, "REGEX_NOSUB"},
-    {REGEX_NEWLINE, "REGEX_NEWLINE"}};
+    {REGEX_NEWLINE, "REGEX_NEWLINE"},
+
+    {AS_QUERY_DURATION_LONG, "QUERY_DURATION_LONG"},
+    {AS_QUERY_DURATION_LONG_RELAX_AP, "QUERY_DURATION_LONG_RELAX_AP"},
+    {AS_QUERY_DURATION_SHORT, "QUERY_DURATION_SHORT"}};
 
 static AerospikeJobConstants aerospike_job_constants[] = {
     {"scan", "JOB_SCAN"}, {"query", "JOB_QUERY"}};
@@ -711,6 +715,8 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 
         // C client 6.0.0
         POLICY_SET_FIELD(short_query, bool);
+
+        POLICY_SET_FIELD(expected_duration, as_query_duration);
     }
 
     // Update the policy
@@ -750,6 +756,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(key, as_policy_key);
         POLICY_SET_FIELD(replica, as_policy_replica);
         POLICY_SET_FIELD(deserialize, bool);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -934,6 +941,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(deserialize, bool);
         POLICY_SET_FIELD(exists, as_policy_exists);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -980,6 +988,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(allow_inline, bool);
         POLICY_SET_FIELD(deserialize, bool);
         POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -1036,6 +1045,7 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
     // Set policy fields
     POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
     POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+    POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
