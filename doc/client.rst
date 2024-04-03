@@ -300,6 +300,9 @@ Batch Operations
         .. deprecated:: 12.0.0
             Use :meth:`batch_operate` instead.
 
+Batch API behavior
+^^^^^^^^^^^^^^^^^^
+
     The following batch methods will return a :class:`BatchRecords` object with
     a ``result`` value of ``0`` if one of the following is true:
 
@@ -327,7 +330,9 @@ Batch Operations
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError` when the Python client-layer code returns an
+            error, such as a connection error or parameter error. If the underlying C client throws an error, it will
+            be returned in the return value as :py:attr:`BatchRecords.batch_records.result`.
 
         .. include:: examples/batch_write.py
             :code: python
@@ -354,7 +359,9 @@ Batch Operations
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError` when the Python client-layer code returns an
+            error, such as a connection error or parameter error. If the underlying C client throws an error, it will
+            be returned in the return value as :py:attr:`BatchRecords.batch_records.result`.
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -370,7 +377,9 @@ Batch Operations
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError` when the Python client-layer code returns an
+            error, such as a connection error or parameter error. If the underlying C client throws an error, it will
+            be returned in the return value as :py:attr:`BatchRecords.batch_records.result`.
 
         .. include:: examples/batch_operate.py
             :code: python
@@ -389,7 +398,9 @@ Batch Operations
         :param dict policy_batch_apply: See :ref:`aerospike_batch_apply_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError` when the Python client-layer code returns an
+            error, such as a connection error or parameter error. If the underlying C client throws an error, it will
+            be returned in the return value as :py:attr:`BatchRecords.batch_records.result`.
 
         .. include:: examples/batch_apply.py
             :code: python
@@ -409,7 +420,9 @@ Batch Operations
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError` when the Python client-layer code returns an
+            error, such as a connection error or parameter error. If the underlying C client throws an error, it will
+            be returned in the return value as :py:attr:`BatchRecords.batch_records.result`.
 
         .. include:: examples/batch_remove.py
             :code: python
