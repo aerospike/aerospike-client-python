@@ -1293,12 +1293,40 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
         py_listener_data[py_listener_data_index].py_callback, py_args, NULL);
     Py_DECREF(py_args);
     if (!py_result) {
-        // Python callback threw an exception
-        // But just ignore it and set our own exception
-        PyErr_Clear();
-        return as_error_update(
-            err, AEROSPIKE_ERR, "Python callback %s threw an exception",
-            py_listener_data[py_listener_data_index].listener_name);
+        // Python callback threw an exception, but just ignore it and set our own exception
+        // When some C client listeners that return an error code, the C client only prints a warning
+        // like the node close and snapshot listeners
+        // We don't want Python to throw an exception in those cases
+        // But to make debugging more helpful, we print the original Python exception in a C client's error message
+        PyObject *py_exc_type, *py_exc_value, *py_traceback;
+        PyErr_Fetch(&py_exc_type, &py_exc_value, &py_traceback);
+        Py_XDECREF(py_traceback);
+
+        const char *exc_type_str = ((PyTypeObject *)py_exc_type)->tp_name;
+
+        const char *exc_value_str;
+        PyObject *py_exc_value_str = NULL;
+        if (py_exc_value != NULL) {
+            // Exception value can be anything, not necessarily just strings
+            // e.g Aerospike exception values are tuples
+            PyObject *py_exc_value_str = PyObject_Str(py_exc_value);
+            Py_DECREF(py_exc_value);
+            exc_value_str = PyUnicode_AsUTF8(py_exc_value_str);
+        }
+        else {
+            // No exception value
+            exc_value_str = "";
+        }
+
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Python callback %s threw a %s exception: %s",
+                        py_listener_data[py_listener_data_index].listener_name,
+                        exc_type_str, exc_value_str);
+
+        Py_DECREF(py_exc_type);
+        Py_XDECREF(py_exc_value_str);
+
+        return AEROSPIKE_ERR;
     }
 
     // We don't care about the return value of the callback. It should be None as defined in the API

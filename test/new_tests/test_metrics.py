@@ -38,8 +38,11 @@ class MyMetricsListeners:
         global cluster_from_snapshot_listener
         cluster_from_snapshot_listener = cluster
 
-    def throw_exc():
-        raise Exception()
+    def enable_throw_exc():
+        raise ValueError("enable threw an error")
+
+    def disable_throw_exc(_: Cluster):
+        raise ValueError("disable threw an error")
 
 
 class TestMetrics:
@@ -180,7 +183,7 @@ class TestMetrics:
 
     def test_enable_listener_throwing_exception(self):
         listeners = MetricsListeners(
-            enable_listener=MyMetricsListeners.throw_exc,
+            enable_listener=MyMetricsListeners.enable_throw_exc,
             disable_listener=MyMetricsListeners.disable,
             node_close_listener=MyMetricsListeners.node_close,
             snapshot_listener=MyMetricsListeners.snapshot
@@ -190,7 +193,8 @@ class TestMetrics:
         )
         with pytest.raises(e.AerospikeError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
-        assert excinfo.value.msg == "Python callback enable_listener threw an exception"
+        assert excinfo.value.msg == "Python callback enable_listener threw a ValueError exception: enable threw an "\
+            "error"
 
     @pytest.mark.parametrize(
         # Policy containing field with invalid type
@@ -268,7 +272,7 @@ class TestMetrics:
     def test_disable_metrics_throwing_exc(self):
         listeners = MetricsListeners(
             enable_listener=MyMetricsListeners.enable,
-            disable_listener=MyMetricsListeners.throw_exc,
+            disable_listener=MyMetricsListeners.disable_throw_exc,
             node_close_listener=MyMetricsListeners.node_close,
             snapshot_listener=MyMetricsListeners.snapshot
         )
@@ -279,4 +283,5 @@ class TestMetrics:
 
         with pytest.raises(e.AerospikeError) as excinfo:
             self.as_connection.disable_metrics()
-        assert excinfo.value.msg == "Python callback disable_listener threw an exception"
+        assert excinfo.value.msg == "Python callback disable_listener threw a ValueError exception: disable threw"\
+            " an error"
