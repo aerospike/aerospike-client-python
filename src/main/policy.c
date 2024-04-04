@@ -1303,28 +1303,43 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
         Py_XDECREF(py_traceback);
 
         const char *exc_type_str = ((PyTypeObject *)py_exc_type)->tp_name;
+        Py_DECREF(py_exc_type);
 
-        const char *exc_value_str;
-        PyObject *py_exc_value_str = NULL;
+        // Contains either the exception value or gives the reason it can't retrieve it
+        char *err_msg_details = NULL;
         if (py_exc_value != NULL) {
             // Exception value can be anything, not necessarily just strings
             // e.g Aerospike exception values are tuples
             PyObject *py_exc_value_str = PyObject_Str(py_exc_value);
             Py_DECREF(py_exc_value);
-            exc_value_str = PyUnicode_AsUTF8(py_exc_value_str);
+
+            if (!py_exc_value_str) {
+                err_msg_details =
+                    strdup("str() on exception value threw an error");
+            }
+            else {
+                const char *ERR_MSG_DETAILS_PREFIX = "Exception value: ";
+
+                const char *exc_value_str = PyUnicode_AsUTF8(py_exc_value_str);
+                size_t allocate_size =
+                    strlen(ERR_MSG_DETAILS_PREFIX) + strlen(exc_value_str) + 1;
+                err_msg_details = malloc(allocate_size);
+                snprintf(err_msg_details, allocate_size, "%s%s",
+                         ERR_MSG_DETAILS_PREFIX, exc_value_str);
+
+                Py_DECREF(py_exc_value_str);
+            }
         }
         else {
-            // No exception value
-            exc_value_str = "";
+            err_msg_details = strdup("Exception value could not be retrieved");
         }
 
         as_error_update(err, AEROSPIKE_ERR,
-                        "Python callback %s threw a %s exception: %s",
+                        "Python callback %s threw a %s exception. %s",
                         py_listener_data[py_listener_data_index].listener_name,
-                        exc_type_str, exc_value_str);
+                        exc_type_str, err_msg_details);
 
-        Py_DECREF(py_exc_type);
-        Py_XDECREF(py_exc_value_str);
+        free(err_msg_details);
 
         return AEROSPIKE_ERR;
     }
