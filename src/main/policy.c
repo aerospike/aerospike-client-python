@@ -1284,7 +1284,7 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
             Py_DECREF(py_args);
             return as_error_update(
                 err, AEROSPIKE_ERR,
-                "Unable to pass Python Cluster object to Python callback %s",
+                "Unable to set Python argument in tuple for Python callback %s",
                 py_listener_data[py_listener_data_index].listener_name);
         }
     }
