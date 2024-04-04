@@ -115,7 +115,7 @@ class MetricsPolicy:
     Attributes:
         metrics_listeners (Optional[:py:class:`MetricsListeners`]): Listeners that handles metrics notification events.
             If set to :py:obj:`None`, the default listener implementation will be used, which writes the metrics
-            snapshot to a file which will later be read and forwarded to OpenTelemetry by a separate offline
+            snapshot to a file which can later be read and forwarded to OpenTelemetry by a separate offline
             application. Otherwise, use all listeners set in the class instance.
 
             The listener could be overridden to send the metrics snapshot directly to OpenTelemetry.
