@@ -1273,7 +1273,7 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
     if (!py_args) {
         return as_error_update(
             err, AEROSPIKE_ERR,
-            "Unable to construct list of arguments for Python callback %s",
+            "Unable to construct tuple of arguments for Python callback %s",
             py_listener_data[py_listener_data_index].listener_name);
     }
 
