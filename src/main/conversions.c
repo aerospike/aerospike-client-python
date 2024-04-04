@@ -866,7 +866,7 @@ create_py_node_metrics_from_as_node_metrics(as_error *error_p,
 
         int result = PyObject_SetAttrString(py_node_metrics,
                                             node_metrics_fields[i], py_buckets);
-       Py_DECREF(py_buckets);
+        Py_DECREF(py_buckets);
         if (result == -1) {
             PyErr_Clear();
             as_error_update(error_p, AEROSPIKE_ERR,
