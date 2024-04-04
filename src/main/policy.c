@@ -1250,10 +1250,12 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     return AEROSPIKE_OK;
 }
 
-#define ENABLE_LISTENER_INDEX 0
-#define DISABLE_LISTENER_INDEX 1
-#define NODE_CLOSE_LISTENER_INDEX 2
-#define SNAPSHOT_LISTENER_INDEX 3
+enum {
+    ENABLE_LISTENER_INDEX,
+    DISABLE_LISTENER_INDEX,
+    NODE_CLOSE_LISTENER_INDEX,
+    SNAPSHOT_LISTENER_INDEX
+};
 
 // Call Python callback defined in udata at index "py_listener_data_index"
 // If py_arg is NULL, pass no arguments to the Python callback
