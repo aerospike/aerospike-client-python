@@ -27,6 +27,7 @@
 #include <aerospike/as_bit_operations.h>
 #include <aerospike/as_hll_operations.h>
 #include <aerospike/as_partition_filter.h>
+#include <aerospike/as_metrics.h>
 
 #define MAX_CONSTANT_STR_SIZE 512
 
@@ -309,3 +310,15 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           as_policy_batch_remove **policy_p,
                                           as_exp *exp_list,
                                           as_exp **exp_list_p);
+
+as_status init_and_set_as_metrics_policy_using_pyobject(
+    as_error *err, PyObject *py_metrics_policy,
+    as_metrics_policy *metrics_policy);
+
+typedef struct {
+    // Use listener name for error messages
+    const char *listener_name;
+    PyObject *py_callback;
+} PyListenerData;
+
+void free_py_listener_data(PyListenerData *py_listener_data);
