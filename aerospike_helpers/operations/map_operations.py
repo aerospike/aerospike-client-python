@@ -782,7 +782,7 @@ def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, 
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        value_list (list): Entries with a value contained in this list will be returned from the map.
+        key_list (list): Entries with a value contained in this list will be returned from the map.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value contained in value_list will be ignored, and all others
@@ -943,9 +943,10 @@ def map_remove_by_value_rank_range_relative(
         bin_name (str): The name of the bin containing the map.
         value: The value of the entry in the map for which to search
         offset (int): Begin removing and returning items with rank == rank(found_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items with rank greater than found_item are returned.
-        return_type: Specifies what to return from the operation.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -1015,6 +1016,8 @@ def map_get_by_value_rank_range_relative(
         bin_name (str): The name of the bin containing the map.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
@@ -1075,6 +1078,8 @@ def map_remove_by_key_index_range_relative(
         bin_name (str): The name of the bin containing the list.
         key (str): The key of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
@@ -1144,6 +1149,8 @@ def map_get_by_key_index_range_relative(
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
