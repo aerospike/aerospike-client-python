@@ -42,11 +42,9 @@ jobs:
         PATTERNS: |
           !doc/**
 
-    - run: echo run_stage_tests=${{ env.GIT_DIFF != '' }} >> $GITHUB_OUTPUT
+    - name: If so, run the stage tests
+      run: echo run_stage_tests=${{ env.GIT_DIFF != '' }} >> $GITHUB_OUTPUT
       id: run_stage_tests
-
-    - name: Output latest dev version (for debugging)
-      run: echo ${{ steps.get-dev-version.outputs.latest-dev-version }}
 
   run-stage-tests:
     needs: [
