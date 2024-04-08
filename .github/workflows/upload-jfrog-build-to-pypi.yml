@@ -1,6 +1,5 @@
 name: Publish JFrog build to PyPI
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       version:
@@ -15,7 +14,6 @@ on:
 
 jobs:
   publish-jfrog-build-to-pypi:
-    if: ${{ false }}
     runs-on: ubuntu-22.04
     steps:
     - uses: jfrog/setup-jfrog-cli@v4
