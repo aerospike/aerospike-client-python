@@ -163,7 +163,7 @@ Server Errors
 
 .. py:exception:: InvalidRequest
 
-    Protocol-level error.
+    Request protocol invalid, or invalid protocol field.
 
     Error code: ``4``
 
@@ -366,7 +366,7 @@ Record Errors
 
 .. py:exception:: BinNameError
 
-    Length of bin name exceeds the limit of 15 characters.
+    Either length of bin name exceeds the limit of 15 characters, or namespace's bin name quota was exceeded.
 
     Error code: ``21``
 
@@ -410,7 +410,7 @@ Index Errors
 
 .. py:exception:: IndexError
 
-    The parent class for indexing exceptions.
+    The parent class for secondary index exceptions.
 
     Error code: ``204``
 
@@ -448,6 +448,8 @@ Index Errors
 
 .. py:exception:: IndexNameMaxLen
 
+    Index name is too long.
+
     Error code: ``205``
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
@@ -473,11 +475,15 @@ Query Errors
 
 .. py:exception:: QueryQueueFull
 
+    Query processing queue is full.
+
     Error code: ``211``
 
     Subclass of :py:exc:`~aerospike.exception.QueryError`.
 
 .. py:exception:: QueryTimeout
+
+    Secondary index query timed out on server.
 
     Error code: ``212``
 
@@ -518,11 +524,15 @@ Admin Errors
 
 .. py:exception:: ForbiddenPassword
 
+    Forbidden password (e.g. recently used)
+
     Error code: ``64``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: IllegalState
+
+    Security protocol not followed.
 
     Error code: ``56``
 
@@ -530,17 +540,23 @@ Admin Errors
 
 .. py:exception:: InvalidCommand
 
+    Administration command is invalid.
+
     Error code: ``54``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidCredential
 
+    Security credential is invalid.
+
     Error code: ``65``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidField
+
+    Administration field is invalid.
 
     Error code: ``55``
 
@@ -560,17 +576,23 @@ Admin Errors
 
 .. py:exception:: InvalidRole
 
+    Role name is invalid.
+
     Error code: ``70``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidUser
 
+    User name is invalid.
+
     Error code: ``60``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: QuotasNotEnabled
+
+    Quotas not enabled on server.
 
     Error code: ``74``
 
@@ -590,11 +612,15 @@ Admin Errors
 
 .. py:exception:: NotWhitelisted
 
+    Command not allowed because sender IP not whitelisted.
+
     Error code: ``82``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidWhitelist
+
+    Invalid IP whitelist.
 
     Error code: ``73``
 
@@ -602,11 +628,15 @@ Admin Errors
 
 .. py:exception:: NotAuthenticated
 
+    User must be authentication before performing database operations.
+
     Error code: ``80``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: RoleExistsError
+
+    Role already exists.
 
     Error code: ``71``
 
@@ -614,11 +644,15 @@ Admin Errors
 
 .. py:exception:: RoleViolation
 
+    User does not possess the required role to perform the database operation.
+
     Error code: ``81``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: SecurityNotEnabled
+
+    Security functionality not enabled by connected server.
 
     Error code: ``52``
 
@@ -626,17 +660,23 @@ Admin Errors
 
 .. py:exception:: SecurityNotSupported
 
+    Security functionality not supported by connected server.
+
     Error code: ``51``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: SecuritySchemeNotSupported
 
+    Security type not supported by connected server.
+
     Error code: ``53``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: UserExistsError
+
+    User was previously created.
 
     Error code: ``61``
 
@@ -663,11 +703,15 @@ UDF Errors
 
 .. py:exception:: UDFNotFound
 
+    UDF does not exist.
+
     Error code: ``1301``
 
     Subclass of :py:exc:`~aerospike.exception.UDFError`.
 
 .. py:exception:: LuaFileNotFound
+
+    LUA file does not exist.
 
     Error code: ``1302``
 
