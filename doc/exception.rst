@@ -254,7 +254,7 @@ Server Errors
 
     All batch queues are full.
 
-    Error code: ````
+    Error code: ``152``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -262,11 +262,15 @@ Server Errors
 
     Batch max requests have been exceeded.
 
+    Error code: ``151``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: BatchDisabledError
 
     Batch functionality has been disabled.
+
+    Error code: ``150``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -274,17 +278,23 @@ Server Errors
 
     Scan aborted by user.
 
+    Error code: ``15``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: LostConflict
 
     Write command loses conflict to XDR.
 
+    Error code: ``28``
+
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: InvalidGeoJSON
 
     Invalid/Unsupported GeoJSON.
+
+    Error code: ``160``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -309,6 +319,8 @@ Record Errors
 
     Record key sent with transaction did not match key stored on server.
 
+    Error code: ``19``
+
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: RecordNotFound
@@ -316,11 +328,15 @@ Record Errors
     Record does not exist in database. May be returned by either a read or a \
     write with the policy :py:data:`aerospike.POLICY_EXISTS_UPDATE`.
 
+    Error code: ``2``
+
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: RecordGenerationError
 
     Generation of record in database does not satisfy write policy.
+
+    Error code: ``3``
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
@@ -328,11 +344,15 @@ Record Errors
 
     Record already exists. May be returned by a write with policy :py:data:`aerospike.POLICY_EXISTS_CREATE`.
 
+    Error code: ``5``
+
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: RecordBusy
 
     Too may concurrent requests for one record - a "hot-key" situation.
+
+    Error code: ``14``
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
@@ -340,11 +360,15 @@ Record Errors
 
     Record being (re-)written can't fit in a storage write block.
 
+    Error code: ``13``
+
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: BinNameError
 
     Length of bin name exceeds the limit of 15 characters.
+
+    Error code: ``21``
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
@@ -353,11 +377,15 @@ Record Errors
     Bin modification operation can't be done on an existing bin due to its value type \
     (for example appending to an integer).
 
+    Error code: ``12``
+
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: BinNotFound
 
     Bin not found on update-only operation.
+
+    Error code: ``17``
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
@@ -365,13 +393,15 @@ Record Errors
 
     Bin already exists on a create-only operation.
 
+    Error code: ``6``
+
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
 .. py:exception:: QueryAbortedError
 
     Query was aborted.
 
-    Error code: ````
+    Error code: ``210``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -382,6 +412,8 @@ Index Errors
 
     The parent class for indexing exceptions.
 
+    Error code: ``204``
+
     .. py:attribute:: index_name
 
         The name of the index associated with the error.
@@ -390,9 +422,13 @@ Index Errors
 
 .. py:exception:: IndexNotFound
 
+    Error code: ``204``
+
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
 .. py:exception:: IndexFoundError
+
+    Error code: ``200``
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
@@ -400,19 +436,27 @@ Index Errors
 
     The index is out of memory.
 
+    Error code: ``202``
+
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
 .. py:exception:: IndexNotReadable
 
+    Error code: ``203``
+
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
 .. py:exception:: IndexNameMaxLen
+
+    Error code: ``205``
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
 .. py:exception:: IndexNameMaxCount
 
     Reached the maximum allowed number of indexes.
+
+    Error code: ``206``
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
@@ -423,13 +467,19 @@ Query Errors
 
     Exception class for query errors.
 
+    Error code: ``213``
+
     Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
 
 .. py:exception:: QueryQueueFull
 
+    Error code: ``211``
+
     Subclass of :py:exc:`~aerospike.exception.QueryError`.
 
 .. py:exception:: QueryTimeout
+
+    Error code: ``212``
 
     Subclass of :py:exc:`~aerospike.exception.QueryError`.
 
@@ -440,12 +490,16 @@ Cluster Errors
 
     Cluster discovery and connection errors.
 
+    Error code: ``11``
+
     Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
 
 .. py:exception:: ClusterChangeError
 
     A cluster state change occurred during the request. This may also be \
     returned by scan operations with the ``fail-on-cluster-change`` flag set.
+
+    Error code: ``7``
 
     Subclass of :py:exc:`~aerospike.exception.ClusterError`.
 
@@ -458,89 +512,133 @@ Admin Errors
 
 .. py:exception:: ExpiredPassword
 
+    Error code: ``63``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: ForbiddenPassword
+
+    Error code: ``64``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: IllegalState
 
+    Error code: ``56``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidCommand
+
+    Error code: ``54``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidCredential
 
+    Error code: ``65``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidField
+
+    Error code: ``55``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidPassword
 
+    Error code: ``62``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidPrivilege
+
+    Error code: ``72``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidRole
 
+    Error code: ``70``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidUser
+
+    Error code: ``60``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: QuotasNotEnabled
 
+    Error code: ``74``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: QuotaExceeded
+
+    Error code: ``83``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidQuota
 
+    Error code: ``75``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: NotWhitelisted
+
+    Error code: ``82``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: InvalidWhitelist
 
+    Error code: ``73``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: NotAuthenticated
+
+    Error code: ``80``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: RoleExistsError
 
+    Error code: ``71``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: RoleViolation
+
+    Error code: ``81``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: SecurityNotEnabled
 
+    Error code: ``52``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: SecurityNotSupported
+
+    Error code: ``51``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: SecuritySchemeNotSupported
 
+    Error code: ``53``
+
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: UserExistsError
+
+    Error code: ``61``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
@@ -550,6 +648,8 @@ UDF Errors
 .. py:exception:: UDFError
 
     The parent class for UDF exceptions exceptions.
+
+    Error code: ``100``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -563,9 +663,13 @@ UDF Errors
 
 .. py:exception:: UDFNotFound
 
+    Error code: ``1301``
+
     Subclass of :py:exc:`~aerospike.exception.UDFError`.
 
 .. py:exception:: LuaFileNotFound
+
+    Error code: ``1302``
 
     Subclass of :py:exc:`~aerospike.exception.UDFError`.
 
