@@ -470,3 +470,21 @@ class TestBatchWrite(TestBaseClass):
         with pytest.raises(exp_res):
             bad_client = aerospike.client({"hosts": [("bad_addr", 3000)]})
             bad_client.batch_write(batch_records)
+
+    def test_batch_read_invalid_policy_value(self):
+        batch_records = br.BatchRecords(
+            [
+                br.Read(
+                    key=("test", "demo", 1),
+                    ops=[
+                        op.read("count"),
+                    ],
+                    policy={
+                        "read_touch_ttl_percent": "fail"
+                    }
+                )
+            ]
+        )
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.batch_write(batch_records)
+        assert excinfo.value.msg == "batch_type: Read, failed to convert policy"

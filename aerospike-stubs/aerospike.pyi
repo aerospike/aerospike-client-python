@@ -1,6 +1,8 @@
-from typing import Any, Callable, Union, final, Literal
+from typing import Any, Callable, Union, final, Literal, Optional
 
 from aerospike_helpers.batch.records import BatchRecords
+from aerospike_helpers.metrics import MetricsPolicy
+
 AS_BOOL: Literal[1]
 AS_BYTES_BLOB: Literal[4]
 AS_BYTES_BOOL: Literal[17]
@@ -287,6 +289,9 @@ TTL_NAMESPACE_DEFAULT: Literal[0]
 TTL_NEVER_EXPIRE: Literal[0xFFFFFFFF]
 TTL_CLIENT_DEFAULT: Literal[0xFFFFFFFD]
 UDF_TYPE_LUA: Literal[0]
+QUERY_DURATION_LONG: Literal[0]
+QUERY_DURATION_SHORT: Literal[1]
+QUERY_DURATION_LONG_RELAX_AP: Literal[2]
 
 @final
 class CDTInfinite:
@@ -352,6 +357,8 @@ class Client:
     def info_single_node(self, command: str, host: str, policy: dict = ...) -> str: ...
     def is_connected(self) -> bool: ...
     def job_info(self, job_id: int, module, policy: dict = ...) -> dict: ...
+    def enable_metrics(self, policy: Optional[MetricsPolicy] = None) -> None: ...
+    def disable_metrics(self) -> None: ...
     # List and map operations in the aerospike module are deprecated and undocumented
     # def list_append(self, *args, **kwargs) -> Any: ...
     # def list_clear(self, *args, **kwargs) -> Any: ...
