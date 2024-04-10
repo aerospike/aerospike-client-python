@@ -300,23 +300,22 @@ Batch Operations
         .. deprecated:: 12.0.0
             Use :meth:`batch_operate` instead.
 
-Batch API behavior
-^^^^^^^^^^^^^^^^^^
+    .. note::
 
-    The following batch methods will return a :class:`BatchRecords` object with
-    a ``result`` value of ``0`` if one of the following is true:
+        The following batch methods will return a :class:`BatchRecords` object with
+        a ``result`` value of ``0`` if one of the following is true:
 
-        * All transactions are successful.
-        * One or more transactions failed because:
+            * All transactions are successful.
+            * One or more transactions failed because:
 
-            - A record was filtered out by an expression
-            - The record was not found
+                - A record was filtered out by an expression
+                - The record was not found
 
-    Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
-    an `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
+        Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
+        an `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
 
-    In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
-    and each batch record contains the result of that transaction.
+        In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
+        and each batch record contains the result of that transaction.
 
     .. method:: batch_write(batch_records: BatchRecords, [policy_batch: dict]) -> BatchRecords
 
