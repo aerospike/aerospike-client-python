@@ -302,7 +302,7 @@ Batch Operations
 
     .. note::
 
-        The following batch methods will return a :class:`BatchRecords` object with
+        The following batch methods will return a :class:`~aerospike_helpers.batch.records.BatchRecords` object with
         a ``result`` value of ``0`` if one of the following is true:
 
             * All transactions are successful.
