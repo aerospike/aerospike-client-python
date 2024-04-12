@@ -343,7 +343,8 @@ setup(
                 'src/main/client/batch_operate.c',
                 'src/main/client/batch_remove.c',
                 'src/main/client/batch_apply.c',
-                'src/main/client/batch_read.c'
+                'src/main/client/batch_read.c',
+                'src/main/client/metrics.c'
             ],
 
             # Compile
@@ -367,6 +368,7 @@ setup(
     },
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions',
+              'aerospike_helpers.metrics',
               'aerospike-stubs'],
     cmdclass={
         'build': CClientBuild,

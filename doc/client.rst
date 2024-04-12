@@ -225,6 +225,9 @@ Batch Operations
 
     .. method:: get_many(keys[, policy: dict]) -> [(key, meta, bins)]
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
         Batch-read multiple records, and return them as a :class:`list`.
 
         Any record that does not exist will have a :py:obj:`None` value for metadata \
@@ -240,10 +243,10 @@ Batch Operations
         .. include:: examples/get_many.py
             :code: python
 
+    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
+
         .. deprecated:: 12.0.0
             Use :meth:`batch_read` instead.
-
-    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys.
 
@@ -258,10 +261,10 @@ Batch Operations
         .. include:: examples/exists_many.py
             :code: python
 
+    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
+
         .. deprecated:: 12.0.0
             Use :meth:`batch_read` instead.
-
-    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read specific bins from multiple records.
 
@@ -276,10 +279,10 @@ Batch Operations
         .. include:: examples/select_many.py
             :code: python
 
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
     .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
+
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_operate` instead.
 
         Batch-read multiple records, and return them as a :class:`list`.
 
@@ -296,9 +299,6 @@ Batch Operations
 
         .. include:: examples/batch_get_ops.py
             :code: python
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_operate` instead.
 
     .. note::
 
@@ -365,6 +365,9 @@ Batch Operations
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
 
         Perform the same read/write transactions on multiple keys.
+
+        .. note:: Prior to Python client 14.0.0, using the :meth:`~batch_operate()` method with only read operations caused an error.
+            This bug was fixed in version 14.0.0.
 
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.
@@ -1268,6 +1271,8 @@ user\'s roles. Users are assigned roles, which are collections of \
 
     .. method:: admin_query_user (username[, policy: dict]) -> []
 
+        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
+
         Return the list of roles granted to the specified user.
 
         :param str username: the username of the user.
@@ -1277,9 +1282,9 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
-
     .. method:: admin_query_users ([policy: dict]) -> {}
+
+        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
 
         Get the roles of all users.
 
@@ -1287,7 +1292,25 @@ user\'s roles. Users are assigned roles, which are collections of \
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
+Metrics
+-------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
+
+        Enable extended periodic cluster and node latency metrics.
+
+        :param MetricsPolicy policy: Optional metrics policy
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+    .. method:: disable_metrics()
+
+        Disable extended periodic cluster and node latency metrics.
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
 .. _admin_user_dict:
 
@@ -1684,6 +1707,26 @@ Read Policies
 
             .. versionadded:: 3.7.0
 
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1755,12 +1798,33 @@ Operate Policies
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
         * **ttl** (:class:`int`)
             The default time-to-live (expiration) of the record in seconds. This field will only be used if an
-            operate transaction:
+            operate transaction contains a write operation and either:
 
             1. Doesn't contain a metadata dictionary with a ``ttl`` value.
             2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
 
             There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
+
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -2026,6 +2090,26 @@ Batch Policies
 
             .. versionadded:: 3.7.0
 
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -2226,6 +2310,25 @@ Batch Read Policies
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
 
 .. _aerospike_info_policies:
 
