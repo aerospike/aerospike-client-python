@@ -312,12 +312,12 @@ Batch Operations
                 - The record was not found
 
         Otherwise:
-            * If the Python client-layer's code throws an error, such as a connection error or parameter error, an
-                exception will be raised.
+
+            * If the Python client-layer's code throws an error, such as a connection error or parameter error, an exception will be raised.
             * If the underlying C client throws an error, the :class:`BatchRecords` object will have a ``result`` value equal to an
-                `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code. In this case, the
-                :class:`BatchRecords` object has a list of batch records called ``batch_records``,
-                and each batch record contains the result of that transaction.
+              `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code. In this case, the
+              :class:`BatchRecords` object has a list of batch records called ``batch_records``,
+              and each batch record contains the result of that transaction.
 
     .. method:: batch_write(batch_records: BatchRecords, [policy_batch: dict]) -> BatchRecords
 
