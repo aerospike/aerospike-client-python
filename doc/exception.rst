@@ -72,14 +72,6 @@ Client Errors
 
     Error code: ``-1``
 
-.. py:exception:: InvalidHostError
-
-    Host name could not be found in DNS lookup.
-
-    Error code: ``-4``
-
-    Subclass of :py:exc:`~aerospike.exception.ClientError`.
-
 .. py:exception:: ParamError
 
     The operation was not performed because of invalid parameters.
@@ -88,11 +80,11 @@ Client Errors
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
-.. py:exception:: MaxErrorRateExceeded
+.. py:exception:: InvalidHostError
 
-    The operation was not performed because the maximum error rate has been exceeded.
+    Host name could not be found in DNS lookup.
 
-    Error code: ``-14``
+    Error code: ``-4``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -120,11 +112,27 @@ Client Errors
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
+.. py:exception:: ConnectionError
+
+    Synchronous connection error.
+
+    Error code: ``-10``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
 .. py:exception:: MaxRetriesExceeded
 
     Max retries limit reached.
 
     Error code: ``-12``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: MaxErrorRateExceeded
+
+    The operation was not performed because the maximum error rate has been exceeded.
+
+    Error code: ``-14``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -141,14 +149,6 @@ Client Errors
     One or more keys failed in a batch.
 
     Error code: ``-16``
-
-    Subclass of :py:exc:`~aerospike.exception.ClientError`.
-
-.. py:exception:: ConnectionError
-
-    Synchronous connection error.
-
-    Error code: ``-10``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -169,22 +169,6 @@ Server Errors
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: OpNotApplicable
-
-    The operation cannot be applied to the current bin value on the server.
-
-    Error code: ``26``
-
-    Subclass of :py:exc:`~aerospike.exception.ServerError`.
-
-.. py:exception:: FilteredOut
-
-    The transaction was not performed because the expression was false.
-
-    Error code: ``27``
-
-    Subclass of :py:exc:`~aerospike.exception.ServerError`.
-
 .. py:exception:: ServerFull
 
     The server node is running out of memory and/or storage device space
@@ -199,6 +183,14 @@ Server Errors
     Operation not allowed in current configuration.
 
     Error code: ``10``
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: ScanAbortedError
+
+    Scan aborted by user.
+
+    Error code: ``15``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -250,19 +242,27 @@ Server Errors
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: BatchQueueFullError
+.. py:exception:: OpNotApplicable
 
-    All batch queues are full.
+    The operation cannot be applied to the current bin value on the server.
 
-    Error code: ``152``
+    Error code: ``26``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: BatchMaxRequestError
+.. py:exception:: FilteredOut
 
-    Batch max requests have been exceeded.
+    The transaction was not performed because the expression was false.
 
-    Error code: ``151``
+    Error code: ``27``
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
+.. py:exception:: LostConflict
+
+    Write command loses conflict to XDR.
+
+    Error code: ``28``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -274,19 +274,19 @@ Server Errors
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: ScanAbortedError
+.. py:exception:: BatchMaxRequestError
 
-    Scan aborted by user.
+    Batch max requests have been exceeded.
 
-    Error code: ``15``
+    Error code: ``151``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: LostConflict
+.. py:exception:: BatchQueueFullError
 
-    Write command loses conflict to XDR.
+    All batch queues are full.
 
-    Error code: ``28``
+    Error code: ``152``
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
@@ -315,14 +315,6 @@ Record Errors
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: RecordKeyMismatch
-
-    Record key sent with transaction did not match key stored on server.
-
-    Error code: ``19``
-
-    Subclass of :py:exc:`~aerospike.exception.RecordError`.
-
 .. py:exception:: RecordNotFound
 
     Record does not exist in database. May be returned by either a read or a \
@@ -348,27 +340,11 @@ Record Errors
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: RecordBusy
+.. py:exception:: BinExistsError
 
-    Too may concurrent requests for one record - a "hot-key" situation.
+    Bin already exists on a create-only operation.
 
-    Error code: ``14``
-
-    Subclass of :py:exc:`~aerospike.exception.RecordError`.
-
-.. py:exception:: RecordTooBig
-
-    Record being (re-)written can't fit in a storage write block.
-
-    Error code: ``13``
-
-    Subclass of :py:exc:`~aerospike.exception.RecordError`.
-
-.. py:exception:: BinNameError
-
-    Either length of bin name exceeds the limit of 15 characters, or namespace's bin name quota was exceeded.
-
-    Error code: ``21``
+    Error code: ``6``
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
@@ -381,6 +357,22 @@ Record Errors
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
+.. py:exception:: RecordTooBig
+
+    Record being (re-)written can't fit in a storage write block.
+
+    Error code: ``13``
+
+    Subclass of :py:exc:`~aerospike.exception.RecordError`.
+
+.. py:exception:: RecordBusy
+
+    Too may concurrent requests for one record - a "hot-key" situation.
+
+    Error code: ``14``
+
+    Subclass of :py:exc:`~aerospike.exception.RecordError`.
+
 .. py:exception:: BinNotFound
 
     Bin not found on update-only operation.
@@ -389,11 +381,19 @@ Record Errors
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
-.. py:exception:: BinExistsError
+.. py:exception:: RecordKeyMismatch
 
-    Bin already exists on a create-only operation.
+    Record key sent with transaction did not match key stored on server.
 
-    Error code: ``6``
+    Error code: ``19``
+
+    Subclass of :py:exc:`~aerospike.exception.RecordError`.
+
+.. py:exception:: BinNameError
+
+    Either length of bin name exceeds the limit of 15 characters, or namespace's bin name quota was exceeded.
+
+    Error code: ``21``
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
 
@@ -420,15 +420,15 @@ Index Errors
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
-.. py:exception:: IndexNotFound
-
-    Error code: ``204``
-
-    Subclass of :py:exc:`~aerospike.exception.IndexError`.
-
 .. py:exception:: IndexFoundError
 
     Error code: ``200``
+
+    Subclass of :py:exc:`~aerospike.exception.IndexError`.
+
+.. py:exception:: IndexNotFound
+
+    Error code: ``201``
 
     Subclass of :py:exc:`~aerospike.exception.IndexError`.
 
@@ -465,14 +465,6 @@ Index Errors
 Query Errors
 ------------
 
-.. py:exception:: QueryError
-
-    Exception class for query errors.
-
-    Error code: ``213``
-
-    Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
-
 .. py:exception:: QueryQueueFull
 
     Query processing queue is full.
@@ -489,16 +481,16 @@ Query Errors
 
     Subclass of :py:exc:`~aerospike.exception.QueryError`.
 
-Cluster Errors
---------------
+.. py:exception:: QueryError
 
-.. py:exception:: ClusterError
+    Exception class for query errors.
 
-    Cluster discovery and connection errors.
-
-    Error code: ``11``
+    Error code: ``213``
 
     Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
+
+Cluster Errors
+--------------
 
 .. py:exception:: ClusterChangeError
 
@@ -509,12 +501,90 @@ Cluster Errors
 
     Subclass of :py:exc:`~aerospike.exception.ClusterError`.
 
+.. py:exception:: ClusterError
+
+    Cluster discovery and connection errors.
+
+    Error code: ``11``
+
+    Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
+
 Admin Errors
 ------------
 
 .. py:exception:: AdminError
 
     The parent class for exceptions of the security API.
+
+.. py:exception:: SecurityNotSupported
+
+    Security functionality not supported by connected server.
+
+    Error code: ``51``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: SecurityNotEnabled
+
+    Security functionality not enabled by connected server.
+
+    Error code: ``52``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: SecuritySchemeNotSupported
+
+    Security type not supported by connected server.
+
+    Error code: ``53``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: InvalidCommand
+
+    Administration command is invalid.
+
+    Error code: ``54``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: InvalidField
+
+    Administration field is invalid.
+
+    Error code: ``55``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: IllegalState
+
+    Security protocol not followed.
+
+    Error code: ``56``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: InvalidUser
+
+    User name is invalid.
+
+    Error code: ``60``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: UserExistsError
+
+    User was previously created.
+
+    Error code: ``61``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: InvalidPassword
+
+    Error code: ``62``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
 .. py:exception:: ExpiredPassword
 
@@ -530,47 +600,11 @@ Admin Errors
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: IllegalState
-
-    Security protocol not followed.
-
-    Error code: ``56``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: InvalidCommand
-
-    Administration command is invalid.
-
-    Error code: ``54``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
 .. py:exception:: InvalidCredential
 
     Security credential is invalid.
 
     Error code: ``65``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: InvalidField
-
-    Administration field is invalid.
-
-    Error code: ``55``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: InvalidPassword
-
-    Error code: ``62``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: InvalidPrivilege
-
-    Error code: ``72``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
@@ -582,39 +616,17 @@ Admin Errors
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: InvalidUser
+.. py:exception:: RoleExistsError
 
-    User name is invalid.
+    Role already exists.
 
-    Error code: ``60``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: QuotasNotEnabled
-
-    Quotas not enabled on server.
-
-    Error code: ``74``
+    Error code: ``71``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: QuotaExceeded
+.. py:exception:: InvalidPrivilege
 
-    Error code: ``83``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: InvalidQuota
-
-    Error code: ``75``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: NotWhitelisted
-
-    Command not allowed because sender IP not whitelisted.
-
-    Error code: ``82``
+    Error code: ``72``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
@@ -626,19 +638,25 @@ Admin Errors
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
+.. py:exception:: QuotasNotEnabled
+
+    Quotas not enabled on server.
+
+    Error code: ``74``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
+.. py:exception:: InvalidQuota
+
+    Error code: ``75``
+
+    Subclass of :py:exc:`~aerospike.exception.AdminError`.
+
 .. py:exception:: NotAuthenticated
 
     User must be authentication before performing database operations.
 
     Error code: ``80``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: RoleExistsError
-
-    Role already exists.
-
-    Error code: ``71``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
@@ -650,35 +668,17 @@ Admin Errors
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: SecurityNotEnabled
+.. py:exception:: NotWhitelisted
 
-    Security functionality not enabled by connected server.
+    Command not allowed because sender IP not whitelisted.
 
-    Error code: ``52``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: SecurityNotSupported
-
-    Security functionality not supported by connected server.
-
-    Error code: ``51``
+    Error code: ``82``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
-.. py:exception:: SecuritySchemeNotSupported
+.. py:exception:: QuotaExceeded
 
-    Security type not supported by connected server.
-
-    Error code: ``53``
-
-    Subclass of :py:exc:`~aerospike.exception.AdminError`.
-
-.. py:exception:: UserExistsError
-
-    User was previously created.
-
-    Error code: ``61``
+    Error code: ``83``
 
     Subclass of :py:exc:`~aerospike.exception.AdminError`.
 
