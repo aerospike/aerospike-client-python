@@ -362,6 +362,9 @@ Batch Operations
 
         Perform the same read/write transactions on multiple keys.
 
+        .. note:: Prior to Python client 14.0.0, using the :meth:`~batch_operate()` method with only read operations caused an error.
+            This bug was fixed in version 14.0.0.
+
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.
         :param dict policy_batch: See :ref:`aerospike_batch_policies`.
