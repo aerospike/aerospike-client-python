@@ -300,20 +300,24 @@ Batch Operations
         .. include:: examples/batch_get_ops.py
             :code: python
 
-    The following batch methods will return a :class:`BatchRecords` object with
-    a ``result`` value of ``0`` if one of the following is true:
+    .. note::
 
-        * All transactions are successful.
-        * One or more transactions failed because:
+        The following batch methods will return a :class:`~aerospike_helpers.batch.records.BatchRecords` object with
+        a ``result`` value of ``0`` if one of the following is true:
 
-            - A record was filtered out by an expression
-            - The record was not found
+            * All transactions are successful.
+            * One or more transactions failed because:
 
-    Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
-    an `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
+                - A record was filtered out by an expression
+                - The record was not found
 
-    In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
-    and each batch record contains the result of that transaction.
+        Otherwise:
+
+            * If the Python client-layer's code throws an error, such as a connection error or parameter error, an exception will be raised.
+            * If the underlying C client throws an error, the returned :class:`~aerospike_helpers.batch.records.BatchRecords` object will have a ``result`` value equal to an
+              `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code. In this case, the
+              :class:`~aerospike_helpers.batch.records.BatchRecords` object has a list of batch records called ``batch_records``,
+              and each batch record contains the result of that transaction.
 
     .. method:: batch_write(batch_records: BatchRecords, [policy_batch: dict]) -> BatchRecords
 
@@ -327,7 +331,7 @@ Batch Operations
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_write.py
             :code: python
@@ -354,7 +358,7 @@ Batch Operations
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. note:: Requires server version >= 6.0.0.
 
@@ -373,7 +377,7 @@ Batch Operations
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_operate.py
             :code: python
@@ -392,7 +396,7 @@ Batch Operations
         :param dict policy_batch_apply: See :ref:`aerospike_batch_apply_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_apply.py
             :code: python
@@ -412,7 +416,7 @@ Batch Operations
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_remove.py
             :code: python
