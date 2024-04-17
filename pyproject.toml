@@ -40,6 +40,9 @@ include-package-data = true
 
 [tool.versioningit]
 
+[tool.versioningit.vcs]
+method = {module = "custom-versionit-format", value="my_vcs"}
+
 # Use versioneer formatting
 [tool.versioningit.format]
 method = {module = "custom-versionit-format", value="my_format"}
