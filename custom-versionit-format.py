@@ -51,6 +51,8 @@ def my_format(
             next_version=next_version,
             params=params
         )
+    else:
+        version_str = base_version
     if os.getenv("UNOPTIMIZED"):
         version_str = append_to_local(version_str, "unoptimized")
     if os.getenv("INCLUDE_DSYM"):
