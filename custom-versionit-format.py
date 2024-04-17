@@ -1,8 +1,10 @@
 from parver import Version
 import versioningit
 from typing import Any, Dict
+import pathlib
 
 import versioningit.basics
+import versioningit.git
 import os
 
 # Take in <version> and <string> as input
@@ -20,18 +22,33 @@ def append_to_local(version_str: str, value: str) -> str:
     version = version.replace(local=new_local)
     return version.__str__()
 
+def my_vcs(
+        project_dir: str | pathlib.Path,
+        params: dict[str, Any]
+) -> versioningit.VCSDescription:
+    vcs_description = versioningit.git.describe_git(
+        project_dir=project_dir,
+        params=params
+    )
+    if vcs_description.state == "exact":
+        # We don't want the format step to be skipped
+        vcs_description.state = "exact_"
+
 def my_format(
         description: versioningit.VCSDescription,
         base_version: str,
         next_version: str,
         params: Dict[str, Any]
 ) -> str:
-    version_str = versioningit.basics.basic_format(
-        description=description,
-        base_version=base_version,
-        next_version=next_version,
-        params=params
-    )
+    # Even if the repository state matches a tag, we always need to label the version if it's unoptimized or includes
+    # dsym for macOS
+    if description.state != "exact_":
+        version_str = versioningit.basics.basic_format(
+            description=description,
+            base_version=base_version,
+            next_version=next_version,
+            params=params
+        )
     if os.getenv("UNOPTIMIZED"):
         version_str = append_to_local(version_str, "unoptimized")
     if os.getenv("INCLUDE_DSYM"):
