@@ -24,7 +24,7 @@ def append_to_local(version_str: str, value: str) -> str:
 
 def my_vcs(
         project_dir: Union[str, pathlib.Path],
-        params: dict[str, Any]
+        params: Dict[str, Any]
 ) -> versioningit.VCSDescription:
     vcs_description = versioningit.git.describe_git(
         project_dir=project_dir,
