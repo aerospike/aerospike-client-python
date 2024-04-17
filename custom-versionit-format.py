@@ -1,6 +1,6 @@
 from parver import Version
 import versioningit
-from typing import Any, Dict
+from typing import Any, Dict, Union
 import pathlib
 
 import versioningit.basics
@@ -23,7 +23,7 @@ def append_to_local(version_str: str, value: str) -> str:
     return version.__str__()
 
 def my_vcs(
-        project_dir: str | pathlib.Path,
+        project_dir: Union[str, pathlib.Path],
         params: dict[str, Any]
 ) -> versioningit.VCSDescription:
     vcs_description = versioningit.git.describe_git(
@@ -53,6 +53,7 @@ def my_format(
         )
     else:
         version_str = base_version
+
     if os.getenv("UNOPTIMIZED"):
         version_str = append_to_local(version_str, "unoptimized")
     if os.getenv("INCLUDE_DSYM"):
