@@ -57,7 +57,7 @@ COVERAGE = os.getenv('COVERAGE')
 UNOPTIMIZED = os.getenv('UNOPTIMIZED')
 
 # Include debug information on macOS (not included by default)
-INCLUDE_DSYM = os.getenv('INCLUDE_DYSM')
+INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 
 ################################################################################
 # GENERIC BUILD SETTINGS
