@@ -32,6 +32,7 @@ def my_vcs(
     )
     if vcs_description.state == "exact":
         # We don't want the format step to be skipped
+        # Workaround: https://github.com/jwodder/versioningit/issues/42#issuecomment-1235573432
         vcs_description.state = "exact_"
 
 def my_format(
