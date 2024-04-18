@@ -120,8 +120,8 @@ jobs:
         status: ${{ job.status }}
         context: "Build wheels (sdist)"
 
-  manylinux:
-    runs-on: ubuntu-22.04
+  manylinux_and_macos:
+    runs-on: ${{ matrix.os-and-wheel-identifier[0] }}
     strategy:
       fail-fast: false
       matrix:
@@ -133,31 +133,43 @@ jobs:
           "cp311",
           "cp312"
         ]
-        platform: [
+        arch: [
           "x86_64",
           "aarch64"
         ]
+        # Need to pair these together
+        os-and-wheel-identifier: [
+          ["ubuntu-22.04", "manylinux"],
+          ["macos-12-large", "macos"]
+        ]
 
     steps:
+    - name: Get build identifier for cibuildwheel
+      run: echo "BUILD_IDENTIFIER=${{ matrix.python }}-${{ matrix.os-and-wheel-identifier[1] }}_${{ matrix.arch }}" >> $GITHUB_ENV
+
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
         sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
+        context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
 
     - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
     - name: Set up QEMU for cross compiling arm64
-      if: ${{ matrix.platform == 'aarch64' }}
+      if: ${{ matrix.arch == 'aarch64' }}
       uses: docker/setup-qemu-action@v2
       with:
         platforms: arm64
 
-    - uses: ./.github/actions/run-ee-server-for-ext-container
+    # TODO: macos docker setup
+
+    - uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       if: ${{ inputs.run_tests }}
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
@@ -165,32 +177,38 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - name: Enable tests
-      if: ${{ inputs.run_tests }}
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
-
-    - name: Disable tests (only run basic import test)
-      if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
-
     - name: Set unoptimize flag
       if: ${{ inputs.apply-no-optimizations }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
+    - name: Set include dsym flag
+      if: ${{ matrix.os-and-wheel-identifier[1] == 'macos' && inputs.include-debug-info-for-macos }}
+      run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.16.5
       env:
-        CIBW_BEFORE_BUILD: git diff
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }}
-        CIBW_ENVIRONMENT: VERSIONINGIT_LOG_LEVEL=DEBUG
-        CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
+        CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
-        CIBW_ARCHS: "${{ matrix.platform }}"
-        CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
+        CIBW_ARCHS: "${{ matrix.arch }}"
+        CIBW_TEST_COMMAND: >
+          if [[ ${{ inputs.run_tests }} == true ]]; then
+            pip install crudini -c {project}/.github/workflows/requirements.txt &&
+            cd {project}/test/ &&
+            python -m crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.run-ee-server.outputs.server-docker-ip }}:3000 &&
+            python -m crudini --existing=param --set config.conf enterprise-edition user superuser &&
+            python -m crudini --existing=param --set config.conf enterprise-edition password superuser &&
+            pip install -r requirements.txt &&
+            python -m pytest new_tests/
+          else
+            python -c 'import aerospike'
+          fi
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
@@ -206,89 +224,72 @@ jobs:
         status: ${{ job.status }}
         context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
 
-  macOS-x86:
-    strategy:
-      fail-fast: false
-      matrix:
-        python: [
-          "cp38",
-          "cp39",
-          "cp310",
-          "cp311",
-          "cp312"
-        ]
-    runs-on: macos-12-large
-    steps:
-    - name: Show job status for commit
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      with:
-        sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
+  # macOS-x86:
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       python: [
+  #         "cp38",
+  #         "cp39",
+  #         "cp310",
+  #         "cp311",
+  #         "cp312"
+  #       ]
+  #   runs-on: macos-12-large
+  #   steps:
+  #   - name: Show job status for commit
+  #     uses: myrotvorets/set-commit-status-action@v2.0.0
+  #     with:
+  #       sha: ${{ github.sha }}
+  #       context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
 
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-        ref: ${{ inputs.ref }}
-        fetch-depth: 0
+  #   - uses: actions/checkout@v4
+  #     with:
+  #       submodules: recursive
+  #       ref: ${{ inputs.ref }}
+  #       fetch-depth: 0
 
-    - name: Install Docker Engine
-      if: ${{ inputs.run_tests }}
-      run: brew install colima
+  #   - uses: ./.github/actions/run-ee-server
+  #     if: ${{ inputs.run_tests }}
+  #     with:
+  #       use-server-rc: ${{ inputs.use-server-rc }}
+  #       server-tag: ${{ inputs.server-tag }}
+  #       docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+  #       docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - name: Install Docker client
-      if: ${{ inputs.run_tests }}
-      run: brew install docker
+  #   - name: Enable tests
+  #     if: ${{ inputs.run_tests && inputs.test-macos-x86 }}
+  #     run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
 
-    - name: Start Docker Engine
-      if: ${{ inputs.run_tests }}
-      run: colima start
+  #   - name: Disable tests (only run basic import test)
+  #     if: ${{ !inputs.run_tests || !inputs.test-macos-x86 }}
+  #     run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
-    - uses: ./.github/actions/run-ee-server
-      if: ${{ inputs.run_tests }}
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+  #   - name: Set unoptimize flag
+  #     if: ${{ inputs.apply-no-optimizations }}
+  #     run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
-    - name: Enable tests
-      if: ${{ inputs.run_tests && inputs.test-macos-x86 }}
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
+  #   - name: Build wheel
+  #     uses: pypa/cibuildwheel@v2.16.5
+  #     env:
+  #       CIBW_BUILD: ${{ matrix.python }}-macosx_x86_64
+  #       CIBW_BUILD_FRONTEND: build
+  #       CIBW_ARCHS: "x86_64"
+  #       CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
-    - name: Disable tests (only run basic import test)
-      if: ${{ !inputs.run_tests || !inputs.test-macos-x86 }}
-      run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
+  #   - name: Save macOS wheel
+  #     uses: actions/upload-artifact@v4
+  #     with:
+  #       name: ${{ matrix.python }}-macosx_x86_64.build
+  #       path: wheelhouse/*.whl
 
-    - name: Set unoptimize flag
-      if: ${{ inputs.apply-no-optimizations }}
-      run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
-
-    - name: Set include dsym flag
-      if: ${{ inputs.include-debug-info-for-macos }}
-      run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
-
-    - name: Build wheel
-      uses: pypa/cibuildwheel@v2.16.5
-      env:
-        CIBW_BUILD: ${{ matrix.python }}-macosx_x86_64
-        CIBW_BUILD_FRONTEND: build
-        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
-        CIBW_ARCHS: "x86_64"
-        CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
-
-    - name: Save macOS wheel
-      uses: actions/upload-artifact@v4
-      with:
-        name: ${{ matrix.python }}-macosx_x86_64.build
-        path: wheelhouse/*.whl
-
-    - name: Set final commit status
-      uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
-      with:
-        status: ${{ job.status }}
-        sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
+  #   - name: Set final commit status
+  #     uses: myrotvorets/set-commit-status-action@v2.0.0
+  #     if: always()
+  #     with:
+  #       status: ${{ job.status }}
+  #       sha: ${{ github.sha }}
+  #       context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
 
   macOS-m1:
     runs-on: [
