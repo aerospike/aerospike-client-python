@@ -214,6 +214,8 @@ jobs:
         directory: coverage-report
         verbose: true # optional (default = false)
         fail_ci_if_error: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   stubtest:
     needs: build
