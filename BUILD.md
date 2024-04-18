@@ -120,10 +120,29 @@ python3 -m pip install -r requirements.txt
 python3 -m build
 ```
 
-<!-- To build the client without any optimizations (usually for debugging), pass in the DEBUG environment variable:
+### Unoptimized builds (only Linux and macOS)
+
+By default, the Python client and the C client submodule are built with optimizations, which can make debugging
+difficult in gdb/lldb. You can build both the Python client and C client submodule without optimizations using an
+environment variable:
 ```
-DEBUG=1 python3 -m build
-``` -->
+UNOPTIMIZED=1 python3 -m build
+```
+
+In Linux, the package version will be labelled with `+debug`. This label is not applied to macOS currently, but it
+will be supported in the future (soon).
+
+### Including debug symbols in macOS
+
+macOS builds do not include source files and line number information for debugging by default. You can include this info
+by using this environment variable:
+```
+INCLUDE_DSYM=1 python3 -m build
+```
+
+This way, when you debug the Python client using lldb, the source files and line numbers will appear in backtraces,
+breakpoints will actually work, etc. macOS builds with this option enabled do not have a labelled version yet, but this
+will be added in the future.
 
 ### Building with sanitizer enabled
 
