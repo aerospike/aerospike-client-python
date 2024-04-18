@@ -270,7 +270,7 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.python }}-macosx_x86_64
         CIBW_BUILD_FRONTEND: build
-        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1 VERSIONINGIT_LOG_LEVEL=DEBUG
         CIBW_ARCHS: "x86_64"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
