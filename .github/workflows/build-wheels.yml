@@ -180,7 +180,9 @@ jobs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.16.5
       env:
+        CIBW_BEFORE_BUILD: git diff
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }}
+        CIBW_ENVIRONMENT: VERSIONINGIT_LOG_LEVEL=DEBUG
         CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
@@ -270,7 +272,7 @@ jobs:
       env:
         CIBW_BUILD: ${{ matrix.python }}-macosx_x86_64
         CIBW_BUILD_FRONTEND: build
-        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1 VERSIONINGIT_LOG_LEVEL=DEBUG
+        CIBW_ENVIRONMENT: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_ARCHS: "x86_64"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
