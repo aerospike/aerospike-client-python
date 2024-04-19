@@ -146,6 +146,11 @@ jobs:
           ["ubuntu-22.04", "manylinux"],
           ["macos-12-large", "macos"]
         ]
+        exclude:
+          # We have a separate job for macOS M1 builds
+          # because we cannot use cibuildwheel on the self hosted runners (yet)
+          - arch: aarch64
+            os-and-wheel-identifier: ["macos-12-large", "macos"]
 
     steps:
     - name: Get build identifier for cibuildwheel
@@ -170,7 +175,8 @@ jobs:
       with:
         platforms: arm64
 
-    # TODO: macos docker setup
+    - uses: ./.github/actions/setup-docker-on-macos
+      if: ${{ inputs.run_tests && inputs.test-macos-x86 }}
 
     - uses: ./.github/actions/run-ee-server
       id: run-ee-server

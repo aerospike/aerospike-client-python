@@ -1,8 +1,15 @@
-    - name: Install Docker Engine
-      run: brew install colima
+name: 'Install Docker on macOS runner'
+runs:
+  using: "composite"
+  steps:
+  - name: Install Docker Engine
+    run: brew install colima
+    shell: bash
 
-    - name: Install Docker client
-      run: brew install docker
+  - name: Install Docker client
+    run: brew install docker
+    shell: bash
 
-    - name: Start Docker Engine
-      run: colima start
+  - name: Start Docker Engine
+    run: colima start
+    shell: bash
