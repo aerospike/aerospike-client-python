@@ -126,8 +126,8 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-    sprintf(request_str_p, fmt_str, data_center_str_p, namespace_str_p,
-            base64_filter);
+    snprintf(request_str_p, request_length * sizeof(char), fmt_str,
+             data_center_str_p, namespace_str_p, base64_filter);
 
     as_status status = AEROSPIKE_OK;
     Py_BEGIN_ALLOW_THREADS

@@ -126,7 +126,7 @@ char *return_search_string(aerospike *as)
     for (i = 0; i < as->config.hosts->size; i++) {
         as_host *host = (as_host *)as_vector_get(as->config.hosts, i);
         int port = host->port;
-        sprintf(port_str, "%d", port);
+        snprintf(port_str, MAX_PORT_SIZE, "%d", port);
         strcat(alias_to_search, host->name);
         strcat(alias_to_search, ":");
         strcat(alias_to_search, port_str);
@@ -137,7 +137,7 @@ char *return_search_string(aerospike *as)
 
     if (as->config.use_shm) {
         char shm_str[MAX_SHM_SIZE];
-        sprintf(shm_str, "%x", as->config.shm_key);
+        snprintf(shm_str, MAX_SHM_SIZE, "%x", as->config.shm_key);
         strcat(alias_to_search, shm_str);
     }
 
