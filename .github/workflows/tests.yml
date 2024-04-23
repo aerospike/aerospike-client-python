@@ -242,7 +242,7 @@ jobs:
 
     - run: stubtest aerospike --allowlist stubtest-allowlist
 
-  test-ce:
+  test-ce-all-python-versions:
     needs: build
     strategy:
       matrix:
@@ -253,20 +253,41 @@ jobs:
           "3.11",
           "3.12"
         ]
-        docker-image-and-tag: [
-          "aerospike/aerospike-server:latest",
-          "aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}"
-        ]
-        exclude:
-        - docker-image-and-tag: "aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}"
-        include:
-        - docker-image-and-tag: "aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}"
-          python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
       fail-fast: false
-    uses: ./.github/workflows/test-ce-for-local-build.yml
-    with:
-      python-version: ${{ matrix.py-version }}
-      docker-image-and-tag: ${{ matrix.docker-image-and-tag }}
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - uses: ./.github/actions/test-ce-for-local-build
+      with:
+        python-version: ${{ matrix.py-version }}
+        docker-image-and-tag: "aerospike/aerospike-server:latest"
+
+  test-ce-latest-server-release:
+    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - uses: ./.github/actions/test-ce-for-local-build
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        docker-image-and-tag: "aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}"
+
+  test-ce-lowest-supported-server:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+    - uses: ./.github/actions/test-ce-for-local-build
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        docker-image-and-tag: "aerospike/aerospike-server:latest"
 
   test-ee:
     runs-on: ubuntu-latest
