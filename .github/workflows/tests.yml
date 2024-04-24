@@ -259,20 +259,11 @@ jobs:
           "3.11",
           "3.12"
         ]
-        docker-image-and-tag: [
-          "aerospike/aerospike-server:latest",
-          "aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}"
-        ]
-        exclude:
-        - docker-image-and-tag: "aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}"
-        include:
-        - docker-image-and-tag: "aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}"
-          python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
       fail-fast: false
     uses: ./.github/workflows/test-ce-for-local-build.yml
     with:
       python-version: ${{ matrix.py-version }}
-      docker-image-and-tag: ${{ matrix.docker-image-and-tag }}
+      docker-image-and-tag: ${{ 'aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server:latest' }}
 
   test-ee:
     runs-on: ubuntu-latest
