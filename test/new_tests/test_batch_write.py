@@ -512,7 +512,7 @@ class TestBatchWrite(TestBaseClass):
             )
         ]
     )
-    def test_global_batch_policies_with_br_classes(self, policy_name: str, batch_record: br.BatchRecord):
+    def test_global_batch_write_and_apply_policies(self, policy_name: str, batch_record: br.BatchRecord):
         config = TestBaseClass.get_connection_config()
         config["policies"][policy_name] = {
             "key": aerospike.POLICY_KEY_SEND
@@ -540,3 +540,25 @@ class TestBatchWrite(TestBaseClass):
                 assert pk == expected_key_tuple[2]
             else:
                 assert pk is None
+
+    def test_global_batch_remove_policy(self):
+        config = TestBaseClass.get_connection_config()
+        config["policies"]["batch_remove"] = {
+            # Record's real generation should be 1 since it was just written before this test case
+            "gen": aerospike.POLICY_GEN_EQ,
+            "generation": 42
+        }
+        c = aerospike.client(config)
+        batch_records = br.BatchRecords(
+            batch_records=[
+                br.Remove(
+                    key=("test", "demo", 0),
+                    policy={
+                        "gen": aerospike.POLICY_GEN_EQ,
+                        "generation": 42
+                    }
+                )
+            ]
+        )
+        with pytest.raises(e.RecordGenerationError):
+            c.batch_write(batch_records)
