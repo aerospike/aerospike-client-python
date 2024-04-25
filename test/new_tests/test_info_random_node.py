@@ -133,7 +133,11 @@ class TestInfoRandomNodeIncorrectUsage(object):
         """
         Test info for incorrect command.
         """
-        with pytest.raises(e.ClientError):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) <= (7, 0):
+            expected_exception = e.ClientError
+        else:
+            expected_exception = e.InvalidRequest
+        with pytest.raises(expected_exception):
             self.as_connection.info_random_node("abcd")
 
     def test_info_random_node_positive_without_connection(self):
