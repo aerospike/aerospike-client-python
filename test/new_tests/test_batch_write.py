@@ -553,12 +553,9 @@ class TestBatchWrite(TestBaseClass):
             batch_records=[
                 br.Remove(
                     key=("test", "demo", 0),
-                    policy={
-                        "gen": aerospike.POLICY_GEN_EQ,
-                        "generation": 42
-                    }
                 )
             ]
         )
-        with pytest.raises(e.RecordGenerationError):
-            c.batch_write(batch_records)
+        brs = c.batch_write(batch_records)
+        assert brs.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
+        assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_GENERATION
