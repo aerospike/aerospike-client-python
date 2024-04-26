@@ -365,7 +365,7 @@ jobs:
 
     - name: Run server
       if: ${{ inputs.run_tests }}
-      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
+      run: docker run -d -p 3000:3000 --pull always --name aerospike ${{ env.IMAGE_NAME }}
 
     - name: Set unoptimize flag
       if: ${{ inputs.apply-no-optimizations }}
