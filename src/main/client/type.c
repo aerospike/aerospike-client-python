@@ -1060,7 +1060,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->as = aerospike_new(&config);
 
     if (AerospikeClientConnect(self) == -1) {
-        aerospike_destroy(self->as);
         return -1;
     }
 
@@ -1368,6 +1367,6 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
     raise_exception(&err);
 
 CLEANUP:
-    AerospikeClient_Type.tp_free(self);
+    AerospikeClient_Type.tp_dealloc(self);
     return NULL;
 }
