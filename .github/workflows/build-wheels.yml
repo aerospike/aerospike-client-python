@@ -165,7 +165,7 @@ jobs:
 
     - name: Enable tests
       if: ${{ inputs.run_tests }}
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=cd {project}/test/ && pip install pytest -c requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
 
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests }}
