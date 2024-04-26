@@ -74,12 +74,12 @@ class TestInfo(object):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
             expectation = pytest.raises(e.InvalidRequest)
         else:
-            expectation = nullcontext
+            expectation = nullcontext()
 
         with expectation:
             nodes_info = self.as_connection.info_all(request)
 
-        if expectation == nullcontext:
+        if type(expectation) == nullcontext:
             assert isinstance(nodes_info, dict)
             assert nodes_info.values() is not None
 
