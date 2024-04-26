@@ -71,7 +71,7 @@ class TestInfo(object):
 
         request = "fake_request_string_not_real"
         # hosts = [host for host in self.connection_config["hosts"]]
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) <= (7, 0):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 1):
             expectation = pytest.raises(e.InvalidRequest)
         else:
             expectation = nullcontext
