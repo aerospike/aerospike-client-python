@@ -1,24 +1,6 @@
 name: Stage tests
-run-name: Stage tests (use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
 
 on:
-  workflow_dispatch:
-    inputs:
-      use-server-rc:
-        type: boolean
-        required: true
-        default: false
-        description: 'Test against server release candidate?'
-      server-tag:
-        type: string
-        required: true
-        default: 'latest'
-        description: 'Server docker image tag'
-      test-macos-x86:
-        required: true
-        type: boolean
-        default: false
-        description: 'Test macOS x86 wheels (unstable)'
   workflow_call:
     inputs:
       ref:
@@ -49,15 +31,9 @@ on:
         required: true
 
 jobs:
-  build-artifacts:
-    uses: ./.github/workflows/build-wheels.yml
-    with:
-      ref: ${{ inputs.ref }}
-
   # We run some source distribution (QE category 1) tests here
   # because QE doesn't have disk space for more Linux distros
   sdist-tests:
-    needs: build-artifacts
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -120,7 +96,6 @@ jobs:
 # because of the same reason we have some category 1 tests in Github Actions
 
   manylinux_rhel_based:
-    needs: build-artifacts
     strategy:
       matrix:
         distros: [
@@ -185,7 +160,6 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
   manylinux_debian:
-    needs: build-artifacts
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -247,7 +221,6 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
   manylinux_ubuntu2204:
-    needs: build-artifacts
     strategy:
       matrix:
         platform: [
@@ -304,7 +277,6 @@ jobs:
 
   macOS:
     if: ${{ inputs.test-macos-x86 }}
-    needs: build-artifacts
     strategy:
       matrix:
         macos-version: [

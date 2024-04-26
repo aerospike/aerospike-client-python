@@ -1,0 +1,25 @@
+name: 'Download builds from JFrog'
+inputs:
+  build-version:
+    required: true
+  # Github Composite Actions can't access secrets
+  # so we need to pass them in as inputs
+  jfrog-platform-url:
+    required: true
+  jfrog-access-token:
+    required: true
+  # vars context is not accessible in composite actions either
+  jfrog-repo-name:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - uses: jfrog/setup-jfrog-cli@v4
+    env:
+      JF_URL: ${{ inputs.jfrog-platform-url }}
+      JF_ACCESS_TOKEN: ${{ inputs.jfrog-access-token }}
+
+  - name: Download JFrog build
+    run: jf rt dl --build python-client/${{ inputs.build-version }} ${{ inputs.jfrog-repo-name }}
+    shell: bash
