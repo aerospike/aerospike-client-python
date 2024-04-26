@@ -8,6 +8,7 @@ from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
 from .test_scan_execute_background import wait_for_job_completion
 import copy
+from contextlib import nullcontext
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -385,3 +386,23 @@ class TestConfigTTL:
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
         assert excinfo.value.msg == "Invalid Policy setting value"
+
+    @pytest.mark.parametrize(
+        "config, context",
+        [
+            (
+                gconfig,
+                nullcontext()
+            ),
+            (
+                {
+                    "hosts": [("invalid-host", 4000)]
+                },
+                # Tests that fail to connect should expect any of these exceptions
+                pytest.raises((e.ConnectionError, e.TimeoutError, e.ClientError))
+            )
+        ]
+    )
+    def test_client_class_constructor(self, config: dict, context):
+        with context:
+            aerospike.Client(config)

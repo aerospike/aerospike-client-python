@@ -1367,6 +1367,6 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
     raise_exception(&err);
 
 CLEANUP:
-    AerospikeClient_Type.tp_dealloc(self);
+    AerospikeClient_Type.tp_dealloc((PyObject *)self);
     return NULL;
 }
