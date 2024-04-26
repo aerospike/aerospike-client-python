@@ -79,8 +79,9 @@ class TestInfo(object):
         with expectation:
             nodes_info = self.as_connection.info_all(request)
 
-        assert isinstance(nodes_info, dict)
-        assert nodes_info.values() is not None
+        if expectation == nullcontext:
+            assert isinstance(nodes_info, dict)
+            assert nodes_info.values() is not None
 
     def test_info_all_with_none_request(self):
         """
