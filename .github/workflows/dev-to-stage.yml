@@ -20,6 +20,18 @@ jobs:
       run: echo latest-dev-version=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
       id: get-dev-version
 
+    - name: Download JFrog builds for this dev version
+      uses: ./.github/actions/download-jf-builds
+      with:
+        build-version: ${{ steps.get-dev-version.outputs.latest-dev-version }}
+        jfrog-platform-url: ${{ secrets.JFROG_PLATFORM_URL }}
+        jfrog-access-token: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        jfrog-repo-name: ${{ vars.JFROG_REPO_NAME }}
+
+    - name: Upload builds to Github as artifacts
+      run: |
+        
+
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
     needs: get-latest-dev-tag
