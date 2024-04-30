@@ -308,7 +308,8 @@ jobs:
     strategy:
       matrix:
         macos-version: [
-          'macos-13'
+          'macos-13',
+          'macos-14-large'
         ]
         python-version: [
           ["3.8", "cp38"],
