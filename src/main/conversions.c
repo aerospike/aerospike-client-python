@@ -1011,6 +1011,7 @@ error:
     return NULL;
 }
 
+// Does not steal a reference to py_arg
 PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *module_name,
                                             const char *class_name,
