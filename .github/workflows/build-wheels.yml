@@ -6,7 +6,6 @@ run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inp
 # For each build, upload to Github as an artifact if it passes testing or does not need to run tests
 
 on:
-  push:
   workflow_dispatch:
     inputs:
       # If we only want to check that the builds pass on an arbitrary branch

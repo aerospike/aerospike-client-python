@@ -6,6 +6,10 @@ on:
       version:
         type: string
         required: true
+      jfrog-repo-name:
+        type: string
+        required: false
+        default: ${{ vars.JFROG_REPO_NAME }}
     secrets:
       JFROG_PLATFORM_URL:
         required: true
