@@ -173,7 +173,7 @@ def list_insert_items(bin_name: str, index, values, policy: Optional[dict] = Non
     Creates a list insert items operation.
 
     The list insert items operation inserts items at index: `index` into the list contained
-    in the specified bin.
+    in the specified bin. Server returns list size.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -280,7 +280,8 @@ def list_remove(bin_name: str, index, ctx: Optional[list] = None):
     """
     Creates a list remove operation.
 
-    The list remove operation removes an item located at `index` in the list specified by `bin_name`
+    The list remove operation removes an item located at `index` in the list specified by `bin_name`.
+    Server returns number of items removed.
 
     Args:
         bin_name (str): The name of the bin containing the item to be removed.
@@ -304,7 +305,7 @@ def list_remove_range(bin_name: str, index, count, ctx: Optional[list] = None):
     Creates a list remove range operation.
 
     The list remove range operation removes `count` items starting at `index`
-    in the list specified by `bin_name`
+    in the list specified by `bin_name`. Server returns number of items removed.
 
     Args:
         bin_name (str): The name of the bin containing the items to be removed.
@@ -349,7 +350,8 @@ def list_clear(bin_name: str, ctx: Optional[list] = None):
 def list_set(bin_name: str, index, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """Create a list set operation.
 
-    The list set operations sets the value of the item at `index` to `value`
+    The list set operations sets the value of the item at `index` to `value`.
+    Server does not return a result by default.
 
     Args:
         bin_name (str): The name of the bin containing the list to be operated on.
