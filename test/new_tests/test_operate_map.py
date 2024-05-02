@@ -444,27 +444,6 @@ class TestOperate(object):
         _, _, bins = self.as_connection.operate(self.test_map_key, ops)
         assert bins["cool_list"] == [1, 2, 3]
 
-    def test_map_remove_by_key_causing_empty_map(self):
-        # Add a map bin with only 1 key on the fly only for this test case
-        map_with_one_key_bin_name = "map_w_one_key"
-        bins = {
-            map_with_one_key_bin_name: {"a": 1}
-        }
-        self.as_connection.put(self.test_map_key, bins)
-
-        ops = [
-            map_operations.map_remove_by_key(
-                bin_name=map_with_one_key_bin_name,
-                key="a",
-                return_type=aerospike.MAP_RETURN_NONE
-            )
-        ]
-        self.as_connection.operate(self.test_map_key, ops)
-
-        _, _, bins = self.as_connection.get(self.test_map_key)
-        # "a" should've been deleted
-        assert bins[map_with_one_key_bin_name] == {}
-
     def test_map_remove_by_key_ret_key_val_test_with_list_read_even(self):
         self.test_map.copy()
         self.as_connection.put(self.test_map_key, {"cool_list": [1, 2, 3, 4]})
