@@ -48,11 +48,12 @@ PERSIST_INDEX_KEY = "persist_index"
 def map_set_policy(bin_name: str, policy, ctx: Optional[list] = None):
     """Creates a map_set_policy_operation.
 
-    The operation allows a user to set the policy for the map.
+    Server sets map policy attributes. Server does not return a value.
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        policy (dict): The :ref:`map_policy dictionary <aerospike_map_policies>`.
+        policy (dict): The :ref:`map_policy dictionary <aerospike_map_policies>`. Note that the "map_write_flags" option
+            in the map policy will be ignored in this operation.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -106,7 +107,8 @@ def map_put(bin_name: str, key, value, map_policy: Optional[dict] = None, ctx: O
         key: The key for the map.
         value: The item to store in the map with the corresponding key.
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -133,7 +135,8 @@ def map_put_items(bin_name: str, item_dict, map_policy: Optional[dict] = None, c
         bin_name (str): The name of the bin containing the map.
         item_dict (dict): A dictionary of key value pairs to be added to the map on the server.
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -176,7 +179,8 @@ def map_increment(bin_name: str, key, amount, map_policy: Optional[dict] = None,
         key: The key for the value to be incremented.
         amount: The amount by which to increment the value stored in map[key]
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -204,7 +208,8 @@ def map_decrement(bin_name: str, key, amount, map_policy: Optional[dict] = None,
         key: The key for the value to be decremented.
         amount: The amount by which to decrement the value stored in map[key]
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
