@@ -22,6 +22,10 @@ Helper functions to create map operation dictionaries arguments for:
 Map operations support nested CDTs through an optional ctx context argument.
 The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.
 
+For the map operations that remove map items, such as :mod:`~aerospike_helpers.operations.map_operations.map_clear` and
+all the ``remove_*`` operations, if all map items are removed in a map, the map becomes empty (i.e it does not get
+deleted).
+
 .. note:: Nested CDT (ctx) requires server version >= 4.6.0
 
 """
