@@ -48,7 +48,7 @@ PERSIST_INDEX_KEY = "persist_index"
 def map_set_policy(bin_name: str, policy, ctx: Optional[list] = None):
     """Creates a map_set_policy_operation.
 
-    Server sets map policy attributes. Server does not return a value.
+    This operation sets map policy attributes server-side for the designated map. Server does not return a value.
 
     Args:
         bin_name (str): The name of the bin containing the map.
