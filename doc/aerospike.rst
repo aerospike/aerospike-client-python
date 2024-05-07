@@ -1048,6 +1048,9 @@ Flags used by list order.
 
     Ordered list.
 
+.. note::
+    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
+
 .. _aerospike_list_sort_flag:
 
 List Sort Flags
