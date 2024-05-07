@@ -23,6 +23,10 @@ runs:
     working-directory: .github/workflows
     shell: bash
 
+  - name: Create config.conf
+    run: cp config.conf.template config.conf
+    working-directory: test
+
   - name: Use enterprise edition instead of community edition in config.conf
     run: |
       crudini --existing=param --set config.conf enterprise-edition hosts ''

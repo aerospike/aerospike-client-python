@@ -381,6 +381,10 @@ jobs:
       run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall delocate -c ./requirements.txt
       working-directory: .github/workflows
 
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
     - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --find-links=wheelhouse/ --no-index --force-reinstall aerospike
 
@@ -498,6 +502,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.python[0] }}-win_amd64.build
+
+      - name: Create config.conf
+        run: cp config.conf.template config.conf
+        working-directory: test
+
       - name: Install wheel
         run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
       - name: Connect to Docker container on remote machine with Docker daemon

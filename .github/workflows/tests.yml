@@ -102,6 +102,10 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - name: Get number of tests
       run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
       working-directory: test
@@ -275,6 +279,10 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - name: Run tests
       run: python -m pytest ./new_tests
       working-directory: test
@@ -331,6 +339,10 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - name: Run tests
       run: python -m pytest ./new_tests -vv
       working-directory: test
@@ -364,6 +376,10 @@ jobs:
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
       run: sleep 3
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
 
     - name: Run tests
       run: python -m pytest ./new_tests
