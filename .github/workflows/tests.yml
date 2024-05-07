@@ -94,7 +94,7 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.8
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
@@ -264,7 +264,8 @@ jobs:
     uses: ./.github/workflows/test-ce-for-local-build.yml
     with:
       python-version: ${{ matrix.py-version }}
-      docker-image-and-tag: ${{ 'aerospike/aerospike-server-rc:latest' || 'aerospike/aerospike-server:latest' }}
+      docker-image: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike/aerospike-server-rc' || 'aerospike/aerospike-server' }}
+    secrets: inherit
 
   test-ee:
     runs-on: ubuntu-latest
