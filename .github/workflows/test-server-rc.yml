@@ -86,7 +86,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - uses: ./.github/actions/setup-docker-on-macos
+    - name: Install Docker Engine
+      run: brew install colima
+
+    - name: Install Docker client
+      run: brew install docker
+
+    - name: Start Docker Engine
+      run: colima start
 
     - uses: ./.github/actions/run-ee-server
       with:
