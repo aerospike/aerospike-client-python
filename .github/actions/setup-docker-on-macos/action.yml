@@ -1,4 +1,6 @@
 name: 'Install Docker on macOS runner'
+description: 'Install Docker using colima'
+
 runs:
   using: "composite"
   steps:
