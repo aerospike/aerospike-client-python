@@ -179,7 +179,6 @@ jobs:
       if: ${{ inputs.run_tests && matrix.os-and-wheel-identifier[1] == 'macos' && inputs.test-macos-x86 }}
 
     - uses: ./.github/actions/run-ee-server
-      id: run-ee-server
       if: ${{ inputs.run_tests }}
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
