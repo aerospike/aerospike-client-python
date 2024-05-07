@@ -176,7 +176,7 @@ jobs:
         platforms: arm64
 
     - uses: ./.github/actions/setup-docker-on-macos
-      if: ${{ inputs.run_tests && inputs.test-macos-x86 }}
+      if: ${{ inputs.run_tests && matrix.os-and-wheel-identifier[1] == 'macos' && inputs.test-macos-x86 }}
 
     - uses: ./.github/actions/run-ee-server
       id: run-ee-server
