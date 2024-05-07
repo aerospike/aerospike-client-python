@@ -153,14 +153,14 @@ jobs:
             os-and-wheel-identifier: ["macos-12-large", "macos"]
 
     steps:
-    - name: Get build identifier for cibuildwheel
-      run: echo "BUILD_IDENTIFIER=${{ matrix.python }}-${{ matrix.os-and-wheel-identifier[1] }}_${{ matrix.arch }}" >> $GITHUB_ENV
-
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
+
+    - name: Get build identifier for cibuildwheel
+      run: echo "BUILD_IDENTIFIER=${{ matrix.python }}-${{ matrix.os-and-wheel-identifier[1] }}_${{ matrix.arch }}" >> $GITHUB_ENV
 
     - uses: actions/checkout@v4
       with:
@@ -195,6 +195,16 @@ jobs:
       if: ${{ matrix.os-and-wheel-identifier[1] == 'macos' && inputs.include-debug-info-for-macos }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
+    - uses: haya14busa/action-cond@v1
+      id: test-command
+      with:
+        cond: ${{ inputs.run_tests && (matrix.os-and-wheel-identifier[1] != 'macos' || inputs.test-macos-x86) }}
+        if_true: "cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/"
+        if_false: "python -c 'import aerospike'"
+
+    - name: Disable tests (only run basic import test)
+      run: echo "TEST_COMMAND=${{ steps.test-command.outputs.value }}" >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.16.5
       env:
@@ -207,18 +217,7 @@ jobs:
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "${{ matrix.arch }}"
-        CIBW_TEST_COMMAND: >
-          if [[ ${{ inputs.run_tests }} == true ]]; then
-            pip install crudini -c {project}/.github/workflows/requirements.txt &&
-            cd {project}/test/ &&
-            python -m crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.run-ee-server.outputs.server-docker-ip }}:3000 &&
-            python -m crudini --existing=param --set config.conf enterprise-edition user superuser &&
-            python -m crudini --existing=param --set config.conf enterprise-edition password superuser &&
-            pip install -r requirements.txt &&
-            python -m pytest new_tests/
-          else
-            python -c 'import aerospike'
-          fi
+        CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
