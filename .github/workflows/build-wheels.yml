@@ -172,16 +172,6 @@ jobs:
       if: ${{ !inputs.run_tests }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
-    - name: Get current version if building a debug wheel
-      if: ${{ inputs.apply-no-optimizations }}
-      run: echo DEBUG_VERSION="$(cat VERSION)+unoptimized" >> $GITHUB_ENV
-
-    - name: Label version for debugging
-      if: ${{ inputs.apply-no-optimizations }}
-      uses: ./.github/actions/update-version
-      with:
-        new_version: ${{ env.DEBUG_VERSION }}
-
     - name: Set unoptimize flag
       if: ${{ inputs.apply-no-optimizations }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
