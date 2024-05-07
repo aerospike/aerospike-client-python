@@ -8,9 +8,6 @@ inputs:
   server-tag:
     required: true
     default: 'latest'
-  is-client-in-another-docker-container:
-    required: false
-    default: 'false'
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
