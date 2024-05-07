@@ -97,6 +97,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
@@ -147,6 +148,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform == 'aarch64' }}
@@ -235,6 +237,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Install Docker Engine
       if: ${{ inputs.run_tests }}
@@ -323,6 +326,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     # Update dependencies if needed
     - name: Add brew to path
@@ -443,6 +447,7 @@ jobs:
         with:
           submodules: recursive
           ref: ${{ inputs.ref }}
+          fetch-depth: 0
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
