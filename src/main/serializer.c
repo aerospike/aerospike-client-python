@@ -488,6 +488,7 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
         }
         PyObject *py_hll = create_class_instance_from_module(
             error_p, "aerospike_helpers", "HyperLogLog", py_bytes);
+        Py_DECREF(py_bytes);
         if (!py_hll) {
             goto CLEANUP;
         }
