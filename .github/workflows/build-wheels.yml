@@ -39,6 +39,11 @@ on:
         type: boolean
         default: false
         description: 'macOS: include source files and line numbers for both C and Python client for debugging?'
+      use-sanitizer:
+        required: true
+        type: boolean
+        default: false
+        description: 'Linux: compile and link with libasan to detect memory errors?'
 
   workflow_call:
     inputs:
@@ -71,6 +76,10 @@ on:
         type: boolean
         default: false
       include-debug-info-for-macos:
+        required: false
+        type: boolean
+        default: false
+      use-sanitizer:
         required: false
         type: boolean
         default: false
@@ -184,10 +193,14 @@ jobs:
       if: ${{ inputs.apply-no-optimizations }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
+    - name: Set sanitizer flag
+      if: ${{ inputs.use-sanitizer }}
+      run: echo "SANITIZER=1" >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.16.5
       env:
-        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }}
+        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }} ${{ inputs.use-sanitizer && 'SANITIZER' || '' }}
         CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
