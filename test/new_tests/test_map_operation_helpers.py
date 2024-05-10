@@ -44,6 +44,10 @@ def sort_map(client, test_key, test_bin):
     client.operate(test_key, operations)
 
 
+# Used in one test case
+MAP_WITH_ONE_KEY_BIN_NAME = "map_w_one_key"
+
+
 class TestNewListOperationsHelpers(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -217,6 +221,48 @@ class TestNewListOperationsHelpers(object):
         assert ret_vals == "b"
         res_map = self.as_connection.get(self.test_key)[2][self.test_bin]
         assert "b" not in res_map
+
+    # For the rest of the map_remove* operations, there are test cases that produce an empty map
+    @pytest.mark.parametrize(
+        "op",
+        [
+            map_ops.map_remove_by_key(
+                bin_name=MAP_WITH_ONE_KEY_BIN_NAME,
+                key="a",
+                return_type=aerospike.MAP_RETURN_NONE
+            ),
+            map_ops.map_remove_by_index(
+                bin_name=MAP_WITH_ONE_KEY_BIN_NAME,
+                index=0,
+                return_type=aerospike.MAP_RETURN_NONE
+            ),
+            map_ops.map_remove_by_rank(
+                bin_name=MAP_WITH_ONE_KEY_BIN_NAME,
+                rank=0,
+                return_type=aerospike.MAP_RETURN_NONE
+            ),
+            map_ops.map_remove_by_value(
+                bin_name=MAP_WITH_ONE_KEY_BIN_NAME,
+                value=1,
+                return_type=aerospike.MAP_RETURN_NONE
+            )
+        ]
+    )
+    def test_map_remove_ops_causing_empty_map(self, op):
+        # Add a map bin with one key on the fly
+        bins = {
+            MAP_WITH_ONE_KEY_BIN_NAME: {"a": 1}
+        }
+        self.as_connection.put(self.test_key, bins)
+
+        ops = [
+            op
+        ]
+        self.as_connection.operate(self.test_key, ops)
+
+        _, _, bins = self.as_connection.get(self.test_key)
+        # "a" should've been deleted
+        assert bins[MAP_WITH_ONE_KEY_BIN_NAME] == {}
 
     def test_map_remove_by_index_range(self):
         sort_map(self.as_connection, self.test_key, self.test_bin)
