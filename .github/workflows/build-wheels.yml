@@ -172,12 +172,12 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Enable tests
-      if: ${{ inputs.run_tests }}
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
+      if: ${{ inputs.run_tests && !inputs.use-sanitizer }}
+      run: echo "CIBW_TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
 
     - name: Disable tests (only run basic import test)
-      if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
+      if: ${{ !inputs.run_tests && !inputs.use-sanitizer }}
+      run: echo "CIBW_TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
     - name: Get current version if building a debug wheel
       if: ${{ inputs.apply-no-optimizations }}
@@ -197,10 +197,6 @@ jobs:
       if: ${{ inputs.use-sanitizer }}
       run: echo "SANITIZER=1" >> $GITHUB_ENV
 
-    - name: Disable tests for sanitizer builds
-      if: ${{ inputs.use-sanitizer }}
-      run: echo "TEST_COMMAND=''" >> $GITHUB_ENV
-
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.16.5
       env:
@@ -212,7 +208,6 @@ jobs:
           yum install python-devel -y &&
           yum install python-setuptools -y
         CIBW_ARCHS: "${{ matrix.platform }}"
-        CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
