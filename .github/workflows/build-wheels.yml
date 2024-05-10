@@ -197,6 +197,10 @@ jobs:
       if: ${{ inputs.use-sanitizer }}
       run: echo "SANITIZER=1" >> $GITHUB_ENV
 
+    - name: Run test command with LD_PRELOAD trick
+      if: ${{ inputs.use-sanitizer }}
+      run: echo "TEST_COMMAND=LD_PRELOAD=$(find / -type f -name "*libasan*" | head -n 1) $TEST_COMMAND" >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.16.5
       env:
