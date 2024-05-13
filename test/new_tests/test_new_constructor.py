@@ -8,6 +8,7 @@ from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
 from .test_scan_execute_background import wait_for_job_completion
 import copy
+from contextlib import nullcontext
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -204,6 +205,14 @@ def test_setting_batch_policies():
     for policy in policies:
         config["policies"][policy] = {}
     aerospike.client(config)
+
+
+def test_query_invalid_expected_duration():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["query"]["expected_duration"] = "1"
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
 
 
 class TestConfigTTL:
@@ -426,3 +435,38 @@ class TestConfigTTL:
 
         err_msg_keys = self.get_err_msg_keys(invalid_config)
         assert excinfo.value.msg == f"config{err_msg_keys} must be a {expected_type_name}"
+
+    @pytest.mark.parametrize(
+        "policy_name",
+        [
+            "read",
+            "operate",
+            "batch",
+        ]
+    )
+    def test_invalid_read_touch_ttl_percent(self, policy_name: str):
+        config = copy.deepcopy(gconfig)
+        config["policies"][policy_name]["read_touch_ttl_percent"] = "fail"
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+        assert excinfo.value.msg == "Invalid Policy setting value"
+
+    @pytest.mark.parametrize(
+        "config, context",
+        [
+            (
+                gconfig,
+                nullcontext()
+            ),
+            (
+                {
+                    "hosts": [("invalid-host", 4000)]
+                },
+                # Tests that fail to connect should expect any of these exceptions
+                pytest.raises((e.ConnectionError, e.TimeoutError, e.ClientError))
+            )
+        ]
+    )
+    def test_client_class_constructor(self, config: dict, context):
+        with context:
+            aerospike.Client(config)

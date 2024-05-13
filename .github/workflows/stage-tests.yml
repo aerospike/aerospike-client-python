@@ -308,7 +308,8 @@ jobs:
     strategy:
       matrix:
         macos-version: [
-          'macos-11',
+          'macos-13',
+          'macos-14-large'
         ]
         python-version: [
           ["3.8", "cp38"],
@@ -343,7 +344,7 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: true
+        use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}

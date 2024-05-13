@@ -28,10 +28,13 @@
 #include <aerospike/aerospike_index.h>
 #include "aerospike/as_scan.h"
 #include "aerospike/as_job.h"
+#include <aerospike/as_metrics.h>
+#include <aerospike/as_cluster.h>
 
 #include "conversions.h"
 #include "policy.h"
 #include "macros.h"
+#include "policy_config.h"
 
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"
@@ -449,7 +452,11 @@ static AerospikeConstants aerospike_constants[] = {
     {REGEX_EXTENDED, "REGEX_EXTENDED"},
     {REGEX_ICASE, "REGEX_ICASE"},
     {REGEX_NOSUB, "REGEX_NOSUB"},
-    {REGEX_NEWLINE, "REGEX_NEWLINE"}};
+    {REGEX_NEWLINE, "REGEX_NEWLINE"},
+
+    {AS_QUERY_DURATION_LONG, "QUERY_DURATION_LONG"},
+    {AS_QUERY_DURATION_LONG_RELAX_AP, "QUERY_DURATION_LONG_RELAX_AP"},
+    {AS_QUERY_DURATION_SHORT, "QUERY_DURATION_SHORT"}};
 
 static AerospikeJobConstants aerospike_job_constants[] = {
     {"scan", "JOB_SCAN"}, {"query", "JOB_QUERY"}};
@@ -708,6 +715,8 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 
         // C client 6.0.0
         POLICY_SET_FIELD(short_query, bool);
+
+        POLICY_SET_FIELD(expected_duration, as_query_duration);
     }
 
     // Update the policy
@@ -747,6 +756,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(key, as_policy_key);
         POLICY_SET_FIELD(replica, as_policy_replica);
         POLICY_SET_FIELD(deserialize, bool);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -931,6 +941,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(deserialize, bool);
         POLICY_SET_FIELD(exists, as_policy_exists);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -977,6 +988,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(allow_inline, bool);
         POLICY_SET_FIELD(deserialize, bool);
         POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -1033,6 +1045,7 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
     // Set policy fields
     POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
     POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+    POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
@@ -1235,4 +1248,406 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     as_hll_policy_set_write_flags(hll_policy, flags);
 
     return AEROSPIKE_OK;
+}
+
+enum {
+    ENABLE_LISTENER_INDEX,
+    DISABLE_LISTENER_INDEX,
+    NODE_CLOSE_LISTENER_INDEX,
+    SNAPSHOT_LISTENER_INDEX
+};
+
+// Call Python callback defined in udata at index "py_listener_data_index"
+// If py_arg is NULL, pass no arguments to the Python callback
+as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
+                           void *udata, PyObject *py_arg)
+{
+    PyListenerData *py_listener_data = (PyListenerData *)udata;
+    PyObject *py_args = NULL;
+    if (py_arg) {
+        py_args = PyTuple_New(1);
+    }
+    else {
+        py_args = PyTuple_New(0);
+    }
+    if (!py_args) {
+        return as_error_update(
+            err, AEROSPIKE_ERR,
+            "Unable to construct tuple of arguments for Python callback %s",
+            py_listener_data[py_listener_data_index].listener_name);
+    }
+
+    if (py_arg) {
+        int result = PyTuple_SetItem(py_args, 0, py_arg);
+        if (result == -1) {
+            PyErr_Clear();
+            Py_DECREF(py_args);
+            return as_error_update(
+                err, AEROSPIKE_ERR,
+                "Unable to set Python argument in tuple for Python callback %s",
+                py_listener_data[py_listener_data_index].listener_name);
+        }
+    }
+
+    PyObject *py_result = PyObject_Call(
+        py_listener_data[py_listener_data_index].py_callback, py_args, NULL);
+    Py_DECREF(py_args);
+    if (!py_result) {
+        // Python callback threw an exception, but just ignore it and set our own exception
+        // When some C client listeners that return an error code, the C client only prints a warning
+        // like the node close and snapshot listeners
+        // We don't want Python to throw an exception in those cases
+        // But to make debugging more helpful, we print the original Python exception in a C client's error message
+        PyObject *py_exc_type, *py_exc_value, *py_traceback;
+        PyErr_Fetch(&py_exc_type, &py_exc_value, &py_traceback);
+        Py_XDECREF(py_traceback);
+
+        const char *exc_type_str = ((PyTypeObject *)py_exc_type)->tp_name;
+        Py_DECREF(py_exc_type);
+
+        // Contains either the exception value or gives the reason it can't retrieve it
+        char *err_msg_details = NULL;
+        if (py_exc_value != NULL) {
+            // Exception value can be anything, not necessarily just strings
+            // e.g Aerospike exception values are tuples
+            PyObject *py_exc_value_str = PyObject_Str(py_exc_value);
+            Py_DECREF(py_exc_value);
+
+            if (!py_exc_value_str) {
+                err_msg_details =
+                    strdup("str() on exception value threw an error");
+            }
+            else {
+                const char *ERR_MSG_DETAILS_PREFIX = "Exception value: ";
+
+                const char *exc_value_str = PyUnicode_AsUTF8(py_exc_value_str);
+                size_t allocate_size =
+                    strlen(ERR_MSG_DETAILS_PREFIX) + strlen(exc_value_str) + 1;
+                err_msg_details = malloc(allocate_size);
+                snprintf(err_msg_details, allocate_size, "%s%s",
+                         ERR_MSG_DETAILS_PREFIX, exc_value_str);
+
+                Py_DECREF(py_exc_value_str);
+            }
+        }
+        else {
+            err_msg_details = strdup("Exception value could not be retrieved");
+        }
+
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Python callback %s threw a %s exception. %s",
+                        py_listener_data[py_listener_data_index].listener_name,
+                        exc_type_str, err_msg_details);
+
+        free(err_msg_details);
+
+        return AEROSPIKE_ERR;
+    }
+
+    // We don't care about the return value of the callback. It should be None as defined in the API
+    Py_DECREF(py_result);
+    return AEROSPIKE_OK;
+}
+
+// This is called by
+// client.enable_metrics() -> release GIL and call aerospike_enable_metrics() -> as_cluster_enable_metrics()
+// We need to reacquire the GIL in this callback
+as_status enable_listener_wrapper(as_error *err, void *py_listener_data)
+{
+    PyGILState_STATE state = PyGILState_Ensure();
+    as_status status =
+        call_py_callback(err, ENABLE_LISTENER_INDEX, py_listener_data, NULL);
+    PyGILState_Release(state);
+    return status;
+}
+
+const unsigned int num_listeners = 4;
+
+void free_py_listener_data(PyListenerData *py_listener_data)
+{
+    for (unsigned int i = 0; i < num_listeners; i++) {
+        Py_CLEAR(py_listener_data[i].py_callback);
+    }
+    free(py_listener_data);
+}
+
+// This can be called by
+// client.close() -> releases GIL and calls aerospike_close() -> aerospike_disable_metrics()
+// ... -> as_cluster_disable_metrics()
+// We need to reacquire the GIL in this callback
+as_status disable_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
+                                   void *py_listener_data)
+{
+    PyGILState_STATE state = PyGILState_Ensure();
+    PyObject *py_cluster = create_py_cluster_from_as_cluster(err, cluster);
+    if (!py_cluster) {
+        return err->code;
+    }
+    as_status status = call_py_callback(err, DISABLE_LISTENER_INDEX,
+                                        py_listener_data, py_cluster);
+
+    // When this C callback is called, we are done using the current Python MetricsListeners callbacks
+    // When re-enabling metrics, a new PyListenerData array will be heap allocated with new MetricsListeners callbacks
+    free_py_listener_data((PyListenerData *)py_listener_data);
+
+    PyGILState_Release(state);
+    return status;
+}
+
+// This is called by
+// as_cluster_tend() -> as_cluster_remove_nodes()
+// This is called by the C client's tend thread, so we need to make sure the GIL is held
+as_status node_close_listener_wrapper(as_error *err, struct as_node_s *node,
+                                      void *py_listener_data)
+{
+    PyGILState_STATE state = PyGILState_Ensure();
+    PyObject *py_node = create_py_node_from_as_node(err, node);
+    if (!py_node) {
+        return err->code;
+    }
+    as_status status = call_py_callback(err, NODE_CLOSE_LISTENER_INDEX,
+                                        py_listener_data, py_node);
+    PyGILState_Release(state);
+    return status;
+}
+
+// This is called by
+// as_cluster_tend() -> as_cluster_manage()
+// This is called by the C client's tend thread, so we need to make sure the GIL is held
+as_status snapshot_listener_wrapper(as_error *err, struct as_cluster_s *cluster,
+                                    void *py_listener_data)
+{
+    PyGILState_STATE state = PyGILState_Ensure();
+    PyObject *py_cluster = create_py_cluster_from_as_cluster(err, cluster);
+    if (!py_cluster) {
+        return err->code;
+    }
+    as_status status = call_py_callback(err, SNAPSHOT_LISTENER_INDEX,
+                                        py_listener_data, py_cluster);
+    PyGILState_Release(state);
+    return status;
+}
+
+#define INVALID_ATTR_TYPE_ERROR_MSG "MetricsPolicy.%s must be a %s type"
+
+// Define this conversion function here instead of conversions.c
+// because it is only used to convert a PyObject to a C client metrics policy
+// C client metrics policy "listeners" must already be declared (i.e in as_metrics_policy).
+as_status
+set_as_metrics_listeners_using_pyobject(as_error *err,
+                                        PyObject *py_metricslisteners,
+                                        as_metrics_listeners *listeners)
+{
+    if (!py_metricslisteners || py_metricslisteners == Py_None) {
+        // Use default metrics writer callbacks that were set when initializing metrics policy
+        return AEROSPIKE_OK;
+    }
+
+    if (!is_pyobj_correct_as_helpers_type(py_metricslisteners, "metrics",
+                                          "MetricsListeners")) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "metrics_listeners",
+                        "aerospike_helpers.metrics.MetricsListeners");
+        return AEROSPIKE_ERR_PARAM;
+    }
+
+    // When a MetricsListeners object is defined with callbacks
+    // Pass those Python callbacks to C client "wrapper" callbacks using udata
+    // Then in those wrapper callbacks, call those Python callbacks
+    PyListenerData *py_listener_data =
+        (PyListenerData *)malloc(sizeof(PyListenerData) * num_listeners);
+    py_listener_data[ENABLE_LISTENER_INDEX] = (PyListenerData){
+        "enable_listener",
+        NULL,
+    };
+    py_listener_data[DISABLE_LISTENER_INDEX] = (PyListenerData){
+        "disable_listener",
+        NULL,
+    };
+    py_listener_data[NODE_CLOSE_LISTENER_INDEX] = (PyListenerData){
+        "node_close_listener",
+        NULL,
+    };
+    py_listener_data[SNAPSHOT_LISTENER_INDEX] = (PyListenerData){
+        "snapshot_listener",
+        NULL,
+    };
+
+    for (unsigned int i = 0; i < num_listeners; i++) {
+        PyObject *py_listener = PyObject_GetAttrString(
+            py_metricslisteners, py_listener_data[i].listener_name);
+        if (!py_listener) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Unable to fetch %s attribute from "
+                            "MetricsListeners instance",
+                            py_listener_data[i].listener_name);
+            goto error;
+        }
+
+        if (!PyCallable_Check(py_listener)) {
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "MetricsPolicy.metrics_listeners.%s must be a callable type",
+                py_listener_data[i].listener_name);
+            Py_DECREF(py_listener);
+            goto error;
+        }
+
+        py_listener_data[i].py_callback = py_listener;
+    }
+
+    listeners->enable_listener = enable_listener_wrapper;
+    listeners->disable_listener = disable_listener_wrapper;
+    listeners->node_close_listener = node_close_listener_wrapper;
+    listeners->snapshot_listener = snapshot_listener_wrapper;
+    listeners->udata = py_listener_data;
+
+    return AEROSPIKE_OK;
+error:
+    free_py_listener_data(py_listener_data);
+    return AEROSPIKE_ERR_PARAM;
+}
+
+#define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
+
+// metrics_policy must be declared already
+as_status
+init_and_set_as_metrics_policy_using_pyobject(as_error *err,
+                                              PyObject *py_metrics_policy,
+                                              as_metrics_policy *metrics_policy)
+{
+    as_metrics_policy_init(metrics_policy);
+
+    if (!py_metrics_policy || py_metrics_policy == Py_None) {
+        // Use default metrics policy
+        return AEROSPIKE_OK;
+    }
+
+    if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
+                                          "MetricsPolicy")) {
+        return as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "policy parameter must be an aerospike_helpers.MetricsPolicy type");
+    }
+
+    PyObject *py_metrics_listeners =
+        PyObject_GetAttrString(py_metrics_policy, "metrics_listeners");
+    if (!py_metrics_listeners) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                               "metrics_listeners");
+    }
+
+    as_status result = set_as_metrics_listeners_using_pyobject(
+        err, py_metrics_listeners, &metrics_policy->metrics_listeners);
+    Py_DECREF(py_metrics_listeners);
+    if (result != AEROSPIKE_OK) {
+        return result;
+    }
+
+    PyObject *py_report_dir =
+        PyObject_GetAttrString(py_metrics_policy, "report_dir");
+    if (!py_report_dir) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        "report_dir");
+        // Need to deallocate metrics listeners' udata
+        goto error;
+    }
+    if (!PyUnicode_Check(py_report_dir)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "report_dir", "str");
+        goto error;
+    }
+    const char *report_dir = PyUnicode_AsUTF8(py_report_dir);
+    if (strlen(report_dir) >= sizeof(metrics_policy->report_dir)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "MetricsPolicy.report_dir must be less than 256 chars");
+        goto error;
+    }
+    strcpy(metrics_policy->report_dir, report_dir);
+
+    PyObject *py_report_size_limit =
+        PyObject_GetAttrString(py_metrics_policy, "report_size_limit");
+    if (!py_report_size_limit) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        "report_size_limit");
+        goto error;
+    }
+    if (!PyLong_CheckExact(py_report_size_limit)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "report_size_limit", "unsigned 64-bit integer");
+        goto error;
+    }
+    unsigned long long report_size_limit =
+        PyLong_AsUnsignedLongLong(py_report_size_limit);
+    if (report_size_limit == (unsigned long long)-1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "report_size_limit", "unsigned 64-bit integer");
+        goto error;
+    }
+    if (report_size_limit > UINT64_MAX) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        "report_size_limit", "unsigned 64-bit integer");
+        goto error;
+    }
+
+    metrics_policy->report_size_limit = (uint64_t)report_size_limit;
+
+    const char *uint32_fields[] = {"interval", "latency_columns",
+                                   "latency_shift"};
+    uint32_t *uint32_ptrs[] = {&metrics_policy->interval,
+                               &metrics_policy->latency_columns,
+                               &metrics_policy->latency_shift};
+    for (unsigned long i = 0;
+         i < sizeof(uint32_fields) / sizeof(uint32_fields[0]); i++) {
+        PyObject *py_field_value =
+            PyObject_GetAttrString(py_metrics_policy, uint32_fields[i]);
+        if (!py_field_value) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                            uint32_fields[i]);
+            goto error;
+        }
+
+        // There's a helper function in the Python client wrapper code called
+        // get_uint32_value
+        // But we don't use it because it doesn't set which exact line
+        // an error occurs. It only returns an error code when it happens
+        if (!PyLong_CheckExact(py_field_value)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
+                            "unsigned 32-bit integer");
+            Py_DECREF(py_field_value);
+            goto error;
+        }
+
+        unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
+        if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
+                            "unsigned 32-bit integer");
+            Py_DECREF(py_field_value);
+            goto error;
+        }
+
+        if (field_value > UINT32_MAX) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
+                            "unsigned 32-bit integer");
+            Py_DECREF(py_field_value);
+            goto error;
+        }
+
+        *uint32_ptrs[i] = (uint32_t)field_value;
+    }
+
+    return AEROSPIKE_OK;
+
+error:
+    // udata would've been allocated if MetricsListener was successfully converted to C code
+    if (py_metrics_listeners && py_metrics_listeners != Py_None) {
+        free_py_listener_data(
+            (PyListenerData *)metrics_policy->metrics_listeners.udata);
+    }
+    return err->code;
 }

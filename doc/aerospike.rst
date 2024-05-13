@@ -811,7 +811,10 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
 .. data:: POLICY_KEY_SEND
 
-    Send the key in addition to the digest. This policy causes a write operation to store the key on the server
+    Send the key in addition to the digest. This policy causes a write operation to store the key on the server.
+
+    .. note:: This option instructs the server to validate the digest by calculating it again from the key sent by the
+        client. Unless this is the explicit intent of the developer, this should be avoided.
 
 .. _POLICY_REPLICA:
 
@@ -1048,6 +1051,9 @@ Flags used by list order.
 .. data:: LIST_ORDERED
 
     Ordered list.
+
+.. note::
+    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
 
 .. _aerospike_list_sort_flag:
 
@@ -1546,3 +1552,36 @@ See :ref:`aerospike_operation_helpers.expressions` for more information.
 .. data:: REGEX_NEWLINE
 
     Match-any-character operators don't match a newline.
+
+.. _query_duration_constants:
+
+Query Duration
+--------------
+
+.. data:: QUERY_DURATION_LONG
+
+     The query is expected to return more than 100 records per node. The server optimizes for a
+     large record set in the following ways:
+
+     * Allow query to be run in multiple threads using the server's query threading configuration.
+     * Do not relax read consistency for AP namespaces.
+     * Add the query to the server's query monitor.
+     * Do not add the overall latency to the server's latency histogram.
+     * Do not allow server timeouts.
+
+.. data:: QUERY_DURATION_SHORT
+
+     The query is expected to return less than 100 records per node. The server optimizes for a
+     small record set in the following ways:
+
+     * Always run the query in one thread and ignore the server's query threading configuration.
+     * Allow query to be inlined directly on the server's service thread.
+     * Relax read consistency for AP namespaces.
+     * Do not add the query to the server's query monitor.
+     * Add the overall latency to the server's latency histogram.
+     * Allow server timeouts. The default server timeout for a short query is 1 second.
+
+.. data:: QUERY_DURATION_LONG_RELAX_AP
+
+     Treat query as a LONG query, but relax read consistency for AP namespaces.
+     This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
