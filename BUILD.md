@@ -120,6 +120,18 @@ python3 -m pip install -r requirements.txt
 python3 -m build
 ```
 
+### Local version identifier
+
+If you are building on a non-tagged commit, or there are uncommitted changes to the repository, a local version
+identifier will be added to the version. The formatting of the local version identifier can be found [here](https://github.com/jwodder/versioningit/tree/v3.1.0?tab=readme-ov-file#example-configurations) under the versioneer
+section. 
+
+The local version identifier will appear in:
+- The package version in the wheel name
+- `python3 -m pip show aerospike` if you installed the wheel
+
+The local version identifier will NOT show up in `aerospike.__version__`.
+
 ### Unoptimized builds (only Linux and macOS)
 
 By default, the Python client and the C client submodule are built with optimizations, which can make debugging
@@ -129,8 +141,7 @@ environment variable:
 UNOPTIMIZED=1 python3 -m build
 ```
 
-In Linux, the package version will be labelled with `+debug`. This label is not applied to macOS currently, but it
-will be supported in the future (soon).
+In Linux and macOS builds, the package version will be labelled with `+unoptimized`.
 
 ### Including debug symbols in macOS
 
@@ -143,6 +154,8 @@ INCLUDE_DSYM=1 python3 -m build
 This way, when you debug the Python client using lldb, the source files and line numbers will appear in backtraces,
 breakpoints will actually work, etc. macOS builds with this option enabled do not have a labelled version yet, but this
 will be added in the future.
+
+In macOS builds, the package version will be labelled with `+dsym`.
 
 ### Building with sanitizer enabled
 
