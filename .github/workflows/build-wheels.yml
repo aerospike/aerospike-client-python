@@ -97,6 +97,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
@@ -147,6 +148,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform == 'aarch64' }}
@@ -170,16 +172,6 @@ jobs:
       if: ${{ !inputs.run_tests }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
-    - name: Get current version if building a debug wheel
-      if: ${{ inputs.apply-no-optimizations }}
-      run: echo DEBUG_VERSION="$(cat VERSION)+unoptimized" >> $GITHUB_ENV
-
-    - name: Label version for debugging
-      if: ${{ inputs.apply-no-optimizations }}
-      uses: ./.github/actions/update-version
-      with:
-        new_version: ${{ env.DEBUG_VERSION }}
-
     - name: Set unoptimize flag
       if: ${{ inputs.apply-no-optimizations }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
@@ -199,6 +191,7 @@ jobs:
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
+      if: ${{ always() }}
       with:
         path: ./wheelhouse/*.whl
         name: ${{ matrix.python }}-manylinux_${{ matrix.platform }}.build
@@ -234,6 +227,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Install Docker Engine
       if: ${{ inputs.run_tests }}
@@ -282,6 +276,7 @@ jobs:
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v4
+      if: ${{ always() }}
       with:
         name: ${{ matrix.python }}-macosx_x86_64.build
         path: wheelhouse/*.whl
@@ -321,6 +316,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     # Update dependencies if needed
     - name: Add brew to path
@@ -363,7 +359,7 @@ jobs:
 
     - name: Run server
       if: ${{ inputs.run_tests }}
-      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
+      run: docker run -d -p 3000:3000 --pull always --name aerospike ${{ env.IMAGE_NAME }}
 
     - name: Set unoptimize flag
       if: ${{ inputs.apply-no-optimizations }}
@@ -378,6 +374,10 @@ jobs:
     - name: Install delocate
       run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall delocate -c ./requirements.txt
       working-directory: .github/workflows
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
 
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
     - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --find-links=wheelhouse/ --no-index --force-reinstall aerospike
@@ -395,6 +395,7 @@ jobs:
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v4
+      if: ${{ always() }}
       with:
         name: ${{ matrix.python-version[0] }}-macosx_arm64.build
         path: wheelhouse/*.whl
@@ -436,6 +437,7 @@ jobs:
         with:
           submodules: recursive
           ref: ${{ inputs.ref }}
+          fetch-depth: 0
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -495,6 +497,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.python[0] }}-win_amd64.build
+
+      - name: Create config.conf
+        run: cp config.conf.template config.conf
+        working-directory: test
+
       - name: Install wheel
         run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
       - name: Connect to Docker container on remote machine with Docker daemon
