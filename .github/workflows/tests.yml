@@ -51,6 +51,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+        fetch-depth: 0
 
     - uses: actions/setup-python@v2
       with:
@@ -102,6 +103,10 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - name: Get number of tests
       run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
       working-directory: test
@@ -119,6 +124,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+        fetch-depth: 0
 
     - uses: actions/setup-python@v2
       with:
@@ -214,6 +220,8 @@ jobs:
         directory: coverage-report
         verbose: true # optional (default = false)
         fail_ci_if_error: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   stubtest:
     needs: build
@@ -273,6 +281,10 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - name: Run tests
       run: python -m pytest ./new_tests
       working-directory: test
@@ -329,6 +341,10 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - name: Run tests
       run: python -m pytest ./new_tests -vv
       working-directory: test
@@ -357,13 +373,15 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run lowest supported server
-      run: |
-        SERVER_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/aerospike/aerospike-server/tags?page_size=100" | jq '.results[] | select(.name | startswith("6.0")).name' -r | head -n 1)
-        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:$SERVER_VERSION
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
       run: sleep 3
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
 
     - name: Run tests
       run: python -m pytest ./new_tests

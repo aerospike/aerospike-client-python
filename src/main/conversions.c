@@ -37,6 +37,8 @@
 #include <aerospike/as_double.h>
 #include <aerospike/as_record_iterator.h>
 #include <aerospike/as_msgpack_ext.h>
+#include <aerospike/as_cluster.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "conversions.h"
 #include "geo.h"
@@ -795,10 +797,300 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static bool is_aerospike_hll_type(PyObject *obj)
+// Creates and returns a Python client ConnectionStats object from a C client's as_conn_stats struct
+// If an error occurs here, return NULL
+PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
+                                                  struct as_conn_stats_s *stats)
 {
-    if (strcmp(obj->ob_type->tp_name, "HyperLogLog")) {
-        // Class name is not HyperLogLog
+    PyObject *py_conn_stats = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "ConnectionStats", NULL);
+    if (!py_conn_stats) {
+        return NULL;
+    }
+
+    const char *field_names[] = {"in_use", "in_pool", "opened", "closed"};
+    uint32_t conn_stats[] = {stats->in_use, stats->in_pool, stats->opened,
+                             stats->closed};
+    for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
+         i++) {
+        PyObject *py_value = PyLong_FromLong(conn_stats[i]);
+        if (!py_value) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to get ConnectionStats field %s",
+                            field_names[i]);
+            goto error;
+        }
+        int result =
+            PyObject_SetAttrString(py_conn_stats, field_names[i], py_value);
+        // Either way if call succeeded or failed, we don't need py_value anymore
+        Py_DECREF(py_value);
+        if (result == -1) {
+            PyErr_Clear();
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to set ConnectionStats field %s",
+                            field_names[i]);
+            goto error;
+        }
+    }
+
+    return py_conn_stats;
+
+error:
+    Py_DECREF(py_conn_stats);
+    return NULL;
+}
+
+// Creates and returns a Python client NodeMetrics object from a C client's as_node_metrics struct
+// If an error occurs here, return NULL
+PyObject *
+create_py_node_metrics_from_as_node_metrics(as_error *error_p,
+                                            as_node_metrics *node_metrics)
+{
+    PyObject *py_node_metrics = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "NodeMetrics", NULL);
+    if (!py_node_metrics) {
+        return NULL;
+    }
+    const char *node_metrics_fields[] = {"conn_latency", "write_latency",
+                                         "read_latency", "batch_latency",
+                                         "query_latency"};
+    uint32_t max = AS_LATENCY_TYPE_NONE;
+    // For each latency type, get list of buckets
+    for (uint32_t i = 0; i < max; i++) {
+        PyObject *py_buckets = PyList_New(0);
+        if (!py_buckets) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Failed to create list of buckets for %s",
+                            node_metrics_fields[i]);
+            goto error;
+        }
+        as_latency_buckets *buckets = &node_metrics->latency[i];
+        uint32_t bucket_max = buckets->latency_columns;
+        // Append each bucket to a list of buckets
+        for (uint32_t j = 0; j < bucket_max; j++) {
+            uint64_t bucket = as_latency_get_bucket(buckets, j);
+            PyObject *py_bucket = PyLong_FromLong(bucket);
+            if (!py_bucket) {
+                as_error_update(error_p, AEROSPIKE_ERR,
+                                "Failed to create bucket at index %d for %s", j,
+                                node_metrics_fields[i]);
+                Py_DECREF(py_buckets);
+                goto error;
+            }
+
+            int result = PyList_Append(py_buckets, py_bucket);
+            Py_DECREF(py_bucket);
+            if (result == -1) {
+                PyErr_Clear();
+                as_error_update(error_p, AEROSPIKE_ERR,
+                                "Failed to append bucket at index %d for %s", j,
+                                node_metrics_fields[i]);
+                Py_DECREF(py_buckets);
+                goto error;
+            }
+        }
+
+        int result = PyObject_SetAttrString(py_node_metrics,
+                                            node_metrics_fields[i], py_buckets);
+        Py_DECREF(py_buckets);
+        if (result == -1) {
+            PyErr_Clear();
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Unable to set list of bucket for %s",
+                            node_metrics_fields[i]);
+            goto error;
+        }
+    }
+
+    return py_node_metrics;
+
+error:
+    Py_DECREF(py_node_metrics);
+    return NULL;
+}
+
+// Creates and returns a Python client Node object from a C client's as_node_s struct
+// If an error occurs here, return NULL
+PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
+{
+    PyObject *py_node = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "Node", NULL);
+    if (!py_node) {
+        return NULL;
+    }
+
+    PyObject *py_name = PyUnicode_FromString(node->name);
+    PyObject_SetAttrString(py_node, "name", py_name);
+    Py_DECREF(py_name);
+
+    // Get address short name (reused code from C client's metrics writer code)
+    as_address *address = as_node_get_address(node);
+    struct sockaddr *addr = (struct sockaddr *)&address->addr;
+    char address_name[AS_IP_ADDRESS_SIZE];
+    as_address_short_name(addr, address_name, sizeof(address_name));
+
+    PyObject *py_address = PyUnicode_FromString(address_name);
+    PyObject_SetAttrString(py_node, "address", py_address);
+    Py_DECREF(py_address);
+
+    uint16_t port = as_address_port(addr);
+    PyObject *py_port = PyLong_FromLong(port);
+    PyObject_SetAttrString(py_node, "port", py_port);
+    Py_DECREF(py_port);
+
+    as_node_stats node_stats;
+    aerospike_node_stats(node, &node_stats);
+    as_conn_stats *sync = &node_stats.sync;
+    PyObject *py_conn_stats =
+        create_py_conn_stats_from_as_conn_stats(error_p, sync);
+    if (py_conn_stats == NULL) {
+        goto error;
+    }
+    PyObject_SetAttrString(py_node, "conns", py_conn_stats);
+    Py_DECREF(py_conn_stats);
+
+    PyObject *py_error_count = PyLong_FromLong(node->error_count);
+    PyObject_SetAttrString(py_node, "error_count", py_error_count);
+    Py_DECREF(py_error_count);
+
+    PyObject *py_timeout_count = PyLong_FromLong(node->timeout_count);
+    PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
+    Py_DECREF(py_timeout_count);
+
+    as_node_metrics *node_metrics = node->metrics;
+    PyObject *py_node_metrics =
+        create_py_node_metrics_from_as_node_metrics(error_p, node_metrics);
+    if (!py_node_metrics) {
+        goto error;
+    }
+    PyObject_SetAttrString(py_node, "metrics", py_node_metrics);
+    Py_DECREF(py_node_metrics);
+
+    return py_node;
+
+error:
+    Py_DECREF(py_node);
+    return NULL;
+}
+
+// Creates and returns a Python client Cluster object from a C client's as_cluster_s struct
+// If an error occurs here, return NULL
+PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
+                                            struct as_cluster_s *cluster)
+{
+    PyObject *py_cluster = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "Cluster", NULL);
+    if (!py_cluster) {
+        return NULL;
+    }
+
+    // Cluster name is optional (declared in client config)
+    if (cluster->cluster_name) {
+        PyObject *py_cluster_name = PyUnicode_FromString(cluster->cluster_name);
+        PyObject_SetAttrString(py_cluster, "cluster_name", py_cluster_name);
+        Py_DECREF(py_cluster_name);
+    }
+    else {
+        PyObject_SetAttrString(py_cluster, "cluster_name", Py_None);
+    }
+
+    PyObject *py_invalid_node_count =
+        PyLong_FromLong(cluster->invalid_node_count);
+    PyObject_SetAttrString(py_cluster, "invalid_node_count",
+                           py_invalid_node_count);
+    Py_DECREF(py_invalid_node_count);
+
+    PyObject *py_transaction_count = PyLong_FromLong(cluster->tran_count);
+    PyObject_SetAttrString(py_cluster, "tran_count", py_transaction_count);
+    Py_DECREF(py_transaction_count);
+
+    PyObject *py_retry_count = PyLong_FromLong(cluster->retry_count);
+    PyObject_SetAttrString(py_cluster, "retry_count", py_retry_count);
+    Py_DECREF(py_retry_count);
+
+    PyObject *py_node_list = PyList_New(cluster->nodes->size);
+    if (!py_node_list) {
+        goto error;
+    }
+    for (uint32_t i = 0; i < cluster->nodes->size; i++) {
+        PyObject *py_node =
+            create_py_node_from_as_node(error_p, cluster->nodes->array[i]);
+        if (!py_node) {
+            Py_DECREF(py_node_list);
+            goto error;
+        }
+        int result = PyList_SetItem(py_node_list, i, py_node);
+        if (result == -1) {
+            PyErr_Clear();
+            Py_DECREF(py_node);
+            Py_DECREF(py_node_list);
+            goto error;
+        }
+    }
+    PyObject_SetAttrString(py_cluster, "nodes", py_node_list);
+    Py_DECREF(py_node_list);
+
+    return py_cluster;
+
+error:
+    Py_DECREF(py_cluster);
+    return NULL;
+}
+
+// Does not steal a reference to py_arg
+PyObject *create_class_instance_from_module(as_error *error_p,
+                                            const char *module_name,
+                                            const char *class_name,
+                                            PyObject *py_arg)
+{
+    PyObject *py_instance = NULL;
+    PyObject *py_module = PyImport_ImportModule(module_name);
+    if (py_module == NULL) {
+        as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
+                        "Unable to import %s module", module_name);
+        return NULL;
+    }
+
+    PyObject *py_class = PyObject_GetAttrString(py_module, class_name);
+    if (py_class == NULL) {
+        as_error_update(error_p, AEROSPIKE_ERR,
+                        "Unable to import %s class from "
+                        "%s module",
+                        class_name, module_name);
+        goto CLEANUP1;
+    }
+
+    if (!PyCallable_Check(py_class)) {
+        as_error_update(error_p, AEROSPIKE_ERR,
+                        "Unable to create %s instance; "
+                        "%s class is not callable",
+                        class_name, class_name);
+        goto CLEANUP2;
+    }
+
+    py_instance = PyObject_CallFunctionObjArgs(py_class, py_arg, NULL);
+    if (py_instance == NULL) {
+        // An exception has been thrown by calling the constructor
+        // We want to show the original exception instead of throwing our own exception
+        goto CLEANUP2;
+    }
+
+CLEANUP2:
+    Py_DECREF(py_class);
+CLEANUP1:
+    Py_DECREF(py_module);
+
+    return py_instance;
+}
+
+// Checks if pyobject is a certain type defined in aerospike_helpers or one of its submodules
+// If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
+bool is_pyobj_correct_as_helpers_type(PyObject *obj,
+                                      const char *expected_submodule_name,
+                                      const char *expected_type_name)
+{
+    if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
+        // Expected class name does not match object's class name
         return false;
     }
 
@@ -815,17 +1107,44 @@ static bool is_aerospike_hll_type(PyObject *obj)
     if (!PyUnicode_Check(py_module_name)) {
         // Invalid module name
         retval = false;
-        goto CLEANUP;
+        goto CLEANUP1;
     }
 
     const char *module_name = PyUnicode_AsUTF8(py_module_name);
-    if (strcmp(module_name, "aerospike_helpers")) {
-        // Class belongs to the wrong module
+    char *module_name_cpy = strdup(module_name);
+    const char *delimiters = ".";
+    char *pyobj_parent_module = strtok(module_name_cpy, delimiters);
+    if (strcmp(pyobj_parent_module, "aerospike_helpers")) {
+        // Class does not belong in aerospike_helpers or any of its submodules
         retval = false;
-        goto CLEANUP;
+        goto CLEANUP2;
+    }
+    char *pyobj_submodule = strtok(NULL, delimiters);
+    if (pyobj_submodule) {
+        // Python object belongs in a aerospike_helpers submodule
+        if (!expected_submodule_name) {
+            // But it is expected to only belong in the parent package
+            retval = false;
+            goto CLEANUP2;
+        }
+        else if (strcmp(pyobj_submodule, expected_submodule_name)) {
+            // But it doesn't match the expected submodule
+            retval = false;
+            goto CLEANUP2;
+        }
+    }
+    else {
+        // Python object belongs in the aerospike_helpers parent submodule
+        if (expected_submodule_name) {
+            // But it is expected to belong to an aerospike_helpers submodule
+            retval = false;
+            goto CLEANUP2;
+        }
     }
 
-CLEANUP:
+CLEANUP2:
+    free(module_name_cpy);
+CLEANUP1:
     Py_DECREF(py_module_name);
     return retval;
 }
@@ -896,7 +1215,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         }
         *val = (as_val *)bytes;
 
-        if (is_aerospike_hll_type(py_obj)) {
+        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog")) {
             bytes->type = AS_BYTES_HLL;
         }
     }
@@ -1105,7 +1424,8 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 char *str = PyBytes_AsString(value);
                 as_bytes_set(bytes, 0, (const uint8_t *)str, str_len);
 
-                if (is_aerospike_hll_type(value)) {
+                if (is_pyobj_correct_as_helpers_type(value, NULL,
+                                                     "HyperLogLog")) {
                     bytes->type = AS_BYTES_HLL;
                 }
                 ret_val = as_record_set_bytes(rec, name, bytes);
