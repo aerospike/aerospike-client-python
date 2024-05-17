@@ -12,6 +12,7 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
 
   upload-to-jfrog:
+    needs: build-artifacts
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
