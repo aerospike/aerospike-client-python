@@ -177,7 +177,7 @@ jobs:
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.16.5
+      uses: pypa/cibuildwheel@v2.18.1
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }}
         CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
@@ -266,7 +266,7 @@ jobs:
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.16.5
+      uses: pypa/cibuildwheel@v2.18.1
       env:
         CIBW_BUILD: ${{ matrix.python }}-macosx_x86_64
         CIBW_BUILD_FRONTEND: build
@@ -447,7 +447,7 @@ jobs:
         working-directory: aerospike-client-c/vs
 
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.18.1
         env:
           CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
           CIBW_BUILD_FRONTEND: build
