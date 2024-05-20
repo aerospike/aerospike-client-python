@@ -9,6 +9,7 @@ Roughly maps to: exception_types.h
 class AerospikeStatus(object):
     AEROSPIKE_OK = 0
     AEROSPIKE_MAX_ERROR_RATE = -14
+    AEROSPIKE_BATCH_FAILED = -16
     AEROSPIKE_SERVER_ERROR = -10
     AEROSPIKE_INVALID_HOST = -4
     AEROSPIKE_ERR_CLIENT = -1

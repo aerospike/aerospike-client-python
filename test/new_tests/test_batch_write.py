@@ -488,3 +488,74 @@ class TestBatchWrite(TestBaseClass):
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.batch_write(batch_records)
         assert excinfo.value.msg == "batch_type: Read, failed to convert policy"
+
+    @pytest.mark.parametrize(
+        "policy_name, batch_record",
+        [
+            (
+                "batch_write",
+                br.Write(
+                    key=("test", "demo", 0),
+                    ops=[
+                        op.write(bin_name="a", write_item=1)
+                    ]
+                )
+            ),
+            (
+                "batch_apply",
+                br.Apply(
+                    key=("test", "demo", 0),
+                    module="sample",
+                    function="list_append",
+                    args=["ilist_bin", 200]
+                ),
+            )
+        ]
+    )
+    def test_global_batch_write_and_apply_policies(self, policy_name: str, batch_record: br.BatchRecord):
+        config = TestBaseClass.get_connection_config()
+        config["policies"][policy_name] = {
+            "key": aerospike.POLICY_KEY_SEND
+        }
+        c = aerospike.client(config)
+        batch_records = br.BatchRecords(
+            batch_records=[
+                batch_record
+            ]
+        )
+        c.batch_write(batch_records)
+
+        query = self.as_connection.query(self.test_ns, self.test_set)
+        records = query.results()
+        # Only the record with primary key 0 should have its PK returned from the query
+        # The other records should not have a PK returned from the server
+        for record_tuple in records:
+            key_tuple = record_tuple[0]
+            pk = key_tuple[2]
+            # Use count bin to identify record's PK
+            bins = record_tuple[2]
+            if bins["count"] == 0:
+                # Get key tuple with PK 0
+                expected_key_tuple = self.keys[0]
+                assert pk == expected_key_tuple[2]
+            else:
+                assert pk is None
+
+    def test_global_batch_remove_policy(self):
+        config = TestBaseClass.get_connection_config()
+        config["policies"]["batch_remove"] = {
+            # Record's real generation should be 1 since it was just written before this test case
+            "gen": aerospike.POLICY_GEN_EQ,
+            "generation": 42
+        }
+        c = aerospike.client(config)
+        batch_records = br.BatchRecords(
+            batch_records=[
+                br.Remove(
+                    key=("test", "demo", 0),
+                )
+            ]
+        )
+        brs = c.batch_write(batch_records)
+        assert brs.result == AerospikeStatus.AEROSPIKE_BATCH_FAILED
+        assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_GENERATION

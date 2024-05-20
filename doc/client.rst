@@ -225,6 +225,9 @@ Batch Operations
 
     .. method:: get_many(keys[, policy: dict]) -> [(key, meta, bins)]
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
         Batch-read multiple records, and return them as a :class:`list`.
 
         Any record that does not exist will have a :py:obj:`None` value for metadata \
@@ -240,10 +243,10 @@ Batch Operations
         .. include:: examples/get_many.py
             :code: python
 
+    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
+
         .. deprecated:: 12.0.0
             Use :meth:`batch_read` instead.
-
-    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys.
 
@@ -258,10 +261,10 @@ Batch Operations
         .. include:: examples/exists_many.py
             :code: python
 
+    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
+
         .. deprecated:: 12.0.0
             Use :meth:`batch_read` instead.
-
-    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read specific bins from multiple records.
 
@@ -276,10 +279,10 @@ Batch Operations
         .. include:: examples/select_many.py
             :code: python
 
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
     .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
+
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_operate` instead.
 
         Batch-read multiple records, and return them as a :class:`list`.
 
@@ -297,23 +300,24 @@ Batch Operations
         .. include:: examples/batch_get_ops.py
             :code: python
 
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_operate` instead.
+    .. note::
 
-    The following batch methods will return a :class:`BatchRecords` object with
-    a ``result`` value of ``0`` if one of the following is true:
+        The following batch methods will return a :class:`~aerospike_helpers.batch.records.BatchRecords` object with
+        a ``result`` value of ``0`` if one of the following is true:
 
-        * All transactions are successful.
-        * One or more transactions failed because:
+            * All transactions are successful.
+            * One or more transactions failed because:
 
-            - A record was filtered out by an expression
-            - The record was not found
+                - A record was filtered out by an expression
+                - The record was not found
 
-    Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
-    an `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
+        Otherwise:
 
-    In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
-    and each batch record contains the result of that transaction.
+            * If the Python client-layer's code throws an error, such as a connection error or parameter error, an exception will be raised.
+            * If the underlying C client throws an error, the returned :class:`~aerospike_helpers.batch.records.BatchRecords` object will have a ``result`` value equal to an
+              `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code. In this case, the
+              :class:`~aerospike_helpers.batch.records.BatchRecords` object has a list of batch records called ``batch_records``,
+              and each batch record contains the result of that transaction.
 
     .. method:: batch_write(batch_records: BatchRecords, [policy_batch: dict]) -> BatchRecords
 
@@ -327,7 +331,7 @@ Batch Operations
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_write.py
             :code: python
@@ -354,13 +358,16 @@ Batch Operations
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. note:: Requires server version >= 6.0.0.
 
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
 
         Perform the same read/write transactions on multiple keys.
+
+        .. note:: Prior to Python client 14.0.0, using the :meth:`~batch_operate()` method with only read operations caused an error.
+            This bug was fixed in version 14.0.0.
 
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.
@@ -370,7 +377,7 @@ Batch Operations
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_operate.py
             :code: python
@@ -389,7 +396,7 @@ Batch Operations
         :param dict policy_batch_apply: See :ref:`aerospike_batch_apply_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_apply.py
             :code: python
@@ -409,7 +416,7 @@ Batch Operations
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_remove.py
             :code: python
@@ -1264,6 +1271,8 @@ user\'s roles. Users are assigned roles, which are collections of \
 
     .. method:: admin_query_user (username[, policy: dict]) -> []
 
+        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
+
         Return the list of roles granted to the specified user.
 
         :param str username: the username of the user.
@@ -1273,17 +1282,15 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
-
     .. method:: admin_query_users ([policy: dict]) -> {}
+
+        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
 
         Get the roles of all users.
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
 
 Metrics
 -------
@@ -2425,6 +2432,8 @@ Map Policies
             | If :py:obj:`True`, persist map index. A map index improves lookup performance,
             | but requires more storage. A map index can be created for a top-level
             | ordered map only. Nested and unordered map indexes are not supported.
+            |
+            | Default: :py:obj:`False`
 
     Example:
 
