@@ -18,7 +18,9 @@ jobs:
   build-artifacts:
     uses: ./.github/workflows/build-wheels.yml
     with:
-      apply-no-optimizations: ${{ inputs.disable-optimizations }}
+      # In a push event, any input values default to ''
+      # https://github.com/orgs/community/discussions/29242#discussioncomment-5063461
+      apply-no-optimizations: ${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }}
 
   upload-to-jfrog:
     needs: build-artifacts
