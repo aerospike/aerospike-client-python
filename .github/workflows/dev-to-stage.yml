@@ -34,16 +34,14 @@ jobs:
         # Get all tags
         fetch-depth: 0
 
-    - name: Were there any non-documentation changes between stage and dev?
-      uses: technote-space/get-diff-action@v6
-      with:
-        FROM: ${{ vars.STAGE_BRANCH_NAME }}
-        TO: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
-        PATTERNS: |
-          !doc/**
+    - name: Get number of files outside of documentation that were changed
+      run: echo NUM_NON_DOC_FILES_CHANGED=$(git diff stage..dev --name-only | grep --invert-match --count "^doc/") >> $GITHUB_ENV
+
+    - name: Were there any files outside of documentation that were changed?
+      run: echo NON_DOC_CHANGES_PRESENT=${{ env.NUM_NON_DOC_FILES_CHANGED != '0' }} >> $GITHUB_ENV
 
     - name: If so, run the stage tests
-      run: echo run_stage_tests=${{ env.GIT_DIFF != '' }} >> $GITHUB_OUTPUT
+      run: echo run_stage_tests=${{ env.NON_DOC_CHANGES_PRESENT != 'true' }} >> $GITHUB_OUTPUT
       id: run_stage_tests
 
   run-stage-tests:
@@ -62,6 +60,10 @@ jobs:
       run-stage-tests,
       get-latest-dev-tag
     ]
+    # If stage tests is skipped, this job would be skipped by default
+    # So ensure that skipping the stage tests still allows this job to run
+    # But we also want to make sure this job doesn't run if the workflow was cancelled
+    if: ${{ !cancelled() && needs.get-latest-dev-tag.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
       ref_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
@@ -70,6 +72,7 @@ jobs:
 
   promote-dev-build-to-rc:
     needs: ff-stage-to-dev-tag
+    if: ${{  }}
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
