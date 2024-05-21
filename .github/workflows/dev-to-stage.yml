@@ -34,14 +34,11 @@ jobs:
         # Get all tags
         fetch-depth: 0
 
-    - name: Get number of files outside of documentation that were changed
-      run: echo NUM_NON_DOC_FILES_CHANGED=$(git diff stage..dev --name-only | grep --invert-match --count "^doc/") >> $GITHUB_ENV
-
-    - name: Were there any files outside of documentation that were changed?
-      run: echo NON_DOC_CHANGES_PRESENT=${{ env.NUM_NON_DOC_FILES_CHANGED != '0' }} >> $GITHUB_ENV
+    - name: Get number of files that were changed between dev and stage (with some exceptions)
+      run: echo NUM_FILES_CHANGED=$(git diff ${{ vars.STAGE_BRANCH_NAME }}..${{ vars.DEV_BRANCH_NAME }} --name-only | grep --invert-match --count -e "^doc/" -e "^aerospike-stubs/") >> $GITHUB_ENV
 
     - name: If so, run the stage tests
-      run: echo run_stage_tests=${{ env.NON_DOC_CHANGES_PRESENT != 'true' }} >> $GITHUB_OUTPUT
+      run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> $GITHUB_OUTPUT
       id: run_stage_tests
 
   run-stage-tests:
@@ -55,13 +52,14 @@ jobs:
       ref: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
     secrets: inherit
 
-  # Stage tests have passed so it is safe to update the stage branch with the changes in dev
+  # Stage tests have either passed or been skipped
+  # so it is safe to update the stage branch with the changes in dev
   ff-stage-to-dev-tag:
     needs: [
       run-stage-tests,
       get-latest-dev-tag
     ]
-    # If stage tests is skipped, this job would be skipped by default
+    # If a parent job is skipped, a dependent job would also be skipped by default
     # So ensure that skipping the stage tests still allows this job to run
     # But we also want to make sure this job doesn't run if the workflow was cancelled
     if: ${{ !cancelled() && needs.get-latest-dev-tag.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
@@ -77,7 +75,7 @@ jobs:
       run-stage-tests
     ]
     # If the stage tests were skipped, any further downstream jobs will also be skipped (not just direct descendents to the skipped job)
-    # So we need to check if the stage tests were skipped as a condition to continue running
+    # So we need to check if the stage tests were skipped as a condition for "grandchildren" jobs to continue running
     if: ${{ !cancelled() && needs.ff-stage-to-dev-tag.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
     uses: ./.github/workflows/bump-version.yml
     with:
@@ -101,7 +99,9 @@ jobs:
 
   rebuild-artifacts-with-rc-version:
     needs: [
+      # Once the old artifacts used for the stage tests are deleted, it's safe to rebuild and upload new artifacts
       delete-dev-artifacts,
+      # We also want to make sure the "bump to RC" commit is ready to use
       promote-dev-build-to-rc,
       run-stage-tests
     ]
@@ -113,6 +113,7 @@ jobs:
   upload-to-jfrog:
     needs: [
       rebuild-artifacts-with-rc-version,
+      # We need the new RC version to label the build in JFrog
       promote-dev-build-to-rc,
       run-stage-tests
     ]
