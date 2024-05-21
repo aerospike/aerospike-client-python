@@ -55,6 +55,7 @@ jobs:
       ref: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
     secrets: inherit
 
+  # Stage tests have passed so it is safe to update the stage branch with the changes in dev
   ff-stage-to-dev-tag:
     needs: [
       run-stage-tests,
@@ -71,8 +72,13 @@ jobs:
     secrets: inherit
 
   promote-dev-build-to-rc:
-    needs: ff-stage-to-dev-tag
-    if: ${{  }}
+    needs: [
+      ff-stage-to-dev-tag,
+      run-stage-tests
+    ]
+    # If the stage tests were skipped, any further downstream jobs will also be skipped (not just direct descendents to the skipped job)
+    # So we need to check if the stage tests were skipped as a condition to continue running
+    if: ${{ !cancelled() && needs.ff-stage-to-dev-tag.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
     uses: ./.github/workflows/bump-version.yml
     with:
       change: 'promote-dev-build-to-rc'
@@ -80,7 +86,8 @@ jobs:
     secrets: inherit
 
   delete-dev-artifacts:
-    needs: promote-dev-build-to-rc
+    needs: run-stage-tests
+    if: ${{ !cancelled() && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -95,8 +102,10 @@ jobs:
   rebuild-artifacts-with-rc-version:
     needs: [
       delete-dev-artifacts,
-      promote-dev-build-to-rc
+      promote-dev-build-to-rc,
+      run-stage-tests
     ]
+    if: ${{ !cancelled() && needs.delete-dev-artifacts.result == 'success' && needs.promote-dev-build-to-rc.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
     uses: ./.github/workflows/build-wheels.yml
     with:
       ref: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
@@ -104,8 +113,10 @@ jobs:
   upload-to-jfrog:
     needs: [
       rebuild-artifacts-with-rc-version,
-      promote-dev-build-to-rc
+      promote-dev-build-to-rc,
+      run-stage-tests
     ]
+    if: ${{ !cancelled() && needs.rebuild-artifacts-with-rc-version.result == 'success' && needs.promote-dev-build-to-rc.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
     name: Upload artifacts to JFrog
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
@@ -114,9 +125,10 @@ jobs:
 
   ff-dev-to-stage:
     needs: [
-      get-latest-dev-tag,
-      upload-to-jfrog
+      promote-dev-build-to-rc,
+      run-stage-tests
     ]
+    if: ${{ !cancelled() && needs.promote-dev-build-to-rc.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
       ref_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
