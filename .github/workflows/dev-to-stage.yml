@@ -37,7 +37,7 @@ jobs:
     - name: Get number of files that were changed between dev and stage (with some exceptions)
       run: echo NUM_FILES_CHANGED=$(git diff ${{ vars.STAGE_BRANCH_NAME }}..${{ vars.DEV_BRANCH_NAME }} --name-only | grep --invert-match --count -e "^doc/" -e "^aerospike-stubs/") >> $GITHUB_ENV
 
-    - name: If so, run the stage tests
+    - name: If any files were changed besides the exceptions, run the stage tests
       run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> $GITHUB_OUTPUT
       id: run_stage_tests
 
