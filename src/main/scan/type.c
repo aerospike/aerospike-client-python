@@ -158,7 +158,7 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
     }
 
     self->unicodeStrVector = NULL;
-    self->static_pool = NULL;
+    self->dynamic_pool = NULL;
     as_scan_init(&self->scan, namespace, set);
 
     if (py_ustr) {
@@ -177,6 +177,13 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
         }
 
         as_vector_destroy(self->unicodeStrVector);
+    }
+
+    if (self->dynamic_pool != NULL) {
+        if (BYTES_POOLS(self->dynamic_pool) != NULL) {
+            pool_destroy(self->dynamic_pool, false);
+        }
+        cf_free(self->dynamic_pool);
     }
 
     Py_CLEAR(self->client);

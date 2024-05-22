@@ -87,15 +87,15 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 
 as_status pyobject_to_val(AerospikeClient *self, as_error *err,
                           PyObject *py_obj, as_val **val,
-                          as_static_pool *static_pool, int serializer_type);
+                          as_dynamic_pool *dynamic_pool, int serializer_type);
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
-                          as_static_pool *static_pool, int serializer_type);
+                          as_dynamic_pool *dynamic_pool, int serializer_type);
 
 as_status pyobject_to_list(AerospikeClient *self, as_error *err,
                            PyObject *py_list, as_list **list,
-                           as_static_pool *static_pool, int serializer_type);
+                           as_dynamic_pool *dynamic_pool, int serializer_type);
 
 as_status pyobject_to_key(as_error *err, PyObject *py_key, as_key *key);
 
@@ -105,7 +105,7 @@ as_status pyobject_to_index(AerospikeClient *self, as_error *err,
 as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                              PyObject *py_rec, PyObject *py_meta,
                              as_record *rec, int serializer_option,
-                             as_static_pool *static_pool);
+                             as_dynamic_pool *dynamic_pool);
 
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_map);
@@ -151,11 +151,6 @@ as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
 
 void error_to_pyobject(const as_error *err, PyObject **obj);
 
-as_status pyobject_to_astype_write(AerospikeClient *self, as_error *err,
-                                   PyObject *py_value, as_val **val,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
-
 as_status as_privilege_to_pyobject(as_error *err, as_privilege privileges[],
                                    PyObject *py_as_privilege,
                                    int privilege_size);
@@ -178,7 +173,7 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
 
 void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
                                    PyObject *py_value, as_binop *binop,
-                                   char *bin, as_static_pool *static_pool);
+                                   char *bin, as_dynamic_pool *dynamic_pool);
 
 as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
                                    PyObject *py_bin, char **bin);
@@ -202,7 +197,7 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 
 as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
-                      as_static_pool *static_pool, int serializer_type);
+                      as_dynamic_pool *dynamic_pool, int serializer_type);
 
 as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
                            as_exp **exp_list, as_error *err);
