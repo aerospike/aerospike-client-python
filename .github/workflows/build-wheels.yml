@@ -121,7 +121,7 @@ jobs:
         status: ${{ job.status }}
         context: "Build wheels (sdist)"
 
-  manylinux_and_macos:
+  build-wheels:
     runs-on: ${{ matrix.platforms[0] }}
     strategy:
       fail-fast: false
@@ -139,7 +139,8 @@ jobs:
           ["manylinux_x86_64", "ubuntu-22.04"],
           ["manylinux_aarch64", "ubuntu-22.04"],
           ["macosx_x86_64", "macos-12-large"],
-          ["macosx_arm64", "macos-13"]
+          ["macosx_arm64", "macos-13"],
+          ["win_amd64", "windows-2022"]
         ]
 
     steps:
@@ -159,6 +160,15 @@ jobs:
         ref: ${{ inputs.ref }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
+
+    - name: Add msbuild to PATH
+      if: ${{ matrix.platforms[0] == 'win_amd64' }}
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Install C client deps
+      if: ${{ matrix.platforms[0] == 'win_amd64' }}
+      run: nuget restore
+      working-directory: aerospike-client-c/vs
 
     - name: Set up QEMU for building and testing in arm64
       if: ${{ endsWith(matrix.platforms[0], 'aarch64') }}
@@ -207,6 +217,8 @@ jobs:
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
+        CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
+        CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
     - name: Upload wheels to GitHub
@@ -225,6 +237,7 @@ jobs:
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
 
   test-macOS-m1:
+    needs: build-wheels
     if: ${{ inputs.run_tests }}
     runs-on: [
       self-hosted,
@@ -292,63 +305,8 @@ jobs:
         status: ${{ job.status }}
         context: "Build wheels (${{ matrix.python-version[0] }}-macosx_arm64)"
 
-  windows-build:
-    strategy:
-      fail-fast: false
-      matrix:
-        python: [
-          ["cp38", "3.8"],
-          ["cp39", "3.9"],
-          ["cp310", "3.10"],
-          ["cp311", "3.11"],
-          ["cp312", "3.12"]
-        ]
-    runs-on: windows-2022
-    steps:
-      - name: Show job status for commit
-        uses: myrotvorets/set-commit-status-action@v2.0.0
-        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
-        with:
-          sha: ${{ github.sha }}
-          context: "Build wheels (${{ matrix.python[0] }}-win_amd64)"
-
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-          ref: ${{ inputs.ref }}
-          fetch-depth: 0
-
-      - name: Add msbuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
-
-      - name: Install C client deps
-        run: nuget restore
-        working-directory: aerospike-client-c/vs
-
-      - name: Build wheel
-        uses: pypa/cibuildwheel@v2.16.5
-        env:
-          CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
-          CIBW_BUILD_FRONTEND: build
-          CIBW_ARCHS: auto64
-          CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-          CIBW_REPAIR_WHEEL_COMMAND: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
-
-      - uses: actions/upload-artifact@v4
-        with:
-          path: ./wheelhouse/*.whl
-          name: ${{ matrix.python[0] }}-win_amd64.build
-
-      - name: Set final commit status
-        uses: myrotvorets/set-commit-status-action@v2.0.0
-        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
-        with:
-          sha: ${{ github.sha }}
-          status: ${{ job.status }}
-          context: "Build wheels (${{ matrix.python[0] }}-win_amd64)"
-
   test-windows:
-    needs: windows-build
+    needs: build-wheels
     if: ${{ inputs.run_tests }}
     strategy:
       fail-fast: false
