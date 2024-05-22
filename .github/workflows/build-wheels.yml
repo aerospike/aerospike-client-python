@@ -122,7 +122,7 @@ jobs:
         context: "Build wheels (sdist)"
 
   build-wheels:
-    runs-on: ${{ matrix.platforms[0] }}
+    runs-on: ${{ matrix.platforms[1] }}
     strategy:
       fail-fast: false
       matrix:
