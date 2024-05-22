@@ -126,14 +126,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Python versions to build wheels on
-        python: [
-          "cp38",
-          "cp39",
-          "cp310",
-          "cp311",
-          "cp312"
-        ]
         platforms: [
           # Wheel type, Github runner OS
           ["manylinux_x86_64", "ubuntu-22.04"],
@@ -141,6 +133,14 @@ jobs:
           ["macosx_x86_64", "macos-12-large"],
           ["macosx_arm64", "macos-13"],
           ["win_amd64", "windows-2022"]
+        ]
+        # Python versions to build wheels on
+        python: [
+          "cp38",
+          "cp39",
+          "cp310",
+          "cp311",
+          "cp312"
         ]
 
     steps:
