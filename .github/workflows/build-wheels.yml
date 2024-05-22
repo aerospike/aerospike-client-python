@@ -180,6 +180,8 @@ jobs:
       # Run tests if flag is set to true
       # We only build macOS arm64 and Windows wheels here, and test them in another job
       run: echo RUN_INTEGRATION_TESTS_IN_THIS_JOB=${{ inputs.run_tests && matrix.platforms[0] != 'macosx_arm64' && matrix.platforms[0] != 'win_amd64' }} >> $GITHUB_ENV
+      # We're using bash syntax for environment variables. Windows steps uses powershell by default
+      shell: bash
 
     - name: Setup Docker on macOS x86 for testing
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && matrix.platforms[0] == 'macosx_x86_64' }}
@@ -201,10 +203,12 @@ jobs:
     - name: By default, disable tests (only run basic import test)
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
+      shell: bash
 
     - name: Enable integration tests
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
       run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
+      shell: bash
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.18.1
