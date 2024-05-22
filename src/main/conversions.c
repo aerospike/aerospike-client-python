@@ -691,7 +691,7 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 
 as_status pyobject_to_list(AerospikeClient *self, as_error *err,
                            PyObject *py_list, as_list **list,
-                           as_dynamic_pool *dynamic_pool, int serializer_type)
+                           as_dynamic_pool *dynamic_pool, int serializer_type, bool allocate_buffer)
 {
     as_error_reset(err);
 
@@ -704,7 +704,7 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     for (int i = 0; i < size; i++) {
         PyObject *py_val = PyList_GetItem(py_list, i);
         as_val *val = NULL;
-        pyobject_to_val(self, err, py_val, &val, dynamic_pool, serializer_type);
+        pyobject_to_val(self, err, py_val, &val, dynamic_pool, serializer_type, allocate_buffer);
         if (err->code != AEROSPIKE_OK) {
             break;
         }
@@ -720,7 +720,7 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
-                          as_dynamic_pool *dynamic_pool, int serializer_type)
+                          as_dynamic_pool *dynamic_pool, int serializer_type, bool allocate_buffer)
 {
     as_error_reset(err);
 
@@ -750,11 +750,11 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
     while (PyDict_Next(py_dict, &pos, &py_key, &py_val)) {
         as_val *key = NULL;
         as_val *val = NULL;
-        pyobject_to_val(self, err, py_key, &key, dynamic_pool, serializer_type);
+        pyobject_to_val(self, err, py_key, &key, dynamic_pool, serializer_type, allocate_buffer);
         if (err->code != AEROSPIKE_OK) {
             break;
         }
-        pyobject_to_val(self, err, py_val, &val, dynamic_pool, serializer_type);
+        pyobject_to_val(self, err, py_val, &val, dynamic_pool, serializer_type, allocate_buffer);
         if (err->code != AEROSPIKE_OK) {
             if (key) {
                 as_val_destroy(key);
@@ -1125,7 +1125,7 @@ CLEANUP1:
 
 as_status pyobject_to_val(AerospikeClient *self, as_error *err,
                           PyObject *py_obj, as_val **val,
-                          as_dynamic_pool *dynamic_pool, int serializer_type)
+                          as_dynamic_pool *dynamic_pool, int serializer_type, bool allocate_buffer)
 {
     as_error_reset(err);
 
@@ -1175,13 +1175,22 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         Py_DECREF(py_ustr);
     }
     else if (PyBytes_Check(py_obj)) {
-        uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
-        uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
         as_bytes *bytes;
         GET_BYTES_POOL(bytes, dynamic_pool, err);
-        as_bytes_init_wrap(bytes, b, b_len, false);
-        *val = (as_val *)bytes;
 
+        uint32_t b_len = (uint32_t)PyBytes_Size(py_obj);
+        uint8_t *b = (uint8_t *)PyBytes_AsString(py_obj);
+        if (allocate_buffer) {
+            uint8_t* heap_b = (uint8_t *)malloc(b_len);
+            memcpy(heap_b, b, b_len);
+            as_bytes_init_wrap(bytes, b, b_len, true);
+
+        }
+        else {
+            as_bytes_init_wrap(bytes, b, b_len, false);
+        }
+
+        *val = (as_val *)bytes;
         if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog")) {
             bytes->type = AS_BYTES_HLL;
         }
@@ -1211,14 +1220,14 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
     else if (PyList_Check(py_obj)) {
         as_list *list = NULL;
         pyobject_to_list(self, err, py_obj, &list, dynamic_pool,
-                         serializer_type);
+                         serializer_type, allocate_buffer);
         if (err->code == AEROSPIKE_OK) {
             *val = (as_val *)list;
         }
     }
     else if (PyDict_Check(py_obj)) {
         as_map *map = NULL;
-        pyobject_to_map(self, err, py_obj, &map, dynamic_pool, serializer_type);
+        pyobject_to_map(self, err, py_obj, &map, dynamic_pool, serializer_type, allocate_buffer);
         if (err->code == AEROSPIKE_OK) {
             *val = (as_val *)map;
         }
@@ -1246,7 +1255,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
             if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(self, serializer_type,
                                                          &bytes, py_obj,
-                                                         err) != AEROSPIKE_OK) {
+                                                         err, allocate_buffer) != AEROSPIKE_OK) {
                     return err->code;
                 }
                 *val = (as_val *)bytes;
@@ -1276,6 +1285,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
         PyObject *key = NULL, *value = NULL;
         Py_ssize_t pos = 0;
         Py_ssize_t size = PyDict_Size(py_rec);
+        bool allocate_buffer = false;
         const char *name;
         long ret_val = 0;
 
@@ -1407,7 +1417,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 // as_list
                 as_list *list = NULL;
                 pyobject_to_list(self, err, value, &list, dynamic_pool,
-                                 serializer_type);
+                                 serializer_type, allocate_buffer);
                 if (err->code != AEROSPIKE_OK) {
                     break;
                 }
@@ -1417,7 +1427,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 // as_map
                 as_map *map = NULL;
                 pyobject_to_map(self, err, value, &map, dynamic_pool,
-                                serializer_type);
+                                serializer_type, allocate_buffer);
                 if (err->code != AEROSPIKE_OK) {
                     break;
                 }
@@ -1436,7 +1446,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     GET_BYTES_POOL(bytes, dynamic_pool, err);
                     if (err->code == AEROSPIKE_OK) {
                         if (serialize_based_on_serializer_policy(
-                                self, serializer_type, &bytes, value, err) !=
+                                self, serializer_type, &bytes, value, err, allocate_buffer) !=
                             AEROSPIKE_OK) {
                             return err->code;
                         }
@@ -2436,15 +2446,17 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     }
     else if (PyList_Check(py_value)) {
         as_list *list = NULL;
+        bool allocate_buffer = false;
         pyobject_to_list(self, err, py_value, &list, dynamic_pool,
-                         SERIALIZER_PYTHON);
+                         SERIALIZER_PYTHON, allocate_buffer);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)list;
     }
     else if (PyDict_Check(py_value)) {
         as_map *map = NULL;
+        bool allocate_buffer = false;
         pyobject_to_map(self, err, py_value, &map, dynamic_pool,
-                        SERIALIZER_PYTHON);
+                        SERIALIZER_PYTHON, allocate_buffer);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)map;
     }
@@ -2472,8 +2484,9 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     else if (PyByteArray_Check(py_value)) {
         as_bytes *bytes;
         GET_BYTES_POOL(bytes, dynamic_pool, err);
+        bool allocate_buffer = false;
         serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes,
-                                             py_value, err);
+                                             py_value, err, allocate_buffer);
         as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
                            bytes->size, false);
         binop_bin->valuep = &binop_bin->value;
@@ -2481,8 +2494,9 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     else {
         as_bytes *bytes;
         GET_BYTES_POOL(bytes, dynamic_pool, err);
+        bool allocate_buffer = false;
         serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes,
-                                             py_value, err);
+                                             py_value, err, allocate_buffer);
         as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
                            bytes->size, false);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
@@ -2754,7 +2768,7 @@ as_status string_and_pyuni_from_pystring(PyObject *py_string,
 // the as_cdt_ctx when it is done.
 as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
-                      as_dynamic_pool *dynamic_pool, int serializer_type)
+                      as_dynamic_pool *dynamic_pool, int serializer_type, bool allocate_buffer)
 {
     PyObject *py_ctx = PyDict_GetItemString(op_dict, CTX_KEY);
     long int_val = 0;
@@ -2842,7 +2856,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             }
             else {
                 if (pyobject_to_val(self, err, value_temp, &val, dynamic_pool,
-                                    serializer_type) != AEROSPIKE_OK) {
+                                    serializer_type, allocate_buffer) != AEROSPIKE_OK) {
                     as_cdt_ctx_destroy(cdt_ctx);
                     return as_error_update(
                         err, AEROSPIKE_ERR_PARAM,

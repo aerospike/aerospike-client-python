@@ -286,7 +286,8 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     as_error_init(&err);
 
     as_dynamic_pool dynamic_pool;
-    BYTES_POOLS(&dynamic_pool) = NULL;
+    dynamic_pool.pool = NULL;
+
 
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -360,8 +361,9 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
         goto CLEANUP;
     }
 
+    bool allocate_buffer = false;
     pyobject_to_list(self, &err, py_args, &arglist, &dynamic_pool,
-                     SERIALIZER_PYTHON);
+                     SERIALIZER_PYTHON, allocate_buffer);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -463,8 +465,8 @@ CLEANUP:
     if (is_query_init) {
         as_query_destroy(&query);
     }
-    if (BYTES_POOLS(&dynamic_pool) != NULL) {
-        pool_destroy(&dynamic_pool, false);
+    if (dynamic_pool.pool != NULL) {
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
     }
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

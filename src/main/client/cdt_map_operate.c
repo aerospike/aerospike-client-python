@@ -33,6 +33,7 @@
 #define AS_PY_MAP_KEY_KEY "key"
 #define AS_PY_RETURN_INVERTED_KEY "inverted"
 #define AS_PY_MAP_INDEX_KEY "index"
+#define ALLOCATE_BUFFER false
 
 static as_status get_map_return_type(as_error *err, PyObject *op_dict,
                                      int *return_type);
@@ -106,6 +107,7 @@ static as_status add_op_map_remove_by_value_rel_rank_range(
     as_val *value = NULL;
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
+    bool allocate_buffer = false;
 
     if (get_map_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
         return err->code;
@@ -125,8 +127,9 @@ static as_status add_op_map_remove_by_value_rel_rank_range(
         return err->code;
     }
 
+
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+                    serializer_type, allocate_buffer) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -169,6 +172,7 @@ static as_status add_op_map_get_by_value_rel_rank_range(
     as_val *value = NULL;
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
+    bool allocate_buffer = false;
 
     if (get_map_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
         return err->code;
@@ -187,9 +191,10 @@ static as_status add_op_map_get_by_value_rel_rank_range(
                   serializer_type, true) != AEROSPIKE_OK) {
         return err->code;
     }
+ 
 
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+                    serializer_type, allocate_buffer) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -232,6 +237,7 @@ static as_status add_op_map_remove_by_key_rel_index_range(
     as_val *key = NULL;
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
+    bool allocate_buffer = false;
 
     if (get_map_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
         return err->code;
@@ -251,8 +257,9 @@ static as_status add_op_map_remove_by_key_rel_index_range(
         return err->code;
     }
 
+
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+                    serializer_type, allocate_buffer) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -294,7 +301,8 @@ static as_status add_op_map_get_by_key_rel_index_range(
     as_val *key = NULL;
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
-
+    bool allocate_buffer = false;
+    
     if (get_map_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
         return err->code;
     }
@@ -313,8 +321,9 @@ static as_status add_op_map_get_by_key_rel_index_range(
         return err->code;
     }
 
+
     if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+                    serializer_type, allocate_buffer) != AEROSPIKE_OK) {
         return err->code;
     }
 

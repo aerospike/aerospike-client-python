@@ -246,8 +246,10 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
         if (serialize_flag) {
             char *py_val;
             Py_ssize_t len;
+
             py_val = (char *)PyUnicode_AsUTF8AndSize(py_return, &len);
-            set_as_bytes(bytes, (uint8_t *)py_val, len, AS_BYTES_BLOB, error_p);
+            as_bytes_init_wrap(bytes, (uint8_t *) py_val, (int32_t) len, false);
+
             Py_DECREF(py_return);
         }
         else {
@@ -293,7 +295,8 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
                                                       int32_t serializer_policy,
                                                       as_bytes **bytes,
                                                       PyObject *value,
-                                                      as_error *error_p)
+                                                      as_error *error_p,
+                                                      bool allocate_buffer)
 {
     uint8_t use_client_serializer = true;
     PyObject *initresult = NULL;

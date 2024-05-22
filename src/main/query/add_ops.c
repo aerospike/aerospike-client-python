@@ -53,7 +53,7 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
     if (self->dynamic_pool == NULL) {
         self->dynamic_pool =
             (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
-        BYTES_POOLS(self->dynamic_pool) = NULL;
+        self->dynamic_pool->pool = NULL;
     }
 
     if (!self || !self->client->as) {

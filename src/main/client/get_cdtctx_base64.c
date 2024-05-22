@@ -55,7 +55,8 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     as_error_init(&err);
 
     as_dynamic_pool dynamic_pool;
-    BYTES_POOLS(&dynamic_pool) = NULL;
+    dynamic_pool.pool = NULL;
+
     static char *kwlist[] = {"ctx", NULL};
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:get_cdtctx_base64", kwlist,
                                     &py_cdtctx) == false) {
@@ -90,8 +91,10 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
             "unable to convert Python cdtctx to it's C client counterpart");
         goto CLEANUP;
     }
+
+    bool allocate_buffer = false;
     if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &dynamic_pool,
-                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+                    SERIALIZER_PYTHON, allocate_buffer) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     if (!ctx_in_use) {
@@ -121,8 +124,8 @@ CLEANUP:
     if (base64 != NULL) {
         cf_free(base64);
     }
-    if (BYTES_POOLS(&dynamic_pool) != NULL) {
-        pool_destroy(&dynamic_pool, false);
+    if (dynamic_pool.pool != NULL) {
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
     }
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

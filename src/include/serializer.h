@@ -59,7 +59,8 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
                                                       int32_t serializer_policy,
                                                       as_bytes **bytes,
                                                       PyObject *value,
-                                                      as_error *error_p);
+                                                      as_error *error_p,
+                                                      bool allocate_buffer);
 
 /**
  * Deserializes Py_Object (value) into as_bytes using Deserialization logic
