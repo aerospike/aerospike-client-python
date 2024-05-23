@@ -36,7 +36,20 @@ static inline void dynamic_pool_shift_block_size_if_needed(as_dynamic_pool *dyna
     }
 }
 
-
+static inline void dynamic_pool_expand_pool_if_needed(as_dynamic_pool *dynamic_pool, as_error* err)
+{
+    if (dynamic_pool->block_id % AS_DYNAMIC_POOL_POINTER_BLOCK_SIZE ==
+        0) {
+        dynamic_pool->pool = (as_bytes **)realloc(
+            dynamic_pool->pool, (dynamic_pool->block_id +
+                                        AS_DYNAMIC_POOL_POINTER_BLOCK_SIZE) *
+    sizeof(as_bytes *));
+    }
+    if (dynamic_pool->pool == NULL) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Failed to allocated memory for dynamic_pool");
+    }
+}
 
 static inline void dynamic_pool_create_pool(as_dynamic_pool *dynamic_pool,
                                        as_error *err)
