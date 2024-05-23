@@ -203,7 +203,9 @@ jobs:
 
     - name: By default, disable tests (only run basic import test)
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
-      run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
+      # Use double quotes to enclose Python code since powershell doesn't seem to allow using single quotes
+      # https://stackoverflow.com/questions/34379631/syntaxerror-eol-while-scanning-string-literal
+      run: echo "TEST_COMMAND=python -c \"import aerospike\"" >> $GITHUB_ENV
       shell: bash
 
     - name: Enable integration tests
