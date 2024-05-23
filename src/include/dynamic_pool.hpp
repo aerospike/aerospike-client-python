@@ -73,7 +73,7 @@ static inline void dynamic_pool_destroy_bytes_in_block(as_dynamic_pool *dynamic_
 static inline void dynamic_pool_free_blocks_and_bytes(as_dynamic_pool *dynamic_pool, bool free_buffer, uint16_t block_num, uint16_t bytes_num)
 {
     if (free_buffer) {
-        dynamic_pool_destroy_bytes_in_block(dynamic_pool, block_num, dynamic_pool->current_block_size);
+        dynamic_pool_destroy_bytes_in_block(dynamic_pool, block_num, bytes_num);
     }
     cf_free(((as_dynamic_pool *)dynamic_pool)->pool[block_num]);
     dynamic_pool_shift_block_size_if_needed(dynamic_pool);
