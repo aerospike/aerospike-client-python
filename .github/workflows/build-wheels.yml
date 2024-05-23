@@ -208,6 +208,13 @@ jobs:
       run: echo "TEST_COMMAND=python -c \"import aerospike\"" >> $GITHUB_ENV
       shell: bash
 
+    - name: Install experimental Python 3.8 arm64 build
+      if: ${{ matrix.platforms[0] == 'macosx_arm64' && matrix.python == 'cp38' }}
+      run: |
+        curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
+        sudo installer -pkg /tmp/Python38.pkg -target /
+        sh "/Applications/Python 3.8/Install Certificates.command"
+
     - name: Enable integration tests
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
       run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
@@ -218,6 +225,7 @@ jobs:
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
+        # We are cross compiling for arm64 on x86_64 hardware, so we need to be specific
         CIBW_ARCHS_LINUX: ${{ matrix.platforms[0] == 'manylinux_aarch64' && 'aarch64' || 'auto' }}
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
