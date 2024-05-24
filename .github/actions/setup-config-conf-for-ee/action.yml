@@ -10,6 +10,7 @@ runs:
 
   - name: Don't use community edition in config.conf
     run: crudini --existing=param --set config.conf community-edition hosts ''
+    working-directory: test
     shell: bash
 
   - name: Set host in config file
