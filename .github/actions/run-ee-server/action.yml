@@ -35,9 +35,11 @@ runs:
 
   - name: Run EE server from Docker image
     run: docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
+    shell: bash
 
   - name: Wait for EE server to start
     run: sleep 5
+    shell: bash
 
   - name: Create config folder to store configs in
     # Cannot create parent directories using docker cp
