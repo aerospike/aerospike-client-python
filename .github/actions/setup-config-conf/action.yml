@@ -4,6 +4,9 @@ inputs:
   using-ee-server:
     required: false
     default: false
+  ee-docker-ip-address:
+    required: false
+    default: '127.0.0.1'
 
 runs:
   using: "composite"
@@ -16,3 +19,5 @@ runs:
   - name: If using EE server, modify config.conf accordingly
     if: ${{ inputs.using-ee-server == 'true' }}
     uses: ./.github/actions/setup-config-conf-for-ee
+    with:
+      ee-host-ip-address: ${{ inputs.ee-host-ip-address }}

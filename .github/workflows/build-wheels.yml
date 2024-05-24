@@ -188,18 +188,28 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && matrix.platforms[0] == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - uses: ./.github/actions/setup-config-conf
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
-      with:
-        using-ee-server: 'true'
-
     - uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: If running test in a manylinux Docker container, connect to internal Docker IP address of server container
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && startsWith(matrix.platforms[0], 'manylinux') }}
+      run: echo "CONFIG_CONF_HOST_IP=${{ steps.run-ee-server.outputs.server-docker-ip-address }}" >> $GITHUB_ENV
+
+    - name: If running test in a manylinux Docker container, connect to internal Docker IP address of server container
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && !startsWith(matrix.platforms[0], 'manylinux') }}
+      run: echo "CONFIG_CONF_HOST_IP=127.0.0.1" >> $GITHUB_ENV
+
+    - uses: ./.github/actions/setup-config-conf
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
+      with:
+        using-ee-server: 'true'
+        ee-host-ip-address: ${{ env.CONFIG_CONF_HOST_IP }}
 
     - name: By default, disable tests (only run basic import test)
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}

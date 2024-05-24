@@ -1,4 +1,7 @@
 name: 'Setup config.conf for enterprise edition server'
+inputs:
+  host-ip-address:
+    required: true
 
 runs:
   using: "composite"
@@ -14,7 +17,7 @@ runs:
     shell: bash
 
   - name: Set host in config file
-    run: crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
+    run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ inputs.host-ip-address }}:3000
     working-directory: test
     shell: bash
 
