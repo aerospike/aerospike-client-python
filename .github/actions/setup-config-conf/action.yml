@@ -20,4 +20,4 @@ runs:
     if: ${{ inputs.using-ee-server == 'true' }}
     uses: ./.github/actions/setup-config-conf-for-ee
     with:
-      ee-host-ip-address: ${{ inputs.ee-host-ip-address }}
+      host-ip-address: ${{ inputs.ee-host-ip-address }}
