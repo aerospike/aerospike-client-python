@@ -201,7 +201,7 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && startsWith(matrix.platforms[0], 'manylinux') }}
       run: echo "CONFIG_CONF_HOST_IP=${{ steps.run-ee-server.outputs.server-docker-ip-address }}" >> $GITHUB_ENV
 
-    - name: If running test in a manylinux Docker container, connect to internal Docker IP address of server container
+    - name: Otherwise if running tests from outside Docker container, use localhost
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && !startsWith(matrix.platforms[0], 'manylinux') }}
       run: echo "CONFIG_CONF_HOST_IP=127.0.0.1" >> $GITHUB_ENV
 

@@ -4,7 +4,7 @@ inputs:
   using-ee-server:
     required: false
     default: false
-  ee-docker-ip-address:
+  ee-host-ip-address:
     required: false
     default: '127.0.0.1'
 
