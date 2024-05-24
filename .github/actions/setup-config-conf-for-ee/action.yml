@@ -1,3 +1,8 @@
+name: 'Setup config.conf for enterprise edition server'
+
+runs:
+  using: "composite"
+  steps:
   - name: Install crudini to manipulate config.conf
     run: pip3 install crudini -c requirements.txt
     working-directory: .github/workflows
