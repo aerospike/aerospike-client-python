@@ -78,7 +78,7 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     char *module = NULL;
     char *function = NULL;
     as_arraylist *arglist = NULL;
-    bool allocate_buffer = false;
+    bool allocate_buffer = true;
 
     if (PyUnicode_Check(py_module)) {
         py_umodule = PyUnicode_AsUTF8String(py_module);

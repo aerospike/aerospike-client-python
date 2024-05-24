@@ -239,7 +239,7 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
 
     if (self->dynamic_pool != NULL) {
         if (self->dynamic_pool->pool != NULL) {
-            DESTROY_DYNAMIC_POOL(self->dynamic_pool, false);
+            DESTROY_DYNAMIC_POOL(self->dynamic_pool, true);
         }
         cf_free(self->dynamic_pool);
     }
