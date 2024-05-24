@@ -16,3 +16,4 @@ runs:
   - name: If using EE server, modify config.conf accordingly
     if: ${{ inputs.using-ee-server == 'true' }}
     uses: ./.github/actions/setup-config-conf-for-ee
+    working-directory: test
