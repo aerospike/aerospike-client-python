@@ -49,6 +49,7 @@ runs:
 
   - name: Grab default aerospike.conf from EE server
     run: docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
+    shell: bash
 
   - name: Stop EE server
     run: docker container stop aerospike
