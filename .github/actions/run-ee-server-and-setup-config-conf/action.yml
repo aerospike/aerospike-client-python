@@ -4,6 +4,16 @@ inputs:
     required: true
     default: 'false'
     description: 'If false, this assume you are running tests from the Docker host'
+  use-server-rc:
+    required: true
+    default: false
+  server-tag:
+    required: true
+    default: 'latest'
+  docker-hub-username:
+    required: false
+  docker-hub-password:
+    required: false
 
 runs:
   using: "composite"
@@ -13,8 +23,8 @@ runs:
     with:
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
-      docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-      docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+      docker-hub-username: ${{ inputs.DOCKER_HUB_BOT_USERNAME }}
+      docker-hub-password: ${{ inputs.DOCKER_HUB_BOT_PW }}
 
   - uses: ./.github/actions/setup-config-conf
     with:

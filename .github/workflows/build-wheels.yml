@@ -189,6 +189,7 @@ jobs:
       uses: ./.github/actions/setup-docker-on-macos
 
     - uses: ./.github/actions/run-ee-server-and-setup-config-conf
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
       with:
         running-tests-from-docker-container: ${{ startsWith(matrix.platforms[0], 'manylinux') }}
 
