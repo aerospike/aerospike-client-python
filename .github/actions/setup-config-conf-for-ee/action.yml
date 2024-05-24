@@ -1,0 +1,23 @@
+  - name: Install crudini to manipulate config.conf
+    run: pip3 install crudini -c requirements.txt
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Don't use community edition in config.conf
+    run: crudini --existing=param --set config.conf community-edition hosts ''
+    shell: bash
+
+  - name: Set host in config file
+    run: crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1
+    working-directory: test
+    shell: bash
+
+  - name: Set user in config file
+    run: crudini --existing=param --set config.conf enterprise-edition user superuser
+    working-directory: test
+    shell: bash
+
+  - name: Set password in config file
+    run: crudini --existing=param --set config.conf enterprise-edition password superuser
+    working-directory: test
+    shell: bash
