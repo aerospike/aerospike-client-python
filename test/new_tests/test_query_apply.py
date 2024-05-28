@@ -423,6 +423,8 @@ class TestQueryApply(object):
         Invoke query.apply() with a stream udf.
         arguments contain a serialized set.
         """
+
+        picky =  pickle.dumps({"lary", "quinton", "julie", "mark"})
         query_results = (
             self.as_connection.query(
                 "test",
@@ -431,12 +433,14 @@ class TestQueryApply(object):
             .apply(
                 "query_apply_parameters",
                 "query_params",
-                [["age", 5], pickle.dumps({"lary", "quinton", "julie", "mark"})],
+                [["age", 5], picky, picky, picky],
             )
             .results()
         )
 
         query_results.sort()
+
+        print(picky)
         assert query_results == [6, 7, 8, 9]
 
     def test_stream_udf_complicated_parameters(self):
