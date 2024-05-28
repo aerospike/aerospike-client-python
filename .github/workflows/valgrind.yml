@@ -31,8 +31,12 @@ jobs:
         python-version: '3.8'
         architecture: 'x64'
 
+    - uses: actions/download-artifact@v4
+      with:
+        name: cp38-manylinux_x86_64.build
+
     - name: Install client
-      run: pip install .
+      run: pip install ./*.whl
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
