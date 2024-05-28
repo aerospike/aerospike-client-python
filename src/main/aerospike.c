@@ -161,8 +161,6 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     py_global_hosts = PyDict_New();
 
-    PyModule_AddStringConstant(aerospike, "__version__", version);
-
     PyObject *exception = AerospikeException_New();
     Py_INCREF(exception);
     int retval = PyModule_AddObject(aerospike, "exception", exception);
