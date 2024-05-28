@@ -248,7 +248,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
             Py_ssize_t len;
 
             py_val = (char *)PyUnicode_AsUTF8AndSize(py_return, &len);
-            as_bytes_init_wrap(bytes, (uint8_t *) py_val, (int32_t) len, false);
+            as_bytes_init_wrap(*bytes, (uint8_t *) py_val, (int32_t) len, false);
 
             Py_DECREF(py_return);
         }
