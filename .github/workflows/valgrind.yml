@@ -14,7 +14,11 @@ on:
         default: false
 
 jobs:
+  build-manylinux-wheels:
+    uses: ./.github/workflows/build-wheels.yml
+
   valgrind:
+    needs: build-manylinux-wheels
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
