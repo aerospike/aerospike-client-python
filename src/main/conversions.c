@@ -1183,7 +1183,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         if (allocate_buffer) {
             uint8_t* heap_b = (uint8_t *)malloc(b_len);
             memcpy(heap_b, b, b_len);
-            as_bytes_init_wrap(bytes, b, b_len, true);
+            as_bytes_init_wrap(bytes, heap_b, b_len, true);
 
         }
         else {
