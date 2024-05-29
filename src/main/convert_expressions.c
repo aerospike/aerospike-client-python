@@ -565,11 +565,9 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
         }
         else {
             as_bytes *bytes;
-            GET_BYTES_POOL(bytes, dynamic_pool, err);
-            bool allocate_buffer = false;
             if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(self, serializer_type,
-                                                         &bytes, py_obj,
+                                                         &bytes, dynamic_pool, py_obj,
                                                          err) != AEROSPIKE_OK) {
                     return err->code;
                 }

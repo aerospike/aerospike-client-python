@@ -1250,10 +1250,9 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         }
         else {
             as_bytes *bytes;
-            GET_BYTES_POOL(bytes, dynamic_pool, err);
             if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(self, serializer_type,
-                                                         &bytes, py_obj,
+                                                         &bytes, dynamic_pool, py_obj,
                                                          err) != AEROSPIKE_OK) {
                     return err->code;
                 }
@@ -1442,10 +1441,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
                 else {
                     as_bytes *bytes;
-                    GET_BYTES_POOL(bytes, dynamic_pool, err);
                     if (err->code == AEROSPIKE_OK) {
                         if (serialize_based_on_serializer_policy(
-                                self, serializer_type, &bytes, value, err) !=
+                                self, serializer_type, &bytes, dynamic_pool, value, err) !=
                             AEROSPIKE_OK) {
                             return err->code;
                         }
@@ -2482,9 +2480,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     }
     else if (PyByteArray_Check(py_value)) {
         as_bytes *bytes;
-        GET_BYTES_POOL(bytes, dynamic_pool, err);
-        bool allocate_buffer = false;
-        serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes,
+        serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, dynamic_pool,
                                              py_value, err);
         as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
                            bytes->size, false);
@@ -2492,9 +2488,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     }
     else {
         as_bytes *bytes;
-        GET_BYTES_POOL(bytes, dynamic_pool, err);
-        bool allocate_buffer = false;
-        serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes,
+        serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes, dynamic_pool,
                                              py_value, err);
         as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
                            bytes->size, false);
