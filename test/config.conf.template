@@ -2,6 +2,6 @@
 hosts: 127.0.0.1:3000
 
 [enterprise-edition]
-hosts :
+hosts : 127.0.0.1:3000
 user :
 password :

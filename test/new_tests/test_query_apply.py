@@ -436,7 +436,6 @@ class TestQueryApply(object):
             .results()
         )
 
-
         query_results.sort()
         assert query_results == [6, 7, 8, 9]
 
@@ -454,13 +453,6 @@ class TestQueryApply(object):
                 "query_apply_parameters",
                 "query_params",
                 [["age", 2], ["id", ["john", ["hi"]], ["john", {"mary": 39}]], []],
-            )
-        )
-
-        query_results = (
-            self.as_connection.query(
-                "test",
-                "demo",
             )
             .results()
         )

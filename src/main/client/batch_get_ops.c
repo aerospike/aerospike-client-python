@@ -145,7 +145,8 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
     }
 
     as_dynamic_pool dynamic_pool;
-    BYTES_POOLS(&dynamic_pool) = NULL;
+    dynamic_pool.pool = NULL;
+
 
     for (int i = 0; i < ops_size; i++) {
         PyObject *py_val = PyList_GetItem(py_ops, i);
@@ -213,8 +214,8 @@ CLEANUP:
 
     as_batch_destroy(&batch);
 
-    if (BYTES_POOLS(&dynamic_pool) != NULL) {
-        pool_destroy(&dynamic_pool, false);
+    if (dynamic_pool.pool != NULL) {
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
     }
     return py_results;
 }

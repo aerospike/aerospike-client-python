@@ -14,7 +14,11 @@ on:
         default: false
 
 jobs:
+  build-manylinux-wheels:
+    uses: ./.github/workflows/build-wheels.yml
+
   valgrind:
+    needs: build-manylinux-wheels
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
@@ -27,8 +31,12 @@ jobs:
         python-version: '3.8'
         architecture: 'x64'
 
+    - uses: actions/download-artifact@v4
+      with:
+        name: cp38-manylinux_x86_64.build
+
     - name: Install client
-      run: pip install .
+      run: pip install ./*.whl
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt

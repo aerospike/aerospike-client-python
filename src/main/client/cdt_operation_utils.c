@@ -87,8 +87,9 @@ as_status get_asval(AerospikeClient *self, as_error *err, char *key,
         *val = NULL;
         return AEROSPIKE_OK;
     }
+    bool allocate_buffer = false;
     return pyobject_to_val(self, err, py_val, val, dynamic_pool,
-                           serializer_type);
+                           serializer_type, allocate_buffer);
 }
 
 as_status get_val_list(AerospikeClient *self, as_error *err,
@@ -106,8 +107,9 @@ as_status get_val_list(AerospikeClient *self, as_error *err,
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Value must be a list");
     }
+    bool allocate_buffer = false;
     return pyobject_to_list(self, err, py_val, list_val, dynamic_pool,
-                            serializer_type);
+                            serializer_type, allocate_buffer);
 }
 
 as_status get_int64_t(as_error *err, const char *key, PyObject *op_dict,
