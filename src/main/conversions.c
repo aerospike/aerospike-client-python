@@ -1184,7 +1184,6 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
             uint8_t* heap_b = (uint8_t *)malloc(b_len);
             memcpy(heap_b, b, b_len);
             as_bytes_init_wrap(bytes, heap_b, b_len, true);
-
         }
         else {
             as_bytes_init_wrap(bytes, b, b_len, false);
@@ -1255,7 +1254,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
             if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(self, serializer_type,
                                                          &bytes, py_obj,
-                                                         err, allocate_buffer) != AEROSPIKE_OK) {
+                                                         err) != AEROSPIKE_OK) {
                     return err->code;
                 }
                 *val = (as_val *)bytes;
@@ -1446,7 +1445,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     GET_BYTES_POOL(bytes, dynamic_pool, err);
                     if (err->code == AEROSPIKE_OK) {
                         if (serialize_based_on_serializer_policy(
-                                self, serializer_type, &bytes, value, err, allocate_buffer) !=
+                                self, serializer_type, &bytes, value, err) !=
                             AEROSPIKE_OK) {
                             return err->code;
                         }
@@ -2486,7 +2485,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         GET_BYTES_POOL(bytes, dynamic_pool, err);
         bool allocate_buffer = false;
         serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes,
-                                             py_value, err, allocate_buffer);
+                                             py_value, err);
         as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
                            bytes->size, false);
         binop_bin->valuep = &binop_bin->value;
@@ -2496,7 +2495,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         GET_BYTES_POOL(bytes, dynamic_pool, err);
         bool allocate_buffer = false;
         serialize_based_on_serializer_policy(self, SERIALIZER_PYTHON, &bytes,
-                                             py_value, err, allocate_buffer);
+                                             py_value, err);
         as_bytes_init_wrap((as_bytes *)&binop_bin->value, bytes->value,
                            bytes->size, false);
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;

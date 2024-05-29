@@ -129,7 +129,7 @@ CLEANUP:
     }
 
     if (dynamic_pool.pool != NULL) {
-        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, true);
     }
 
     // If an error occurred, tell Python.

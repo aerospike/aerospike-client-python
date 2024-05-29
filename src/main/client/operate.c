@@ -561,7 +561,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             GET_BYTES_POOL(bytes, dynamic_pool, err);
             if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(
-                        self, SERIALIZER_PYTHON, &bytes, py_value, err, allocate_buffer) !=
+                        self, SERIALIZER_PYTHON, &bytes, py_value, err) !=
                     AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
@@ -594,7 +594,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             GET_BYTES_POOL(bytes, dynamic_pool, err);
             if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(
-                        self, SERIALIZER_PYTHON, &bytes, py_value, err, allocate_buffer) !=
+                        self, SERIALIZER_PYTHON, &bytes, py_value, err) !=
                     AEROSPIKE_OK) {
                     goto CLEANUP;
                 }

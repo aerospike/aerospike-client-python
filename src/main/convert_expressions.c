@@ -570,7 +570,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_dynamic_pool *dynamic_pool,
             if (err->code == AEROSPIKE_OK) {
                 if (serialize_based_on_serializer_policy(self, serializer_type,
                                                          &bytes, py_obj,
-                                                         err, allocate_buffer) != AEROSPIKE_OK) {
+                                                         err) != AEROSPIKE_OK) {
                     return err->code;
                 }
                 as_exp_entry tmp_entry =

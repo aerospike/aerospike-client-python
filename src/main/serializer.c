@@ -218,6 +218,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     PyObject *py_return = NULL;
     PyObject *py_value = NULL;
     PyObject *py_arglist = PyTuple_New(1);
+    bool allocate_buffer = true;
 
     if (serialize_flag) {
         Py_XINCREF(*value);
@@ -248,7 +249,9 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
             Py_ssize_t len;
 
             py_val = (char *)PyUnicode_AsUTF8AndSize(py_return, &len);
-            as_bytes_init_wrap(*bytes, (uint8_t *) py_val, (int32_t) len, false);
+            uint8_t* heap_b = (uint8_t *)malloc((uint32_t)len);
+            memcpy(heap_b, py_val, b_len);
+            as_bytes_init_wrap(*bytes, heap_b, (int32_t) len, allocate_buffer);
 
             Py_DECREF(py_return);
         }
@@ -295,8 +298,7 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
                                                       int32_t serializer_policy,
                                                       as_bytes **bytes,
                                                       PyObject *value,
-                                                      as_error *error_p,
-                                                      bool allocate_buffer)
+                                                      as_error *error_p)
 {
     uint8_t use_client_serializer = true;
     PyObject *initresult = NULL;
@@ -329,13 +331,11 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
             uint8_t *str = (uint8_t *)PyByteArray_AsString(value);
             uint32_t str_len = (uint32_t)PyByteArray_Size(value);
             as_bytes_init_wrap(*bytes, str, str_len, false);
-            as_bytes_set_type(*bytes, AS_BYTES_BLOB);
         }
         else if (PyBytes_Check(value)) {
             uint8_t *b = (uint8_t *)PyBytes_AsString(value);
             uint32_t b_len = (uint32_t)PyBytes_Size(value);
             as_bytes_init_wrap(*bytes, b, b_len, false);
-            as_bytes_set_type(*bytes, AS_BYTES_BLOB);
         }
         else {
             as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
