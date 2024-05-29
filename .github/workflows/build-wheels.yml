@@ -146,6 +146,8 @@ jobs:
       python-tag: ${{ matrix.python-tag }}
       platform-tags: ${{ matrix.platform-tag-and-os[0] }}
       os: ${{ matrix.platform-tag-and-os[1] }}
+      unoptimized: ${{ inputs.apply-no-optimizations }}
+      include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
 
   build-macOS-m1:
     strategy:
@@ -162,6 +164,8 @@ jobs:
       python-tag: ${{ matrix.python-tag }}
       platform-tags: macosx_arm64
       os: macos-13-xlarge
+      unoptimized: ${{ inputs.apply-no-optimizations }}
+      include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
 
   build-windows:
     strategy:
@@ -221,13 +225,7 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - name: Use server rc
-      if: ${{ inputs.use-server-rc }}
-      run: echo IMAGE_NAME="${{ vars.SERVER_RC_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Use server release
-      if: ${{ !inputs.use-server-rc }}
-      run: echo IMAGE_NAME="${{ vars.SERVER_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
+    
 
     - run: python${{ matrix.python-version[1] }} -m pip install --find-links=wheelhouse/ --no-index aerospike
 

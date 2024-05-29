@@ -12,6 +12,20 @@ on:
       os:
         type: string
         required: true
+      ref:
+        type: string
+        required: true
+      run_tests:
+        type: boolean
+        required: true
+      unoptimized:
+        type: boolean
+        required: false
+        default: false
+      include-debug-info-for-macos:
+        type: boolean
+        required: false
+        default: false
 
 jobs:
   cibuildwheel:
@@ -25,7 +39,8 @@ jobs:
       uses: myrotvorets/set-commit-status-action@v2.0.0
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ github.sha }}
+        # TODO: verify this
+        sha: ${{ inputs.ref }}
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
 
     - uses: actions/checkout@v4
@@ -43,7 +58,10 @@ jobs:
       if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
       working-directory: aerospike-client-c/vs
-      shell: bash
+
+    - name: Setup Docker on macOS x86 for testing
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/setup-docker-on-macos
 
     - name: Set up QEMU for building and testing Linux aarch64 wheels
       if: ${{ endsWith(inputs.platform-tag, 'aarch64') }}
@@ -51,45 +69,38 @@ jobs:
       with:
         platforms: arm64
 
-    - name: Setup Docker on macOS x86 for testing
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && matrix.platforms[0] == 'macosx_x86_64' }}
-      uses: ./.github/actions/setup-docker-on-macos
-
     - uses: ./.github/actions/run-ee-server-and-setup-config-conf
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
+      if: ${{ inputs.run_tests }}
       with:
-        running-tests-from-docker-container: ${{ startsWith(matrix.platforms[0], 'manylinux') }}
+        running-tests-from-docker-container: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
 
-    - name: By default, disable tests (only run basic import test)
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
-      # Use double quotes to enclose Python code since powershell doesn't seem to allow using single quotes
-      # https://stackoverflow.com/questions/34379631/syntaxerror-eol-while-scanning-string-literal
-      run: echo "TEST_COMMAND=python -c \"import aerospike\"" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Install experimental Python 3.8 arm64 build
-      # By default, cibuildwheel installs and uses Python 3.8 x86_64 to cross compile arm64 wheels
-      # There is a bug that builds x86_64 wheels instead, so we install this Python 3.8 native ARM build to ensure
-      # the wheel is compiled in arm64
+    - name: Install experimental Python 3.8 macOS arm64 build
+      # By default, cibuildwheel installs and uses Python 3.8 x86_64 to cross compile macOS arm64 wheels
+      # There is a bug that builds macOS x86_64 wheels instead, so we install this Python 3.8 native ARM build to ensure
+      # the wheel is compiled for macOS arm64
       # https://cibuildwheel.pypa.io/en/stable/faq/#macos-building-cpython-38-wheels-on-arm64
-      if: ${{ matrix.platforms[0] == 'macosx_arm64' && matrix.python == 'cp38' }}
+      if: ${{ inputs.python-tag == 'cp38' && inputs.platform-tag == 'macosx_arm64' }}
       run: |
         curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
         sudo installer -pkg /tmp/Python38.pkg -target /
         sh "/Applications/Python 3.8/Install Certificates.command"
 
-    - name: Enable integration tests
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
+    - name: If not running tests against server, only run basic import test
+      if: ${{ !inputs.run_tests }}
+      run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
+
+    - name: Otherwise, enable integration tests
+      if: ${{ inputs.run_tests }}
       run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
       shell: bash
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.18.1
       env:
-        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }}
+        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
-        # We are cross compiling for arm64 on x86_64 hardware, so we need to be specific
-        CIBW_ARCHS_LINUX: ${{ matrix.platforms[0] == 'manylinux_aarch64' && 'aarch64' || 'auto' }}
+        # We are cross compiling for Linux aarch64 on x86_64 hardware, so we need to specify the target arch
+        CIBW_ARCHS_LINUX: ${{ inputs.platform-tag == 'manylinux_aarch64' && 'aarch64' || 'auto' }}
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
@@ -111,6 +122,7 @@ jobs:
       uses: myrotvorets/set-commit-status-action@v2.0.0
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ github.sha }}
+        # TODO: double check
+        sha: ${{ inputs.ref }}
         status: ${{ job.status }}
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
