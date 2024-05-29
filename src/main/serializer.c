@@ -249,7 +249,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
             Py_ssize_t len;
 
             py_val = (char *)PyUnicode_AsUTF8AndSize(py_return, &len);
-            uint8_t* heap_b = (uint8_t *)calloc((uint32_t) len);
+            uint8_t* heap_b = (uint8_t *)cf_calloc((uint32_t) len, sizeof(uint8_t));
             memcpy(heap_b, py_val, (uint32_t) len);
             as_bytes_init_wrap(*bytes, heap_b, (int32_t) len, allocate_buffer);
 

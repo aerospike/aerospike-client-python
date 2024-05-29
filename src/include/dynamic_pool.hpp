@@ -22,7 +22,7 @@ typedef struct bytes_dynamic_pool {
 static inline void dynamic_pool_malloc_block(as_dynamic_pool *dynamic_pool,
                                        as_error *err)
 {
-    dynamic_pool->pool[dynamic_pool->block_id] = (as_bytes *)malloc(sizeof(as_bytes) * dynamic_pool->current_block_size);
+    dynamic_pool->pool[dynamic_pool->block_id] = (as_bytes *)cf_malloc(sizeof(as_bytes) * dynamic_pool->current_block_size);
     if (dynamic_pool->pool[dynamic_pool->block_id] == NULL) {
         as_error_update(err, AEROSPIKE_ERR,
                         "Failed to allocated memory for dynamic_pool");
@@ -54,7 +54,7 @@ static inline void dynamic_pool_expand_pool_if_needed(as_dynamic_pool *dynamic_p
 static inline void dynamic_pool_create_pool(as_dynamic_pool *dynamic_pool,
                                        as_error *err)
 {
-    dynamic_pool->pool = (as_bytes **)malloc(
+    dynamic_pool->pool = (as_bytes **)cf_malloc(
         AS_DYNAMIC_POOL_POINTER_BLOCK_SIZE * sizeof(as_bytes *));
     if (dynamic_pool->pool == NULL) {
         as_error_update(err, AEROSPIKE_ERR,
