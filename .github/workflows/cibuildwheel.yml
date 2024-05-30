@@ -18,7 +18,8 @@ on:
         required: true
       run_tests:
         type: boolean
-        required: true
+        required: false
+        default: false
       unoptimized:
         type: boolean
         required: false
