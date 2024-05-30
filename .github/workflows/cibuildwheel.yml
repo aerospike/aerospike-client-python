@@ -5,7 +5,7 @@ on:
     inputs:
       python-tags:
         type: string
-        required: true
+        required: false
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
       platform-tag:
         type: string
