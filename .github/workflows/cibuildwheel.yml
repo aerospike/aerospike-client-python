@@ -3,9 +3,10 @@ name: 'Build wheels using cibuildwheel'
 on:
   workflow_call:
     inputs:
-      python-tag:
+      python-tags:
         type: string
         required: true
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
       platform-tag:
         type: string
         required: true
@@ -29,10 +30,13 @@ on:
 
 jobs:
   cibuildwheel:
+    strategy:
+      matrix:
+        python-tag: ${{ fromJSON(inputs.python-tags) }}
     runs-on: ${{ inputs.os }}
     steps:
     - name: Get build identifier for cibuildwheel
-      run: echo "BUILD_IDENTIFIER=${{ inputs.python-tag }}-${{ inputs.platform-tag }}" >> $GITHUB_ENV
+      run: echo "BUILD_IDENTIFIER=${{ matrix.python-tag }}-${{ inputs.platform-tag }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Show job status for commit
@@ -79,7 +83,7 @@ jobs:
       # There is a bug that builds macOS x86_64 wheels instead, so we install this Python 3.8 native ARM build to ensure
       # the wheel is compiled for macOS arm64
       # https://cibuildwheel.pypa.io/en/stable/faq/#macos-building-cpython-38-wheels-on-arm64
-      if: ${{ inputs.python-tag == 'cp38' && inputs.platform-tag == 'macosx_arm64' }}
+      if: ${{ matrix.python-tag == 'cp38' && inputs.platform-tag == 'macosx_arm64' }}
       run: |
         curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
         sudo installer -pkg /tmp/Python38.pkg -target /
