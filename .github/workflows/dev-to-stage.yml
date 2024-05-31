@@ -54,86 +54,15 @@ jobs:
       ref: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
     secrets: inherit
 
-  # Stage tests have either passed or been skipped
+  # Stage tests have passed or skipped
   # so it is safe to update the stage branch with the changes in dev
-  ff-stage-to-dev-tag:
+  # and upload RC builds with the tested changes to JFrog
+  bump-stage-and-upload-to-jfrog:
     needs: [
       run-stage-tests,
       get-latest-dev-tag
     ]
-    # If a parent job is skipped, a dependent job would also be skipped by default
-    # So ensure that skipping the stage tests still allows this job to run
-    # But we also want to make sure this job doesn't run if the workflow was cancelled
-    if: ${{ !cancelled() && needs.get-latest-dev-tag.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
-    uses: ./.github/workflows/fast-forward-merge.yml
+    if: ${{ !cancelled() && needs.get-latest-dev-tag == 'passed' && (needs.run-stage-tests.result == 'passed' || needs.run-stage-tests.result == 'skipped') }}
+    uses: ./.github/workflows/bump-stage-and-upload-to-jfrog.yml
     with:
-      ref_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
-      base_branch: ${{ vars.STAGE_BRANCH_NAME }}
-    secrets: inherit
-
-  promote-dev-build-to-rc:
-    needs: [
-      ff-stage-to-dev-tag,
-      run-stage-tests
-    ]
-    # If the stage tests were skipped, any further downstream jobs will also be skipped (not just direct descendents to the skipped job)
-    # So we need to check if the stage tests were skipped as a condition for "grandchildren" jobs to continue running
-    if: ${{ !cancelled() && needs.ff-stage-to-dev-tag.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'promote-dev-build-to-rc'
-      ref: ${{ vars.STAGE_BRANCH_NAME }}
-    secrets: inherit
-
-  delete-dev-artifacts:
-    needs: run-stage-tests
-    if: ${{ !cancelled() && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      # We can't upload to the same artifact name with upload-artifact@v4
-      # So we must delete the artifacts produced by stage-tests.yml
-      # Before rebuilding the artifacts with the new RC version
-      - name: Remove artifacts with dev version
-        uses: geekyeggo/delete-artifact@v4
-        with:
-          name: '*.build'
-
-  rebuild-artifacts-with-rc-version:
-    needs: [
-      # Once the old artifacts used for the stage tests are deleted, it's safe to rebuild and upload new artifacts
-      delete-dev-artifacts,
-      # We also want to make sure the "bump to RC" commit is ready to use
-      promote-dev-build-to-rc,
-      run-stage-tests
-    ]
-    if: ${{ !cancelled() && needs.delete-dev-artifacts.result == 'success' && needs.promote-dev-build-to-rc.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
-    uses: ./.github/workflows/build-wheels.yml
-    with:
-      ref: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
-
-  upload-to-jfrog:
-    needs: [
-      rebuild-artifacts-with-rc-version,
-      # We need the new RC version to label the build in JFrog
-      promote-dev-build-to-rc,
-      run-stage-tests
-    ]
-    if: ${{ !cancelled() && needs.rebuild-artifacts-with-rc-version.result == 'success' && needs.promote-dev-build-to-rc.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
-    name: Upload artifacts to JFrog
-    uses: ./.github/workflows/upload-to-jfrog.yml
-    with:
-      version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
-    secrets: inherit
-
-  ff-dev-to-stage:
-    needs: [
-      promote-dev-build-to-rc,
-      run-stage-tests
-    ]
-    if: ${{ !cancelled() && needs.promote-dev-build-to-rc.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped' ) }}
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      ref_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
-      base_branch: ${{ vars.DEV_BRANCH_NAME }}
-    secrets: inherit
+      tested-dev-tag: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
