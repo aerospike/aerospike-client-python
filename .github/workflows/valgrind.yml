@@ -47,5 +47,9 @@ jobs:
     - run: sudo apt update
     - run: sudo apt install valgrind -y
     # Also print details of directly and indirectly reachable blocks
-    - run: PYTHONMALLOC=malloc valgrind --leak-check=full --show-leak-kinds=all --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+    - name: Fetch valgrind suppression file for Python
+      run: wget https://svn.python.org/projects/python/trunk/Misc/valgrind-python.supp
+      working-directory: test
+
+    - run: PYTHONMALLOC=malloc valgrind --leak-check=full --show-leak-kinds=all --suppressions=valgrind-python.supp --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
