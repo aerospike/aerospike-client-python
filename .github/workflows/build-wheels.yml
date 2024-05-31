@@ -44,7 +44,8 @@ on:
         required: false
         type: boolean
         default: false
-      ref:
+      # workflow_call hack
+      ref-override:
         type: string
         required: false
       # Calling workflow doesn't actually use the options below
@@ -137,23 +138,26 @@ jobs:
     uses: ./.github/workflows/cibuildwheel.yml
     with:
       platform-tags: ${{ matrix.platform-tag-and-os[0] }}
-      os: ${{ matrix.platform-tag-and-os[1] }}
+      runner-os: ${{ matrix.platform-tag-and-os[1] }}
       unoptimized: ${{ inputs.apply-no-optimizations }}
       include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
+      ref-override: ${{ inputs.ref-override }}
 
   build-macOS-m1:
     uses: ./.github/workflows/cibuildwheel.yml
     with:
       platform-tags: macosx_arm64
-      os: macos-13-xlarge
+      runner-os: macos-13-xlarge
       unoptimized: ${{ inputs.apply-no-optimizations }}
       include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
+      ref-override: ${{ inputs.ref-override }}
 
   build-windows:
     uses: ./.github/workflows/cibuildwheel.yml
     with:
       platform-tags: win_amd64
-      os: windows-2022
+      runner-os: windows-2022
+      ref-override: ${{ inputs.ref-override }}
 
   test-macOS-m1:
     needs: build-macOS-m1

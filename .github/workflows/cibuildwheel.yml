@@ -1,21 +1,48 @@
 name: 'Build wheels using cibuildwheel'
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       python-tags:
         type: string
+        description: Python versions to build the client for
         required: false
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
       platform-tag:
         type: string
         required: true
-      os:
+      runner-os:
         type: string
         required: true
-      ref:
+      run_tests:
+        type: boolean
+        required: false
+        default: false
+      unoptimized:
+        type: boolean
+        required: false
+        default: false
+      include-debug-info-for-macos:
+        type: boolean
+        required: false
+        default: false
+  workflow_call:
+    inputs:
+      python-tags:
+        type: string
+        description: Python versions to build the client for
+        required: false
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+      platform-tag:
         type: string
         required: true
+      runner-os:
+        type: string
+        required: true
+      ref-override:
+        type: string
+        required: false
+        default: ${{ github.ref }}
       run_tests:
         type: boolean
         required: false
@@ -34,7 +61,7 @@ jobs:
     strategy:
       matrix:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
-    runs-on: ${{ inputs.os }}
+    runs-on: ${{ inputs.runner-os }}
     steps:
     - name: Get build identifier for cibuildwheel
       run: echo "BUILD_IDENTIFIER=${{ matrix.python-tag }}-${{ inputs.platform-tag }}" >> $GITHUB_ENV
@@ -44,7 +71,6 @@ jobs:
       uses: myrotvorets/set-commit-status-action@v2.0.0
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        # TODO: verify this
         sha: ${{ inputs.ref }}
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
 
@@ -64,11 +90,11 @@ jobs:
       run: nuget restore
       working-directory: aerospike-client-c/vs
 
-    - name: Setup Docker on macOS x86 for testing
+    - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: Set up QEMU for building and testing Linux aarch64 wheels
+    - name: 'Linux aarch64: Set up QEMU for building and testing wheels'
       if: ${{ endsWith(inputs.platform-tag, 'aarch64') }}
       uses: docker/setup-qemu-action@v2
       with:
@@ -79,7 +105,7 @@ jobs:
       with:
         running-tests-from-docker-container: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
 
-    - name: Install experimental Python 3.8 macOS arm64 build
+    - name: 'macOS arm64: Install experimental Python 3.8 macOS arm64 build'
       # By default, cibuildwheel installs and uses Python 3.8 x86_64 to cross compile macOS arm64 wheels
       # There is a bug that builds macOS x86_64 wheels instead, so we install this Python 3.8 native ARM build to ensure
       # the wheel is compiled for macOS arm64
@@ -93,6 +119,7 @@ jobs:
     - name: If not running tests against server, only run basic import test
       if: ${{ !inputs.run_tests }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
+      shell: bash
 
     - name: Otherwise, enable integration tests
       if: ${{ inputs.run_tests }}
@@ -135,7 +162,6 @@ jobs:
       uses: myrotvorets/set-commit-status-action@v2.0.0
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        # TODO: double check
         sha: ${{ inputs.ref }}
         status: ${{ job.status }}
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
