@@ -10,10 +10,12 @@ on:
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
       platform-tag:
         type: string
-        required: true
+        required: false
+        default: manylinux_x86_64
       runner-os:
         type: string
-        required: true
+        required: false
+        default: ubuntu-22.04
       unoptimized:
         type: boolean
         required: false
