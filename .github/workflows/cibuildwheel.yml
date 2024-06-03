@@ -14,15 +14,15 @@ on:
       runner-os:
         type: string
         required: true
-      run_tests:
-        type: boolean
-        required: false
-        default: false
       unoptimized:
         type: boolean
         required: false
         default: false
       include-debug-info-for-macos:
+        type: boolean
+        required: false
+        default: false
+      run_tests:
         type: boolean
         required: false
         default: false
@@ -39,19 +39,19 @@ on:
       runner-os:
         type: string
         required: true
-      ref-override:
+      ref-to-build:
         type: string
         required: false
         default: ${{ github.ref }}
-      run_tests:
-        type: boolean
-        required: false
-        default: false
       unoptimized:
         type: boolean
         required: false
         default: false
       include-debug-info-for-macos:
+        type: boolean
+        required: false
+        default: false
+      run_tests:
         type: boolean
         required: false
         default: false
@@ -71,39 +71,15 @@ jobs:
       uses: myrotvorets/set-commit-status-action@v2.0.0
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ inputs.ref }}
+        sha: ${{ inputs.ref-to-build }}
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
 
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ inputs.ref }}
+        ref: ${{ inputs.ref-to-build }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
-
-    - name: Add msbuild to PATH
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      uses: microsoft/setup-msbuild@v1.1
-
-    - name: Install C client deps
-      if: ${{ inputs.platform-tag == 'win_amd64' }}
-      run: nuget restore
-      working-directory: aerospike-client-c/vs
-
-    - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64' }}
-      uses: ./.github/actions/setup-docker-on-macos
-
-    - name: 'Linux aarch64: Set up QEMU for building and testing wheels'
-      if: ${{ endsWith(inputs.platform-tag, 'aarch64') }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
-
-    - uses: ./.github/actions/run-ee-server-and-setup-config-conf
-      if: ${{ inputs.run_tests }}
-      with:
-        running-tests-from-docker-container: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
 
     - name: 'macOS arm64: Install experimental Python 3.8 macOS arm64 build'
       # By default, cibuildwheel installs and uses Python 3.8 x86_64 to cross compile macOS arm64 wheels
@@ -115,6 +91,30 @@ jobs:
         curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
         sudo installer -pkg /tmp/Python38.pkg -target /
         sh "/Applications/Python 3.8/Install Certificates.command"
+
+    - name: 'Windows: Add msbuild to PATH'
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: 'Windows: Install C client deps'
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
+      run: nuget restore
+      working-directory: aerospike-client-c/vs
+
+    - name: 'Linux aarch64: Set up QEMU for building and testing wheels'
+      if: ${{ endsWith(inputs.platform-tag, 'aarch64') }}
+      uses: docker/setup-qemu-action@v2
+      with:
+        platforms: arm64
+
+    - name: 'macOS x86: Setup Docker using colima for testing'
+      if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/setup-docker-on-macos
+
+    - uses: ./.github/actions/run-ee-server-and-setup-config-conf
+      if: ${{ inputs.run_tests }}
+      with:
+        running-tests-from-docker-container: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ !inputs.run_tests }}
