@@ -97,6 +97,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Show job status for commit
+      # If workflow_call triggered this job, github.event_name will inherit the event of the calling workflow
+      # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
+      # Commit status will already be shown by the calling workflow for these events
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
         sha: ${{ github.sha }}
@@ -106,6 +110,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
@@ -121,7 +126,9 @@ jobs:
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+      # Always run even if job failed or is cancelled
+      # But we don't want to show anything if the calling workflow was triggered by these events
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
@@ -148,6 +155,7 @@ jobs:
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
@@ -156,6 +164,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform == 'aarch64' }}
@@ -178,16 +187,6 @@ jobs:
     - name: Disable tests (only run basic import test)
       if: ${{ !inputs.run_tests && !inputs.use-sanitizer }}
       run: echo "CIBW_TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
-
-    - name: Get current version if building a debug wheel
-      if: ${{ inputs.apply-no-optimizations }}
-      run: echo DEBUG_VERSION="$(cat VERSION)+unoptimized" >> $GITHUB_ENV
-
-    - name: Label version for debugging
-      if: ${{ inputs.apply-no-optimizations }}
-      uses: ./.github/actions/update-version
-      with:
-        new_version: ${{ env.DEBUG_VERSION }}
 
     - name: Set unoptimize flag
       if: ${{ inputs.apply-no-optimizations }}
@@ -218,7 +217,7 @@ jobs:
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
@@ -239,6 +238,7 @@ jobs:
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
@@ -247,6 +247,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Install Docker Engine
       if: ${{ inputs.run_tests }}
@@ -302,7 +303,7 @@ jobs:
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         status: ${{ job.status }}
         sha: ${{ github.sha }}
@@ -327,6 +328,7 @@ jobs:
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python-version[0] }}-macosx_arm64)"
@@ -335,6 +337,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     # Update dependencies if needed
     - name: Add brew to path
@@ -393,6 +396,10 @@ jobs:
       run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall delocate -c ./requirements.txt
       working-directory: .github/workflows
 
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
     - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --find-links=wheelhouse/ --no-index --force-reinstall aerospike
 
@@ -422,7 +429,7 @@ jobs:
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
@@ -443,6 +450,7 @@ jobs:
     steps:
       - name: Show job status for commit
         uses: myrotvorets/set-commit-status-action@v2.0.0
+        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ github.sha }}
           context: "Build wheels (${{ matrix.python[0] }}-win_amd64)"
@@ -451,6 +459,7 @@ jobs:
         with:
           submodules: recursive
           ref: ${{ inputs.ref }}
+          fetch-depth: 0
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -475,7 +484,7 @@ jobs:
 
       - name: Set final commit status
         uses: myrotvorets/set-commit-status-action@v2.0.0
-        if: always()
+        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ github.sha }}
           status: ${{ job.status }}
@@ -498,6 +507,7 @@ jobs:
     steps:
       - name: Show job status for commit
         uses: myrotvorets/set-commit-status-action@v2.0.0
+        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ github.sha }}
           context: "Test Windows (${{ matrix.python[0] }}-win_amd64)"
@@ -510,6 +520,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.python[0] }}-win_amd64.build
+
+      - name: Create config.conf
+        run: cp config.conf.template config.conf
+        working-directory: test
+
       - name: Install wheel
         run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
       - name: Connect to Docker container on remote machine with Docker daemon
@@ -533,7 +548,7 @@ jobs:
           docker container rm aerospike
 
       - name: Show job status for commit
-        if: always()
+        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
         uses: myrotvorets/set-commit-status-action@v2.0.0
         with:
           sha: ${{ github.sha }}

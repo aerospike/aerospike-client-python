@@ -137,8 +137,6 @@ static int Aerospike_Clear(PyObject *aerospike)
 
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
-
-    const char version[] = "15.0.1rc2";
     // Makes things "thread-safe"
     Py_Initialize();
     int i = 0;
@@ -160,8 +158,6 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     Aerospike_Enable_Default_Logging();
 
     py_global_hosts = PyDict_New();
-
-    PyModule_AddStringConstant(aerospike, "__version__", version);
 
     PyObject *exception = AerospikeException_New();
     Py_INCREF(exception);
