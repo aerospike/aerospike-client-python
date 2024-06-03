@@ -63,6 +63,7 @@ jobs:
     strategy:
       matrix:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
+      fail-fast: false
     runs-on: ${{ inputs.runner-os }}
     steps:
     - name: Get build identifier for cibuildwheel
