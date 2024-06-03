@@ -69,11 +69,17 @@ jobs:
       run: echo "BUILD_IDENTIFIER=${{ matrix.python-tag }}-${{ inputs.platform-tag }}" >> $GITHUB_ENV
       shell: bash
 
+    - name: Get commit sha to show status check
+      # The workflow_dispatch event does not have a ref-to-build input
+      # And when dereferencing a non-existent input, it will return an empty string
+      # We have to pass in a valid sha, so just use github.ref by default
+      run: echo STATUS_CHECK_COMMIT_SHA=${{ inputs.ref-to-build != '' && inputs.ref-to-build || github.ref }} >> $GITHUB_ENV
+
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ inputs.ref-to-build }}
+        sha: ${{ env.STATUS_CHECK_COMMIT_SHA }}
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
 
     - uses: actions/checkout@v4
@@ -164,6 +170,6 @@ jobs:
       uses: myrotvorets/set-commit-status-action@v2.0.0
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ inputs.ref }}
+        sha: ${{ env.STATUS_CHECK_COMMIT_SHA }}
         status: ${{ job.status }}
         context: "Build wheels (${{ env.BUILD_IDENTIFIER }})"
