@@ -1,7 +1,6 @@
 name: 'Build wheels using cibuildwheel'
 
 on:
-  pull_request:
   workflow_dispatch:
     inputs:
       python-tags:
