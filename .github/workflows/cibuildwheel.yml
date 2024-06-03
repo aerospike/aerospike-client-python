@@ -41,10 +41,10 @@ on:
       runner-os:
         type: string
         required: true
-      ref-to-build:
+      sha-to-build:
         type: string
         required: false
-        default: ${{ github.ref }}
+        default: ${{ github.sha }}
       unoptimized:
         type: boolean
         required: false
@@ -73,7 +73,7 @@ jobs:
       # The workflow_dispatch event does not have a ref-to-build input
       # And when dereferencing a non-existent input, it will return an empty string
       # We have to pass in a valid sha, so just use github.ref by default
-      run: echo STATUS_CHECK_COMMIT_SHA=${{ inputs.ref-to-build != '' && inputs.ref-to-build || github.ref }} >> $GITHUB_ENV
+      run: echo STATUS_CHECK_COMMIT_SHA=${{ inputs.ref-to-build != '' && inputs.ref-to-build || github.sha }} >> $GITHUB_ENV
 
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
