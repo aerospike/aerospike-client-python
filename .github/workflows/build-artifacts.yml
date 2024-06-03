@@ -1,14 +1,14 @@
-name: Build wheels
-run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }}, apply-no-optimizations=${{ inputs.apply-no-optimizations }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }})
+name: Build artifacts
+run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
 
 # Builds manylinux wheels and source distribution
-# If running tests, publish results in commit status
-# For each build, upload to Github as an artifact if it passes testing or does not need to run tests
+# Optionally run tests on manylinux wheels
+# Then upload artifacts to Github
 
 on:
   workflow_dispatch:
     inputs:
-      # If we only want to check that the builds pass on an arbitrary branch
+      # If we only want to check that the wheels pass testing on an arbitrary branch
       run_tests:
         description: "Run integration tests"
         required: true
@@ -24,21 +24,11 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
-      apply-no-optimizations:
-        required: true
-        type: boolean
-        default: false
-        description: 'Linux and macOS: apply -O0 when building C and Python client?'
-      include-debug-info-for-macos:
-        required: true
-        type: boolean
-        default: false
-        description: 'macOS: include source files and line numbers for both C and Python client for debugging?'
 
   workflow_call:
     inputs:
       # The "dev" tests test the artifacts against a server release
-      # The "stage" tests and release workflow only need to build the artifacts, not test them
+      # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
       run_tests:
         description: "Run integration tests"
         required: false
@@ -58,15 +48,6 @@ on:
         type: string
         required: false
         default: 'latest'
-      apply-no-optimizations:
-        required: false
-        type: boolean
-        default: false
-      include-debug-info-for-macos:
-        required: false
-        type: boolean
-        default: false
-      # See comment about this hack in
       is_workflow_call:
         type: boolean
         default: true
@@ -139,15 +120,6 @@ jobs:
     with:
       platform-tags: ${{ matrix.platform-tag-and-os[0] }}
       runner-os: ${{ matrix.platform-tag-and-os[1] }}
-      unoptimized: ${{ inputs.apply-no-optimizations }}
-      include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
-      ref-override: ${{ inputs.ref-override }}
-
-  build-macOS-m1:
-    uses: ./.github/workflows/cibuildwheel.yml
-    with:
-      platform-tags: macosx_arm64
-      runner-os: macos-13-xlarge
       unoptimized: ${{ inputs.apply-no-optimizations }}
       include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
       ref-override: ${{ inputs.ref-override }}

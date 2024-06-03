@@ -1,0 +1,82 @@
+name: Build and test wheels on self-hosted runners
+
+on:
+  workflow_dispatch:
+    inputs:
+      python-tags:
+        type: string
+        description: Python versions to build and test the client on
+        required: false
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+      platform-tag:
+        type: string
+        required: true
+        default: win_amd64
+      runner-os:
+        type: string
+        required: true
+        default: windows-2022
+      self-hosted-tags:
+        type: string
+        required: true
+        default: '["self-hosted", "Windows", "X64"]'
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+
+jobs:
+  build-wheels:
+    uses: ./.github/workflows/cibuildwheel.yml
+    with:
+      platform-tag: ${{ inputs.platform-tag }}
+      python-tags: ${{ inputs.python-tags }}
+      runner-os: ${{ inputs.runner-os }}
+
+  test-wheels-on-self-hosted:
+    needs: build-wheels
+    runs-on: ${{ fromJson(inputs.self-hosted-tags) }}
+    strategy:
+      matrix:
+        python-tag: ${{ fromJson(inputs.python-tags) }}
+      fail-fast: false
+    steps:
+    - name: Show job status for commit
+      uses: myrotvorets/set-commit-status-action@v2.0.0
+      with:
+        sha: ${{ github.sha }}
+        context: "Test (${{ matrix.python-version[0] }})"
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: 'macOS arm64: Need to be able to save Docker Hub credentials to keychain'
+      if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
+      run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+
+    - if: ${{ inputs.use-server-rc }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Get Python version from Python tag
+      # Cut out "cp" prefix and insert dot after the first occurrence of 3
+      run: echo PYTHON_VERSION=$(${{ inputs.python-tag }} | cut -c 3- | sed "s/^3/3./") >> $GITHUB_ENV
+
+    - run: python${{ env.PYTHON_VERSION }} -m pip install --find-links=wheelhouse/ --no-index aerospike
+
+    - run: python${{ env.PYTHON_VERSION }} -m pip install -r requirements.txt
+      working-directory: test
+
+    - run: python${{ env.PYTHON_VERSION }} -m pytest new_tests/
+      working-directory: test
+
+    - name: Set final commit status
+      uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
+      with:
+        sha: ${{ github.sha }}
+        status: ${{ job.status }}
+        context: "Test ${{ matrix.python-version[0] }}"
