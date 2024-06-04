@@ -67,3 +67,4 @@ jobs:
     uses: ./.github/workflows/bump-stage-and-upload-to-jfrog.yml
     with:
       tested-dev-tag: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+    secrets: inherit
