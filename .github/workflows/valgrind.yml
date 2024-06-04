@@ -42,7 +42,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run EE server
-      uses: ./.github/actions/run-ee-server
+      uses: ./.github/actions/run-ee-server-and-setup-config-conf
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}

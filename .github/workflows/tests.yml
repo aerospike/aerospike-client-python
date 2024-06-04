@@ -103,9 +103,7 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
+    - uses: ./.github/actions/setup-config-conf
 
     - name: Get number of tests
       run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
@@ -146,7 +144,7 @@ jobs:
       working-directory: test
 
     - name: Run Aerospike server
-      uses: ./.github/actions/run-ee-server
+      uses: ./.github/actions/run-ee-server-and-setup-config-conf
       with:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
@@ -281,9 +279,7 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
+    - uses: ./.github/actions/setup-config-conf
 
     - name: Run tests
       run: python -m pytest ./new_tests
@@ -341,9 +337,7 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
+    - uses: ./.github/actions/setup-config-conf
 
     - name: Run tests
       run: python -m pytest ./new_tests -vv
@@ -379,9 +373,7 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
+    - uses: ./.github/actions/setup-config-conf
 
     - name: Run tests
       run: python -m pytest ./new_tests
@@ -410,7 +402,7 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - uses: ./.github/actions/run-ee-server
+    - uses: ./.github/actions/run-ee-server-and-setup-config-conf
       with:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}

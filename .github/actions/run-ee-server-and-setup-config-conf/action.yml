@@ -1,9 +1,9 @@
 name: 'Run enterprise edition server and setup config.conf'
 inputs:
-  running-tests-from-docker-container:
+  is-client-in-another-container:
     required: true
     default: 'false'
-    description: 'If false, this assume you are running tests from the Docker host'
+    description: 'Is client in a Docker container separate from the server container? If false, client is running in Docker host'
   use-server-rc:
     required: true
     default: false
@@ -29,4 +29,4 @@ runs:
   - uses: ./.github/actions/setup-config-conf
     with:
       using-ee-server: 'true'
-      ee-host-ip-address: ${{ inputs.running-tests-from-docker-container == 'true' && steps.run-ee-server.outputs.server-docker-ip-address || '127.0.0.1' }}
+      ee-host-ip-address: ${{ inputs.is-client-in-another-container == 'true' && steps.run-ee-server.outputs.server-docker-ip-address || '127.0.0.1' }}

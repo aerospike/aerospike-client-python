@@ -95,7 +95,7 @@ jobs:
     - name: Start Docker Engine
       run: colima start
 
-    - uses: ./.github/actions/run-ee-server
+    - uses: ./.github/actions/run-ee-server-and-setup-config-conf
       with:
         use-server-rc: true
         server-tag: latest
@@ -167,9 +167,7 @@ jobs:
     - name: Run server RC
       run: docker run -d -p 3000:3000 --name aerospike ${{ vars.SERVER_RC_REPO_LINK }}
 
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
+    - uses: ./.github/actions/setup-config-conf
 
     - name: Wait for server to be ready
       run: sleep 5
