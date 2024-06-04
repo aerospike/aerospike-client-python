@@ -63,7 +63,7 @@ jobs:
       run-stage-tests,
       get-latest-dev-tag
     ]
-    if: ${{ !cancelled() && needs.get-latest-dev-tag == 'passed' && (needs.run-stage-tests.result == 'passed' || needs.run-stage-tests.result == 'skipped') }}
+    if: ${{ !cancelled() && needs.get-latest-dev-tag.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped') }}
     uses: ./.github/workflows/bump-stage-and-upload-to-jfrog.yml
     with:
       tested-dev-tag: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
