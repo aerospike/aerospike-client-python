@@ -39,11 +39,11 @@ on:
         type: boolean
         default: false
         description: 'macOS: include source files and line numbers for both C and Python client for debugging?'
-      use-sanitizer:
-        required: true
-        type: boolean
-        default: false
-        description: 'Linux: compile and link with libasan to detect memory errors?'
+      gcc-version-for-sanitizer:
+        required: false
+        type: string
+        default: '12'
+        description: "Linux x86: which gcc version to build instrumented wheel with sanitizer? If empty, don't use sanitizer"
 
   workflow_call:
     inputs:
@@ -193,8 +193,15 @@ jobs:
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
     - name: Set sanitizer flag
-      if: ${{ inputs.use-sanitizer }}
+      if: ${{ matrix.platform == 'x86_64' && inputs.gcc-version-for-sanitizer != '' }}
       run: echo "SANITIZER=1" >> $GITHUB_ENV
+
+    - name: Set commands for installing required build packages on Linux
+      run: echo BEFORE_ALL_LINUX="yum install openssl-devel -y && yum install python-devel -y && yum install python-setuptools -y" >> $GITHUB_ENV
+
+    - name: 'Sanitizer wheels: install the same gcc version used in QE tests'
+      if: ${{ matrix.platform == 'x86_64' && inputs.gcc-version-for-sanitizer != '' }}
+      run: echo BEFORE_ALL_LINUX="${{ env.BEFORE_ALL_LINUX }} && yum install -y devtoolset-11" >> $GITHUB_ENV
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.16.5
@@ -202,10 +209,7 @@ jobs:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }} ${{ inputs.use-sanitizer && 'SANITIZER' || '' }}
         CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
         CIBW_BUILD_FRONTEND: build
-        CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y &&
-          yum install python-devel -y &&
-          yum install python-setuptools -y
+        CIBW_BEFORE_ALL_LINUX: ${{ env.BEFORE_ALL_LINUX }}
         CIBW_ARCHS: "${{ matrix.platform }}"
 
     - name: Upload wheels to GitHub
