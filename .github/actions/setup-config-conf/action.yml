@@ -1,0 +1,23 @@
+name: 'Setup config.conf'
+description: 'Setup config.conf from config.conf.template'
+inputs:
+  using-ee-server:
+    required: false
+    default: false
+  ee-host-ip-address:
+    required: false
+    default: '127.0.0.1'
+
+runs:
+  using: "composite"
+  steps:
+  - name: Install config.conf to use community edition
+    run: cp config.conf.template config.conf
+    working-directory: test
+    shell: bash
+
+  - name: If using EE server, modify config.conf accordingly
+    if: ${{ inputs.using-ee-server == 'true' }}
+    uses: ./.github/actions/setup-config-conf-for-ee
+    with:
+      host-ip-address: ${{ inputs.ee-host-ip-address }}

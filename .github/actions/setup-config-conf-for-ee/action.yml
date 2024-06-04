@@ -1,0 +1,32 @@
+name: 'Setup config.conf for enterprise edition server'
+inputs:
+  host-ip-address:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Install crudini to manipulate config.conf
+    run: pip3 install crudini -c requirements.txt
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Don't use community edition in config.conf
+    run: crudini --existing=param --set config.conf community-edition hosts ''
+    working-directory: test
+    shell: bash
+
+  - name: Set host in config file
+    run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ inputs.host-ip-address }}:3000
+    working-directory: test
+    shell: bash
+
+  - name: Set user in config file
+    run: crudini --existing=param --set config.conf enterprise-edition user superuser
+    working-directory: test
+    shell: bash
+
+  - name: Set password in config file
+    run: crudini --existing=param --set config.conf enterprise-edition password superuser
+    working-directory: test
+    shell: bash
