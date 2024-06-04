@@ -20,9 +20,6 @@ jobs:
       run: echo latest-dev-version=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
       id: get-dev-version
 
-    - name: Output latest dev version (for debugging)
-      run: echo ${{ steps.get-dev-version.outputs.latest-dev-version }}
-
   compare-dev-tag-and-stage:
     outputs:
       run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
