@@ -1,18 +1,12 @@
 on:
   workflow_call:
+    inputs:
+      python-version:
+        type: string
+        required: true
 
 jobs:
   download-and-test-wheel:
-    strategy:
-      fail-fast: false
-      matrix:
-        python: [
-          ["cp38", "3.8"],
-          ["cp39", "3.9"],
-          ["cp310", "3.10"],
-          ["cp311", "3.11"],
-          ["cp312", "3.12"]
-        ]
     runs-on: [self-hosted, Windows, X64]
     steps:
     - name: Show job status for commit
