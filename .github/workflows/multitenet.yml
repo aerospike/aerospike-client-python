@@ -3,6 +3,6 @@ on:
 
 jobs:
   multitenet:
-    runs-on: ubuntu-22.04
+    runs-on: [multitenet]
     steps:
       - run: docker run -d --name ubuntu ubuntu:22.04 tail -f /dev/null
