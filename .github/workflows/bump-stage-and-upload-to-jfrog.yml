@@ -1,12 +1,14 @@
 on:
   workflow_call:
     inputs:
-      tested-dev-tag:
+      passed-dev-tag:
         type: string
         required: true
     secrets:
+      # Used to bump version in Github
       CLIENT_BOT_PAT:
         required: true
+      # Used to upload to JFrog
       JFROG_PLATFORM_URL:
         required: true
       JFROG_ACCESS_TOKEN:
@@ -14,13 +16,15 @@ on:
 
 jobs:
   ff-stage-to-dev-tag:
+    name: Fast forward stage branch to the dev tag that passed stage testing
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
-      ref_to_merge: ${{ inputs.tested-dev-tag }}
+      ref_to_merge: ${{ inputs.passed-dev-tag }}
       base_branch: ${{ vars.STAGE_BRANCH_NAME }}
     secrets: inherit
 
   promote-dev-build-to-rc:
+    name: Bump (promote) the dev version to an RC version in the stage branch
     needs: ff-stage-to-dev-tag
     uses: ./.github/workflows/bump-version.yml
     with:
@@ -29,17 +33,16 @@ jobs:
     secrets: inherit
 
   rebuild-artifacts-with-rc-version:
-    # We want to make sure the "bump to RC" commit is ready to use for rebuilding on 
     needs: promote-dev-build-to-rc
     uses: ./.github/workflows/build-wheels.yml
     with:
       ref: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
 
-  upload-to-jfrog:
+  upload-rc-artifacts-to-jfrog:
     needs: [
       rebuild-artifacts-with-rc-version,
       # We need the new RC version to label the build in JFrog
-      promote-dev-build-to-rc,
+      promote-dev-build-to-rc
     ]
     name: Upload artifacts to JFrog
     uses: ./.github/workflows/upload-to-jfrog.yml
@@ -47,7 +50,8 @@ jobs:
       version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
     secrets: inherit
 
-  ff-dev-to-stage: 
+  ff-dev-to-stage:
+    name: Fast forward dev branch to stage branch to include the bump to RC commit
     needs: promote-dev-build-to-rc
     uses: ./.github/workflows/fast-forward-merge.yml
     with:
