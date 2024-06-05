@@ -3,6 +3,7 @@ on:
     inputs:
       passed-dev-tag:
         type: string
+        description: Dev tag to fast forward the stage branch to
         required: true
     secrets:
       # Used to bump version in Github
