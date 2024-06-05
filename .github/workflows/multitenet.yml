@@ -1,0 +1,8 @@
+on:
+  push:
+
+jobs:
+  multitenet:
+    runs-on: ubuntu-22.04
+    steps:
+      - run: docker run -d --name ubuntu ubuntu:22.04 tail -f /dev/null
