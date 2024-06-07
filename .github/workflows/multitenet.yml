@@ -5,5 +5,7 @@ jobs:
   multitenet:
     runs-on: [multitenet]
     steps:
-      - run: echo Runs
-      # - run: docker run -d --name ubuntu ubuntu:22.04 tail -f /dev/null
+      - run: docker run -d --name ubuntu ubuntu:22.04 tail -f /dev/null
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.8'
