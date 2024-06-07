@@ -94,10 +94,13 @@ jobs:
 # because of the same reason we have some category 1 tests in Github Actions
 
   # These tests use a Docker container to run the distro
-  wheel-distro-tests:
+  distro-tests:
     strategy:
       matrix:
         distro: [
+          # Category 1
+          "redhat/ubi9",
+          # Category 2
           "amazonlinux:2023",
           "ubuntu:22.04",
           "python:3.8",
@@ -119,12 +122,22 @@ jobs:
           ["x86_64", "linux/amd64"],
           ["aarch64", "linux/arm64"],
         ]
+        category: [
+          1,
+          2
+        ]
         # Exclude all matrix combinations, then selectively pick the combinations of distros, python versions, and CPU archs
         # we want to test
         exclude:
-          - platform: "x86_64"
-          - platform: "aarch64"
+          - category: 1
+          - category: 2
         include:
+          # Define cat 1 tests
+          - distro: redhat/ubi9
+            python-version: ["3.9", "cp39"]
+            platform: ["x86_64", "linux/amd64"]
+            category: 1
+          # Define cat 2 tests
           - distro: amazonlinux:2023
             python-version: ["3.9", "cp39"]
           - distro: amazonlinux:2023
