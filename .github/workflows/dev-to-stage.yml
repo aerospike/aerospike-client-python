@@ -5,6 +5,7 @@ on:
   workflow_dispatch:
 
 jobs:
+  # We want to skip the stage tests if the changes made between dev and stage wouldn't affect the results of the stage tests
   compare-latest-dev-tag-and-stage:
     outputs:
       latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
