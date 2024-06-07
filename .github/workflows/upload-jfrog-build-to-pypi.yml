@@ -28,5 +28,5 @@ jobs:
       with:
         # This is the directory jf downloads the artifacts to
         packages-dir: aerospike/${{ inputs.version }}/artifacts
-        repository-url: ${{ inputs.use-test-pypi && 'https://test.pypi.org/legacy/' || 'https://pypi.org/legacy/' }}
+        repository-url: ${{ inputs.use-test-pypi && 'https://test.pypi.org/legacy/' || 'https://upload.pypi.org/legacy/' }}
         password: ${{ inputs.use-test-pypi && secrets.TEST_PYPI_API_TOKEN || secrets.PYPI_API_TOKEN }}

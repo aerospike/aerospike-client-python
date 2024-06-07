@@ -5,25 +5,43 @@ on:
   workflow_dispatch:
 
 jobs:
-  get-latest-dev-tag:
+  # We want to skip the stage tests if the changes made between dev and stage wouldn't affect the results of the stage tests
+  compare-latest-dev-tag-and-stage:
     outputs:
-      latest-dev-version: ${{ steps.get-dev-version.outputs.latest-dev-version }}
+      latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
+      run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
         # Get all tags
         fetch-depth: 0
-        ref: ${{ vars.DEV_BRANCH_NAME }}
 
-    - name: Get latest dev version
-      run: echo latest-dev-version=$(git describe --tags --abbrev=0) >> $GITHUB_OUTPUT
-      id: get-dev-version
+    - name: Get latest dev tag
+      run: echo latest-dev-tag=$(git describe --tags --abbrev=0 origin/${{ vars.DEV_BRANCH_NAME }}) >> $GITHUB_OUTPUT
+      id: get-dev-tag
+
+    - name: Get number of files that were changed between dev and stage (with some exceptions)
+      run: echo NUM_FILES_CHANGED=$(git diff origin/${{ vars.STAGE_BRANCH_NAME }}..origin/${{ vars.DEV_BRANCH_NAME }} --name-only | grep --invert-match --count -e "^doc/" -e "^aerospike-stubs/" -e VERSION) >> $GITHUB_ENV
+      # We want this step to fail if a command failed while using pipes
+      shell: bash
+
+    - name: If any files were changed besides the exceptions, run the stage tests
+      run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> $GITHUB_OUTPUT
+      id: run_stage_tests
+
+  upload-jfrog-artifacts-as-github-artifacts:
+    needs: compare-latest-dev-tag-and-stage
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        sparse-checkout: ./.github/actions/download-jf-builds
 
     - name: Download JFrog builds for this dev version
       uses: ./.github/actions/download-jf-builds
       with:
-        build-version: ${{ steps.get-dev-version.outputs.latest-dev-version }}
+        build-version: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
         jfrog-platform-url: ${{ secrets.JFROG_PLATFORM_URL }}
         jfrog-access-token: ${{ secrets.JFROG_ACCESS_TOKEN }}
         jfrog-repo-name: ${{ vars.JFROG_REPO_NAME }}
@@ -37,7 +55,7 @@ jobs:
           const artifact = new DefaultArtifactClient()
 
           var fs = require('fs');
-          const artifacts-path = ./aerospike/${{ steps.get-dev-version.outputs.latest-dev-version }}/artifacts;
+          const artifacts-path = ./aerospike/${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}/artifacts;
           var files = fs.readdirSync(artifacts-path);
 
           const python_tag_and_os_regex = /([a-z0-9]+)-[a-z0-9]+-(manylinux|macosx|win)/;
@@ -61,71 +79,26 @@ jobs:
         result-encoding: string
 
   run-stage-tests:
+    needs: compare-latest-dev-tag-and-stage
+    if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
     uses: ./.github/workflows/stage-tests.yml
-    needs: get-latest-dev-tag
     with:
-      ref: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
+      ref: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
     secrets: inherit
 
-  ff-stage-to-dev-tag:
+  # Stage tests have passed or skipped
+  # so it is safe to update the stage branch with the changes in dev, promote the version to an RC, and rebuild and upload the RC to JFrog
+  # We store the subsequent jobs after the stage tests in a separate reusable workflow...
+  # because if stage tests were skipped, all subsequent jobs will be skipped by default too (both direct and indirect descendents)
+  # This means we have to add a manual check for each subsequent job that checks if the stage tests were skipped in order to run them
+  # It's easier to just add this manual check once to a reusable workflow that wraps around all the subsequent jobs
+  bump-stage-and-upload-to-jfrog:
     needs: [
       run-stage-tests,
-      get-latest-dev-tag
+      compare-latest-dev-tag-and-stage
     ]
-    uses: ./.github/workflows/fast-forward-merge.yml
+    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped') }}
+    uses: ./.github/workflows/bump-stage-and-upload-to-jfrog.yml
     with:
-      ref_to_merge: ${{ needs.get-latest-dev-tag.outputs.latest-dev-version }}
-      base_branch: ${{ vars.STAGE_BRANCH_NAME }}
-    secrets: inherit
-
-  promote-dev-build-to-rc:
-    needs: ff-stage-to-dev-tag
-    uses: ./.github/workflows/bump-version.yml
-    with:
-      change: 'promote-dev-build-to-rc'
-      ref: ${{ vars.STAGE_BRANCH_NAME }}
-    secrets: inherit
-
-  delete-dev-artifacts:
-    needs: promote-dev-build-to-rc
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/checkout@v4
-      # We can't upload to the same artifact name with upload-artifact@v4
-      # So we must delete the artifacts produced by stage-tests.yml
-      # Before rebuilding the artifacts with the new RC version
-      - name: Remove artifacts with dev version
-        uses: geekyeggo/delete-artifact@v4
-        with:
-          name: '*.build'
-
-  rebuild-artifacts-with-rc-version:
-    needs: [
-      delete-dev-artifacts,
-      promote-dev-build-to-rc
-    ]
-    uses: ./.github/workflows/build-wheels.yml
-    with:
-      ref: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
-
-  upload-to-jfrog:
-    needs: [
-      rebuild-artifacts-with-rc-version,
-      promote-dev-build-to-rc
-    ]
-    name: Upload artifacts to JFrog
-    uses: ./.github/workflows/upload-to-jfrog.yml
-    with:
-      version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
-    secrets: inherit
-
-  ff-dev-to-stage:
-    needs: [
-      get-latest-dev-tag,
-      upload-to-jfrog
-    ]
-    uses: ./.github/workflows/fast-forward-merge.yml
-    with:
-      ref_to_merge: origin/${{ vars.STAGE_BRANCH_NAME }}
-      base_branch: ${{ vars.DEV_BRANCH_NAME }}
+      passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
     secrets: inherit
