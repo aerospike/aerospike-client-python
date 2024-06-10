@@ -4,6 +4,11 @@ on:
       dev-tag-to-test:
         type: string
         required: true
+    secrets:
+      JFROG_PLATFORM_URL:
+        required: true
+      JFROG_ACCESS_TOKEN:
+        required: true
 
 jobs:
   upload-jfrog-artifacts-as-github-artifacts:
