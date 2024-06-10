@@ -1,0 +1,61 @@
+on:
+  workflow_call:
+
+jobs:
+  upload-jfrog-artifacts-as-github-artifacts:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        sparse-checkout: ./.github/actions/download-jf-builds
+
+    - name: Download JFrog builds for this dev version
+      uses: ./.github/actions/download-jf-builds
+      with:
+        build-version: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
+        jfrog-platform-url: ${{ secrets.JFROG_PLATFORM_URL }}
+        jfrog-access-token: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        jfrog-repo-name: ${{ vars.JFROG_REPO_NAME }}
+
+    - name: Upload builds to Github as artifacts
+      uses: actions/github-script@v7
+      with:
+        script: |
+          import {DefaultArtifactClient} from '@actions/artifact'
+
+          const artifact = new DefaultArtifactClient()
+
+          var fs = require('fs');
+          const artifacts-path = ./aerospike/${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}/artifacts;
+          var files = fs.readdirSync(artifacts-path);
+
+          const python_tag_and_os_regex = /([a-z0-9]+)-[a-z0-9]+-(manylinux|macosx|win)/;
+          const arch_regex = /_([a-z0-9])\.whl/;
+          for (var i = 0; i < files.length; i++){
+            # Construct artifact name (i.e build identifier)
+            let python_tag, os, arch;
+            [python_tag, os] = python_tag_and_os_regex.exec(files[i]);
+            [arch] = arch_regex.exec(files[i]);
+            const artifact_name = `{python_tag}-{os}-{arch}.build`;
+
+            const {id, size} = await artifact.uploadArtifact(
+              // name of the artifact
+              artifact-name,
+              // files to include (supports absolute and relative paths)
+              [`{artifacts-path}/{files[i]}`],
+              {
+              }
+            )
+          }
+        result-encoding: string
+
+  run-stage-tests:
+    needs: [
+      compare-latest-dev-tag-and-stage,
+      upload-jfrog-artifacts-as-github-artifacts
+    ]
+    if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
+    uses: ./.github/workflows/stage-tests.yml
+    with:
+      ref: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
+    secrets: inherit
