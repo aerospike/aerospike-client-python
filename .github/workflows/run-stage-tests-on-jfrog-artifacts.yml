@@ -33,7 +33,7 @@ jobs:
       uses: actions/github-script@v7
       with:
         script: |
-          import {DefaultArtifactClient} from '@actions/artifact'
+          const {DefaultArtifactClient} = require('@actions/artifact')
 
           const artifact = new DefaultArtifactClient()
 
