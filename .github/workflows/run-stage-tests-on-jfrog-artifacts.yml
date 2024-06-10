@@ -26,6 +26,8 @@ jobs:
         jfrog-access-token: ${{ secrets.JFROG_ACCESS_TOKEN }}
         jfrog-repo-name: ${{ vars.JFROG_REPO_NAME }}
 
+    - run: npm i @actions/artifact
+
     - name: Upload builds to Github as artifacts
       # TODO: need to check this works
       uses: actions/github-script@v7
