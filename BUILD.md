@@ -130,8 +130,6 @@ The local version identifier will appear in:
 - The package version in the wheel name
 - `python3 -m pip show aerospike` if you installed the wheel
 
-The local version identifier will NOT show up in `aerospike.__version__`.
-
 ### Unoptimized builds (only Linux and macOS)
 
 By default, the Python client and the C client submodule are built with optimizations, which can make debugging
