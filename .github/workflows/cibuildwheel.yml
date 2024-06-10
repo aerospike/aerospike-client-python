@@ -123,10 +123,11 @@ jobs:
       if: ${{ inputs.run_tests && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - uses: ./.github/actions/run-ee-server-and-setup-config-conf
-      if: ${{ inputs.run_tests }}
-      with:
-        running-tests-from-docker-container: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+    - uses: ./.github/actions/run-ee-server
+      if: ${{ inputs.run_tests && !startsWith(inputs.platform-tag, 'manylinux') }}
+
+    - uses: ./.github/actions/run-ee-server-for-ext-container
+      if: ${{ inputs.run_tests && startsWith(inputs.platform-tag, 'manylinux') }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ !inputs.run_tests }}
