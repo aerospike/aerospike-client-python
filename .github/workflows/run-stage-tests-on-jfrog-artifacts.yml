@@ -59,4 +59,4 @@ jobs:
     uses: ./.github/workflows/stage-tests.yml
     secrets: inherit
     with:
-      ref-to-test: ${{ inputs.dev-tag-to-test }}
+      ref: ${{ inputs.dev-tag-to-test }}
