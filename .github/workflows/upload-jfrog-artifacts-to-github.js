@@ -4,7 +4,7 @@ exports.upload_jfrog_artifacts_to_github = async (dev_tag_to_test) => {
     const artifact = new DefaultArtifactClient()
 
     var fs = require('fs');
-    const artifacts_path = `${process.env.INIT_CWD}/aerospike/${dev_tag_to_test}/artifacts`;
+    const artifacts_path = `./aerospike/${dev_tag_to_test}/artifacts`;
     var files = fs.readdirSync(artifacts_path);
 
     const python_tag_and_os_regex = /([a-z0-9]+)-[a-z0-9]+-(manylinux|macosx|win)/;
