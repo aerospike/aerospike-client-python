@@ -1,5 +1,7 @@
 name: 'cibuildwheel'
 
+# Build wheels only for a specific platform
+
 on:
   workflow_dispatch:
     inputs:
@@ -37,16 +39,12 @@ on:
     inputs:
       python-tags:
         type: string
-        description: Python versions to build the client for
         required: false
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
-      platform-tag:
+      platform-tag-and-runner-os:
         type: string
         required: true
-      sha-to-build:
-        type: string
-        required: false
-        default: ${{ github.sha }}
+        default: '["manylinux_x86_64", "ubuntu-22.04"]'
       unoptimized:
         type: boolean
         required: false
@@ -59,6 +57,10 @@ on:
         type: boolean
         required: false
         default: false
+      sha-to-build:
+        type: string
+        required: false
+        default: ${{ github.sha }}
 
 jobs:
   cibuildwheel:
