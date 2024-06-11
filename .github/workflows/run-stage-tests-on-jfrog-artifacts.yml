@@ -28,6 +28,8 @@ jobs:
         jfrog-access-token: ${{ secrets.JFROG_ACCESS_TOKEN }}
         jfrog-repo-name: ${{ vars.JFROG_REPO_NAME }}
 
+    - run: find ./aerospike/${{ inputs.dev-tag-to-test }}/artifacts -type f -exec 
+
     - run: npm i @actions/artifact
 
     - name: Upload builds to Github as artifacts
