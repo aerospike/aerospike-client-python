@@ -10,6 +10,7 @@ exports.upload_jfrog_artifacts_to_github = async (dev_tag_to_test) => {
     const python_tag_and_os_regex = /^([a-z0-9]+)-[a-z0-9]+-(manylinux|macosx|win)/;
     const arch_regex = /_([a-z0-9_])\.whl$/;
     for (var i = 0; i < files.length; i++){
+      print(`Processing ${files[i]}`)
       // Construct artifact name (i.e build identifier)
       let python_tag, os, arch;
       [python_tag, os] = python_tag_and_os_regex.exec(files[i]);
