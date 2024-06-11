@@ -1,6 +1,7 @@
 name: 'cibuildwheel'
 
 # Build wheels only for a specific platform
+# Useful if we only need to build a subset of all the wheels
 
 on:
   workflow_dispatch:
@@ -9,8 +10,11 @@ on:
         type: string
         description: Python versions to build the client for
         required: false
+        # Default is the supported Python versions by the Python client
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
       platform-tag-and-runner-os:
+        # We hardcode the runner OS version to make sure the wheels are always built in the same environment
+        # ... for each platform
         type: choice
         required: true
         options:
@@ -19,6 +23,7 @@ on:
         - '["macosx_x86_64", "macos-12-large"]'
         - '["macosx_arm64", "macos-13-large"]'
         - '["win_amd64", "windows-2022"]'
+        # Makes debugging via gh cli easier
         default: '["manylinux_x86_64", "ubuntu-22.04"]'
       unoptimized:
         description: 'macOS or Linux: Apply -O0 flag?'
@@ -41,10 +46,16 @@ on:
         type: string
         required: false
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+      # Unlike with a workflow dispatch event, we want to make sure any calling workflow is explicit about the platform
+      # it wants to build for
       platform-tag-and-runner-os:
         type: string
         required: true
-        default: '["manylinux_x86_64", "ubuntu-22.04"]'
+      sha-to-build:
+        type: string
+        required: false
+        default: ${{ github.sha }}
+      # Unused by calling workflows
       unoptimized:
         type: boolean
         required: false
@@ -57,10 +68,6 @@ on:
         type: boolean
         required: false
         default: false
-      sha-to-build:
-        type: string
-        required: false
-        default: ${{ github.sha }}
 
 jobs:
   cibuildwheel:
