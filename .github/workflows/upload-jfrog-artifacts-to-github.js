@@ -7,7 +7,7 @@ exports.upload_jfrog_artifacts_to_github = async (dev_tag_to_test) => {
     const artifacts_path = `./aerospike/${dev_tag_to_test}/artifacts`;
     var files = fs.readdirSync(artifacts_path);
 
-    const python_tag_and_os_regex = /^([a-z0-9]+)-[a-z0-9]+-(manylinux|macosx|win)/;
+    const python_tag_and_os_regex = /([a-z0-9]+)-[a-z0-9]+-(manylinux|macosx|win)/;
     const arch_regex = /_([a-z0-9_])\.whl$/;
     for (var i = 0; i < files.length; i++){
       console.log(`Processing ${files[i]}`)
