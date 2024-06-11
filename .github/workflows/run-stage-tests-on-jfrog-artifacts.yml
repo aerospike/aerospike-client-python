@@ -36,7 +36,7 @@ jobs:
       with:
         script: |
           const module = require('./.github/workflows/upload-jfrog-artifacts-to-github.js')
-          await module.upload_jfrog_artifacts_to_github(${{ inputs.dev-tag-to-test }})
+          await module.upload_jfrog_artifacts_to_github('${{ inputs.dev-tag-to-test }}')
         result-encoding: string
 
   run-stage-tests:
