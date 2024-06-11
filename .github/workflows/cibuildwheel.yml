@@ -10,7 +10,7 @@ on:
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
       platform-tag-and-runner-os:
         type: choice
-        required: false
+        required: true
         options:
         - '["manylinux_x86_64", "ubuntu-22.04"]'
         - '["manylinux_aarch64", "ubuntu-22.04"]'
