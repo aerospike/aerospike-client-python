@@ -39,6 +39,11 @@ on:
         type: boolean
         default: false
         description: 'Test macOS x86 wheels (unstable)'
+      use-jfrog-builds:
+        required: false
+        description: If false, assume wheels are uploaded as Github artifacts
+        type: boolean
+        default: true
     secrets:
       # Required for testing against a server RC
       DOCKER_HUB_BOT_USERNAME:
@@ -47,15 +52,9 @@ on:
         required: true
 
 jobs:
-  build-artifacts:
-    uses: ./.github/workflows/build-wheels.yml
-    with:
-      ref: ${{ inputs.ref }}
-
   # We run some source distribution (QE category 1) tests here
   # because QE doesn't have disk space for more Linux distros
   sdist-tests:
-    needs: build-artifacts
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -82,8 +81,12 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - uses: actions/download-artifact@v4
+      if: ${{ !inputs.use-jfrog-builds }}
       with:
         name: sdist.build
+
+    - if: ${{ inputs.use-jfrog-builds }}
+      run: jf rt download 
 
     - name: Run distro container
       run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
@@ -118,7 +121,6 @@ jobs:
 # because of the same reason we have some category 1 tests in Github Actions
 
   manylinux_rhel_based:
-    needs: build-artifacts
     strategy:
       matrix:
         distros: [
@@ -183,7 +185,6 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
   manylinux_debian:
-    needs: build-artifacts
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -245,7 +246,6 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.debian-name }} python${{ matrix.python-version[0] }} -m pytest new_tests/
 
   manylinux_ubuntu2204:
-    needs: build-artifacts
     strategy:
       matrix:
         platform: [
@@ -302,7 +302,6 @@ jobs:
 
   macOS:
     if: ${{ inputs.test-macos-x86 }}
-    needs: build-artifacts
     strategy:
       matrix:
         macos-version: [

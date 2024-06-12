@@ -4,6 +4,9 @@ inputs:
     required: true
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
+  exclusions:
+    required: false
+    default: ''
   jfrog-platform-url:
     required: true
   jfrog-access-token:
