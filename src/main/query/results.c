@@ -106,6 +106,12 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
+    if (self->query.ops) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "No operations can be used with query.results");
+        goto CLEANUP;
+    }
+
     // Convert python policy object to as_policy_query
     pyobject_to_policy_query(
         self->client, &err, py_policy, &query_policy, &query_policy_p,
