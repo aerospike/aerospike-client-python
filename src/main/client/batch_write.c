@@ -447,7 +447,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     if (PyObject_HasAttrString(py_obj, FIELD_NAME_BATCH_RESULT)) {
         PyObject_DelAttrString(py_obj, FIELD_NAME_BATCH_RESULT);
     }
-    PyObject_SetAttrString(py_obj, FIELD_NAME_BATCH_RESULT, py_bw_res);
+    PyObject_SetAttrStringSafe(py_obj, FIELD_NAME_BATCH_RESULT, py_bw_res);
     Py_DECREF(py_bw_res);
 
     as_error_reset(err);
@@ -469,13 +469,13 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         if (PyObject_HasAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT)) {
             PyObject_DelAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT);
         }
-        PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RESULT,
-                               py_res);
+        PyObject_SetAttrStringSafe(py_batch_record, FIELD_NAME_BATCH_RESULT,
+                                   py_res);
         Py_DECREF(py_res);
 
         PyObject *py_in_doubt = PyBool_FromLong((long)in_doubt);
-        PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_INDOUBT,
-                               py_in_doubt);
+        PyObject_SetAttrStringSafe(py_batch_record, FIELD_NAME_BATCH_INDOUBT,
+                                   py_in_doubt);
         Py_DECREF(py_in_doubt);
 
         if (*result_code == AEROSPIKE_OK) {
@@ -489,14 +489,14 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
             if (result_rec) {
                 record_to_pyobject(self, err, result_rec, requested_key, &rec);
-                PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
-                                       rec);
+                PyObject_SetAttrStringSafe(py_batch_record,
+                                           FIELD_NAME_BATCH_RECORD, rec);
                 Py_DECREF(rec);
             }
             else {
                 Py_INCREF(Py_None);
-                PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
-                                       Py_None);
+                PyObject_SetAttrStringSafe(py_batch_record,
+                                           FIELD_NAME_BATCH_RECORD, Py_None);
             }
         }
     }
