@@ -39,6 +39,11 @@ on:
         type: boolean
         default: false
         description: 'macOS: include source files and line numbers for both C and Python client for debugging?'
+      gcc-version-for-sanitizer:
+        required: false
+        type: string
+        default: '12'
+        description: "Linux x86: which gcc version to build instrumented wheel with sanitizer? If empty, don't use sanitizer"
 
   workflow_call:
     inputs:
@@ -71,6 +76,10 @@ on:
         type: boolean
         default: false
       include-debug-info-for-macos:
+        required: false
+        type: boolean
+        default: false
+      use-sanitizer:
         required: false
         type: boolean
         default: false
@@ -172,29 +181,36 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Enable tests
-      if: ${{ inputs.run_tests }}
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
+      if: ${{ inputs.run_tests && !inputs.use-sanitizer }}
+      run: echo "CIBW_TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
 
     - name: Disable tests (only run basic import test)
-      if: ${{ !inputs.run_tests }}
-      run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
+      if: ${{ !inputs.run_tests && !inputs.use-sanitizer }}
+      run: echo "CIBW_TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
     - name: Set unoptimize flag
       if: ${{ inputs.apply-no-optimizations }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
+    - name: Set sanitizer flag
+      if: ${{ matrix.platform == 'x86_64' && inputs.gcc-version-for-sanitizer != '' }}
+      run: echo "SANITIZER=1" >> $GITHUB_ENV
+
+    - name: Set commands for installing required build packages on Linux
+      run: echo BEFORE_ALL_LINUX="yum install openssl-devel -y && yum install python-devel -y && yum install python-setuptools -y" >> $GITHUB_ENV
+
+    - name: 'Sanitizer wheels: install the same gcc version used in QE tests'
+      if: ${{ matrix.platform == 'x86_64' && inputs.gcc-version-for-sanitizer != '' }}
+      run: echo BEFORE_ALL_LINUX="${{ env.BEFORE_ALL_LINUX }} && yum install -y devtoolset-11" >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.16.5
       env:
-        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }}
+        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }} ${{ inputs.use-sanitizer && 'SANITIZER' || '' }}
         CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
         CIBW_BUILD_FRONTEND: build
-        CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y &&
-          yum install python-devel -y &&
-          yum install python-setuptools -y
+        CIBW_BEFORE_ALL_LINUX: ${{ env.BEFORE_ALL_LINUX }}
         CIBW_ARCHS: "${{ matrix.platform }}"
-        CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
