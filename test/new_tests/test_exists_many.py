@@ -207,11 +207,9 @@ class TestExistsMany:
         client1 = aerospike.client(config)
         client1.close()
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             client1.exists_many(self.keys, {"total_timeout": 20})
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_neg_exists_many_with_extra_parameter_in_key(self, put_data):
         keys = []
@@ -232,12 +230,10 @@ class TestExistsMany:
         key = ("test", "demo", None, bytearray("ase;as[d'as;djk;uyfl", "utf-8"), None)
         keys_get.append(key)
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.exists_many(keys_get)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "key tuple must be (Namespace, Set, Key) or (Namespace, Set, None, Digest)"
 
         for key in keys:
             self.as_connection.remove(key)
