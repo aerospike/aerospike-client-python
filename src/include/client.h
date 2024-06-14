@@ -365,7 +365,7 @@ PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
 /**
  * Create secondary cdt index
  *
- *		client.index_cdt_create(namespace, set, bin, index_name, ctx, policy)
+ *		client.index_cdt_create(namespace, set, bin, index_type, index_datatype, index_name, ctx, policy)
  *
  */
 PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,

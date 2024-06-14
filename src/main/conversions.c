@@ -2765,6 +2765,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       as_static_pool *static_pool, int serializer_type)
 {
     PyObject *py_ctx = PyDict_GetItemString(op_dict, CTX_KEY);
+
     long int_val = 0;
     as_val *val = NULL;
 
