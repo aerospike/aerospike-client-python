@@ -24,8 +24,6 @@
 #include "exceptions.h"
 #include "exception_types.h"
 
-static PyObject *module;
-
 PyObject *PyInit_exception(void)
 {
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
@@ -36,7 +34,7 @@ PyObject *PyInit_exception(void)
                                            NULL,
                                            NULL,
                                            NULL};
-    module = PyModule_Create(&moduledef);
+    PyObject *module = PyModule_Create(&moduledef);
 
     struct exceptions exceptions_array;
 
@@ -552,22 +550,11 @@ PyObject *PyInit_exception(void)
     return module;
 }
 
-void remove_exception(as_error *err)
-{
-    PyObject *py_key = NULL, *py_value = NULL;
-    Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(module);
-
-    while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
-        Py_DECREF(py_value);
-    }
-}
-
 void raise_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(module);
+    PyObject *py_module_dict = PyImport_ImportModule("aerospike.exception");
     bool found = false;
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
@@ -638,7 +625,7 @@ PyObject *raise_exception_old(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(module);
+    PyObject *py_module_dict = PyImport_ImportModule("aerospike.exception");
     bool found = false;
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
