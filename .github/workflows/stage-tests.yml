@@ -1,8 +1,5 @@
 name: Stage tests
 
-env:
-  DISTRO_CONTAINER_NAME: distro-container
-
 on:
   workflow_call:
     inputs:
@@ -126,14 +123,26 @@ jobs:
           ["x86_64", "linux/amd64"],
           ["aarch64", "linux/arm64"],
         ]
+        category: [
+          1,
+          2
+        ]
         # Exclude all matrix combinations, then selectively pick the combinations of distros, python versions, and CPU archs
         # we want to test
+        exclude:
+          - category: 1
+          - category: 2
         include:
+          # Define cat 1 tests
+          - distro: redhat/ubi9
+            python-version: ["3.9", "cp39"]
+            platform: ["x86_64", "linux/amd64"]
+            category: 1
+          # Define cat 2 tests
           - distro: amazonlinux:2023
-            python-version: [
-              ["3.9", "cp39"],
-              ["3.11", "cp311"]
-            ]
+            python-version: ["3.9", "cp39"]
+          - distro: amazonlinux:2023
+            python-version: ["3.11", "cp311"]
           - distro: ubuntu:22.04
             python-version: ["3.10", "cp310"]
           - distro: python:3.8
@@ -170,6 +179,9 @@ jobs:
       with:
         platforms: arm64
 
+    - name: Get distro container name
+      run: echo DISTRO_CONTAINER_NAME="distro-container" >> $GITHUB_ENV
+
     - name: Run distro container
       # Run distro container on host network to access the server Docker container using localhost
       run: docker run --name ${{ env.DISTRO_CONTAINER_NAME }} --platform ${{ matrix.platform[1] }} --network host --detach ${{ matrix.distro }} tail -f /dev/null
@@ -177,16 +189,14 @@ jobs:
     - name: Copy repo to container
       run: docker cp . ${{ env.DISTRO_CONTAINER_NAME }}:/aerospike-client-python
 
-    - name: "Amazon Linux 2023: install python 3.11 since it doesn't come installed by default"
-      if: ${{ matrix.python-version[0] == '3.11' }}
+    - name: 'Amazon Linux 2023: install python 3.11 if applicable'
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} yum install -y python3.11
+      if: ${{ matrix.python-version[0] == '3.11' }}
 
     - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 1)'
-      if: ${{ matrix.distro == 'ubuntu:22.04' }}
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} apt update
 
     - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 2)'
-      if: ${{ matrix.distro == 'ubuntu:22.04' }}
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} apt install python3 python3-pip -y
 
     - name: Make sure pip is installed
