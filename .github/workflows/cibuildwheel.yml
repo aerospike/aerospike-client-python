@@ -1,7 +1,7 @@
 name: 'cibuildwheel'
 
-# Build wheels only for a specific platform
-# Useful if we only need to build a subset of all the wheels
+# Build a single wheel for a specific Python version and a specific platform
+# Useful for building a wheel with debug flags
 
 on:
   workflow_dispatch:
@@ -11,8 +11,16 @@ on:
         description: Python version to build the client for
         required: true
       platform-tag-and-runner-os:
-        # We hardcode the runner OS version to make sure the wheels are always built in the same environment...
-        # ...for each platform
+        description: Platform to build the client for. (ignore runner OS)
+        # We hardcode the runner OS version to make sure the wheels are always built in the same environment
+        # for each platform.
+        # It is not possible in Github Actions to create a "map" of values
+        # so we cannot map the platform tag to the runner OS.
+        # The workaround for this is to create a list of "2-tuples" that can be converted later into a real JSON list.
+        # Each 2-tuple is a list that maps the platform tag with the runner OS.
+        # Alternatively we could create a workflow job that maps the platform tag to the runner OS,
+        # but this would waste Github Actions resources if there were a calling workflow that runs this job many times
+        # to build multiple wheels.
         type: choice
         required: true
         options:
@@ -21,10 +29,11 @@ on:
         - '["macosx_x86_64", "macos-12-large"]'
         - '["macosx_arm64", "macos-13-large"]'
         - '["win_amd64", "windows-2022"]'
-        # Makes debugging via gh cli easier
+        # Makes debugging via gh cli easier.
         default: '["manylinux_x86_64", "ubuntu-22.04"]'
       unoptimized:
         description: 'macOS or Linux: Apply -O0 flag?'
+        # Windows supports a different flag to disable optimizations, but we haven't added support for it yet
         type: boolean
         required: false
         default: false
@@ -35,11 +44,18 @@ on:
         default: false
       run_tests:
         description: 'manylinux or macOS x86: Run Aerospike server and run tests?'
+        # This is only supported for the above platforms because we cannot run Docker on Github runners for mac M1 and
+        # Windows x86.
         type: boolean
         required: false
         default: false
   workflow_call:
     inputs:
+      # See workflow call hack in update-version.yml
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
       python-tag:
         type: string
         description: Python version to build the client for
@@ -54,7 +70,7 @@ on:
         type: string
         required: false
         default: ${{ github.sha }}
-      # Build flag inputs unused by calling workflows
+      # Debug build settings unused by calling workflows
       unoptimized:
         type: boolean
         required: false
@@ -81,10 +97,9 @@ jobs:
       shell: bash
 
     - name: Get commit sha to show status check
-      # The workflow_dispatch event does not have a sha-to-build input
-      # And when dereferencing a non-existent input, it will return an empty string
-      # We have to pass in a valid sha, so just use github.sha by default
-      run: echo COMMIT_SHA_FOR_STATUS_CHECK=${{ inputs.sha-to-build != '' && inputs.sha-to-build || github.sha }} >> $GITHUB_ENV
+      # The workflow_dispatch event doesn't have the sha-to-build input
+      # So we also want to pass in the sha that triggered that event
+      run: echo COMMIT_SHA_FOR_STATUS_CHECK=${{ inputs.is_workflow_call == true && inputs.sha-to-build || github.sha }} >> $GITHUB_ENV
 
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -99,7 +114,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ inputs.sha-to-build }}
+        ref: ${{ env.COMMIT_SHA_FOR_STATUS_CHECK }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
 
@@ -129,32 +144,37 @@ jobs:
       with:
         platforms: arm64
 
+    - run: echo "RUN_INTEGRATION_TESTS_IN_THIS_JOB=${{ inputs.run_tests && (startsWith(env.PLATFORM_TAG, 'manylinux') || env.PLATFORM_TAG == 'macosx_x86_64') }}" >> $GITHUB_ENV
+      shell: bash
+
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ inputs.run_tests && env.PLATFORM_TAG == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && env.PLATFORM_TAG == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - uses: ./.github/actions/run-ee-server
-      if: ${{ inputs.run_tests && !startsWith(env.PLATFORM_TAG, 'manylinux') }}
+    - name: 'Run Aerospike server in Docker container'
+      uses: ./.github/actions/run-ee-server
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && !startsWith(env.PLATFORM_TAG, 'manylinux') }}
 
-    - uses: ./.github/actions/run-ee-server-for-ext-container
-      if: ${{ inputs.run_tests && startsWith(env.PLATFORM_TAG, 'manylinux') }}
+    - name: 'Linux: run Aerospike server in Docker container and configure config.conf to connect to another Docker container'
+      uses: ./.github/actions/run-ee-server-for-ext-container
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && startsWith(env.PLATFORM_TAG, 'manylinux') }}
 
     - name: If not running tests against server, only run basic import test
-      if: ${{ !inputs.run_tests }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
       shell: bash
 
     - name: Otherwise, enable integration tests
-      if: ${{ inputs.run_tests }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
       run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
       shell: bash
 
     - name: Set unoptimize flag
-      if: ${{ inputs.unoptimized }}
+      if: ${{ inputs.unoptimized && (startsWith(env.PLATFORM_TAG, 'manylinux') || startsWith(env.PLATFORM_TAG, 'macosx')) }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
     - name: Set include dsym flag
-      if: ${{ inputs.include-debug-info-for-macos }}
+      if: ${{ inputs.include-debug-info-for-macos && startsWith(env.PLATFORM_TAG, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
     - name: Build wheel
