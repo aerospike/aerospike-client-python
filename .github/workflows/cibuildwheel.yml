@@ -11,7 +11,7 @@ on:
         description: Python version to build the client for
         required: true
       platform-tag-and-runner-os:
-        description: Platform to build the client for. (ignore runner OS)
+        description: Platform and runner OS to build the client for.
         # We hardcode the runner OS version to make sure the wheels are always built in the same environment
         # for each platform.
         # It is not possible in Github Actions to create a "map" of values
@@ -62,6 +62,9 @@ on:
         required: true
       # Unlike in a workflow dispatch event, we want to make sure any calling workflow is explicit about the platform
       # it wants to build for
+      # Unfortunately, we have to pass in the runner OS as input because we want to reuse the same input in the
+      # workflow_dispatch event, and this means whenever we change the runner OS used to build a wheel
+      # we also have to change it everywhere else that this workflow is being programmatically called
       platform-tag-and-runner-os:
         type: string
         required: true

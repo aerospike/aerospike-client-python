@@ -14,11 +14,13 @@ on:
         default: false
 
 jobs:
-  build-manylinux-wheels:
-    uses: ./.github/workflows/build-wheels.yml
+  build-manylinux-wheel:
+    uses: ./.github/workflows/cibuildwheel.yml
+    with:
+      platform-tag-and-runner-os: '["manylinux_x86_64", "ubuntu-22.04"]'
 
   valgrind:
-    needs: build-manylinux-wheels
+    needs: build-manylinux-wheel
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
