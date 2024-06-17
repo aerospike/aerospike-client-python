@@ -147,20 +147,21 @@ jobs:
       with:
         platforms: arm64
 
+    # Note that environment variables in Github are all strings
     - run: echo "RUN_INTEGRATION_TESTS_IN_THIS_JOB=${{ inputs.run_tests && (startsWith(env.PLATFORM_TAG, 'manylinux') || env.PLATFORM_TAG == 'macosx_x86_64') }}" >> $GITHUB_ENV
       shell: bash
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && env.PLATFORM_TAG == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && env.PLATFORM_TAG == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
       uses: ./.github/actions/run-ee-server
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && env.PLATFORM_TAG == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && env.PLATFORM_TAG == 'macosx_x86_64' }}
 
     - name: 'Linux: run Aerospike server in Docker container and configure config.conf to connect to another Docker container'
       uses: ./.github/actions/run-ee-server-for-ext-container
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && startsWith(env.PLATFORM_TAG, 'manylinux') }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && startsWith(env.PLATFORM_TAG, 'manylinux') }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
