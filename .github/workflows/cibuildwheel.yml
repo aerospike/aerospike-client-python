@@ -151,9 +151,9 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && env.PLATFORM_TAG == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: 'Run Aerospike server in Docker container'
+    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
       uses: ./.github/actions/run-ee-server
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && !startsWith(env.PLATFORM_TAG, 'manylinux') }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB && env.PLATFORM_TAG == 'macosx_x86_64' }}
 
     - name: 'Linux: run Aerospike server in Docker container and configure config.conf to connect to another Docker container'
       uses: ./.github/actions/run-ee-server-for-ext-container
