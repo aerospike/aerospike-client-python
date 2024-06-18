@@ -459,3 +459,23 @@ jobs:
     - name: Check spelling
       run: sphinx-build -b linkcheck . links
       working-directory: doc
+
+  metrics-tests:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+    - name: Download aerolab
+      run: wget https://github.com/aerospike/aerolab/releases/download/7.6.0-7b5bbde/aerolab-linux-amd64-7.6.0.deb
+    - name: Install aerolab
+      run: sudo dpkg -i *.deb
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+    - run: python3 -m pip install *.whl
+    - run: python3 test_node_close_listener.py
+      working-directory: test/metrics

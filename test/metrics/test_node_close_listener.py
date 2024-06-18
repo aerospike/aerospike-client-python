@@ -64,7 +64,7 @@ def snapshot(_: Cluster):
     pass
 
 
-NODE_COUNT = 3
+NODE_COUNT = 1
 print(f"Creating {NODE_COUNT} node cluster...")
 subprocess.run(["aerolab", "cluster", "create", f"--count={NODE_COUNT}"], check=True)
 
