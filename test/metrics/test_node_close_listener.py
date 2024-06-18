@@ -125,6 +125,8 @@ try:
     finally:
         c.close()
 finally:
-    # Cleanup
-    subprocess.run(["aerolab", "cluster", "stop"], check=True)
-    subprocess.run(["aerolab", "cluster", "destroy", "--force"], check=True)
+    if NODE_COUNT > 1:
+        # There should still be at least one node active
+        # Cleanup
+        subprocess.run(["aerolab", "cluster", "stop"], check=True)
+        subprocess.run(["aerolab", "cluster", "destroy", "--force"], check=True)
