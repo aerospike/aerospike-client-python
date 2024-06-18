@@ -112,7 +112,8 @@ try:
         print("Enabling metrics...")
         c.enable_metrics(policy=policy)
 
-        NODE_TO_CLOSE = 2
+        # Close the last node
+        NODE_TO_CLOSE = NODE_COUNT
         print(f"Closing node {NODE_TO_CLOSE}...")
         subprocess.run(["aerolab", "cluster", "stop", f"--nodes={NODE_TO_CLOSE}"], check=True)
         # Run with --force or else it will ask to confirm
