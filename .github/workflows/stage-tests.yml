@@ -84,14 +84,14 @@ jobs:
       with:
         name: sdist.build
 
-    - name: Download JFrog builds for this dev version
-      if: ${{ inputs.is_workflow_call }}
-      uses: ./.github/actions/download-jf-builds
-      with:
-        build-version: ${{ inputs.ref }}
-        jfrog-platform-url: ${{ secrets.JFROG_PLATFORM_URL }}
-        jfrog-access-token: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        jfrog-repo-name: ${{ vars.JFROG_REPO_NAME }}
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - name: Download JFrog build
+      run: jf rt dl --build python-client/${{ inputs.ref }} ${{ secrets.JFROG_REPO_NAME }}
+      shell: bash
 
     - name: Move JFrog source distribution to current working directory
       if: ${{ inputs.is_workflow_call }}
