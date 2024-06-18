@@ -85,8 +85,18 @@ jobs:
       with:
         name: sdist.build
 
-    - if: ${{ inputs.use-jfrog-builds }}
-      run: jf rt download 
+    - name: Download JFrog builds for this dev version
+      if: ${{ inputs.use-jfrog-builds }}
+      uses: ./.github/actions/download-jf-builds
+      with:
+        build-version: ${{ inputs.ref }}
+        jfrog-platform-url: ${{ secrets.JFROG_PLATFORM_URL }}
+        jfrog-access-token: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        jfrog-repo-name: ${{ vars.JFROG_REPO_NAME }}
+
+    - name: Move JFrog source distribution to current working directory
+      if: ${{ inputs.use-jfrog-builds }}
+      run: mv aerospike/${{ inputs.ref }}/artifacts/*.tar.gz .
 
     - name: Run distro container
       run: docker run --name ${{ matrix.distros[1] }} --network host --detach ${{ matrix.distros[0] }} tail -f /dev/null
