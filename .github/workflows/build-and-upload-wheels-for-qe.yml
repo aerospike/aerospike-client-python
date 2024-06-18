@@ -14,6 +14,7 @@ on:
         default: false
         type: boolean
         required: true
+  repository_dispatch:
 
 jobs:
   build-artifacts:
@@ -22,6 +23,7 @@ jobs:
       # In a push event, any input values default to ''
       # https://github.com/orgs/community/discussions/29242#discussioncomment-5063461
       apply-no-optimizations: ${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }}
+      ref: ${{ github.event_name == 'repository_dispatch' && github.event.client_payload.build_tag || '' }}
 
   upload-to-jfrog:
     needs: build-artifacts
