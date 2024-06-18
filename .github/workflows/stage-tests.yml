@@ -92,7 +92,7 @@ jobs:
 
     - name: Download JFrog build
       if: ${{ inputs.is_workflow_call }}
-      run: jf rt dl --flat --exclusions "**/*.whl" --build python-client/${{ inputs.ref }} ${{ secrets.JFROG_REPO_NAME }}
+      run: jf rt dl --flat --exclusions "${{ secrets.JFROG_REPO_NAME }}/**/*.whl" --build python-client/${{ inputs.ref }} ${{ secrets.JFROG_REPO_NAME }}
       shell: bash
 
     - name: Run distro container
