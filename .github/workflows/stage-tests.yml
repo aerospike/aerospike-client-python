@@ -171,7 +171,7 @@ jobs:
 
     - name: Download JFrog build
       if: ${{ inputs.is_workflow_call }}
-      run: jf rt dl --flat --build python-client/${{ inputs.ref }} "${{ vars.JFROG_REPO_NAME }}/**/*${{ matrix.python-version[1] }}*${{ matrix.platform[0] }}.whl"
+      run: jf rt dl --flat --build python-client/${{ inputs.ref }} "${{ vars.JFROG_REPO_NAME }}/**/*${{ matrix.python-version[1] }}*manylinux*${{ matrix.platform[0] }}.whl"
       shell: bash
 
     - name: Set up QEMU for cross compiling arm64
@@ -241,7 +241,7 @@ jobs:
 
     - name: Download JFrog build
       if: ${{ inputs.is_workflow_call }}
-      run: jf rt dl --flat --build python-client/${{ inputs.ref }} "${{ vars.JFROG_REPO_NAME }}/**/*${{ matrix.python-version[1] }}*${{ matrix.platform[0] }}.whl"
+      run: jf rt dl --flat --build python-client/${{ inputs.ref }} "${{ vars.JFROG_REPO_NAME }}/**/*${{ matrix.python-version[1] }}*manylinux*${{ matrix.platform[0] }}.whl"
       shell: bash
 
     - uses: ./.github/actions/run-ee-server
@@ -305,7 +305,7 @@ jobs:
 
     - name: Download JFrog build
       if: ${{ inputs.is_workflow_call }}
-      run: jf rt dl --flat --build python-client/${{ inputs.ref }} "${{ vars.JFROG_REPO_NAME }}/**/*cp310*${{ matrix.platform[0] }}.whl"
+      run: jf rt dl --flat --build python-client/${{ inputs.ref }} "${{ vars.JFROG_REPO_NAME }}/**/*cp310*manylinux*${{ matrix.platform[0] }}.whl"
       shell: bash
 
     - name: Set up QEMU for cross compiling arm64
