@@ -32,7 +32,8 @@ jobs:
 
   run-stage-tests-on-jfrog-artifacts:
     needs: compare-latest-dev-tag-and-stage
-    if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests }}
+    # All job outputs are unicode strings
+    if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
     uses: ./.github/workflows/stage-tests.yml
     # Need to pass in JFrog secrets
     secrets: inherit
