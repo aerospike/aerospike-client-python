@@ -34,7 +34,7 @@ on:
         type: boolean
         default: true
       jfrog-build-version-to-test:
-        description: Used only when use_jfrog_builds is true. This must be a valid build version for JFrog artifacts
+        description: Used only when use_jfrog_builds is true.
         type: string
         required: false
       # These will be set if use_jfrog_builds is false (i.e when someone is building and testing the artifacts in a workflow dispatch event)
