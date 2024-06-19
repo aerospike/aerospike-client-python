@@ -23,7 +23,6 @@ on:
 jobs:
   build-wheels:
     uses: ./.github/workflows/build-wheels.yml
-    secrets: inherit
 
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
