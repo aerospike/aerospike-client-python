@@ -8,6 +8,7 @@ jobs:
   # We want to skip the stage tests if the changes made between dev and stage wouldn't affect the results of the stage tests
   compare-latest-dev-tag-and-stage:
     outputs:
+      # This is always available, but the stage tests only use it if they're being run (i.e not skipped)
       latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
       run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
     runs-on: ubuntu-22.04
