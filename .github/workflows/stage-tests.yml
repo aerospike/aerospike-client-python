@@ -31,6 +31,8 @@ on:
         description: Used only when use_jfrog_builds is true. This must be a valid build version for JFrog artifacts
         type: string
         required: false
+      # These will be set if use_jfrog_builds is false (i.e when someone is building and testing the artifacts in a workflow dispatch event)
+      # If use_jfrog_builds is true, only the defaults will be used
       use-server-rc:
         type: boolean
         required: false
