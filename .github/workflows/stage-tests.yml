@@ -79,19 +79,22 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - uses: actions/download-artifact@v4
-      if: ${{ !inputs.use_jfrog_builds }}
+    - if: ${{ !inputs.use_jfrog_builds }}
+      uses: actions/download-artifact@v4
       with:
         name: sdist.build
 
-    - uses: jfrog/setup-jfrog-cli@v4
-      if: ${{ inputs.use_jfrog_builds }}
+    # TODO: JFrog code is repeated throughout this workflow
+    # But it will be refactored later
+
+    - if: ${{ inputs.use_jfrog_builds }}
+      uses: jfrog/setup-jfrog-cli@v4
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
-    - name: Download JFrog build
-      if: ${{ inputs.use_jfrog_builds }}
+    - if: ${{ inputs.use_jfrog_builds }}
+      name: Download JFrog build
       run: jf rt dl --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/*.tar.gz"
 
     - name: Run distro container
