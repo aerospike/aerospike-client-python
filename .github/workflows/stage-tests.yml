@@ -1,6 +1,10 @@
 name: Stage tests
 run-name: Stage tests (use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
 
+# Downloads artifacts either from Github or JFrog
+# and runs category 1 (source distribution) and category 2 (binary distribution) tests
+# The purpose is to test that our artifacts work on the Linux distros / OS versions that the client supports
+
 on:
   workflow_dispatch:
     inputs:
