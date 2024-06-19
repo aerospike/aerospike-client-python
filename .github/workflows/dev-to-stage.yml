@@ -34,6 +34,7 @@ jobs:
     needs: compare-latest-dev-tag-and-stage
     if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests }}
     uses: ./.github/workflows/stage-tests.yml
+    # Need to pass in JFrog secrets
     secrets: inherit
     with:
       ref: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
