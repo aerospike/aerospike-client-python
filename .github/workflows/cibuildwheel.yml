@@ -1,36 +1,62 @@
 name: 'cibuildwheel'
 
-# Build a single wheel for a specific Python version and a specific platform
-# Useful for building a wheel with debug flags
+# Build wheels on all Python versions supported by the Python client for a specific platform
 
 on:
   workflow_dispatch:
     inputs:
-      python-tag:
+      # Originally we were going to have 3 workflows to build a single wheel, all wheels for a platform, and all artifacts for
+      # the Python client. But for the workflow that builds all wheels for a platform, it would have to reuse and forward
+      # most of the same inputs from the workflow that builds a single wheel, so we would have to maintain the same inputs in two places.
+      # Combining the first two workflows into one (i.e this workflow) helps maintainability.
+      python-tags:
         type: string
-        description: Python version to build the client for
-        required: true
-      platform-tag-and-runner-os:
-        description: Platform and runner OS to build the client for.
-        # We hardcode the runner OS version to make sure the wheels are always built in the same environment
-        # for each platform.
-        # It is not possible in Github Actions to create a "map" of values
-        # so we cannot map the platform tag to the runner OS.
-        # The workaround for this is to create a list of "2-tuples" that can be converted later into a real JSON list.
-        # Each 2-tuple is a list that maps the platform tag with the runner OS.
-        # Alternatively we could create a workflow job that maps the platform tag to the runner OS,
-        # but this would waste Github Actions resources if there were a calling workflow that runs this job many times
-        # to build multiple wheels.
+        description: Valid JSON list of Python tags to build the client for
+        required: false
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+      platform-tag:
+        description: Platform to build the client for.
         type: choice
         required: true
         options:
-        - '["manylinux_x86_64", "ubuntu-22.04"]'
-        - '["manylinux_aarch64", "ubuntu-22.04"]'
-        - '["macosx_x86_64", "macos-12-large"]'
-        - '["macosx_arm64", "macos-13-large"]'
-        - '["win_amd64", "windows-2022"]'
+        - manylinux_x86_64
+        - manylinux_aarch64
+        - macosx_x86_64
+        - macosx_arm64
+        - win_amd64
         # Makes debugging via gh cli easier.
-        default: '["manylinux_x86_64", "ubuntu-22.04"]'
+        default: manylinux_x86_64
+      # Ideally, we want to hardcode the runner OS version to make sure the wheels are always built in the same environment
+      # for each platform.
+      # But it is not possible in Github Actions to create a "map" of values
+      # so we cannot map the platform tag to the runner OS.
+      #
+      # Solutions we considered:
+      #
+      # 1. We could create a workflow job that maps the platform tag to the runner OS,
+      # but this would waste Github Actions resources if there were a calling workflow that runs this job many times
+      # to build multiple wheels.
+      # 2. We could create a list of string-encoded JSON lists that can be converted later into a real JSON list.
+      # Each string encoded list is a list that contains the platform tag first, and then the runner OS second.
+      # Each encoded list is a "choice" that can be selected from a workflow_dispatch input
+      # but we decided against this because workflow_call doesn't support "choice" inputs, so we would have to update
+      # the runner OS everywhere that this workflow is called by another workflow anyways.
+      #
+      # For now, just use two separate inputs for the platform tag and runner OS to keep things simple for both
+      # workflow_dispatch and workflow_call
+      runner-os:
+        description: Runner OS to build the client on
+        type: choice
+        required: true
+        options:
+        # For both x86 and ARM:
+        - ubuntu-22.04
+        # x86:
+        - macos-12-large
+        # ARM:
+        - macos-13-large
+        - windows-2022
+        default: ubuntu-22.04
       unoptimized:
         description: 'macOS or Linux: Apply -O0 flag?'
         # Windows supports a different flag to disable optimizations, but we haven't added support for it yet
@@ -56,20 +82,18 @@ on:
         type: boolean
         default: true
         required: false
-      python-tag:
-        type: string
-        description: Python version to build the client for
-        required: true
-      # Unlike in a workflow dispatch event, we want to make sure any calling workflow is explicit about the platform
-      # it wants to build for
-      # Unfortunately, we have to pass in the runner OS as input because we want to reuse the same input in the
-      # workflow_dispatch event, and this means whenever we change the runner OS used to build a wheel
-      # we also have to change it everywhere else that this workflow is being programmatically called
-      platform-tag-and-runner-os:
+      python-tags:
         type: string
         required: true
-      sha-to-build:
-        description: Python client repo commit sha to build
+      platform-tag:
+        type: string
+        required: true
+      # See comment in workflow_dispatch for the runner os is exposed as an input
+      runner-os:
+        type: string
+        required: true
+      sha-to-build-override:
+        description: For some calling workflows, they are not called from the branch we are building the wheels from
         type: string
         required: false
         default: ${{ github.sha }}
@@ -89,14 +113,14 @@ on:
 
 jobs:
   cibuildwheel:
-    runs-on: ${{ fromJSON(inputs.platform-tag-and-runner-os)[1] }}
+    strategy:
+      matrix:
+        python-tag: ${{ fromJSON(inputs.python-tags) }}
+      fail-fast: false
+    runs-on: ${{ inputs.runner-os }}
     steps:
-    - name: Get platform tag from input
-      run: echo PLATFORM_TAG=${{ fromJSON(inputs.platform-tag-and-runner-os)[0] }} >> $GITHUB_ENV
-      shell: bash
-
     - name: Get build identifier for cibuildwheel
-      run: echo "BUILD_IDENTIFIER=${{ inputs.python-tag }}-${{ env.PLATFORM_TAG }}" >> $GITHUB_ENV
+      run: echo "BUILD_IDENTIFIER=${{ matrix.python-tag }}-${{ inputs.platform-tag }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Get commit sha to show status check
@@ -126,42 +150,42 @@ jobs:
       # There is a bug that builds macOS x86_64 wheels instead, so we install this Python 3.8 native ARM build to ensure
       # the wheel is compiled for macOS arm64
       # https://cibuildwheel.pypa.io/en/stable/faq/#macos-building-cpython-38-wheels-on-arm64
-      if: ${{ inputs.python-tag == 'cp38' && env.PLATFORM_TAG == 'macosx_arm64' }}
+      if: ${{ matrix.python-tag == 'cp38' && inputs.platform-tag == 'macosx_arm64' }}
       run: |
         curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
         sudo installer -pkg /tmp/Python38.pkg -target /
         sh "/Applications/Python 3.8/Install Certificates.command"
 
     - name: 'Windows: Add msbuild to PATH'
-      if: ${{ env.PLATFORM_TAG == 'win_amd64' }}
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
       uses: microsoft/setup-msbuild@v1.1
 
     - name: 'Windows: Install C client deps'
-      if: ${{ env.PLATFORM_TAG == 'win_amd64' }}
+      if: ${{ inputs.platform-tag == 'win_amd64' }}
       run: nuget restore
       working-directory: aerospike-client-c/vs
 
     - name: 'Linux aarch64: Set up QEMU for building and testing wheels'
-      if: ${{ endsWith(env.PLATFORM_TAG, 'aarch64') }}
+      if: ${{ endsWith(inputs.platform-tag, 'aarch64') }}
       uses: docker/setup-qemu-action@v2
       with:
         platforms: arm64
 
     # Note that environment variables in Github are all strings
-    - run: echo "RUN_INTEGRATION_TESTS_IN_THIS_JOB=${{ inputs.run_tests && (startsWith(env.PLATFORM_TAG, 'manylinux') || env.PLATFORM_TAG == 'macosx_x86_64') }}" >> $GITHUB_ENV
+    - run: echo "RUN_INTEGRATION_TESTS_IN_THIS_JOB=${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}" >> $GITHUB_ENV
       shell: bash
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && env.PLATFORM_TAG == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
       uses: ./.github/actions/run-ee-server
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && env.PLATFORM_TAG == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
 
     - name: 'Linux: run Aerospike server in Docker container and configure config.conf to connect to another Docker container'
       uses: ./.github/actions/run-ee-server-for-ext-container
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && startsWith(env.PLATFORM_TAG, 'manylinux') }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
@@ -174,11 +198,11 @@ jobs:
       shell: bash
 
     - name: Set unoptimize flag
-      if: ${{ inputs.unoptimized && (startsWith(env.PLATFORM_TAG, 'manylinux') || startsWith(env.PLATFORM_TAG, 'macosx')) }}
+      if: ${{ inputs.unoptimized && (startsWith(inputs.platform-tag, 'manylinux') || startsWith(inputs.platform-tag, 'macosx')) }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
     - name: Set include dsym flag
-      if: ${{ inputs.include-debug-info-for-macos && startsWith(env.PLATFORM_TAG, 'macosx') }}
+      if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
     - name: Build wheel
@@ -187,7 +211,7 @@ jobs:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         # We are cross compiling for Linux aarch64 on x86_64 hardware, so we need to specify the target arch
-        CIBW_ARCHS_LINUX: ${{ env.PLATFORM_TAG == 'manylinux_aarch64' && 'aarch64' || 'auto' }}
+        CIBW_ARCHS_LINUX: ${{ inputs.platform-tag == 'manylinux_aarch64' && 'aarch64' || 'auto' }}
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >

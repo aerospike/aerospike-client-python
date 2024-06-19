@@ -34,8 +34,7 @@ on:
         required: false
         type: boolean
         default: false
-      # workflow_call hack
-      ref-override:
+      sha-to-build-override:
         type: string
         required: false
       # Calling workflow doesn't actually use the options below
@@ -118,20 +117,23 @@ jobs:
         ]
     uses: ./.github/workflows/cibuildwheel.yml
     with:
-      platform-tag-and-runner-os: ${{ toJson(matrix.platform-tag-and-runner-os) }}
-      ref-override: ${{ inputs.ref-override }}
+      platform-tag: ${{ matrix.platform-tag-and-runner-os[0] }}
+      runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}
+      sha-to-build-override: ${{ inputs.sha-to-build-override }}
 
   build-windows:
     uses: ./.github/workflows/cibuildwheel.yml
     with:
-      platform-tag-and-runner-os: '["win_amd64", "windows-2022"]'
-      ref-override: ${{ inputs.ref-override }}
+      platform-tag: win_amd64
+      runner-os: windows-2022
+      sha-to-build-override: ${{ inputs.sha-to-build-override }}
 
   build-macOS-m1:
     uses: ./.github/workflows/cibuildwheel.yml
     with:
-      platform-tag-and-runner-os: '["macosx_arm64", "macos-13-large"]'
-      ref-override: ${{ inputs.ref-override }}
+      platform-tag: macosx_arm64
+      runner-os: macos-13-large
+      sha-to-build-override: ${{ inputs.sha-to-build-override }}
 
   test-macOS-m1:
     needs: build-macOS-m1
