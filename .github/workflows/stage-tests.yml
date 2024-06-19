@@ -4,6 +4,7 @@ run-name: Stage tests (use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{
 # Downloads artifacts either from Github or JFrog
 # and runs category 1 (source distribution) and category 2 (binary distribution) tests
 # The purpose is to test that our artifacts work on the Linux distros / OS versions that the client supports
+# and QE doesn't have disk space for more Linux distros, so we have some tests in Github Actions
 
 on:
   workflow_dispatch:
@@ -55,8 +56,6 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 jobs:
-  # We run some source distribution (QE category 1) tests here
-  # because QE doesn't have disk space for more Linux distros
   sdist-tests:
     runs-on: ubuntu-22.04
     strategy:
@@ -129,9 +128,6 @@ jobs:
     - name: Run tests
       id: test
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
-
-# We also run some wheel (QE test category 2) tests
-# because of the same reason we have some category 1 tests in Github Actions
 
   manylinux_rhel_based:
     strategy:
