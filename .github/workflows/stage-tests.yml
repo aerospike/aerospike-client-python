@@ -48,12 +48,6 @@ on:
         type: boolean
         default: false
         description: 'Test macOS x86 wheels (unstable)'
-    secrets:
-      # Required for testing against a server RC
-      DOCKER_HUB_BOT_USERNAME:
-        required: true
-      DOCKER_HUB_BOT_PW:
-        required: true
 
 jobs:
   # We run some source distribution (QE category 1) tests here
