@@ -29,7 +29,7 @@ jobs:
     needs: build-wheels
     secrets: inherit
     with:
+      use_jfrog_builds: false
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
       test-macos-x86: ${{ inputs.test-macos-x86 }}
-      use_jfrog_builds: false
