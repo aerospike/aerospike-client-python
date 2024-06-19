@@ -38,8 +38,8 @@ jobs:
     # Need to pass in JFrog secrets
     secrets: inherit
     with:
-      ref: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
       use_jfrog_builds: true
+      jfrog-build-version-to-test: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
 
   # Stage tests have passed or skipped
   # so it is safe to update the stage branch with the changes in dev, promote the version to an RC, and rebuild and upload the RC to JFrog
