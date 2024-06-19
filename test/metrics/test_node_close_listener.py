@@ -123,9 +123,11 @@ try:
         time.sleep(10)
 
         assert node_close_called is True
+        print(f"{node_close_called} is true. Passed")
     finally:
         c.close()
 finally:
-    # Cleanup
-    subprocess.run(["aerolab", "cluster", "stop"], check=True)
-    subprocess.run(["aerolab", "cluster", "destroy", "--force"], check=True)
+    print("Cleaning up...")
+    if NODE_COUNT > 1:
+        subprocess.run(["aerolab", "cluster", "stop"], check=True)
+        subprocess.run(["aerolab", "cluster", "destroy", "--force"], check=True)
