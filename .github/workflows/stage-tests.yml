@@ -29,7 +29,7 @@ on:
       # Same strategy as workflow_call hack
       # See details in update-version workflow
       use_jfrog_builds:
-        description: If false, build artifacts from source for testing
+        description: If false, download artifacts from Github
         required: true
         type: boolean
         default: true
