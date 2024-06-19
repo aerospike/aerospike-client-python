@@ -22,6 +22,7 @@ on:
   workflow_call:
     inputs:
       # Same strategy as workflow_call hack
+      # See details in update-version workflow
       use_jfrog_builds:
         description: If false, build artifacts from source for testing
         required: true
