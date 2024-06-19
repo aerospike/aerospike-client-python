@@ -18,7 +18,8 @@ jobs:
     uses: ./.github/workflows/cibuildwheel.yml
     with:
       python-tag: cp38
-      platform-tag-and-runner-os: '["manylinux_x86_64", "ubuntu-22.04"]'
+      platform-tag: manylinux_x86_64
+      runner-os: ubuntu-22.04
 
   valgrind:
     needs: build-manylinux-wheel
