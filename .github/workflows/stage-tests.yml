@@ -115,33 +115,11 @@ jobs:
   wheel-tests:
     strategy:
       matrix:
-        distro: [
-          "amazonlinux:2023",
-          "ubuntu:22.04",
-          "python:3.8",
-          "python:3.9",
-          "python:3.10",
-          "python:3.11",
-          "python:3.12",
-        ]
-        python-version: [
-          # Python version, Python tag
-          ["3.8", "cp38"],
-          ["3.9", "cp39"],
-          ["3.10", "cp310"],
-          ["3.11", "cp311"],
-          ["3.12", "cp312"],
-        ]
         platform: [
           # Platform in artifact file name, Docker platform
           ["x86_64", "linux/amd64"],
           ["aarch64", "linux/arm64"],
         ]
-        # Exclude all matrix combinations, then selectively pick the combinations of distros, python versions, and CPU archs
-        # we want to test
-        exclude:
-          - platform: ["x86_64", "linux/amd64"]
-          - platform: ["aarch64", "linux/arm64"]
         include:
           - distro: amazonlinux:2023
             python-version: ["3.9", "cp39"]
