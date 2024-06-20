@@ -115,11 +115,11 @@ jobs:
 
     - name: Get file name glob pattern for sdist
       if: ${{ inputs.use_jfrog_builds && matrix.distro-python[2] == 1 }}
-      run: echo "ARTIFACT_FILE_NAME_PATTERN='*.tar.gz'" >> $GITHUB_ENV
+      run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
 
     - name: Get file name glob pattern for sdist
       if: ${{ inputs.use_jfrog_builds && matrix.distro-python[2] == 2 }}
-      run: echo "ARTIFACT_FILE_NAME_PATTERN='*${{ matrix.distro-python[1][1] }}*manylinux*${{ matrix.platform[0] }}.whl'" >> $GITHUB_ENV
+      run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ matrix.distro-python[1][1] }}*manylinux*${{ matrix.platform[0] }}.whl" >> $GITHUB_ENV
 
     - name: Download artifact from JFrog
       if: ${{ inputs.use_jfrog_builds }}
