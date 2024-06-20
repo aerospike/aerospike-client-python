@@ -11,7 +11,7 @@ on:
     inputs:
       jfrog-build-version-to-test:
         type: string
-        required: false
+        required: true
       # Usually we wouldn't need to set the below inputs for testing changes
       # But these inputs are present throughout the workflow so we include them in workflow_dispatch to be safe
       #
