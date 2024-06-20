@@ -87,7 +87,7 @@ jobs:
         include:
           - distro-python: ["amazonlinux:2023", ["3.9", "cp39"], 1]
             platform: ["x86_64", "linux/amd64"]
-          - distro-python: ["redhat/ubi9", ["3.11", "cp311"], 1]
+          - distro-python: ["redhat/ubi9", ["3.9", "cp39"], 1]
             platform: ["x86_64", "linux/amd64"]
       fail-fast: false
     runs-on: ubuntu-22.04
