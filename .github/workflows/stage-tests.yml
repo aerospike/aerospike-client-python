@@ -123,7 +123,7 @@ jobs:
 
     - name: Download artifact from JFrog
       if: ${{ inputs.use_jfrog_builds }}
-      run: jf rt dl --no-op --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
+      run: jf rt dl --fail-no-op --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform[0] == 'aarch64' }}
