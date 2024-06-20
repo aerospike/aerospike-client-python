@@ -112,13 +112,10 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ matrix.distros[1] }} python${{ matrix.python-version }} -m pytest new_tests/
 
   # These tests use a Docker container to run the distro
-  distro-tests:
+  wheel-tests:
     strategy:
       matrix:
         distro: [
-          # Category 1
-          "redhat/ubi9",
-          # Category 2
           "amazonlinux:2023",
           "ubuntu:22.04",
           "python:3.8",
@@ -128,7 +125,7 @@ jobs:
           "python:3.12",
         ]
         python-version: [
-          # Python version
+          # Python version, Python tag
           ["3.8", "cp38"],
           ["3.9", "cp39"],
           ["3.10", "cp310"],
@@ -140,22 +137,12 @@ jobs:
           ["x86_64", "linux/amd64"],
           ["aarch64", "linux/arm64"],
         ]
-        category: [
-          1,
-          2
-        ]
         # Exclude all matrix combinations, then selectively pick the combinations of distros, python versions, and CPU archs
         # we want to test
         exclude:
-          - category: 1
-          - category: 2
+          - platform: ["x86_64", "linux/amd64"]
+          - platform: ["aarch64", "linux/arm64"]
         include:
-          # Define cat 1 tests
-          - distro: redhat/ubi9
-            python-version: ["3.9", "cp39"]
-            platform: ["x86_64", "linux/amd64"]
-            category: 1
-          # Define cat 2 tests
           - distro: amazonlinux:2023
             python-version: ["3.9", "cp39"]
           - distro: amazonlinux:2023
@@ -179,11 +166,10 @@ jobs:
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
 
-    # Ubuntu 22.04 uses Python 3.10 by default
     - uses: actions/download-artifact@v4
       if: ${{ !inputs.use_jfrog_builds }}
       with:
-        name: cp310-manylinux_${{ matrix.platform[0] }}.build
+        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.build
 
     - uses: jfrog/setup-jfrog-cli@v4
       if: ${{ inputs.use_jfrog_builds }}
@@ -193,16 +179,13 @@ jobs:
 
     - name: Download JFrog build
       if: ${{ inputs.use_jfrog_builds }}
-      run: jf rt dl --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/*cp310*manylinux*${{ matrix.platform[0] }}.whl"
+      run: jf rt dl --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/*${{ matrix.python-version[1] }}*manylinux*${{ matrix.platform[0] }}.whl"
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform[0] == 'aarch64' }}
       uses: docker/setup-qemu-action@v2
       with:
         platforms: arm64
-
-    - name: Run distro container
-      run: docker run --name Ubuntu --platform ${{ matrix.platform[1] }} --network host --detach ubuntu:22.04 tail -f /dev/null
 
     - uses: ./.github/actions/run-ee-server
       with:
@@ -210,16 +193,6 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - uses: actions/download-artifact@v4
-      with:
-        name: ${{ matrix.python-version[1] }}-manylinux_${{ matrix.platform[0] }}.build
-
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ matrix.platform[0] == 'aarch64' }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
 
     - name: Get distro container name
       run: echo DISTRO_CONTAINER_NAME="distro-container" >> $GITHUB_ENV
@@ -232,17 +205,19 @@ jobs:
       run: docker cp . ${{ env.DISTRO_CONTAINER_NAME }}:/aerospike-client-python
 
     - name: 'Amazon Linux 2023: install python 3.11 if applicable'
+      if: ${{ matrix.distro == 'amazonlinux:2023' && matrix.python-version[0] == '3.11' }}
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} yum install -y python3.11
-      if: ${{ matrix.python-version[0] == '3.11' }}
 
     - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 1)'
+      if: ${{ matrix.distro == 'ubuntu:22.04' }}
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} apt update
 
     - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 2)'
+      if: ${{ matrix.distro == 'ubuntu:22.04' }}
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} apt install python3 python3-pip -y
 
     - name: Make sure pip is installed
-      # TODO: check which distros need to run this or not
+      if: ${{ matrix.distro == 'amazonlinux:2023' || startsWith(matrix.distro, 'python') }}
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.python-version[0] }} -m ensurepip
 
     - name: Install wheel
