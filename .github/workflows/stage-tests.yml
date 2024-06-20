@@ -6,10 +6,35 @@ name: Stage tests
 # and QE doesn't have disk space for more Linux distros, so we have some tests in Github Actions
 
 on:
+  # For testing changes to this workflow only
+  workflow_dispatch:
+    inputs:
+      jfrog-build-version-to-test:
+        type: string
+        required: false
+      # Usually we wouldn't need to set the below inputs for testing changes
+      # But these inputs are present throughout the workflow so we include them in workflow_dispatch to be safe
+      #
+      # For this event, ihis input should always be set to true.
+      # Otherwise, the workflow will fail because it's downloading non-existent Github artifacts
+      use_jfrog_builds:
+        required: false
+        type: boolean
+        default: true
+      use-server-rc:
+        type: boolean
+        required: false
+        default: false
+      server-tag:
+        type: string
+        required: false
+        default: 'latest'
+      test-macos-x86:
+        required: false
+        type: boolean
+        default: false
   workflow_call:
     inputs:
-      # Same strategy as workflow_call hack
-      # See details in update-version workflow
       use_jfrog_builds:
         description: If false, download artifacts from Github
         required: true
