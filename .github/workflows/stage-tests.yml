@@ -123,7 +123,7 @@ jobs:
 
     - name: Download artifact from JFrog
       if: ${{ inputs.use_jfrog_builds }}
-      run: jf rt dl --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
+      run: jf rt dl --no-op --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
 
     - name: Set up QEMU for cross compiling arm64
       if: ${{ matrix.platform[0] == 'aarch64' }}
@@ -165,12 +165,14 @@ jobs:
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.distro-python[1][0] }} -m ensurepip
 
     - name: 'Cat 1: Install build dependencies using yum'
+      if: ${{ matrix.distro-python[2] == 1 }}
       run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
 
     - name: 'Cat 1: Install more build dependencies using pip'
+      if: ${{ matrix.distro-python[2] == 1 }}
       run: docker exec --workdir /aerospike-client-python/ ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.distro-python[1][0] }} -m pip install -r requirements.txt
 
-    - name: Install wheel
+    - name: Install distribution
       run: docker exec --workdir /aerospike-client-python/ ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.distro-python[1][0] }} -m pip install ${{ env.ARTIFACT_FILE_NAME_PATTERN }}
 
     - name: Install pytest
