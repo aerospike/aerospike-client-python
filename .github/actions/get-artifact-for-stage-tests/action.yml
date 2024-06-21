@@ -64,16 +64,16 @@ runs:
       JF_ACCESS_TOKEN: ${{ inputs.JFROG_ACCESS_TOKEN }}
 
   - name: 'Using JFrog: Get file name glob pattern for sdist'
-    if: ${{ inputs.get_from_jfrog && inputs.dist_type_to_get == 'sdist' }}
+    if: ${{ inputs.get_from_jfrog == 'true' && inputs.dist_type_to_get == 'sdist' }}
     run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
     shell: bash
 
   - name: 'Using JFrog: Get file name glob pattern for wheel'
-    if: ${{ inputs.get_from_jfrog && inputs.dist_type_to_get == 'wheel' }}
+    if: ${{ inputs.get_from_jfrog == 'true' && inputs.dist_type_to_get == 'wheel' }}
     run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ env.PYTHON_TAG }}*${{ inputs.wheel_os }}*${{ inputs.wheel_cpu_arch }}.whl" >> $GITHUB_ENV
     shell: bash
 
   - name: Download artifact from JFrog
-    if: ${{ inputs.get_from_jfrog }}
+    if: ${{ inputs.get_from_jfrog == 'true' }}
     run: jf rt dl --fail-no-op --flat --build python-client/${{ inputs.jfrog_build_version }} "${{ inputs.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
     shell: bash
