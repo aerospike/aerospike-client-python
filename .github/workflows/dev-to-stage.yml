@@ -8,6 +8,7 @@ jobs:
   # We want to skip the stage tests if the changes made between dev and stage wouldn't affect the results of the stage tests
   compare-latest-dev-tag-and-stage:
     outputs:
+      # This is always available, but the stage tests only use it if they're being run (i.e not skipped)
       latest-dev-tag: ${{ steps.get-dev-tag.outputs.latest-dev-tag }}
       run_stage_tests: ${{ steps.run_stage_tests.outputs.run_stage_tests }}
     runs-on: ubuntu-22.04
@@ -30,13 +31,16 @@ jobs:
       run: echo run_stage_tests=${{ env.NUM_FILES_CHANGED != '0' }} >> $GITHUB_OUTPUT
       id: run_stage_tests
 
-  run-stage-tests:
+  run-stage-tests-on-jfrog-artifacts:
     needs: compare-latest-dev-tag-and-stage
+    # All job outputs are unicode strings
     if: ${{ needs.compare-latest-dev-tag-and-stage.outputs.run_stage_tests == 'true' }}
     uses: ./.github/workflows/stage-tests.yml
-    with:
-      ref: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
+    # Need to pass in JFrog secrets
     secrets: inherit
+    with:
+      use_jfrog_builds: true
+      jfrog-build-version-to-test: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}
 
   # Stage tests have passed or skipped
   # so it is safe to update the stage branch with the changes in dev, promote the version to an RC, and rebuild and upload the RC to JFrog
@@ -46,10 +50,10 @@ jobs:
   # It's easier to just add this manual check once to a reusable workflow that wraps around all the subsequent jobs
   bump-stage-and-upload-to-jfrog:
     needs: [
-      run-stage-tests,
+      run-stage-tests-on-jfrog-artifacts,
       compare-latest-dev-tag-and-stage
     ]
-    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && (needs.run-stage-tests.result == 'success' || needs.run-stage-tests.result == 'skipped') }}
+    if: ${{ !cancelled() && needs.compare-latest-dev-tag-and-stage.result == 'success' && (needs.run-stage-tests-on-jfrog-artifacts.result == 'success' || needs.run-stage-tests-on-jfrog-artifacts.result == 'skipped') }}
     uses: ./.github/workflows/bump-stage-and-upload-to-jfrog.yml
     with:
       passed-dev-tag: ${{ needs.compare-latest-dev-tag-and-stage.outputs.latest-dev-tag }}

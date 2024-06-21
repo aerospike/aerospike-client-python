@@ -51,6 +51,11 @@ jobs:
       version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
     secrets: inherit
 
+  # See reason for deleting artifacts in dev-workflow-p2.yml
+  delete-artifacts:
+    needs: upload-rc-artifacts-to-jfrog
+    uses: ./.github/workflows/delete-artifacts.yml
+
   ff-dev-to-stage:
     name: Fast forward dev branch to stage branch to include the bump to RC commit
     needs: promote-dev-build-to-rc
