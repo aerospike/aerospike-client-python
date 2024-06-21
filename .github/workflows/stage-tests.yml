@@ -6,33 +6,6 @@ name: Stage tests
 # and QE doesn't have enough disk space for more Linux distros, so we have some tests here in Github Actions
 
 on:
-  # For testing changes to this workflow only
-  workflow_dispatch:
-    inputs:
-      jfrog-build-version-to-test:
-        type: string
-        default: '15.0.1rc3'
-        required: true
-      # For workflow_dispatch, this input should always be set to true.
-      # Otherwise, the workflow will fail because it's downloading non-existent Github artifacts
-      use_jfrog_builds:
-        type: boolean
-        required: false
-        default: true
-      # Usually we wouldn't need to set the below inputs for testing changes to this workflow
-      # But these inputs are present throughout the workflow so we include them in workflow_dispatch to be safe
-      use-server-rc:
-        type: boolean
-        required: false
-        default: false
-      server-tag:
-        type: string
-        required: false
-        default: 'latest'
-      test-macos-x86:
-        required: false
-        type: boolean
-        default: true
   workflow_call:
     inputs:
       use_jfrog_builds:
@@ -99,7 +72,7 @@ jobs:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
         sparse-checkout: |
           test
-          .github/actions/get-artifacts-for-stage-tests
+          .github/actions/get-artifact-for-stage-tests
 
     # Map test case tuple entries to env vars
     - run: echo "DISTRO_DOCKER_IMAGE_AND_TAG=${{ matrix.test-case[0] }}" >> $GITHUB_ENV
@@ -107,7 +80,7 @@ jobs:
     - run: echo "DISTRO_DOCKER_IAMGE_PLATFORM=${{ matrix.test-case[2] }}" >> $GITHUB_ENV
     - run: echo "PYTHON_VERSION=${{ matrix.test-case[3] }}" >> $GITHUB_ENV
 
-    - uses: ./.github/actions/get-artifacts-for-stage-tests
+    - uses: ./.github/actions/get-artifact-for-stage-tests
       with:
         get_from_jfrog: ${{ inputs.use_jfrog_builds }}
         # Only used if above input is true
@@ -192,7 +165,7 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.runner-os }}
     steps:
-    - uses: ./.github/actions/get-artifacts-for-stage-tests
+    - uses: ./.github/actions/get-artifact-for-stage-tests
       with:
         get_from_jfrog: ${{ inputs.use_jfrog_builds }}
         # Only used if above input is true
