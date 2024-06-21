@@ -460,7 +460,7 @@ jobs:
       run: sphinx-build -b linkcheck . links
       working-directory: doc
 
-  metrics-tests:
+  test-metrics-node-close-listener:
     needs: build
     runs-on: ubuntu-latest
     steps:
@@ -480,4 +480,22 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
     - run: python3 test_node_close_listener.py
+      working-directory: test/metrics
+
+  test-metrics-cluster-name:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+    - run: python3 -m pip install *.whl
+    - run: python3 -m pip install -r requirements.txt
+      working-directory: test/metrics
+    - run: python3 test_cluster_name.py
       working-directory: test/metrics
