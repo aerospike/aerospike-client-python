@@ -42,7 +42,7 @@ runs:
   - name: 'Cat 2: Get Python tag for build identifier'
     if: ${{ inputs.dist_type_to_get == 'wheel' }}
     # example: 3.9 -> cp39
-    run: echo "PYTHON_TAG=cp$(echo ${{ inputs.python_version }}) | tr -d '.')" >> $GITHUB_ENV
+    run: echo "PYTHON_TAG=cp$(echo ${{ inputs.python_version }} | tr -d '.')" >> $GITHUB_ENV
     shell: bash
 
   - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'wheel' }}
