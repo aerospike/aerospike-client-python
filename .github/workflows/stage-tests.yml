@@ -3,7 +3,7 @@ name: Stage tests
 # Downloads artifacts either from Github or JFrog
 # and runs category 1 (source distribution) and category 2 (binary distribution) tests
 # The purpose is to test that our artifacts work on the Linux distros / OS versions that the client supports
-# and QE doesn't have disk space for more Linux distros, so we have some tests in Github Actions
+# and QE doesn't have enough disk space for more Linux distros, so we have some tests here in Github Actions
 
 on:
   # For testing changes to this workflow only
@@ -63,193 +63,117 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 jobs:
-  # These tests use a Docker container to run the distro
-  distro-tests:
+  stage-tests:
     strategy:
       matrix:
-        platform: [
-          # Platform in artifact file name, Docker platform
-          ["x86_64", "linux/amd64"],
-          ["aarch64", "linux/arm64"],
+        test-case: [
+          # Docker image + tag, test category, Docker image platform (cpu arch), Python version
+          ["amazonlinux:2023", 2, "linux/amd64", "3.9"],
+          ["amazonlinux:2023", 2, "linux/arm64", "3.9"],
+          ["amazonlinux:2023", 2, "linux/amd64", "3.11"],
+          ["amazonlinux:2023", 2, "linux/arm64", "3.11"],
+          ["ubuntu:22.04", 2, "linux/amd64", "3.10"],
+          ["ubuntu:22.04", 2, "linux/arm64", "3.10"],
+          # Bookworm is Debian 12
+          ["python:3.8-bookworm", 2, "linux/amd64", "3.8"],
+          ["python:3.8-bookworm", 2, "linux/arm64", "3.8"],
+          ["python:3.9-bookworm", 2, "linux/amd64", "3.9"],
+          ["python:3.9-bookworm", 2, "linux/arm64", "3.9"],
+          ["python:3.10-bookworm", 2, "linux/amd64", "3.10"],
+          ["python:3.10-bookworm", 2, "linux/arm64", "3.10"],
+          ["python:3.11-bookworm", 2, "linux/amd64", "3.11"],
+          ["python:3.11-bookworm", 2, "linux/arm64", "3.11"],
+          ["python:3.12-bookworm", 2, "linux/amd64", "3.12"],
+          ["python:3.12-bookworm", 2, "linux/arm64", "3.12"],
+          ["amazonlinux:2023", 1, "linux/amd64", "3.9"],
+          ["redhat/ubi9", 1, "linux/amd64", "3.9"],
         ]
-        distro-python: [
-          # Docker image + tag, Python version, Python tag, test category
-          ["amazonlinux:2023", ["3.9", "cp39"], 2],
-          ["amazonlinux:2023", ["3.11", "cp311"], 2],
-          ["ubuntu:22.04", ["3.10", "cp310"], 2],
-          # Debian 12 (bookworm)
-          ["python:3.8-bookworm", ["3.8", "cp38"], 2],
-          ["python:3.9-bookworm", ["3.9", "cp39"], 2],
-          ["python:3.10-bookworm", ["3.10", "cp310"], 2],
-          ["python:3.11-bookworm", ["3.11", "cp311"], 2],
-          ["python:3.12-bookworm", ["3.12", "cp312"], 2]
-        ]
-        include:
-          - distro-python: ["amazonlinux:2023", ["3.9", "cp39"], 1]
-            platform: ["x86_64", "linux/amd64"]
-          - distro-python: ["redhat/ubi9", ["3.9", "cp39"], 1]
-            platform: ["x86_64", "linux/amd64"]
       fail-fast: false
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
-
-    - if: ${{ !inputs.use_jfrog_builds && matrix.distro-python[2] == 1 }}
-      run: echo "GH_ARTIFACT_NAME=sdist" >> $GITHUB_ENV
-
-    - if: ${{ !inputs.use_jfrog_builds && matrix.distro-python[2] == 2 }}
-      run: echo "GH_ARTIFACT_NAME=${{ matrix.distro-python[1][1] }}-manylinux_${{ matrix.platform[0] }}" >> $GITHUB_ENV
-
-    - uses: actions/download-artifact@v4
-      if: ${{ !inputs.use_jfrog_builds }}
-      with:
-        name: ${{ env.GH_ARTIFACT_NAME }}.build
-
-    - uses: jfrog/setup-jfrog-cli@v4
-      if: ${{ inputs.use_jfrog_builds }}
-      env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
-    - name: Get file name glob pattern for sdist
-      if: ${{ inputs.use_jfrog_builds && matrix.distro-python[2] == 1 }}
-      run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
-
-    - name: Get file name glob pattern for sdist
-      if: ${{ inputs.use_jfrog_builds && matrix.distro-python[2] == 2 }}
-      run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ matrix.distro-python[1][1] }}*manylinux*${{ matrix.platform[0] }}.whl" >> $GITHUB_ENV
-
-    - name: Download artifact from JFrog
-      if: ${{ inputs.use_jfrog_builds }}
-      run: jf rt dl --fail-no-op --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
-
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ matrix.platform[0] == 'aarch64' }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
-
-    - uses: ./.github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Get distro container name
-      run: echo DISTRO_CONTAINER_NAME="distro-container" >> $GITHUB_ENV
-
-    - name: Run distro container
-      # Run distro container on host network to access the server Docker container using localhost
-      run: docker run --name ${{ env.DISTRO_CONTAINER_NAME }} --platform ${{ matrix.platform[1] }} --network host --detach ${{ matrix.distro-python[0] }} tail -f /dev/null
-
-    - name: Copy repo to container
-      run: docker cp . ${{ env.DISTRO_CONTAINER_NAME }}:/aerospike-client-python
-
-    - name: 'Amazon Linux 2023: install python 3.11 if applicable'
-      if: ${{ matrix.distro-python[0] == 'amazonlinux:2023' && matrix.distro-python[1][0] == '3.11' }}
-      run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} yum install -y python3.11
-
-    - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 1)'
-      if: ${{ matrix.distro-python[0] == 'ubuntu:22.04' }}
-      run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} apt update
-
-    - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 2)'
-      if: ${{ matrix.distro-python[0] == 'ubuntu:22.04' }}
-      run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} apt install python3 python3-pip -y
-
-    - name: Make sure pip is installed
-      if: ${{ matrix.distro-python[0] == 'amazonlinux:2023' || matrix.distro-python[0] == 'redhat/ubi9' || startsWith(matrix.distro-python[0], 'python') }}
-      run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.distro-python[1][0] }} -m ensurepip
-
-    - name: 'Cat 1: Install build dependencies using yum'
-      if: ${{ matrix.distro-python[2] == 1 }}
-      run: docker exec ${{ env.DISTRO_CONTAINER_NAME }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
-
-    - name: 'Cat 1: Install more build dependencies using pip'
-      if: ${{ matrix.distro-python[2] == 1 }}
-      run: docker exec --workdir /aerospike-client-python/ ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.distro-python[1][0] }} -m pip install -r requirements.txt
-
-    - name: Install distribution
-      run: docker exec --workdir /aerospike-client-python/ ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.distro-python[1][0] }} -m pip install ${{ env.ARTIFACT_FILE_NAME_PATTERN }}
-
-    - name: Install pytest
-      run: docker exec --workdir /aerospike-client-python/test ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.distro-python[1][0] }} -m pip install pytest -c requirements.txt
-
-    - name: Run tests
-      id: test
-      run: docker exec --workdir /aerospike-client-python/test ${{ env.DISTRO_CONTAINER_NAME }} python${{ matrix.distro-python[1][0] }} -m pytest new_tests/
+    uses: ./.github/workflows/stage-test.yml
+    with:
+      runner-os: ubuntu-22.04
+      linux-distro-docker-image-and-tag: ${{ matrix.test-case[0] }}
+      test-category: ${{ matrix.test-case[1] }}
+      linux-distro-cpu-platform: ${{ matrix.test-case[2] }}
+      use_jfrog_builds: ${{ inputs.use_jfrog_builds }}
+      jfrog-build-version: ${{ inputs.jfrog-build-version-to-test }}
+      python-version: ${{ matrix.test-case[3] }}
+      use-server-rc: ${{ inputs.use-server-rc }}
+      server-tag: ${{ inputs.server-tag }}
 
   macOS:
     if: ${{ inputs.test-macos-x86 }}
     strategy:
       matrix:
-        macos-version: [
-          'macos-13',
-          'macos-14-large'
+        runner-os: [
+          macos-13,
+          macos-14-large
         ]
         python-version: [
-          ["3.8", "cp38"],
-          ["3.9", "cp39"],
-          ["3.10", "cp310"],
-          ["3.11", "cp311"],
-          ["3.12", "cp312"]
+          "3.8",
+          "3.9",
+          "3.10",
+          "3.11",
+          "3.12",
         ]
       fail-fast: false
-    runs-on: ${{ matrix.macos-version }}
-    steps:
-    - uses: actions/checkout@v4
-      with:
-        ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
+    uses: ./.github/workflows/stage-test.yml
+    with:
+      runner-os: ${{ matrix.runner-os }}
+      test-category: 2
+      use_jfrog_builds: ${{ inputs.use_jfrog_builds }}
+      jfrog-build-version: ${{ inputs.jfrog-build-version-to-test }}
+      python-version: ${{ matrix.python-version }}
+      use-server-rc: ${{ inputs.use-server-rc }}
+      server-tag: ${{ inputs.server-tag }}
 
-    - uses: actions/download-artifact@v4
-      if: ${{ !inputs.use_jfrog_builds }}
-      with:
-        name: ${{ matrix.python-version[1] }}-macosx_x86_64.build
+    # steps:
+    # - uses: actions/download-artifact@v4
+    #   if: ${{ !inputs.use_jfrog_builds }}
+    #   with:
+    #     name: ${{ matrix.python-version[1] }}-macosx_x86_64.build
 
-    - uses: jfrog/setup-jfrog-cli@v4
-      if: ${{ inputs.use_jfrog_builds }}
-      env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+    # - uses: jfrog/setup-jfrog-cli@v4
+    #   if: ${{ inputs.use_jfrog_builds }}
+    #   env:
+    #     JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+    #     JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
-    - name: Download JFrog build
-      if: ${{ inputs.use_jfrog_builds }}
-      run: jf rt dl --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/*${{ matrix.python-version[1] }}*macosx*x86_64.whl"
+    # - name: Download JFrog build
+    #   if: ${{ inputs.use_jfrog_builds }}
+    #   run: jf rt dl --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/*${{ matrix.python-version[1] }}*macosx*x86_64.whl"
 
-    - uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version[0] }}
+    # - uses: actions/setup-python@v4
+    #   with:
+    #     python-version: ${{ matrix.python-version[0] }}
 
-    - name: Install Docker Engine
-      run: brew install colima
+    # - name: Install Docker Engine
+    #   run: brew install colima
 
-    - name: Install Docker client
-      run: brew install docker
+    # - name: Install Docker client
+    #   run: brew install docker
 
-    - name: Start Docker Engine
-      run: colima start
+    # - name: Start Docker Engine
+    #   run: colima start
 
-    - uses: ./.github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    # - uses: ./.github/actions/run-ee-server
+    #   with:
+    #     use-server-rc: ${{ inputs.use-server-rc }}
+    #     server-tag: ${{ inputs.server-tag }}
+    #     docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+    #     docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - name: Wait for server to be ready
-      run: sleep 5
+    # - name: Wait for server to be ready
+    #   run: sleep 5
 
-    - name: Install wheel
-      run: python3 -m pip install *.whl
+    # - name: Install wheel
+    #   run: python3 -m pip install *.whl
 
-    - name: Install test dependencies
-      run: python3 -m pip install pytest -c requirements.txt
-      working-directory: test
+    # - name: Install test dependencies
+    #   run: python3 -m pip install pytest -c requirements.txt
+    #   working-directory: test
 
-    - name: Run tests
-      run: python3 -m pytest new_tests/
-      id: test
-      working-directory: test
+    # - name: Run tests
+    #   run: python3 -m pytest new_tests/
+    #   id: test
+    #   working-directory: test
