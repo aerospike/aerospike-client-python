@@ -96,7 +96,9 @@ jobs:
       uses: actions/checkout@v4
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
-        sparse-checkout: test
+        sparse-checkout: |
+          test/
+          .github/actions/get-artifacts-for-stage-tests/
 
     # Map test case tuple entries to env vars
     - run: echo "DISTRO_DOCKER_IMAGE_AND_TAG=${{ matrix.test-case[0] }}" >> $GITHUB_ENV
