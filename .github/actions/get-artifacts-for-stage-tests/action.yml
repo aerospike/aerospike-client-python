@@ -33,6 +33,7 @@ runs:
   - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'sdist' }}
     name: 'Cat 1: Get Github artifact name for source distribution'
     run: echo "GITHUB_ARTIFACT_NAME=sdist" >> $GITHUB_ENV
+    shell: bash
 
   # If getting a wheel from Github, construct artifact name containing that wheel
   # The artifact name is the build identifier used in cibuildwheel to build that wheel
@@ -42,9 +43,11 @@ runs:
     if: ${{ inputs.dist_type_to_get == 'wheel' }}
     # example: 3.9 -> cp39
     run: echo "PYTHON_TAG=cp$(echo ${{ inputs.python_version }}) | tr -d '.')" >> $GITHUB_ENV
+    shell: bash
 
   - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'wheel' }}
     run: echo "GITHUB_ARTIFACT_NAME=${{ env.PYTHON_TAG }}-${{ inputs.wheel_os }}_${{ inputs.wheel_cpu_arch }}.build" >> $GITHUB_ENV
+    shell: bash
 
   - uses: actions/download-artifact@v4
     if: ${{ inputs.get_from_jfrog == 'false' }}
@@ -63,11 +66,14 @@ runs:
   - name: 'Using JFrog: Get file name glob pattern for sdist'
     if: ${{ inputs.get_from_jfrog && inputs.dist_type_to_get == 'sdist' }}
     run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
+    shell: bash
 
   - name: 'Using JFrog: Get file name glob pattern for wheel'
     if: ${{ inputs.get_from_jfrog && inputs.dist_type_to_get == 'wheel' }}
     run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ env.PYTHON_TAG }}*${{ inputs.wheel_os }}*${{ inputs.wheel_cpu_arch }}.whl" >> $GITHUB_ENV
+    shell: bash
 
   - name: Download artifact from JFrog
     if: ${{ inputs.get_from_jfrog }}
     run: jf rt dl --fail-no-op --flat --build python-client/${{ inputs.jfrog_build_version }} "${{ inputs.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
+    shell: bash
