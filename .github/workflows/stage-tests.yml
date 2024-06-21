@@ -66,13 +66,14 @@ jobs:
       LINUX_DISTRO_CONTAINER_NAME: linux-distro
     runs-on: ubuntu-22.04
     steps:
-    - name: Get tests
+    - name: Get tests and Github action scripts
       uses: actions/checkout@v4
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
         sparse-checkout: |
           test
           .github/actions/get-artifact-for-stage-tests
+          ./.github/actions/run-ee-server
 
     # Map test case tuple entries to env vars
     - run: echo "DISTRO_DOCKER_IMAGE_AND_TAG=${{ matrix.test-case[0] }}" >> $GITHUB_ENV
@@ -165,6 +166,15 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.runner-os }}
     steps:
+    - name: Get tests and Github action scripts
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
+        sparse-checkout: |
+          test
+          .github/actions/get-artifact-for-stage-tests
+          ./.github/actions/run-ee-server
+
     - uses: ./.github/actions/get-artifact-for-stage-tests
       with:
         get_from_jfrog: ${{ inputs.use_jfrog_builds }}
