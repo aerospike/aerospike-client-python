@@ -11,6 +11,7 @@ on:
     inputs:
       jfrog-build-version-to-test:
         type: string
+        default: '15.0.1rc3'
         required: true
       # For workflow_dispatch, this input should always be set to true.
       # Otherwise, the workflow will fail because it's downloading non-existent Github artifacts
@@ -31,7 +32,7 @@ on:
       test-macos-x86:
         required: false
         type: boolean
-        default: false
+        default: true
   workflow_call:
     inputs:
       use_jfrog_builds:
