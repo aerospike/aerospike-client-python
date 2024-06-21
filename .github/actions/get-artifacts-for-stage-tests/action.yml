@@ -4,6 +4,9 @@ inputs:
   get_from_jfrog:
     description: Boolean. If false, get artifacts from Github
     required: true
+  jfrog_build_version:
+    description: If getting from JFrog, what build version to get the artifact from?
+    required: false
   dist_type_to_get:
     description: 'Type of distribution to get (possible values: sdist, wheel)'
     required: true
@@ -11,10 +14,18 @@ inputs:
     description: 'If getting wheel, specify Python version of wheel (e.g possible value: 3.9)'
     required: false
   wheel_os:
-    description: 'If getting wheel, what os is it built for? (possible values: macos, linux)'
+    description: 'If getting wheel, what os is it built for? Must be inside the wheel name / cibw build identifier (possible values: macosx, manylinux)'
     required: false
   wheel_cpu_arch:
     description: 'If getting wheel, what CPU arch is it built for? Must be the same in wheel name / cibw build identifier used to build wheel (e.g possible value: x86_64)'
+  # Secrets
+  JFROG_PLATFORM_URL:
+    required: false
+  JFROG_ACCESS_TOKEN:
+    required: false
+  # Variables
+  JFROG_REPO_NAME:
+    required: false
 
 runs:
   using: 'composite'
@@ -23,8 +34,8 @@ runs:
     name: 'Cat 1: Get Github artifact name for source distribution'
     run: echo "GITHUB_ARTIFACT_NAME=sdist" >> $GITHUB_ENV
 
-  # If getting a wheel from Github, construct build identifier used to build it
-  # That build identifier is the artifact name on Github
+  # If getting a wheel from Github, construct artifact name containing that wheel
+  # The artifact name is the build identifier used in cibuildwheel to build that wheel
 
   # We also need the python tag for searching a wheel in JFrog
   - name: 'Cat 2: Get Python tag for build identifier'
@@ -32,28 +43,31 @@ runs:
     # example: 3.9 -> cp39
     run: echo "PYTHON_TAG=cp$(echo ${{ inputs.python_version }}) | tr -d '.')" >> $GITHUB_ENV
 
-  - if: ${{ !inputs.use_jfrog_builds && inputs.dist_type_to_get == 'wheel' }}
-    run: echo "GITHUB_ARTIFACT_NAME=${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG_WHEEL_TYPE }}_${{ env.PLATFORM_TAG_CPU_ARCH }}.build" >> $GITHUB_ENV
+  - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'wheel' }}
+    run: echo "GITHUB_ARTIFACT_NAME=${{ env.PYTHON_TAG }}-${{ inputs.wheel_os }}_${{ inputs.wheel_cpu_arch }}.build" >> $GITHUB_ENV
 
   - uses: actions/download-artifact@v4
-    if: ${{ !inputs.use_jfrog_builds }}
+    if: ${{ inputs.get_from_jfrog == 'false' }}
     with:
       name: ${{ env.GITHUB_ARTIFACT_NAME }}
 
+  # End codepath that downloads artifacts from Github
+  # Begin codepath that downloads from JFrog
+
   - uses: jfrog/setup-jfrog-cli@v4
-    if: ${{ inputs.use_jfrog_builds }}
+    if: ${{ inputs.get_from_jfrog == 'true' }}
     env:
-      JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-      JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+      JF_URL: ${{ inputs.JFROG_PLATFORM_URL }}
+      JF_ACCESS_TOKEN: ${{ inputs.JFROG_ACCESS_TOKEN }}
 
   - name: 'Using JFrog: Get file name glob pattern for sdist'
-    if: ${{ inputs.use_jfrog_builds && inputs.test-category == 1 }}
+    if: ${{ inputs.get_from_jfrog && inputs.dist_type_to_get == 'sdist' }}
     run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
 
   - name: 'Using JFrog: Get file name glob pattern for wheel'
-    if: ${{ inputs.use_jfrog_builds && inputs.test-category == 2 }}
-    run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ env.PYTHON_TAG }}*manylinux*${{ env.PLATFORM_TAG_CPU_ARCH }}.whl" >> $GITHUB_ENV
+    if: ${{ inputs.get_from_jfrog && inputs.dist_type_to_get == 'wheel' }}
+    run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ env.PYTHON_TAG }}*${{ inputs.wheel_os }}*${{ inputs.wheel_cpu_arch }}.whl" >> $GITHUB_ENV
 
   - name: Download artifact from JFrog
-    if: ${{ inputs.use_jfrog_builds }}
-    run: jf rt dl --fail-no-op --flat --build python-client/${{ inputs.jfrog-build-version }} "${{ vars.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"
+    if: ${{ inputs.get_from_jfrog }}
+    run: jf rt dl --fail-no-op --flat --build python-client/${{ inputs.jfrog_build_version }} "${{ inputs.JFROG_REPO_NAME }}/**/${{ env.ARTIFACT_FILE_NAME_PATTERN }}"

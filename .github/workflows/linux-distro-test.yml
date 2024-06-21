@@ -1,15 +1,10 @@
+# Category 1 or 2 test for a Linux distro (using Docker)
+
 on:
   workflow_call:
     inputs:
-      runner-os:
-        description: Linux or macOS Github runner to use
-        type: string
-        required: true
+      # Test definition
       linux-distro-docker-image-and-tag:
-        description: Only use when running a Linux distro test
-        type: string
-        required: false
-      linux-distro-cpu-platform:
         description: Only use when running a Linux distro test
         type: string
         required: false
@@ -17,6 +12,14 @@ on:
         description: Category 1 or 2
         type: number
         required: true
+      linux-distro-cpu-platform:
+        description: Only use when running a Linux distro test
+        type: string
+        required: false
+      python-version:
+        type: string
+        required: true
+      # Where to get artifact to test
       use_jfrog_builds:
         description: If false, download artifacts from Github
         required: true
@@ -26,11 +29,7 @@ on:
         description: Used only when use_jfrog_builds is true.
         type: string
         required: false
-      python-version:
-        type: string
-        required: true
-      # These will be set if use_jfrog_builds is false (i.e when someone is building and testing the artifacts in a workflow dispatch event)
-      # If use_jfrog_builds is true, only the defaults will be used
+      # Test settings
       use-server-rc:
         type: boolean
         required: false
@@ -46,14 +45,28 @@ env:
   LINUX_DISTRO_CONTAINER_NAME: linux-distro
 
 jobs:
-  stage-test:
-    runs-on: ${{ inputs.runner-os }}
+  linux-distro-test:
+    runs-on: ubuntu-22.04
     steps:
       - name: Get tests
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version || github.sha }}
           sparse-checkout: test
+
+      - uses: ./.github/actions/get-artifacts-for-stage-tests
+        with:
+          get_from_jfrog: ${{ inputs.use_jfrog_builds }}
+          # Only used if above input is true
+          jfrog_build_version: ${{ inputs.jfrog-build-version }}
+          dist_type_to_get: ${{ inputs.test-category == 2 && 'wheel' || 'sdist' }}
+          # Only used if running category 2 tests
+          wheel_python_version: ${{ inputs.python-version }}
+          wheel_os: manylinux
+          wheel_cpu_arch: ${{ inputs.linux-distro-cpu-platform == 'linux/amd64' && 'x86_64' || 'aarch64' }}
+          JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+          JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+          JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
       - name: Set up QEMU for cross compiling arm64
         if: ${{ inputs.linux-distro-cpu-platform == 'linux/arm64' }}

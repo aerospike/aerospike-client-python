@@ -12,15 +12,14 @@ on:
       jfrog-build-version-to-test:
         type: string
         required: true
-      # Usually we wouldn't need to set the below inputs for testing changes
-      # But these inputs are present throughout the workflow so we include them in workflow_dispatch to be safe
-      #
-      # For this event, ihis input should always be set to true.
+      # For workflow_dispatch, this input should always be set to true.
       # Otherwise, the workflow will fail because it's downloading non-existent Github artifacts
       use_jfrog_builds:
-        required: false
         type: boolean
+        required: false
         default: true
+      # Usually we wouldn't need to set the below inputs for testing changes to this workflow
+      # But these inputs are present throughout the workflow so we include them in workflow_dispatch to be safe
       use-server-rc:
         type: boolean
         required: false
@@ -44,7 +43,7 @@ on:
         description: Used only when use_jfrog_builds is true.
         type: string
         required: false
-      # These will be set if use_jfrog_builds is false (i.e when someone is building and testing the artifacts in a workflow dispatch event)
+      # These will be set if use_jfrog_builds is false (i.e when someone is building the artifacts from scratch and stage testing them in a calling workflow)
       # If use_jfrog_builds is true, only the defaults will be used
       use-server-rc:
         type: boolean
@@ -89,15 +88,20 @@ jobs:
           ["redhat/ubi9", 1, "linux/amd64", "3.9"],
         ]
       fail-fast: false
-    uses: ./.github/workflows/stage-test.yml
+    # We use a reusable workflow to assign each matrix tuple to inputs
+    # This makes the linux distro test code more readable
+    # Otherwise we would have to refer to each tuple entry using indices
+    uses: ./.github/workflows/linux-distro-test.yml
     with:
-      runner-os: ubuntu-22.04
+      # Test definition
       linux-distro-docker-image-and-tag: ${{ matrix.test-case[0] }}
       test-category: ${{ matrix.test-case[1] }}
       linux-distro-cpu-platform: ${{ matrix.test-case[2] }}
+      python-version: ${{ matrix.test-case[3] }}
+      # JFrog settings
       use_jfrog_builds: ${{ inputs.use_jfrog_builds }}
       jfrog-build-version: ${{ inputs.jfrog-build-version-to-test }}
-      python-version: ${{ matrix.test-case[3] }}
+      # Testing inputs
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
 
@@ -117,63 +121,52 @@ jobs:
           "3.12",
         ]
       fail-fast: false
-    uses: ./.github/workflows/stage-test.yml
-    with:
-      runner-os: ${{ matrix.runner-os }}
-      test-category: 2
-      use_jfrog_builds: ${{ inputs.use_jfrog_builds }}
-      jfrog-build-version: ${{ inputs.jfrog-build-version-to-test }}
-      python-version: ${{ matrix.python-version }}
-      use-server-rc: ${{ inputs.use-server-rc }}
-      server-tag: ${{ inputs.server-tag }}
+    runs-on: ${{ matrix.runner-os }}
+    steps:
+    - uses: ./.github/actions/get-artifacts-for-stage-tests
+      with:
+        get_from_jfrog: ${{ inputs.use_jfrog_builds }}
+        # Only used if above input is true
+        jfrog_build_version: ${{ inputs.jfrog-build-version-to-test }}
+        dist_type_to_get: 'wheel'
+        wheel_python_version: ${{ matrix.python-version }}
+        wheel_os: macosx
+        wheel_cpu_arch: x86_64
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
-    # steps:
-    # - uses: actions/download-artifact@v4
-    #   if: ${{ !inputs.use_jfrog_builds }}
-    #   with:
-    #     name: ${{ matrix.python-version[1] }}-macosx_x86_64.build
+    - uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
 
-    # - uses: jfrog/setup-jfrog-cli@v4
-    #   if: ${{ inputs.use_jfrog_builds }}
-    #   env:
-    #     JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-    #     JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+    - name: Install Docker Engine
+      run: brew install colima
 
-    # - name: Download JFrog build
-    #   if: ${{ inputs.use_jfrog_builds }}
-    #   run: jf rt dl --flat --build python-client/${{ inputs.jfrog-build-version-to-test }} "${{ vars.JFROG_REPO_NAME }}/**/*${{ matrix.python-version[1] }}*macosx*x86_64.whl"
+    - name: Install Docker client
+      run: brew install docker
 
-    # - uses: actions/setup-python@v4
-    #   with:
-    #     python-version: ${{ matrix.python-version[0] }}
+    - name: Start Docker Engine
+      run: colima start
 
-    # - name: Install Docker Engine
-    #   run: brew install colima
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    # - name: Install Docker client
-    #   run: brew install docker
+    - name: Wait for server to be ready
+      run: sleep 5
 
-    # - name: Start Docker Engine
-    #   run: colima start
+    - name: Install wheel
+      run: python3 -m pip install *.whl
 
-    # - uses: ./.github/actions/run-ee-server
-    #   with:
-    #     use-server-rc: ${{ inputs.use-server-rc }}
-    #     server-tag: ${{ inputs.server-tag }}
-    #     docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-    #     docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+    - name: Install test dependencies
+      run: python3 -m pip install pytest -c requirements.txt
+      working-directory: test
 
-    # - name: Wait for server to be ready
-    #   run: sleep 5
-
-    # - name: Install wheel
-    #   run: python3 -m pip install *.whl
-
-    # - name: Install test dependencies
-    #   run: python3 -m pip install pytest -c requirements.txt
-    #   working-directory: test
-
-    # - name: Run tests
-    #   run: python3 -m pytest new_tests/
-    #   id: test
-    #   working-directory: test
+    - name: Run tests
+      run: python3 -m pytest new_tests/
+      id: test
+      working-directory: test
