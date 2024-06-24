@@ -6,6 +6,7 @@ import aerospike
 from aerospike_helpers.metrics import MetricsListeners, MetricsPolicy, Cluster, Node, ConnectionStats, NodeMetrics
 
 
+# Copied from new_tests/test_metrics.py
 # Tests that the Node object returned from the node_close callback has these fields
 # and makes sure these fields have the correct types
 def test_node_is_populated(node: Node):
