@@ -1,5 +1,5 @@
 name: 'Get artifact for stage tests'
-description: 'Outputs artifact either from Github artifacts or JFrog to current working dir'
+description: 'Downloads artifact either from Github artifacts or JFrog to current working dir'
 inputs:
   get_from_jfrog:
     description: Boolean. If false, get artifacts from Github
@@ -54,7 +54,8 @@ runs:
     with:
       name: ${{ env.GITHUB_ARTIFACT_NAME }}
 
-  # We need the file name pattern to install the artifact using pip later
+  # Either way when we download from JFrog or Github,
+  # we need the file name pattern to install the artifact using pip later on
 
   - name: 'Using JFrog: Get file name glob pattern for sdist'
     if: ${{ inputs.dist_type_to_get == 'sdist' }}
