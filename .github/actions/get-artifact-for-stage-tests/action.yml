@@ -54,6 +54,16 @@ runs:
     with:
       name: ${{ env.GITHUB_ARTIFACT_NAME }}
 
+  # We need the file name pattern to install the artifact using pip later
+
+  - name: 'Using JFrog: Get file name glob pattern for sdist'
+    run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
+    shell: bash
+
+  - name: 'Using JFrog: Get file name glob pattern for wheel'
+    run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ env.PYTHON_TAG }}*${{ inputs.wheel_os }}*${{ inputs.wheel_cpu_arch }}.whl" >> $GITHUB_ENV
+    shell: bash
+
   # End codepath that downloads artifacts from Github
   # Begin codepath that downloads from JFrog
 
@@ -62,16 +72,6 @@ runs:
     env:
       JF_URL: ${{ inputs.JFROG_PLATFORM_URL }}
       JF_ACCESS_TOKEN: ${{ inputs.JFROG_ACCESS_TOKEN }}
-
-  - name: 'Using JFrog: Get file name glob pattern for sdist'
-    if: ${{ inputs.get_from_jfrog == 'true' && inputs.dist_type_to_get == 'sdist' }}
-    run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
-    shell: bash
-
-  - name: 'Using JFrog: Get file name glob pattern for wheel'
-    if: ${{ inputs.get_from_jfrog == 'true' && inputs.dist_type_to_get == 'wheel' }}
-    run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ env.PYTHON_TAG }}*${{ inputs.wheel_os }}*${{ inputs.wheel_cpu_arch }}.whl" >> $GITHUB_ENV
-    shell: bash
 
   - name: Download artifact from JFrog
     if: ${{ inputs.get_from_jfrog == 'true' }}
