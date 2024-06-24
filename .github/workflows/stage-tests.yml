@@ -77,7 +77,7 @@ jobs:
     # Map test case tuple entries to env vars
     - run: echo "DISTRO_DOCKER_IMAGE_AND_TAG=${{ matrix.test-case[0] }}" >> $GITHUB_ENV
     - run: echo "TEST_CATEGORY=${{ matrix.test-case[1] }}" >> $GITHUB_ENV
-    - run: echo "DISTRO_DOCKER_IAMGE_PLATFORM=${{ matrix.test-case[2] }}" >> $GITHUB_ENV
+    - run: echo "DISTRO_DOCKER_IMAGE_PLATFORM=${{ matrix.test-case[2] }}" >> $GITHUB_ENV
     - run: echo "PYTHON_VERSION=${{ matrix.test-case[3] }}" >> $GITHUB_ENV
 
     - uses: ./.github/actions/get-artifact-for-stage-tests
