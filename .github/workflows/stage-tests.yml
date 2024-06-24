@@ -66,6 +66,8 @@ jobs:
       LINUX_DISTRO_CONTAINER_NAME: linux-distro
     runs-on: ubuntu-22.04
     steps:
+    # TODO: the checkout code is also duplicated in the macOS stage tests
+    # But it's only a few lines of code so I didn't bother.
     - name: Get tests and Github action scripts
       uses: actions/checkout@v4
       with:
@@ -74,7 +76,7 @@ jobs:
           test
           .github
 
-    # Map test case tuple entries to env vars
+    # Map test case tuple entries to env vars to make code easier to read
     - run: echo "DISTRO_DOCKER_IMAGE_AND_TAG=${{ matrix.test-case[0] }}" >> $GITHUB_ENV
     - run: echo "TEST_CATEGORY=${{ matrix.test-case[1] }}" >> $GITHUB_ENV
     - run: echo "DISTRO_DOCKER_IMAGE_PLATFORM=${{ matrix.test-case[2] }}" >> $GITHUB_ENV
@@ -83,10 +85,10 @@ jobs:
     - uses: ./.github/actions/get-artifact-for-stage-tests
       with:
         get_from_jfrog: ${{ inputs.use_jfrog_builds }}
-        # Only used if above input is true
+        # This input is only used if above input is true
         jfrog_build_version: ${{ inputs.jfrog-build-version-to-test }}
         dist_type_to_get: ${{ env.TEST_CATEGORY == '2' && 'wheel' || 'sdist' }}
-        # Only used if running category 2 tests
+        # wheel* inputs are used only if running category 2 tests
         wheel_python_version: ${{ env.PYTHON_VERSION }}
         wheel_os: manylinux
         wheel_cpu_arch: ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM == 'linux/amd64' && 'x86_64' || 'aarch64' }}
@@ -108,10 +110,10 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run distro container
-      # Run distro container on host network to access the server Docker container using localhost
-      run: docker run --name ${{ env.LINUX_DISTRO_CONTAINER_NAME }} --platform ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM }} --network host --detach ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG }} tail -f /dev/null
+      # Run distro container on host network to access the Aerospike server using localhost (without having to change config.conf)
+      run: docker run --detach --network host --platform ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM }} --name ${{ env.LINUX_DISTRO_CONTAINER_NAME }} ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG }} tail -f /dev/null
 
-    - name: Copy repo to container
+    - name: Copy repo (and artifact) to container
       run: docker cp . ${{ env.LINUX_DISTRO_CONTAINER_NAME }}:/aerospike-client-python
 
     - name: 'Amazon Linux 2023: install python 3.11 if applicable'
@@ -134,11 +136,11 @@ jobs:
       if: ${{ env.TEST_CATEGORY == '1' }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y openssl-devel glibc-devel autoconf automake libtool zlib-devel openssl-devel python-devel
 
-    - name: 'Cat 1: Install more build dependencies using pip'
+    - name: 'Cat 1: Install pip build frontend'
       if: ${{ env.TEST_CATEGORY == '1' }}
       run: docker exec --workdir /aerospike-client-python/ ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pip install -r requirements.txt
 
-    - name: Install distribution
+    - name: Install sdist or wheel distribution
       run: docker exec --workdir /aerospike-client-python/ ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pip install ${{ env.ARTIFACT_FILE_NAME_PATTERN }}
 
     - name: Install pytest
@@ -175,8 +177,8 @@ jobs:
 
     - uses: ./.github/actions/get-artifact-for-stage-tests
       with:
+        # See comments in linux stage tests for how this works
         get_from_jfrog: ${{ inputs.use_jfrog_builds }}
-        # Only used if above input is true
         jfrog_build_version: ${{ inputs.jfrog-build-version-to-test }}
         dist_type_to_get: 'wheel'
         wheel_python_version: ${{ matrix.python-version }}
