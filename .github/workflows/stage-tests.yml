@@ -67,7 +67,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     # TODO: the checkout code is also duplicated in the macOS stage tests
-    # But it's only a few lines of code so I didn't bother.
+    # But it's only a few lines of code so I didn't bother to create a composite action for it.
     - name: Get tests and Github action scripts
       uses: actions/checkout@v4
       with:
