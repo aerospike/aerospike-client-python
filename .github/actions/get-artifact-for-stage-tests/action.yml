@@ -32,7 +32,7 @@ runs:
   steps:
   - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'sdist' }}
     name: 'Cat 1: Get Github artifact name for source distribution'
-    run: echo "GITHUB_ARTIFACT_NAME=sdist" >> $GITHUB_ENV
+    run: echo "GITHUB_ARTIFACT_NAME=sdist.build" >> $GITHUB_ENV
     shell: bash
 
   # If getting a wheel from Github, construct artifact name containing that wheel
