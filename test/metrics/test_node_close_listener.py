@@ -96,7 +96,7 @@ try:
         "use_services_alternate": True
     }
     print(f"Connecting to {HOST_NAME}:{first_node_port} using Python client...")
-    c = aerospike.client(config)
+    client = aerospike.client(config)
     try:
         # Show logs to confirm that node is removed from the client's perspective
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
@@ -111,7 +111,7 @@ try:
         )
         policy = MetricsPolicy(metrics_listeners=listeners)
         print("Enabling metrics...")
-        c.enable_metrics(policy=policy)
+        client.enable_metrics(policy=policy)
 
         # Close the last node
         NODE_TO_CLOSE = NODE_COUNT
@@ -125,12 +125,12 @@ try:
 
         assert node_close_called is True
         # Need to print assert result somehow
-        print(f"node_close_called is true. Passed")
+        print("node_close_called is true. Passed")
     finally:
         # Calling close() after we lose connection to the whole cluster is safe. It will be a no-op
         # It is not explicitly documented for the Python client or C client, but this behavior was verified with C
         # client developer
-        c.close()
+        client.close()
 finally:
     print("Cleaning up...")
     if NODE_COUNT > 1:
