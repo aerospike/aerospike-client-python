@@ -123,8 +123,12 @@ try:
         time.sleep(10)
 
         assert node_close_called is True
-        print(f"{node_close_called} is true. Passed")
+        # Need to print assert result somehow
+        print(f"node_close_called is true. Passed")
     finally:
+        # Calling close() after we lose connection to the whole cluster is safe. It will be a no-op
+        # It is not explicitly documented for the Python client or C client, but this behavior was verified with C
+        # client developer
         c.close()
 finally:
     print("Cleaning up...")
