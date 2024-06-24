@@ -20,9 +20,9 @@ jobs:
 
   build-artifacts:
     needs: promote-rc-build-to-release
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-artifacts.yml
     with:
-      ref: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
+      sha-to-build-and-test-override: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog

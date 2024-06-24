@@ -19,11 +19,11 @@ jobs:
   rebuild-artifacts-with-new-dev-num:
     needs: bump-dev-number
     name: Rebuild artifacts with new dev number
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-artifacts.yml
     with:
       # On pull_request_target, the bump version commit will be ignored
       # So we must pass it manually to the workflow
-      ref: ${{ needs.bump-dev-number.outputs.bump_sha }}
+      sha-to-build-and-test-override: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets: inherit
 
   upload-to-jfrog:

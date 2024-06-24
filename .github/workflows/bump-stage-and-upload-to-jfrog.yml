@@ -35,9 +35,9 @@ jobs:
 
   rebuild-artifacts-with-rc-version:
     needs: promote-dev-build-to-rc
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-artifacts.yml
     with:
-      ref: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+      sha-to-build-and-test-override: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
 
   upload-rc-artifacts-to-jfrog:
     needs: [

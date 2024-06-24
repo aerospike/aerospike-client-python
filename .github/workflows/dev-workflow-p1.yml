@@ -24,7 +24,7 @@ on:
 
 jobs:
   test-with-server-release:
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-artifacts.yml
     with:
       run_tests: ${{ github.event_name == 'workflow_dispatch' && inputs.run_server_release_tests || true }}
     secrets: inherit

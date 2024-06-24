@@ -14,39 +14,45 @@ on:
         required: true
         type: boolean
         default: false
+      # If we are testing new server features
       use-server-rc:
         type: boolean
         required: true
         default: false
         description: 'Test against server release candidate?'
-      # If we are creating a backport and want to test an arbitrary branch against an older server version
+      # If we are creating a backport and want to test against an older server version
       server-tag:
+        type: string
         required: true
         default: 'latest'
         description: 'Server docker image tag'
 
   workflow_call:
     inputs:
-      # The "dev" tests test the artifacts against a server release
+      # The "dev" tests test the artifacts against a server
       # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
       run_tests:
         description: "Run integration tests"
         required: false
         type: boolean
         default: false
+      # Input only used in workflow_call events
       sha-to-build-and-test-override:
+        description: Some calling workflows want to specifically test on a different branch than the one the workflow is called from
         type: string
+        default: ${{ github.sha }}
         required: false
-      # Calling workflow doesn't actually use the options below
+      # Calling workflow doesn't actually use the testing options below
       # But we need to set default values for workflow calls to use
       use-server-rc:
         required: false
-        default: true
+        default: false
         type: boolean
       server-tag:
         type: string
         required: false
         default: 'latest'
+      # workflow_call hack
       is_workflow_call:
         type: boolean
         default: true
@@ -64,20 +70,31 @@ jobs:
     name: Build source distribution
     runs-on: ubuntu-22.04
     steps:
+    - name: Get commit sha to show status check
+      # The workflow_dispatch event doesn't have the sha-to-build-and-test-override input
+      # So we also want to pass the github sha that triggered that event into the set-commit-status-action, instead
+      run: echo COMMIT_SHA_FOR_STATUS_CHECK=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test-override || github.sha }} >> $GITHUB_ENV
+      shell: bash
+
+    - name: Create status check message
+      run: echo STATUS_CHECK_MESSAGE="cibuildwheel (sdist)" >> $GITHUB_ENV
+      shell: bash
+
     - name: Show job status for commit
       # If workflow_call triggered this job, github.event_name will inherit the event of the calling workflow
       # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
-      # Commit status will already be shown by the calling workflow for these events
+      # Commit status will already be shown by the calling workflow for push and pull request events, but not
+      # for other events like workflow_dispatch. so we have to do it manually
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
-        sha: ${{ github.sha }}
-        context: "Build wheels (sdist)"
+        sha: ${{ env.COMMIT_SHA_FOR_STATUS_CHECK }}
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ inputs.ref }}
+        ref: ${{ env.COMMIT_SHA_FOR_STATUS_CHECK }}
         fetch-depth: 0
 
     - name: Install build dependencies (pip packages)
@@ -98,16 +115,11 @@ jobs:
       # But we don't want to show anything if the calling workflow was triggered by these events
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ github.sha }}
+        sha: ${{ env.COMMIT_SHA_FOR_STATUS_CHECK }}
         status: ${{ job.status }}
-        context: "Build wheels (sdist)"
+        context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-  # We use separate jobs for macOS ARM64 and Windows
-  # Because when we test wheels for those two platforms, we want to check that only the builds for those respective
-  # platforms passed.
-  # For now, we cannot consolidate all the builds into one job because matrix outputs are not a feature yet
-
-  manylinux-and-macOS-x86:
+  build-wheels:
     strategy:
       matrix:
         platform-tag-and-runner-os: [
@@ -122,4 +134,7 @@ jobs:
     with:
       platform-tag: ${{ matrix.platform-tag-and-runner-os[0] }}
       runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}
-      sha-to-build-override: ${{ inputs.sha-to-build-and-test-override }}
+      sha-to-build-and-test-override: ${{ inputs.sha-to-build-and-test-override }}
+      run_tests: ${{ inputs.run_tests }}
+      use-server-rc: ${{ inputs.use-server-rc }}
+      server-tag: ${{ inputs.server-tag }}
