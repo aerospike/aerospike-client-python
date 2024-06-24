@@ -57,10 +57,12 @@ runs:
   # We need the file name pattern to install the artifact using pip later
 
   - name: 'Using JFrog: Get file name glob pattern for sdist'
+    if: ${{ inputs.dist_type_to_get == 'sdist' }}
     run: echo "ARTIFACT_FILE_NAME_PATTERN=*.tar.gz" >> $GITHUB_ENV
     shell: bash
 
   - name: 'Using JFrog: Get file name glob pattern for wheel'
+    if: ${{ inputs.dist_type_to_get == 'wheel' }}
     run: echo "ARTIFACT_FILE_NAME_PATTERN=*${{ env.PYTHON_TAG }}*${{ inputs.wheel_os }}*${{ inputs.wheel_cpu_arch }}.whl" >> $GITHUB_ENV
     shell: bash
 
