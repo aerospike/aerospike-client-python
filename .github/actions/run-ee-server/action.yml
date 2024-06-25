@@ -26,7 +26,7 @@ runs:
 
   - name: Use release server
     if: ${{ inputs.use-server-rc == 'false' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise:7.0" >> $GITHUB_ENV
+    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise:6.4" >> $GITHUB_ENV
     shell: bash
 
   - name: Use release candidate server

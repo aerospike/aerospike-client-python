@@ -1,5 +1,5 @@
 env:
-  SERVER_TAG: '7.0'
+  SERVER_TAG: '6.4'
 
 name: Build wheels
 
