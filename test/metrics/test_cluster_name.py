@@ -11,7 +11,7 @@ docker_client = docker.from_env()
 print("Running server container...")
 container = docker_client.containers.run("aerospike/aerospike-server", detach=True, ports={"3000/tcp": 3000})
 print("Waiting for server to initialize...")
-time.sleep(3)
+time.sleep(5)
 
 try:
     config = {
