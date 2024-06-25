@@ -210,7 +210,11 @@ jobs:
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
-      run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
+      # Use double quotes otherwise Windows will throw this error in cibuildwheel
+      # 'import
+      #       ^
+      # SyntaxError: EOL while scanning string literal
+      run: echo "TEST_COMMAND=python -c \"import aerospike\"" >> $GITHUB_ENV
       shell: bash
 
     - name: Otherwise, enable integration tests
