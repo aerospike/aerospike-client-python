@@ -105,7 +105,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ !inputs.use-server-rc }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
     - uses: actions/checkout@v2
       with:
