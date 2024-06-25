@@ -53,7 +53,7 @@ on:
         options:
         - ubuntu-22.04 # For both Linux x86 and ARM
         - macos-12-large # macOS x86
-        - macos-13-large # macOS ARM
+        - macos-14 # macOS ARM
         - windows-2022
         default: ubuntu-22.04
       unoptimized:
