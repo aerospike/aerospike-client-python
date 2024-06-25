@@ -497,6 +497,5 @@ jobs:
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/metrics
-    - run: docker run -d -p 3000:3000 aerospike/aerospike-server
     - run: python3 test_cluster_name.py
       working-directory: test/metrics
