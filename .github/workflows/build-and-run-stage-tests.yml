@@ -17,7 +17,7 @@ on:
       test-macos-x86:
         required: true
         type: boolean
-        default: false
+        default: true
         description: 'Test macOS x86 wheels (unstable)'
 
 jobs:
