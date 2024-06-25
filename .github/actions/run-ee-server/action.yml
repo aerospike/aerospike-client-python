@@ -26,7 +26,7 @@ runs:
 
   - name: Use release server
     if: ${{ inputs.use-server-rc == 'false' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise" >> $GITHUB_ENV
+    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise:7.0" >> $GITHUB_ENV
     shell: bash
 
   - name: Use release candidate server
@@ -36,7 +36,7 @@ runs:
 
   - name: Get default aerospike.conf from Docker server EE container
     run: |
-      docker run -d --name aerospike -p 3000-3002:3000-3002 ${SERVER_IMAGE}:7.0
+      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE
       sleep 5
       docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
       docker container stop aerospike
