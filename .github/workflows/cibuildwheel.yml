@@ -312,6 +312,7 @@ jobs:
           PYTHON_TAG=${{ matrix.python-tag }}
           PYTHON_VERSION="${PYTHON_TAG/cp/}"
           echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
+        shell: bash
 
       - name: Set default Python version we're testing via PATH env var
         uses: actions/setup-python@v5
