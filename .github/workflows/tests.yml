@@ -103,9 +103,7 @@ jobs:
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
+    - uses: ./.github/actions/setup-config-conf
 
     - name: Get number of tests
       run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
@@ -151,6 +149,8 @@ jobs:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
 
     - run: sleep 5
 
