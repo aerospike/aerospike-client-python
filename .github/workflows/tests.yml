@@ -112,18 +112,17 @@ jobs:
     needs: build-local-wheels
     strategy:
       matrix:
-        python-version: [
-          "3.8",
-          "3.9",
-          "3.10",
-          "3.11",
-          "3.12"
+        # Python version, test to run
+        test-case: [
+          [ce, "3.8"],
+          [ce, "3.9"],
+          [ce, "3.10"],
+          [ce, "3.11"],
+          [ce, "3.12"],
+          # Use oldest supported Python version by default
+          [ee-only, _],
+          [metrics-node-close-listener, _]
         ]
-        include:
-          - stubtest: false
-          # By default, run only CE tests
-          - only-ee-tests: false
-          - metrics-node-close-listener: false
       fail-fast: false
     runs-on: ubuntu-22.04
     steps:
@@ -131,42 +130,42 @@ jobs:
       with:
         submodules: recursive
 
+    - run: echo "TEST_TYPE=${{ matrix.test-case[0] }}" >> $GITHUB_ENV
+    - run: echo "PYTHON_VERSION=${{ env.TEST_TYPE == 'ce' && matrix.test-case[1] || env.LOWEST_SUPPORTED_PY_VERSION }}" >> $GITHUB_ENV
+
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: ${{ env.PYTHON_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-${{ matrix.python-version }}
+        name: wheel-${{ env.PYTHON_VERSION }}
 
-    - name: Download aerolab
-      run: wget https://github.com/aerospike/aerolab/releases/download/7.6.0-7b5bbde/aerolab-linux-amd64-7.6.0.deb
-    - name: Install aerolab
-      run: sudo dpkg -i *.deb
-    - name: Tell aerolab to use Docker
-      run: aerolab config backend -t docker
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+    - if: ${{ matrix.metrics-node-close-listener }}
+      uses: ./.github/actions/setup-aerolab
 
     - run: python3 -m pip install *.whl
 
     - name: Install test dependencies
+      if: ${{ env.TEST_TYPE == 'ce' || env.TEST_TYPE == 'ee' }}
       run: pip install -r test/requirements.txt
 
     - name: Create config file using template
+      if: ${{ env.TEST_TYPE == 'ce' || env.TEST_TYPE == 'ee' }}
       run: cp config.conf.template config.conf
       working-directory: test
 
+    # TODO: fix
     - if: ${{ endsWith(inputs.docker-image, '-rc') }}
       uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    # TODO: fix
     - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 ${{ inputs.docker-image }}:latest
+      run: docker run -d --name aerospike -p 3000:3000 ${{ inputs.docker-image }}:latest
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
@@ -304,8 +303,6 @@ jobs:
       fail-fast: false
     uses: ./.github/workflows/test-ce-for-local-build.yml
     with:
-      python-version: ${{ matrix.py-version }}
-      docker-image: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike/aerospike-server-rc' || 'aerospike/aerospike-server' }}
     secrets: inherit
 
   test-ee:
