@@ -19,8 +19,7 @@ runs:
   using: "composite"
   steps:
   - name: Install crudini to manipulate config.conf
-    # Use pipx because we are running crudini directly and not from Python
-    run: pipx install --pip-args '-c requirements.txt' crudini
+    run: pip3 install crudini -c requirements.txt
     working-directory: .github/workflows
     shell: bash
 
