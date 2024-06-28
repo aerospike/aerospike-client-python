@@ -1,11 +1,8 @@
-name: PR tests
+name: Smoke tests
 
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.8'
 
-# Trigger test workflow whenever:
-# 1. A pull request is updated (e.g with new commits)
-# 2. Commits are pushed directly to the dev, stage or master branch
 on:
   push:
     branches: ["dev*", "stage*", "master*", "v*-backport*"]
@@ -28,23 +25,57 @@ on:
         required: true
 
 jobs:
-  lint:
+  test-without-wheel:
+    strategy:
+      matrix:
+        tool: [
+          'pre-commit',
+          'sphinx',
+        ]
+        include:
+        - tool: sphinx
+          builder: linkcheck
+        - tool: sphinx
+          builder: spelling
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+
     - uses: actions/setup-python@v2
       with:
         python-version: '3.9'
         architecture: 'x64'
-    - uses: pre-commit/action@v3.0.0
 
-  build:
+    - if: ${{ matrix.tool == 'pre-commit' }}
+      uses: pre-commit/action@v3.0.0
+
+    - name: Install dependencies for using sphinx
+      run: python -m pip install -r doc/requirements.txt
+
+    - name: Check spelling
+      if: ${{ matrix.tool == 'sphinx' && matrix.builder == 'spelling' }}
+      # We don't care about the output directory since we're just running tests, not building the docs
+      run: sphinx-build -b spelling . spelling -W --keep-going
+      working-directory: doc
+
+    - name: Check links
+      if: ${{ matrix.tool == 'sphinx' && matrix.builder == 'linkcheck' }}
+      run: sphinx-build -b linkcheck . links
+      working-directory: doc
+
+  build-local-wheels:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        py-version: [
+          "3.8",
+          "3.9",
+          "3.10",
+          "3.11",
+          "3.12"
+        ]
       fail-fast: false
 
     steps:
@@ -59,8 +90,10 @@ jobs:
         architecture: 'x64'
 
     - run: sudo apt update
+
     - name: Install build dependencies (apt packages)
-      run: sudo apt install python3-dev libssl-dev -y
+      run: sudo apt install -y python3-dev libssl-dev
+
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
 
@@ -75,48 +108,80 @@ jobs:
         name: wheel-${{ matrix.py-version }}
         path: ./dist/*.whl
 
-  test-memray:
-    needs: build
-    runs-on: ubuntu-latest
+  test-using-wheel:
+    needs: build-local-wheels
+    strategy:
+      matrix:
+        # Python version, test to run
+        test-case: [
+          [ce, "3.8"],
+          [ce, "3.9"],
+          [ce, "3.10"],
+          [ce, "3.11"],
+          [ce, "3.12"],
+          # Use oldest supported Python version by default
+          [ee-only, _],
+          [metrics-node-close-listener, _]
+        ]
+      fail-fast: false
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - run: echo "TEST_TYPE=${{ matrix.test-case[0] }}" >> $GITHUB_ENV
+    - run: echo "PYTHON_VERSION=${{ env.TEST_TYPE == 'ce' && matrix.test-case[1] || env.LOWEST_SUPPORTED_PY_VERSION }}" >> $GITHUB_ENV
 
     - uses: actions/setup-python@v2
       with:
-        python-version: "3.8"
+        python-version: ${{ env.PYTHON_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.8
+        name: wheel-${{ env.PYTHON_VERSION }}
 
-    - name: Install client
-      run: pip install *.whl
+    - run: python3 -m pip install *.whl
+
+    - run: echo RUNNING_NEW_TESTS=${{ env.TEST_TYPE == 'ce' || env.TEST_TYPE == 'ee' }} >> $GITHUB_ENV
 
     - name: Install test dependencies
+      if: ${{ env.RUNNING_NEW_TESTS == 'true' }}
       run: pip install -r test/requirements.txt
 
+    # TODO: run ee server
+
+    - name: Create config file using template
+      if: ${{ env.RUNNING_NEW_TESTS == 'true' }}
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - if: ${{ env.TEST_TYPE == 'metrics-node-close-listener' }}
+      uses: ./.github/actions/setup-aerolab
+
+    # TODO: fix
+    - if: ${{ endsWith(inputs.docker-image, '-rc') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    # TODO: fix
     - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000:3000 ${{ inputs.docker-image }}:latest
 
     - name: Wait for database to be ready
       # Should be ready after 3 seconds
       run: sleep 3
 
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
-
-    - name: Get number of tests
-      run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
-      working-directory: test
-
     - name: Run tests
-      # Get number of tests since setting to 0 doesn't work properly
-      # pytest-memray currently throws a ZeroDivision error due to having a bug
-      # We ignore this for now
-      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }} || true
+      run: python -m pytest ./new_tests
       working-directory: test
+
+    - if: ${{ matrix.metrics-node-close-listener }}
+      run: python3 test_node_close_listener.py
+      working-directory: test/metrics
 
   generate-coverage-report:
     runs-on: ubuntu-latest
@@ -206,10 +271,6 @@ jobs:
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
     - uses: actions/download-artifact@v3
       with:
         name: coverage-report
@@ -223,74 +284,16 @@ jobs:
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-  stubtest:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
 
-    - run: pip install mypy
+    - run: pip install mypy -c requirements.txt
+      working-directory: .github/workflows
 
     - run: stubtest aerospike --allowlist stubtest-allowlist
 
-  # Run this when testing new server features on server release candidate
-  # to make sure the tests don't regress on the last server release.
-  test-ce-latest-release:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-    needs: build
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
-
-    - name: Run tests
-      run: python -m pytest ./new_tests
-      working-directory: test
-
   test-ce:
-    runs-on: ubuntu-latest
     needs: build
     strategy:
       matrix:
@@ -302,90 +305,9 @@ jobs:
           "3.12"
         ]
       fail-fast: false
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.py-version }}
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-${{ matrix.py-version }}
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
-
-    - name: Run Aerospike server
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
-
-    - name: Run tests
-      run: python -m pytest ./new_tests -vv
-      working-directory: test
-
-  test-lowest-supported-server:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - name: Run lowest supported server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
-
-    - name: Run tests
-      run: python -m pytest ./new_tests
-      working-directory: test
+    uses: ./.github/workflows/test-ce-for-local-build.yml
+    with:
+    secrets: inherit
 
   test-ee:
     runs-on: ubuntu-latest
@@ -410,6 +332,10 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
+    - name: Create config file using template
+      run: cp config.conf.template config.conf
+      working-directory: test
+
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
@@ -429,58 +355,6 @@ jobs:
         docker container logs aerospike
         cat ./configs/aerospike.conf
 
-  spellcheck-docs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-        architecture: 'x64'
-    - name: Install dependencies for checking spelling in docs
-      # TODO: find way to split up dependencies
-      run: python -m pip install -r doc/requirements.txt
-    - name: Check spelling
-      run: sphinx-build -b spelling . spelling -W --keep-going
-      working-directory: doc
-
-  check-links-docs:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: '3.9'
-        architecture: 'x64'
-    - name: Install documentation dependencies
-      run: python -m pip install -r doc/requirements.txt
-    - name: Check spelling
-      run: sphinx-build -b linkcheck . links
-      working-directory: doc
-
-  test-metrics-node-close-listener:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-    - name: Download aerolab
-      run: wget https://github.com/aerospike/aerolab/releases/download/7.6.0-7b5bbde/aerolab-linux-amd64-7.6.0.deb
-    - name: Install aerolab
-      run: sudo dpkg -i *.deb
-    - name: Tell aerolab to use Docker
-      run: aerolab config backend -t docker
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-    - run: python3 -m pip install *.whl
-    - run: python3 test_node_close_listener.py
-      working-directory: test/metrics
 
   test-metrics-cluster-name:
     needs: build
