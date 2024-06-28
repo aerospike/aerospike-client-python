@@ -9,7 +9,7 @@ runs:
   - name: Wait for EE server to start
     run: |
       while true; do
-        return_code=$(docker exec -it ${{ inputs.container-name }} asinfo -v status | grep -qE "^ok")
+        return_code=$(docker exec ${{ inputs.container-name }} asinfo -v status | grep -qE "^ok")
         if [[ $return_code -eq 0 ]]; then
           # Server is ready when asinfo returns ok
           break

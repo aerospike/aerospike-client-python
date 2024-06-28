@@ -61,7 +61,7 @@ runs:
     run: |
       docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
       while true; do
-        return_code=$(docker exec -it aerospike asinfo -v status | grep -qE "^ok")
+        return_code=$(docker exec aerospike asinfo -v status | grep -qE "^ok")
         if [[ $return_code -eq 0 ]]; then
           # Server is ready when asinfo returns ok
           break
