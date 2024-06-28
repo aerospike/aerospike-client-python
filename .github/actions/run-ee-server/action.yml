@@ -57,9 +57,16 @@ runs:
     shell: bash
 
   - name: Get default aerospike.conf from Docker server EE container
+    # TODO: refactor to use composite action
     run: |
       docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
-      sleep 5
+      while true; do
+        return_code=$(docker exec -it ${{ inputs.container-name }} asinfo -v status | grep -qE "^ok")
+        if [[ $return_code -eq 0 ]]; then
+          # Server is ready when asinfo returns ok
+          break
+        fi
+      done
       docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
       docker container stop aerospike
       docker container rm aerospike
@@ -74,6 +81,8 @@ runs:
   - name: Run enterprise edition server
     run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
     shell: bash
+
+  - uses: ./.github/action/wait-for-as-server-to-start
 
   - name: Create user in database for tests
     # Use default admin user to create another user for testing
