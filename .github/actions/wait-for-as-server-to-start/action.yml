@@ -6,14 +6,8 @@ inputs:
 runs:
   using: "composite"
   steps:
+  # Composite actions doesn't support step-level timeout-minutes
+  # Use timeout command, and must use shell script file for timeout
   - name: Wait for EE server to start
-    run: |
-      while true; do
-        return_code=$(docker exec ${{ inputs.container-name }} asinfo -v status | grep -qE "^ok")
-        if [[ $return_code -eq 0 ]]; then
-          # Server is ready when asinfo returns ok
-          break
-        fi
-      done
+    run: timeout 30 ./.github/workflows/wait-for-as-server-to-start.yml ${{ inputs.container-name }}
     shell: bash
-    timeout-minutes: 3
