@@ -142,19 +142,23 @@ jobs:
       with:
         name: wheel-${{ env.PYTHON_VERSION }}
 
-    - if: ${{ matrix.metrics-node-close-listener }}
-      uses: ./.github/actions/setup-aerolab
-
     - run: python3 -m pip install *.whl
 
+    - run: echo RUNNING_NEW_TESTS=${{ env.TEST_TYPE == 'ce' || env.TEST_TYPE == 'ee' }} >> $GITHUB_ENV
+
     - name: Install test dependencies
-      if: ${{ env.TEST_TYPE == 'ce' || env.TEST_TYPE == 'ee' }}
+      if: ${{ env.RUNNING_NEW_TESTS == 'true' }}
       run: pip install -r test/requirements.txt
 
+    # TODO: run ee server
+
     - name: Create config file using template
-      if: ${{ env.TEST_TYPE == 'ce' || env.TEST_TYPE == 'ee' }}
+      if: ${{ env.RUNNING_NEW_TESTS == 'true' }}
       run: cp config.conf.template config.conf
       working-directory: test
+
+    - if: ${{ env.TEST_TYPE == 'metrics-node-close-listener' }}
+      uses: ./.github/actions/setup-aerolab
 
     # TODO: fix
     - if: ${{ endsWith(inputs.docker-image, '-rc') }}
