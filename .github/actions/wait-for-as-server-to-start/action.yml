@@ -1,0 +1,19 @@
+name: 'Wait for Aerospike server to start'
+inputs:
+  container-name:
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+  - name: Wait for EE server to start
+    run: |
+      while true; do
+        return_code=$(docker exec -it ${{ inputs.container-name }} asinfo -v status | grep -qE "^ok")
+        if [[ $return_code -eq 0 ]]; then
+          # Server is ready when asinfo returns ok
+          break
+        fi
+      done
+    shell: bash
+    timeout-minutes: 3
