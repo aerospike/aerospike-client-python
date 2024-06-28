@@ -339,7 +339,6 @@ jobs:
       - name: Connect to Docker container on remote machine with Docker daemon
         if: ${{ inputs.platform-tag == 'win_amd64'  }}
         # DOCKER_HOST contains the IP address of the remote machine
-        # crudini already installed through run-ee-server
         run: |
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
           python${{ env.PYTHON_VERSION }} -m pip install crudini -c ${{ github.workspace }}/.github/workflows/requirements.txt
