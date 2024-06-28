@@ -314,7 +314,13 @@ jobs:
           echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
         shell: bash
 
-      - uses: ./.github/actions/run-ee-server
+      # TODO: make Windows run EE tests
+      - name: Only run CE tests for Windows for now
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
+        uses: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
+
+      - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
+        uses: ./.github/actions/run-ee-server
 
       - name: Create config.conf
         run: cp config.conf.template config.conf
