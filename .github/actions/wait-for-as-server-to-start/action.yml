@@ -9,5 +9,5 @@ runs:
   # Composite actions doesn't support step-level timeout-minutes
   # Use timeout command, and must use shell script file for timeout
   - name: Wait for EE server to start
-    run: timeout 30 ./.github/workflows/wait-for-as-server-to-start.yml ${{ inputs.container-name }}
+    run: timeout 30 ./.github/workflows/wait-for-as-server-to-start.sh ${{ inputs.container-name }}
     shell: bash
