@@ -317,7 +317,7 @@ jobs:
       # TODO: make Windows run EE tests
       - name: Only run CE tests for Windows for now
         if: ${{ inputs.platform-tag == 'win_amd64' }}
-        uses: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
+        run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
 
       - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         uses: ./.github/actions/run-ee-server
