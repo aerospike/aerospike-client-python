@@ -108,6 +108,8 @@ jobs:
       working-directory: test
 
     - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       # Get number of tests since setting to 0 doesn't work properly
@@ -278,6 +280,8 @@ jobs:
       working-directory: test
 
     - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests
@@ -336,6 +340,8 @@ jobs:
       working-directory: test
 
     - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests -vv
@@ -372,6 +378,8 @@ jobs:
       working-directory: test
 
     - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests

@@ -172,6 +172,8 @@ jobs:
       working-directory: test
 
     - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - run: python${{ matrix.python-version[0] }} -m pytest new_tests/
       id: test
