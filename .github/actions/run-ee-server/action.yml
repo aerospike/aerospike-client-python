@@ -82,7 +82,7 @@ runs:
     run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
     shell: bash
 
-  - uses: ./.github/action/wait-for-as-server-to-start
+  - uses: ./.github/actions/wait-for-as-server-to-start
     with:
       container-name: aerospike
 
