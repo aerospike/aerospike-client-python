@@ -1,3 +1,7 @@
+#!/bin/sh
+
+set -x
+
 container_name=$1
 
 while [ true ];
