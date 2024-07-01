@@ -59,7 +59,7 @@ runs:
   - run: docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
 
   - uses: ./.github/actions/wait-for-as-server-to-start
-    id: wait-for-server
+    id: wait-for-server1
     with:
       container-name: aerospike
 
@@ -81,13 +81,13 @@ runs:
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
-    id: wait-for-server
+    id: wait-for-server2
     with:
       container-name: aerospike
 
   # Enabling debug logging for workflow runs doesn't show container logs
   # So we need this step for now
-  - if: ${{ !cancelled() && steps.wait-for-server.outcome == 'failure' }}
+  - if: ${{ !cancelled() && (steps.wait-for-server1.outcome == 'failure' || steps.wait-for-server2.outcome == 'failure') }}
     name: Print logs to help debug why the server failed to start up
     run: docker container logs aerospike
     shell: bash
