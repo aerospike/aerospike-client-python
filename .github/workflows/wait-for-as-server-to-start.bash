@@ -11,6 +11,7 @@ while true; do
         instance_argument="--instance security"
     fi
 
+    docker exec $container_name asinfo $instance_argument -v status
     docker exec $container_name asinfo $instance_argument -v status | grep -qE "^ok"
     grep_return_code=$?
     if [[ $grep_return_code -eq 0 ]]; then
