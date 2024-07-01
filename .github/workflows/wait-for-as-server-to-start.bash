@@ -1,7 +1,8 @@
 #!/bin/bash
 
 set -x
-set pipefail
+# We only care about the last command's result (i.e grep)
+set -o pipefail
 
 container_name=$1
 
