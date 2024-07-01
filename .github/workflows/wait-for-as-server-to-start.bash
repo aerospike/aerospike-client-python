@@ -12,8 +12,7 @@ while true; do
         user_credentials="--user=admin --password=admin"
     fi
 
-    # We use asinfo since the Aerospike server Docker image doesn't support healthcheck
-    docker exec $container_name asinfo $user_credentials -v status 2>&1 | tee --append /dev/tty | grep -qE "^ok"
+    docker exec $container_name asinfo $user_credentials -v status | grep -qE "^ok"
     return_code=$?
     if [[ $return_code -eq 0 ]]; then
         # Server is ready when asinfo returns ok
