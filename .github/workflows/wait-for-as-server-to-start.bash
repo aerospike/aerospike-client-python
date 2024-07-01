@@ -8,11 +8,11 @@ is_security_enabled=$2
 
 while true; do
     if [[ $is_security_enabled == true ]]; then
-        instance_argument="--instance secure"
+        # TODO: passing in hardcoded credentials since I can't figure out how to use --instance with global astools.conf
+        user_credentials="--user=admin --password=admin"
     fi
 
-    docker exec $container_name asinfo $instance_argument -v status
-    docker exec $container_name asinfo $instance_argument -v status | grep -qE "^ok"
+    docker exec $container_name asinfo $user_credentials -v status | grep -qE "^ok"
     grep_return_code=$?
     if [[ $grep_return_code -eq 0 ]]; then
         # Server is ready when asinfo returns ok
