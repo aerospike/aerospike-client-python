@@ -13,8 +13,8 @@ while true; do
     fi
 
     docker exec $container_name asinfo $user_credentials -v status | grep -qE "^ok"
-    grep_return_code=$?
-    if [[ $grep_return_code -eq 0 ]]; then
+    return_code=$?
+    if [[ $return_code -eq 0 ]]; then
         # Server is ready when asinfo returns ok
         break
     fi
