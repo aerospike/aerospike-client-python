@@ -1,7 +1,6 @@
 #!/bin/bash
 
 set -x
-set -e
 
 container_name=$1
 
