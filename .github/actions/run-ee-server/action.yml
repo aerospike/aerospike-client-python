@@ -56,17 +56,15 @@ runs:
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
+  - run: docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
+
+  - uses: ./.github/actions/wait-for-as-server-to-start
+    id: wait-for-server
+    with:
+      container-name: aerospike
+
   - name: Get default aerospike.conf from Docker server EE container
-    # TODO: refactor to use composite action
     run: |
-      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
-      while true; do
-        docker exec aerospike asinfo -v status | grep -qE "^ok"
-        if [[ $? -eq 0 ]]; then
-          # Server is ready when asinfo returns ok
-          break
-        fi
-      done
       docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
       docker container stop aerospike
       docker container rm aerospike
@@ -82,11 +80,6 @@ runs:
     run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
     shell: bash
 
-  - name: Create user in database for tests
-    # Use default admin user to create another user for testing
-    run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
-    shell: bash
-
   - uses: ./.github/actions/wait-for-as-server-to-start
     id: wait-for-server
     with:
@@ -97,4 +90,9 @@ runs:
   - if: ${{ !cancelled() && steps.wait-for-server.outcome == 'failure' }}
     name: Print logs to help debug why the server failed to start up
     run: docker container logs aerospike
+    shell: bash
+
+  - name: Create user in database for tests
+    # Use default admin user to create another user for testing
+    run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
     shell: bash
