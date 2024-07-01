@@ -63,6 +63,7 @@ runs:
     id: wait-for-server1
     with:
       container-name: aerospike
+      is-security-enabled: false
 
   - name: Get default aerospike.conf from Docker server EE container
     run: |
@@ -85,6 +86,7 @@ runs:
     id: wait-for-server2
     with:
       container-name: aerospike
+      is-security-enabled: true
 
   # Enabling debug logging for workflow runs doesn't show container logs
   # So we need this step for now
