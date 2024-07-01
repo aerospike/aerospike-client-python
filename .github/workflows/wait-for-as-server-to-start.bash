@@ -7,7 +7,7 @@ container_name=$1
 
 while true; do
     docker exec $container_name asinfo --user=superuser --password=superuser -v status | grep -qE "^ok"
-    grep_return_code=$1
+    grep_return_code=$?
     if [[ $grep_return_code -eq 0 ]]; then
         # Server is ready when asinfo returns ok
         break
