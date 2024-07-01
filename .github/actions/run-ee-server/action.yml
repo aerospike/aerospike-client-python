@@ -92,6 +92,7 @@ runs:
   - if: ${{ steps.wait-for-server.outcome == 'failure' }}
     name: If server failed to start up, print logs for debugging
     run: docker container logs aerospike
+    shell: bash
 
   - name: Create user in database for tests
     # Use default admin user to create another user for testing
