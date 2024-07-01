@@ -7,7 +7,8 @@ runs:
   using: "composite"
   steps:
   # Composite actions doesn't support step-level timeout-minutes
-  # Use timeout command, and must use shell script file for timeout
+  # Use timeout command and store polling script in file to make easier to read
+  # Call bash shell explicitly since timeout uses "sh" shell by default, for some reason
   - name: Wait for EE server to start
-    run: timeout 30 ./.github/workflows/wait-for-as-server-to-start.bash ${{ inputs.container-name }}
+    run: timeout 30 bash ./.github/workflows/wait-for-as-server-to-start.bash ${{ inputs.container-name }}
     shell: bash
