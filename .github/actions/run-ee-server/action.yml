@@ -57,6 +57,7 @@ runs:
     shell: bash
 
   - run: docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
+    shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
     id: wait-for-server1
