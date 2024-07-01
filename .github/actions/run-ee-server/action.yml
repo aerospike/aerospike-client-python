@@ -89,8 +89,8 @@ runs:
 
   # Enabling debug logging for workflow runs doesn't show container logs
   # So we need this step for now
-  - if: ${{ steps.wait-for-server.outcome == 'failure' }}
-    name: If server failed to start up, print logs for debugging
+  - if: ${{ !cancelled() && steps.wait-for-server.outcome == 'failure' }}
+    name: Print logs to help debug why the server failed to start up
     run: docker container logs aerospike
     shell: bash
 
