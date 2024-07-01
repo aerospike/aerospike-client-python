@@ -6,6 +6,7 @@ container_name=$1
 
 while true; do
     # Print first command in case it fails and we need to figure out why
+    docker exec $container_name asinfo -v status || true
     docker exec $container_name asinfo -v status | tee >(echo) | grep -qE "^ok"
     docker_return_code=${PIPESTATUS[0]}
     if [[ $docker_return_code -ne 0 ]]; then
