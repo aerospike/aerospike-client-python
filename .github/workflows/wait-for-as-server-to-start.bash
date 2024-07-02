@@ -15,7 +15,11 @@ while true; do
     fi
 
     # An unset variable will have a default empty value
-    docker exec $container_name asinfo $user_credentials -v status | grep -qE "^ok"
+    # Intermediate step is to print docker exec command's output in case it fails
+    # Sometimes, errors only appear in stdout and not stderr (like an asinfo -v "invalid_command")
+    # But piping and passing stdin to grep will hide stdout. grep doesn't have a way to print all lines passed as input
+    # ack does have an option but it doesn't come installed by default
+    docker exec $container_name asinfo $user_credentials -v status | tee >(cat) | grep -qE "^ok"
     if [[ $? -eq 0 ]]; then
         # Server is ready when asinfo returns ok
         break
