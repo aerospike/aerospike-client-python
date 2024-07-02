@@ -12,6 +12,7 @@ while true; do
         user_credentials="--user=admin --password=admin"
     fi
 
+    # An unset variable will have a default empty value
     docker exec $container_name asinfo $user_credentials -v status | grep -qE "^ok"
     if [[ $? -eq 0 ]]; then
         # Server is ready when asinfo returns ok
