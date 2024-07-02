@@ -48,9 +48,6 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - name: Wait for server to be ready
-      run: sleep 5
-
     - uses: actions/download-artifact@v4
       with:
         name: ${{ matrix.python[1] }}-manylinux_${{ matrix.platform }}.build
@@ -101,9 +98,6 @@ jobs:
         server-tag: latest
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Wait for server to be ready
-      run: sleep 5
 
     - uses: actions/download-artifact@v4
       with:
@@ -171,14 +165,15 @@ jobs:
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - name: Wait for server to be ready
-      run: sleep 5
-
     - name: Install wheel
       run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages *.whl
 
     - run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages -r requirements.txt
       working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - run: python${{ matrix.python-version[0] }} -m pytest new_tests/
       id: test
