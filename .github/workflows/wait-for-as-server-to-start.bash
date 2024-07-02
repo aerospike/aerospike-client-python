@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -x
+# Makes sure that docker exec command does not silently fail
 set -o pipefail
 
 container_name=$1
@@ -8,6 +9,7 @@ is_security_enabled=$2
 
 while true; do
     if [[ $is_security_enabled == true ]]; then
+        # We need to pass credentials to asinfo if server requires it
         # TODO: passing in hardcoded credentials since I can't figure out how to use --instance with global astools.conf
         user_credentials="--user=admin --password=admin"
     fi
