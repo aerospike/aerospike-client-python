@@ -1,5 +1,5 @@
 name: 'Run EE Server'
-description: 'Run EE server'
+description: 'Run EE server. Returns once server is ready'
 inputs:
   # All inputs in composite actions are strings
   use-server-rc:
