@@ -16,12 +16,12 @@ while true; do
 
     # An unset variable will have a default empty value
     # Intermediate step is to print docker exec command's output in case it fails
-    # Sometimes, errors only appear in stdout and not stderr (like an asinfo -v "invalid_command")
+    # Sometimes, errors only appear in stdout and not stderr, like if asinfo throws an error because of no credentials
+    # (This is a bug in asinfo since all error messages should be sent to stderr)
     # But piping and passing stdin to grep will hide the first command's stdout.
     # grep doesn't have a way to print all lines passed as input.
     # ack does have an option but it doesn't come installed by default
-    docker exec $container_name asinfo $user_credentials -v status | tee >(cat) | grep -qE "^ok"
-    if [[ $? -eq 0 ]]; then
+    if docker exec "$container_name" asinfo "$user_credentials" -v status | tee >(cat) | grep -qE "^ok"; then
         # Server is ready when asinfo returns ok
         break
     fi
