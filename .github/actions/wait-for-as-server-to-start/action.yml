@@ -1,4 +1,5 @@
 name: 'Wait for Aerospike server to start'
+description: Only tested on Linux and macOS
 inputs:
   container-name:
     required: true
