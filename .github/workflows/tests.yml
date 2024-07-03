@@ -103,13 +103,13 @@ jobs:
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - name: Get number of tests
-      run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
-      working-directory: test
-
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
         container-name: aerospike
+
+    - name: Get number of tests
+      run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
+      working-directory: test
 
     - name: Run tests
       # Get number of tests since setting to 0 doesn't work properly
