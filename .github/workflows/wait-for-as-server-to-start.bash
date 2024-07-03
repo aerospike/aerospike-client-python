@@ -21,7 +21,8 @@ while true; do
     # But piping and passing stdin to grep will hide the first command's stdout.
     # grep doesn't have a way to print all lines passed as input.
     # ack does have an option but it doesn't come installed by default
-    if docker exec "$container_name" asinfo "$user_credentials" -v status | tee >(cat) | grep -qE "^ok"; then
+    # shellcheck disable=SC2086 # The flags in user credentials should be separate anyways. Not one string
+    if docker exec "$container_name" asinfo $user_credentials -v status | tee >(cat) | grep -qE "^ok"; then
         # Server is ready when asinfo returns ok
         break
     fi
