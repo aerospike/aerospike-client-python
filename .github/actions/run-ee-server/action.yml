@@ -14,33 +14,13 @@ inputs:
     required: false
   docker-hub-password:
     required: false
+outputs:
+  server-docker-ip-address:
+    value: ${{ steps.get-server-docker-ip-address.outputs.ip-address }}
 
 runs:
   using: "composite"
   steps:
-  - name: Install crudini to manipulate config.conf
-    run: pip3 install crudini -c requirements.txt
-    working-directory: .github/workflows
-    shell: bash
-
-  - name: Create config.conf
-    run: cp config.conf.template config.conf
-    working-directory: test
-    shell: bash
-
-  - name: Use enterprise edition instead of community edition in config.conf
-    run: |
-      crudini --existing=param --set config.conf enterprise-edition hosts ''
-      crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --existing=param --set config.conf enterprise-edition user superuser
-      crudini --existing=param --set config.conf enterprise-edition password superuser
-    working-directory: test
-    shell: bash
-
-  - name: Create config folder to store configs in
-    run: mkdir configs
-    shell: bash
-
   - name: Use release server
     if: ${{ inputs.use-server-rc == 'false' }}
     run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise" >> $GITHUB_ENV
@@ -56,7 +36,14 @@ runs:
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
-  - run: docker run -d --name aerospike -p 3000:3000 $SERVER_IMAGE:${{ inputs.server-tag }}
+  # Use step output instead of env since we don't want this composite action to interfere with the calling workflow's environment variables
+  - name: Get container name to use
+    id: get_container_name
+    run: echo "container_name=aerospike" >> $GITHUB_OUTPUT
+    shell: bash
+
+  - name: Run EE server from Docker image
+    run: docker run -d --name ${{ steps.get_container_name.outputs.container_name }} -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
@@ -65,11 +52,22 @@ runs:
       container-name: aerospike
       is-security-enabled: false
 
-  - name: Get default aerospike.conf from Docker server EE container
-    run: |
-      docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
-      docker container stop aerospike
-      docker container rm aerospike
+  - name: Create config folder to store configs in
+    # Cannot create parent directories using docker cp
+    # https://docs.docker.com/reference/cli/docker/container/cp/
+    run: mkdir configs
+    shell: bash
+
+  - name: Grab default aerospike.conf from EE server
+    run: docker cp ${{ steps.get_container_name.outputs.container_name }}:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
+    shell: bash
+
+  - name: Stop EE server
+    run: docker container stop ${{ steps.get_container_name.outputs.container_name }}
+    shell: bash
+
+  - name: Remove EE server
+    run: docker container rm ${{ steps.get_container_name.outputs.container_name }}
     shell: bash
 
   - name: Enable security features using aerospike.conf
@@ -79,7 +77,7 @@ runs:
     shell: bash
 
   - name: Run enterprise edition server
-    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name ${{ steps.get_container_name.outputs.container_name }} $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
@@ -97,5 +95,10 @@ runs:
 
   - name: Create user in database for tests
     # Use default admin user to create another user for testing
-    run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
+    run: docker exec ${{ steps.get_container_name.outputs.container_name }} asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
+    shell: bash
+
+  - name: Output internal Docker IP address of server
+    id: get-server-docker-ip-address
+    run: echo "ip-address=$(docker inspect ${{ steps.get_container_name.outputs.container_name }} -f '{{ .NetworkSettings.IPAddress }}')" >> $GITHUB_OUTPUT
     shell: bash
