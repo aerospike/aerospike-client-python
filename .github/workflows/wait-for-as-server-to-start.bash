@@ -1,7 +1,7 @@
 #!/bin/bash
 
 set -x
-# Makes sure that docker exec command does not silently fail
+# Makes sure that if the "docker exec" command fails, it is not ignored
 set -o pipefail
 
 container_name=$1
