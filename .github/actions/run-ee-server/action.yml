@@ -32,8 +32,8 @@ runs:
     run: |
       crudini --existing=param --set config.conf enterprise-edition hosts ''
       crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --existing=param --set config.conf enterprise-edition user superuser
-      crudini --existing=param --set config.conf enterprise-edition password superuser
+      crudini --existing=param --set config.conf enterprise-edition user admin
+      crudini --existing=param --set config.conf enterprise-edition password admin
     working-directory: test
     shell: bash
 
@@ -75,7 +75,7 @@ runs:
     run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
     shell: bash
 
-  - name: Create user in database for tests
-    # Use default admin user to create another user for testing
-    run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
-    shell: bash
+  # - name: Create user in database for tests
+  #   # Use default admin user to create another user for testing
+  #   run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
+  #   shell: bash
