@@ -41,22 +41,17 @@ runs:
     run: mkdir configs
     shell: bash
 
-  - name: Use release server
-    if: ${{ inputs.use-server-rc == 'false' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise" >> $GITHUB_ENV
-    shell: bash
-
-  - name: Use release candidate server
-    if: ${{ inputs.use-server-rc == 'true' }}
-    run: echo "SERVER_IMAGE=aerospike/aerospike-server-enterprise-rc" >> $GITHUB_ENV
-    shell: bash
-
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
-  - run: docker run -d --name aerospike -p 3000:3000 $SERVER_IMAGE:${{ inputs.server-tag }}
+  - run: echo SECURITY_IMAGE_TAG=server-ee-${{ inputs.use-server-rc }}:${{ inputs.server-tag }} >> $GITHUB_ENV
+
+  - run: docker build . --build-arg rc=${{ inputs.use-server-rc == 'true' && '-rc' || '' }} --build-arg tag=${{ inputs.server-tag }} --tag ${{ env.SECURITY_IMAGE_TAG }}
+    working-directory: .github/workflows
+
+  - run: docker run -d --name aerospike -p 3000:3000 ${{ env.SECURITY_IMAGE_TAG }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
@@ -65,32 +60,9 @@ runs:
       container-name: aerospike
       is-security-enabled: false
 
-  - name: Get default aerospike.conf from Docker server EE container
-    run: |
-      docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
-      docker container stop aerospike
-      docker container rm aerospike
-    shell: bash
-
-  - name: Enable security features using aerospike.conf
-    # Security stanza
-    run: echo -e "security {\n\tenable-quotas true\n}\n" >> ./aerospike.conf
-    working-directory: ./configs
-    shell: bash
-
-  - name: Run enterprise edition server
-    run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
-    shell: bash
-
-  - uses: ./.github/actions/wait-for-as-server-to-start
-    id: wait-for-server2
-    with:
-      container-name: aerospike
-      is-security-enabled: true
-
   # Enabling debug logging for workflow runs doesn't show container logs
   # So we need this step for now
-  - if: ${{ !cancelled() && (steps.wait-for-server1.outcome == 'failure' || steps.wait-for-server2.outcome == 'failure') }}
+  - if: ${{ !cancelled() && steps.wait-for-server1.outcome == 'failure' }}
     name: Print logs to help debug why the server failed to start up
     run: docker container logs aerospike
     shell: bash
