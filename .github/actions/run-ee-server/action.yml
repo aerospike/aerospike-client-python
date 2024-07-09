@@ -41,15 +41,26 @@ runs:
     run: mkdir configs
     shell: bash
 
+  # - run: docker build . --build-arg rc=${{ inputs.use-server-rc == 'true' && '-rc' || '' }} --build-arg tag=${{ inputs.server-tag }} --tag ${{ env.SECURITY_IMAGE_TAG }}
+  #   working-directory: .github/workflows
+
+  - name: Cache Docker layers
+    uses: actions/cache@v4
+    with:
+      path: /tmp/.buildx-cache
+      key: buildx-${{ inputs.use-server-rc }}-${{ inputs.server-tag }}
+
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
-  - run: echo SECURITY_IMAGE_TAG=server-ee-${{ inputs.use-server-rc }}:${{ inputs.server-tag }} >> $GITHUB_ENV
-
-  - run: docker build . --build-arg rc=${{ inputs.use-server-rc == 'true' && '-rc' || '' }} --build-arg tag=${{ inputs.server-tag }} --tag ${{ env.SECURITY_IMAGE_TAG }}
-    working-directory: .github/workflows
+  - name: Build and push
+    uses: docker/build-push-action@v6
+    with:
+      push: true
+      tags: server-ee-${{ inputs.use-server-rc }}:${{ inputs.server-tag }}
+      cache-to: type=inline
 
   - run: docker run -d --name aerospike -p 3000:3000 ${{ env.SECURITY_IMAGE_TAG }}
     shell: bash
