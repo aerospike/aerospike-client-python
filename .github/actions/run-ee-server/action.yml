@@ -1,5 +1,5 @@
 name: 'Run EE Server'
-description: 'Run EE server'
+description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
 inputs:
   # All inputs in composite actions are strings
   use-server-rc:
@@ -56,10 +56,17 @@ runs:
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
+  - run: docker run -d --name aerospike -p 3000:3000 $SERVER_IMAGE:${{ inputs.server-tag }}
+    shell: bash
+
+  - uses: ./.github/actions/wait-for-as-server-to-start
+    id: wait-for-server1
+    with:
+      container-name: aerospike
+      is-security-enabled: false
+
   - name: Get default aerospike.conf from Docker server EE container
     run: |
-      docker run -d --name aerospike -p 3000-3002:3000-3002 $SERVER_IMAGE:${{ inputs.server-tag }}
-      sleep 5
       docker cp aerospike:/etc/aerospike/aerospike.conf ./configs/aerospike.conf
       docker container stop aerospike
       docker container rm aerospike
@@ -73,6 +80,19 @@ runs:
 
   - name: Run enterprise edition server
     run: docker run -tid -v $(pwd)/configs:/opt/aerospike/etc -p 3000:3000 --name aerospike $SERVER_IMAGE:${{ inputs.server-tag }} asd --config-file /opt/aerospike/etc/aerospike.conf
+    shell: bash
+
+  - uses: ./.github/actions/wait-for-as-server-to-start
+    id: wait-for-server2
+    with:
+      container-name: aerospike
+      is-security-enabled: true
+
+  # Enabling debug logging for workflow runs doesn't show container logs
+  # So we need this step for now
+  - if: ${{ !cancelled() && (steps.wait-for-server1.outcome == 'failure' || steps.wait-for-server2.outcome == 'failure') }}
+    name: Print logs to help debug why the server failed to start up
+    run: docker container logs aerospike
     shell: bash
 
   # - name: Create user in database for tests
