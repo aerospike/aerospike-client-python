@@ -57,6 +57,7 @@ runs:
     with:
       build-args: |
         image=${{ env.IMAGE_NAME }}
+      file: .github/workflows/Dockerfile
       tags: ${{ env.SECURITY_IMAGE_NAME }}
 
   - run: docker run -d --name aerospike -p 3000:3000 ${{ env.SECURITY_IMAGE_NAME }}
