@@ -55,6 +55,7 @@ runs:
   - name: Build and push
     uses: docker/build-push-action@v6
     with:
+      context: .
       build-args: |
         image=${{ env.IMAGE_NAME }}
       file: .github/workflows/Dockerfile
