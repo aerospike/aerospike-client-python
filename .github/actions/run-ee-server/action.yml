@@ -41,28 +41,22 @@ runs:
     run: mkdir configs
     shell: bash
 
-  # - run: docker build . --build-arg rc=${{ inputs.use-server-rc == 'true' && '-rc' || '' }} --build-arg tag=${{ inputs.server-tag }} --tag ${{ env.SECURITY_IMAGE_TAG }}
-  #   working-directory: .github/workflows
-
-  - name: Cache Docker layers
-    uses: actions/cache@v4
-    with:
-      path: /tmp/.buildx-cache
-      key: buildx-${{ inputs.use-server-rc }}-${{ inputs.server-tag }}
-
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
+  - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
+  - run: echo SECURITY_IMAGE_NAME=${{ env.IMAGE_NAME }}-security >> $GITHUB_ENV
+
   - name: Build and push
     uses: docker/build-push-action@v6
     with:
-      push: true
-      tags: server-ee-${{ inputs.use-server-rc }}:${{ inputs.server-tag }}
-      cache-to: type=inline
+      build-args: |
+        image=${{ env.IMAGE_NAME }}
+      tags: ${{ env.SECURITY_IMAGE_NAME }}
 
-  - run: docker run -d --name aerospike -p 3000:3000 ${{ env.SECURITY_IMAGE_TAG }}
+  - run: docker run -d --name aerospike -p 3000:3000 ${{ env.SECURITY_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
@@ -73,10 +67,10 @@ runs:
 
   # Enabling debug logging for workflow runs doesn't show container logs
   # So we need this step for now
-  - if: ${{ !cancelled() && steps.wait-for-server1.outcome == 'failure' }}
-    name: Print logs to help debug why the server failed to start up
-    run: docker container logs aerospike
-    shell: bash
+  # - if: ${{ !cancelled() && steps.wait-for-server1.outcome == 'failure' }}
+  #   name: Print logs to help debug why the server failed to start up
+  #   run: docker container logs aerospike
+  #   shell: bash
 
   # - name: Create user in database for tests
   #   # Use default admin user to create another user for testing
