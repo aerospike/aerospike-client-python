@@ -24,6 +24,7 @@ while true; do
     # shellcheck disable=SC2086 # The flags in user credentials should be separate anyways. Not one string
     if docker exec "$container_name" asinfo $user_credentials -v status | tee >(cat) | grep -qE "^ok"; then
         # Server is ready when asinfo returns ok
+        echo "Server is ready now."
         break
     fi
     echo "Server didn't return ok. Polling again..."
