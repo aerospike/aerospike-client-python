@@ -156,12 +156,6 @@ jobs:
         ref: ${{ inputs.ref }}
         fetch-depth: 0
 
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ matrix.platform[0] == 'aarch64' }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
-
     - uses: ./.github/actions/run-ee-server-for-ext-container
       if: ${{ inputs.run_tests }}
       with:
