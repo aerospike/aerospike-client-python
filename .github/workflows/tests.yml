@@ -131,6 +131,8 @@ jobs:
         python-version: "3.9"
         architecture: 'x64'
 
+    - run: python3 -m pip install -r requirements.txt
+
     - name: Build client
       # Use old build command to generate object .o files in build/temp*/src/main directory
       # They will also contain .gcno files there
