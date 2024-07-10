@@ -26,4 +26,5 @@ while true; do
         # Server is ready when asinfo returns ok
         break
     fi
+    echo "Server didn't return ok. Polling again..."
 done
