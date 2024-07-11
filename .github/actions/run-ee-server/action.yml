@@ -19,6 +19,8 @@ runs:
   using: "composite"
   steps:
   - name: Install crudini to manipulate config.conf
+    # This will only work on the Github hosted runners.
+    # TODO: self hosted runners do not have pipx installed by default
     run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
     working-directory: .github/workflows
     shell: bash
