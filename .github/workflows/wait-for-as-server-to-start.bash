@@ -25,6 +25,7 @@ while true; do
     if docker exec "$container_name" asinfo $user_credentials -v status | tee >(cat) | grep -qE "^ok"; then
         # Server is ready when asinfo returns ok
         echo "Server is ready now."
+        docker container inspect "$container_name"
         break
     fi
     echo "Server didn't return ok. Polling again..."
