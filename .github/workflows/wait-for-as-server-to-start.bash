@@ -26,7 +26,8 @@ while true; do
         # Server is ready when asinfo returns ok
         echo "Server is ready now."
         docker exec "$container_name" asinfo $user_credentials -v "cluster-stable"
-        docker container inspect "$container_name"
+        docker run --rm aerospike/aerospike-tools asadm -U admin -P admin -e "info network" -h $(docker inspect -f "{{ .NetworkSettings.IPAddress }}" "$container_name")
+        # docker container inspect "$container_name"
         break
     fi
     echo "Server didn't return ok. Polling again..."
