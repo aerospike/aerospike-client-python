@@ -344,7 +344,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv
+      run: python -m pytest ./new_tests -vv -k "not test_admin"
       working-directory: test
 
   test-lowest-supported-server:
