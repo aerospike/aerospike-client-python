@@ -7,13 +7,13 @@ set -o pipefail
 container_name=$1
 is_security_enabled=$2
 
-while true; do
-    if [[ $is_security_enabled == true ]]; then
-        # We need to pass credentials to asinfo if server requires it
-        # TODO: passing in hardcoded credentials since I can't figure out how to use --instance with global astools.conf
-        user_credentials="--user=admin --password=admin"
-    fi
+if [[ $is_security_enabled == true ]]; then
+    # We need to pass credentials to asinfo if server requires it
+    # TODO: passing in hardcoded credentials since I can't figure out how to use --instance with global astools.conf
+    user_credentials="--user=admin --password=admin"
+fi
 
+while true; do
     # An unset variable will have a default empty value
     # Intermediate step is to print docker exec command's output in case it fails
     # Sometimes, errors only appear in stdout and not stderr, like if asinfo throws an error because of no credentials
@@ -22,13 +22,24 @@ while true; do
     # grep doesn't have a way to print all lines passed as input.
     # ack does have an option but it doesn't come installed by default
     # shellcheck disable=SC2086 # The flags in user credentials should be separate anyways. Not one string
+    echo "Waiting for server to accept requests..."
     if docker exec "$container_name" asinfo $user_credentials -v status | tee >(cat) | grep -qE "^ok"; then
         # Server is ready when asinfo returns ok
-        echo "Server is ready now."
-        docker exec "$container_name" asinfo $user_credentials -v "cluster-stable"
-        docker run --rm aerospike/aerospike-tools asadm -U admin -P admin -e "info network" -h $(docker inspect -f "{{ .NetworkSettings.IPAddress }}" "$container_name")
+        echo "Can reach server now."
         # docker container inspect "$container_name"
         break
     fi
+
     echo "Server didn't return ok. Polling again..."
+done
+
+while true; do
+    echo "Waiting for server to stabilize (i.e return a cluster key)..."
+    # We assume that when an ERROR is returned, the cluster is not stable yet
+    if docker exec "$container_name" asinfo $user_credentials -v cluster-stable 2>&1 | (! grep -qE "^ERROR"); then
+        echo "Server is in a stable state."
+        break
+    fi
+
+    echo "Server did not return a cluster key. Polling again..."
 done
