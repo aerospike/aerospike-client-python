@@ -33,13 +33,13 @@ while true; do
     echo "Server didn't return ok via the service port. Polling again..."
 done
 
-while true; do
-    echo "Waiting for server to stabilize (i.e return a cluster key)..."
-    # We assume that when an ERROR is returned, the cluster is not stable yet
-    if docker exec "$container_name" asinfo $user_credentials -v cluster-stable 2>&1 | (! grep -qE "^ERROR"); then
-        echo "Server is in a stable state."
-        break
-    fi
+# while true; do
+#     echo "Waiting for server to stabilize (i.e return a cluster key)..."
+#     # We assume that when an ERROR is returned, the cluster is not stable yet
+#     if docker exec "$container_name" asinfo $user_credentials -v cluster-stable 2>&1 | (! grep -qE "^ERROR"); then
+#         echo "Server is in a stable state."
+#         break
+#     fi
 
-    echo "Server did not return a cluster key. Polling again..."
-done
+#     echo "Server did not return a cluster key. Polling again..."
+# done
