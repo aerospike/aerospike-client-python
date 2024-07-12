@@ -22,7 +22,7 @@ while true; do
     # grep doesn't have a way to print all lines passed as input.
     # ack does have an option but it doesn't come installed by default
     # shellcheck disable=SC2086 # The flags in user credentials should be separate anyways. Not one string
-    echo "Waiting for server to accept requests..."
+    echo "Checking if we can reach the server via the service port..."
     if docker exec "$container_name" asinfo $user_credentials -v status | tee >(cat) | grep -qE "^ok"; then
         # Server is ready when asinfo returns ok
         echo "Can reach server now."
@@ -30,7 +30,7 @@ while true; do
         break
     fi
 
-    echo "Server didn't return ok. Polling again..."
+    echo "Server didn't return ok via the service port. Polling again..."
 done
 
 while true; do
