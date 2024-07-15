@@ -57,10 +57,9 @@ runs:
     uses: docker/build-push-action@v6
     with:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
-      context: .
+      context: .github/workflows
       build-args: |
         image=${{ env.IMAGE_NAME }}
-      file: .github/workflows/Dockerfile
       tags: ${{ env.SECURITY_IMAGE_NAME }}
 
   - run: docker run -d --name aerospike -p 3000:3000 ${{ env.SECURITY_IMAGE_NAME }}
