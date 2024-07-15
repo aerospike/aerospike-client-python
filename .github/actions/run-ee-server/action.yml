@@ -32,8 +32,8 @@ runs:
     run: |
       crudini --existing=param --set config.conf enterprise-edition hosts ''
       crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --existing=param --set config.conf enterprise-edition user admin
-      crudini --existing=param --set config.conf enterprise-edition password admin
+      crudini --existing=param --set config.conf enterprise-edition user superuser
+      crudini --existing=param --set config.conf enterprise-edition password superuser
     working-directory: test
     shell: bash
 
