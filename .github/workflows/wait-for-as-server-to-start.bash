@@ -33,9 +33,11 @@ while true; do
     echo "Server didn't return ok via the service port. Polling again..."
 done
 
+# Although the server may be reachable via the service port, the cluster may not be fully initialized yet.
+# If we try to connect too soon (e.g right after "status" returns ok), the client may throw error code -1
 while true; do
     echo "Waiting for server to stabilize (i.e return a cluster key)..."
-    # We assume that when an ERROR is returned, the cluster is not stable yet
+    # We assume that when an ERROR is returned, the cluster is not stable yet (i.e not fully initialized)
     if docker exec "$container_name" asinfo $user_credentials -v cluster-stable 2>&1 | (! grep -qE "^ERROR"); then
         echo "Server is in a stable state."
         break
