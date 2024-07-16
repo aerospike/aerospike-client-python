@@ -9,7 +9,7 @@ is_security_enabled=$2
 
 if [[ $is_security_enabled == true ]]; then
     # We need to pass credentials to asinfo if server requires it
-    # TODO: passing in hardcoded credentials since I can't figure out how to use --instance with global astools.conf
+    # TODO: passing in credentials via command line flags since I can't figure out how to use --instance with global astools.conf
     user_credentials="--user=admin --password=admin"
 fi
 
