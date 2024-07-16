@@ -64,7 +64,7 @@ jobs:
       fail-fast: false
     env:
       LINUX_DISTRO_CONTAINER_NAME: linux-distro
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.test-case[2] == 'linux/amd64' && 'ubuntu-22.04' || 'aerospike_arm_runners_2' }}
     steps:
     # TODO: the checkout code is also duplicated in the macOS stage tests
     # But it's only a few lines of code so I didn't bother to create a composite action for it.
@@ -95,12 +95,6 @@ jobs:
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
-
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM == 'linux/arm64' }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
 
     - uses: ./.github/actions/run-ee-server
       with:
@@ -200,9 +194,6 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Wait for server to be ready
-      run: sleep 5
 
     - name: Install wheel
       run: python3 -m pip install *.whl
