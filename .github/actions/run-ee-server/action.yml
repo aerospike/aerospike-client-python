@@ -57,6 +57,7 @@ runs:
   # macOS Github runners don't have Docker by default
   - if: ${{ runner.os == 'macOS' }}
     run: brew install docker-buildx
+    shell: bash
 
   - name: Build and push
     uses: docker/build-push-action@v6
