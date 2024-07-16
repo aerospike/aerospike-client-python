@@ -344,7 +344,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_get_put.py -vv -k "test_pos_get_initkey_with_client_policy_send"
+      run: python -m pytest ./new_tests -vv
       working-directory: test
 
   test-lowest-supported-server:

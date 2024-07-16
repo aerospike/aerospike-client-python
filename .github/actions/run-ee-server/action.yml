@@ -49,7 +49,6 @@ runs:
   - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  # TODO: needs to be the exact tag, not "latest"
   - run: echo SECURITY_IMAGE_NAME=${{ env.IMAGE_NAME }}-security >> $GITHUB_ENV
     shell: bash
 
@@ -66,19 +65,6 @@ runs:
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
-    id: wait-for-server1
     with:
       container-name: aerospike
       is-security-enabled: true
-
-  # Enabling debug logging for workflow runs doesn't show container logs
-  # So we need this step for now
-  # - if: ${{ !cancelled() && steps.wait-for-server1.outcome == 'failure' }}
-  - name: Print logs to help debug why the server failed to start up
-    run: docker container logs aerospike
-    shell: bash
-
-  # - name: Create user in database for tests
-  #   # Use default admin user to create another user for testing
-  #   run: docker exec aerospike asadm --user admin --password admin --enable -e "manage acl create user superuser password superuser roles read-write-udf sys-admin user-admin data-admin"
-  #   shell: bash
