@@ -206,6 +206,14 @@ def test_setting_batch_policies():
     aerospike.client(config)
 
 
+def test_query_invalid_expected_duration():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["query"]["expected_duration"] = "1"
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    assert excinfo.value.msg == "Invalid Policy setting value"
+
+
 class TestConfigTTL:
     NEW_TTL = 9000
 
