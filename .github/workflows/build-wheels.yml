@@ -506,6 +506,10 @@ jobs:
         run: cp config.conf.template config.conf
         working-directory: test
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python[2] }}
+
       - name: Install wheel
         run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
       - name: Connect to Docker container on remote machine with Docker daemon
