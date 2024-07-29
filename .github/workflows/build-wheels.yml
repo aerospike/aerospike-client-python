@@ -508,7 +508,7 @@ jobs:
 
       - uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python[2] }}
+          python-version: ${{ matrix.python[1] }}
 
       - name: Install wheel
         run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
