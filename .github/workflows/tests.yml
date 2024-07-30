@@ -71,6 +71,9 @@ jobs:
     - name: Wait for database to be ready
       run: sleep 3
 
+    - run: cp config.conf.template config.conf
+      working-directory: test
+
     - name: Test
       run: pypy3.9 -m pytest new_tests/ -vv
       working-directory: test
