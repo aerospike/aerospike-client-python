@@ -14,20 +14,29 @@ on:
         default: false
 
 jobs:
+  build-manylinux-wheels:
+    uses: ./.github/workflows/build-wheels.yml
+
   valgrind:
+    needs: build-manylinux-wheels
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
+        fetch-depth: 0
 
     - uses: actions/setup-python@v2
       with:
         python-version: '3.8'
         architecture: 'x64'
 
+    - uses: actions/download-artifact@v4
+      with:
+        name: cp38-manylinux_x86_64.build
+
     - name: Install client
-      run: pip install .
+      run: pip install ./*.whl
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
@@ -38,10 +47,6 @@ jobs:
         use-server-rc: ${{ inputs.use-server-rc }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
 
     # We want the latest version of valgrind
     - name: Download valgrind source code

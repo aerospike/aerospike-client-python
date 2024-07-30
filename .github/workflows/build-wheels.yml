@@ -1,5 +1,5 @@
 name: Build wheels
-run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }}, build-for-debugging=${{ inputs.build-for-debugging }})
+run-name: Build wheels (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }}, apply-no-optimizations=${{ inputs.apply-no-optimizations }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }})
 
 # Builds manylinux wheels and source distribution
 # If running tests, publish results in commit status
@@ -29,11 +29,17 @@ on:
         type: boolean
         default: false
         description: 'Test macOS x86 wheels (unstable)'
-      build-for-debugging:
+      apply-no-optimizations:
         required: true
         type: boolean
         default: false
-        description: 'Apply -O0 when building C client and Python client? (Linux)'
+        description: 'Linux and macOS: apply -O0 when building C and Python client?'
+      include-debug-info-for-macos:
+        required: true
+        type: boolean
+        default: false
+        description: 'macOS: include source files and line numbers for both C and Python client for debugging?'
+
   workflow_call:
     inputs:
       # The "dev" tests test the artifacts against a server release
@@ -60,7 +66,11 @@ on:
         required: false
         type: boolean
         default: false
-      build-for-debugging:
+      apply-no-optimizations:
+        required: false
+        type: boolean
+        default: false
+      include-debug-info-for-macos:
         required: false
         type: boolean
         default: false
@@ -78,6 +88,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Show job status for commit
+      # If workflow_call triggered this job, github.event_name will inherit the event of the calling workflow
+      # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
+      # Commit status will already be shown by the calling workflow for these events
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
         sha: ${{ github.sha }}
@@ -87,6 +101,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
@@ -102,14 +117,15 @@ jobs:
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+      # Always run even if job failed or is cancelled
+      # But we don't want to show anything if the calling workflow was triggered by these events
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
         context: "Build wheels (sdist)"
 
   manylinux:
-    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -122,27 +138,23 @@ jobs:
           "cp312"
         ]
         platform: [
-          "x86_64",
-          "aarch64"
+          ["x86_64", "ubuntu-22.04"],
+          ["aarch64", "aerospike_arm_runners_2"]
         ]
-
+    runs-on: ${{ matrix.platform[1] }}
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
-        context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
+        context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform[0] }})"
 
     - uses: actions/checkout@v4
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
-
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ matrix.platform == 'aarch64' }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
+        fetch-depth: 0
 
     - uses: ./.github/actions/run-ee-server-for-ext-container
       if: ${{ inputs.run_tests }}
@@ -160,46 +172,37 @@ jobs:
       if: ${{ !inputs.run_tests }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
-    - name: Get current version if building a debug wheel
-      if: ${{ inputs.build-for-debugging }}
-      run: echo DEBUG_VERSION="$(cat VERSION)+unoptimized" >> $GITHUB_ENV
-
-    - name: Label version for debugging
-      if: ${{ inputs.build-for-debugging }}
-      uses: ./.github/actions/update-version
-      with:
-        new_version: ${{ env.DEBUG_VERSION }}
-
-    - name: Build without optimizations
-      if: ${{ inputs.build-for-debugging }}
+    - name: Set unoptimize flag
+      if: ${{ inputs.apply-no-optimizations }}
       run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.16.5
+      uses: pypa/cibuildwheel@v2.19.2
       env:
-        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.build-for-debugging && 'UNOPTIMIZED' || '' }}
-        CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform }}
+        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }}
+        CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform[0] }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
-        CIBW_ARCHS: "${{ matrix.platform }}"
+        CIBW_ARCHS: "${{ matrix.platform[0] }}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
+      if: ${{ always() }}
       with:
         path: ./wheelhouse/*.whl
-        name: ${{ matrix.python }}-manylinux_${{ matrix.platform }}.build
+        name: ${{ matrix.python }}-manylinux_${{ matrix.platform[0] }}.build
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
-        context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform }})"
+        context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform[0] }})"
 
   macOS-x86:
     strategy:
@@ -216,6 +219,7 @@ jobs:
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
@@ -224,6 +228,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     - name: Install Docker Engine
       if: ${{ inputs.run_tests }}
@@ -253,8 +258,16 @@ jobs:
       if: ${{ !inputs.run_tests || !inputs.test-macos-x86 }}
       run: echo "TEST_COMMAND=python -c 'import aerospike'" >> $GITHUB_ENV
 
+    - name: Set unoptimize flag
+      if: ${{ inputs.apply-no-optimizations }}
+      run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
+
+    - name: Set include dsym flag
+      if: ${{ inputs.include-debug-info-for-macos }}
+      run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
+
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.16.5
+      uses: pypa/cibuildwheel@v2.19.2
       env:
         CIBW_BUILD: ${{ matrix.python }}-macosx_x86_64
         CIBW_BUILD_FRONTEND: build
@@ -264,13 +277,14 @@ jobs:
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v4
+      if: ${{ always() }}
       with:
         name: ${{ matrix.python }}-macosx_x86_64.build
         path: wheelhouse/*.whl
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         status: ${{ job.status }}
         sha: ${{ github.sha }}
@@ -295,6 +309,7 @@ jobs:
     steps:
     - name: Show job status for commit
       uses: myrotvorets/set-commit-status-action@v2.0.0
+      if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python-version[0] }}-macosx_arm64)"
@@ -303,6 +318,7 @@ jobs:
       with:
         submodules: recursive
         ref: ${{ inputs.ref }}
+        fetch-depth: 0
 
     # Update dependencies if needed
     - name: Add brew to path
@@ -322,7 +338,7 @@ jobs:
         echo STATIC_SSL=1 >> $GITHUB_ENV
 
     - name: Install pip build packages
-      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages -r requirements.txt
+      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall -r requirements.txt
 
     # Self-hosted runner only
     # Need to be able to save Docker Hub credentials to keychain
@@ -345,18 +361,30 @@ jobs:
 
     - name: Run server
       if: ${{ inputs.run_tests }}
-      run: docker run -d -p 3000:3000 --name aerospike ${{ env.IMAGE_NAME }}
+      run: docker run -d -p 3000:3000 --pull always --name aerospike ${{ env.IMAGE_NAME }}
+
+    - name: Set unoptimize flag
+      if: ${{ inputs.apply-no-optimizations }}
+      run: echo "UNOPTIMIZED=1" >> $GITHUB_ENV
+
+    - name: Set include dsym flag
+      if: ${{ inputs.include-debug-info-for-macos }}
+      run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
     - run: python${{ matrix.python-version[1] }} -m build
 
     - name: Install delocate
-      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages delocate -c ./requirements.txt
+      run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall delocate -c ./requirements.txt
       working-directory: .github/workflows
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
 
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
     - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --find-links=wheelhouse/ --no-index --force-reinstall aerospike
 
-    - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages -r requirements.txt
+    - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall -r requirements.txt
       if: ${{ inputs.run_tests }}
       working-directory: test
 
@@ -369,6 +397,7 @@ jobs:
 
     - name: Save macOS wheel
       uses: actions/upload-artifact@v4
+      if: ${{ always() }}
       with:
         name: ${{ matrix.python-version[0] }}-macosx_arm64.build
         path: wheelhouse/*.whl
@@ -381,7 +410,7 @@ jobs:
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
-      if: always()
+      if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
@@ -402,6 +431,7 @@ jobs:
     steps:
       - name: Show job status for commit
         uses: myrotvorets/set-commit-status-action@v2.0.0
+        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ github.sha }}
           context: "Build wheels (${{ matrix.python[0] }}-win_amd64)"
@@ -410,6 +440,7 @@ jobs:
         with:
           submodules: recursive
           ref: ${{ inputs.ref }}
+          fetch-depth: 0
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v1.1
@@ -419,7 +450,7 @@ jobs:
         working-directory: aerospike-client-c/vs
 
       - name: Build wheel
-        uses: pypa/cibuildwheel@v2.16.5
+        uses: pypa/cibuildwheel@v2.19.2
         env:
           CIBW_BUILD: ${{ matrix.python[0] }}-win_amd64
           CIBW_BUILD_FRONTEND: build
@@ -434,7 +465,7 @@ jobs:
 
       - name: Set final commit status
         uses: myrotvorets/set-commit-status-action@v2.0.0
-        if: always()
+        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ github.sha }}
           status: ${{ job.status }}
@@ -457,6 +488,7 @@ jobs:
     steps:
       - name: Show job status for commit
         uses: myrotvorets/set-commit-status-action@v2.0.0
+        if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
         with:
           sha: ${{ github.sha }}
           context: "Test Windows (${{ matrix.python[0] }}-win_amd64)"
@@ -469,6 +501,11 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.python[0] }}-win_amd64.build
+
+      - name: Create config.conf
+        run: cp config.conf.template config.conf
+        working-directory: test
+
       - name: Install wheel
         run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
       - name: Connect to Docker container on remote machine with Docker daemon
@@ -492,7 +529,7 @@ jobs:
           docker container rm aerospike
 
       - name: Show job status for commit
-        if: always()
+        if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
         uses: myrotvorets/set-commit-status-action@v2.0.0
         with:
           sha: ${{ github.sha }}

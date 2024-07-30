@@ -202,7 +202,7 @@ class TestExpressions(TestBaseClass):
                 "bymap_bin": {1: "b".encode("utf8"), 2: "d".encode("utf8"), 3: "f".encode("utf8")},
                 "bomap_bin": {1: False, 2: False, 3: True},
                 "nmap_bin": {1: None, 2: aerospike.null(), 3: aerospike.null()},
-                "fmap_bin": {1.0: 1.0, 2.0: 2.0, 6.0: 6.0},
+                "fmap_bin": {1: 1.0, 2: 2.0, 6: 6.0},
                 "gmap_bin": {1: GEO_POLY, 2: GEO_POLY1, 3: GEO_POLY2},
             }
             self.as_connection.put(key, rec)
@@ -413,7 +413,7 @@ class TestExpressions(TestBaseClass):
         "bin, bin_name, ctx, policy, key, value, expected",
         [
             ("imap_bin", "imap_bin", None, None, 3, 6, [12]),
-            ("fmap_bin", "fmap_bin", None, None, 6.0, 6.0, [12.0]),
+            ("fmap_bin", "fmap_bin", None, None, 6, 6.0, [12.0]),
             (ListBin("mlist_bin"), "mlist_bin", [cdt_ctx.cdt_ctx_list_index(0)], None, 1, 4, [6]),
         ],
     )
@@ -471,7 +471,7 @@ class TestExpressions(TestBaseClass):
                 "fmap_bin",
                 None,
                 {},
-                [8.0, 10.0, 1.0, 1.0, 6.0, 6.0],
+                [8, 10.0, 1, 1.0, 6, 6.0],
             ),
         ],
     )
@@ -773,8 +773,8 @@ class TestExpressions(TestBaseClass):
                 ),
                 [2, 1]
             ),
-            # Get entries with keys 2.0 and 6.0
-            # Inverse is entry with key 1.0
+            # Get entries with keys 2 and 6
+            # Inverse is entry with key 1
             # This has reverse rank 2
             (
                 "fmap_bin",
