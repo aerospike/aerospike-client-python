@@ -206,6 +206,7 @@ jobs:
         context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform[0] }})"
 
   macOS-x86:
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -293,6 +294,7 @@ jobs:
         context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
 
   macOS-m1:
+    if: ${{ false }}
     runs-on: [
       self-hosted,
       macOS,
