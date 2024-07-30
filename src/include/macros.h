@@ -16,6 +16,19 @@
 
 #pragma once
 
+#include <Python.h>
+
 // pyval is a PyObject* classname is a string
 #define AS_Matches_Classname(pyval, classname)                                 \
     (strcmp((pyval)->ob_type->tp_name, (classname)) == 0)
+
+inline void PyObject_SetAttrStringSafe(PyObject *obj, const char *attr_name,
+                                       PyObject *value)
+{
+    if (value == NULL) {
+        PyObject_DelAttrString(obj, attr_name);
+    }
+    else {
+        PyObject_SetAttrString(obj, attr_name, value);
+    }
+}
