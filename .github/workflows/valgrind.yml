@@ -39,7 +39,7 @@ jobs:
       run: pip install ./*.whl
 
     - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+      run: pip install pytest -c test/requirements.txt
 
     - name: Run EE server
       uses: ./.github/actions/run-ee-server
