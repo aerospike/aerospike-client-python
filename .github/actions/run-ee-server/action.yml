@@ -56,10 +56,14 @@ runs:
   - run: echo SECURITY_IMAGE_NAME=${{ env.IMAGE_NAME }}-security >> $GITHUB_ENV
     shell: bash
 
-  # macOS Github runners don't have Docker by default
+  # macOS Github runners don't have Docker buildx by default, unlike Linux
   - if: ${{ runner.os == 'macOS' }}
     run: brew install docker-buildx
     shell: bash
+
+  # The Windows self-hosted images don't have it either
+  - if: ${{ runner.os == 'Windows' }}
+    uses: docker/setup-buildx-action@v3
 
   - name: Build and push
     uses: docker/build-push-action@v6
