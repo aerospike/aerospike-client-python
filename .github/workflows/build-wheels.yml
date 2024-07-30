@@ -501,10 +501,14 @@ jobs:
         with:
           name: ${{ matrix.python[0] }}-win_amd64.build
 
-      - name: Install wheel
-        run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python[1] }}
 
-      - run: python${{ matrix.python[1] }} -m pip install pytest -c requirements.txt
+      - name: Install wheel
+        run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
+
+      - run: python3 -m pip install pytest -c requirements.txt
         working-directory: test
 
       - uses: ./.github/actions/run-ee-server
@@ -513,10 +517,10 @@ jobs:
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          python${{ matrix.python[1] }} -m crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
+          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
         working-directory: test
 
-      - run: python${{ matrix.python[1] }} -m pytest new_tests/
+      - run: python3 -m pytest new_tests/
         working-directory: test
 
       - name: Cleanup
