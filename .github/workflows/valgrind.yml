@@ -28,12 +28,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: 'pypy3.9'
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
       with:
-        name: cp38-manylinux_x86_64.build
+        name: pp39-manylinux_x86_64.build
 
     - name: Install client
       run: pip install ./*.whl
