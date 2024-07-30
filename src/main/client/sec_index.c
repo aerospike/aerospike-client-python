@@ -233,7 +233,7 @@ CLEANUP:
         error_to_pyobject(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "name")) {
-            PyObject_SetAttrStringSafe(exception_type, "name", py_name);
+            PyObject_SetAttrString(exception_type, "name", py_name);
         }
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);
@@ -334,7 +334,7 @@ CLEANUP:
         error_to_pyobject(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "name")) {
-            PyObject_SetAttrStringSafe(exception_type, "name", py_name);
+            PyObject_SetAttrString(exception_type, "name", py_name);
         }
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);

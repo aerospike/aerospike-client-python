@@ -290,7 +290,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     Py_DECREF(data.func_name);
 
     PyObject *py_bw_res = PyLong_FromLong((long)batch_apply_err.code);
-    PyObject_SetAttrStringSafe(br_instance, FIELD_NAME_BATCH_RESULT, py_bw_res);
+    PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_bw_res);
     Py_DECREF(py_bw_res);
 
     as_error_reset(err);
