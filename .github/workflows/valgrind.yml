@@ -74,5 +74,7 @@ jobs:
     #   run: sudo make install
     #   working-directory: valgrind-3.21.0
 
-    - run: PYTHONMALLOC=malloc valgrind --max-threads=3000 --leak-check=full --show-leak-kinds=all --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+    - run: PYTHONMALLOC=malloc valgrind --tool=massif --massif-out-file=./massif.out --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+      working-directory: test
+    - run: ms_print ./massif.out
       working-directory: test
