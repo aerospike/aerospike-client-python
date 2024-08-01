@@ -44,6 +44,20 @@ jobs:
     - run: pipx environment
     - run: pipx install crudini
 
+  windows-pipx-test:
+    runs-on: [self-hosted, Windows, X64]
+    strategy:
+      matrix:
+        setup-python: [false, true]
+    steps:
+      - if: ${{ matrix.setup-python }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+          architecture: 'x64'
+      - run: pipx environment
+      - run: pipx install crudini
+
   lint:
     runs-on: ubuntu-latest
     steps:
