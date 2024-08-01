@@ -28,6 +28,22 @@ on:
         required: true
 
 jobs:
+  pipx-test-wout-setup-python:
+    runs-on: ubuntu-latest
+    steps:
+    - run: pipx environment
+    - run: pipx install crudini
+
+  pipx-test-with-setup-python:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+        architecture: 'x64'
+    - run: pipx environment
+    - run: pipx install crudini
+
   lint:
     runs-on: ubuntu-latest
     steps:
