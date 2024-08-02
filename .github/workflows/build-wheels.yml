@@ -496,15 +496,10 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
       - name: Download wheel
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.python[0] }}-win_amd64.build
-
-      - name: Create config.conf
-        run: cp config.conf.template config.conf
-        working-directory: test
 
       - uses: actions/setup-python@v5
         with:
@@ -512,15 +507,17 @@ jobs:
 
       - name: Install wheel
         run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
+
+      - run: python3 -m pip install pytest -c requirements.txt
+        working-directory: test
+
+      - uses: ./.github/actions/run-ee-server
+
       - name: Connect to Docker container on remote machine with Docker daemon
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
-          python3 -m pip install crudini==0.9.4
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          python3 -m crudini --set config.conf community-edition hosts ${env:DOCKER_HOST_IP}:3000
-        working-directory: test
-
-      - run: python3 -m pip install pytest -c requirements.txt
+          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
         working-directory: test
 
       - run: python3 -m pytest new_tests/
