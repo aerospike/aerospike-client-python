@@ -356,7 +356,7 @@ jobs:
     - run: ldconfig -p | grep libasan.so
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv
+      run: LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.6 python -m pytest ./new_tests -vv
       working-directory: test
 
   test-lowest-supported-server:
