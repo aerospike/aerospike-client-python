@@ -232,6 +232,9 @@ class CClientBuild(build):
             ]
             if UNOPTIMIZED:
                 cmd.append('O=0')
+            if SANITIZER:
+                ext_cflags = " ".join(sanitizer_flags)
+                cmd.append(f"EXT_CFLAGS={ext_cflags}")
 
         def compile():
             print(cmd, library_dirs, libraries)
