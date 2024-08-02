@@ -45,6 +45,10 @@ jobs:
     strategy:
       matrix:
         py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        sanitizer: [false]
+        include:
+        - py-version: 3.8
+          sanitizer: true
       fail-fast: false
 
     steps:
@@ -63,6 +67,9 @@ jobs:
       run: sudo apt install python3-dev libssl-dev -y
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
+
+    - if: ${{ matrix.sanitizer }}
+      run: echo SANITIZER=1 >> $GITHUB_ENV
 
     - name: Build client
       run: python3 -m build
