@@ -320,13 +320,16 @@ jobs:
         ref: ${{ inputs.ref }}
         fetch-depth: 0
 
+    # TODO: remove
     # Update dependencies if needed
     - name: Add brew to path
       run: echo PATH=$PATH:/opt/homebrew/bin/ >> $GITHUB_ENV
 
+    # TODO: remove
     - name: Install or upgrade Python
       run: brew install python@${{ matrix.python-version[1] }}
 
+    # TODO: remove
     - name: Install or upgrade OpenSSL 1.1
       run: brew install openssl@1.1
 
@@ -337,9 +340,11 @@ jobs:
         echo CPATH="$openssl_path/include/" >> $GITHUB_ENV
         echo STATIC_SSL=1 >> $GITHUB_ENV
 
+    # TODO: remove
     - name: Install pip build packages
       run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall -r requirements.txt
 
+    # TODO: Move to run-ee-server
     # Self-hosted runner only
     # Need to be able to save Docker Hub credentials to keychain
     - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
@@ -363,13 +368,16 @@ jobs:
 
     - run: python${{ matrix.python-version[1] }} -m build
 
+    # TODO: shouldn't break system packages and force-reinstall
     - name: Install delocate
       run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall delocate -c ./requirements.txt
       working-directory: .github/workflows
 
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
+    # TODO: shouldn't break system packages and force-reinstall
     - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --find-links=wheelhouse/ --no-index --force-reinstall aerospike
 
+    # TODO: shouldn't break system packages and force-reinstall
     - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall -r requirements.txt
       if: ${{ inputs.run_tests }}
       working-directory: test
@@ -388,6 +396,7 @@ jobs:
         name: ${{ matrix.python-version[0] }}-macosx_arm64.build
         path: wheelhouse/*.whl
 
+    # TODO: remove
     - name: Stop server
       if: ${{ always() && inputs.run_tests }}
       run: |
