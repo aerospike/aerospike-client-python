@@ -353,6 +353,8 @@ jobs:
       with:
         container-name: aerospike
 
+    - run: ldconfig -p | grep libasan.so
+
     - name: Run tests
       run: python -m pytest ./new_tests -vv
       working-directory: test
