@@ -89,7 +89,8 @@ SANITIZER=os.getenv('SANITIZER')
 if SANITIZER:
     sanitizer_flags = [
         '-fsanitize=address',
-        '-fsanitize-recover=all'
+        '-fsanitize-recover=all',
+        '-fno-omit-frame-pointer'
     ]
     extra_compile_args.extend(sanitizer_flags)
 
