@@ -22,7 +22,7 @@ runs:
   steps:
   - name: Install crudini to manipulate config.conf
     # This will only work on the Github hosted runners.
-    # TODO: self hosted runners do not have pipx installed by default
+    # TODO: mac m1 self hosted runners do not have pipx installed by default
     run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
     working-directory: .github/workflows
     shell: bash
@@ -56,10 +56,9 @@ runs:
   - run: echo SECURITY_IMAGE_NAME=${{ env.IMAGE_NAME }}-security >> $GITHUB_ENV
     shell: bash
 
-  # macOS Github runners don't have Docker by default
-  - if: ${{ runner.os == 'macOS' }}
-    run: brew install docker-buildx
-    shell: bash
+  # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
+  - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
+    uses: docker/setup-buildx-action@v3
 
   - name: Build and push
     uses: docker/build-push-action@v6
@@ -69,6 +68,10 @@ runs:
       build-args: |
         image=${{ env.IMAGE_NAME }}
       tags: ${{ env.SECURITY_IMAGE_NAME }}
+      # setup-buildx-action configures Docker to use the docker-container build driver
+      # This driver doesn't publish an image locally by default
+      # so we have to manually enable it
+      load: true
 
   - run: docker run -d --name aerospike -p 3000:3000 ${{ env.SECURITY_IMAGE_NAME }}
     shell: bash

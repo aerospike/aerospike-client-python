@@ -347,23 +347,13 @@ jobs:
     - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
       if: ${{ inputs.run_tests && inputs.use-server-rc }}
 
-    - if: ${{ inputs.run_tests && inputs.use-server-rc }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Use server rc
-      if: ${{ inputs.run_tests && inputs.use-server-rc }}
-      run: echo IMAGE_NAME="${{ vars.SERVER_RC_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Use server release
-      if: ${{ inputs.run_tests && !inputs.use-server-rc }}
-      run: echo IMAGE_NAME="${{ vars.SERVER_REPO_LINK }}:${{ inputs.server-tag }}" >> $GITHUB_ENV
-
-    - name: Run server
+    - uses: ./.github/actions/run-ee-server
       if: ${{ inputs.run_tests }}
-      run: docker run -d -p 3000:3000 --pull always --name aerospike ${{ env.IMAGE_NAME }}
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Set unoptimize flag
       if: ${{ inputs.apply-no-optimizations }}
@@ -378,10 +368,6 @@ jobs:
     - name: Install delocate
       run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --force-reinstall delocate -c ./requirements.txt
       working-directory: .github/workflows
-
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
 
     - run: delocate-wheel --require-archs "arm64" -w wheelhouse/ -v dist/*.whl
     - run: python${{ matrix.python-version[1] }} -m pip install --break-system-packages --find-links=wheelhouse/ --no-index --force-reinstall aerospike
@@ -498,30 +484,31 @@ jobs:
         with:
           ref: ${{ inputs.ref }}
 
-      - run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
       - name: Download wheel
         uses: actions/download-artifact@v4
         with:
           name: ${{ matrix.python[0] }}-win_amd64.build
 
-      - name: Create config.conf
-        run: cp config.conf.template config.conf
-        working-directory: test
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python[1] }}
 
       - name: Install wheel
-        run: python${{ matrix.python[1] }} -m pip install aerospike --force-reinstall --no-index --find-links=./
+        run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
+
+      - run: python3 -m pip install pytest -c requirements.txt
+        working-directory: test
+
+      - uses: ./.github/actions/run-ee-server
+
       - name: Connect to Docker container on remote machine with Docker daemon
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
-          python${{ matrix.python[1] }} -m pip install crudini==0.9.4
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          python${{ matrix.python[1] }} -m crudini --set config.conf community-edition hosts ${env:DOCKER_HOST_IP}:3000
+          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
         working-directory: test
 
-      - run: python${{ matrix.python[1] }} -m pip install pytest -c requirements.txt
-        working-directory: test
-
-      - run: python${{ matrix.python[1] }} -m pytest new_tests/
+      - run: python3 -m pytest new_tests/
         working-directory: test
 
       - name: Cleanup
