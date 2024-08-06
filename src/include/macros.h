@@ -22,6 +22,8 @@
 #define AS_Matches_Classname(pyval, classname)                                 \
     (strcmp((pyval)->ob_type->tp_name, (classname)) == 0)
 
+// We can't declare a macro called PyObject_SetAttrString because PyPy's Python header file already defines
+// a header named PyObject_SetAttrString to point to its own implementation
 inline void PyObject_SetAttrStringSafe(PyObject *obj, const char *attr_name,
                                        PyObject *value)
 {
