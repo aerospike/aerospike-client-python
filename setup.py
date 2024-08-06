@@ -289,6 +289,7 @@ setup(
                 'src/main/aerospike.c',
                 'src/main/exception.c',
                 'src/main/log.c',
+                'src/main/pyobject_setattrstringsafe.c',
                 'src/main/client/type.c',
                 'src/main/client/apply.c',
                 'src/main/client/bit_operate.c',
