@@ -562,8 +562,20 @@ as_status declare_policy_constants(PyObject *aerospike)
         goto exit;
     }
     for (i = 0; i < (int)AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
-        PyModule_AddIntConstant(aerospike, aerospike_constants[i].constant_str,
-                                aerospike_constants[i].constantno);
+        if (!strcmp(aerospike_constants[i].constant_str,
+                    "TTL_CLIENT_DEFAULT")) {
+            PyObject *py_default_ttl =
+                PyLong_FromUnsignedLong(AS_RECORD_CLIENT_DEFAULT_TTL);
+            // TODO: Check failure condition
+            PyModule_AddObject(aerospike, aerospike_constants[i].constant_str,
+                               py_default_ttl);
+            // TODO: check for failure
+        }
+        else {
+            PyModule_AddIntConstant(aerospike,
+                                    aerospike_constants[i].constant_str,
+                                    aerospike_constants[i].constantno);
+        }
     }
 
     for (i = 0; i < (int)AEROSPIKE_JOB_CONSTANTS_ARR_SIZE; i++) {
