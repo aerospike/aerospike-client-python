@@ -338,8 +338,9 @@ jobs:
     # TODO: Move to run-ee-server
     # Self-hosted runner only
     # Need to be able to save Docker Hub credentials to keychain
+    # And this is also needed to build the security enabled image
     - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-      if: ${{ inputs.run_tests && inputs.use-server-rc }}
+      if: ${{ inputs.run_tests }}
 
     - uses: ./.github/actions/run-ee-server
       if: ${{ inputs.run_tests }}
