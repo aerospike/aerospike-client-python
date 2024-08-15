@@ -10,7 +10,7 @@ jobs:
       - run: echo $PATH
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.11'
       - run: echo $PATH
       - run: python3 -m pip install -r requirements.txt
       - run: pipx install crudini
