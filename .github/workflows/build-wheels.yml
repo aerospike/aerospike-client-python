@@ -385,13 +385,6 @@ jobs:
         name: ${{ matrix.python-version[0] }}-macosx_arm64.build
         path: wheelhouse/*.whl
 
-    # TODO: remove
-    - name: Stop server
-      if: ${{ always() && inputs.run_tests }}
-      run: |
-        docker container stop aerospike
-        docker container prune -f
-
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
