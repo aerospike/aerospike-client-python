@@ -323,6 +323,7 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version[1] }}
+        architecture: arm64
 
     - name: Set environment variables for building
       run: |
