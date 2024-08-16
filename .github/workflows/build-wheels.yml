@@ -336,8 +336,8 @@ jobs:
       run: python3 -m pip install -r requirements.txt
 
     # The mac m1 self hosted runners use Docker Desktop which uses Keychain by default to store `docker login` credentials
+    # It's also required for pulling certain public images for some reason, like moby buildx
     # There's currently no way to configure a different credential store (AFAIK), so we just need to make sure Keychain is unlocked
-    # or else it will block pulling certain Docker images (like the ones mentioned below)
     - name: Allow saving Docker Hub credentials using keychain and pulling moby buildx Docker image 
       run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
       if: ${{ inputs.run_tests }}
