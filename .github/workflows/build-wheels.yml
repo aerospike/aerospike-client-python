@@ -242,6 +242,8 @@ jobs:
       if: ${{ inputs.run_tests }}
       run: colima start
 
+    - run: cat $HOME/.docker/config.json
+
     - uses: ./.github/actions/run-ee-server
       if: ${{ inputs.run_tests }}
       with:
