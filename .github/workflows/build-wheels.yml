@@ -136,7 +136,7 @@ jobs:
           "cp310",
           "cp311",
           "cp312",
-          "pp39"
+          "pp310"
         ]
         platform: [
           ["x86_64", "ubuntu-22.04"],
@@ -215,7 +215,7 @@ jobs:
           "cp310",
           "cp311",
           "cp312",
-          "pp39"
+          "pp310"
         ]
     runs-on: macos-12-large
     steps:
@@ -306,7 +306,7 @@ jobs:
           ["cp310", "3.10"],
           ["cp311", "3.11"],
           ["cp312", "3.12"],
-          ["pp39", _]
+          ["pp310", _]
         ]
       fail-fast: false
     steps:
@@ -415,7 +415,7 @@ jobs:
           # ["cp310", "3.10"],
           # ["cp311", "3.11"],
           # ["cp312", "3.12"],
-          ["pp39", "_"]
+          ["pp310", "_"]
         ]
     runs-on: windows-2022
     steps:
@@ -473,7 +473,7 @@ jobs:
           # ["cp310", "3.10"],
           # ["cp311", "3.11"],
           # ["cp312", "3.12"],
-          ["pp39", "pypy3.9"]
+          ["pp310", "pypy3.10"]
         ]
     runs-on: [self-hosted, Windows, X64]
     steps:
