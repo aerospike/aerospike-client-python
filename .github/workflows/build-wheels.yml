@@ -390,9 +390,17 @@ jobs:
         ref: ${{ inputs.ref }}
         fetch-depth: 0
 
+    - name: Download wheel
+      uses: actions/download-artifact@v4
+      with:
+        name: ${{ matrix.python-version[0] }}-macosx_arm64.build
+
     - uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version[1] }}
+
+    - name: Install wheel
+      run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
 
     # The mac m1 self hosted runners use Docker Desktop which uses Keychain by default to store `docker login` credentials
     # It's also required for pulling certain public images for some reason, like moby buildx
