@@ -338,15 +338,12 @@ jobs:
     - name: Install pip build packages
       run: python3 -m pip install -r requirements.txt
 
-    # TODO: run this in startup script so we don't have to run it in the workflow code
-      # TODO: Move to run-ee-server
-    # Self-hosted runner only
-    # Need to be able to save Docker Hub credentials to keychain
-    # And this is also needed to build the security enabled image
-    # - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
-    #   if: ${{ inputs.run_tests }}
-
-    - run: security lock-keychain -a
+    # The mac m1 self hosted runners use Docker Desktop which uses Keychain by default to store `docker login` credentials
+    # There's currently no way to configure a different credential store (AFAIK), so we just need to make sure Keychain is unlocked
+    # or else it will block pulling certain Docker images (like the ones mentioned below)
+    - name: Allow saving Docker Hub credentials using keychain and pulling moby buildx Docker image 
+      run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
+      if: ${{ inputs.run_tests }}
 
     - uses: ./.github/actions/run-ee-server
       if: ${{ inputs.run_tests }}
