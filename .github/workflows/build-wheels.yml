@@ -343,6 +343,8 @@ jobs:
     # - run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
     #   if: ${{ inputs.run_tests }}
 
+    - run: security lock-keychain -a
+
     - uses: ./.github/actions/run-ee-server
       if: ${{ inputs.run_tests }}
       with:
