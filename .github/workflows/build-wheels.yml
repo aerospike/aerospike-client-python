@@ -251,6 +251,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - run: cat $HOME/.docker/config.json
+    - run: security list-keychains
 
     - name: Enable tests
       if: ${{ inputs.run_tests && inputs.test-macos-x86 }}
