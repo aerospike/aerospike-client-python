@@ -25,3 +25,6 @@ class HyperLogLog(bytes):
     """
     def __new__(cls, o) -> "HyperLogLog":
         return super().__new__(cls, o)
+
+    def __repr__(obj) -> str:
+        return f"HyperLogLog({obj})"
