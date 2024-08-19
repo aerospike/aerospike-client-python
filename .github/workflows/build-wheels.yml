@@ -526,7 +526,7 @@ jobs:
       - run: python3 -m pip install pytest -c requirements.txt
         working-directory: test
 
-      # TODO: bug: inputs are not passed in
+      # TODO: bug: inputs are not passed in. Just fix this in the refactoring PR
       - uses: ./.github/actions/run-ee-server
 
       - name: Connect to Docker container on remote machine with Docker daemon
