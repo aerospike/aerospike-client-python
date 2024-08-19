@@ -429,7 +429,7 @@ jobs:
       with:
         sha: ${{ github.sha }}
         status: ${{ job.status }}
-        context: "Test self hosted (${{ matrix.python-version[0] }}-macosx_arm64)"
+        context: "Test self-hosted (${{ matrix.python-version[0] }}-macosx_arm64)"
 
   windows-build:
     strategy:
