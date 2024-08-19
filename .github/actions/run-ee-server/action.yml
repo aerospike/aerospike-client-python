@@ -22,8 +22,6 @@ runs:
   steps:
   - name: Install crudini to manipulate config.conf
     # This will only work on the Github hosted runners.
-    # TODO: make sure crudini is always installed
-    # TODO: mac m1 self hosted runners do not have pipx installed by default
     run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
     working-directory: .github/workflows
     shell: bash
@@ -62,7 +60,6 @@ runs:
     uses: docker/setup-buildx-action@v3
 
   - name: Build and push
-    # TODO: Make sure base image is always pulled
     uses: docker/build-push-action@v6
     with:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
