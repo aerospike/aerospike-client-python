@@ -290,6 +290,8 @@ jobs:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
 
+  # TODO: this needs refactoring. But for now, just reuse code from macos x86
+  # There's already an open PR to refactor all this code for building wheels and the sdist
   macOS-m1:
     strategy:
       fail-fast: false
@@ -330,7 +332,7 @@ jobs:
     - uses: actions/setup-python@v5
       with:
         python-version: 3.8
-      if: runner.os == 'macOS' && runner.arch == 'ARM64'
+      if: runner.os == 'macOS' && runner.arch == 'ARM64' && matrix.python == 'cp38'
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.19.2
