@@ -290,7 +290,7 @@ jobs:
         sha: ${{ github.sha }}
         context: "Build wheels (${{ matrix.python }}-macosx_x86_64)"
 
-  # TODO: this needs refactoring. But for now, just reuse code from macos x86
+  # TODO: this needs refactoring. But for now, just reuse code from the macos x86 job
   # There's already an open PR to refactor all this code for building wheels and the sdist
   macOS-m1:
     strategy:
