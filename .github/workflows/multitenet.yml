@@ -15,3 +15,10 @@ jobs:
       - run: python3 -m pip install -r requirements.txt
       - run: pipx install crudini
       - run: crudini --version
+      - run: |
+          if [ -e "./a" ]; then
+              echo "File exists"
+          else 
+              echo "Creating file"
+              touch ./a
+          fi 
