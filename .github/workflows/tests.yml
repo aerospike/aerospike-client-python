@@ -46,9 +46,6 @@ jobs:
       matrix:
         py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         sanitizer: [false]
-        exclude:
-        - py-version: 3.8
-          sanitizer: false
         include:
         - py-version: 3.8
           sanitizer: true
@@ -79,10 +76,15 @@ jobs:
       env:
         CFLAGS: '-Werror'
 
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
+
+    - if: ${{ matrix.sanitizer }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
+
     - name: Send wheel to test jobs
       uses: actions/upload-artifact@v3
       with:
-        name: wheel-${{ matrix.py-version }}
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
         path: ./dist/*.whl
 
   test-memray:
@@ -309,6 +311,10 @@ jobs:
           "3.11",
           "3.12"
         ]
+        sanitizer: [false]
+        include:
+          - py-version: 3.8
+            sanitizer: true
       fail-fast: false
 
     steps:
@@ -321,9 +327,14 @@ jobs:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
 
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
+
+    - if: ${{ matrix.sanitizer }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
+
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-${{ matrix.py-version }}
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
       run: pip install *.whl
@@ -353,10 +364,13 @@ jobs:
       with:
         container-name: aerospike
 
-    - run: ldconfig -p | grep libasan.so
+    - if: ${{ matrix.sanitizer }}
+      run: |
+        echo ASAN_OPTIONS='halt_on_error=0' >> $GITHUB_ENV
+        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
 
     - name: Run tests
-      run: ASAN_OPTIONS='halt_on_error=0' LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.6 python -m pytest ./new_tests -vv
+      run: python -m pytest ./new_tests -vv
       working-directory: test
 
   test-lowest-supported-server:
