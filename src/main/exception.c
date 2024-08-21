@@ -627,7 +627,7 @@ PyObject *raise_exception_old(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyImport_ImportModule("aerospike.exception");
+    PyObject *py_module = PyImport_ImportModule("aerospike.exception");
     PyObject *py_module_dict = PyModule_GetDict(py_module);
     Py_DECREF(py_module);
     bool found = false;
