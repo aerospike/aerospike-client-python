@@ -307,6 +307,19 @@ jobs:
         with:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
+      - name: Convert Python tag to Python version
+        # Don't use sed because we want this command to work on both mac and windows
+        # The command used in GNU sed is different than in macOS sed
+        run: |
+          PYTHON_TAG=${{ matrix.python-tag }}
+          PYTHON_VERSION="${PYTHON_TAG/cp/}"
+          echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
+        shell: bash
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
       - name: Install wheel
         run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
         shell: bash
