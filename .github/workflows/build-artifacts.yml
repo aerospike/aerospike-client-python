@@ -67,8 +67,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Get commit sha to show status check
-      # The workflow_dispatch event doesn't have the sha-to-build-and-test-override input
-      # So we also want to pass the github sha that triggered that event into the set-commit-status-action, instead
+      # A workflow_dispatch event doesn't have the sha-to-build-and-test-override input
+      # So for a workflow_dispatch event, we want to use the github commit hash that triggered it
       run: echo COMMIT_SHA_FOR_STATUS_CHECK=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test-override || github.sha }} >> $GITHUB_ENV
       shell: bash
 
