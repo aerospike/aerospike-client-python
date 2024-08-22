@@ -135,7 +135,7 @@ static int Aerospike_Clear(PyObject *aerospike)
     return 0;
 }
 
-PyMODINIT_FUNC PyInit_aerospike(void)
+PyMODINIT_FUNC PyInit__aerospike(void)
 {
     // Makes things "thread-safe"
     Py_Initialize();
