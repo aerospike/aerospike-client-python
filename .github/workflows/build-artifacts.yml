@@ -8,24 +8,21 @@ run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ 
 on:
   workflow_dispatch:
     inputs:
-      # If we only want to check that the wheels pass testing on an arbitrary branch
       run_tests:
-        description: "Run integration tests"
+        description: "Run integration tests with the wheels after building them"
         required: true
         type: boolean
         default: false
-      # If we are testing new server features
       use-server-rc:
         type: boolean
         required: true
         default: false
-        description: 'Test against server release candidate?'
-      # If we are creating a backport and want to test against an older server version
+        description: 'Test against server release candidate? (e.g to test new server features)'
       server-tag:
         type: string
         required: true
         default: 'latest'
-        description: 'Server docker image tag'
+        description: 'Server docker image tag (e.g to test a client backport version)'
 
   workflow_call:
     inputs:
