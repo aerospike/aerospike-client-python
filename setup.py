@@ -282,7 +282,7 @@ setup(
     ext_modules=[
         Extension(
             # Extension Name
-            'aerospike',
+            'aerospike.aerospike',
 
             # Source Files
             [
