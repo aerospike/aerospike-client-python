@@ -554,16 +554,9 @@ void raise_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_fromlist = PyList_New(1);
-    PyObject *py_module_name = PyUnicode_FromString("exception");
-    PyList_SetItem(py_fromlist, 0, py_module_name);
-    PyObject *py_module =
-        PyImport_ImportModuleEx("aerospike", Py_None, Py_None, py_fromlist);
-    Py_DECREF(py_fromlist);
-    // if (py_module == NULL) {
-    //     PyErr_Print();
-    //     exit(1);
-    // }
+    PyObject *py_importlib_module = PyImport_ImportModule("importlib");
+    PyObject *py_module = PyObject_CallMethod(
+        py_importlib_module, "import_module", "%s", "aerospike.exception");
     PyObject *py_module_dict = PyModule_GetDict(py_module);
     Py_DECREF(py_module);
     bool found = false;
@@ -636,16 +629,9 @@ PyObject *raise_exception_old(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_fromlist = PyList_New(1);
-    PyObject *py_module_name = PyUnicode_FromString("exception");
-    PyList_SetItem(py_fromlist, 0, py_module_name);
-    PyObject *py_module =
-        PyImport_ImportModuleEx("aerospike", Py_None, Py_None, py_fromlist);
-    Py_DECREF(py_fromlist);
-    // if (py_module == NULL) {
-    //     PyErr_Print();
-    //     exit(1);
-    // }
+    PyObject *py_importlib_module = PyImport_ImportModule("importlib");
+    PyObject *py_module = PyObject_CallMethod(
+        py_importlib_module, "import_module", "%s", "aerospike.exception");
     PyObject *py_module_dict = PyModule_GetDict(py_module);
     Py_DECREF(py_module);
     bool found = false;
