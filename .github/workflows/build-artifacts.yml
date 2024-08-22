@@ -77,10 +77,11 @@ jobs:
       shell: bash
 
     - name: Show job status for commit
-      # If workflow_call triggered this job, github.event_name will inherit the event of the calling workflow
-      # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
       # Commit status will already be shown by the calling workflow for push and pull request events, but not
-      # for other events like workflow_dispatch. so we have to do it manually
+      # for any other event like workflow_dispatch. so we have to do it manually
+      # If workflow_call triggered this job, github.event_name will inherit the event of the calling workflow
+      # The calling workflow can be triggered by push or pull request events, so there's that
+      # https://github.com/actions/runner/issues/3146#issuecomment-2000017097
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
