@@ -6,6 +6,7 @@ run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ 
 # Then upload artifacts to Github
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       # If we only want to check that the wheels pass testing on an arbitrary branch
