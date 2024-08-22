@@ -299,33 +299,7 @@ jobs:
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
-      - if: ${{ inputs.use-server-rc }}
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-          password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-      - name: Convert Python tag to Python version
-        # Don't use sed because we want this command to work on both mac and windows
-        # The command used in GNU sed is different than in macOS sed
-        run: |
-          PYTHON_TAG=${{ matrix.python-tag }}
-          PYTHON_VERSION="${PYTHON_TAG/cp/}"
-          echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
-        shell: bash
-
-      # TODO: make Windows run EE tests
-      - name: Only run CE tests for Windows for now
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        run: docker run -d -p 3000:3000 --name aerospike aerospike/aerospike-server
-
-      - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
-        uses: ./.github/actions/run-ee-server
-
-      - name: Create config.conf
-        run: cp config.conf.template config.conf
-        working-directory: test
-        shell: bash
+      - uses: ./.github/actions/run-ee-server
 
       - name: Download wheel
         uses: actions/download-artifact@v4
@@ -333,7 +307,7 @@ jobs:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
       - name: Install wheel
-        run: python${{ env.PYTHON_VERSION }} -m pip install aerospike --force-reinstall --no-index --find-links=./
+        run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
         shell: bash
 
       - name: Connect to Docker container on remote machine with Docker daemon
@@ -341,15 +315,14 @@ jobs:
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          python${{ env.PYTHON_VERSION }} -m pip install crudini -c ${{ github.workspace }}/.github/workflows/requirements.txt
-          python${{ env.PYTHON_VERSION }} -m crudini --set config.conf community-edition hosts ${env:DOCKER_HOST_IP}:3000
+          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
         working-directory: test
 
-      - run: python${{ env.PYTHON_VERSION }} -m pip install pytest -c requirements.txt
+      - run: python3 -m pip install pytest -c requirements.txt
         working-directory: test
         shell: bash
 
-      - run: python${{ env.PYTHON_VERSION }} -m pytest new_tests/
+      - run: python3 -m pytest new_tests/
         working-directory: test
         shell: bash
 
