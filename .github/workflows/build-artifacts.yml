@@ -33,6 +33,11 @@ on:
         type: boolean
         default: false
       # Input only used in workflow_call events
+      # workflow_call hack
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
       sha-to-build-and-test-override:
         description: Some calling workflows want to specifically test on a different branch than the one the workflow is called from
         type: string
@@ -48,11 +53,6 @@ on:
         type: string
         required: false
         default: 'latest'
-      # workflow_call hack
-      is_workflow_call:
-        type: boolean
-        default: true
-        required: false
     secrets:
       DOCKER_HUB_BOT_USERNAME:
         required: false
