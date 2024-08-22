@@ -32,19 +32,19 @@ on:
         required: false
         type: boolean
         default: false
-      # Input only used in workflow_call events
       # workflow_call hack
       is_workflow_call:
         type: boolean
         default: true
         required: false
+      # This input is only used in workflow_call events
       sha-to-build-and-test-override:
         description: Some calling workflows want to specifically test on a different branch than the one the workflow is called from
         type: string
         default: ${{ github.sha }}
         required: false
-      # Calling workflow doesn't actually use the testing options below
-      # But we need to set default values for workflow calls to use
+      # A calling workflow doesn't actually set values to the inputs below
+      # But the workflow we need to have default values for these inputs
       use-server-rc:
         required: false
         default: false
