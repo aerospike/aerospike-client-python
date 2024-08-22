@@ -26,6 +26,7 @@ jobs:
   test-with-server-release:
     uses: ./.github/workflows/build-artifacts.yml
     with:
+      sha-to-build-and-test: ${{ github.sha }}
       run_tests: ${{ github.event_name == 'pull_request' && true || inputs.run_server_release_tests }}
     secrets: inherit
 
