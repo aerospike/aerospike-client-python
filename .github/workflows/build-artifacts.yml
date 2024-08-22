@@ -29,7 +29,6 @@ on:
       # The "dev" tests test the artifacts against a server
       # The dev-to-stage and stage-to-master workflow only need to build the artifacts, not test them
       run_tests:
-        description: "Run integration tests"
         required: false
         type: boolean
         default: false
