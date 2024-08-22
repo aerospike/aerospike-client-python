@@ -21,7 +21,6 @@
 
 #include "types.h"
 #include "client.h"
-#include "geo_dumps.h"
 
 /*******************************************************************************
  * FUNCTIONS
@@ -43,6 +42,8 @@ PyObject *AerospikeGeospatial_Dumps(AerospikeGeospatial *self, PyObject *args,
 
 void store_geodata(AerospikeGeospatial *self, as_error *err,
                    PyObject *py_geodata);
+
+PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err);
 
 PyObject *AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err);
 

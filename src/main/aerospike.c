@@ -24,6 +24,7 @@
 #include "geo.h"
 #include "scan.h"
 #include "key_ordered_dict.h"
+#include "predicates.h"
 #include "exceptions.h"
 #include "policy.h"
 #include "log.h"
@@ -120,10 +121,12 @@ struct Aerospike_State {
 
 static int Aerospike_Clear(PyObject *aerospike)
 {
+    Py_CLEAR(Aerospike_State(aerospike)->exception);
     Py_CLEAR(Aerospike_State(aerospike)->client);
     Py_CLEAR(Aerospike_State(aerospike)->query);
     Py_CLEAR(Aerospike_State(aerospike)->scan);
     Py_CLEAR(Aerospike_State(aerospike)->kdict);
+    Py_CLEAR(Aerospike_State(aerospike)->predicates);
     Py_CLEAR(Aerospike_State(aerospike)->geospatial);
     Py_CLEAR(Aerospike_State(aerospike)->null_object);
     Py_CLEAR(Aerospike_State(aerospike)->wildcard_object);
@@ -139,7 +142,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     int i = 0;
 
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
-                                           "aerospike.aerospike",
+                                           "aerospike",
                                            "Aerospike Python Client",
                                            sizeof(struct Aerospike_State),
                                            Aerospike_Methods,
@@ -156,9 +159,17 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     py_global_hosts = PyDict_New();
 
+    PyObject *exception = AerospikeException_New();
+    Py_INCREF(exception);
+    int retval = PyModule_AddObject(aerospike, "exception", exception);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
+    Aerospike_State(aerospike)->exception = exception;
+
     PyTypeObject *client = AerospikeClient_Ready();
     Py_INCREF(client);
-    int retval = PyModule_AddObject(aerospike, "Client", (PyObject *)client);
+    retval = PyModule_AddObject(aerospike, "Client", (PyObject *)client);
     if (retval == -1) {
         goto CLEANUP;
     }
@@ -203,6 +214,14 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     declare_policy_constants(aerospike);
     declare_log_constants(aerospike);
+
+    PyObject *predicates = AerospikePredicates_New();
+    Py_INCREF(predicates);
+    retval = PyModule_AddObject(aerospike, "predicates", predicates);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
+    Aerospike_State(aerospike)->predicates = predicates;
 
     PyTypeObject *geospatial = AerospikeGeospatial_Ready();
     Py_INCREF(geospatial);

@@ -15,8 +15,16 @@
  ******************************************************************************/
 
 #include <Python.h>
+#include <stdbool.h>
 
+#include <aerospike/as_arraylist.h>
 #include <aerospike/as_error.h>
+
+#include "client.h"
+#include "conversions.h"
+#include "exceptions.h"
+#include "geo.h"
+#include "policy.h"
 
 PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
 {
@@ -42,6 +50,39 @@ PyObject *AerospikeGeospatial_DoDumps(PyObject *geo_data, as_error *err)
                                                 geo_data, NULL);
         Py_DECREF(json_module);
         Py_DECREF(py_funcname);
+    }
+
+    return initresult;
+}
+
+PyObject *AerospikeGeospatial_Dumps(AerospikeGeospatial *self, PyObject *args,
+                                    PyObject *kwds)
+{
+
+    PyObject *initresult = NULL;
+    // Aerospike error object
+    as_error err;
+    // Initialize error object
+    as_error_init(&err);
+
+    if (!self) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid geospatial data");
+        goto CLEANUP;
+    }
+
+    initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
+    if (!initresult) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to call dumps function");
+        goto CLEANUP;
+    }
+
+CLEANUP:
+
+    // If an error occurred, tell Python.
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
     }
 
     return initresult;

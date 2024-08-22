@@ -24,8 +24,9 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_error.h>
 
+#include "conversions.h"
 #include "exceptions.h"
-#include "geo_dumps.h"
+#include "geo.h"
 
 static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
 {
@@ -378,7 +379,7 @@ static PyMethodDef AerospikePredicates_Methods[] = {
      METH_VARARGS, "Create a geo_contains_geojson_point predicate"},
     {NULL, NULL, 0, NULL}};
 
-PyObject *PyInit_predicates(void)
+PyObject *AerospikePredicates_New(void)
 {
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
                                            "aerospike.predicates",
