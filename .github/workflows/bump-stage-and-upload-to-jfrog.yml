@@ -38,6 +38,7 @@ jobs:
     uses: ./.github/workflows/build-artifacts.yml
     with:
       sha-to-build-and-test: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+    secrets: inherit
 
   upload-rc-artifacts-to-jfrog:
     needs: [

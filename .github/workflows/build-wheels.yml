@@ -1,5 +1,5 @@
 name: 'Build wheels'
-run-name: 'Build wheels (platform-tag=${{ inputs.platform-tag }}, python-tags=${{ inputs.python-tags }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
+run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
@@ -104,9 +104,8 @@ on:
       # Only used in workflow_call event
       sha-to-build-and-test:
         type: string
-        required: false
-        default: ${{ github.sha }}
-      # Debug build settings unused by calling workflows, but set here as defaults
+        required: true
+      # The below settings are unused by calling workflows, but set here as defaults
       unoptimized:
         type: boolean
         required: false
@@ -129,9 +128,20 @@ on:
         type: string
         default: 'latest'
         description: 'Server docker image tag'
+    secrets:
+      # Just make all the secrets required to make things easier...
+      DOCKER_HUB_USERNAME:
+        required: true
+      DOCKER_HUB_PASSWORD:
+        required: true
+      MAC_M1_SELF_HOSTED_RUNNER_PW:
+        required: true
 
 env:
   COMMIT_SHA_TO_BUILD_AND_TEST: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
+  # Note that environment variables in Github are all strings
+  # Github mac m1 and windows runners don't support Docker / nested virtualization
+  # so we need to use self-hosted runners for those platforms
   RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
 
 jobs:
@@ -182,29 +192,28 @@ jobs:
       run: nuget restore
       working-directory: aerospike-client-c/vs
 
-    - name: 'Linux aarch64: Set up QEMU for building and testing wheels'
-      if: ${{ startsWith(inputs.platform-tag, 'manylinux') && endsWith(inputs.platform-tag, 'aarch64') }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
-
-    # Note that environment variables in Github are all strings
-    # Github mac m1 and windows runners don't support Docker / nested virtualization
-    # so we need to use self-hosted runners for those platforms
-    - run: echo "RUN_INTEGRATION_TESTS_IN_THIS_JOB=${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}" >> $GITHUB_ENV
-      shell: bash
-
     - name: 'macOS x86: Setup Docker using colima for testing'
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      uses: ./.github/actions/run-ee-server
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+      uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
+    # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      uses: ./.github/actions/run-ee-server-for-ext-container
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
+      uses: ./.github/actions/run-ee-server-for-ext-container
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
@@ -233,14 +242,13 @@ jobs:
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
-        # We are cross compiling for Linux aarch64 on x86_64 hardware, so we need to specify the target arch
-        CIBW_ARCHS_LINUX: ${{ inputs.platform-tag == 'manylinux_aarch64' && 'aarch64' || 'auto' }}
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
+        # Not enabled by default
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
@@ -262,6 +270,7 @@ jobs:
 
   test-self-hosted:
     needs: cibuildwheel
+    # There's a top-level env variable for this but we can't use it here, unfortunately
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
       fail-fast: false
@@ -291,6 +300,11 @@ jobs:
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
       - uses: ./.github/actions/run-ee-server
+        with:
+          use-server-rc: ${{ inputs.use-server-rc }}
+          server-tag: ${{ inputs.server-tag }}
+          docker-hub-username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker-hub-password: ${{ secrets.DOCKER_HUB_PASSWORD }}
 
       - name: Download wheel
         uses: actions/download-artifact@v4
@@ -315,7 +329,7 @@ jobs:
         shell: bash
 
       - name: Connect to Docker container on remote machine with Docker daemon
-        if: ${{ inputs.platform-tag == 'win_amd64'  }}
+        if: ${{ inputs.platform-tag == 'win_amd64' }}
         # DOCKER_HOST contains the IP address of the remote machine
         run: |
           $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}

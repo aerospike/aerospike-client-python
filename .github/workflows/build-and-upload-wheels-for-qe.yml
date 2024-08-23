@@ -29,6 +29,7 @@ jobs:
       runner-os: ubuntu-22.04
       unoptimized: ${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }}
       sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
 
   upload-to-jfrog:
     needs: build-artifacts

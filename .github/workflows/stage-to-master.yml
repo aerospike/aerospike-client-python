@@ -23,6 +23,7 @@ jobs:
     uses: ./.github/workflows/build-artifacts.yml
     with:
       sha-to-build-and-test: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
+    secrets: inherit
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
@@ -45,6 +46,7 @@ jobs:
         path: artifacts
         merge-multiple: true
 
+    # TODO: fix
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:

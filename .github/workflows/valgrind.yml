@@ -20,6 +20,7 @@ jobs:
       python-tag: '["cp38"]'
       platform-tag: manylinux_x86_64
       runner-os: ubuntu-22.04
+    secrets: inherit
 
   valgrind:
     needs: build-manylinux-wheel
