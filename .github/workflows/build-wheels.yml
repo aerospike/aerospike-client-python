@@ -157,6 +157,7 @@ jobs:
         #     print(file.read())
         # shell: python
         echo runner_os=ubuntu-22.04 >> $GITHUB_OUTPUT
+        cat $GITHUB_OUTPUT
 
   cibuildwheel:
     needs: get-runner-os
