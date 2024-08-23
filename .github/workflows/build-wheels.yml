@@ -142,7 +142,7 @@ env:
   COMMIT_SHA_TO_BUILD_AND_TEST: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
   # Note that environment variables in Github are all strings
   # Github mac m1 and windows runners don't support Docker / nested virtualization
-  # so we need to use self-hosted runners for those platforms
+  # so we need to use self-hosted runners to test wheels for these platforms
   RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
 
 jobs:
