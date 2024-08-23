@@ -39,7 +39,7 @@ jobs:
   build-sdist:
     uses: ./.github/workflows/build-sdist.yml
     with:
-      sha-to-build: ${{ github.sha }}
+      sha_to_build: ${{ github.sha }}
 
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml

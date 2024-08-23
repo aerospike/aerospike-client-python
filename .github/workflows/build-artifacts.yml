@@ -65,7 +65,7 @@ jobs:
   build-sdist:
     uses: ./.github/workflows/build-sdist.yml
     with:
-      sha-to-build: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
+      sha_to_build: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
 
   build-wheels:
     strategy:
