@@ -19,7 +19,8 @@ on:
       # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
       #
       # However, it's harder to combine this workflow (case 1 + 2) with case 3, because:
-      # 1. We have to test certain platforms on self-hosted runners, while other platforms can be tested on Github runners
+      # 1. Matrix outputs don't exist yet in Github Actions. So all jobs in the cibuildwheel job would have to pass
+      # for the self hosted job to run. We want each platform to be tested independently of each other
       # 2. We'd have to maintain a data structure that maps wheel platform tags to runner names
       # For example, for building wheels on a specific platform (e.g manylinux_x86_64),
       # we need to know the name of the actions runner (e.g ubuntu-22.04) to run the job that builds those wheels:
