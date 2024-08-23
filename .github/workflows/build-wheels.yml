@@ -130,7 +130,7 @@ on:
         default: 'latest'
         description: 'Server docker image tag'
     secrets:
-      # Just make all the secrets required to make things easier...
+      # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
         required: true
       DOCKER_HUB_BOT_PW:
