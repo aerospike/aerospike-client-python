@@ -34,6 +34,7 @@ jobs:
     with:
       platform-tag: ${{ matrix.platform-tag-and-runner-os[0] }}
       runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}
+      sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
   build-sdist:
