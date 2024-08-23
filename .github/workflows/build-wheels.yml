@@ -143,9 +143,10 @@ jobs:
       runner-os: ${{ steps.get-runner-os.outputs.runner-os }}
     runs-on: ubuntu-22.04
     steps:
-    - run: echo poor_mans_hashmap_key=runner_for_${{ inputs.platform-tag }} >> $GITHUB_ENV
     - id: get-runner-os
-      run: echo runner-os=${{ env.poor_mans_hashmap_key }} >> $GITHUB_OUTPUT
+      run: |
+       echo poor_mans_hashmap_key=runner_for_${{ inputs.platform-tag }}
+       echo runner-os=$poor_mans_hashmap_key >> $GITHUB_OUTPUT
 
   cibuildwheel:
     needs: get-runner-os
