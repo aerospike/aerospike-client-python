@@ -154,6 +154,8 @@ jobs:
         with open('github_output_filename', 'a') as file:
           file.write('\n')
           file.write(f"runner-os={runner_os}")
+        with open('github_output_filename', 'r') as file:
+          print(file.read())
       shell: python
 
   cibuildwheel:
