@@ -31,7 +31,7 @@ static PyObject *module;
 PyObject *AerospikeException_New(void)
 {
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
-                                           "_aerospike.exception",
+                                           "aerospike._aerospike.exception",
                                            "Exception objects",
                                            -1,
                                            NULL,
