@@ -9,11 +9,11 @@ on:
       # These are the usual cases for building wheels:
       #
       # 1. One wheel for *one* supported Python version. This is for running specialized tests that only need one Python version
-      # like valgrind or QE tests
+      # like valgrind or a failing QE test. And usually, we only need one wheel for debugging purposes.
       # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
-      # single OS or CPU architecture, or for bugs that only occur on a single one of those.
+      # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
       # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
-      # CI/CD stages (e.g dev, stage, or master)
+      # CI/CD stages (e.g dev, stage, or master). We usually do not need to build debug wheels in this case.
       #
       # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
       # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
@@ -29,7 +29,7 @@ on:
       # etc...
       # }
       # A map data structure doesn't exist in Github Actions
-      # so just make the workflow accept a single platform tag and runner name as inputs
+      # so just make this workflow accept a single platform tag and runner name as inputs
       # A wrapper workflow can create a matrix of tuples containing platform tags and runner names that calls this workflow
       python-tags:
         type: string
