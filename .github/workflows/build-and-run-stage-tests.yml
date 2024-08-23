@@ -21,7 +21,7 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 jobs:
-  build-artifacts:
+  build-wheels:
     strategy:
       matrix:
         platform-tag-and-runner-os: [
@@ -36,9 +36,17 @@ jobs:
       runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}
     secrets: inherit
 
+  build-sdist:
+    uses: ./.github/workflows/build-sdist.yml
+    with:
+      sha-to-build: ${{ github.sha }}
+
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
-    needs: build-artifacts
+    needs: [
+      build-wheels,
+      build-sdist
+    ]
     secrets: inherit
     with:
       use_jfrog_builds: false
