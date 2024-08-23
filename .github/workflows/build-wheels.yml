@@ -53,7 +53,8 @@ on:
         type: choice
         required: true
         options:
-        - ubuntu-22.04 # For both Linux x86 and ARM
+        - ubuntu-22.04 # Linux x86
+        - aerospike_arm_runners_2 # Linux aarch64
         - macos-12-large # macOS x86
         - macos-14 # macOS ARM
         - windows-2022
