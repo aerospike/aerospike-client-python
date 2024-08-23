@@ -134,7 +134,7 @@ env:
 jobs:
   get-runner-os:
     outputs:
-      runner-os: ${{ steps.get-runner-os.outputs.runner-os }}
+      runner-os: ${{ steps.get-runner-os.outputs.runner_os }}
     runs-on: ubuntu-22.04
     steps:
     - id: get-runner-os
@@ -152,7 +152,7 @@ jobs:
         github_output_filename = os.getenv("GITHUB_OUTPUT")
         print(github_output_filename)
         with open('github_output_filename', 'a') as file:
-          file.write(f"runner-os={runner_os}")
+          file.write(f"runner_os={runner_os}")
         with open('github_output_filename', 'r') as file:
           print(file.read())
       shell: python
