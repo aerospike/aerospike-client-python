@@ -148,6 +148,7 @@ jobs:
           "win_amd64": "windows-2022"
         }
     steps:
+    - run: echo ${{ env.platform-tag-to-runner-name }}
     - id: get-runner-os
       run: echo runner-os=${{ env.platform-tag-to-runner-name[inputs.platform-tag] }} >> $GITHUB_OUTPUT
 
