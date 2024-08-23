@@ -147,8 +147,10 @@ jobs:
           "win_amd64": "windows-2022"
         }
         runner_os = platform_tag_to_runner_name["${{ inputs.platform-tag }}"]
+        print(runner_os)
         import os
         github_output_filename = os.getenv("GITHUB_OUTPUT")
+        print(github_output)
         with open('github_output_filename', 'a') as file:
           file.write('\n')
           file.write(f"runner-os={runner_os}")
