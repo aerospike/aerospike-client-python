@@ -1,5 +1,5 @@
-name: 'cibuildwheel'
-run-name: 'cibuildwheel (platform-tag=${{ inputs.platform-tag }}, python-tags=${{ inputs.python-tags }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
+name: 'Build wheels'
+run-name: 'Build wheels (platform-tag=${{ inputs.platform-tag }}, python-tags=${{ inputs.python-tags }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
