@@ -146,7 +146,7 @@ jobs:
     - id: get-runner-os
       run: |
        echo poor_mans_hashmap_key=runner_for_${{ inputs.platform-tag }}
-       echo runner-os=$poor_mans_hashmap_key >> $GITHUB_OUTPUT
+       echo $poor_mans_hashmap_key
 
   cibuildwheel:
     needs: get-runner-os
