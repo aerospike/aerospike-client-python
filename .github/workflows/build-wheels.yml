@@ -130,6 +130,10 @@ on:
         default: 'latest'
         description: 'Server docker image tag'
 
+env:
+  COMMIT_SHA_TO_BUILD_AND_TEST: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
+  RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
+
 jobs:
   cibuildwheel:
     strategy:
@@ -137,18 +141,9 @@ jobs:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
       fail-fast: false
     runs-on: ${{ inputs.runner-os }}
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
     steps:
-    - name: Get build identifier for cibuildwheel
-      run: echo "BUILD_IDENTIFIER=${{ matrix.python-tag }}-${{ inputs.platform-tag }}" >> $GITHUB_ENV
-      # Powershell (the default shell for Windows) has a different syntax for setting environment variables
-      shell: bash
-
-    - name: Get commit sha to show status check
-      # The workflow_dispatch event doesn't have the sha-to-build-and-test input
-      # But set-commit-status-action requires a valid github sha
-      run: echo COMMIT_SHA_TO_BUILD_AND_TEST=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }} >> $GITHUB_ENV
-      shell: bash
-
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
       shell: bash
@@ -200,19 +195,19 @@ jobs:
       shell: bash
 
     - name: 'macOS x86: Setup Docker using colima for testing'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
       uses: ./.github/actions/run-ee-server
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
 
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
       uses: ./.github/actions/run-ee-server-for-ext-container
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
 
     - name: If not running tests against server, only run basic import test
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'false' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
       # Use double quotes otherwise Windows will throw this error in cibuildwheel
       # 'import
       #       ^
@@ -221,7 +216,7 @@ jobs:
       shell: bash
 
     - name: Otherwise, enable integration tests
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_THIS_JOB == 'true' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
       shell: bash
 
@@ -273,16 +268,9 @@ jobs:
       matrix:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
     runs-on: ${{ inputs.platform-tag == 'macosx_arm64' && fromJSON('["self-hosted", "macOS", "ARM64"]') || fromJSON('["self-hosted", "Windows", "X64"]') }}
+    env:
+      BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
     steps:
-      # TODO: copy and pasted status check code from cibuildwheel job, but need to refactor later
-      - name: Get build identifier for cibuildwheel
-        run: echo "BUILD_IDENTIFIER=${{ matrix.python-tag }}-${{ inputs.platform-tag }}" >> $GITHUB_ENV
-        shell: bash
-
-      - name: Get commit sha to show status check
-        run: echo COMMIT_SHA_TO_BUILD_AND_TEST=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }} >> $GITHUB_ENV
-        shell: bash
-
       - name: Create status check message
         run: echo STATUS_CHECK_MESSAGE="Test on self hosted (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
         shell: bash
