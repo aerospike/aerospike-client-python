@@ -150,7 +150,7 @@ jobs:
         print(runner_os)
         import os
         github_output_filename = os.getenv("GITHUB_OUTPUT")
-        print(github_output)
+        print(github_output_filename)
         with open('github_output_filename', 'a') as file:
           file.write('\n')
           file.write(f"runner-os={runner_os}")
