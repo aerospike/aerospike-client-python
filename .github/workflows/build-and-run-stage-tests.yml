@@ -30,7 +30,7 @@ jobs:
           ["macosx_x86_64", "macos-12-large"]
         ]
       # Need all the artifacts to run all the stage tests, so fail fast
-    uses: ./.github/workflows/cibuildwheel.yml
+    uses: ./.github/workflows/build-wheels.yml
     with:
       platform-tag: ${{ matrix.platform-tag-and-runner-os[0] }}
       runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}

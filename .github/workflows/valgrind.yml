@@ -15,7 +15,7 @@ on:
 
 jobs:
   build-manylinux-wheel:
-    uses: ./.github/workflows/cibuildwheel.yml
+    uses: ./.github/workflows/build-wheels.yml
     with:
       python-tag: '["cp38"]'
       platform-tag: manylinux_x86_64

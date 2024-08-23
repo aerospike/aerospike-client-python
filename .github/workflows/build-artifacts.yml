@@ -38,11 +38,11 @@ on:
         default: true
         required: false
       # This input is only used in workflow_call events
-      sha-to-build-and-test-override:
+      sha-to-build-and-test:
         description: A calling workflow may want to run this workflow on a different ref than the calling workflow's ref
         type: string
-        default: ${{ github.sha }}
-        required: false
+        # Make it required to make things simple
+        required: true
       # A calling workflow doesn't actually set values to the inputs below
       # But the workflow we need to have default values for these inputs
       use-server-rc:
@@ -67,9 +67,9 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - name: Get commit sha to show status check
-      # A workflow_dispatch event doesn't have the sha-to-build-and-test-override input
+      # A workflow_dispatch event doesn't have the sha-to-build-and-test input
       # So for a workflow_dispatch event, we want to use the github commit hash that triggered it
-      run: echo COMMIT_SHA_FOR_STATUS_CHECK=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test-override || github.sha }} >> $GITHUB_ENV
+      run: echo COMMIT_SHA_FOR_STATUS_CHECK=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }} >> $GITHUB_ENV
       shell: bash
 
     - name: Create status check message
@@ -127,11 +127,11 @@ jobs:
           ["win_amd64", "windows-2022"]
         ]
       fail-fast: false
-    uses: ./.github/workflows/cibuildwheel.yml
+    uses: ./.github/workflows/build-wheels.yml
     with:
       platform-tag: ${{ matrix.platform-tag-and-runner-os[0] }}
       runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}
-      sha-to-build-and-test-override: ${{ inputs.sha-to-build-and-test-override }}
+      sha-to-build-and-test: ${{ inputs.sha-to-build-and-test }}
       run_tests: ${{ inputs.run_tests }}
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}

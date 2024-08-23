@@ -102,7 +102,7 @@ on:
         type: string
         required: true
       # Only used in workflow_call event
-      sha-to-build-and-test-override:
+      sha-to-build-and-test:
         type: string
         required: false
         default: ${{ github.sha }}
@@ -144,9 +144,9 @@ jobs:
       shell: bash
 
     - name: Get commit sha to show status check
-      # The workflow_dispatch event doesn't have the sha-to-build-and-test-override input
+      # The workflow_dispatch event doesn't have the sha-to-build-and-test input
       # But set-commit-status-action requires a valid github sha
-      run: echo COMMIT_SHA_TO_BUILD_AND_TEST=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test-override || github.sha }} >> $GITHUB_ENV
+      run: echo COMMIT_SHA_TO_BUILD_AND_TEST=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }} >> $GITHUB_ENV
       shell: bash
 
     - name: Create status check message
@@ -280,7 +280,7 @@ jobs:
         shell: bash
 
       - name: Get commit sha to show status check
-        run: echo COMMIT_SHA_TO_BUILD_AND_TEST=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test-override || github.sha }} >> $GITHUB_ENV
+        run: echo COMMIT_SHA_TO_BUILD_AND_TEST=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }} >> $GITHUB_ENV
         shell: bash
 
       - name: Create status check message
