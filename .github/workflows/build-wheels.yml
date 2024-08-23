@@ -138,24 +138,8 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
     - id: get-runner-os
-      run: |
-        platform_tag_to_runner_name = {
-          "manylinux_x86_64": "ubuntu-22.04",
-          "manylinux_aarch64": "aerospike_arm_runners_2",
-          "macosx_x86_64": "macos-12-large",
-          "macosx_arm64": "macos-14",
-          "win_amd64": "windows-2022"
-        }
-        runner_os = platform_tag_to_runner_name["${{ inputs.platform-tag }}"]
-        print(runner_os)
-        import os
-        github_output_filename = os.getenv("GITHUB_OUTPUT")
-        print(github_output_filename)
-        with open('github_output_filename', 'a') as file:
-          print(f"runner_os={runner_os}", file)
-        with open('github_output_filename', 'r') as file:
-          print(file.read())
-      shell: python
+      run: echo runner-os=$(python3 get-runner-os-for-platform-tag.py) >> $GITHUB_OUTPUT
+      working-directory: .github/workflows
 
   cibuildwheel:
     needs: get-runner-os
