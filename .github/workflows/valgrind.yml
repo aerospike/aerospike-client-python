@@ -17,7 +17,7 @@ jobs:
   build-manylinux-wheel:
     uses: ./.github/workflows/build-wheels.yml
     with:
-      python-tag: '["cp38"]'
+      python-tags: '["cp38"]'
       platform-tag: manylinux_x86_64
       runner-os: ubuntu-22.04
       sha-to-build-and-test: ${{ github.sha }}
