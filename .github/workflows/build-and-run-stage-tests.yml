@@ -21,7 +21,7 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 jobs:
-  build-wheels:
+  build-select-wheels:
     strategy:
       matrix:
         platform-tag-and-runner-os: [
@@ -44,7 +44,7 @@ jobs:
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
     needs: [
-      build-wheels,
+      build-select-wheels,
       build-sdist
     ]
     secrets: inherit
