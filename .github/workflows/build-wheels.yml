@@ -13,7 +13,7 @@ on:
       # 2. Wheels for *all* supported Python versions for *one* supported platform. This is useful for testing workflow changes for a
       # single OS or CPU architecture (e.g testing that changes to debugging modes work on all Python versions)
       # 3. Wheels for *all* supported Python versions and *all* supported platforms. This is for building wheels for different
-      # CI/CD stages (e.g dev, stage, or master). We usually do not need to build debug wheels in this case.
+      # CI/CD stages (e.g dev, stage, or master). We can also test debugging modes for all platforms that support them
       #
       # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
       # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
@@ -106,7 +106,6 @@ on:
       sha-to-build-and-test:
         type: string
         required: true
-      # The below settings are unused by calling workflows, but set here as defaults
       unoptimized:
         type: boolean
         required: false
