@@ -131,9 +131,9 @@ on:
         description: 'Server docker image tag'
     secrets:
       # Just make all the secrets required to make things easier...
-      DOCKER_HUB_USERNAME:
+      DOCKER_HUB_BOT_USERNAME:
         required: true
-      DOCKER_HUB_PASSWORD:
+      DOCKER_HUB_BOT_PW:
         required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
@@ -203,8 +203,8 @@ jobs:
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     # TODO: combine this composite action and the above into one
     - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
@@ -213,8 +213,8 @@ jobs:
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
@@ -304,8 +304,8 @@ jobs:
         with:
           use-server-rc: ${{ inputs.use-server-rc }}
           server-tag: ${{ inputs.server-tag }}
-          docker-hub-username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker-hub-password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+          docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
       - name: Download wheel
         uses: actions/download-artifact@v4
