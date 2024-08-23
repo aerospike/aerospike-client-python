@@ -20,7 +20,6 @@ jobs:
       python-tag: '["cp38"]'
       platform-tag: manylinux_x86_64
       runner-os: ubuntu-22.04
-      sha-to-build-and-test: ${{ github.sha }}
 
   valgrind:
     needs: build-manylinux-wheel

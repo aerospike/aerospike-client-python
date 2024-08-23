@@ -22,7 +22,7 @@ jobs:
     needs: promote-rc-build-to-release
     uses: ./.github/workflows/build-artifacts.yml
     with:
-      sha-to-build-and-test: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
+      sha-to-build-and-test-override: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
@@ -35,7 +35,6 @@ jobs:
       version: ${{ needs.promote-rc-build-to-release.outputs.new_version }}
     secrets: inherit
 
-  # TODO: make this upload to test pypi for testing this workflow
   publish-to-pypi:
     runs-on: ubuntu-22.04
     needs: build-artifacts

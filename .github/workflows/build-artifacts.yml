@@ -38,10 +38,11 @@ on:
         default: true
         required: false
       # This input is only used in workflow_call events
-      sha-to-build-and-test:
+      sha-to-build-and-test-override:
         description: A calling workflow may want to run this workflow on a different ref than the calling workflow's ref
         type: string
-        required: true
+        default: ${{ github.sha }}
+        required: false
       # A calling workflow doesn't actually set values to the inputs below
       # But the workflow we need to have default values for these inputs
       use-server-rc:
@@ -62,14 +63,19 @@ on:
 
 jobs:
   build-sdist:
-    env:
-      # A workflow_dispatch event doesn't have the sha-to-build-and-test-override input
-      # So for a workflow_dispatch event, we want to use the github commit hash that triggered it
-      COMMIT_SHA_TO_BUILD_FROM: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
-      STATUS_CHECK_MESSAGE: 'build-artifacts (sdist)'
     name: Build source distribution
     runs-on: ubuntu-22.04
     steps:
+    - name: Get commit sha to show status check
+      # A workflow_dispatch event doesn't have the sha-to-build-and-test-override input
+      # So for a workflow_dispatch event, we want to use the github commit hash that triggered it
+      run: echo COMMIT_SHA_FOR_STATUS_CHECK=${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test-override || github.sha }} >> $GITHUB_ENV
+      shell: bash
+
+    - name: Create status check message
+      run: echo STATUS_CHECK_MESSAGE="cibuildwheel (sdist)" >> $GITHUB_ENV
+      shell: bash
+
     - name: Show job status for commit
       # Commit status will already be shown by the calling workflow for push and pull request events, but not
       # for any other event like workflow_dispatch. so we have to do it manually
@@ -79,13 +85,13 @@ jobs:
       if: ${{ github.event_name != 'push' && github.event_name != 'pull_request' }}
       uses: myrotvorets/set-commit-status-action@v2.0.0
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_FROM }}
+        sha: ${{ env.COMMIT_SHA_FOR_STATUS_CHECK }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
     - uses: actions/checkout@v4
       with:
         submodules: recursive
-        ref: ${{ env.COMMIT_SHA_TO_BUILD_FROM }}
+        ref: ${{ env.COMMIT_SHA_FOR_STATUS_CHECK }}
         fetch-depth: 0
 
     - name: Install build dependencies (pip packages)
@@ -106,7 +112,7 @@ jobs:
       # But we don't want to show anything if the calling workflow was triggered by these events
       if: ${{ always() && github.event_name != 'push' && github.event_name != 'pull_request' }}
       with:
-        sha: ${{ env.COMMIT_SHA_TO_BUILD_FROM }}
+        sha: ${{ env.COMMIT_SHA_FOR_STATUS_CHECK }}
         status: ${{ job.status }}
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
@@ -125,7 +131,7 @@ jobs:
     with:
       platform-tag: ${{ matrix.platform-tag-and-runner-os[0] }}
       runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}
-      sha-to-build-and-test: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
+      sha-to-build-and-test-override: ${{ inputs.sha-to-build-and-test-override }}
       run_tests: ${{ inputs.run_tests }}
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
