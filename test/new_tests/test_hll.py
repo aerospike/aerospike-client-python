@@ -489,3 +489,19 @@ class TestHLL(object):
 
     def test_hll_superclass(self):
         assert issubclass(HyperLogLog, bytes)
+
+    def test_hll_str_repr(self):
+        bytes_obj = b'asdf'
+        hll = HyperLogLog(bytes_obj)
+
+        expected_repr = f"{hll.__class_.__name__}({bytes_obj.__repr__()})"
+        assert str(hll) == expected_repr
+        assert repr(hll) == expected_repr
+
+        hll_from_eval = eval(expected_repr)
+        # We compare HLL instances by comparing their bytes values
+        assert hll == hll_from_eval
+
+        # Negative test for comparing HLL values
+        different_hll = HyperLogLog(b'asdff')
+        assert different_hll != hll_from_eval
