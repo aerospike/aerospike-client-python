@@ -163,7 +163,7 @@ class TestExpressions(TestBaseClass):
     def setup(self, request, as_connection):
         self.test_ns = "test"
         self.test_set = "demo"
-
+        self.first_key = (self.test_ns, self.test_set, 0)
         for i in range(_NUM_RECORDS):
             key = ("test", "demo", i)
             rec = {
@@ -828,7 +828,15 @@ class TestExpressions(TestBaseClass):
         ops = [
             expr_ops.expression_read(bin_name, expr.compile())
         ]
-        key = (self.test_ns, self.test_set, 0)
-        _, _, bins = self.as_connection.operate(key, ops)
+        _, _, bins = self.as_connection.operate(self.first_key, ops)
 
         assert bins[bin_name] == expected
+
+    def test_map_get_nil_value_type(self):
+        bin_name = "nmap_bin"
+        exp = MapGetByKey(None, aerospike.MAP_RETURN_VALUE, ResultType.NIL, 2, bin_name).compile()
+        ops = [
+            expr_ops.expression_read("2_value", exp)
+        ]
+        _, _, bins = self.as_connection.operate(self.first_key, ops)
+        assert bins[bin_name] is None
