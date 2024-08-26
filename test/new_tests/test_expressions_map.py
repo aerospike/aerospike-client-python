@@ -836,7 +836,7 @@ class TestExpressions(TestBaseClass):
         bin_name = "nmap_bin"
         exp = MapGetByKey(None, aerospike.MAP_RETURN_VALUE, ResultType.NIL, 2, bin_name).compile()
         ops = [
-            expr_ops.expression_read("2_value", exp)
+            expr_ops.expression_read(bin_name, exp)
         ]
         _, _, bins = self.as_connection.operate(self.first_key, ops)
         assert bins[bin_name] is None
