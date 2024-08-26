@@ -24,16 +24,15 @@ jobs:
   build-select-wheels:
     strategy:
       matrix:
-        platform-tag-and-runner-os: [
-          ["manylinux_x86_64", "ubuntu-22.04"],
-          ["manylinux_aarch64", "aerospike_arm_runners_2"],
-          ["macosx_x86_64", "macos-12-large"]
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64"
         ]
       # Need all the artifacts to run all the stage tests, so fail fast
     uses: ./.github/workflows/build-wheels.yml
     with:
-      platform-tag: ${{ matrix.platform-tag-and-runner-os[0] }}
-      runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}
+      platform-tag: ${{ matrix.platform-tag }}
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 

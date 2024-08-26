@@ -18,20 +18,11 @@ on:
       # We're able to combine case 1 and 2 into one workflow by creating an input that takes in a JSON list of strings (Python tags)
       # to build wheels for. Actual list inputs aren't supported yet, so it's actually a JSON list encoded as a string.
       #
-      # However, it's harder to combine this workflow (case 1 + 2) with case 3, because:
-      # 1. Matrix outputs don't exist yet in Github Actions. So all jobs in the cibuildwheel job would have to pass
-      # for the self hosted job to run. We want each platform to be tested independently of each other
-      # 2. We'd have to maintain a data structure that maps wheel platform tags to runner names
-      # For example, for building wheels on a specific platform (e.g manylinux_x86_64),
-      # we need to know the name of the actions runner (e.g ubuntu-22.04) to run the job that builds those wheels:
-      # {
-      # manylinux_x86_64 -> ubuntu-22.04
-      # macosx_x86_64 -> macos-12-large
-      # etc...
-      # }
-      # A map data structure doesn't exist in Github Actions
-      # so just make this workflow accept a single platform tag and runner name as inputs
-      # A wrapper workflow can create a matrix of tuples containing platform tags and runner names that calls this workflow
+      # However, it's harder to combine this workflow (case 1 + 2) with case 3, because matrix outputs don't exist yet
+      # in Github Actions. So all jobs in the cibuildwheel job would have to pass for a self hosted job to run.
+      # We want each platform to be tested independently of each other,
+      # so there is a wrapper workflow that has a list of platforms to test and reuses this workflow for each platform.
+      # If one platform fails, it will not affect the building and testing of another platform (we disable fail fast mode)
       python-tags:
         type: string
         description: Valid JSON list of Python tags to build the client for
@@ -132,6 +123,9 @@ env:
   RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
 
 jobs:
+  # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
+  # This uses up more billing minutes (rounded up to 1 minute for each job run),
+  # but this should be ok based on the minutes usage data for the aerospike organization
   get-runner-os:
     outputs:
       runner-os: ${{ steps.get-runner-os.outputs.runner_os }}

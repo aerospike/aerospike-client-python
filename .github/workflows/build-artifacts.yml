@@ -89,18 +89,17 @@ jobs:
   build-wheels:
     strategy:
       matrix:
-        platform-tag-and-runner-os: [
-          ["manylinux_x86_64", "ubuntu-22.04"],
-          ["manylinux_aarch64", "aerospike_arm_runners_2"],
-          ["macosx_x86_64", "macos-12-large"],
-          ["macosx_arm64", "macos-14"],
-          ["win_amd64", "windows-2022"]
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64",
+          "macosx_arm64",
+          "win_amd64"
         ]
       fail-fast: false
     uses: ./.github/workflows/build-wheels.yml
     with:
-      platform-tag: ${{ matrix.platform-tag-and-runner-os[0] }}
-      runner-os: ${{ matrix.platform-tag-and-runner-os[1] }}
+      platform-tag: ${{ matrix.platform-tag }}
       # Can't use env context here, so just copy from build-sdist env var
       sha-to-build-and-test: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
       unoptimized: ${{ inputs.unoptimized }}
