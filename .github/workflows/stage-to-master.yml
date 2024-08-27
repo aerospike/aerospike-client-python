@@ -51,6 +51,14 @@ jobs:
         packages-dir: artifacts/
         password: ${{ secrets.PYPI_API_TOKEN }}
 
+  # See reason for deleting artifacts in dev-workflow-p2.yml
+  delete-artifacts:
+    needs: [
+      upload-to-jfrog,
+      publish-to-pypi
+    ]
+    uses: ./.github/workflows/delete-artifacts.yml
+
   fast-forward-stage-to-master:
     needs: build-artifacts
     uses: ./.github/workflows/fast-forward-merge.yml

@@ -6,6 +6,7 @@ import aerospike
 from aerospike_helpers.metrics import MetricsListeners, MetricsPolicy, Cluster, Node, ConnectionStats, NodeMetrics
 
 
+# Copied from new_tests/test_metrics.py
 # Tests that the Node object returned from the node_close callback has these fields
 # and makes sure these fields have the correct types
 def test_node_is_populated(node: Node):
@@ -64,7 +65,7 @@ def snapshot(_: Cluster):
     pass
 
 
-NODE_COUNT = 3
+NODE_COUNT = 1
 print(f"Creating {NODE_COUNT} node cluster...")
 subprocess.run(["aerolab", "cluster", "create", f"--count={NODE_COUNT}"], check=True)
 
@@ -95,7 +96,7 @@ try:
         "use_services_alternate": True
     }
     print(f"Connecting to {HOST_NAME}:{first_node_port} using Python client...")
-    c = aerospike.client(config)
+    client = aerospike.client(config)
     try:
         # Show logs to confirm that node is removed from the client's perspective
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
@@ -110,9 +111,10 @@ try:
         )
         policy = MetricsPolicy(metrics_listeners=listeners)
         print("Enabling metrics...")
-        c.enable_metrics(policy=policy)
+        client.enable_metrics(policy=policy)
 
-        NODE_TO_CLOSE = 2
+        # Close the last node
+        NODE_TO_CLOSE = NODE_COUNT
         print(f"Closing node {NODE_TO_CLOSE}...")
         subprocess.run(["aerolab", "cluster", "stop", f"--nodes={NODE_TO_CLOSE}"], check=True)
         # Run with --force or else it will ask to confirm
@@ -122,9 +124,15 @@ try:
         time.sleep(10)
 
         assert node_close_called is True
+        # Need to print assert result somehow
+        print("node_close_called is true. Passed")
     finally:
-        c.close()
+        # Calling close() after we lose connection to the whole cluster is safe. It will be a no-op
+        # It is not explicitly documented for the Python client or C client, but this behavior was verified with C
+        # client developer
+        client.close()
 finally:
-    # Cleanup
-    subprocess.run(["aerolab", "cluster", "stop"], check=True)
-    subprocess.run(["aerolab", "cluster", "destroy", "--force"], check=True)
+    print("Cleaning up...")
+    if NODE_COUNT > 1:
+        subprocess.run(["aerolab", "cluster", "stop"], check=True)
+        subprocess.run(["aerolab", "cluster", "destroy", "--force"], check=True)
