@@ -38,7 +38,6 @@ jobs:
 
   publish-to-pypi:
     runs-on: ubuntu-22.04
-    if: ${{ false }}
     needs: build-artifacts
     steps:
     - name: Download and store all artifacts to single folder
