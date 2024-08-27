@@ -494,7 +494,7 @@ class TestHLL(object):
         bytes_obj = b'asdf'
         hll = HyperLogLog(bytes_obj)
 
-        expected_repr = f"{hll.__class_.__name__}({bytes_obj.__repr__()})"
+        expected_repr = f"{hll.__class__.__name__}({bytes_obj.__repr__()})"
         assert str(hll) == expected_repr
         assert repr(hll) == expected_repr
 
