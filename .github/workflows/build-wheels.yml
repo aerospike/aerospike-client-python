@@ -199,7 +199,7 @@ jobs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.19.2
       env:
-        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }} ${{ inputs.use-sanitizer && 'SANITIZER' || '' }}
+        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.apply-no-optimizations && 'UNOPTIMIZED' || '' }} ${{ inputs.gcc-version-for-sanitizer && 'SANITIZER' || '' }}
         CIBW_BEFORE_ALL_LINUX: ${{ env.BEFORE_ALL_LINUX }}
         CIBW_BUILD: ${{ matrix.python }}-manylinux_${{ matrix.platform[0] }}
         CIBW_BUILD_FRONTEND: build
