@@ -32,6 +32,9 @@ as_status set_optional_gen(as_policy_gen *target_ptr, PyObject *py_policy,
 as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
                               const char *name);
 as_status get_uint32_value(PyObject *py_policy_val, uint32_t *return_uint32);
+as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
+                                    const char *field_name);
+
 /*
  * py_policies must exist, and be a dictionary
  */
@@ -182,6 +185,12 @@ as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy)
         return status;
     }
 
+    status = set_optional_int_property(&read_policy->read_touch_ttl_percent,
+                                       py_policy, "read_touch_ttl_percent");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     return AEROSPIKE_OK;
 }
 
@@ -229,6 +238,11 @@ as_status set_write_policy(as_policy_write *write_policy, PyObject *py_policy)
         return status;
     }
 
+    status = set_optional_uint32_property(&write_policy->ttl, py_policy, "ttl");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     status = set_optional_uint32_property(
         (uint32_t *)&write_policy->compression_threshold, py_policy,
         "compression_threshold");
@@ -269,6 +283,11 @@ as_status set_apply_policy(as_policy_apply *apply_policy, PyObject *py_policy)
     }
 
     status = set_optional_replica(&apply_policy->replica, py_policy, "replica");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_uint32_property(&apply_policy->ttl, py_policy, "ttl");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -367,6 +386,16 @@ as_status set_query_policy(as_policy_query *query_policy, PyObject *py_policy)
         return status;
     }
 
+    PyObject *py_expected_duration =
+        PyDict_GetItemString(py_policy, "expected_duration");
+    if (py_expected_duration) {
+        if (!PyLong_CheckExact(py_expected_duration)) {
+            return AEROSPIKE_ERR_PARAM;
+        }
+        query_policy->expected_duration =
+            (as_query_duration)PyLong_AsLong(py_expected_duration);
+    }
+
     return AEROSPIKE_OK;
 }
 
@@ -389,6 +418,11 @@ as_status set_scan_policy(as_policy_scan *scan_policy, PyObject *py_policy)
 
     status = set_optional_bool_property(&scan_policy->durable_delete, py_policy,
                                         "durable_delete");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_uint32_property(&scan_policy->ttl, py_policy, "ttl");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -437,6 +471,12 @@ as_status set_operate_policy(as_policy_operate *operate_policy,
         return status;
     }
 
+    status =
+        set_optional_uint32_property(&operate_policy->ttl, py_policy, "ttl");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     status = set_optional_gen(&operate_policy->gen, py_policy, "gen");
     if (status != AEROSPIKE_OK) {
         return status;
@@ -464,6 +504,12 @@ as_status set_operate_policy(as_policy_operate *operate_policy,
 
     status = set_optional_sc_read_mode(&operate_policy->read_mode_sc, py_policy,
                                        "read_mode_sc");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_int_property(&operate_policy->read_touch_ttl_percent,
+                                       py_policy, "read_touch_ttl_percent");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -518,6 +564,12 @@ as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy)
         return status;
     }
     status = set_optional_replica(&batch_policy->replica, py_policy, "replica");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_int_property(&batch_policy->read_touch_ttl_percent,
+                                       py_policy, "read_touch_ttl_percent");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -633,6 +685,12 @@ as_status set_batch_write_policy(as_policy_batch_write *batch_write_policy,
 
     status =
         set_optional_exists(&batch_write_policy->exists, py_policy, "exists");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_uint32_property(&batch_write_policy->ttl, py_policy,
+                                          "ttl");
     if (status != AEROSPIKE_OK) {
         return status;
     }
@@ -995,5 +1053,21 @@ as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
         return status;
     }
     *target_ptr = (as_policy_exists)out_uint32;
+    return AEROSPIKE_OK;
+}
+
+as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
+                                    const char *field_name)
+{
+    PyObject *py_field = PyDict_GetItemString(py_policy, field_name);
+    if (py_field) {
+        if (PyLong_Check(py_field)) {
+            *property_ptr = (int)PyLong_AsLong(py_field);
+        }
+        else {
+            return AEROSPIKE_ERR_PARAM;
+        }
+    }
+
     return AEROSPIKE_OK;
 }

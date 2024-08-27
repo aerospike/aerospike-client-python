@@ -20,8 +20,8 @@ a cluster-tending thread.
 
 .. seealso::
     `Client Architecture
-    <https://www.aerospike.com/docs/architecture/clients.html>`_ and
-    `Data Distribution <https://www.aerospike.com/docs/architecture/data-distribution.html>`_.
+    <https://aerospike.com/docs/server/architecture/clients.html>`_ and
+    `Data Distribution <https://aerospike.com/docs/server/architecture/data-distribution.html>`_.
 
 Boilerplate Code For Examples
 -----------------------------
@@ -71,7 +71,7 @@ Connection
             Python client 5.0.0 and up will fail to connect to Aerospike server 4.8.x or older.
             If you see the error "-10, ‘Failed to connect’", please make sure you are using server 4.9 or later.
 
-        .. seealso:: `Security features article <https://docs.aerospike.com/server/guide/security/index.html>`_.
+        .. seealso:: `Security features article <https://aerospike.com/docs/server/guide/security>`_.
 
     .. method:: is_connected()
 
@@ -225,6 +225,9 @@ Batch Operations
 
     .. method:: get_many(keys[, policy: dict]) -> [(key, meta, bins)]
 
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_read` instead.
+
         Batch-read multiple records, and return them as a :class:`list`.
 
         Any record that does not exist will have a :py:obj:`None` value for metadata \
@@ -240,10 +243,10 @@ Batch Operations
         .. include:: examples/get_many.py
             :code: python
 
+    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
+
         .. deprecated:: 12.0.0
             Use :meth:`batch_read` instead.
-
-    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
 
         Batch-read metadata for multiple keys.
 
@@ -258,10 +261,10 @@ Batch Operations
         .. include:: examples/exists_many.py
             :code: python
 
+    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
+
         .. deprecated:: 12.0.0
             Use :meth:`batch_read` instead.
-
-    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
 
         Batch-read specific bins from multiple records.
 
@@ -276,10 +279,10 @@ Batch Operations
         .. include:: examples/select_many.py
             :code: python
 
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
     .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
+
+        .. deprecated:: 12.0.0
+            Use :meth:`batch_operate` instead.
 
         Batch-read multiple records, and return them as a :class:`list`.
 
@@ -297,23 +300,24 @@ Batch Operations
         .. include:: examples/batch_get_ops.py
             :code: python
 
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_operate` instead.
+    .. note::
 
-    The following batch methods will return a :class:`BatchRecords` object with
-    a ``result`` value of ``0`` if one of the following is true:
+        The following batch methods will return a :class:`~aerospike_helpers.batch.records.BatchRecords` object with
+        a ``result`` value of ``0`` if one of the following is true:
 
-        * All transactions are successful.
-        * One or more transactions failed because:
+            * All transactions are successful.
+            * One or more transactions failed because:
 
-            - A record was filtered out by an expression
-            - The record was not found
+                - A record was filtered out by an expression
+                - The record was not found
 
-    Otherwise if one or more transactions failed, the :class:`BatchRecords` object will have a ``result`` value equal to
-    an `as_status <https://docs.aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code.
+        Otherwise:
 
-    In any case, the :class:`BatchRecords` object has a list of batch records called ``batch_records``,
-    and each batch record contains the result of that transaction.
+            * If the Python client-layer's code throws an error, such as a connection error or parameter error, an exception will be raised.
+            * If the underlying C client throws an error, the returned :class:`~aerospike_helpers.batch.records.BatchRecords` object will have a ``result`` value equal to an
+              `as_status <https://aerospike.com/apidocs/c/dc/d42/as__status_8h.html>`_ error code. In this case, the
+              :class:`~aerospike_helpers.batch.records.BatchRecords` object has a list of batch records called ``batch_records``,
+              and each batch record contains the result of that transaction.
 
     .. method:: batch_write(batch_records: BatchRecords, [policy_batch: dict]) -> BatchRecords
 
@@ -327,7 +331,7 @@ Batch Operations
 
         :return: A reference to the batch_records argument of type :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_write.py
             :code: python
@@ -354,22 +358,26 @@ Batch Operations
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. note:: Requires server version >= 6.0.0.
 
-    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict]) -> BatchRecords
+    .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
 
         Perform the same read/write transactions on multiple keys.
+
+        .. note:: Prior to Python client 14.0.0, using the :meth:`~batch_operate()` method with only read operations caused an error.
+            This bug was fixed in version 14.0.0.
 
         :param list keys: The keys to operate on.
         :param list ops: List of operations to apply.
         :param dict policy_batch: See :ref:`aerospike_batch_policies`.
         :param dict policy_batch_write: See :ref:`aerospike_batch_write_policies`.
+        :param int ttl: The time-to-live (expiration) of each record in seconds.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_operate.py
             :code: python
@@ -388,7 +396,7 @@ Batch Operations
         :param dict policy_batch_apply: See :ref:`aerospike_batch_apply_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_apply.py
             :code: python
@@ -408,7 +416,7 @@ Batch Operations
         :param dict policy_batch: Optional aerospike batch policy :ref:`aerospike_batch_policies`.
         :param dict policy_batch_remove: Optional aerospike batch remove policy :ref:`aerospike_batch_remove_policies`.
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
-        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`.
+        :raises: A subclass of :exc:`~aerospike.exception.AerospikeError`. See note above :meth:`batch_write` for details.
 
         .. include:: examples/batch_remove.py
             :code: python
@@ -670,8 +678,8 @@ User Defined Functions
                  :class:`int`, :class:`float`, :class:`bytearray`, :class:`list`, :class:`dict`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `Record UDF <https://docs.aerospike.com/server/guide/record_udf>`_ \
-          and `Developing Record UDFs <https://developer.aerospike.com/udf/developing_record_udfs>`_.
+        .. seealso:: `Record UDF <https://aerospike.com/docs/server/guide/record_udf>`_ \
+          and `Developing Record UDFs <https://aerospike.com/developer/udf/developing_record_udfs>`_.
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
@@ -772,7 +780,7 @@ Info Operations
 
         Send an info *command* to a single node specified by *host name*.
 
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
         :param str host: a node name. Example: 'BCER199932C'
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
@@ -786,7 +794,7 @@ Info Operations
 
         If any of the individual requests fail, this will raise an exception.
 
-        :param str command: see `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: see `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`dict`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -803,7 +811,7 @@ Info Operations
 
         Send an info *command* to a single random node.
 
-        :param str command: the info command. See `Info Command Reference <http://www.aerospike.com/docs/reference/info/>`_.
+        :param str command: the info command. See `Info Command Reference <https://aerospike.com/docs/server/reference/info/>`_.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :rtype: :class:`str`
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -822,7 +830,7 @@ Info Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
-        .. seealso:: `xdr-set-filter Info Command Reference <https://docs.aerospike.com/reference/info#xdr-set-filter>`_.
+        .. seealso:: `xdr-set-filter Info Command Reference <https://aerospike.com/docs/server/reference/info#xdr-set-filter>`_.
 
         .. versionchanged:: 5.0.0
 
@@ -853,7 +861,7 @@ Info Operations
         Remove all records in the namespace / set whose last updated time is older than the given time.
 
         This method is many orders of magnitude faster than deleting records one at a time.
-        See `Truncate command reference <https://docs.aerospike.com/reference/info#truncate>`_.
+        See `Truncate command reference <https://aerospike.com/docs/server/reference/info#truncate>`_.
 
         This asynchronous server call may return before the truncation is complete.  The user can still
         write new records after the server returns because new records will have last update times
@@ -907,6 +915,18 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+    .. method:: index_blob_create(ns, set, bin, name[, policy])
+
+        Create an blob index with index name *name* on the *bin* in the specified \
+        *ns*, *set*.
+
+        :param str ns: the namespace in the aerospike cluster.
+        :param str set: the set name.
+        :param str bin: the name of the bin the secondary index is built on.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
     .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
 
         Create an index named *name* for numeric, string or GeoJSON values \
@@ -916,7 +936,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -932,7 +952,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -948,7 +968,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC`` and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1058,7 +1078,7 @@ user\'s roles. Users are assigned roles, which are collections of \
         print("Error [{0}]: {1}".format(e.code, e.msg))
     client.close()
 
-.. seealso:: `Security features article <https://docs.aerospike.com/server/guide/security/index.html>`_.
+.. seealso:: `Security features article <https://aerospike.com/docs/server/guide/security>`_.
 
 .. class:: Client
     :noindex:
@@ -1251,6 +1271,8 @@ user\'s roles. Users are assigned roles, which are collections of \
 
     .. method:: admin_query_user (username[, policy: dict]) -> []
 
+        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
+
         Return the list of roles granted to the specified user.
 
         :param str username: the username of the user.
@@ -1260,9 +1282,9 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
-
     .. method:: admin_query_users ([policy: dict]) -> {}
+
+        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
 
         Get the roles of all users.
 
@@ -1270,7 +1292,25 @@ user\'s roles. Users are assigned roles, which are collections of \
         :return: a :class:`dict` of roles keyed by username.
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
+Metrics
+-------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
+
+        Enable extended periodic cluster and node latency metrics.
+
+        :param MetricsPolicy policy: Optional metrics policy
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+    .. method:: disable_metrics()
+
+        Disable extended periodic cluster and node latency metrics.
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
 .. _admin_user_dict:
 
@@ -1421,7 +1461,7 @@ Key Tuple
         client.remove(keyTuple)
         client.close()
 
-    .. seealso:: `Data Model: Keys and Digests <https://docs.aerospike.com/server/architecture/data-model#records>`_.
+    .. seealso:: `Data Model: Keys and Digests <https://aerospike.com/docs/server/architecture/data-model#records>`_.
 
 .. _aerospike_record_tuple:
 
@@ -1487,7 +1527,7 @@ Record Tuple
             client.remove(keyTuple)
             client.close()
 
-    .. seealso:: `Data Model: Record <https://www.aerospike.com/docs/architecture/data-model.html#records>`_.
+    .. seealso:: `Data Model: Record <https://aerospike.com/docs/server/architecture/data-model.html#records>`_.
 
 .. _metadata_dict:
 
@@ -1496,7 +1536,7 @@ Metadata Dictionary
 
 The metadata dictionary has the following key-value pairs:
 
-    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS`.
+    * ``"ttl"`` (:class:`int`): record time to live in seconds. See :ref:`TTL_CONSTANTS` for possible special values.
     * ``"gen"`` (:class:`int`): record generation
 
 .. _aerospike_policies:
@@ -1563,6 +1603,14 @@ Write Policies
             | One of the :ref:`POLICY_EXISTS` values such as :data:`aerospike.POLICY_EXISTS_CREATE`
             |
             | Default: :data:`aerospike.POLICY_EXISTS_IGNORE`
+        * **ttl**
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if
+            the write transaction:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
         * **gen**
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
@@ -1659,6 +1707,26 @@ Read Policies
 
             .. versionadded:: 3.7.0
 
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1728,6 +1796,35 @@ Operate Policies
             | One of the :ref:`POLICY_GEN` values such as :data:`aerospike.POLICY_GEN_IGNORE`
             |
             | Default: :data:`aerospike.POLICY_GEN_IGNORE`
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an
+            operate transaction contains a write operation and either:
+
+            1. Doesn't contain a metadata dictionary with a ``ttl`` value.
+            2. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this option. See :ref:`TTL_CONSTANTS`.
+
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -1831,6 +1928,11 @@ Apply Policies
             | One of the :ref:`POLICY_COMMIT_LEVEL` values such as :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
             |
             | Default: :data:`aerospike.POLICY_COMMIT_LEVEL_ALL`
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used if an apply
+            transaction doesn't have an apply policy with a ``ttl`` value that overrides this field.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
         * **durable_delete** (:class:`bool`)
             | Perform durable delete
             |
@@ -1988,6 +2090,26 @@ Batch Policies
 
             .. versionadded:: 3.7.0
 
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
+
         * **replica**
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
@@ -2074,11 +2196,21 @@ Batch Write Policies
             |
             | Default: None
         * **ttl** :class:`int`
-            | The time-to-live (expiration) in seconds to apply to every record in the batch.
-            |
-            | The ttl must be a 32-bit unsigned integer, or a :exc:`~aerospike.exception.ParamError` will be raised.
-            |
-            | Default: ``0``
+            The time-to-live (expiration) in seconds to apply to every record in the batch. This field will only be
+            used if:
+            1. A :meth:`~aerospike.Client.batch_write` call contains a :class:`~aerospike_helpers.batch.records.Write` that:
+
+               a. Doesn't contain a metadata dictionary with a ``ttl`` value.
+               b. Contains a metadata dictionary with a ``ttl`` value set to :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            2. A :meth:`~aerospike.Client.batch_operate` call:
+
+               a. Doesn't pass in a `ttl` argument.
+               b. Passes in `aerospike.TTL_CLIENT_DEFAULT` to the `ttl` parameter.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
+
+            Default: ``0``
 
 .. _aerospike_batch_apply_policies:
 
@@ -2103,20 +2235,11 @@ Batch Apply Policies
         * **ttl** int
             | Time to live (expiration) of the record in seconds.
             |
-            | 0 which means that the
-            | record will adopt the default TTL value from the namespace.
+            | See :ref:`TTL_CONSTANTS` for possible special values.
             |
-            | 0xFFFFFFFF (also, -1 in a signed 32 bit int)
-            | which means that the record
-            | will get an internal "void_time" of zero, and thus will never expire.
-            |
-            | 0xFFFFFFFE (also, -2 in a signed 32 bit int)
-            | which means that the record
-            |
-            | ttl will not change when the record is updated.
             | Note that the TTL value will be employed ONLY on write/update calls.
             |
-            | Default: 0
+            | Default: ``0``
         * **durable_delete** :class:`bool`
             | If the transaction results in a record deletion, leave a tombstone for the record. This prevents deleted records from reappearing after node failures. Valid for Aerospike Server Enterprise Edition only.
             |
@@ -2187,6 +2310,25 @@ Batch Read Policies
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
             | Default: None
+        * **read_touch_ttl_percent**
+            Determine how record TTL (time to live) is affected on reads. When enabled, the server can
+            efficiently operate as a read-based LRU cache where the least recently used records are expired.
+            The value is expressed as a percentage of the TTL sent on the most recent write such that a read
+            within this interval of the record’s end of life will generate a touch.
+
+            For example, if the most recent write had a TTL of 10 hours and ``"read_touch_ttl_percent"`` is set to
+            80, the next read within 8 hours of the record's end of life (equivalent to 2 hours after the most
+            recent write) will result in a touch, resetting the TTL to another 10 hours.
+
+            Values:
+
+            * ``0`` : Use server config default-read-touch-ttl-pct for the record's namespace/set.
+            * ``-1`` : Do not reset record TTL on reads.
+            * ``1`` - ``100`` : Reset record TTL on reads when within this percentage of the most recent write TTL.
+
+            Default: ``0``
+
+            .. note:: Requires Aerospike server version >= 7.1.
 
 .. _aerospike_info_policies:
 
@@ -2264,20 +2406,10 @@ Map Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional map policies, which are applicable to map operations. Only one of ``map_write_mode`` or ``map_write_flags`` should
-    be provided. ``map_write_mode`` should be used for Aerospike Server versions < `4.3.0` and ``map_write_flags`` should be used for Aerospike server versions
-    greater than or equal to `4.3.0` .
+    A :class:`dict` of optional map policies, which are applicable to map operations.
 
     .. hlist::
         :columns: 1
-
-        * **map_write_mode**
-            | Write mode for the map operation.
-            | One of the :ref:`aerospike_map_write_mode` values such as :data:`aerospike.MAP_UPDATE`
-            |
-            | Default: :data:`aerospike.MAP_UPDATE`
-
-            .. note:: This should only be used for Server version < 4.3.0.
 
         * **map_write_flags**
             | Write flags for the map operation.
@@ -2296,6 +2428,13 @@ Map Policies
             |
             | Default: :data:`aerospike.MAP_UNORDERED`
 
+        * **persist_index** (:class:`bool`)
+            | If :py:obj:`True`, persist map index. A map index improves lookup performance,
+            | but requires more storage. A map index can be created for a top-level
+            | ordered map only. Nested and unordered map indexes are not supported.
+            |
+            | Default: :py:obj:`False`
+
     Example:
 
     .. code-block:: python
@@ -2304,12 +2443,6 @@ Map Policies
         map_policy = {
             'map_order': aerospike.MAP_UNORDERED,
             'map_write_flags': aerospike.MAP_WRITE_FLAGS_CREATE_ONLY
-        }
-
-        # Server < 4.3.0
-        map_policy = {
-            'map_order': aerospike.MAP_UNORDERED,
-            'map_write_mode': aerospike.MAP_CREATE_ONLY
         }
 
 .. _aerospike_bit_policies:

@@ -127,6 +127,31 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
         AS_INDEX_STRING, NULL);
 }
 
+PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_policy = NULL;
+    PyObject *py_ns = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_bin = NULL;
+    PyObject *py_name = NULL;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_blob_create",
+                                    kwlist, &py_ns, &py_set, &py_bin, &py_name,
+                                    &py_policy) == false) {
+        return NULL;
+    }
+
+    return createIndexWithDataAndCollectionType(
+        self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
+        AS_INDEX_BLOB, NULL);
+}
+
 /**
  *******************************************************************************************************
  * Creates a cdt index for a bin in the Aerospike DB.
@@ -298,10 +323,6 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
     Py_BEGIN_ALLOW_THREADS
     aerospike_index_remove(self->as, &err, info_policy_p, namespace, name);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -597,11 +618,7 @@ static PyObject *createIndexWithDataAndCollectionType(
                                set_ptr, bin_ptr, name, index_type, data_type,
                                ctx);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-    else {
+    if (err.code == AEROSPIKE_OK) {
         Py_BEGIN_ALLOW_THREADS
         aerospike_index_create_wait(&err, &task, 2000);
         Py_END_ALLOW_THREADS

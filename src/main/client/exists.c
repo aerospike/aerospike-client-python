@@ -119,9 +119,6 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
 
         Py_INCREF(py_result_meta);
     }
-    else {
-        as_error_update(&err, err.code, NULL);
-    }
 
 CLEANUP:
 

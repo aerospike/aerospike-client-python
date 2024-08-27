@@ -8,24 +8,35 @@ on:
         required: false
         default: ""
       use-server-rc:
+        type: boolean
+        description: 'Use server release candidate?'
         required: true
         default: false
 
 jobs:
+  build-manylinux-wheels:
+    uses: ./.github/workflows/build-wheels.yml
+
   valgrind:
-    runs-on: ubuntu-latest
+    needs: build-manylinux-wheels
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
+        fetch-depth: 0
 
     - uses: actions/setup-python@v2
       with:
-        python-version: "3.7"
+        python-version: '3.8'
         architecture: 'x64'
 
+    - uses: actions/download-artifact@v4
+      with:
+        name: cp38-manylinux_x86_64.build
+
     - name: Install client
-      run: pip install .
+      run: pip install ./*.whl
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
@@ -34,10 +45,8 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - run: sudo apt update
     - run: sudo apt install valgrind -y

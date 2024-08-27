@@ -99,6 +99,12 @@ static PyMethodDef AerospikeScan_Type_Methods[] = {
 
     {NULL}};
 
+static PyMemberDef AerospikeScan_Type_custom_members[] = {
+    {"ttl", T_UINT, offsetof(AerospikeScan, scan) + offsetof(as_scan, ttl), 0,
+     "The time-to-live (expiration) of the record in seconds."},
+    {NULL} /* Sentinel */
+};
+
 /*******************************************************************************
  * PYTHON TYPE HOOKS
  ******************************************************************************/
@@ -207,20 +213,20 @@ static PyTypeObject AerospikeScan_Type = {
     "operation. To create a new instance of the Scan class, call the\n"
     "scan() method on an instance of a Client class.\n",
     // tp_doc
-    0,                          // tp_traverse
-    0,                          // tp_clear
-    0,                          // tp_richcompare
-    0,                          // tp_weaklistoffset
-    0,                          // tp_iter
-    0,                          // tp_iternext
-    AerospikeScan_Type_Methods, // tp_methods
-    0,                          // tp_members
-    0,                          // tp_getset
-    0,                          // tp_base
-    0,                          // tp_dict
-    0,                          // tp_descr_get
-    0,                          // tp_descr_set
-    0,                          // tp_dictoffset
+    0,                                 // tp_traverse
+    0,                                 // tp_clear
+    0,                                 // tp_richcompare
+    0,                                 // tp_weaklistoffset
+    0,                                 // tp_iter
+    0,                                 // tp_iternext
+    AerospikeScan_Type_Methods,        // tp_methods
+    AerospikeScan_Type_custom_members, // tp_members
+    0,                                 // tp_getset
+    0,                                 // tp_base
+    0,                                 // tp_dict
+    0,                                 // tp_descr_get
+    0,                                 // tp_descr_set
+    0,                                 // tp_dictoffset
     (initproc)AerospikeScan_Type_Init,
     // tp_init
     0,                      // tp_alloc

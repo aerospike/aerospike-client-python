@@ -1,13 +1,16 @@
-name: PR pre-merge tests
+name: PR tests
+
+env:
+  LOWEST_SUPPORTED_PY_VERSION: '3.8'
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
-# 2. Commits are pushed directly to the stage or master branch
+# 2. Commits are pushed directly to the dev, stage or master branch
 on:
   push:
-    branches: ["stage", "master"]
+    branches: ["dev*", "stage*", "master*", "v*-backport*"]
   pull_request:
-    branches: ["stage"]
+    branches: ["dev*", "stage*", "v*-backport*"]
     types: [
       # Default triggers
       opened,
@@ -18,6 +21,11 @@ on:
       unlabeled
     ]
   workflow_dispatch:
+    inputs:
+      test-server-rc:
+        type: boolean
+        default: false
+        required: true
 
 jobs:
   lint:
@@ -36,13 +44,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
       fail-fast: false
 
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+        fetch-depth: 0
 
     - uses: actions/setup-python@v2
       with:
@@ -66,12 +75,56 @@ jobs:
         name: wheel-${{ matrix.py-version }}
         path: ./dist/*.whl
 
-  test-coverage:
+  test-memray:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.8"
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-3.8
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
+
+    - name: Get number of tests
+      run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
+      working-directory: test
+
+    - name: Run tests
+      # Get number of tests since setting to 0 doesn't work properly
+      # pytest-memray currently throws a ZeroDivision error due to having a bug
+      # We ignore this for now
+      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }} || true
+      working-directory: test
+
+  generate-coverage-report:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
+        fetch-depth: 0
 
     - uses: actions/setup-python@v2
       with:
@@ -96,14 +149,14 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-
-    - run: sleep 5
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
 
     - name: Copy over source files to build dir
-      if: ${{ always() }}
+      if: ${{ !cancelled() }}
       # The build/temp*/src/main directory will contain a hierarchy of object .o files
       # But the source files must be stored in the same folder hierarchy at build/temp*/src/main/src/main
       run: |
@@ -130,27 +183,43 @@ jobs:
         cp src/main/scan/*.c build/temp*/src/main/scan/src/main/scan/
 
     - name: Generate coverage report for all object files
-      if: ${{ always() }}
+      if: ${{ !cancelled() }}
       run: |
         cd build/temp*/src/main
         find . -type f -name "*.o" -execdir gcov {} \;
 
     - name: Move aerospike_helpers coverage report to this directory
+      if: ${{ !cancelled() }}
       run: mv test/coverage.xml build/temp*/src/main
 
-    - name: Get exact folder to find coverage reports
-      if: ${{ always() }}
-      # Can't pass in glob pattern to codecov action (I think?)
-      run: |
-        obj_dir=$(ls -d build/temp*/src/main/)
-        echo "OBJ_DIR=$obj_dir" >> $GITHUB_ENV
+    - name: Upload coverage report folder to Github
+      if: ${{ !cancelled() }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: coverage-report
+        path: build/temp*/src/main/
+
+  coverage-upload:
+    needs: generate-coverage-report
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: coverage-report
+        path: ./coverage-report
 
     - uses: codecov/codecov-action@v3
-      if: ${{ always() }}
       with:
-        directory: ${{ env.OBJ_DIR }}
+        directory: coverage-report
         verbose: true # optional (default = false)
         fail_ci_if_error: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   stubtest:
     needs: build
@@ -162,12 +231,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.7'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.7
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
@@ -190,12 +259,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.7'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.7
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
@@ -206,9 +275,13 @@ jobs:
     - name: Run Aerospike server
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests
@@ -220,11 +293,11 @@ jobs:
     strategy:
       matrix:
         py-version: [
-          "3.7",
           "3.8",
           "3.9",
           "3.10",
-          "3.11"
+          "3.11",
+          "3.12"
         ]
       fail-fast: false
 
@@ -248,17 +321,27 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
+    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
     - name: Run Aerospike server release candidate with latest tag
       if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike.jfrog.io/docker/aerospike/aerospike-server-rc:latest
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests -vv
@@ -274,12 +357,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: "3.7"
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.7
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
@@ -288,13 +371,15 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run lowest supported server
-      run: |
-        SERVER_VERSION=$(curl -s "https://registry.hub.docker.com/v2/repositories/aerospike/aerospike-server/tags?page_size=100" | jq '.results[] | select(.name | startswith("6.0")).name' -r | head -n 1)
-        docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:$SERVER_VERSION
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests
@@ -310,12 +395,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: 3.7
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-3.7
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
     - name: Install client
       run: pip install *.whl
@@ -326,9 +411,8 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-
-    - name: Wait for server to start
-      run: sleep 5
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
       run: python -m pytest ./new_tests/test_admin_*.py
@@ -370,3 +454,43 @@ jobs:
     - name: Check spelling
       run: sphinx-build -b linkcheck . links
       working-directory: doc
+
+  test-metrics-node-close-listener:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+    - name: Download aerolab
+      run: wget https://github.com/aerospike/aerolab/releases/download/7.6.0-7b5bbde/aerolab-linux-amd64-7.6.0.deb
+    - name: Install aerolab
+      run: sudo dpkg -i *.deb
+    - name: Tell aerolab to use Docker
+      run: aerolab config backend -t docker
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+    - run: python3 -m pip install *.whl
+    - run: python3 test_node_close_listener.py
+      working-directory: test/metrics
+
+  test-metrics-cluster-name:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+    - run: python3 -m pip install *.whl
+    - run: python3 -m pip install -r requirements.txt
+      working-directory: test/metrics
+    - run: python3 test_cluster_name.py
+      working-directory: test/metrics

@@ -17,7 +17,6 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
-#include <unistd.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/as_config.h>
@@ -32,6 +31,7 @@
 #include "exceptions.h"
 #include "tls_config.h"
 #include "policy_config.h"
+#include "metrics.h"
 
 static int set_rack_aware_config(as_config *conf, PyObject *config_dict);
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict);
@@ -214,6 +214,11 @@ PyDoc_STRVAR(index_string_create_doc,
 \n\
 Create a string index with index_name on the bin in the specified ns, set.");
 
+PyDoc_STRVAR(index_blob_create_doc,
+             "index_blob_create(ns, set, bin, index_name[, policy])\n\
+\n\
+Create a blob index with index_name on the bin in the specified ns, set.");
+
 PyDoc_STRVAR(
     index_cdt_create_doc,
     "index_cdt_create(ns, set, bin,  index_type, index_datatype, index_name, ctx, [, policy])\n\
@@ -339,6 +344,13 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Checks current connection state."},
     {"shm_key", (PyCFunction)AerospikeClient_shm_key,
      METH_VARARGS | METH_KEYWORDS, "Get the shm key of the cluster"},
+
+    // METRICS
+
+    {"enable_metrics", (PyCFunction)AerospikeClient_EnableMetrics,
+     METH_VARARGS | METH_KEYWORDS, NULL},
+    {"disable_metrics", (PyCFunction)AerospikeClient_DisableMetrics,
+     METH_NOARGS, NULL},
 
     // ADMIN OPERATIONS
 
@@ -472,6 +484,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, index_integer_create_doc},
     {"index_string_create", (PyCFunction)AerospikeClient_Index_String_Create,
      METH_VARARGS | METH_KEYWORDS, index_string_create_doc},
+    {"index_blob_create", (PyCFunction)AerospikeClient_Index_Blob_Create,
+     METH_VARARGS | METH_KEYWORDS, index_blob_create_doc},
     {"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
      METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
@@ -740,7 +754,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
     }
 
-    as_policies_init(&config.policies);
     //Set default value of use_batch_direct
 
     PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
@@ -1047,7 +1060,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->as = aerospike_new(&config);
 
     if (AerospikeClientConnect(self) == -1) {
-        aerospike_destroy(self->as);
         return -1;
     }
 
@@ -1355,6 +1367,6 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
     raise_exception(&err);
 
 CLEANUP:
-    AerospikeClient_Type.tp_free(self);
+    AerospikeClient_Type.tp_dealloc((PyObject *)self);
     return NULL;
 }

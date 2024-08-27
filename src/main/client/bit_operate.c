@@ -54,9 +54,6 @@ static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
 static as_status get_uint8t_from_pyargs(as_error *err, char *key,
                                         PyObject *op_dict, uint8_t **value);
 
-static as_status get_bool_from_pyargs(as_error *err, char *key,
-                                      PyObject *op_dict, bool *boolean);
-
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
                                          PyObject *op_dict, uint32_t *value);
 
@@ -901,26 +898,6 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
         return err->code;
     }
 
-    return AEROSPIKE_OK;
-}
-
-static as_status get_bool_from_pyargs(as_error *err, char *key,
-                                      PyObject *op_dict, bool *boolean)
-{
-    PyObject *py_val = PyDict_GetItemString(op_dict, key);
-    if (!py_val) {
-        // op_dict does not contain key
-        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
-                               key);
-    }
-
-    if (!PyBool_Check(py_val)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "key %s does not point to a boolean in the dict",
-                               key);
-    }
-
-    *boolean = (bool)PyObject_IsTrue(py_val);
     return AEROSPIKE_OK;
 }
 

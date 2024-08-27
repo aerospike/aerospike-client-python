@@ -61,9 +61,9 @@ as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
 as_status as_udf_files_to_pyobject(as_error *err, as_udf_files *files,
                                    PyObject **py_files);
 
-as_status strArray_to_py_list(as_error *err, int num_elements, int element_size,
-                              char str_array_ptr[][element_size],
-                              PyObject *py_list);
+as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
+                                        char str_array_ptr[][AS_ROLE_SIZE],
+                                        PyObject *py_list);
 
 as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
                                      int element_size, char **str_array_ptr,
@@ -227,3 +227,16 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
                                          as_batch_result *bres,
                                          PyObject *py_batch_record,
                                          bool checking_if_records_exist);
+
+PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
+                                            struct as_cluster_s *cluster);
+PyObject *create_py_node_from_as_node(as_error *error_p,
+                                      struct as_node_s *node);
+
+bool is_pyobj_correct_as_helpers_type(PyObject *obj,
+                                      const char *expected_submodule_name,
+                                      const char *expected_type_name);
+PyObject *create_class_instance_from_module(as_error *error_p,
+                                            const char *module_name,
+                                            const char *class_name,
+                                            PyObject *py_arg);

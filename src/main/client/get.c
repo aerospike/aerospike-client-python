@@ -114,9 +114,6 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
             PyTuple_SetItem(p_key, 2, Py_None);
         }
     }
-    else {
-        as_error_update(&err, err.code, NULL);
-    }
 
 CLEANUP:
 

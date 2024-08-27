@@ -161,6 +161,75 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 py_ubin = NULL;
             }
         }
+        else if (in_datatype == AS_INDEX_BLOB) {
+            // TODO: Some of this code can be shared by all the other index data types
+            if (PyUnicode_Check(py_bin)) {
+                const char *py_bin_buffer = PyUnicode_AsUTF8(py_bin);
+                // bin points to the internal buffer of the Python string
+                // so we need to make a copy of the bin string in case the Python string gets garbage collected
+                bin = strdup(py_bin_buffer);
+            }
+            else {
+                rc = 1;
+                break;
+            }
+            uint8_t *val = NULL;
+            Py_ssize_t bytes_size;
+
+            if (PyBytes_Check(py_val1)) {
+                val = (uint8_t *)PyBytes_AsString(py_val1);
+                bytes_size = PyBytes_Size(py_val1);
+            }
+            else if (PyByteArray_Check(py_val1)) {
+                val = (uint8_t *)PyByteArray_AsString(py_val1);
+                bytes_size = PyByteArray_Size(py_val1);
+            }
+            else {
+                rc = 1;
+                free(bin);
+                break;
+            }
+
+            uint8_t *bytes_buffer =
+                (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
+            memcpy(bytes_buffer, val, sizeof(uint8_t) * bytes_size);
+            val = bytes_buffer;
+
+            as_query_where_init(&self->query, 1);
+            if (index_type == AS_INDEX_TYPE_DEFAULT) {
+                as_query_where_with_ctx(&self->query, bin, pctx,
+                                        as_blob_equals(val, bytes_size, true));
+            }
+            else if (index_type == AS_INDEX_TYPE_LIST) {
+                as_query_where_with_ctx(
+                    &self->query, bin, pctx,
+                    as_blob_contains(LIST, val, bytes_size, true));
+            }
+            else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
+                as_query_where_with_ctx(
+                    &self->query, bin, pctx,
+                    as_blob_contains(MAPKEYS, val, bytes_size, true));
+            }
+            else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
+                as_query_where_with_ctx(
+                    &self->query, bin, pctx,
+                    as_blob_contains(MAPVALUES, val, bytes_size, true));
+            }
+            else {
+                rc = 1;
+                free(bin);
+                break;
+            }
+            if (py_ubin) {
+                Py_DECREF(py_ubin);
+                py_ubin = NULL;
+            }
+
+            self->query.where.entries[0].value.blob_val._free = true;
+
+            // Cleanup
+            free(bin);
+        }
         else {
             // If it ain't expected, raise and error
             as_error_update(
@@ -212,6 +281,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 rc = 1;
                 break;
             }
+
             if (py_ubin) {
                 Py_DECREF(py_ubin);
                 py_ubin = NULL;

@@ -33,6 +33,14 @@
 #include "exceptions.h"
 #include "policy.h"
 
+// Unistd isn't available on windows
+#ifdef _WIN32
+    #define F_OK 0
+    #define access _access
+#else
+    #include <unistd.h>
+#endif
+
 /**
  *******************************************************************************************************
  * Registers a UDF module with the Aerospike DB.
@@ -115,7 +123,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
 
     // Convert lua file to content
     as_bytes content;
-    file_p = fopen(filename, "r");
+    // Read in binary mode to avoid converting Windows newlines to UNIX newlines
+    file_p = fopen(filename, "rb");
 
     // Make this equal to twice the path size, so the path and the filename
     // may be 255 characters each. The max size should then be 255 + 255 + 1 + 1
@@ -353,10 +362,6 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
     Py_BEGIN_ALLOW_THREADS
     aerospike_udf_remove(self->as, &err, info_policy_p, filename);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -442,18 +447,12 @@ PyObject *AerospikeClient_UDF_List(AerospikeClient *self, PyObject *args,
     aerospike_udf_list(self->as, &err, info_policy_p, &files);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
 
     // Convert as_udf_files struct into python object
     PyObject *py_files;
     as_udf_files_to_pyobject(&err, &files, &py_files);
-
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -564,7 +563,6 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
                       (language - AS_UDF_TYPE_LUA), &file);
     Py_END_ALLOW_THREADS
     if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
         goto CLEANUP;
     }
     udf_content = Py_BuildValue("s#", file.content.bytes, file.content.size);

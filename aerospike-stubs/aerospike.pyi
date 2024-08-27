@@ -1,7 +1,8 @@
-from typing import Any, Callable, Union
-from typing_extensions import final, Literal
+from typing import Any, Callable, Union, final, Literal, Optional
 
 from aerospike_helpers.batch.records import BatchRecords
+from aerospike_helpers.metrics import MetricsPolicy
+
 AS_BOOL: Literal[1]
 AS_BYTES_BLOB: Literal[4]
 AS_BYTES_BOOL: Literal[17]
@@ -58,6 +59,7 @@ HLL_WRITE_CREATE_ONLY: Literal[1]
 HLL_WRITE_DEFAULT: Literal[0]
 HLL_WRITE_NO_FAIL: Literal[4]
 HLL_WRITE_UPDATE_ONLY: Literal[2]
+INDEX_BLOB: Literal[3]
 INDEX_GEO2DSPHERE: Literal[2]
 INDEX_NUMERIC: Literal[1]
 INDEX_STRING: Literal[0]
@@ -94,7 +96,6 @@ LOG_LEVEL_INFO: Literal[2]
 LOG_LEVEL_OFF: Literal[-1]
 LOG_LEVEL_TRACE: Literal[4]
 LOG_LEVEL_WARN: Literal[1]
-MAP_CREATE_ONLY: Literal[2]
 MAP_KEY_ORDERED: Literal[1]
 MAP_KEY_VALUE_ORDERED: Literal[3]
 MAP_RETURN_COUNT: Literal[5]
@@ -110,8 +111,6 @@ MAP_RETURN_VALUE: Literal[7]
 MAP_RETURN_ORDERED_MAP: Literal[17]
 MAP_RETURN_UNORDERED_MAP: Literal[16]
 MAP_UNORDERED: Literal[0]
-MAP_UPDATE: Literal[0]
-MAP_UPDATE_ONLY: Literal[1]
 MAP_WRITE_FLAGS_CREATE_ONLY: Literal[1]
 MAP_WRITE_FLAGS_DEFAULT: Literal[0]
 MAP_WRITE_FLAGS_NO_FAIL: Literal[4]
@@ -198,6 +197,7 @@ OP_LIST_SET_ORDER: Literal[1030]
 OP_LIST_SIZE: Literal[1014]
 OP_LIST_SORT: Literal[1031]
 OP_LIST_TRIM: Literal[1013]
+OP_LIST_CREATE: Literal[1041]
 OP_MAP_CLEAR: Literal[1107]
 OP_MAP_DECREMENT: Literal[1105]
 OP_MAP_GET_BY_INDEX: Literal[1122]
@@ -239,6 +239,7 @@ OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL: Literal[1128]
 OP_MAP_REMOVE_BY_VALUE_REL_INDEX_RANGE: Literal[1138]
 OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE: Literal[1139]
 OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END: Literal[1133]
+OP_MAP_CREATE: Literal[1144]
 OP_MAP_SET_POLICY: Literal[1101]
 OP_MAP_SIZE: Literal[1106]
 POLICY_COMMIT_LEVEL_ALL: Literal[0]
@@ -286,7 +287,11 @@ SERIALIZER_USER: Literal[3]
 TTL_DONT_UPDATE: Literal[0xFFFFFFFE]
 TTL_NAMESPACE_DEFAULT: Literal[0]
 TTL_NEVER_EXPIRE: Literal[0xFFFFFFFF]
+TTL_CLIENT_DEFAULT: Literal[0xFFFFFFFD]
 UDF_TYPE_LUA: Literal[0]
+QUERY_DURATION_LONG: Literal[0]
+QUERY_DURATION_SHORT: Literal[1]
+QUERY_DURATION_LONG_RELAX_AP: Literal[2]
 
 @final
 class CDTInfinite:
@@ -322,7 +327,7 @@ class Client:
     def apply(self, key: tuple, module: str, function: str, args: list, policy: dict = ...) -> Union[str, int, float, bytearray, list, dict]: ...
     def batch_apply(self, keys: list, module: str, function: str, args: list, policy_batch: dict = ..., policy_batch_apply: dict = ...) -> BatchRecords: ...
     def batch_get_ops(self, keys: list, ops: list, policy: dict) -> list: ...
-    def batch_operate(self, keys: list, ops: list, policy_batch: dict = ..., policy_batch_write: dict = ...) -> BatchRecords: ...
+    def batch_operate(self, keys: list, ops: list, policy_batch: dict = ..., policy_batch_write: dict = ..., ttl: int = ...) -> BatchRecords: ...
     def batch_remove(self, keys: list, policy_batch: dict = ..., policy_batch_remove: dict = ...) -> BatchRecords: ...
     def batch_read(self, keys: list, bins: list[str] = ..., policy_batch: dict = ...) -> BatchRecords: ...
     def batch_write(self, batch_records: BatchRecords, policy_batch: dict = ...) -> BatchRecords: ...
@@ -346,11 +351,14 @@ class Client:
     def index_map_values_create(self, ns: str, set: str, bin: str, index_datatype, name: str, policy: dict = ...) -> None: ...
     def index_remove(self, ns, name: str, policy: dict = ...) -> None: ...
     def index_string_create(self, ns: str, set: str, bin: str, name: str, policy: dict = ...) -> None: ...
+    def index_blob_create(self, ns: str, set: str, bin: str, name: str, policy: dict = ...) -> None: ...
     def info_all(self, command: str, policy: dict = ...) -> dict: ...
     def info_random_node(self, command: str, policy: dict = ...) -> str: ...
     def info_single_node(self, command: str, host: str, policy: dict = ...) -> str: ...
     def is_connected(self) -> bool: ...
     def job_info(self, job_id: int, module, policy: dict = ...) -> dict: ...
+    def enable_metrics(self, policy: Optional[MetricsPolicy] = None) -> None: ...
+    def disable_metrics(self) -> None: ...
     # List and map operations in the aerospike module are deprecated and undocumented
     # def list_append(self, *args, **kwargs) -> Any: ...
     # def list_clear(self, *args, **kwargs) -> Any: ...
@@ -443,6 +451,7 @@ class Query:
     def where(self, predicate: tuple, ctx: list = ...) -> None: ...
 
 class Scan:
+    ttl: int
     def __init__(self, *args, **kwargs) -> None: ...
     def add_ops(self, ops: list) -> None: ...
     def apply(self, module: str, function: str, arguments: list = ...) -> Any: ...

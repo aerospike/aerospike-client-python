@@ -25,8 +25,8 @@ In this case, if the set is initialized to :py:obj:`None`, then the query will o
 
 .. note::
     The secondary index filters in :mod:`aerospike.predicates` are **not** the same as
-    the deprecated `predicate expressions <https://docs.aerospike.com/server/guide/predicate>`_.
-    For more details, read this `guide <https://docs.aerospike.com/server/guide/query>`_.
+    the deprecated `predicate expressions <https://aerospike.com/docs/server/guide/predicate>`_.
+    For more details, read this `guide <https://aerospike.com/docs/server/guide/query>`_.
 
 Writing Using Query
 -------------------
@@ -38,7 +38,7 @@ See available write operations at :mod:`aerospike_helpers.operations`.
 Query Aggregations
 ------------------
 
-A `stream UDF <https://developer.aerospike.com/udf/developing_stream_udfs>`_ \
+A `stream UDF <https://aerospike.com/developer/udf/developing_stream_udfs>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
@@ -54,8 +54,8 @@ Finally, the query is invoked using one of these methods:
 - :meth:`~aerospike.Query.execute_background`
 
 .. seealso::
-    `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
-    `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
+    `Queries <https://aerospike.com/docs/server/guide/query.html>`_ and \
+    `Managing Queries <https://aerospike.com/docs/server/operations/manage/queries/>`_.
 
 Fields
 ======
@@ -80,20 +80,10 @@ Fields
         Default: ``0`` (no limit)
 
     ttl (:class:`int`)
-        The time-to-live (expiration) of the record in seconds.
+        The time-to-live (expiration) of the record in seconds. If set to :data:`aerospike.TTL_CLIENT_DEFAULT`, use the
+        client's default write policy ttl.
 
-        There are also special values that can be set in the record TTL:
-
-            ``0`` (``TTL_NAMESPACE_DEFAULT``)
-                Which means that the record will adopt the default TTL value from the namespace.
-
-            ``0xFFFFFFFF`` (``TTL_NEVER_EXPIRE``)
-                (also, ``-1`` in a signed 32 bit int) Which means that the record will never expire.
-
-            ``0xFFFFFFFE`` (``TTL_DONT_UPDATE``)
-                (also, ``-2`` in a signed 32 bit int)
-                Which means that the record ttl will not change when the record is
-                updated.
+        See :ref:`TTL_CONSTANTS` for more possible special values.
 
         .. note::
             Note that the TTL value will be employed ONLY on background query writes.
@@ -225,16 +215,16 @@ Assume this boilerplate code is run before all examples below:
     .. method:: apply(module, function[, arguments])
 
         Aggregate the :meth:`results` using a stream \
-        `UDF <http://www.aerospike.com/docs/guide/udf.html>`_. If no \
+        `UDF <https://aerospike.com/docs/server/guide/udf.html>`_. If no \
         predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
         will aggregate over all the records in the specified set.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
-        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
 
-        .. seealso:: `Developing Stream UDFs <https://developer.aerospike.com/udf/developing_stream_udfs>`_
+        .. seealso:: `Developing Stream UDFs <https://aerospike.com/developer/udf/developing_stream_udfs>`_
 
         Example: find the first name distribution of users who are 21 or older using \
         a query aggregation:
@@ -483,14 +473,30 @@ Policies
             | Set to `False` for backup programs that just need access to raw bytes.
             |
             | Default: ``True``
-        * **short_query** :class:`bool`
-            | Is query expected to return less than 100 records.
-            | If True, the server will optimize the query for a small record set.
-            | This field is ignored for aggregation queries, background queries
-            | and server versions less than 6.0.0.
+        * **expected_duration**
+            | Expected query duration. The server treats the query in different ways depending on the expected duration.
+            | This field is ignored for aggregation queries, background queries and server versions < 6.0.
             |
-            | Mututally exclusive with records_per_second
-            | Default: ``False``
+            | See :ref:`query_duration_constants` for possible values.
+            |
+            | Default: :data:`aerospike.QUERY_DURATION_LONG`
+        * **short_query** :class:`bool`
+            **Deprecated**: Use ``"expected_duration"`` instead.
+
+            For backwards compatibility: If ``"short_query"`` is true, the query is treated as a short query and
+            ``"expected_duration"`` is ignored. If ``"short_query"`` is false, ``"expected_duration"`` is used
+            and defaults to :data:`aerospike.QUERY_DURATION_LONG`.
+
+            Is query expected to return less than 100 records.
+
+            If True, the server will optimize the query for a small record set.
+
+            This field is ignored for aggregation queries, background queries
+            and server versions less than 6.0.0.
+
+            Mutually exclusive with records_per_second
+
+            Default: ``False``
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
