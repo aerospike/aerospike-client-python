@@ -116,7 +116,7 @@ class ResultType:
     """
     Flags used to indicate expression value_type.
     """
-
+    NIL = 0
     BOOLEAN = 1
     INTEGER = 2
     STRING = 3
