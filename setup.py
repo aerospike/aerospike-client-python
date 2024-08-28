@@ -93,7 +93,7 @@ if SANITIZER:
     ]
     extra_compile_args.extend(sanitizer_flags)
 
-    #extra_link_args.append("-static-libasan")
+    extra_link_args.append("-lasan")
     extra_link_args.extend(sanitizer_flags)
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
