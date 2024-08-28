@@ -84,6 +84,7 @@ on:
 
 jobs:
   build-sdist:
+    if: ${{ false }}
     name: Build source distribution
     runs-on: ubuntu-22.04
     steps:
@@ -132,14 +133,14 @@ jobs:
         # Python versions to build wheels on
         python: [
           "cp38",
-          "cp39",
-          "cp310",
-          "cp311",
-          "cp312"
+          # "cp39",
+          # "cp310",
+          # "cp311",
+          # "cp312"
         ]
         platform: [
           ["x86_64", "ubuntu-22.04"],
-          ["aarch64", "aerospike_arm_runners_2"]
+          # ["aarch64", "aerospike_arm_runners_2"]
         ]
     runs-on: ${{ matrix.platform[1] }}
     steps:
@@ -205,6 +206,7 @@ jobs:
         context: "Build wheels (${{ matrix.python }}-manylinux_${{ matrix.platform[0] }})"
 
   macOS-x86:
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -293,6 +295,7 @@ jobs:
   # TODO: this needs refactoring. But for now, just reuse code from the macos x86 job
   # There's already an open PR to refactor all this code for building wheels and the sdist
   macOS-m1:
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
@@ -432,6 +435,7 @@ jobs:
         context: "Test self-hosted (${{ matrix.python-version[0] }}-macosx_arm64)"
 
   windows-build:
+    if: ${{ false }}
     strategy:
       fail-fast: false
       matrix:
