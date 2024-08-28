@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import pytest
-import inspect
-
 from aerospike import exception as e
 from aerospike import predicates as p
 from .test_base_class import TestBaseClass
