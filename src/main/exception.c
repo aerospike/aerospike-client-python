@@ -236,9 +236,10 @@ PyObject *AerospikeException_New(void)
     for (unsigned long i = 0; i < exception_count; i++) {
         struct exception_def exception = exception_defs[i];
         // Create fully qualified name
-        char exception_fully_qualified_name[strlen(submodule_name) +
-                                            strlen(exception.class_name)];
+        char exception_fully_qualified_name[strlen(submodule_name) + 1 +
+                                            strlen(exception.class_name) + 1];
         strcpy(exception_fully_qualified_name, submodule_name);
+        strcat(exception_fully_qualified_name, ".");
         strcat(exception_fully_qualified_name, exception.class_name);
 
         // TODO: if fetching base class is too slow, cache them using variables
