@@ -249,7 +249,7 @@ PyObject *AerospikeException_New(void)
             py_base_class =
                 PyObject_GetAttrString(py_module, exception.base_class_name);
             if (py_base_class == NULL) {
-                goto CLEANUP_ON_ERROR;
+                return NULL;
             }
         }
 
@@ -257,7 +257,7 @@ PyObject *AerospikeException_New(void)
         if (exception.list_of_attrs != NULL) {
             py_exc_dict = PyDict_New();
             if (py_exc_dict == NULL) {
-                goto CLEANUP_ON_ERROR;
+                return NULL;
             }
 
             const char *const *curr_attr_ref = exception.list_of_attrs;
@@ -266,7 +266,7 @@ PyObject *AerospikeException_New(void)
                     PyDict_SetItemString(py_exc_dict, *curr_attr_ref, Py_None);
                 if (retval == -1) {
                     Py_DECREF(py_exc_dict);
-                    goto CLEANUP_ON_ERROR;
+                    return NULL;
                 }
                 curr_attr_ref++;
             }
@@ -276,7 +276,7 @@ PyObject *AerospikeException_New(void)
         PyObject *py_exception_class = PyErr_NewException(
             exception_fully_qualified_name, py_base_class, py_exc_dict);
         if (py_exception_class == NULL) {
-            goto CLEANUP_ON_ERROR;
+            return NULL;
         }
         Py_XDECREF(py_base_class);
         Py_XDECREF(py_exc_dict);
@@ -288,30 +288,28 @@ PyObject *AerospikeException_New(void)
         else {
             py_code = PyLong_FromLong(exception.code);
             if (py_code == NULL) {
-                Py_DECREF(py_exception_class);
-                goto CLEANUP_ON_ERROR;
+                goto LOOP_ITERATION_CLEANUP;
             }
         }
         int retval =
             PyObject_SetAttrString(py_exception_class, "code", py_code);
         Py_DECREF(py_code);
         if (retval == -1) {
-            Py_DECREF(py_exception_class);
-            goto CLEANUP_ON_ERROR;
+            goto LOOP_ITERATION_CLEANUP;
         }
 
         retval = PyModule_AddObject(py_module, exception.class_name,
                                     py_exception_class);
         if (retval == -1) {
-            Py_DECREF(py_exception_class);
-            goto CLEANUP_ON_ERROR;
+            goto LOOP_ITERATION_CLEANUP;
         }
+
+    LOOP_ITERATION_CLEANUP:
+        Py_DECREF(py_exception_class);
+        return NULL;
     }
 
     return py_module;
-
-CLEANUP_ON_ERROR:
-    return NULL;
 }
 
 void remove_exception(as_error *err)
