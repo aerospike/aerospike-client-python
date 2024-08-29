@@ -33,6 +33,9 @@ struct exception_def {
     // If NULL, there is no base class
     const char *base_class_name;
     enum as_status_e code;
+    // Only applies to base exception classes that need their own fields
+    // NULL if this doesn't apply
+    const char **attr_names;
 };
 
 // Parent exception names that other exceptions inherit from
@@ -51,137 +54,169 @@ struct exception_def {
 // TODO: idea. define this as a list of tuples in python?
 // Base classes must be defined before classes that inherit from them
 struct exception_def exception_defs[] = {
-    {"AerospikeError", NULL, AEROSPIKE_ERR},
+    {"AerospikeError",
+     NULL,
+     AEROSPIKE_ERR,
+     {"code", "file", "msg", "line", NULL}},
     {CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_CLIENT},
+     AEROSPIKE_ERR_CLIENT, NULL},
     {SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_SERVER},
-    {"TimeoutError", AEROSPIKE_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_TIMEOUT},
+     AEROSPIKE_ERR_SERVER, NULL},
+    {"TimeoutError", AEROSPIKE_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_TIMEOUT, NULL},
     // Client errors
-    {"ParamError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_PARAM},
-    {"InvalidHostError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INVALID_HOST},
-    {"ConnectionError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_CONNECTION},
-    {"TLSError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_TLS_ERROR},
-    {"BatchFailed", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_BATCH_FAILED},
-    {"NoResponse", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_NO_RESPONSE},
+    {"ParamError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_PARAM, NULL},
+    {"InvalidHostError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INVALID_HOST,
+     NULL},
+    {"ConnectionError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_CONNECTION,
+     NULL},
+    {"TLSError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_TLS_ERROR, NULL},
+    {"BatchFailed", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_BATCH_FAILED, NULL},
+    {"NoResponse", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_NO_RESPONSE, NULL},
     {"MaxErrorRateExceeded", CLIENT_ERR_EXCEPTION_NAME,
-     AEROSPIKE_MAX_ERROR_RATE},
+     AEROSPIKE_MAX_ERROR_RATE, NULL},
     {"MaxRetriesExceeded", CLIENT_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED},
-    {"InvalidNodeError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INVALID_NODE},
+     AEROSPIKE_ERR_MAX_RETRIES_EXCEEDED, NULL},
+    {"InvalidNodeError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INVALID_NODE,
+     NULL},
     {"NoMoreConnectionsError", CLIENT_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_NO_MORE_CONNECTIONS},
+     AEROSPIKE_ERR_NO_MORE_CONNECTIONS, NULL},
     {"AsyncConnectionError", CLIENT_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_ASYNC_CONNECTION},
-    {"ClientAbortError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_CLIENT_ABORT},
+     AEROSPIKE_ERR_ASYNC_CONNECTION, NULL},
+    {"ClientAbortError", CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_CLIENT_ABORT,
+     NULL},
     // Server errors
-    {"InvalidRequest", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_REQUEST_INVALID},
-    {"ServerFull", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_SERVER_FULL},
+    {"InvalidRequest", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_REQUEST_INVALID,
+     NULL},
+    {"ServerFull", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_SERVER_FULL, NULL},
     {"AlwaysForbidden", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_ALWAYS_FORBIDDEN},
+     AEROSPIKE_ERR_ALWAYS_FORBIDDEN, NULL},
     {"UnsupportedFeature", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_UNSUPPORTED_FEATURE},
-    {"DeviceOverload", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_DEVICE_OVERLOAD},
+     AEROSPIKE_ERR_UNSUPPORTED_FEATURE, NULL},
+    {"DeviceOverload", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_DEVICE_OVERLOAD,
+     NULL},
     {"NamespaceNotFound", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_NAMESPACE_NOT_FOUND},
-    {"ForbiddenError", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_FAIL_FORBIDDEN},
-    {QUERY_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_QUERY},
+     AEROSPIKE_ERR_NAMESPACE_NOT_FOUND, NULL},
+    {"ForbiddenError", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_FAIL_FORBIDDEN,
+     NULL},
+    {QUERY_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_QUERY,
+     NULL},
     {CLUSTER_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_CLUSTER},
+     AEROSPIKE_ERR_CLUSTER, NULL},
     {"InvalidGeoJSON", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_GEO_INVALID_GEOJSON},
+     AEROSPIKE_ERR_GEO_INVALID_GEOJSON, NULL},
     {"OpNotApplicable", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_OP_NOT_APPLICABLE},
-    {"FilteredOut", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_FILTERED_OUT},
-    {"LostConflict", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_LOST_CONFLICT},
-    {"ScanAbortedError", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_SCAN_ABORTED},
+     AEROSPIKE_ERR_OP_NOT_APPLICABLE, NULL},
+    {"FilteredOut", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_FILTERED_OUT, NULL},
+    {"LostConflict", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_LOST_CONFLICT, NULL},
+    {"ScanAbortedError", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_SCAN_ABORTED,
+     NULL},
     {"ElementNotFoundError", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND},
+     AEROSPIKE_ERR_FAIL_ELEMENT_NOT_FOUND, NULL},
     {"ElementExistsError", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS},
+     AEROSPIKE_ERR_FAIL_ELEMENT_EXISTS, NULL},
     {"BatchDisabledError", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_BATCH_DISABLED},
+     AEROSPIKE_ERR_BATCH_DISABLED, NULL},
     {"BatchMaxRequestError", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_BATCH_MAX_REQUESTS_EXCEEDED},
+     AEROSPIKE_ERR_BATCH_MAX_REQUESTS_EXCEEDED, NULL},
     {"BatchQueueFullError", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_BATCH_QUEUES_FULL},
+     AEROSPIKE_ERR_BATCH_QUEUES_FULL, NULL},
     {"QueryAbortedError", SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_QUERY_ABORTED},
+     AEROSPIKE_ERR_QUERY_ABORTED, NULL},
     // Cluster errors
     {"ClusterChangeError", CLUSTER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_CLUSTER_CHANGE},
+     AEROSPIKE_ERR_CLUSTER_CHANGE, NULL},
     // Record errors
     // RecordError doesn't have an error code. It will be ignored in this case
-    {RECORD_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, NO_ERROR_CODE},
+    {RECORD_ERR_EXCEPTION_NAME,
+     SERVER_ERR_EXCEPTION_NAME,
+     NO_ERROR_CODE,
+     {"key", "bin", NULL}},
     {"RecordKeyMismatch", RECORD_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_RECORD_KEY_MISMATCH},
+     AEROSPIKE_ERR_RECORD_KEY_MISMATCH, NULL},
     {"RecordNotFound", RECORD_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_RECORD_NOT_FOUND},
+     AEROSPIKE_ERR_RECORD_NOT_FOUND, NULL},
     {"RecordGenerationError", RECORD_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_RECORD_GENERATION},
+     AEROSPIKE_ERR_RECORD_GENERATION, NULL},
     {"RecordExistsError", RECORD_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_RECORD_EXISTS},
-    {"RecordTooBig", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_RECORD_TOO_BIG},
-    {"RecordBusy", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_RECORD_BUSY},
-    {"BinNameError", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_NAME},
+     AEROSPIKE_ERR_RECORD_EXISTS, NULL},
+    {"RecordTooBig", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_RECORD_TOO_BIG,
+     NULL},
+    {"RecordBusy", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_RECORD_BUSY, NULL},
+    {"BinNameError", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_NAME, NULL},
     {"BinIncompatibleType", RECORD_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE},
-    {"BinExistsError", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_EXISTS},
-    {"BinNotFound", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_NOT_FOUND},
+     AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE, NULL},
+    {"BinExistsError", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_EXISTS,
+     NULL},
+    {"BinNotFound", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_NOT_FOUND,
+     NULL},
     // Index errors
-    {INDEX_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX},
-    {"IndexNotFound", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_NOT_FOUND},
-    {"IndexFoundError", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_FOUND},
-    {"IndexOOM", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_OOM},
+    {INDEX_ERR_EXCEPTION_NAME,
+     SERVER_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_INDEX,
+     {"name", NULL}},
+    {"IndexNotFound", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_NOT_FOUND,
+     NULL},
+    {"IndexFoundError", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_FOUND,
+     NULL},
+    {"IndexOOM", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_OOM, NULL},
     {"IndexNotReadable", INDEX_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_INDEX_NOT_READABLE},
+     AEROSPIKE_ERR_INDEX_NOT_READABLE, NULL},
     {"IndexNameMaxLen", INDEX_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_INDEX_NAME_MAXLEN},
+     AEROSPIKE_ERR_INDEX_NAME_MAXLEN, NULL},
     {"IndexNameMaxCount", INDEX_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_INDEX_MAXCOUNT},
+     AEROSPIKE_ERR_INDEX_MAXCOUNT, NULL},
     // UDF errors
-    {UDF_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_UDF},
-    {"UDFNotFound", UDF_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_UDF_NOT_FOUND},
+    {UDF_ERR_EXCEPTION_NAME,
+     SERVER_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_UDF,
+     {"module", "func", NULL}},
+    {"UDFNotFound", UDF_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_UDF_NOT_FOUND, NULL},
     {"LuaFileNotFound", UDF_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_LUA_FILE_NOT_FOUND},
+     AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, NULL},
     // Admin errors
-    {ADMIN_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, NO_ERROR_CODE},
+    {ADMIN_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, NO_ERROR_CODE, NULL},
     {"SecurityNotSupported", ADMIN_ERR_EXCEPTION_NAME,
-     AEROSPIKE_SECURITY_NOT_SUPPORTED},
+     AEROSPIKE_SECURITY_NOT_SUPPORTED, NULL},
     {"SecurityNotEnabled", ADMIN_ERR_EXCEPTION_NAME,
-     AEROSPIKE_SECURITY_NOT_ENABLED},
+     AEROSPIKE_SECURITY_NOT_ENABLED, NULL},
     {"SecuritySchemeNotSupported", ADMIN_ERR_EXCEPTION_NAME,
-     AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED},
-    {"InvalidCommand", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_COMMAND},
-    {"InvalidField", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_FIELD},
-    {"IllegalState", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_ILLEGAL_STATE},
-    {"InvalidUser", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_USER},
-    {"UserExistsError", ADMIN_ERR_EXCEPTION_NAME,
-     AEROSPIKE_USER_ALREADY_EXISTS},
-    {"InvalidPassword", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_PASSWORD},
-    {"ExpiredPassword", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_EXPIRED_PASSWORD},
+     AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED, NULL},
+    {"InvalidCommand", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_COMMAND,
+     NULL},
+    {"InvalidField", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_FIELD, NULL},
+    {"IllegalState", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_ILLEGAL_STATE, NULL},
+    {"InvalidUser", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_USER, NULL},
+    {"UserExistsError", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_USER_ALREADY_EXISTS,
+     NULL},
+    {"InvalidPassword", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_PASSWORD,
+     NULL},
+    {"ExpiredPassword", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_EXPIRED_PASSWORD,
+     NULL},
     {"ForbiddenPassword", ADMIN_ERR_EXCEPTION_NAME,
-     AEROSPIKE_FORBIDDEN_PASSWORD},
+     AEROSPIKE_FORBIDDEN_PASSWORD, NULL},
     {"InvalidCredential", ADMIN_ERR_EXCEPTION_NAME,
-     AEROSPIKE_INVALID_CREDENTIAL},
-    {"InvalidRole", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_ROLE},
-    {"RoleExistsError", ADMIN_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ROLE_ALREADY_EXISTS},
-    {"RoleViolation", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_ROLE_VIOLATION},
-    {"InvalidPrivilege", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_PRIVILEGE},
-    {"NotAuthenticated", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_NOT_AUTHENTICATED},
-    {"InvalidWhitelist", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_WHITELIST},
-    {"NotWhitelisted", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_NOT_WHITELISTED},
-    {"QuotasNotEnabled", ADMIN_ERR_EXCEPTION_NAME,
-     AEROSPIKE_QUOTAS_NOT_ENABLED},
-    {"InvalidQuota", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_QUOTA},
-    {"QuotaExceeded", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_QUOTA_EXCEEDED},
+     AEROSPIKE_INVALID_CREDENTIAL, NULL},
+    {"InvalidRole", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_ROLE, NULL},
+    {"RoleExistsError", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_ROLE_ALREADY_EXISTS,
+     NULL},
+    {"RoleViolation", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_ROLE_VIOLATION, NULL},
+    {"InvalidPrivilege", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_PRIVILEGE,
+     NULL},
+    {"NotAuthenticated", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_NOT_AUTHENTICATED,
+     NULL},
+    {"InvalidWhitelist", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_WHITELIST,
+     NULL},
+    {"NotWhitelisted", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_NOT_WHITELISTED,
+     NULL},
+    {"QuotasNotEnabled", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_QUOTAS_NOT_ENABLED,
+     NULL},
+    {"InvalidQuota", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_QUOTA, NULL},
+    {"QuotaExceeded", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_QUOTA_EXCEEDED, NULL},
     // Query errors
-    {"QueryQueueFull", QUERY_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_QUERY_QUEUE_FULL},
-    {"QueryTimeout", QUERY_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_QUERY_TIMEOUT},
+    {"QueryQueueFull", QUERY_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_QUERY_QUEUE_FULL,
+     NULL},
+    {"QueryTimeout", QUERY_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_QUERY_TIMEOUT,
+     NULL},
 };
 
 // Returns NULL if an error occurred
@@ -197,60 +232,6 @@ PyObject *AerospikeException_New(void)
                                            NULL,
                                            NULL};
     py_module = PyModule_Create(&moduledef);
-
-    // Exception attrs
-
-    // TODO: move char* arrays into mapper as inline
-    PyObject *py_aerospike_exception_dict = NULL;
-    const char *aerospike_exception_attrs[] = {
-        "code", "file", "msg", "line", NULL
-        // TODO: in doubt flag missing
-    };
-
-    PyObject *py_record_exception_dict = NULL;
-    const char *record_exception_attrs[] = {"key", "bin", NULL};
-
-    PyObject *py_index_exception_dict = NULL;
-    const char *index_exception_attrs[] = {// TODO: this doesn't match the docs
-                                           "name", NULL};
-
-    PyObject *py_udf_exception_dict = NULL;
-    const char *udf_exception_attrs[] = {"module", "func", NULL};
-
-    struct py_dict_to_attr_list {
-        PyObject **ref_to_py_dict;
-        const char **attr_list;
-    };
-    struct py_dict_to_attr_list mapper[] = {
-        {&py_aerospike_exception_dict, aerospike_exception_attrs},
-        {&py_record_exception_dict, record_exception_attrs},
-        {&py_index_exception_dict, index_exception_attrs},
-        {&py_udf_exception_dict, udf_exception_attrs}};
-
-    for (unsigned long i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
-        PyObject *py_dict = PyDict_New();
-        if (py_dict == NULL) {
-            goto CLEANUP;
-        }
-
-        // TODO: use another macro?
-        const char **attr_list = mapper[i].attr_list;
-        const char *attr = attr_list[0];
-        while (++attr != NULL) {
-            int retval =
-                PyDict_SetItemString(py_dict, (const char *)attr, Py_None);
-            if (retval == -1) {
-                // TODO: cleanup properly
-                goto CLEANUP;
-            }
-        }
-        *(mapper[i].ref_to_py_dict) = py_dict;
-        continue;
-
-    CLEANUP:
-        Py_XDECREF(py_dict);
-        return NULL;
-    }
 
     unsigned long exception_count =
         sizeof(exception_defs) / sizeof(exception_defs[0]);
@@ -275,38 +256,23 @@ PyObject *AerospikeException_New(void)
             }
         }
 
-        // TODO: Move this into struct somehow?
-        bool is_exc_record_error =
-            strcmp(exception.class_name, RECORD_ERR_EXCEPTION_NAME) == 0;
-        bool is_exc_descendent_of_record_error =
-            strcmp(exception.base_class_name, RECORD_ERR_EXCEPTION_NAME) == 0;
-        bool is_exc_index_error =
-            strcmp(exception.class_name, INDEX_ERR_EXCEPTION_NAME) == 0;
-        bool is_exc_udf_error =
-            strcmp(exception.class_name, UDF_ERR_EXCEPTION_NAME) == 0;
-        bool is_exc_admin_error =
-            strcmp(exception.class_name, ADMIN_ERR_EXCEPTION_NAME) == 0;
-        bool is_exc_desc_of_admin_error =
-            strcmp(exception.base_class_name, ADMIN_ERR_EXCEPTION_NAME) == 0;
-        bool is_exc_desc_of_query_error =
-            strcmp(exception.base_class_name, QUERY_ERR_EXCEPTION_NAME) == 0;
         PyObject *py_exc_dict = NULL;
-        if (is_exc_descendent_of_record_error || is_exc_admin_error ||
-            is_exc_desc_of_admin_error || is_exc_desc_of_query_error) {
-            py_exc_dict = NULL;
-        }
-        else if (is_exc_record_error) {
-            py_exc_dict = py_record_exception_dict;
-        }
-        else if (is_exc_index_error) {
-            py_exc_dict = py_index_exception_dict;
-        }
-        else if (is_exc_udf_error) {
-            py_exc_dict = py_udf_exception_dict;
-        }
-        else {
-            // TODO: only need to assign this to AerospikeError?
-            py_exc_dict = py_aerospike_exception_dict;
+        if (exception.attr_names != NULL) {
+            py_exc_dict = PyDict_New();
+            if (py_exc_dict == NULL) {
+                goto CLEANUP_ON_ERROR;
+            }
+
+            const char *attr = exception.attr_names;
+            while (attr != NULL) {
+                int retval = PyDict_SetItemString(py_exc_dict,
+                                                  (const char *)attr, Py_None);
+                if (retval == -1) {
+                    // TODO: cleanup properly
+                    goto CLEANUP_ON_ERROR;
+                }
+                attr++;
+            }
         }
 
         // TODO: same dictionary used for all classes?
@@ -319,7 +285,7 @@ PyObject *AerospikeException_New(void)
         Py_DECREF(py_exc_dict);
 
         PyObject *py_code = NULL;
-        if (is_exc_record_error || is_exc_admin_error) {
+        if (exception.code == NO_ERROR_CODE) {
             py_code = Py_None;
         }
         else {
@@ -348,11 +314,6 @@ PyObject *AerospikeException_New(void)
     return py_module;
 
 CLEANUP_ON_ERROR:
-    for (unsigned long i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
-        // TODO: use Py_CLEAR()?
-        PyObject *py_dict = *mapper[i].ref_to_py_dict;
-        Py_DECREF(py_dict);
-    }
     return NULL;
 }
 
