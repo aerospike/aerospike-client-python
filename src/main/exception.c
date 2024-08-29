@@ -262,10 +262,9 @@ PyObject *AerospikeException_New(void)
 
             const char *attr = exception.list_of_attr_names[0];
             while (attr != NULL) {
-                int retval = PyDict_SetItemString(py_exc_dict,
-                                                  (const char *)attr, Py_None);
+                int retval = PyDict_SetItemString(py_exc_dict, attr, Py_None);
                 if (retval == -1) {
-                    // TODO: cleanup properly
+                    Py_DECREF(py_exc_dict);
                     goto CLEANUP_ON_ERROR;
                 }
                 attr++;
