@@ -198,32 +198,23 @@ PyObject *AerospikeException_New(void)
                                            NULL};
     py_module = PyModule_Create(&moduledef);
 
-    struct exceptions exceptions_array;
-
-    memset(&exceptions_array, 0, sizeof(exceptions_array));
-
     // Exception attrs
 
     PyObject *py_aerospike_exception_dict = NULL;
     const char *aerospike_exception_attrs[] = {
-        "code", "file", "msg", "line"
+        "code", "file", "msg", "line", NULL
         // TODO: in doubt flag missing
     };
 
     PyObject *py_record_exception_dict = NULL;
-    const char *record_exception_attrs[] = {
-        "key",
-        "bin",
-    };
+    const char *record_exception_attrs[] = {"key", "bin", NULL};
 
     PyObject *py_index_exception_dict = NULL;
-    const char *index_exception_attrs[] = {
-        // TODO: this doesn't match the docs
-        "name",
-    };
+    const char *index_exception_attrs[] = {// TODO: this doesn't match the docs
+                                           "name", NULL};
 
     PyObject *py_udf_exception_dict = NULL;
-    const char *udf_exception_attrs[] = {"module", "func"};
+    const char *udf_exception_attrs[] = {"module", "func", NULL};
 
     struct {
         PyObject **ref_to_py_dict;
@@ -241,9 +232,10 @@ PyObject *AerospikeException_New(void)
 
         // TODO: use another macro?
         const char **attr_list = mapper[i].attr_list;
-        for (unsigned long i = 0; i < sizeof(attr_list) / sizeof(attr_list[0]);
-             i++) {
-            int retval = PyDict_SetItemString(py_dict, attr_list[i], Py_None);
+        char *attr = attr_list[0];
+        while (++attr != NULL) {
+            int retval =
+                PyDict_SetItemString(py_dict, (const char *)attr, Py_None);
             if (retval == -1) {
                 // TODO: cleanup properly
                 goto CLEANUP;
@@ -270,6 +262,7 @@ PyObject *AerospikeException_New(void)
         strcat(exception_fully_qualified_name, exception.class_name);
 
         // TODO: if fetching base class is too slow, cache them using variables
+        // I think this only runs once when `import aerospike` is called, though
         PyObject *py_base_class = NULL;
         if (exception.base_class_name != NULL) {
             py_base_class =
