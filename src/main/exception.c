@@ -227,21 +227,22 @@ PyObject *AerospikeException_New(void)
 
     struct {
         PyObject **ref_to_py_dict;
-        char **attr_list
+        const char **attr_list
     } mapper[] = {{&py_aerospike_exception_dict, aerospike_exception_attrs},
                   {&py_record_exception_dict, record_exception_attrs},
                   {&py_index_exception_dict, index_exception_attrs},
                   {&py_udf_exception_dict, udf_exception_attrs}};
 
-    for (int i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
+    for (unsigned long i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
         PyObject *py_dict = PyDict_New();
         if (py_dict == NULL) {
             goto CLEANUP;
         }
 
         // TODO: use another macro?
-        char **attr_list = mapper[i].attr_list;
-        for (int i = 0; i < sizeof(attr_list) / sizeof(attr_list[0]); i++) {
+        const char **attr_list = mapper[i].attr_list;
+        for (unsigned long i = 0; i < sizeof(attr_list) / sizeof(attr_list[0]);
+             i++) {
             int retval = PyDict_SetItemString(py_dict, attr_list[i], Py_None);
             if (retval == -1) {
                 // TODO: cleanup properly
