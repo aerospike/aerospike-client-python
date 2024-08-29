@@ -303,6 +303,7 @@ PyObject *AerospikeException_New(void)
         if (retval == -1) {
             goto LOOP_ITERATION_CLEANUP;
         }
+        continue;
 
     LOOP_ITERATION_CLEANUP:
         Py_DECREF(py_exception_class);
