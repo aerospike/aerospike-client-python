@@ -219,7 +219,7 @@ PyObject *AerospikeException_New(void)
 
     struct py_dict_to_attr_list {
         PyObject **ref_to_py_dict;
-        const char **attr_list
+        const char **attr_list;
     };
     struct py_dict_to_attr_list mapper[] = {
         {&py_aerospike_exception_dict, aerospike_exception_attrs},
