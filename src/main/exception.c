@@ -346,7 +346,7 @@ PyObject *AerospikeException_New(void)
     return py_module;
 
 CLEANUP_ON_ERROR:
-    for (int i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
+    for (unsigned long i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
         // TODO: use Py_CLEAR()?
         PyObject *py_dict = *mapper[i].ref_to_py_dict;
         Py_DECREF(py_dict);
