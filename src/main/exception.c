@@ -59,7 +59,7 @@ const char *const udf_err_attrs[] = {"module", "func", NULL};
 // TODO: idea. define this as a list of tuples in python?
 // Base classes must be defined before classes that inherit from them
 struct exception_def exception_defs[] = {
-    {"AerospikeError", NULL, AEROSPIKE_ERR, aerospike_err_attrs},
+    {"AerospikeError", NULL, NO_ERROR_CODE, aerospike_err_attrs},
     {CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_EXCEPTION_NAME,
      AEROSPIKE_ERR_CLIENT, NULL},
     {SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_EXCEPTION_NAME,
@@ -323,6 +323,7 @@ void remove_exception(as_error *err)
     }
 }
 
+// TODO: idea. Use python dict to map error code to exception
 void raise_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
