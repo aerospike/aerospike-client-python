@@ -260,14 +260,15 @@ PyObject *AerospikeException_New(void)
                 goto CLEANUP_ON_ERROR;
             }
 
-            for (const char *const *attr_ref = exception.list_of_attrs;
-                 attr_ref != NULL; attr_ref++) {
+            const char *const *curr_attr_ref = exception.list_of_attrs;
+            while (*curr_attr_ref != NULL) {
                 int retval =
-                    PyDict_SetItemString(py_exc_dict, *attr_ref, Py_None);
+                    PyDict_SetItemString(py_exc_dict, *curr_attr_ref, Py_None);
                 if (retval == -1) {
                     Py_DECREF(py_exc_dict);
                     goto CLEANUP_ON_ERROR;
                 }
+                curr_attr_ref++;
             }
         }
 
@@ -277,8 +278,8 @@ PyObject *AerospikeException_New(void)
         if (py_exception_class == NULL) {
             goto CLEANUP_ON_ERROR;
         }
-        Py_DECREF(py_base_class);
-        Py_DECREF(py_exc_dict);
+        Py_XDECREF(py_base_class);
+        Py_XDECREF(py_exc_dict);
 
         PyObject *py_code = NULL;
         if (exception.code == NO_ERROR_CODE) {
