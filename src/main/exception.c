@@ -35,7 +35,7 @@ struct exception_def {
     enum as_status_e code;
     // Only applies to base exception classes that need their own fields
     // NULL if this doesn't apply
-    const char *const *list_of_attr_names;
+    const char *const *list_of_attrs;
 };
 
 // Parent exception names that other exceptions inherit from
@@ -254,20 +254,20 @@ PyObject *AerospikeException_New(void)
         }
 
         PyObject *py_exc_dict = NULL;
-        if (exception.list_of_attr_names != NULL) {
+        if (exception.list_of_attrs != NULL) {
             py_exc_dict = PyDict_New();
             if (py_exc_dict == NULL) {
                 goto CLEANUP_ON_ERROR;
             }
 
-            const char *attr = exception.list_of_attr_names[0];
-            while (attr != NULL) {
-                int retval = PyDict_SetItemString(py_exc_dict, attr, Py_None);
+            for (const char *const *attr_ref = exception.list_of_attrs;
+                 attr_ref != NULL; attr_ref++) {
+                int retval =
+                    PyDict_SetItemString(py_exc_dict, *attr_ref, Py_None);
                 if (retval == -1) {
                     Py_DECREF(py_exc_dict);
                     goto CLEANUP_ON_ERROR;
                 }
-                attr++;
             }
         }
 
