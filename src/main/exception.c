@@ -35,7 +35,7 @@ struct exception_def {
     enum as_status_e code;
     // Only applies to base exception classes that need their own fields
     // NULL if this doesn't apply
-    const char **attr_names;
+    const char *const *list_of_attr_names;
 };
 
 // Parent exception names that other exceptions inherit from
@@ -51,13 +51,15 @@ struct exception_def {
 
 #define NO_ERROR_CODE 0
 
+const char *const aerospike_err_attrs[] = {"code", "file", "msg", "line", NULL};
+const char *const record_err_attrs[] = {"key", "bin", NULL};
+const char *const index_err_attrs[] = {"name", NULL};
+const char *const udf_err_attrs[] = {"module", "func", NULL};
+
 // TODO: idea. define this as a list of tuples in python?
 // Base classes must be defined before classes that inherit from them
 struct exception_def exception_defs[] = {
-    {"AerospikeError",
-     NULL,
-     AEROSPIKE_ERR,
-     {"code", "file", "msg", "line", NULL}},
+    {"AerospikeError", NULL, AEROSPIKE_ERR, aerospike_err_attrs},
     {CLIENT_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_EXCEPTION_NAME,
      AEROSPIKE_ERR_CLIENT, NULL},
     {SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_EXCEPTION_NAME,
@@ -127,10 +129,8 @@ struct exception_def exception_defs[] = {
      AEROSPIKE_ERR_CLUSTER_CHANGE, NULL},
     // Record errors
     // RecordError doesn't have an error code. It will be ignored in this case
-    {RECORD_ERR_EXCEPTION_NAME,
-     SERVER_ERR_EXCEPTION_NAME,
-     NO_ERROR_CODE,
-     {"key", "bin", NULL}},
+    {RECORD_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, NO_ERROR_CODE,
+     record_err_attrs},
     {"RecordKeyMismatch", RECORD_ERR_EXCEPTION_NAME,
      AEROSPIKE_ERR_RECORD_KEY_MISMATCH, NULL},
     {"RecordNotFound", RECORD_ERR_EXCEPTION_NAME,
@@ -150,10 +150,8 @@ struct exception_def exception_defs[] = {
     {"BinNotFound", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_NOT_FOUND,
      NULL},
     // Index errors
-    {INDEX_ERR_EXCEPTION_NAME,
-     SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_INDEX,
-     {"name", NULL}},
+    {INDEX_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX,
+     index_err_attrs},
     {"IndexNotFound", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_NOT_FOUND,
      NULL},
     {"IndexFoundError", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_FOUND,
@@ -166,10 +164,8 @@ struct exception_def exception_defs[] = {
     {"IndexNameMaxCount", INDEX_ERR_EXCEPTION_NAME,
      AEROSPIKE_ERR_INDEX_MAXCOUNT, NULL},
     // UDF errors
-    {UDF_ERR_EXCEPTION_NAME,
-     SERVER_ERR_EXCEPTION_NAME,
-     AEROSPIKE_ERR_UDF,
-     {"module", "func", NULL}},
+    {UDF_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_UDF,
+     udf_err_attrs},
     {"UDFNotFound", UDF_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_UDF_NOT_FOUND, NULL},
     {"LuaFileNotFound", UDF_ERR_EXCEPTION_NAME,
      AEROSPIKE_ERR_LUA_FILE_NOT_FOUND, NULL},
@@ -257,13 +253,13 @@ PyObject *AerospikeException_New(void)
         }
 
         PyObject *py_exc_dict = NULL;
-        if (exception.attr_names != NULL) {
+        if (exception.list_of_attr_names != NULL) {
             py_exc_dict = PyDict_New();
             if (py_exc_dict == NULL) {
                 goto CLEANUP_ON_ERROR;
             }
 
-            const char *attr = exception.attr_names;
+            const char *attr = exception.list_of_attr_names[0];
             while (attr != NULL) {
                 int retval = PyDict_SetItemString(py_exc_dict,
                                                   (const char *)attr, Py_None);
