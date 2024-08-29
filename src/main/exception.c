@@ -200,6 +200,7 @@ PyObject *AerospikeException_New(void)
 
     // Exception attrs
 
+    // TODO: move char* arrays into mapper as inline
     PyObject *py_aerospike_exception_dict = NULL;
     const char *aerospike_exception_attrs[] = {
         "code", "file", "msg", "line", NULL
@@ -216,7 +217,7 @@ PyObject *AerospikeException_New(void)
     PyObject *py_udf_exception_dict = NULL;
     const char *udf_exception_attrs[] = {"module", "func", NULL};
 
-    struct {
+    struct py_dict_to_attr {
         PyObject **ref_to_py_dict;
         const char **attr_list
     } mapper[] = {{&py_aerospike_exception_dict, aerospike_exception_attrs},
