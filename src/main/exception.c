@@ -217,13 +217,15 @@ PyObject *AerospikeException_New(void)
     PyObject *py_udf_exception_dict = NULL;
     const char *udf_exception_attrs[] = {"module", "func", NULL};
 
-    struct py_dict_to_attr {
+    struct py_dict_to_attr_list {
         PyObject **ref_to_py_dict;
         const char **attr_list
-    } mapper[] = {{&py_aerospike_exception_dict, aerospike_exception_attrs},
-                  {&py_record_exception_dict, record_exception_attrs},
-                  {&py_index_exception_dict, index_exception_attrs},
-                  {&py_udf_exception_dict, udf_exception_attrs}};
+    };
+    struct py_dict_to_attr_list mapper[] = {
+        {&py_aerospike_exception_dict, aerospike_exception_attrs},
+        {&py_record_exception_dict, record_exception_attrs},
+        {&py_index_exception_dict, index_exception_attrs},
+        {&py_udf_exception_dict, udf_exception_attrs}};
 
     for (unsigned long i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
         PyObject *py_dict = PyDict_New();
