@@ -233,7 +233,7 @@ PyObject *AerospikeException_New(void)
 
         // TODO: use another macro?
         const char **attr_list = mapper[i].attr_list;
-        char *attr = attr_list[0];
+        const char *attr = attr_list[0];
         while (++attr != NULL) {
             int retval =
                 PyDict_SetItemString(py_dict, (const char *)attr, Py_None);
