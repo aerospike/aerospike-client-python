@@ -35,11 +35,20 @@ struct exception_def {
     enum as_status_e code;
 };
 
+// Parent exception names that other exceptions inherit from
 #define AEROSPIKE_ERR_EXCEPTION_NAME "AerospikeError"
 #define CLIENT_ERR_EXCEPTION_NAME "ClientError"
 #define SERVER_ERR_EXCEPTION_NAME "ServerError"
 #define CLUSTER_ERR_EXCEPTION_NAME "ClusterError"
+#define RECORD_ERR_EXCEPTION_NAME "RecordError"
+#define INDEX_ERR_EXCEPTION_NAME "IndexError"
+#define UDF_ERR_EXCEPTION_NAME "UDFError"
+#define ADMIN_ERR_EXCEPTION_NAME "AdminError"
+#define QUERY_ERR_EXCEPTION_NAME "QueryError"
 
+#define NO_ERROR_CODE 0
+
+// TODO: idea. define this as a list of tuples in python?
 // Base classes must be defined before classes that inherit from them
 struct exception_def exception_defs[] = {
     {"AerospikeError", NULL, AEROSPIKE_ERR},
@@ -78,7 +87,7 @@ struct exception_def exception_defs[] = {
     {"NamespaceNotFound", SERVER_ERR_EXCEPTION_NAME,
      AEROSPIKE_ERR_NAMESPACE_NOT_FOUND},
     {"ForbiddenError", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_FAIL_FORBIDDEN},
-    {"QueryError", SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_QUERY},
+    {QUERY_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_QUERY},
     {CLUSTER_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME,
      AEROSPIKE_ERR_CLUSTER},
     {"InvalidGeoJSON", SERVER_ERR_EXCEPTION_NAME,
@@ -104,11 +113,76 @@ struct exception_def exception_defs[] = {
     {"ClusterChangeError", CLUSTER_ERR_EXCEPTION_NAME,
      AEROSPIKE_ERR_CLUSTER_CHANGE},
     // Record errors
-    // 0 means no error code
-    {"RecordError", SERVER_ERR_EXCEPTION_NAME, 0},
+    // RecordError doesn't have an error code. It will be ignored in this case
+    {RECORD_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, NO_ERROR_CODE},
+    {"RecordKeyMismatch", RECORD_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_RECORD_KEY_MISMATCH},
+    {"RecordNotFound", RECORD_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_RECORD_NOT_FOUND},
+    {"RecordGenerationError", RECORD_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_RECORD_GENERATION},
+    {"RecordExistsError", RECORD_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_RECORD_EXISTS},
+    {"RecordTooBig", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_RECORD_TOO_BIG},
+    {"RecordBusy", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_RECORD_BUSY},
+    {"BinNameError", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_NAME},
+    {"BinIncompatibleType", RECORD_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE},
+    {"BinExistsError", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_EXISTS},
+    {"BinNotFound", RECORD_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_BIN_NOT_FOUND},
+    // Index errors
+    {INDEX_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX},
+    {"IndexNotFound", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_NOT_FOUND},
+    {"IndexFoundError", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_FOUND},
+    {"IndexOOM", INDEX_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_INDEX_OOM},
+    {"IndexNotReadable", INDEX_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_INDEX_NOT_READABLE},
+    {"IndexNameMaxLen", INDEX_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_INDEX_NAME_MAXLEN},
+    {"IndexNameMaxCount", INDEX_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_INDEX_MAXCOUNT},
+    // UDF errors
+    {UDF_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_UDF},
+    {"UDFNotFound", UDF_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_UDF_NOT_FOUND},
+    {"LuaFileNotFound", UDF_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_LUA_FILE_NOT_FOUND},
+    // Admin errors
+    {ADMIN_ERR_EXCEPTION_NAME, SERVER_ERR_EXCEPTION_NAME, NO_ERROR_CODE},
+    {"SecurityNotSupported", ADMIN_ERR_EXCEPTION_NAME,
+     AEROSPIKE_SECURITY_NOT_SUPPORTED},
+    {"SecurityNotEnabled", ADMIN_ERR_EXCEPTION_NAME,
+     AEROSPIKE_SECURITY_NOT_ENABLED},
+    {"SecuritySchemeNotSupported", ADMIN_ERR_EXCEPTION_NAME,
+     AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED},
+    {"InvalidCommand", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_COMMAND},
+    {"InvalidField", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_FIELD},
+    {"IllegalState", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_ILLEGAL_STATE},
+    {"InvalidUser", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_USER},
+    {"UserExistsError", ADMIN_ERR_EXCEPTION_NAME,
+     AEROSPIKE_USER_ALREADY_EXISTS},
+    {"InvalidPassword", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_PASSWORD},
+    {"ExpiredPassword", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_EXPIRED_PASSWORD},
+    {"ForbiddenPassword", ADMIN_ERR_EXCEPTION_NAME,
+     AEROSPIKE_FORBIDDEN_PASSWORD},
+    {"InvalidCredential", ADMIN_ERR_EXCEPTION_NAME,
+     AEROSPIKE_INVALID_CREDENTIAL},
+    {"InvalidRole", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_ROLE},
+    {"RoleExistsError", ADMIN_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ROLE_ALREADY_EXISTS},
+    {"RoleViolation", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_ROLE_VIOLATION},
+    {"InvalidPrivilege", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_PRIVILEGE},
+    {"NotAuthenticated", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_NOT_AUTHENTICATED},
+    {"InvalidWhitelist", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_WHITELIST},
+    {"NotWhitelisted", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_NOT_WHITELISTED},
+    {"QuotasNotEnabled", ADMIN_ERR_EXCEPTION_NAME,
+     AEROSPIKE_QUOTAS_NOT_ENABLED},
+    {"InvalidQuota", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_INVALID_QUOTA},
+    {"QuotaExceeded", ADMIN_ERR_EXCEPTION_NAME, AEROSPIKE_QUOTA_EXCEEDED},
+    // Query errors
+    {"QueryQueueFull", QUERY_ERR_EXCEPTION_NAME,
+     AEROSPIKE_ERR_QUERY_QUEUE_FULL},
+    {"QueryTimeout", QUERY_ERR_EXCEPTION_NAME, AEROSPIKE_ERR_QUERY_TIMEOUT},
 };
-
-static PyObject *create_py_dict_of_attrs() {}
 
 // Returns NULL if an error occurred
 // TODO: make sure this aligns with C-API docs
@@ -128,122 +202,63 @@ PyObject *AerospikeException_New(void)
 
     memset(&exceptions_array, 0, sizeof(exceptions_array));
 
-    struct record_exceptions_struct record_array = {
-        {&exceptions_array.RecordKeyMismatch, &exceptions_array.RecordNotFound,
-         &exceptions_array.RecordGenerationError,
-         &exceptions_array.RecordExistsError, &exceptions_array.RecordTooBig,
-         &exceptions_array.RecordBusy, &exceptions_array.BinNameError,
-         &exceptions_array.BinIncompatibleType,
-         &exceptions_array.BinExistsError, &exceptions_array.BinNotFound},
-        {"RecordKeyMismatch", "RecordNotFound", "RecordGenerationError",
-         "RecordExistsError", "RecordTooBig", "RecordBusy", "BinNameError",
-         "BinIncompatibleType", "BinExistsError", "BinNotFound"},
-        {AEROSPIKE_ERR_RECORD_KEY_MISMATCH, AEROSPIKE_ERR_RECORD_NOT_FOUND,
-         AEROSPIKE_ERR_RECORD_GENERATION, AEROSPIKE_ERR_RECORD_EXISTS,
-         AEROSPIKE_ERR_RECORD_TOO_BIG, AEROSPIKE_ERR_RECORD_BUSY,
-         AEROSPIKE_ERR_BIN_NAME, AEROSPIKE_ERR_BIN_INCOMPATIBLE_TYPE,
-         AEROSPIKE_ERR_BIN_EXISTS, AEROSPIKE_ERR_BIN_NOT_FOUND}};
+    // Exception attrs
 
-    struct index_exceptions_struct index_array = {
-        {&exceptions_array.IndexNotFound, &exceptions_array.IndexFoundError,
-         &exceptions_array.IndexOOM, &exceptions_array.IndexNotReadable,
-         &exceptions_array.IndexNameMaxLen,
-         &exceptions_array.IndexNameMaxCount},
-        {"IndexNotFound", "IndexFoundError", "IndexOOM", "IndexNotReadable",
-         "IndexNameMaxLen", "IndexNameMaxCount"},
-        {AEROSPIKE_ERR_INDEX_NOT_FOUND, AEROSPIKE_ERR_INDEX_FOUND,
-         AEROSPIKE_ERR_INDEX_OOM, AEROSPIKE_ERR_INDEX_NOT_READABLE,
-         AEROSPIKE_ERR_INDEX_NAME_MAXLEN, AEROSPIKE_ERR_INDEX_MAXCOUNT}};
+    PyObject *py_aerospike_exception_dict = NULL;
+    const char *aerospike_exception_attrs[] = {
+        "code", "file", "msg", "line"
+        // TODO: in doubt flag missing
+    };
 
-    struct admin_exceptions_struct admin_array = {
-        {&exceptions_array.SecurityNotSupported,
-         &exceptions_array.SecurityNotEnabled,
-         &exceptions_array.SecuritySchemeNotSupported,
-         &exceptions_array.InvalidCommand,
-         &exceptions_array.InvalidField,
-         &exceptions_array.IllegalState,
-         &exceptions_array.InvalidUser,
-         &exceptions_array.UserExistsError,
-         &exceptions_array.InvalidPassword,
-         &exceptions_array.ExpiredPassword,
-         &exceptions_array.ForbiddenPassword,
-         &exceptions_array.InvalidCredential,
-         &exceptions_array.InvalidRole,
-         &exceptions_array.RoleExistsError,
-         &exceptions_array.RoleViolation,
-         &exceptions_array.InvalidPrivilege,
-         &exceptions_array.NotAuthenticated,
-         &exceptions_array.InvalidWhitelist,
-         &exceptions_array.NotWhitelisted,
-         &exceptions_array.QuotasNotEnabled,
-         &exceptions_array.InvalidQuota,
-         &exceptions_array.QuotaExceeded},
-        {"SecurityNotSupported",
-         "SecurityNotEnabled",
-         "SecuritySchemeNotSupported",
-         "InvalidCommand",
-         "InvalidField",
-         "IllegalState",
-         "InvalidUser",
-         "UserExistsError",
-         "InvalidPassword",
-         "ExpiredPassword",
-         "ForbiddenPassword",
-         "InvalidCredential",
-         "InvalidRole",
-         "RoleExistsError",
-         "RoleViolation",
-         "InvalidPrivilege",
-         "NotAuthenticated",
-         "InvalidWhitelist",
-         "NotWhitelisted",
-         "QuotasNotEnabled",
-         "InvalidQuota",
-         "QuotaExceeded"},
-        {AEROSPIKE_SECURITY_NOT_SUPPORTED,
-         AEROSPIKE_SECURITY_NOT_ENABLED,
-         AEROSPIKE_SECURITY_SCHEME_NOT_SUPPORTED,
-         AEROSPIKE_INVALID_COMMAND,
-         AEROSPIKE_INVALID_FIELD,
-         AEROSPIKE_ILLEGAL_STATE,
-         AEROSPIKE_INVALID_USER,
-         AEROSPIKE_USER_ALREADY_EXISTS,
-         AEROSPIKE_INVALID_PASSWORD,
-         AEROSPIKE_EXPIRED_PASSWORD,
-         AEROSPIKE_FORBIDDEN_PASSWORD,
-         AEROSPIKE_INVALID_CREDENTIAL,
-         AEROSPIKE_INVALID_ROLE,
-         AEROSPIKE_ROLE_ALREADY_EXISTS,
-         AEROSPIKE_ROLE_VIOLATION,
-         AEROSPIKE_INVALID_PRIVILEGE,
-         AEROSPIKE_NOT_AUTHENTICATED,
-         AEROSPIKE_INVALID_WHITELIST,
-         AEROSPIKE_NOT_WHITELISTED,
-         AEROSPIKE_QUOTAS_NOT_ENABLED,
-         AEROSPIKE_INVALID_QUOTA,
-         AEROSPIKE_QUOTA_EXCEEDED}};
+    PyObject *py_record_exception_dict = NULL;
+    const char *record_exception_attrs[] = {
+        "key",
+        "bin",
+    };
 
-    PyObject *py_code = NULL;
-    PyObject *py_dict = PyDict_New();
-    if (py_dict == NULL) {
-        goto CLEANUP_ON_ERROR;
-    }
-    const char *aerospike_exception_attrs[] = {"code", "file", "msg", "line"};
-    // TODO: use another macro?
-    for (int i = 0; i < sizeof(aerospike_exception_attrs) /
-                            sizeof(aerospike_exception_attrs[0]);
-         i++) {
-        int retval = PyDict_SetItemString(py_dict, aerospike_exception_attrs[i],
-                                          Py_None);
-        if (retval == -1) {
-            goto CLEANUP_ON_ERROR;
+    PyObject *py_index_exception_dict = NULL;
+    const char *index_exception_attrs[] = {
+        // TODO: this doesn't match the docs
+        "name",
+    };
+
+    PyObject *py_udf_exception_dict = NULL;
+    const char *udf_exception_attrs[] = {"module", "func"};
+
+    struct {
+        PyObject **ref_to_py_dict;
+        char **attr_list
+    } mapper[] = {{&py_aerospike_exception_dict, aerospike_exception_attrs},
+                  {&py_record_exception_dict, record_exception_attrs},
+                  {&py_index_exception_dict, index_exception_attrs},
+                  {&py_udf_exception_dict, udf_exception_attrs}};
+
+    for (int i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
+        PyObject *py_dict = PyDict_New();
+        if (py_dict == NULL) {
+            goto CLEANUP;
         }
-    }
 
-    // TODO: in doubt flag missing
+        // TODO: use another macro?
+        char **attr_list = mapper[i].attr_list;
+        for (int i = 0; i < sizeof(attr_list) / sizeof(attr_list[0]); i++) {
+            int retval = PyDict_SetItemString(py_dict, attr_list[i], Py_None);
+            if (retval == -1) {
+                // TODO: cleanup properly
+                goto CLEANUP;
+            }
+        }
+        *(mapper[i].ref_to_py_dict) = py_dict;
+        continue;
+
+    CLEANUP:
+        Py_XDECREF(py_dict);
+        return NULL;
+    }
 
     unsigned long exception_count =
         sizeof(exception_defs) / sizeof(exception_defs[0]);
+    // TODO: Define variable at moduledef
     const char *submodule_name = "exception";
     for (unsigned long i = 0; i < exception_count; i++) {
         struct exception_def exception = exception_defs[i];
@@ -263,19 +278,59 @@ PyObject *AerospikeException_New(void)
             }
         }
 
+        // TODO: Move this into struct somehow?
+        bool is_exc_record_error =
+            strcmp(exception.class_name, RECORD_ERR_EXCEPTION_NAME) == 0;
+        bool is_exc_descendent_of_record_error =
+            strcmp(exception.base_class_name, RECORD_ERR_EXCEPTION_NAME) == 0;
+        bool is_exc_index_error =
+            strcmp(exception.class_name, INDEX_ERR_EXCEPTION_NAME) == 0;
+        bool is_exc_udf_error =
+            strcmp(exception.class_name, UDF_ERR_EXCEPTION_NAME) == 0;
+        bool is_exc_admin_error =
+            strcmp(exception.class_name, ADMIN_ERR_EXCEPTION_NAME) == 0;
+        bool is_exc_desc_of_admin_error =
+            strcmp(exception.base_class_name, ADMIN_ERR_EXCEPTION_NAME) == 0;
+        bool is_exc_desc_of_query_error =
+            strcmp(exception.base_class_name, QUERY_ERR_EXCEPTION_NAME) == 0;
+        PyObject *py_exc_dict = NULL;
+        if (is_exc_descendent_of_record_error || is_exc_admin_error ||
+            is_exc_desc_of_admin_error || is_exc_desc_of_query_error) {
+            py_exc_dict = NULL;
+        }
+        else if (is_exc_record_error) {
+            py_exc_dict = py_record_exception_dict;
+        }
+        else if (is_exc_index_error) {
+            py_exc_dict = py_index_exception_dict;
+        }
+        else if (is_exc_udf_error) {
+            py_exc_dict = py_udf_exception_dict;
+        }
+        else {
+            // TODO: only need to assign this to AerospikeError?
+            py_exc_dict = py_aerospike_exception_dict;
+        }
+
         // TODO: same dictionary used for all classes?
         PyObject *py_exception_class = PyErr_NewException(
-            exception_fully_qualified_name, py_base_class, py_dict);
+            exception_fully_qualified_name, py_base_class, py_exc_dict);
         if (py_exception_class == NULL) {
             goto CLEANUP_ON_ERROR;
         }
         Py_DECREF(py_base_class);
-        Py_DECREF(py_dict);
+        Py_DECREF(py_exc_dict);
 
-        PyObject *py_code = PyLong_FromLong(exception.code);
-        if (py_code == NULL) {
-            Py_DECREF(py_exception_class);
-            goto CLEANUP_ON_ERROR;
+        PyObject *py_code = NULL;
+        if (is_exc_record_error || is_exc_admin_error) {
+            py_code = Py_None;
+        }
+        else {
+            py_code = PyLong_FromLong(exception.code);
+            if (py_code == NULL) {
+                Py_DECREF(py_exception_class);
+                goto CLEANUP_ON_ERROR;
+            }
         }
         int retval =
             PyObject_SetAttrString(py_exception_class, "code", py_code);
@@ -293,142 +348,14 @@ PyObject *AerospikeException_New(void)
         }
     }
 
-    //Record exceptions
-    PyObject *py_record_dict = PyDict_New();
-    PyDict_SetItemString(py_record_dict, "key", Py_None);
-    PyDict_SetItemString(py_record_dict, "bin", Py_None);
-
-    exceptions_array.RecordError = PyErr_NewException(
-        "exception.RecordError", exceptions_array.ServerError, py_record_dict);
-    Py_INCREF(exceptions_array.RecordError);
-    Py_DECREF(py_record_dict);
-    PyObject_SetAttrString(exceptions_array.RecordError, "code", Py_None);
-    PyModule_AddObject(py_module, "RecordError", exceptions_array.RecordError);
-
-    //int count = sizeof(record_exceptions)/sizeof(record_exceptions[0]);
-    count = sizeof(record_array.record_exceptions) /
-            sizeof(record_array.record_exceptions[0]);
-    for (i = 0; i < count; i++) {
-        current_exception = record_array.record_exceptions[i];
-        char *name = record_array.record_exceptions_name[i];
-        char prefix[40] = "exception.";
-        *current_exception = PyErr_NewException(
-            strcat(prefix, name), exceptions_array.RecordError, NULL);
-        Py_INCREF(*current_exception);
-        PyModule_AddObject(py_module, name, *current_exception);
-        PyObject *py_code =
-            PyLong_FromLong(record_array.record_exceptions_codes[i]);
-        PyObject_SetAttrString(*current_exception, "code", py_code);
-        Py_DECREF(py_code);
-    }
-
-    //Index exceptions
-    PyObject *py_index_dict = PyDict_New();
-    PyDict_SetItemString(py_index_dict, "name", Py_None);
-
-    exceptions_array.IndexError = PyErr_NewException(
-        "exception.IndexError", exceptions_array.ServerError, py_index_dict);
-    Py_INCREF(exceptions_array.IndexError);
-    Py_DECREF(py_index_dict);
-    py_code = PyLong_FromLong(AEROSPIKE_ERR_INDEX);
-    PyObject_SetAttrString(exceptions_array.IndexError, "code", py_code);
-    Py_DECREF(py_code);
-    PyModule_AddObject(py_module, "IndexError", exceptions_array.IndexError);
-
-    count = sizeof(index_array.index_exceptions) /
-            sizeof(index_array.index_exceptions[0]);
-    for (i = 0; i < count; i++) {
-        current_exception = index_array.index_exceptions[i];
-        char *name = index_array.index_exceptions_name[i];
-        char prefix[40] = "exception.";
-        *current_exception = PyErr_NewException(
-            strcat(prefix, name), exceptions_array.IndexError, NULL);
-        Py_INCREF(*current_exception);
-        PyModule_AddObject(py_module, name, *current_exception);
-        PyObject *py_code =
-            PyLong_FromLong(index_array.index_exceptions_codes[i]);
-        PyObject_SetAttrString(*current_exception, "code", py_code);
-        Py_DECREF(py_code);
-    }
-
-    //UDF exceptions
-    PyObject *py_udf_dict = PyDict_New();
-    PyDict_SetItemString(py_udf_dict, "module", Py_None);
-    PyDict_SetItemString(py_udf_dict, "func", Py_None);
-
-    exceptions_array.UDFError = PyErr_NewException(
-        "exception.UDFError", exceptions_array.ServerError, py_udf_dict);
-    Py_INCREF(exceptions_array.UDFError);
-    Py_DECREF(py_udf_dict);
-    PyModule_AddObject(py_module, "UDFError", exceptions_array.UDFError);
-    py_code = PyLong_FromLong(AEROSPIKE_ERR_UDF);
-    PyObject_SetAttrString(exceptions_array.UDFError, "code", py_code);
-    Py_DECREF(py_code);
-
-    exceptions_array.UDFNotFound = PyErr_NewException(
-        "exception.UDFNotFound", exceptions_array.UDFError, NULL);
-    Py_INCREF(exceptions_array.UDFNotFound);
-    PyModule_AddObject(py_module, "UDFNotFound", exceptions_array.UDFNotFound);
-    py_code = PyLong_FromLong(AEROSPIKE_ERR_UDF_NOT_FOUND);
-    PyObject_SetAttrString(exceptions_array.UDFNotFound, "code", py_code);
-    Py_DECREF(py_code);
-
-    exceptions_array.LuaFileNotFound = PyErr_NewException(
-        "exception.LuaFileNotFound", exceptions_array.UDFError, NULL);
-    Py_INCREF(exceptions_array.LuaFileNotFound);
-    PyModule_AddObject(py_module, "LuaFileNotFound",
-                       exceptions_array.LuaFileNotFound);
-    py_code = PyLong_FromLong(AEROSPIKE_ERR_LUA_FILE_NOT_FOUND);
-    PyObject_SetAttrString(exceptions_array.LuaFileNotFound, "code", py_code);
-    Py_DECREF(py_code);
-
-    //Admin exceptions
-    exceptions_array.AdminError = PyErr_NewException(
-        "exception.AdminError", exceptions_array.ServerError, NULL);
-    Py_INCREF(exceptions_array.AdminError);
-    PyObject_SetAttrString(exceptions_array.AdminError, "code", Py_None);
-    PyModule_AddObject(py_module, "AdminError", exceptions_array.AdminError);
-
-    count = sizeof(admin_array.admin_exceptions) /
-            sizeof(admin_array.admin_exceptions[0]);
-    for (i = 0; i < count; i++) {
-        current_exception = admin_array.admin_exceptions[i];
-        char *name = admin_array.admin_exceptions_name[i];
-        char prefix[40] = "exception.";
-        *current_exception = PyErr_NewException(
-            strcat(prefix, name), exceptions_array.AdminError, NULL);
-        Py_INCREF(*current_exception);
-        PyModule_AddObject(py_module, name, *current_exception);
-        PyObject *py_code =
-            PyLong_FromLong(admin_array.admin_exceptions_codes[i]);
-        PyObject_SetAttrString(*current_exception, "code", py_code);
-        Py_DECREF(py_code);
-    }
-
-    //Query exceptions
-    exceptions_array.QueryQueueFull = PyErr_NewException(
-        "exception.QueryQueueFull", exceptions_array.QueryError, NULL);
-    Py_INCREF(exceptions_array.QueryQueueFull);
-    PyModule_AddObject(py_module, "QueryQueueFull",
-                       exceptions_array.QueryQueueFull);
-    py_code = PyLong_FromLong(AEROSPIKE_ERR_QUERY_QUEUE_FULL);
-    PyObject_SetAttrString(exceptions_array.QueryQueueFull, "code", py_code);
-    Py_DECREF(py_code);
-
-    exceptions_array.QueryTimeout = PyErr_NewException(
-        "exception.QueryTimeout", exceptions_array.QueryError, NULL);
-    Py_INCREF(exceptions_array.QueryTimeout);
-    PyModule_AddObject(py_module, "QueryTimeout",
-                       exceptions_array.QueryTimeout);
-    py_code = PyLong_FromLong(AEROSPIKE_ERR_QUERY_TIMEOUT);
-    PyObject_SetAttrString(exceptions_array.QueryTimeout, "code", py_code);
-    Py_DECREF(py_code);
-
     return py_module;
 
 CLEANUP_ON_ERROR:
-    // TODO: use Py_CLEAR()?
-    Py_XDECREF(py_dict);
+    for (int i = 0; i < sizeof(mapper) / sizeof(mapper[0]); i++) {
+        // TODO: use Py_CLEAR()?
+        PyObject *py_dict = *mapper[i].ref_to_py_dict;
+        Py_DECREF(py_dict);
+    }
     return NULL;
 }
 
