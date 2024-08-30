@@ -330,8 +330,7 @@ PyObject *AerospikeException_New(void)
             goto LOOP_ITERATION_CLEANUP;
         }
 
-        retval = PyModule_AddObject(py_module,
-                                    exception_def.fully_qualified_class_name,
+        retval = PyModule_AddObject(py_module, exception_def.class_name,
                                     py_exception_class);
         if (retval == -1) {
             goto LOOP_ITERATION_CLEANUP;
