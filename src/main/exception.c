@@ -262,27 +262,27 @@ PyObject *AerospikeException_New(void)
     unsigned long exception_count =
         sizeof(exception_defs) / sizeof(exception_defs[0]);
     for (unsigned long i = 0; i < exception_count; i++) {
-        struct exception_def exception = exception_defs[i];
+        struct exception_def exception_def = exception_defs[i];
 
         // TODO: if fetching base class is too slow, cache them using variables
         // I think this only runs once when `import aerospike` is called, though
         PyObject *py_base_class = NULL;
-        if (exception.base_class_name != NULL) {
-            py_base_class =
-                PyObject_GetAttrString(py_module, exception.base_class_name);
+        if (exception_def.base_class_name != NULL) {
+            py_base_class = PyObject_GetAttrString(
+                py_module, exception_def.base_class_name);
             if (py_base_class == NULL) {
                 return NULL;
             }
         }
 
         PyObject *py_exc_dict = NULL;
-        if (exception.list_of_attrs != NULL) {
+        if (exception_def.list_of_attrs != NULL) {
             py_exc_dict = PyDict_New();
             if (py_exc_dict == NULL) {
                 return NULL;
             }
 
-            const char *const *curr_attr_ref = exception.list_of_attrs;
+            const char *const *curr_attr_ref = exception_def.list_of_attrs;
             while (*curr_attr_ref != NULL) {
                 int retval =
                     PyDict_SetItemString(py_exc_dict, *curr_attr_ref, Py_None);
@@ -295,9 +295,9 @@ PyObject *AerospikeException_New(void)
         }
 
         // TODO: same dictionary used for all classes?
-        PyObject *py_exception_class = PyErr_NewException(
-            (const char *)exception.fully_qualified_class_name, py_base_class,
-            py_exc_dict);
+        PyObject *py_exception_class =
+            PyErr_NewException(exception_def.fully_qualified_class_name,
+                               py_base_class, py_exc_dict);
         if (py_exception_class == NULL) {
             return NULL;
         }
@@ -305,11 +305,11 @@ PyObject *AerospikeException_New(void)
         Py_XDECREF(py_exc_dict);
 
         PyObject *py_code = NULL;
-        if (exception.code == NO_ERROR_CODE) {
+        if (exception_def.code == NO_ERROR_CODE) {
             py_code = Py_None;
         }
         else {
-            py_code = PyLong_FromLong(exception.code);
+            py_code = PyLong_FromLong(exception_def.code);
             if (py_code == NULL) {
                 goto LOOP_ITERATION_CLEANUP;
             }
@@ -321,9 +321,9 @@ PyObject *AerospikeException_New(void)
             goto LOOP_ITERATION_CLEANUP;
         }
 
-        retval =
-            PyModule_AddObject(py_module, exception.fully_qualified_class_name,
-                               py_exception_class);
+        retval = PyModule_AddObject(py_module,
+                                    exception_def.fully_qualified_class_name,
+                                    py_exception_class);
         if (retval == -1) {
             goto LOOP_ITERATION_CLEANUP;
         }
