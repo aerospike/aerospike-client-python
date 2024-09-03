@@ -725,6 +725,25 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+// TODO:
+// no config policy -> config policy -> transaction level policy
+as_status initialize_as_policy_from_pyobject(as_error *err,
+                                             as_policy_read *policy_ref,
+                                             PyObject *py_policy)
+{
+    if (!py_policy || py_policy == Py_None) {
+        // Use config-level policy
+        return AEROSPIKE_OK;
+    }
+    else if (!PyDict_Check(py_policy)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "policy must be a dict");
+    }
+
+    // TODO:???
+    // as_policy_read_copy(config_read_policy, policy);
+}
+
 /**
  * Converts a PyObject into an as_policy_read object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
