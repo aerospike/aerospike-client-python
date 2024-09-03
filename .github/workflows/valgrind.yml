@@ -14,11 +14,16 @@ on:
         default: false
 
 jobs:
-  build-manylinux-wheels:
+  build-manylinux-wheel:
     uses: ./.github/workflows/build-wheels.yml
+    with:
+      python-tags: '["cp38"]'
+      platform-tag: manylinux_x86_64
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
 
   valgrind:
-    needs: build-manylinux-wheels
+    needs: build-manylinux-wheel
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4

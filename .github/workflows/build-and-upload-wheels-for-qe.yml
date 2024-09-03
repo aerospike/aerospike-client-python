@@ -17,11 +17,18 @@ on:
 
 jobs:
   build-artifacts:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64"
+        ]
     uses: ./.github/workflows/build-wheels.yml
     with:
-      # In a push event, any input values default to ''
-      # https://github.com/orgs/community/discussions/29242#discussioncomment-5063461
-      apply-no-optimizations: ${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }}
+      platform-tag: ${{ matrix.platform-tag }}
+      unoptimized: ${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }}
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
 
   upload-to-jfrog:
     needs: build-artifacts
