@@ -836,7 +836,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
                                                 PyObject *py_meta,
                                                 PyObject *py_policy)
 {
-    int i = 0;
     long operation;
     long return_type = -1;
     bool operation_succeeded = false;
@@ -853,6 +852,10 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
 
     as_operations ops;
     Py_ssize_t size = PyList_Size(py_list);
+    if (PyErr_Occurred()) {
+        return NULL;
+    }
+
     as_operations_inita(&ops, size);
 
     if (py_policy) {
@@ -872,14 +875,19 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    for (i = 0; i < size; i++) {
+    for (Py_ssize_t i = 0; i < size; i++) {
         PyObject *py_val = PyList_GetItem(py_list, i);
+        if (py_val == NULL) {
+            return NULL;
+        }
 
-        if (PyDict_Check(py_val)) {
-            if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops,
-                       &operation, &return_type) != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
+        if (!PyDict_Check(py_val)) {
+            return NULL;
+        }
+
+        if (add_op(self, err, py_val, unicodeStrVector, &static_pool, &ops,
+                   &operation, &return_type) != AEROSPIKE_OK) {
+            goto CLEANUP;
         }
     }
     if (err->code != AEROSPIKE_OK) {
@@ -898,7 +906,10 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     operation_succeeded = true;
 
     if (rec) {
-        record_to_pyobject(self, err, rec, key, &py_rec);
+        as_status retval = record_to_pyobject(self, err, rec, key, &py_rec);
+        if (!retval) {
+            goto CLEANUP;
+        }
     }
 
 CLEANUP:
