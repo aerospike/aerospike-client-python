@@ -14,11 +14,16 @@ on:
         default: false
 
 jobs:
-  build-manylinux-wheels:
+  build-manylinux-wheel:
     uses: ./.github/workflows/build-wheels.yml
+    with:
+      python-tags: '["cp38"]'
+      platform-tag: manylinux_x86_64
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
 
   valgrind:
-    needs: build-manylinux-wheels
+    needs: build-manylinux-wheel
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
@@ -47,10 +52,6 @@ jobs:
         use-server-rc: ${{ inputs.use-server-rc }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
 
     - run: sudo apt update
     - run: sudo apt install valgrind -y

@@ -20,9 +20,10 @@ jobs:
 
   build-artifacts:
     needs: promote-rc-build-to-release
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-artifacts.yml
     with:
-      ref: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
+      sha-to-build-and-test: ${{ needs.promote-rc-build-to-release.outputs.bump_sha }}
+    secrets: inherit
 
   upload-to-jfrog:
     name: Upload artifacts to JFrog
@@ -45,11 +46,20 @@ jobs:
         path: artifacts
         merge-multiple: true
 
+    # TODO: fix
     - name: Publish package distributions to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         packages-dir: artifacts/
         password: ${{ secrets.PYPI_API_TOKEN }}
+
+  # See reason for deleting artifacts in dev-workflow-p2.yml
+  delete-artifacts:
+    needs: [
+      upload-to-jfrog,
+      publish-to-pypi
+    ]
+    uses: ./.github/workflows/delete-artifacts.yml
 
   fast-forward-stage-to-master:
     needs: build-artifacts

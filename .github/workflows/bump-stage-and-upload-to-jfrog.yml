@@ -35,9 +35,10 @@ jobs:
 
   rebuild-artifacts-with-rc-version:
     needs: promote-dev-build-to-rc
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-artifacts.yml
     with:
-      ref: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+      sha-to-build-and-test: ${{ needs.promote-dev-build-to-rc.outputs.bump_sha }}
+    secrets: inherit
 
   upload-rc-artifacts-to-jfrog:
     needs: [
@@ -50,6 +51,11 @@ jobs:
     with:
       version: ${{ needs.promote-dev-build-to-rc.outputs.new_version }}
     secrets: inherit
+
+  # See reason for deleting artifacts in dev-workflow-p2.yml
+  delete-artifacts:
+    needs: upload-rc-artifacts-to-jfrog
+    uses: ./.github/workflows/delete-artifacts.yml
 
   ff-dev-to-stage:
     name: Fast forward dev branch to stage branch to include the bump to RC commit

@@ -26,6 +26,7 @@ on:
         required: false
         description: Commit to bump off of
         type: string
+      # See workflow call hack in update-version.yml
       is_workflow_call:
         type: boolean
         default: true

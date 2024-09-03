@@ -24,9 +24,10 @@ on:
 
 jobs:
   test-with-server-release:
-    uses: ./.github/workflows/build-wheels.yml
+    uses: ./.github/workflows/build-artifacts.yml
     with:
-      run_tests: ${{ github.event_name == 'workflow_dispatch' && inputs.run_server_release_tests || true }}
+      run_tests: ${{ github.event_name == 'pull_request' && true || inputs.run_server_release_tests }}
+      sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
   test-with-server-rc:
