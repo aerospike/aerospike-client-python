@@ -28,6 +28,9 @@
 
 static PyObject *py_module;
 
+#define SUBMODULE_NAME "exception"
+
+//  Used to create a Python Exception class
 struct exception_def {
     // When adding the exception to the module, we only need the class name
     // Example: AerospikeError
@@ -43,8 +46,14 @@ struct exception_def {
     const char *const *list_of_attrs;
 };
 
-// Parent exception names that other exceptions inherit from
-// TODO: change this to a function macro
+// Used to create instances of the above struct
+#define EXCEPTION_DEF(class_name, base_class_name, err_code, attrs)            \
+    {                                                                          \
+        class_name, SUBMODULE_NAME "." class_name, base_class_name, err_code,  \
+            attrs                                                              \
+    }
+
+// Base exception names
 #define AEROSPIKE_ERR_EXCEPTION_NAME "AerospikeError"
 #define CLIENT_ERR_EXCEPTION_NAME "ClientError"
 #define SERVER_ERR_EXCEPTION_NAME "ServerError"
@@ -55,6 +64,8 @@ struct exception_def {
 #define ADMIN_ERR_EXCEPTION_NAME "AdminError"
 #define QUERY_ERR_EXCEPTION_NAME "QueryError"
 
+// If a base exception doesn't have an error code
+// No exception should have an error code of 0, so this should be ok
 #define NO_ERROR_CODE 0
 
 const char *const aerospike_err_attrs[] = {"code", "file", "msg", "line", NULL};
@@ -62,18 +73,8 @@ const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
 
-// We have to prepend this to every class name
-// otherwise we have to dynamically allocate memory for each class name
-// which will take longer to initialize this module
-#define SUBMODULE_NAME "exception"
-#define EXCEPTION_DEF(class_name, base_class_name, err_code, attrs)            \
-    {                                                                          \
-        class_name, SUBMODULE_NAME "." class_name, base_class_name, err_code,  \
-            attrs                                                              \
-    }
-
 // TODO: idea. define this as a list of tuples in python?
-// Base classes must be defined before classes that inherit from them
+// Base classes must be defined before classes that inherit from them (topological sorting)
 struct exception_def exception_defs[] = {
     EXCEPTION_DEF(AEROSPIKE_ERR_EXCEPTION_NAME, NULL, NO_ERROR_CODE,
                   aerospike_err_attrs),
@@ -255,7 +256,6 @@ struct exception_def exception_defs[] = {
 #define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
 
 // Returns NULL if an error occurred
-// TODO: make sure this aligns with C-API docs
 PyObject *AerospikeException_New(void)
 {
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
@@ -267,6 +267,9 @@ PyObject *AerospikeException_New(void)
                                            NULL,
                                            NULL};
     py_module = PyModule_Create(&moduledef);
+    if (py_module == NULL) {
+        return NULL;
+    }
 
     unsigned long exception_count =
         sizeof(exception_defs) / sizeof(exception_defs[0]);
@@ -280,6 +283,7 @@ PyObject *AerospikeException_New(void)
             py_base_class = PyObject_GetAttrString(
                 py_module, exception_def.base_class_name);
             if (py_base_class == NULL) {
+                Py_DECREF(py_module);
                 return NULL;
             }
         }
@@ -288,6 +292,8 @@ PyObject *AerospikeException_New(void)
         if (exception_def.list_of_attrs != NULL) {
             py_exc_dict = PyDict_New();
             if (py_exc_dict == NULL) {
+                Py_XDECREF(py_base_class);
+                Py_DECREF(py_module);
                 return NULL;
             }
 
@@ -297,6 +303,8 @@ PyObject *AerospikeException_New(void)
                     PyDict_SetItemString(py_exc_dict, *curr_attr_ref, Py_None);
                 if (retval == -1) {
                     Py_DECREF(py_exc_dict);
+                    Py_XDECREF(py_base_class);
+                    Py_DECREF(py_module);
                     return NULL;
                 }
                 curr_attr_ref++;
@@ -307,11 +315,12 @@ PyObject *AerospikeException_New(void)
         PyObject *py_exception_class =
             PyErr_NewException(exception_def.fully_qualified_class_name,
                                py_base_class, py_exc_dict);
-        if (py_exception_class == NULL) {
-            return NULL;
-        }
         Py_XDECREF(py_base_class);
         Py_XDECREF(py_exc_dict);
+        if (py_exception_class == NULL) {
+            Py_DECREF(py_module);
+            return NULL;
+        }
 
         PyObject *py_code = NULL;
         if (exception_def.code == NO_ERROR_CODE) {
