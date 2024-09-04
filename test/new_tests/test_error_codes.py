@@ -132,10 +132,26 @@ def test_error_codes(error, error_name, error_code, base):
 
     # Test inherited attributes (can be from indirect parent)
     base_class_to_attrs = {
-        e.AerospikeError: ["code", "msg", "file", "line", "in_doubt"],
-        e.RecordError: ["key", "bin"],
-        e.IndexError: ["name"],
-        e.UDFError: ["module", "func"]
+        e.AerospikeError: [
+            "code",
+            "msg",
+            "file",
+            "line",
+            # in_doubt is only added when an AerospikeError or subclass of it is raised by the client
+            # This attribute is not set when initializing the exception classes in `aerospike.exception`
+            # "in_doubt"
+        ],
+        e.RecordError: [
+            "key",
+            "bin"
+        ],
+        e.IndexError: [
+            "name"
+        ],
+        e.UDFError: [
+            "module",
+            "func"
+        ]
     }
     for base_class in base_class_to_attrs:
         if issubclass(excinfo.type, base_class):
