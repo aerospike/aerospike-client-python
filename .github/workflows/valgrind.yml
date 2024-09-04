@@ -60,5 +60,5 @@ jobs:
       working-directory: test
 
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
-      if: ${{ inputs.massif }}
+      if: ${{ !cancelled() && inputs.massif }}
       working-directory: test
