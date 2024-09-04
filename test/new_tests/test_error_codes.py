@@ -41,7 +41,7 @@ from .as_errors import (
         (e.AsyncConnectionError, "AsyncConnectionError", AEROSPIKE_ERR_ASYNC_CONNECTION, e.ClientError),
         (e.ClientAbortError, "ClientAbortError", AEROSPIKE_ERR_CLIENT_ABORT, e.ClientError),
         # Server errors
-        (e.ServerError, None, None, Exception),
+        (e.ServerError, None, None, e.AerospikeError),
         (e.InvalidRequest, None, None, e.ServerError),
         (e.OpNotApplicable, None, None, e.ServerError),
         (e.FilteredOut, None, None, e.ServerError),
@@ -88,7 +88,7 @@ from .as_errors import (
         (e.ClusterError, None, None, e.AerospikeError),
         (e.ClusterChangeError, None, None, e.ClusterError),
         # Admin errors
-        (e.AdminError, None, None, Exception),
+        (e.AdminError, None, None, e.AerospikeError),
         (e.ExpiredPassword, None, None, e.AdminError),
         (e.ForbiddenPassword, None, None, e.AdminError),
         (e.IllegalState, None, None, e.AdminError),
