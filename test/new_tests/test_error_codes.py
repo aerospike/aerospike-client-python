@@ -45,7 +45,7 @@ base_class_to_attrs = {
 # TODO: make sure other places in the tests aren't doing the same thing as here
 # TODO: add documentation for the tests in a README
 @pytest.mark.parametrize(
-    "error, error_name, error_code, base",
+    "expected_exc_class, expected_exc_name, expected_error_code, expected_exc_base_class",
     (
         # Don't test error_name and error_code fields that are set to None
         # The exception name should be the class name anyways...
