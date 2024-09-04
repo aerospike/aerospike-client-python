@@ -22,7 +22,7 @@ jobs:
   build-manylinux-wheel:
     uses: ./.github/workflows/build-wheels.yml
     with:
-      python-tags: '["cp38"]'
+      python-tags: '["cp312"]'
       platform-tag: manylinux_x86_64
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
@@ -45,7 +45,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: cp38-manylinux_x86_64.build
+        name: cp312-manylinux_x86_64.build
 
     - name: Install client
       run: pip install ./*.whl
