@@ -14,6 +14,31 @@ from .as_errors import (
     AEROSPIKE_ERR_SCAN_ABORTED,
     AEROSPIKE_ERR_TLS_ERROR,
 )
+from typing import Optional
+
+# Used to test inherited attributes (can be from indirect parent)
+base_class_to_attrs = {
+    e.AerospikeError: [
+        "code",
+        "msg",
+        "file",
+        "line",
+        # in_doubt is only added when an AerospikeError or subclass of it is raised by the client
+        # This attribute is not set when initializing the exception classes in `aerospike.exception`
+        # "in_doubt"
+    ],
+    e.RecordError: [
+        "key",
+        "bin"
+    ],
+    e.IndexError: [
+        "name"
+    ],
+    e.UDFError: [
+        "module",
+        "func"
+    ]
+}
 
 
 # TODO: add missing type stubs
@@ -117,42 +142,24 @@ from .as_errors import (
         (e.LuaFileNotFound, None, None, e.UDFError),
     ),
 )
-def test_error_codes(error, error_name, error_code, base):
-    with pytest.raises(error) as excinfo:
-        raise error
+def test_error_codes(
+    expected_exc_class: type,
+    expected_exc_name: Optional[str],
+    expected_error_code: Optional[int],
+    expected_exc_base_class: type
+):
+    with pytest.raises(expected_exc_class) as excinfo:
+        raise expected_exc_class
 
-    if error_code is not None:
-        assert excinfo.value.code == error_code
+    if expected_error_code is not None:
+        assert excinfo.value.code == expected_error_code
 
-    if error_name is not None:
-        assert excinfo.type.__name__ == error_name
+    if expected_exc_name is not None:
+        assert excinfo.type.__name__ == expected_exc_name
 
     # Test directly inherited class
-    assert base in excinfo.type.__bases__
+    assert expected_exc_base_class in excinfo.type.__bases__
 
-    # Test inherited attributes (can be from indirect parent)
-    base_class_to_attrs = {
-        e.AerospikeError: [
-            "code",
-            "msg",
-            "file",
-            "line",
-            # in_doubt is only added when an AerospikeError or subclass of it is raised by the client
-            # This attribute is not set when initializing the exception classes in `aerospike.exception`
-            # "in_doubt"
-        ],
-        e.RecordError: [
-            "key",
-            "bin"
-        ],
-        e.IndexError: [
-            "name"
-        ],
-        e.UDFError: [
-            "module",
-            "func"
-        ]
-    }
     for base_class in base_class_to_attrs:
         if issubclass(excinfo.type, base_class):
             for attr in base_class_to_attrs[base_class]:
