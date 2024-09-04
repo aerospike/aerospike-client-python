@@ -118,15 +118,26 @@ from .as_errors import (
     ),
 )
 def test_error_codes(error, error_name, error_code, base):
-    with pytest.raises(error) as test_error:
+    with pytest.raises(error) as excinfo:
         raise error
 
-    test_error = test_error.value
-
     if error_code is not None:
-        assert test_error.code == error_code
+        assert excinfo.value.code == error_code
 
     if error_name is not None:
-        assert type(test_error).__name__ == error_name
+        assert excinfo.type.__name__ == error_name
 
-    assert base in test_error.__class__.__bases__
+    # Test directly inherited class
+    assert base in excinfo.type.__bases__
+
+    # Test inherited attributes (can be from indirect parent)
+    base_class_to_attrs = {
+        e.AerospikeError: ["code", "msg", "file", "line", "in_doubt"],
+        e.RecordError: ["key", "bin"],
+        e.IndexError: ["name"],
+        e.UDFError: ["module", "func"]
+    }
+    for base_class in base_class_to_attrs:
+        if issubclass(excinfo.type, base_class):
+            for attr in base_class_to_attrs[base_class]:
+                assert hasattr(excinfo.value, attr)
