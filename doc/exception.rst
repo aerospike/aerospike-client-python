@@ -298,6 +298,14 @@ Server Errors
 
     Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
+.. py:exception:: QueryAbortedError
+
+    Query was aborted.
+
+    Error code: ``210``
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
+
 Record Errors
 -------------
 
@@ -396,14 +404,6 @@ Record Errors
     Error code: ``21``
 
     Subclass of :py:exc:`~aerospike.exception.RecordError`.
-
-.. py:exception:: QueryAbortedError
-
-    Query was aborted.
-
-    Error code: ``210``
-
-    Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
 Index Errors
 ------------
