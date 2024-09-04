@@ -277,7 +277,8 @@ PyObject *AerospikeException_New(void)
         struct exception_def exception_def = exception_defs[i];
 
         // TODO: if fetching base class is too slow, cache them using variables
-        // I think this only runs once when `import aerospike` is called, though
+        // This only runs once when `import aerospike` is called, though
+        // When a module is loaded once through an import, it won't be loaded again
         PyObject *py_base_class = NULL;
         if (exception_def.base_class_name != NULL) {
             py_base_class = PyObject_GetAttrString(
@@ -287,6 +288,7 @@ PyObject *AerospikeException_New(void)
             }
         }
 
+        // Set up class attributes
         PyObject *py_exc_dict = NULL;
         if (exception_def.list_of_attrs != NULL) {
             py_exc_dict = PyDict_New();
@@ -308,7 +310,6 @@ PyObject *AerospikeException_New(void)
             }
         }
 
-        // TODO: same dictionary used for all classes?
         PyObject *py_exception_class =
             PyErr_NewException(exception_def.fully_qualified_class_name,
                                py_base_class, py_exc_dict);
