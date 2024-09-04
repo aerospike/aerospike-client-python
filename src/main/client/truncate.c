@@ -32,7 +32,6 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
 {
     as_policy_info info_policy;
     as_policy_info *info_policy_p = NULL;
-    as_status status = AEROSPIKE_OK;
 
     pyobject_to_policy_info(err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info);
