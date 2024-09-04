@@ -16,7 +16,6 @@ from .as_errors import (
 )
 
 
-# TODO: test exception fields for base classes
 # TODO: add missing type stubs
 # TODO: make sure other places in the tests aren't doing the same thing as here
 # TODO: add documentation for the tests in a README
@@ -25,9 +24,8 @@ from .as_errors import (
     (
         # Don't test error_name and error_code fields that are set to None
         # The exception name should be the class name anyways...
-        # If base is None, there is no base class for the exception
         # The API docs just specify the exception class and its base class, so we only test those things
-        (e.AerospikeError, None, None, None),
+        (e.AerospikeError, None, None, Exception),
         (e.ClientError, None, None, e.AerospikeError),
         # Client errors
         (e.InvalidHostError, None, None, e.ClientError),
@@ -43,7 +41,7 @@ from .as_errors import (
         (e.AsyncConnectionError, "AsyncConnectionError", AEROSPIKE_ERR_ASYNC_CONNECTION, e.ClientError),
         (e.ClientAbortError, "ClientAbortError", AEROSPIKE_ERR_CLIENT_ABORT, e.ClientError),
         # Server errors
-        (e.ServerError, None, None, None),
+        (e.ServerError, None, None, Exception),
         (e.InvalidRequest, None, None, e.ServerError),
         (e.OpNotApplicable, None, None, e.ServerError),
         (e.FilteredOut, None, None, e.ServerError),
@@ -90,7 +88,7 @@ from .as_errors import (
         (e.ClusterError, None, None, e.AerospikeError),
         (e.ClusterChangeError, None, None, e.ClusterError),
         # Admin errors
-        (e.AdminError, None, None, None),
+        (e.AdminError, None, None, Exception),
         (e.ExpiredPassword, None, None, e.AdminError),
         (e.ForbiddenPassword, None, None, e.AdminError),
         (e.IllegalState, None, None, e.AdminError),
@@ -125,6 +123,10 @@ def test_error_codes(error, error_name, error_code, base):
 
     test_error = test_error.value
 
-    assert test_error.code == error_code
-    assert type(test_error).__name__ == error_name
-    assert issubclass(type(test_error), base)
+    if error_code is not None:
+        assert test_error.code == error_code
+
+    if error_name is not None:
+        assert type(test_error).__name__ == error_name
+
+    assert base in test_error.__class__.__bases__
