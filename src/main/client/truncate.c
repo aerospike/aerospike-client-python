@@ -42,8 +42,7 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    status =
-        aerospike_truncate(self->as, err, info_policy_p, namespace, set, nanos);
+    aerospike_truncate(self->as, err, info_policy_p, namespace, set, nanos);
 
 CLEANUP:
 
