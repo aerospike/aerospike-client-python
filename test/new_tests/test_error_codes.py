@@ -42,7 +42,8 @@ base_class_to_attrs = {
 
 
 # TODO: add missing type stubs
-# TODO: make sure other places in the tests aren't doing the same thing as here
+# TODO: make sure other places in the tests aren't doing the same thing as here.
+# We'll do this by cleaning up the test code. But it's nice to test the API in one place
 # TODO: add documentation for the tests in a README
 @pytest.mark.parametrize(
     "expected_exc_class, expected_exc_name, expected_error_code, expected_exc_base_class",
