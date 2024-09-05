@@ -487,7 +487,7 @@ Query Errors
 
     Error code: ``213``
 
-    Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 Cluster Errors
 --------------
@@ -507,7 +507,7 @@ Cluster Errors
 
     Error code: ``11``
 
-    Subclass of :py:exc:`~aerospike.exception.AerospikeError`.
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 Admin Errors
 ------------
@@ -515,6 +515,8 @@ Admin Errors
 .. py:exception:: AdminError
 
     The parent class for exceptions of the security API.
+
+    Subclass of :py:exc:`~aerospike.exception.ServerError`.
 
 .. py:exception:: SecurityNotSupported
 
