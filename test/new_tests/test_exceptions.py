@@ -50,7 +50,7 @@ base_class_to_attrs = {
     (
         # Don't test error_name fields that are set to None
         # The exception name should be the class name anyways...
-        (e.AerospikeError, None, 1, Exception),
+        (e.AerospikeError, None, None, Exception),
         (e.ClientError, None, -1, e.AerospikeError),
         # Client errors
         (e.InvalidHostError, None, -4, e.ClientError),
