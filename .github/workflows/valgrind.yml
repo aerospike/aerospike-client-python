@@ -22,7 +22,7 @@ jobs:
   build-manylinux-wheel:
     uses: ./.github/workflows/build-wheels.yml
     with:
-      python-tags: '["cp312"]'
+      python-tags: '["cp310"]'
       platform-tag: manylinux_x86_64
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
@@ -40,12 +40,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.12'
+        python-version: '3.10'
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
       with:
-        name: cp312-manylinux_x86_64.build
+        name: cp310-manylinux_x86_64.build
 
     - name: Install client
       run: pip install ./*.whl
