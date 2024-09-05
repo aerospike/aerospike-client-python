@@ -106,14 +106,14 @@ base_class_to_attrs = {
         (e.IndexNameMaxLen, None, None, e.IndexError),
         (e.IndexNameMaxCount, None, None, e.IndexError),
         # Query errors
-        (e.QueryError, None, None, e.AerospikeError),
+        (e.QueryError, None, None, e.ServerError),
         (e.QueryQueueFull, None, None, e.QueryError),
         (e.QueryTimeout, None, None, e.QueryError),
         # Cluster errors
-        (e.ClusterError, None, None, e.AerospikeError),
+        (e.ClusterError, None, None, e.ServerError),
         (e.ClusterChangeError, None, None, e.ClusterError),
         # Admin errors
-        (e.AdminError, None, None, e.AerospikeError),
+        (e.AdminError, None, None, e.ServerError),
         (e.ExpiredPassword, None, None, e.AdminError),
         (e.ForbiddenPassword, None, None, e.AdminError),
         (e.IllegalState, None, None, e.AdminError),
