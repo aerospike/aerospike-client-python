@@ -250,6 +250,7 @@ jobs:
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
+        CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
