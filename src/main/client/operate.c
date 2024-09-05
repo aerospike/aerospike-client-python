@@ -294,22 +294,21 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
-struct aerospike_helper_codes_to_add_op_methods {
-    // Internal code only used by aerospike_helpers
-    // Represents the operation to add in the C client
-    unsigned int code;
-    void *add_op_method;
-};
+// struct aerospike_helper_codes_to_add_op_methods {
+//     // Internal code only used by aerospike_helpers
+//     // Represents the operation to add in the C client
+//     unsigned int code;
+//     void *add_op_method;
+// };
 
-struct aerospike_helper_codes_to_add_op_methods map[] =
-    {
-        {OP_LIST_APPEND, as_operations_list_append},
-}
+// struct aerospike_helper_codes_to_add_op_methods map[] =
+//     {
+//         {OP_LIST_APPEND, as_operations_list_append},
+// };
 
-as_status
-add_op(AerospikeClient * self, as_error *err, PyObject *py_op_dict,
-       as_vector *unicodeStrVector, as_static_pool *static_pool,
-       as_operations *ops, long *op, long *ret_type)
+as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
+                 as_vector *unicodeStrVector, as_static_pool *static_pool,
+                 as_operations *ops, long *op, long *ret_type)
 {
     as_val *put_val = NULL;
     as_val *put_key = NULL;
@@ -353,6 +352,13 @@ add_op(AerospikeClient * self, as_error *err, PyObject *py_op_dict,
     // TODO: get bin if it exists. Don't fail out if it doesn't
     if (get_bin(err, py_op_dict, unicodeStrVector, &bin) != AEROSPIKE_OK) {
         return err->code;
+    }
+
+    // TODO: no way to define an array of function pointers with differing arguments
+    switch (op_code) {
+    case OP_LIST_APPEND:
+        // as_operations_list_append();
+        break;
     }
 
     /* Handle the list operations with a helper in the cdt_list_operate.c file */
