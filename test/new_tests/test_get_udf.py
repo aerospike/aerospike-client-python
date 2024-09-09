@@ -81,7 +81,10 @@ class TestGetRegistered(object):
         with pytest.raises(e.UDFError) as err_info:
             self.as_connection.udf_get(non_existant_module, self.udf_language)
 
-        assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_UDF
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 2):
+            assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_UDF
+        else:
+            assert err_info.value.code == AerospikeStatus.AEROSPIKE_ERR_RECORD_NOT_FOUND
 
     def test_udf_get_with_invalid_language(self):
         """
