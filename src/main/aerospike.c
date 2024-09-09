@@ -117,149 +117,117 @@ struct Aerospike_State {
     PyTypeObject *infinite_object;
 };
 
-#define Aerospike_State(o) ((struct Aerospike_State *)PyModule_GetState(o))
+// #define Aerospike_State(o) ((struct Aerospike_State *)PyModule_GetState(o))
 
-static int Aerospike_Clear(PyObject *aerospike)
-{
-    Py_CLEAR(Aerospike_State(aerospike)->exception);
-    Py_CLEAR(Aerospike_State(aerospike)->client);
-    Py_CLEAR(Aerospike_State(aerospike)->query);
-    Py_CLEAR(Aerospike_State(aerospike)->scan);
-    Py_CLEAR(Aerospike_State(aerospike)->kdict);
-    Py_CLEAR(Aerospike_State(aerospike)->predicates);
-    Py_CLEAR(Aerospike_State(aerospike)->geospatial);
-    Py_CLEAR(Aerospike_State(aerospike)->null_object);
-    Py_CLEAR(Aerospike_State(aerospike)->wildcard_object);
-    Py_CLEAR(Aerospike_State(aerospike)->infinite_object);
+// static int Aerospike_Clear(PyObject *aerospike)
+// {
+//     Py_CLEAR(Aerospike_State(aerospike)->exception);
+//     Py_CLEAR(Aerospike_State(aerospike)->client);
+//     Py_CLEAR(Aerospike_State(aerospike)->query);
+//     Py_CLEAR(Aerospike_State(aerospike)->scan);
+//     Py_CLEAR(Aerospike_State(aerospike)->kdict);
+//     Py_CLEAR(Aerospike_State(aerospike)->predicates);
+//     Py_CLEAR(Aerospike_State(aerospike)->geospatial);
+//     Py_CLEAR(Aerospike_State(aerospike)->null_object);
+//     Py_CLEAR(Aerospike_State(aerospike)->wildcard_object);
+//     Py_CLEAR(Aerospike_State(aerospike)->infinite_object);
 
-    return 0;
-}
+//     return 0;
+// }
+
+PyObject (*pyobject_creation_methods[])(void) = {
+    AerospikeException_New,        AerospikePredicates_New,
+    AerospikeClient_Ready,         AerospikeQuery_Ready,
+    AerospikeGeospatial_Ready,     AerospikeNullObject_Ready,
+    AerospikeWildcardObject_Ready, AerospikeInfiniteObject_Ready,
+};
 
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
-    // Makes things "thread-safe"
-    Py_Initialize();
-    int i = 0;
+    // TODO: use macro for module name
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "aerospike",
+        "Aerospike Python Client",
+        sizeof(struct Aerospike_State),
+        Aerospike_Methods,
+        NULL,
+        NULL,
+        //    Aerospike_Clear
+    };
 
-    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
-                                           "aerospike",
-                                           "Aerospike Python Client",
-                                           sizeof(struct Aerospike_State),
-                                           Aerospike_Methods,
-                                           NULL,
-                                           NULL,
-                                           Aerospike_Clear};
-
-    PyObject *aerospike = PyModule_Create(&moduledef);
+    PyObject *py_aerospike_module = PyModule_Create(&moduledef);
+    if (py_aerospike_module == NULL) {
+        return NULL;
+    }
 
     // In case adding objects to module fails, we can properly deallocate the module state later
-    memset(Aerospike_State(aerospike), 0, sizeof(struct Aerospike_State));
+    // memset(Aerospike_State(py_aerospike_module), 0, sizeof(struct Aerospike_State));
 
     Aerospike_Enable_Default_Logging();
 
     py_global_hosts = PyDict_New();
-
-    PyObject *exception = AerospikeException_New();
-    Py_INCREF(exception);
-    int retval = PyModule_AddObject(aerospike, "exception", exception);
-    if (retval == -1) {
-        goto CLEANUP;
+    if (py_global_hosts == NULL) {
+        goto MODULE_CLEANUP;
     }
-    Aerospike_State(aerospike)->exception = exception;
 
-    PyTypeObject *client = AerospikeClient_Ready();
-    Py_INCREF(client);
-    retval = PyModule_AddObject(aerospike, "Client", (PyObject *)client);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->client = client;
+    for (int i = 0; i < sizeof(pyobject_creation_methods) /
+                            sizeof(pyobject_creation_methods[0]);
+         i++) {
+        PyObject *(*create_pyobject)(void) = pyobject_creation_methods[i];
+        PyObject *py_object = create_pyobject();
 
-    PyTypeObject *query = AerospikeQuery_Ready();
-    Py_INCREF(query);
-    retval = PyModule_AddObject(aerospike, "Query", (PyObject *)query);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->query = query;
+        // Get name of pyobject
+        PyObject *py_name_of_pyobj;
+        if (PyType_Check(py_object)) {
+            py_name_of_pyobj = PyType_GetName(py_object);
+            if (py_name_of_pyobj == NULL) {
+                goto GLOBAL_HOSTS_CLEANUP;
+            }
+        }
+        else if (PyModule_Check(py_object)) {
+            py_name_of_pyobj = PyModule_GetNameObject(py_object);
+        }
+        else {
+            // This shouldn't occur. But check to be safe
+            // TODO: raise exception
+        }
+        const char *name_of_pyobj = PyUnicode_AsUTF8(py_name_of_pyobj);
 
-    PyTypeObject *scan = AerospikeScan_Ready();
-    Py_INCREF(scan);
-    retval = PyModule_AddObject(aerospike, "Scan", (PyObject *)scan);
-    if (retval == -1) {
-        goto CLEANUP;
+        int retval =
+            PyModule_AddObject(py_aerospike_module, name_of_pyobj, py_object);
+        if (retval == -1) {
+            goto GLOBAL_HOSTS_CLEANUP;
+        }
+        // TODO: why does state need to be used?
+        // Aerospike_State(py_aerospike_module)->exception = py_exception_module;
     }
-    Aerospike_State(aerospike)->scan = scan;
-
-    PyTypeObject *kdict = AerospikeKeyOrderedDict_Ready();
-    Py_INCREF(kdict);
-    retval = PyModule_AddObject(aerospike, "KeyOrderedDict", (PyObject *)kdict);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->kdict = kdict;
 
     /*
 	 * Add constants to module.
 	 */
+    int i = 0;
     for (i = 0; i < (int)OPERATOR_CONSTANTS_ARR_SIZE; i++) {
-        PyModule_AddIntConstant(aerospike, operator_constants[i].constant_str,
+        PyModule_AddIntConstant(py_aerospike_module,
+                                operator_constants[i].constant_str,
                                 operator_constants[i].constantno);
     }
 
     for (i = 0; i < (int)AUTH_MODE_CONSTANTS_ARR_SIZE; i++) {
-        PyModule_AddIntConstant(aerospike, auth_mode_constants[i].constant_str,
+        PyModule_AddIntConstant(py_aerospike_module,
+                                auth_mode_constants[i].constant_str,
                                 auth_mode_constants[i].constantno);
     }
 
-    declare_policy_constants(aerospike);
-    declare_log_constants(aerospike);
+    declare_policy_constants(py_aerospike_module);
+    declare_log_constants(py_aerospike_module);
 
-    PyObject *predicates = AerospikePredicates_New();
-    Py_INCREF(predicates);
-    retval = PyModule_AddObject(aerospike, "predicates", predicates);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->predicates = predicates;
+    return py_aerospike_module;
 
-    PyTypeObject *geospatial = AerospikeGeospatial_Ready();
-    Py_INCREF(geospatial);
-    retval = PyModule_AddObject(aerospike, "GeoJSON", (PyObject *)geospatial);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->geospatial = geospatial;
-
-    PyTypeObject *null_object = AerospikeNullObject_Ready();
-    Py_INCREF(null_object);
-    retval = PyModule_AddObject(aerospike, "null", (PyObject *)null_object);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->null_object = null_object;
-
-    PyTypeObject *wildcard_object = AerospikeWildcardObject_Ready();
-    Py_INCREF(wildcard_object);
-    retval = PyModule_AddObject(aerospike, "CDTWildcard",
-                                (PyObject *)wildcard_object);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->wildcard_object = wildcard_object;
-
-    PyTypeObject *infinite_object = AerospikeInfiniteObject_Ready();
-    Py_INCREF(infinite_object);
-    retval = PyModule_AddObject(aerospike, "CDTInfinite",
-                                (PyObject *)infinite_object);
-    if (retval == -1) {
-        goto CLEANUP;
-    }
-    Aerospike_State(aerospike)->infinite_object = infinite_object;
-
-    return aerospike;
-
-CLEANUP:
-    Aerospike_Clear(aerospike);
+GLOBAL_HOSTS_CLEANUP:
+    Py_DECREF(py_global_hosts);
+MODULE_CLEANUP:
+    Py_DECREF(py_aerospike_module);
+    // Aerospike_Clear(py_aerospike_module);
     return NULL;
 }
