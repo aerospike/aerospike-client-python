@@ -245,8 +245,7 @@ jobs:
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y &&
-          yum install python-setuptools -y
+          yum install openssl-devel -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         # TODO: need to create lockfile for delvewheel or the workflow might break unexpectedly
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
