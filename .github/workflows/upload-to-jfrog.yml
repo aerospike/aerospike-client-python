@@ -35,6 +35,7 @@ jobs:
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
     - name: 'JFrog PyPI upload: link JFrog build with these artifacts'
+      if: ${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME }}
       run: echo JFROG_BUILD_OPTS="--build-name python-client --build-number ${{ inputs.version }}" >> $GITHUB_ENV
 
     - name: Choose folder to upload artifacts to
