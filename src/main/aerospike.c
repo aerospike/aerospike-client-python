@@ -224,9 +224,14 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
     }
 
-    // TODO: leave off from here
-    declare_policy_constants(py_aerospike_module);
-    declare_log_constants(py_aerospike_module);
+    retval = declare_policy_constants(py_aerospike_module);
+    if (retval == -1) {
+        goto GLOBAL_HOSTS_CLEANUP;
+    }
+    retval = declare_log_constants(py_aerospike_module);
+    if (retval == -1) {
+        goto GLOBAL_HOSTS_CLEANUP;
+    }
 
     return py_aerospike_module;
 
