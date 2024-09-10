@@ -2389,38 +2389,67 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
     return err->code;
 }
 
-void error_to_pyobject(const as_error *err, PyObject **obj)
+PyObject *create_pytuple_using_as_error(const as_error *err)
 {
-    PyObject *py_file = NULL;
-    if (err->file) {
-        py_file = PyUnicode_FromString(err->file);
-    }
-    else {
-        Py_INCREF(Py_None);
-        py_file = Py_None;
-    }
-    PyObject *py_line = NULL;
-    if (err->line > 0) {
-        py_line = PyLong_FromLong(err->line);
-    }
-    else {
-        Py_INCREF(Py_None);
-        py_line = Py_None;
+    PyObject *py_err_tuple = PyTuple_New(5);
+    if (py_err_tuple == NULL) {
+        goto error;
     }
 
-    PyObject *py_code = PyLong_FromLongLong(err->code);
-    PyObject *py_message = PyUnicode_FromString(err->message);
+    Py_ssize_t size_of_py_tuple = PyTuple_Size(py_err_tuple);
+    if (size_of_py_tuple == -1) {
+        goto CLEANUP_TUPLE_ON_ERROR;
+    }
 
-    PyObject *py_in_doubt = err->in_doubt ? Py_True : Py_False;
-    Py_INCREF(py_in_doubt);
+    for (Py_ssize_t i = 0; i <= size_of_py_tuple; i++) {
+        PyObject *py_member_of_tuple;
+        switch (i) {
+        case PY_EXCEPTION_CODE:
+            py_member_of_tuple = PyLong_FromLongLong(err->code);
+            break;
+        case PY_EXCEPTION_MSG:
+            py_member_of_tuple = PyUnicode_FromString(err->message);
+            break;
+        case PY_EXCEPTION_FILE:
+            if (err->file) {
+                py_member_of_tuple = PyUnicode_FromString(err->file);
+            }
+            else {
+                // TODO: maybe create a helper method for this?
+                Py_INCREF(Py_None);
+                py_member_of_tuple = Py_None;
+            }
+            break;
+        case PY_EXCEPTION_LINE:
+            if (err->line > 0) {
+                py_member_of_tuple = PyLong_FromLong(err->line);
+            }
+            else {
+                Py_INCREF(Py_None);
+                py_member_of_tuple = Py_None;
+            }
+            break;
+        case AS_PY_EXCEPTION_IN_DOUBT:
+            py_member_of_tuple = PyBool_FromLong(err->in_doubt);
+            break;
+        }
 
-    PyObject *py_err = PyTuple_New(5);
-    PyTuple_SetItem(py_err, PY_EXCEPTION_CODE, py_code);
-    PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
-    PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
-    PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
-    PyTuple_SetItem(py_err, AS_PY_EXCEPTION_IN_DOUBT, py_in_doubt);
-    *obj = py_err;
+        if (py_member_of_tuple == NULL) {
+            goto CLEANUP_TUPLE_ON_ERROR;
+        }
+
+        int retval = PyTuple_SetItem(py_err_tuple, i, py_member_of_tuple);
+        if (retval == -1) {
+            goto CLEANUP_TUPLE_ON_ERROR;
+        }
+    }
+
+    return py_err_tuple;
+
+CLEANUP_TUPLE_ON_ERROR:
+    Py_DECREF(py_err_tuple);
+error:
+    return NULL;
 }
 
 void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
