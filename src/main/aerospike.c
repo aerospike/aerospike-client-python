@@ -149,20 +149,16 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         PyModuleDef_HEAD_INIT,
         "aerospike",
         "Aerospike Python Client",
-        sizeof(struct Aerospike_State),
+        0,
         Aerospike_Methods,
         NULL,
         NULL,
-        //    Aerospike_Clear
     };
 
     PyObject *py_aerospike_module = PyModule_Create(&moduledef);
     if (py_aerospike_module == NULL) {
         return NULL;
     }
-
-    // In case adding objects to module fails, we can properly deallocate the module state later
-    // memset(Aerospike_State(py_aerospike_module), 0, sizeof(struct Aerospike_State));
 
     Aerospike_Enable_Default_Logging();
 
@@ -175,50 +171,60 @@ PyMODINIT_FUNC PyInit_aerospike(void)
                             sizeof(pyobject_creation_methods[0]);
          i++) {
         PyObject *(*create_pyobject)(void) = pyobject_creation_methods[i];
-        PyObject *py_object = create_pyobject();
-
-        // Get name of pyobject
-        PyObject *py_name_of_pyobj;
-        if (PyType_Check(py_object)) {
-            py_name_of_pyobj = PyType_GetName(py_object);
-            if (py_name_of_pyobj == NULL) {
-                goto GLOBAL_HOSTS_CLEANUP;
-            }
-        }
-        else if (PyModule_Check(py_object)) {
-            py_name_of_pyobj = PyModule_GetNameObject(py_object);
-        }
-        else {
-            // This shouldn't occur. But check to be safe
-            // TODO: raise exception
-        }
-        const char *name_of_pyobj = PyUnicode_AsUTF8(py_name_of_pyobj);
-
-        int retval =
-            PyModule_AddObject(py_aerospike_module, name_of_pyobj, py_object);
-        if (retval == -1) {
+        PyObject *py_member = create_pyobject();
+        if (py_member == NULL) {
             goto GLOBAL_HOSTS_CLEANUP;
         }
-        // TODO: why does state need to be used?
-        // Aerospike_State(py_aerospike_module)->exception = py_exception_module;
+
+        // Get name of pyobject
+        PyObject *py_member_name =
+            PyObject_GetAttrString(py_member, "__name__");
+        if (py_member_name == NULL) {
+            goto MEMBER_CLEANUP;
+        }
+
+        const char *member_name = PyUnicode_AsUTF8(py_member_name);
+        Py_DECREF(py_member_name);
+        if (member_name == NULL) {
+            goto MEMBER_CLEANUP;
+        }
+
+        int retval =
+            PyModule_AddObject(py_aerospike_module, member_name, py_member);
+        if (retval == -1) {
+            goto MEMBER_CLEANUP;
+        }
+        continue;
+
+    MEMBER_CLEANUP:
+        Py_DECREF(py_member);
+        goto GLOBAL_HOSTS_CLEANUP;
     }
 
     /*
 	 * Add constants to module.
 	 */
     int i = 0;
+    int retval;
     for (i = 0; i < (int)OPERATOR_CONSTANTS_ARR_SIZE; i++) {
-        PyModule_AddIntConstant(py_aerospike_module,
-                                operator_constants[i].constant_str,
-                                operator_constants[i].constantno);
+        retval = PyModule_AddIntConstant(py_aerospike_module,
+                                         operator_constants[i].constant_str,
+                                         operator_constants[i].constantno);
+        if (retval == -1) {
+            goto GLOBAL_HOSTS_CLEANUP;
+        }
     }
 
     for (i = 0; i < (int)AUTH_MODE_CONSTANTS_ARR_SIZE; i++) {
-        PyModule_AddIntConstant(py_aerospike_module,
-                                auth_mode_constants[i].constant_str,
-                                auth_mode_constants[i].constantno);
+        retval = PyModule_AddIntConstant(py_aerospike_module,
+                                         auth_mode_constants[i].constant_str,
+                                         auth_mode_constants[i].constantno);
+        if (retval == -1) {
+            goto GLOBAL_HOSTS_CLEANUP;
+        }
     }
 
+    // TODO: leave off from here
     declare_policy_constants(py_aerospike_module);
     declare_log_constants(py_aerospike_module);
 
