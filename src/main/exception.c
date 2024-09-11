@@ -425,9 +425,8 @@ error:
     return NULL;
 }
 
-// TODO: benchmark that this doesn't take up too much memory / disk space
-// Return -1 on error
-int raise_exception(as_error *err, PyObject *py_dict_extra_exc_fields)
+int raise_exception_with_api_call_extra_info(as_error *err,
+                                             as_exc_extra_info *extra_info)
 {
     int retval = -1;
     PyObject *py_dict_err_code = PyObject_GetAttrString(
@@ -447,16 +446,44 @@ int raise_exception(as_error *err, PyObject *py_dict_extra_exc_fields)
         goto cleanup_exc_class_on_error;
     }
 
+    if (extra_info != NULL) {
+        as_exc_extra_info curr_pair;
+        // Sentinel value
+        while (curr_pair.attr_name != NULL) {
+            const char *exc_attr_name = PyUnicode_AsUTF8(curr_pair.attr_name);
+            if (exc_attr_name == NULL) {
+                goto cleanup_err_tuple_on_error;
+            }
+
+            if (PyObject_HasAttrString(py_exc_class, exc_attr_name)) {
+                retval = PyObject_SetAttrString(py_exc_class, exc_attr_name,
+                                                curr_pair.py_value);
+                if (retval == -1) {
+                    goto cleanup_err_tuple_on_error;
+                }
+            }
+        }
+    }
+
     // TODO: not sure how to check if this fails
     PyErr_SetObject(py_exc_class, py_err_tuple);
     Py_DECREF(py_err_tuple);
 
     retval = 0;
 
+cleanup_err_tuple_on_error:
+    Py_DECREF(py_err_tuple);
 cleanup_exc_class_on_error:
     Py_DECREF(py_exc_class);
 cleanup_py_dict_on_error:
     Py_DECREF(py_dict_err_code);
 finish:
     return retval;
+}
+
+// TODO: benchmark that this doesn't take up too much memory / disk space
+// Return -1 on error
+int raise_exception(as_error *err)
+{
+    return raise_exception_with_api_call_extra_info(err, NULL);
 }
