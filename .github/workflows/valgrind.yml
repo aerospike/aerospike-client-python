@@ -20,9 +20,12 @@ on:
 
 env:
   PYTHON_TAG: cp38
+  PLATFORM_TAG: manylinux_x86_64
 
 jobs:
   look-for-wheel-in-jfrog:
+    outputs:
+      num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
     runs-on: ubuntu-22.04
     steps:
     - uses: jfrog/setup-jfrog-cli@v4
@@ -30,14 +33,38 @@ jobs:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
+    - name: Get shortened commit hash of this workflow run
+      # versioningit commit sha is always 8 chars long it seems
+      # We assume this prints out a sha that is unique and at most 8 chars
+      run: echo SHORT_GITHUB_SHA=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_ENV
+
+    # TODO: will fail if one commit has two builds with different labels
+    # TODO: might be code in stage tests to check exact file name matches?
+    - run: echo JF_SEARCH_STRING="${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*" >> $GITHUB_ENV
+
     - name: Look for wheel built with default settings in JFrog
-      # TODO: need to reduce sha to certain number of chars
-      # TODO: must match exactly one artifact
-      run: jf rt search ${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.PYTHON_TAG }}*manylinux*x86_64*${{ github.sha }}*
+      id: count_num_artifacts_found
+      run: echo num_artifacts=$(jf rt search --count "${{ env.JF_SEARCH_STRING }}") >> $GITHUB_OUTPUT
+
+    - name: Cannot determine which artifact to use, fail out
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts > 1 }}
+      run: exit 1
+
+    - name: Found the exact artifact in JFrog, downloading...
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
+      run: jf rt download --flat --fail-no-op "${{ env.JF_SEARCH_STRING }}"
+
+    - name: Pass to valgrind job
+      if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
+      uses: actions/upload-artifact@v4
+      with:
+        if-no-files-found: error
+        name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
+        path: '*.whl'
 
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
-    if: ${{ !cancelled() && needs.look-for-wheel-in-jfrog.result == 'failure' }}
+    if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
     uses: ./.github/workflows/build-wheels.yml
     with:
       python-tags: '["cp38"]'
@@ -49,6 +76,7 @@ jobs:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
     needs: build-manylinux-wheel
+    if: ${{ !cancelled() && needs.build-manylinux-wheel.result == 'success' || needs.build-manylinux-wheel.result == 'skipped' }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
@@ -58,12 +86,13 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
+        # TODO: can convert from python tag
         python-version: '3.8'
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
       with:
-        name: cp38-manylinux_x86_64.build
+        name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
 
     - name: Install client
       run: pip install ./*.whl
@@ -90,6 +119,7 @@ jobs:
     - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
 
+    # TODO: upload report as artifact
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
       if: ${{ !cancelled() && inputs.massif }}
       working-directory: test
