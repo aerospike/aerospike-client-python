@@ -193,10 +193,10 @@ enum aerospike_cdt_ctx_identifiers {
     CDT_CTX_MAP_KEY_CREATE = 0x24
 };
 
-typedef struct Aerospike_Constants {
-    long constantno;
-    char constant_str[MAX_CONSTANT_STR_SIZE];
-} AerospikeConstants;
+struct as_constant_to_module_member_name {
+    long value;
+    const char *member_name;
+};
 
 typedef struct Aerospike_JobConstants {
     char job_str[MAX_CONSTANT_STR_SIZE];
