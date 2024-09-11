@@ -23,7 +23,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include "exceptions.h"
-#include "exception_types.h"
 #include "macros.h"
 
 static PyObject *py_module;
