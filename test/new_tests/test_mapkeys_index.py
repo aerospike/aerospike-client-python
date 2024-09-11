@@ -121,7 +121,7 @@ class TestMapKeysIndex(object):
         ),
         ids=("ns too long", "set too long", "bin too long", "index name too long"),
     )
-    def test_mapkeys_with_parameters_too_long(self, ns, test_set, test_bin, index_name):
+    def test_mapkeys_with_parameters_too_long(self, ns, test_set, test_bin, index_name, request):
         # Invoke index_map_keys_create() with correct arguments and set
         # length extra
         policy = {}
@@ -130,7 +130,7 @@ class TestMapKeysIndex(object):
             self.as_connection.index_map_keys_create(ns, test_set, test_bin, aerospike.INDEX_STRING, index_name, policy)
 
         err_code = err_info.value.code
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 2):
+        if request.node.callspec.id == "ns too long" and (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 2):
             assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
         else:
             assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
