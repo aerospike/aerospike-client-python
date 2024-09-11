@@ -19,7 +19,21 @@ on:
         default: false
 
 jobs:
+  look-for-wheel-in-jfrog:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - name: Look for wheel built with default settings in JFrog
+      # TODO: need to reduce sha to certain number of chars
+      run: jf rt search ${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/${{ github.sha }}
+
   build-manylinux-wheel:
+    needs: look-for-wheel-in-jfrog
+    if: ${{ !cancelled() && needs.look-for-wheel-in-jfrog.result == 'failure' }}
     uses: ./.github/workflows/build-wheels.yml
     with:
       python-tags: '["cp38"]'
