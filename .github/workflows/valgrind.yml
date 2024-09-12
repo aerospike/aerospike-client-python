@@ -37,6 +37,11 @@ jobs:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
+    - uses: actions/checkout@v4
+      with:
+        sparse-checkout-cone-mode: false
+        sparse-checkout: .github/workflows/${{ env.JFROG_FILESPEC_NAME }}
+
     - name: Get shortened commit hash of this workflow run
       # versioningit commit sha is always 8 chars long it seems
       # We assume this prints out a sha that is unique and at most 8 chars
