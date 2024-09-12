@@ -73,7 +73,7 @@ jobs:
       with:
         if-no-files-found: error
         name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
-        path: '*.whl'
+        path: './.github/workflows/*.whl'
 
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
@@ -96,7 +96,7 @@ jobs:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
     needs: build-manylinux-wheel
-    if: ${{ !cancelled() && needs.build-manylinux-wheel.result == 'success' || needs.build-manylinux-wheel.result == 'skipped' }}
+    if: ${{ !cancelled() && (needs.build-manylinux-wheel.result == 'success' || needs.build-manylinux-wheel.result == 'skipped') }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
