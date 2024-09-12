@@ -26,6 +26,10 @@ jobs:
   look-for-wheel-in-jfrog:
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
+      python-tag: ${{ env.PYTHON_TAG }}
+      platform-tag: ${{ env.PLATFORM_TAG }}
+    env:
+      JFROG_FILESPEC_NAME: jfrog-filespec.json
     runs-on: ubuntu-22.04
     steps:
     - uses: jfrog/setup-jfrog-cli@v4
@@ -38,13 +42,15 @@ jobs:
       # We assume this prints out a sha that is unique and at most 8 chars
       run: echo SHORT_GITHUB_SHA=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_ENV
 
-    # TODO: will fail if one commit has two builds with different labels
-    # TODO: might be code in stage tests to check exact file name matches?
-    - run: echo JF_SEARCH_STRING="${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*" >> $GITHUB_ENV
+    - name: Set filespec variables
+      # TODO: set using env var?
+      run: echo SPEC_VARS_FLAG='--spec-vars="repo_name=${{ vars.JFROG_GENERIC_REPO_NAME }};branch=${{ github.ref_name }};commit_sha=${{ env.SHORT_GITHUB_SHA }};python_tag=${{ env.PYTHON_TAG }}"' >> $GITHUB_ENV
 
     - name: Look for wheel built with default settings in JFrog
       id: count_num_artifacts_found
-      run: echo num_artifacts=$(jf rt search --count "${{ env.JF_SEARCH_STRING }}") >> $GITHUB_OUTPUT
+      # We use AQL because we want to exclude builds if they have special labels, like unoptimized builds
+      run: echo num_artifacts=$(jf rt search --count --spec=./${{ env.JFROG_FILESPEC_NAME }} ${{ env.SPEC_VARS_FLAG }}) >> $GITHUB_OUTPUT
+      working-directory: .github/workflows
 
     - name: Cannot determine which artifact to use, fail out
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts > 1 }}
@@ -52,7 +58,7 @@ jobs:
 
     - name: Found the exact artifact in JFrog, downloading...
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
-      run: jf rt download --flat --fail-no-op "${{ env.JF_SEARCH_STRING }}"
+      run: jf rt download --flat --fail-no-op --spec=./${{ env.JFROG_FILESPEC_NAME }} ${{ env.SPEC_VARS_FLAG }}
 
     - name: Pass to valgrind job
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
@@ -67,8 +73,8 @@ jobs:
     if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
     uses: ./.github/workflows/build-wheels.yml
     with:
-      python-tags: '["cp38"]'
-      platform-tag: manylinux_x86_64
+      python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
+      platform-tag: ${{ needs.look-for-wheel-in-jfrog.outputs.platform-tag }}
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
@@ -84,13 +90,21 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
+    - name: Convert Python tag to Python version
+      run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
+      shell: bash
+
     - uses: actions/setup-python@v2
       with:
-        # TODO: can convert from python tag
-        python-version: '3.8'
+        python-version: '${{ env.PYTHON_VERSION }}'
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
+
+    - name: Remove artifact from Github
+      uses: geekyeggo/delete-artifact@v5
       with:
         name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
 
