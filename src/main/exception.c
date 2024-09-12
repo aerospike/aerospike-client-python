@@ -507,12 +507,12 @@ int raise_exception_with_api_call_extra_info(as_error *err,
     PyObject *py_exc_class =
         get_py_exc_class_from_err_code(py_dict_err_code, err->code);
     if (py_exc_class == NULL) {
-        goto cleanup_py_dict_on_error;
+        goto cleanup_py_dict;
     }
 
     PyObject *py_err_tuple = create_pytuple_using_as_error(err);
     if (py_err_tuple == NULL) {
-        goto cleanup_exc_class_on_error;
+        goto cleanup_exc_class;
     }
 
     if (extra_info != NULL) {
@@ -522,7 +522,7 @@ int raise_exception_with_api_call_extra_info(as_error *err,
                 retval = PyObject_SetAttrString(
                     py_exc_class, curr_pair->attr_name, curr_pair->py_value);
                 if (retval == -1) {
-                    goto cleanup_err_tuple_on_error;
+                    goto cleanup_err_tuple;
                 }
             }
             curr_pair++;
@@ -531,15 +531,13 @@ int raise_exception_with_api_call_extra_info(as_error *err,
 
     // TODO: not sure how to check if this fails
     PyErr_SetObject(py_exc_class, py_err_tuple);
-    Py_DECREF(py_err_tuple);
-
     retval = 0;
 
-cleanup_err_tuple_on_error:
+cleanup_err_tuple:
     Py_DECREF(py_err_tuple);
-cleanup_exc_class_on_error:
+cleanup_exc_class:
     Py_DECREF(py_exc_class);
-cleanup_py_dict_on_error:
+cleanup_py_dict:
     Py_DECREF(py_dict_err_code);
 finish:
     return retval;
