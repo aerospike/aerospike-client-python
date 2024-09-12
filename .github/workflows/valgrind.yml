@@ -83,6 +83,13 @@ jobs:
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
+  upload-built-wheel-to-jfrog:
+    needs: build-manylinux-wheel
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
+    secrets: inherit
+
   valgrind:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
@@ -105,11 +112,6 @@ jobs:
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
-      with:
-        name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
-
-    - name: Remove artifact from Github
-      uses: geekyeggo/delete-artifact@v5
       with:
         name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
 
@@ -142,3 +144,15 @@ jobs:
     - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
       if: ${{ !cancelled() && inputs.massif }}
       working-directory: test
+
+  # See reason for deleting artifacts in dev-workflow-p2.yml
+  # TODO: probably not correct
+  delete-artifacts:
+    needs: [
+      # These jobs must have downloaded the artifact from Github before we can delete it
+      upload-built-wheel-to-jfrog,
+      valgrind
+    ]
+    # Workflow run must clean up after itself even if cancelled
+    if: ${{ always() }}
+    uses: ./.github/workflows/delete-artifacts.yml
