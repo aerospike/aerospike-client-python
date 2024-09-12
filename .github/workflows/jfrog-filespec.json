@@ -5,10 +5,18 @@
                 "items.find": {
                     "repo": "${repo_name}",
                     "path": "${branch}",
-                    "name": {
-                        "$nmatch": "*(+|.)[a-z]+*",
-                        "$match": "*${commit_sha}*${python_tag}*manylinux*x86_64*.whl"
-                    }
+                    "$and": [
+                        {
+                            "name": {
+                                "$nmatch": "*(+|.)[a-z]+*"
+                            }
+                        },
+                        {
+                            "name": {
+                                "$match": "*${commit_sha}*${python_tag}*manylinux*x86_64*.whl"
+                            }
+                        }
+                    ]
                 }
             }
         }
