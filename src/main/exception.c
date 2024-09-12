@@ -448,16 +448,10 @@ int raise_exception_with_api_call_extra_info(as_error *err,
 
     if (extra_info != NULL) {
         as_exc_extra_info curr_pair;
-        // Sentinel value
         while (curr_pair.attr_name != NULL) {
-            const char *exc_attr_name = PyUnicode_AsUTF8(curr_pair.attr_name);
-            if (exc_attr_name == NULL) {
-                goto cleanup_err_tuple_on_error;
-            }
-
-            if (PyObject_HasAttrString(py_exc_class, exc_attr_name)) {
-                retval = PyObject_SetAttrString(py_exc_class, exc_attr_name,
-                                                curr_pair.py_value);
+            if (PyObject_HasAttrString(py_exc_class, curr_pair.attr_name)) {
+                retval = PyObject_SetAttrString(
+                    py_exc_class, curr_pair.attr_name, curr_pair.py_value);
                 if (retval == -1) {
                     goto cleanup_err_tuple_on_error;
                 }
