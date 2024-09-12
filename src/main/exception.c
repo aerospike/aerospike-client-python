@@ -67,7 +67,9 @@ struct exception_def {
 // No exception should have an error code of 0, so this should be ok
 #define NO_ERROR_CODE 0
 
-const char *const aerospike_err_attrs[] = {"code", "file", "msg", "line", NULL};
+// TODO: need to document that in_doubt is included as an attribute with None as default value
+const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
+                                           "line", "in_doubt", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
@@ -425,15 +427,18 @@ error:
     return NULL;
 }
 
+// TODO: Create an enum instead?
 #define PY_EXCEPTION_CODE 0
 #define PY_EXCEPTION_MSG 1
 #define PY_EXCEPTION_FILE 2
 #define PY_EXCEPTION_LINE 3
 #define AS_PY_EXCEPTION_IN_DOUBT 4
 
+#define ERROR_TUPLE_SIZE 5
+
 PyObject *create_pytuple_using_as_error(const as_error *err)
 {
-    PyObject *py_err_tuple = PyTuple_New(5);
+    PyObject *py_err_tuple = PyTuple_New(ERROR_TUPLE_SIZE);
     if (py_err_tuple == NULL) {
         goto error;
     }
@@ -476,6 +481,7 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
             break;
         }
 
+        // TODO: error case where i is out of bounds?
         if (py_member_of_tuple == NULL) {
             goto CLEANUP_TUPLE_ON_ERROR;
         }
@@ -513,6 +519,20 @@ int raise_exception_with_api_call_extra_info(as_error *err,
     PyObject *py_err_tuple = create_pytuple_using_as_error(err);
     if (py_err_tuple == NULL) {
         goto cleanup_exc_class;
+    }
+
+    // Set exception class attributes as well
+    for (int i = 0; i < ERROR_TUPLE_SIZE; i++) {
+        PyObject *py_tuple_item = PyTuple_GetItem(py_err_tuple, i);
+        if (py_tuple_item == NULL) {
+            goto cleanup_err_tuple;
+        }
+
+        retval = PyObject_SetAttrString(py_exc_class, aerospike_err_attrs[i],
+                                        py_tuple_item);
+        if (retval == -1) {
+            goto cleanup_err_tuple;
+        }
     }
 
     if (extra_info != NULL) {
