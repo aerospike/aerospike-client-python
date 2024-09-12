@@ -273,17 +273,9 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", Py_None);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        as_exc_extra_info extra_info[] = {
+            {"module", Py_None}, {"func", Py_None}, {0}};
+        raise_exception_with_api_call_extra_info(&err, extra_info);
         return NULL;
     }
 
@@ -369,17 +361,9 @@ CLEANUP:
         Py_DECREF(py_ustr);
     }
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", py_filename);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        as_exc_extra_info extra_info[] = {
+            {"module", py_filename}, {"func", Py_None}, {0}};
+        raise_exception_with_api_call_extra_info(&err, extra_info);
         return NULL;
     }
 
@@ -461,17 +445,9 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", Py_None);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        as_exc_extra_info extra_info[] = {
+            {"module", Py_None}, {"func", Py_None}, {0}};
+        raise_exception_with_api_call_extra_info(&err, extra_info);
         return NULL;
     }
 
@@ -576,17 +552,9 @@ CLEANUP:
         as_udf_file_destroy(&file);
     }
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", py_module);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        as_exc_extra_info extra_info[] = {
+            {"module", py_module}, {"func", Py_None}, {0}};
+        raise_exception_with_api_call_extra_info(&err, extra_info);
         return NULL;
     }
 
