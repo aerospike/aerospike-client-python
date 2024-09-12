@@ -490,8 +490,8 @@ error:
     return NULL;
 }
 
-int raise_exception_with_api_call_extra_info(
-    const as_error *err, const as_exc_extra_info *extra_info)
+int raise_exception_with_api_call_extra_info(as_error *err,
+                                             as_exc_extra_info *extra_info)
 {
     int retval = -1;
     PyObject *py_dict_err_code = PyObject_GetAttrString(
