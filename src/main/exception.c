@@ -443,7 +443,7 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
         goto CLEANUP_TUPLE_ON_ERROR;
     }
 
-    for (Py_ssize_t i = 0; i <= size_of_py_tuple; i++) {
+    for (Py_ssize_t i = 0; i < size_of_py_tuple; i++) {
         PyObject *py_member_of_tuple = NULL;
         switch (i) {
         case PY_EXCEPTION_CODE:
