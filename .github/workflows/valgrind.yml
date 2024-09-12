@@ -54,6 +54,7 @@ jobs:
     - name: Look for wheel built with default settings in JFrog
       id: count_num_artifacts_found
       # We use AQL because we want to exclude builds if they have special labels, like unoptimized builds
+      # We can't use a search pattern to exclude strings, as far as I know
       run: echo num_artifacts=$(jf rt search --count --spec=./${{ env.JFROG_FILESPEC_NAME }} ${{ env.SPEC_VARS_FLAG }}) >> $GITHUB_OUTPUT
       working-directory: .github/workflows
 
@@ -146,7 +147,6 @@ jobs:
       working-directory: test
 
   # See reason for deleting artifacts in dev-workflow-p2.yml
-  # TODO: probably not correct
   delete-artifacts:
     needs: [
       # These jobs must have downloaded the artifact from Github before we can delete it
