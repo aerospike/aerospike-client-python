@@ -2432,10 +2432,12 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
         case AS_PY_EXCEPTION_IN_DOUBT:
             py_member_of_tuple = PyBool_FromLong(err->in_doubt);
             break;
-        }
-
-        if (py_member_of_tuple == NULL) {
+        default:
+            // There is an extra field in the tuple
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Extra member found in exception tuple");
             goto CLEANUP_TUPLE_ON_ERROR;
+            break;
         }
 
         int retval = PyTuple_SetItem(py_err_tuple, i, py_member_of_tuple);
