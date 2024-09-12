@@ -76,9 +76,11 @@ static inline bool isExprOp(int op);
 
 #define EXCEPTION_ON_ERROR()                                                   \
     if (err.code != AEROSPIKE_OK) {                                            \
-        raise_exception(&err);
-return NULL;
-}
+        as_exc_extra_info extra_info[] = {                                     \
+            {"key", py_key}, {"bin", py_bin}, {0}};                            \
+        raise_exception_with_api_call_extra_info(&err, extra_info);            \
+        return NULL;                                                           \
+    }
 
 #define DECREF_LIST_AND_RESULT()                                               \
     if (py_list) {                                                             \
