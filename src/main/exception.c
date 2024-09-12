@@ -476,6 +476,10 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
             break;
         }
 
+        if (py_member_of_tuple == NULL) {
+            goto CLEANUP_TUPLE_ON_ERROR;
+        }
+
         int retval = PyTuple_SetItem(py_err_tuple, i, py_member_of_tuple);
         if (retval == -1) {
             goto CLEANUP_TUPLE_ON_ERROR;
