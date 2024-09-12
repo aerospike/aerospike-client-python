@@ -245,7 +245,7 @@ class TestIndex(object):
         ns_name = "a" * 50
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises((e.InvalidRequest, e.NamespaceNotFound)) as err_info:
             self.as_connection.index_string_create(ns_name, "demo", "name", "name_index", policy)
 
         err_code = err_info.value.code

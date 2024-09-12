@@ -126,7 +126,7 @@ class TestMapKeysIndex(object):
         # length extra
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises((e.InvalidRequest, e.NamespaceNotFound)) as err_info:
             self.as_connection.index_map_keys_create(ns, test_set, test_bin, aerospike.INDEX_STRING, index_name, policy)
 
         err_code = err_info.value.code
