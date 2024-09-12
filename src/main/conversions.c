@@ -2402,7 +2402,7 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
     }
 
     for (Py_ssize_t i = 0; i <= size_of_py_tuple; i++) {
-        PyObject *py_member_of_tuple;
+        PyObject *py_member_of_tuple = NULL;
         switch (i) {
         case PY_EXCEPTION_CODE:
             py_member_of_tuple = PyLong_FromLongLong(err->code);
@@ -2431,12 +2431,6 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
             break;
         case AS_PY_EXCEPTION_IN_DOUBT:
             py_member_of_tuple = PyBool_FromLong(err->in_doubt);
-            break;
-        default:
-            // There is an extra field in the tuple
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Extra member found in exception tuple");
-            goto CLEANUP_TUPLE_ON_ERROR;
             break;
         }
 
