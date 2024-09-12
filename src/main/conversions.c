@@ -54,12 +54,6 @@
 #define PY_KEYT_KEY 2
 #define PY_KEYT_DIGEST 3
 
-#define PY_EXCEPTION_CODE 0
-#define PY_EXCEPTION_MSG 1
-#define PY_EXCEPTION_FILE 2
-#define PY_EXCEPTION_LINE 3
-#define AS_PY_EXCEPTION_IN_DOUBT 4
-
 #define CTX_KEY "ctx"
 #define CDT_CTX_ORDER_KEY "order_key"
 #define CDT_CTX_PAD_KEY "pad_key"
@@ -2387,65 +2381,6 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
 
     *obj = py_meta;
     return err->code;
-}
-
-PyObject *create_pytuple_using_as_error(const as_error *err)
-{
-    PyObject *py_err_tuple = PyTuple_New(5);
-    if (py_err_tuple == NULL) {
-        goto error;
-    }
-
-    Py_ssize_t size_of_py_tuple = PyTuple_Size(py_err_tuple);
-    if (size_of_py_tuple == -1) {
-        goto CLEANUP_TUPLE_ON_ERROR;
-    }
-
-    for (Py_ssize_t i = 0; i <= size_of_py_tuple; i++) {
-        PyObject *py_member_of_tuple = NULL;
-        switch (i) {
-        case PY_EXCEPTION_CODE:
-            py_member_of_tuple = PyLong_FromLongLong(err->code);
-            break;
-        case PY_EXCEPTION_MSG:
-            py_member_of_tuple = PyUnicode_FromString(err->message);
-            break;
-        case PY_EXCEPTION_FILE:
-            if (err->file) {
-                py_member_of_tuple = PyUnicode_FromString(err->file);
-            }
-            else {
-                // TODO: maybe create a helper method for this?
-                Py_INCREF(Py_None);
-                py_member_of_tuple = Py_None;
-            }
-            break;
-        case PY_EXCEPTION_LINE:
-            if (err->line > 0) {
-                py_member_of_tuple = PyLong_FromLong(err->line);
-            }
-            else {
-                Py_INCREF(Py_None);
-                py_member_of_tuple = Py_None;
-            }
-            break;
-        case AS_PY_EXCEPTION_IN_DOUBT:
-            py_member_of_tuple = PyBool_FromLong(err->in_doubt);
-            break;
-        }
-
-        int retval = PyTuple_SetItem(py_err_tuple, i, py_member_of_tuple);
-        if (retval == -1) {
-            goto CLEANUP_TUPLE_ON_ERROR;
-        }
-    }
-
-    return py_err_tuple;
-
-CLEANUP_TUPLE_ON_ERROR:
-    Py_DECREF(py_err_tuple);
-error:
-    return NULL;
 }
 
 void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
