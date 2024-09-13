@@ -523,23 +523,24 @@ static struct module_constant_name_to_value module_constants[] = {
     {"JOB_QUERY", true, .value.string = "query"}};
 
 struct module_obj_name_to_creation_method {
-    // We may specify a name different from the object's __name__
-    // If NULL, use the object's __name__
+    // We define this instead of using the object's __name__
+    // because we don't want to deal with using a Unicode object's internal buffer
     const char *obj_name;
     PyObject *(*pyobject_creation_method)(void);
 };
 
 static struct module_obj_name_to_creation_method module_pyobjects[] = {
+    // TODO: Define macros somewhere
     {"exception", AerospikeException_New},
     {"predicates", AerospikePredicates_New},
-    {NULL, (PyObject * (*)(void)) AerospikeClient_Ready},
-    {NULL, (PyObject * (*)(void)) AerospikeQuery_Ready},
+    {"Client", (PyObject * (*)(void)) AerospikeClient_Ready},
+    {"Query", (PyObject * (*)(void)) AerospikeQuery_Ready},
     {"GeoJSON", (PyObject * (*)(void)) AerospikeGeospatial_Ready},
-    {NULL, (PyObject * (*)(void)) AerospikeNullObject_Ready},
-    {NULL, (PyObject * (*)(void)) AerospikeWildcardObject_Ready},
-    {NULL, (PyObject * (*)(void)) AerospikeInfiniteObject_Ready},
-    {NULL, (PyObject * (*)(void)) AerospikeKeyOrderedDict_Ready},
-    {NULL, (PyObject * (*)(void)) AerospikeScan_Ready},
+    {"null", (PyObject * (*)(void)) AerospikeNullObject_Ready},
+    {"CDTWildcard", (PyObject * (*)(void)) AerospikeWildcardObject_Ready},
+    {"CDTInfinite", (PyObject * (*)(void)) AerospikeInfiniteObject_Ready},
+    {"KeyOrderedDict", (PyObject * (*)(void)) AerospikeKeyOrderedDict_Ready},
+    {"Scan", (PyObject * (*)(void)) AerospikeScan_Ready},
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)
@@ -575,28 +576,8 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
 
-        // Get name of pyobject
-        char *member_name;
-        PyObject *py_member_name = NULL;
-        if (module_pyobjects[i].obj_name == NULL) {
-            py_member_name = PyObject_GetAttrString(py_member, "__name__");
-            if (py_member_name == NULL) {
-                goto MODULE_MEMBER_CLEANUP_ON_ERROR;
-            }
-
-            member_name = PyUnicode_AsUTF8(py_member_name);
-            if (member_name == NULL) {
-                Py_DECREF(py_member_name);
-                goto MODULE_MEMBER_CLEANUP_ON_ERROR;
-            }
-        }
-        else {
-            member_name = (char *)module_pyobjects[i].obj_name;
-        }
-
-        retval =
-            PyModule_AddObject(py_aerospike_module, member_name, py_member);
-        Py_XDECREF(py_member_name);
+        retval = PyModule_AddObject(py_aerospike_module,
+                                    module_pyobjects[i].obj_name, py_member);
         if (retval == -1) {
             goto MODULE_MEMBER_CLEANUP_ON_ERROR;
         }
