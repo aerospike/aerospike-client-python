@@ -522,15 +522,22 @@ static struct module_constant_name_to_value module_constants[] = {
     {"scan", true, .value.string = "JOB_SCAN"},
     {"query", true, .value.string = "JOB_QUERY"}};
 
-static PyObject *(*const pyobject_creation_methods[])(void) = {
-    AerospikeException_New,
-    AerospikePredicates_New,
-    (PyObject * (*)(void)) AerospikeClient_Ready,
-    (PyObject * (*)(void)) AerospikeQuery_Ready,
-    (PyObject * (*)(void)) AerospikeGeospatial_Ready,
-    (PyObject * (*)(void)) AerospikeNullObject_Ready,
-    (PyObject * (*)(void)) AerospikeWildcardObject_Ready,
-    (PyObject * (*)(void)) AerospikeInfiniteObject_Ready,
+struct module_obj_name_to_creation_method {
+    // We may specify a name different from the object's __name__
+    // If NULL, use the object's __name__
+    const char *obj_name;
+    PyObject *(*pyobject_creation_method)(void);
+};
+
+static struct module_obj_name_to_creation_method module_pyobjects[] = {
+    {"exception", AerospikeException_New},
+    {"predicates", AerospikePredicates_New},
+    {NULL, (PyObject * (*)(void)) AerospikeClient_Ready},
+    {NULL, (PyObject * (*)(void)) AerospikeQuery_Ready},
+    {"GeoJSON", (PyObject * (*)(void)) AerospikeGeospatial_Ready},
+    {NULL, (PyObject * (*)(void)) AerospikeNullObject_Ready},
+    {NULL, (PyObject * (*)(void)) AerospikeWildcardObject_Ready},
+    {NULL, (PyObject * (*)(void)) AerospikeInfiniteObject_Ready},
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)
@@ -557,26 +564,32 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     unsigned long i = 0;
     int retval;
-    for (i = 0; i < sizeof(pyobject_creation_methods) /
-                        sizeof(pyobject_creation_methods[0]);
+    for (i = 0; i < sizeof(module_pyobjects) / sizeof(module_pyobjects[0]);
          i++) {
-        PyObject *(*create_pyobject)(void) = pyobject_creation_methods[i];
+        PyObject *(*create_pyobject)(void) =
+            module_pyobjects[i].pyobject_creation_method;
         PyObject *py_member = create_pyobject();
         if (py_member == NULL) {
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
 
         // Get name of pyobject
-        PyObject *py_member_name =
-            PyObject_GetAttrString(py_member, "__name__");
-        if (py_member_name == NULL) {
-            goto MODULE_MEMBER_CLEANUP_ON_ERROR;
-        }
+        const char *member_name;
+        if (module_pyobjects[i].obj_name == NULL) {
+            PyObject *py_member_name =
+                PyObject_GetAttrString(py_member, "__name__");
+            if (py_member_name == NULL) {
+                goto MODULE_MEMBER_CLEANUP_ON_ERROR;
+            }
 
-        const char *member_name = PyUnicode_AsUTF8(py_member_name);
-        Py_DECREF(py_member_name);
-        if (member_name == NULL) {
-            goto MODULE_MEMBER_CLEANUP_ON_ERROR;
+            const char *member_name = PyUnicode_AsUTF8(py_member_name);
+            Py_DECREF(py_member_name);
+            if (member_name == NULL) {
+                goto MODULE_MEMBER_CLEANUP_ON_ERROR;
+            }
+        }
+        else {
+            member_name = module_pyobjects[i].obj_name;
         }
 
         retval =
