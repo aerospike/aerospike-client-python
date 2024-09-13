@@ -392,16 +392,23 @@ void remove_exception(as_error *err)
 
 // Return NULL on error
 // Otherwise returns strong reference to exception class
-PyObject *get_py_exc_class_from_err_code(PyObject *py_dict_err_code,
-                                         as_status err_code)
+PyObject *get_py_exc_class_from_err_code(as_status err_code)
 {
+    PyObject *py_dict_err_code = PyObject_GetAttrString(
+        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS);
+    if (py_dict_err_code == NULL) {
+        goto error;
+    }
+
     PyObject *py_err_code = PyLong_FromLong(err_code);
     if (py_err_code == NULL) {
+        Py_DECREF(py_dict_err_code);
         goto error;
     }
 
     PyObject *py_exc_class =
         PyDict_GetItemWithError(py_dict_err_code, py_err_code);
+    Py_DECREF(py_dict_err_code);
     Py_XDECREF(py_err_code);
 
     if (py_exc_class == NULL) {
@@ -504,16 +511,9 @@ int raise_exception_with_api_call_extra_info(as_error *err,
                                              as_exc_extra_info *extra_info)
 {
     int retval = -1;
-    PyObject *py_dict_err_code = PyObject_GetAttrString(
-        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS);
-    if (py_dict_err_code == NULL) {
-        goto finish;
-    }
-
-    PyObject *py_exc_class =
-        get_py_exc_class_from_err_code(py_dict_err_code, err->code);
+    PyObject *py_exc_class = get_py_exc_class_from_err_code(err->code);
     if (py_exc_class == NULL) {
-        goto cleanup_py_dict;
+        goto finish;
     }
 
     PyObject *py_err_tuple = create_pytuple_using_as_error(err);
@@ -562,8 +562,6 @@ cleanup_err_tuple:
     Py_DECREF(py_err_tuple);
 cleanup_exc_class:
     Py_DECREF(py_exc_class);
-cleanup_py_dict:
-    Py_DECREF(py_dict_err_code);
 finish:
     return retval;
 }
