@@ -582,7 +582,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
                 goto MODULE_MEMBER_CLEANUP_ON_ERROR;
             }
 
-            const char *member_name = PyUnicode_AsUTF8(py_member_name);
+            member_name = PyUnicode_AsUTF8(py_member_name);
             Py_DECREF(py_member_name);
             if (member_name == NULL) {
                 goto MODULE_MEMBER_CLEANUP_ON_ERROR;
