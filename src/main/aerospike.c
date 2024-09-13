@@ -523,10 +523,14 @@ static struct module_constant_name_to_value module_constants[] = {
     {"query", true, .value.string = "JOB_QUERY"}};
 
 static PyObject (*const pyobject_creation_methods[])(void) = {
-    AerospikeException_New,        AerospikePredicates_New,
-    AerospikeClient_Ready,         AerospikeQuery_Ready,
-    AerospikeGeospatial_Ready,     AerospikeNullObject_Ready,
-    AerospikeWildcardObject_Ready, AerospikeInfiniteObject_Ready,
+    AerospikeException_New,
+    AerospikePredicates_New,
+    (PyObject * (*)(void)) AerospikeClient_Ready,
+    (PyObject * (*)(void)) AerospikeQuery_Ready,
+    (PyObject * (*)(void)) AerospikeGeospatial_Ready,
+    (PyObject * (*)(void)) AerospikeNullObject_Ready,
+    (PyObject * (*)(void)) AerospikeWildcardObject_Ready,
+    (PyObject * (*)(void)) AerospikeInfiniteObject_Ready,
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)
@@ -551,10 +555,10 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         goto MODULE_CLEANUP_ON_ERROR;
     }
 
-    int i = 0;
+    unsigned long i = 0;
     int retval;
-    for (int i = 0; i < sizeof(pyobject_creation_methods) /
-                            sizeof(pyobject_creation_methods[0]);
+    for (i = 0; i < sizeof(pyobject_creation_methods) /
+                        sizeof(pyobject_creation_methods[0]);
          i++) {
         PyObject *(*create_pyobject)(void) = pyobject_creation_methods[i];
         PyObject *py_member = create_pyobject();
