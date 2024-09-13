@@ -122,8 +122,6 @@
         }                                                                      \
     }
 
-static AerospikeJobConstants aerospike_job_constants[] = {
-    {"scan", "JOB_SCAN"}, {"query", "JOB_QUERY"}};
 /**
  * Function for setting scan parameters in scan.
  * Like Percentage, Concurrent, Nobins
@@ -212,33 +210,6 @@ as_status set_query_options(as_error *err, PyObject *query_options,
         query->no_bins = PyObject_IsTrue(no_bins_val);
     }
     return AEROSPIKE_OK;
-}
-/**
- * Declares policy constants.
- */
-int declare_policy_constants(PyObject *aerospike)
-{
-    // TODO: Clean up enums / structs used to define these constants
-    int i;
-    int retval = 0;
-    for (i = 0; i < (int)AEROSPIKE_CONSTANTS_ARR_SIZE; i++) {
-        retval = PyModule_AddIntConstant(aerospike,
-                                         aerospike_constants[i].constant_str,
-                                         aerospike_constants[i].constantno);
-        if (retval == -1) {
-            return -1;
-        }
-    }
-
-    for (i = 0; i < (int)AEROSPIKE_JOB_CONSTANTS_ARR_SIZE; i++) {
-        retval = PyModule_AddStringConstant(
-            aerospike, aerospike_job_constants[i].exposed_job_str,
-            aerospike_job_constants[i].job_str);
-        if (retval == -1) {
-            return -1;
-        }
-    }
-    return 0;
 }
 
 /**

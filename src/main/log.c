@@ -31,22 +31,6 @@
 
 static AerospikeLogCallback user_callback;
 
-/*
- * Declare's log level constants.
- */
-int declare_log_constants(PyObject *aerospike)
-{
-    // Add incidividual constants to aerospike module.
-
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_OFF", LOG_LEVEL_OFF);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_WARN", LOG_LEVEL_WARN);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_INFO", LOG_LEVEL_INFO);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
-    return 0;
-}
-
 PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
                                   PyObject *kwds)
 {
