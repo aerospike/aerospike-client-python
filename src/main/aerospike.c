@@ -576,26 +576,27 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
 
         // Get name of pyobject
-        const char *member_name;
+        char *member_name;
+        PyObject *py_member_name = NULL;
         if (module_pyobjects[i].obj_name == NULL) {
-            PyObject *py_member_name =
-                PyObject_GetAttrString(py_member, "__name__");
+            py_member_name = PyObject_GetAttrString(py_member, "__name__");
             if (py_member_name == NULL) {
                 goto MODULE_MEMBER_CLEANUP_ON_ERROR;
             }
 
             member_name = PyUnicode_AsUTF8(py_member_name);
-            Py_DECREF(py_member_name);
             if (member_name == NULL) {
+                Py_DECREF(py_member_name);
                 goto MODULE_MEMBER_CLEANUP_ON_ERROR;
             }
         }
         else {
-            member_name = module_pyobjects[i].obj_name;
+            member_name = (char *)module_pyobjects[i].obj_name;
         }
 
         retval =
             PyModule_AddObject(py_aerospike_module, member_name, py_member);
+        Py_XDECREF(py_member_name);
         if (retval == -1) {
             goto MODULE_MEMBER_CLEANUP_ON_ERROR;
         }
