@@ -381,10 +381,14 @@ static PyMethodDef AerospikePredicates_Methods[] = {
 
 PyObject *AerospikePredicates_New(void)
 {
-    static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT, "predicates",
-        //    "aerospike.predicates",
-        "Query Predicates", -1, AerospikePredicates_Methods, NULL, NULL, NULL};
+    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
+                                           "aerospike.predicates",
+                                           "Query Predicates",
+                                           -1,
+                                           AerospikePredicates_Methods,
+                                           NULL,
+                                           NULL,
+                                           NULL};
 
     PyObject *module = PyModule_Create(&moduledef);
     return module;
