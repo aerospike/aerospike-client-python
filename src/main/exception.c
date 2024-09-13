@@ -253,19 +253,15 @@ struct exception_def exception_defs[] = {
                   AEROSPIKE_ERR_QUERY_TIMEOUT, NULL)};
 
 // TODO: define aerospike module name somewhere else
-#define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
+// #define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
 
 // Returns NULL if an error occurred
 PyObject *AerospikeException_New(void)
 {
-    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
-                                           FULLY_QUALIFIED_MODULE_NAME,
-                                           "Exception objects",
-                                           -1,
-                                           NULL,
-                                           NULL,
-                                           NULL,
-                                           NULL};
+    static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT, SUBMODULE_NAME,
+        //    FULLY_QUALIFIED_MODULE_NAME,
+        "Exception objects", -1, NULL, NULL, NULL, NULL};
     py_module = PyModule_Create(&moduledef);
     if (py_module == NULL) {
         return NULL;
