@@ -538,6 +538,8 @@ static struct module_obj_name_to_creation_method module_pyobjects[] = {
     {NULL, (PyObject * (*)(void)) AerospikeNullObject_Ready},
     {NULL, (PyObject * (*)(void)) AerospikeWildcardObject_Ready},
     {NULL, (PyObject * (*)(void)) AerospikeInfiniteObject_Ready},
+    {NULL, (PyObject * (*)(void)) AerospikeKeyOrderedDict_Ready},
+    {NULL, (PyObject * (*)(void)) AerospikeScan_Ready},
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)
