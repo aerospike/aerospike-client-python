@@ -522,7 +522,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"scan", true, .value.string = "JOB_SCAN"},
     {"query", true, .value.string = "JOB_QUERY"}};
 
-static PyObject (*const pyobject_creation_methods[])(void) = {
+static PyObject *(*const pyobject_creation_methods[])(void) = {
     AerospikeException_New,
     AerospikePredicates_New,
     (PyObject * (*)(void)) AerospikeClient_Ready,
