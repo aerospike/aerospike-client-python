@@ -542,7 +542,12 @@ int raise_exception_with_api_call_extra_info(as_error *err,
                 retval = PyObject_SetAttrString(
                     py_exc_class, curr_pair->attr_name, curr_pair->py_value);
                 if (retval == -1) {
-                    goto cleanup_err_tuple;
+                    if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+                        PyErr_Clear();
+                    }
+                    else {
+                        goto cleanup_err_tuple;
+                    }
                 }
             }
             curr_pair++;
