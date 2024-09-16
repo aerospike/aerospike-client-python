@@ -531,7 +531,7 @@ struct module_obj_name_to_creation_method {
 
 static struct module_obj_name_to_creation_method module_pyobjects[] = {
     // TODO: Define macros somewhere
-    // {"exception", AerospikeException_New},
+    {"exception", AerospikeException_New},
     // {"predicates", AerospikePredicates_New},
     // {"Client", (PyObject * (*)(void)) AerospikeClient_Ready},
     // {"Query", (PyObject * (*)(void)) AerospikeQuery_Ready},
