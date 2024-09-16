@@ -489,13 +489,12 @@ static struct module_constant_name_to_value module_constants[] = {
      .value.integer = AS_QUERY_DURATION_LONG_RELAX_AP},
     {"QUERY_DURATION_SHORT", .value.integer = AS_QUERY_DURATION_SHORT},
 
-    // TODO: remove enum because it already exists in C client
-    {"LOG_LEVEL_OFF", .value.integer = LOG_LEVEL_OFF},
-    {"LOG_LEVEL_ERROR", .value.integer = LOG_LEVEL_ERROR},
-    {"LOG_LEVEL_WARN", .value.integer = LOG_LEVEL_WARN},
-    {"LOG_LEVEL_INFO", .value.integer = LOG_LEVEL_INFO},
-    {"LOG_LEVEL_DEBUG", .value.integer = LOG_LEVEL_DEBUG},
-    {"LOG_LEVEL_TRACE", .value.integer = LOG_LEVEL_TRACE},
+    {"LOG_LEVEL_OFF", .value.integer = -1},
+    {"LOG_LEVEL_ERROR", .value.integer = AS_LOG_LEVEL_ERROR},
+    {"LOG_LEVEL_WARN", .value.integer = AS_LOG_LEVEL_WARN},
+    {"LOG_LEVEL_INFO", .value.integer = AS_LOG_LEVEL_INFO},
+    {"LOG_LEVEL_DEBUG", .value.integer = AS_LOG_LEVEL_DEBUG},
+    {"LOG_LEVEL_TRACE", .value.integer = AS_LOG_LEVEL_TRACE},
 
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
     {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};

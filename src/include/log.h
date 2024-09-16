@@ -20,20 +20,6 @@
 #include <aerospike/as_status.h>
 
 /*
- * Enum to declare log level constants
- */
-typedef enum Aerospike_log_level_e {
-
-    LOG_LEVEL_OFF = -1,
-    LOG_LEVEL_ERROR,
-    LOG_LEVEL_WARN,
-    LOG_LEVEL_INFO,
-    LOG_LEVEL_DEBUG,
-    LOG_LEVEL_TRACE
-
-} aerospike_log_level;
-
-/*
  * Structure to hold user's log_callback object
  */
 typedef struct Aerospike_log_callback {
