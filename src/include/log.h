@@ -41,12 +41,6 @@ typedef struct Aerospike_log_callback {
 } AerospikeLogCallback;
 
 /**
- * Add log level constants to aerospike module
- *          aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
- */
-as_status declare_log_constants(PyObject *aerospike);
-
-/**
  * Set log level for C-SDK
  *          aerospike.set_log_level( aerospike.LOG_LEVEL_WARN )
  */
