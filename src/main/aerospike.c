@@ -55,7 +55,7 @@ config = {\n\
 }\n\
 client = aerospike.client(config)");
 
-static PyMethodDef Aerospike_Methods[] = {
+static PyMethodDef aerospike_methods[] = {
 
     //Serialization
     {"set_serializer", (PyCFunction)AerospikeClient_Set_Serializer,
@@ -508,7 +508,6 @@ struct module_obj_name_to_creation_method {
 };
 
 static struct module_obj_name_to_creation_method module_pyobjects[] = {
-    // TODO: Define macros somewhere
     {"exception", AerospikeException_New},
     {"predicates", AerospikePredicates_New},
     {"Client", (PyObject * (*)(void)) AerospikeClient_Ready},
@@ -526,9 +525,9 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     // TODO: use macro for module name
     static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
-        .m_name = "aerospike",
+        .m_name = AEROSPIKE_MODULE_NAME,
         .m_doc = "Aerospike Python Client",
-        .m_methods = Aerospike_Methods,
+        .m_methods = aerospike_methods,
     };
 
     PyObject *py_aerospike_module = PyModule_Create(&moduledef);
