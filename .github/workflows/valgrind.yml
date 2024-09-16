@@ -24,7 +24,8 @@ env:
 
 jobs:
   # TODO: handle case where we run valgrind on a "central" branch
-  look-for-wheel-in-jfrog:
+  look-for-wheel-in-generic-jfrog-repo:
+    if: ${{ github.ref_name != 'dev' && github.ref_name != 'stage' && github.ref_name != 'master' }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
       python-tag: ${{ env.PYTHON_TAG }}
@@ -77,8 +78,8 @@ jobs:
         path: './.github/workflows/*.whl'
 
   build-manylinux-wheel:
-    needs: look-for-wheel-in-jfrog
-    if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
+    needs: look-for-wheel-in-generic-jfrog-repo
+    if: ${{ !cancelled() && needs.look-for-wheel-in-generic-jfrog-repo.result == 'skipped' || (needs.look-for-wheel-in-generic-jfrog-repo.result == 'success' && needs.look-for-wheel-in-generic-jfrog-repo.outputs.num_artifacts_found == 0) }}
     uses: ./.github/workflows/build-wheels.yml
     with:
       python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
