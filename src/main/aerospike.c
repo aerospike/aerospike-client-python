@@ -33,8 +33,8 @@
 #include "nullobject.h"
 #include "cdt_types.h"
 
-// #include <aerospike/as_operations.h>
-// #include <aerospike/as_log_macros.h>
+#include <aerospike/as_operations.h>
+#include <aerospike/as_log_macros.h>
 #include <aerospike/as_job.h>
 #include <aerospike/as_admin.h>
 #include <aerospike/as_record.h>
