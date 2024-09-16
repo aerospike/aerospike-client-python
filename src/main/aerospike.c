@@ -536,7 +536,7 @@ static struct module_obj_name_to_creation_method module_pyobjects[] = {
     {"Client", (PyObject * (*)(void)) AerospikeClient_Ready},
     {"Query", (PyObject * (*)(void)) AerospikeQuery_Ready},
     {"GeoJSON", (PyObject * (*)(void)) AerospikeGeospatial_Ready},
-    {"null", (PyObject * (*)(void)) AerospikeNullObject_Ready},
+    // {"null", (PyObject * (*)(void)) AerospikeNullObject_Ready},
     {"CDTWildcard", (PyObject * (*)(void)) AerospikeWildcardObject_Ready},
     {"CDTInfinite", (PyObject * (*)(void)) AerospikeInfiniteObject_Ready},
     {"KeyOrderedDict", (PyObject * (*)(void)) AerospikeKeyOrderedDict_Ready},
