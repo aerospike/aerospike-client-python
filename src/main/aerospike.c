@@ -88,6 +88,16 @@ static PyMethodDef Aerospike_Methods[] = {
 
     {NULL}};
 
+struct module_constant_name_to_value {
+    const char *member_name;
+    // If false, is int value
+    bool is_str_value;
+    union value {
+        long integer;
+        const char *string;
+    } value;
+};
+
 static struct module_constant_name_to_value module_constants[] = {
     {"OPERATOR_READ", false, .value.integer = AS_OPERATOR_READ},
     {"OPERATOR_WRITE", false, .value.integer = AS_OPERATOR_WRITE},
