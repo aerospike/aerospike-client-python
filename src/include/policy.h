@@ -29,14 +29,6 @@
 #include <aerospike/as_partition_filter.h>
 #include <aerospike/as_metrics.h>
 
-#define MAX_CONSTANT_STR_SIZE 512
-
-/*
- *******************************************************************************************************
- *Structure to map constant number to constant name string for Aerospike constants.
- *******************************************************************************************************
- */
-
 enum Aerospike_serializer_values {
     SERIALIZER_NONE, /* default handler for serializer type */
     SERIALIZER_PYTHON,

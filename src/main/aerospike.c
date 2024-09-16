@@ -89,7 +89,7 @@ static PyMethodDef aerospike_methods[] = {
     {NULL}};
 
 struct module_constant_name_to_value {
-    const char *member_name;
+    const char *name;
     // If false, is int value
     bool is_str_value;
     union value {
@@ -98,6 +98,9 @@ struct module_constant_name_to_value {
     } value;
 };
 
+// TODO: many of these names are the same as the enum name
+// Is there a way to generate this code?
+// TODO: regression tests for all these constants
 static struct module_constant_name_to_value module_constants[] = {
     {"OPERATOR_READ", .value.integer = AS_OPERATOR_READ},
     {"OPERATOR_WRITE", .value.integer = AS_OPERATOR_WRITE},
@@ -171,6 +174,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"PRIV_UDF_ADMIN", .value.integer = AS_PRIVILEGE_UDF_ADMIN},
     {"PRIV_SINDEX_ADMIN", .value.integer = AS_PRIVILEGE_SINDEX_ADMIN},
 
+    // TODO: If only aerospike_helpers relies on these constants,
+    // maybe move these constants to aerospike_helpers package
     {"OP_LIST_APPEND", .value.integer = OP_LIST_APPEND},
     {"OP_LIST_APPEND_ITEMS", .value.integer = OP_LIST_APPEND_ITEMS},
     {"OP_LIST_INSERT", .value.integer = OP_LIST_INSERT},
@@ -218,6 +223,23 @@ static struct module_constant_name_to_value module_constants[] = {
         .value.integer = OP_LIST_GET_BY_VALUE_RANK_RANGE_REL,
     },
     {"OP_LIST_CREATE", .value.integer = OP_LIST_CREATE},
+    {
+        "OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END",
+
+        .value.integer = OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END,
+    },
+    {"OP_LIST_GET_BY_INDEX_RANGE_TO_END",
+     .value.integer = OP_LIST_GET_BY_INDEX_RANGE_TO_END},
+    {"OP_LIST_GET_BY_RANK_RANGE_TO_END",
+     .value.integer = OP_LIST_GET_BY_RANK_RANGE_TO_END},
+    {"OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END",
+     .value.integer = OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END},
+    {"OP_LIST_REMOVE_BY_REL_RANK_RANGE",
+     .value.integer = OP_LIST_REMOVE_BY_REL_RANK_RANGE},
+    {"OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END",
+     .value.integer = OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END},
+    {"OP_LIST_REMOVE_BY_RANK_RANGE_TO_END",
+     .value.integer = OP_LIST_REMOVE_BY_RANK_RANGE_TO_END},
 
     {"OP_MAP_SET_POLICY", .value.integer = OP_MAP_SET_POLICY},
     {"OP_MAP_CREATE", .value.integer = OP_MAP_CREATE},
@@ -251,6 +273,39 @@ static struct module_constant_name_to_value module_constants[] = {
     {"OP_MAP_GET_BY_RANK_RANGE", .value.integer = OP_MAP_GET_BY_RANK_RANGE},
     {"OP_MAP_GET_BY_VALUE_LIST", .value.integer = OP_MAP_GET_BY_VALUE_LIST},
     {"OP_MAP_GET_BY_KEY_LIST", .value.integer = OP_MAP_GET_BY_KEY_LIST},
+    /* CDT operations for use with expressions, new in 5.0 */
+    {"OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL",
+     .value.integer = OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL},
+    {"OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL",
+     .value.integer = OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL},
+    {"OP_MAP_GET_BY_VALUE_RANK_RANGE_REL",
+     .value.integer = OP_MAP_GET_BY_VALUE_RANK_RANGE_REL},
+    {"OP_MAP_GET_BY_KEY_INDEX_RANGE_REL",
+     .value.integer = OP_MAP_GET_BY_KEY_INDEX_RANGE_REL},
+    {"OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END",
+     .value.integer = OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END},
+    {"OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END",
+     .value.integer = OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END},
+    {"OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END",
+     .value.integer = OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END},
+    {"OP_MAP_REMOVE_BY_RANK_RANGE_TO_END",
+     .value.integer = OP_MAP_REMOVE_BY_RANK_RANGE_TO_END},
+    {"OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END",
+     .value.integer = OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END},
+    {"OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE",
+     .value.integer = OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE},
+    {"OP_MAP_REMOVE_BY_VALUE_REL_INDEX_RANGE",
+     .value.integer = OP_MAP_REMOVE_BY_VALUE_REL_INDEX_RANGE},
+    {"OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE",
+     .value.integer = OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE},
+    {"OP_MAP_GET_BY_KEY_REL_INDEX_RANGE",
+     .value.integer = OP_MAP_GET_BY_KEY_REL_INDEX_RANGE},
+    {"OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END",
+     .value.integer = OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END},
+    {"OP_MAP_GET_BY_INDEX_RANGE_TO_END",
+     .value.integer = OP_MAP_GET_BY_INDEX_RANGE_TO_END},
+    {"OP_MAP_GET_BY_RANK_RANGE_TO_END",
+     .value.integer = OP_MAP_GET_BY_RANK_RANGE_TO_END},
 
     {"MAP_UNORDERED", .value.integer = AS_MAP_UNORDERED},
     {"MAP_KEY_ORDERED", .value.integer = AS_MAP_KEY_ORDERED},
@@ -296,34 +351,6 @@ static struct module_constant_name_to_value module_constants[] = {
     {"LIST_ORDERED", .value.integer = AS_LIST_ORDERED},
     {"LIST_UNORDERED", .value.integer = AS_LIST_UNORDERED},
 
-    /* CDT operations for use with expressions, new in 5.0 */
-    {"OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL",
-     .value.integer = OP_MAP_REMOVE_BY_VALUE_RANK_RANGE_REL},
-    {"OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL",
-     .value.integer = OP_MAP_REMOVE_BY_KEY_INDEX_RANGE_REL},
-    {"OP_MAP_GET_BY_VALUE_RANK_RANGE_REL",
-     .value.integer = OP_MAP_GET_BY_VALUE_RANK_RANGE_REL},
-    {"OP_MAP_GET_BY_KEY_INDEX_RANGE_REL",
-     .value.integer = OP_MAP_GET_BY_KEY_INDEX_RANGE_REL},
-
-    {
-        "OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END",
-
-        .value.integer = OP_LIST_GET_BY_VALUE_RANK_RANGE_REL_TO_END,
-    },
-    {"OP_LIST_GET_BY_INDEX_RANGE_TO_END",
-     .value.integer = OP_LIST_GET_BY_INDEX_RANGE_TO_END},
-    {"OP_LIST_GET_BY_RANK_RANGE_TO_END",
-     .value.integer = OP_LIST_GET_BY_RANK_RANGE_TO_END},
-    {"OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END",
-     .value.integer = OP_LIST_REMOVE_BY_REL_RANK_RANGE_TO_END},
-    {"OP_LIST_REMOVE_BY_REL_RANK_RANGE",
-     .value.integer = OP_LIST_REMOVE_BY_REL_RANK_RANGE},
-    {"OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END",
-     .value.integer = OP_LIST_REMOVE_BY_INDEX_RANGE_TO_END},
-    {"OP_LIST_REMOVE_BY_RANK_RANGE_TO_END",
-     .value.integer = OP_LIST_REMOVE_BY_RANK_RANGE_TO_END},
-
     {"MAP_WRITE_NO_FAIL", .value.integer = AS_MAP_WRITE_NO_FAIL},
     {"MAP_WRITE_PARTIAL", .value.integer = AS_MAP_WRITE_PARTIAL},
 
@@ -342,6 +369,7 @@ static struct module_constant_name_to_value module_constants[] = {
     // AP Read Mode
     {"POLICY_READ_MODE_AP_ONE", .value.integer = AS_POLICY_READ_MODE_AP_ONE},
     {"POLICY_READ_MODE_AP_ALL", .value.integer = AS_POLICY_READ_MODE_AP_ALL},
+
     // SC Read Mode
     {"POLICY_READ_MODE_SC_SESSION",
      .value.integer = AS_POLICY_READ_MODE_SC_SESSION},
@@ -421,31 +449,6 @@ static struct module_constant_name_to_value module_constants[] = {
     {"HLL_WRITE_NO_FAIL", .value.integer = AS_HLL_WRITE_NO_FAIL},
     {"HLL_WRITE_ALLOW_FOLD", .value.integer = AS_HLL_WRITE_ALLOW_FOLD},
 
-    {"OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END",
-     .value.integer = OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE_TO_END},
-    {"OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END",
-     .value.integer = OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE_TO_END},
-    {"OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END",
-     .value.integer = OP_MAP_REMOVE_BY_INDEX_RANGE_TO_END},
-    {"OP_MAP_REMOVE_BY_RANK_RANGE_TO_END",
-     .value.integer = OP_MAP_REMOVE_BY_RANK_RANGE_TO_END},
-    {"OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END",
-     .value.integer = OP_MAP_GET_BY_KEY_REL_INDEX_RANGE_TO_END},
-    {"OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE",
-     .value.integer = OP_MAP_REMOVE_BY_KEY_REL_INDEX_RANGE},
-    {"OP_MAP_REMOVE_BY_VALUE_REL_INDEX_RANGE",
-     .value.integer = OP_MAP_REMOVE_BY_VALUE_REL_INDEX_RANGE},
-    {"OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE",
-     .value.integer = OP_MAP_REMOVE_BY_VALUE_REL_RANK_RANGE},
-    {"OP_MAP_GET_BY_KEY_REL_INDEX_RANGE",
-     .value.integer = OP_MAP_GET_BY_KEY_REL_INDEX_RANGE},
-    {"OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END",
-     .value.integer = OP_MAP_GET_BY_VALUE_RANK_RANGE_REL_TO_END},
-    {"OP_MAP_GET_BY_INDEX_RANGE_TO_END",
-     .value.integer = OP_MAP_GET_BY_INDEX_RANGE_TO_END},
-    {"OP_MAP_GET_BY_RANK_RANGE_TO_END",
-     .value.integer = OP_MAP_GET_BY_RANK_RANGE_TO_END},
-
     /* Expression operation constants 5.1.0 */
     {"OP_EXPR_READ", .value.integer = OP_EXPR_READ},
     {"OP_EXPR_WRITE", .value.integer = OP_EXPR_WRITE},
@@ -500,28 +503,31 @@ static struct module_constant_name_to_value module_constants[] = {
     {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};
 
 struct module_obj_name_to_creation_method {
-    // We define this instead of using the object's __name__
-    // because we don't want to deal with using a Unicode object's internal buffer
     const char *obj_name;
     PyObject *(*pyobject_creation_method)(void);
 };
 
 static struct module_obj_name_to_creation_method module_pyobjects[] = {
+    // We don't use object __name__ attributes because:
+    // 1. The modules' __name__ is the fully qualified name which includes the package name
+    // 2. Some of the objects have names different from the class name when accessed from the package
+    // 3. We don't want to deal with extracting an object's __name__ from a Unicode object.
+    // We have to make sure the Unicode object lives as long as we need its internal buffer
+    // It's easier to just use a C string directly
     {"exception", AerospikeException_New},
     {"predicates", AerospikePredicates_New},
     {"Client", (PyObject * (*)(void)) AerospikeClient_Ready},
     {"Query", (PyObject * (*)(void)) AerospikeQuery_Ready},
+    {"Scan", (PyObject * (*)(void)) AerospikeScan_Ready},
+    {"KeyOrderedDict", (PyObject * (*)(void)) AerospikeKeyOrderedDict_Ready},
     {"GeoJSON", (PyObject * (*)(void)) AerospikeGeospatial_Ready},
     {"null", (PyObject * (*)(void)) AerospikeNullObject_Ready},
     {"CDTWildcard", (PyObject * (*)(void)) AerospikeWildcardObject_Ready},
     {"CDTInfinite", (PyObject * (*)(void)) AerospikeInfiniteObject_Ready},
-    {"KeyOrderedDict", (PyObject * (*)(void)) AerospikeKeyOrderedDict_Ready},
-    {"Scan", (PyObject * (*)(void)) AerospikeScan_Ready},
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
-    // TODO: use macro for module name
     static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         .m_name = AEROSPIKE_MODULE_NAME,
@@ -555,13 +561,9 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         retval = PyModule_AddObject(py_aerospike_module,
                                     module_pyobjects[i].obj_name, py_member);
         if (retval == -1) {
-            goto MODULE_MEMBER_CLEANUP_ON_ERROR;
+            Py_DECREF(py_member);
+            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
-        continue;
-
-    MODULE_MEMBER_CLEANUP_ON_ERROR:
-        Py_DECREF(py_member);
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
     /*
@@ -571,12 +573,12 @@ PyMODINIT_FUNC PyInit_aerospike(void)
          i++) {
         if (module_constants[i].is_str_value == false) {
             retval = PyModule_AddIntConstant(py_aerospike_module,
-                                             module_constants[i].member_name,
+                                             module_constants[i].name,
                                              module_constants[i].value.integer);
         }
         else {
             retval = PyModule_AddStringConstant(
-                py_aerospike_module, module_constants[i].member_name,
+                py_aerospike_module, module_constants[i].name,
                 module_constants[i].value.string);
         }
 
