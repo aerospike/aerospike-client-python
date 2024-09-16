@@ -246,9 +246,9 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
  ******************************************************************************/
 static PyTypeObject AerospikeQuery_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-        FULLY_QUALIFIED_TYPE_NAME("aerospike.Query"), // tp_name
-    sizeof(AerospikeQuery),                           // tp_basicsize
-    0,                                                // tp_itemsize
+        FULLY_QUALIFIED_TYPE_NAME("Query"), // tp_name
+    sizeof(AerospikeQuery),                 // tp_basicsize
+    0,                                      // tp_itemsize
     (destructor)AerospikeQuery_Type_Dealloc,
     // tp_dealloc
     0, // tp_print
