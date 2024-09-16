@@ -625,6 +625,5 @@ GLOBAL_HOSTS_CLEANUP_ON_ERROR:
     Py_DECREF(py_global_hosts);
 MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_aerospike_module);
-    // Aerospike_Clear(py_aerospike_module);
     return NULL;
 }
