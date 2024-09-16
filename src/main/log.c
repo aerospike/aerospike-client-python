@@ -182,7 +182,7 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
 void Aerospike_Enable_Default_Logging()
 {
     // Invoke C API to set log level
-    as_log_set_level((as_log_level)LOG_LEVEL_ERROR);
+    as_log_set_level((as_log_level)AS_LOG_LEVEL_ERROR);
     // Register callback to C-SDK
     as_log_set_callback((as_log_callback)console_log_cb);
 
