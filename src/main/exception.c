@@ -338,6 +338,7 @@ PyObject *AerospikeException_New(void)
 
         PyObject *py_code = NULL;
         if (exception_def.code == NO_ERROR_CODE) {
+            Py_INCREF(Py_None);
             py_code = Py_None;
         }
         else {
