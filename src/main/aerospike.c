@@ -497,8 +497,8 @@ static struct module_constant_name_to_value module_constants[] = {
     {"LOG_LEVEL_DEBUG", .value.integer = LOG_LEVEL_DEBUG},
     {"LOG_LEVEL_TRACE", .value.integer = LOG_LEVEL_TRACE},
 
-    {"JOB_SCAN", true, .value.string = "scan"},
-    {"JOB_QUERY", true, .value.string = "query"}};
+    {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
+    {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};
 
 struct module_obj_name_to_creation_method {
     // We define this instead of using the object's __name__
