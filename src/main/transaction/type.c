@@ -1,12 +1,6 @@
-#include <aerospike/as_txn.h>
-
 #include <Python.h>
 
-typedef struct {
-    PyObject_HEAD
-        /* Type-specific fields go here. */
-        as_txn *txn;
-} AerospikeTransaction;
+#include "types.h"
 
 static PyObject *AerospikeTransaction_id(AerospikeTransaction *self)
 {
@@ -40,7 +34,7 @@ static PyMethodDef AerospikeTransaction_methods[] = {
     {NULL} /* Sentinel */
 };
 
-static PyTypeObject AerospikeTransaction_Type = {
+PyTypeObject AerospikeTransaction_Type = {
     .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.Transaction",
     .tp_basicsize = sizeof(AerospikeTransaction),
     .tp_itemsize = 0,

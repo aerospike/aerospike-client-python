@@ -25,6 +25,7 @@
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_txn.h>
 #include "pool.h"
 
 // Bin names can be of type Unicode in Python
@@ -96,3 +97,11 @@ typedef struct {
 typedef struct {
     PyDictObject dict;
 } AerospikeKeyOrderedDict;
+
+typedef struct {
+    PyObject_HEAD
+        /* Type-specific fields go here. */
+        as_txn *txn;
+} AerospikeTransaction;
+
+extern PyTypeObject AerospikeTransaction_Type;

@@ -529,6 +529,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"truncate", (PyCFunction)AerospikeClient_Truncate,
      METH_VARARGS | METH_KEYWORDS, truncate_doc},
 
+    // Multi record transactions
+    {"commit", AerospikeClient_Commit, METH_VARARGS | METH_KEYWORDS},
+    {"abort", AerospikeClient_Abort, METH_VARARGS | METH_KEYWORDS},
+
     {NULL}};
 
 /*******************************************************************************
