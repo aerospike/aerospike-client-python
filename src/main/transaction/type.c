@@ -47,4 +47,4 @@ static PyTypeObject CustomType = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = AerospikeTransaction_new,
     .tp_methods = AerospikeTransaction_methods,
-    .tp_dealloc = AerospikeTransaction_dealloc};
+    .tp_dealloc = (destructor)AerospikeTransaction_dealloc};
