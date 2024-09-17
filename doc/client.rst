@@ -587,6 +587,30 @@ Single-Record Transactions
     .. index::
         single: User Defined Functions
 
+Multi-Record Transactions
+--------------------------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: commit(transaction_id: int) -> None:
+
+        Attempt to commit the given multi-record transaction. First, the expected record versions are
+        sent to the server nodes for verification. If all nodes return success, the transaction is
+        committed. Otherwise, the transaction is aborted.
+
+        Requires server version 8.0+
+
+        :param int transaction_id: Multi-record transaction id.
+
+    .. method:: abort(transaction_id: int) -> None:
+
+        Abort and rollback the given multi-record transaction.
+
+        Requires server version 8.0+
+
+        :param int transaction_id: Multi-record transaction id.
+
     .. _aerospike_udf_operations:
 
 User Defined Functions
