@@ -8,26 +8,12 @@ typedef struct {
         as_txn *txn;
 } AerospikeTransaction;
 
-static PyObject *AerospikeTransaction_name(AerospikeTransaction *self)
+static PyObject *AerospikeTransaction_id(AerospikeTransaction *self)
 {
     uint64_t id = self->txn->id;
     PyObject *py_id = PyLong_FromUnsignedLong(id);
     return py_id;
 }
-
-static PyMethodDef AerospikeTransaction_methods[] = {
-    {"id", (PyCFunction)AerospikeTransaction_name, METH_NOARGS,
-     "Return multi-record transaction ID"},
-    {NULL} /* Sentinel */
-};
-
-static PyTypeObject CustomType = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.Transaction",
-    .tp_basicsize = sizeof(AerospikeTransaction),
-    .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_new = AerospikeTransaction_new,
-    .tp_dealloc = AerospikeTransaction_dealloc};
 
 static void AerospikeTransaction_dealloc(AerospikeTransaction *self)
 {
@@ -47,3 +33,18 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
 
     return (PyObject *)self;
 }
+
+static PyMethodDef AerospikeTransaction_methods[] = {
+    {"id", (PyCFunction)AerospikeTransaction_id, METH_NOARGS,
+     "Return multi-record transaction ID"},
+    {NULL} /* Sentinel */
+};
+
+static PyTypeObject CustomType = {
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.Transaction",
+    .tp_basicsize = sizeof(AerospikeTransaction),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_new = AerospikeTransaction_new,
+    .tp_methods = AerospikeTransaction_methods,
+    .tp_dealloc = AerospikeTransaction_dealloc};
