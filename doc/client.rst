@@ -593,7 +593,7 @@ Multi-Record Transactions
 .. class:: Client
     :noindex:
 
-    .. method:: commit(transaction_id: int) -> None:
+    .. method:: commit(transaction: aerospike.Transaction) -> None:
 
         Attempt to commit the given multi-record transaction. First, the expected record versions are
         sent to the server nodes for verification. If all nodes return success, the transaction is
@@ -601,15 +601,15 @@ Multi-Record Transactions
 
         Requires server version 8.0+
 
-        :param int transaction_id: Multi-record transaction id.
+        :param aerospike.Transaction transaction_id: Multi-record transaction.
 
-    .. method:: abort(transaction_id: int) -> None:
+    .. method:: abort(transaction_id: aerospike.Transaction) -> None:
 
         Abort and rollback the given multi-record transaction.
 
         Requires server version 8.0+
 
-        :param int transaction_id: Multi-record transaction id.
+        :param aerospike.Transaction transaction_id: Multi-record transaction.
 
     .. _aerospike_udf_operations:
 
