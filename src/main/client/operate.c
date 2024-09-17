@@ -970,7 +970,6 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
     }
 
 CLEANUP:
-    // This method will always set an exception's bin attribute to Python's None
     EXCEPTION_ON_ERROR();
 
     return py_result;
