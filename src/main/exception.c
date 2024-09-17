@@ -546,8 +546,17 @@ int raise_exception_with_api_call_extra_info(as_error *err,
         as_exc_extra_info *curr_pair = extra_info;
         while (curr_pair->attr_name != NULL) {
             if (PyObject_HasAttrString(py_exc_class, curr_pair->attr_name)) {
+                // Some API methods that raise an exception will set an attribute value to be NULL
+                // i.e operate() sets bin to be NULL when raising an exception
+                // We don't want those API methods to remove the attribute from the exception class, so just change to None
+                // TODO: make sure those API methods aren't deleting the attributes
+                if (curr_pair->py_value == NULL) {
+                    Py_INCREF(Py_None);
+                    curr_pair->py_value = Py_None;
+                }
                 retval = PyObject_SetAttrString(
                     py_exc_class, curr_pair->attr_name, curr_pair->py_value);
+                Py_DECREF(Py_None);
                 if (retval == -1) {
                     goto cleanup_err_tuple;
                 }
