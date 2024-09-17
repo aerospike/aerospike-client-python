@@ -601,7 +601,7 @@ Multi-Record Transactions
 
         Requires server version 8.0+
 
-        :param aerospike.Transaction transaction_id: Multi-record transaction.
+        :param aerospike.Transaction transaction: Multi-record transaction.
 
     .. method:: abort(transaction_id: aerospike.Transaction) -> None:
 
@@ -609,7 +609,7 @@ Multi-Record Transactions
 
         Requires server version 8.0+
 
-        :param aerospike.Transaction transaction_id: Multi-record transaction.
+        :param aerospike.Transaction transaction: Multi-record transaction.
 
     .. _aerospike_udf_operations:
 
