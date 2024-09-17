@@ -33,6 +33,7 @@
 #include "module_functions.h"
 #include "nullobject.h"
 #include "cdt_types.h"
+#include "transaction.h"
 #include <aerospike/as_log_macros.h>
 
 PyObject *py_global_hosts;
