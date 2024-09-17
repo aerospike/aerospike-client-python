@@ -545,15 +545,11 @@ int raise_exception_with_api_call_extra_info(as_error *err,
         as_exc_extra_info *curr_pair = extra_info;
         while (curr_pair->attr_name != NULL) {
             if (PyObject_HasAttrString(py_exc_class, curr_pair->attr_name)) {
+                // TODO: leave off from here
                 retval = PyObject_SetAttrString(
                     py_exc_class, curr_pair->attr_name, curr_pair->py_value);
                 if (retval == -1) {
-                    if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-                        PyErr_Clear();
-                    }
-                    else {
-                        goto cleanup_err_tuple;
-                    }
+                    goto cleanup_err_tuple;
                 }
             }
             curr_pair++;
