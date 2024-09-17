@@ -203,6 +203,13 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
     Aerospike_State(aerospike)->kdict = kdict;
 
+    PyTypeObject *transaction = AerospikeTransaction_Ready();
+    retval =
+        PyModule_AddObject(aerospike, "Transaction", (PyObject *)transaction);
+    if (retval == -1) {
+        goto CLEANUP;
+    }
+
     /*
 	 * Add constants to module.
 	 */

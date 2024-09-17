@@ -40,7 +40,7 @@ static PyMethodDef AerospikeTransaction_methods[] = {
     {NULL} /* Sentinel */
 };
 
-static PyTypeObject CustomType = {
+static PyTypeObject AerospikeTransaction_Type = {
     .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.Transaction",
     .tp_basicsize = sizeof(AerospikeTransaction),
     .tp_itemsize = 0,
@@ -48,3 +48,10 @@ static PyTypeObject CustomType = {
     .tp_new = AerospikeTransaction_new,
     .tp_methods = AerospikeTransaction_methods,
     .tp_dealloc = (destructor)AerospikeTransaction_dealloc};
+
+PyTypeObject *AerospikeTransaction_Ready()
+{
+    return PyType_Ready(&AerospikeTransaction_Type) == 0
+               ? &AerospikeTransaction_Type
+               : NULL;
+}
