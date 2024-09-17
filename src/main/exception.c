@@ -18,6 +18,7 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_log_macros.h>
 
 #include "conversions.h"
 #include <string.h>
@@ -471,7 +472,6 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
                 py_member_of_tuple = PyUnicode_FromString(err->file);
             }
             else {
-                // TODO: maybe create a helper method for this?
                 Py_INCREF(Py_None);
                 py_member_of_tuple = Py_None;
             }
@@ -489,8 +489,9 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
             py_member_of_tuple = PyBool_FromLong(err->in_doubt);
             break;
         default:
-            // TODO: log a warning that this codepath should not have executed
-            // Or throw an exception
+            // This codepath should not have executed
+            as_log_warn("Invalid index %d when creating a Python error tuple",
+                        i);
             break;
         }
 
@@ -545,7 +546,6 @@ int raise_exception_with_api_call_extra_info(as_error *err,
         as_exc_extra_info *curr_pair = extra_info;
         while (curr_pair->attr_name != NULL) {
             if (PyObject_HasAttrString(py_exc_class, curr_pair->attr_name)) {
-                // TODO: leave off from here
                 retval = PyObject_SetAttrString(
                     py_exc_class, curr_pair->attr_name, curr_pair->py_value);
                 if (retval == -1) {
@@ -568,7 +568,6 @@ finish:
     return retval;
 }
 
-// TODO: benchmark that this doesn't take up too much memory / disk space
 // Return -1 on error
 int raise_exception(as_error *err)
 {
