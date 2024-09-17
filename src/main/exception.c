@@ -435,12 +435,13 @@ error:
     return NULL;
 }
 
-// TODO: Create an enum instead?
-#define PY_EXCEPTION_CODE 0
-#define PY_EXCEPTION_MSG 1
-#define PY_EXCEPTION_FILE 2
-#define PY_EXCEPTION_LINE 3
-#define AS_PY_EXCEPTION_IN_DOUBT 4
+enum {
+    AS_PY_ERR_TUPLE_CODE = 0,
+    AS_PY_ERR_TUPLE_MSG = 1,
+    AS_PY_ERR_TUPLE_FILE = 2,
+    AS_PY_ERR_TUPLE_LINE = 3,
+    AS_PY_ERR_TUPLE_IN_DOUBT = 4
+};
 
 #define ERROR_TUPLE_SIZE 5
 
@@ -459,13 +460,13 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
     for (Py_ssize_t i = 0; i < size_of_py_tuple; i++) {
         PyObject *py_member_of_tuple = NULL;
         switch (i) {
-        case PY_EXCEPTION_CODE:
+        case AS_PY_ERR_TUPLE_CODE:
             py_member_of_tuple = PyLong_FromLongLong(err->code);
             break;
-        case PY_EXCEPTION_MSG:
+        case AS_PY_ERR_TUPLE_MSG:
             py_member_of_tuple = PyUnicode_FromString(err->message);
             break;
-        case PY_EXCEPTION_FILE:
+        case AS_PY_ERR_TUPLE_FILE:
             if (err->file) {
                 py_member_of_tuple = PyUnicode_FromString(err->file);
             }
@@ -475,7 +476,7 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
                 py_member_of_tuple = Py_None;
             }
             break;
-        case PY_EXCEPTION_LINE:
+        case AS_PY_ERR_TUPLE_LINE:
             if (err->line > 0) {
                 py_member_of_tuple = PyLong_FromLong(err->line);
             }
@@ -484,13 +485,17 @@ PyObject *create_pytuple_using_as_error(const as_error *err)
                 py_member_of_tuple = Py_None;
             }
             break;
-        case AS_PY_EXCEPTION_IN_DOUBT:
+        case AS_PY_ERR_TUPLE_IN_DOUBT:
             py_member_of_tuple = PyBool_FromLong(err->in_doubt);
+            break;
+        default:
+            // TODO: log a warning that this codepath should not have executed
+            // Or throw an exception
             break;
         }
 
-        // TODO: error case where i is out of bounds?
         if (py_member_of_tuple == NULL) {
+            // One of the above methods to create the member failed
             goto CLEANUP_TUPLE_ON_ERROR;
         }
 
