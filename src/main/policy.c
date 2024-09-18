@@ -770,7 +770,13 @@ int set_as_policy_fields_using_pyobject(as_error *err, void *policy_ref,
 
     struct policy_field *curr_field;
     while (curr_field != NULL) {
-        PyObject *py_field_value = PyDict_GetItem(py_policy, curr_field->name);
+        PyObject *py_field_name = PyUnicode_FromString(curr_field->name);
+        if (py_field_name == NULL) {
+            goto error;
+        }
+        PyObject *py_field_value =
+            PyDict_GetItemWithError(py_policy, py_field_name);
+        Py_DECREF(py_field_name);
         if (py_field_value == NULL) {
             if (PyErr_Occurred()) {
                 goto error;
