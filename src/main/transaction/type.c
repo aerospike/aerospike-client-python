@@ -58,8 +58,7 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
             // TODO: deallocate
             return NULL;
         }
-        self->txn =
-            as_txn_create_capacity(py_reads_capacity, py_writes_capacity);
+        self->txn = as_txn_create_capacity(reads_capacity, writes_capacity);
     }
     else {
         self->txn = as_txn_create();
