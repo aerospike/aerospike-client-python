@@ -138,6 +138,7 @@ jobs:
         cp src/main/nullobject/*.c build/temp*/src/main/nullobject/src/main/nullobject/
         cp src/main/query/*.c build/temp*/src/main/query/src/main/query/
         cp src/main/scan/*.c build/temp*/src/main/scan/src/main/scan/
+        cp src/main/transaction/*.c build/temp*/src/main/transaction/src/main/transaction/
 
     - name: Generate coverage report for all object files
       if: ${{ !cancelled() }}
