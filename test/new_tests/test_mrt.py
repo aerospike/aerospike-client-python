@@ -1,22 +1,26 @@
 import aerospike
 from aerospike import exception as e
 import pytest
+from contextlib import nullcontext
 # from aerospike.Client import abort, commit
 
 
 @pytest.mark.usefixtures("as_connection")
 class TestMRT:
     @pytest.mark.parametrize(
-        "args",
+        "args, context",
         [
-            [],
-            [256, 256]
+            ([], nullcontext),
+            ([256, 256], nullcontext),
+            ([256], pytest.raises((e.TypeError)))
         ]
     )
-    def test_transaction(self, args: list):
-        mrt = aerospike.Transaction(*args)
-        id = mrt.id()
-        assert type(id) == int
+    def test_transaction(self, args: list, context):
+        with context:
+            mrt = aerospike.Transaction(*args)
+        if context != nullcontext:
+            id = mrt.id()
+            assert type(id) == int
 
     @pytest.mark.parametrize(
         "args",
