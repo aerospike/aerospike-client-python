@@ -13,8 +13,10 @@ class TestMRT:
 
     @pytest.mark.parametrize(
         "args",
-        [],
-        ["string"]
+        [
+            [],
+            ["string"]
+        ]
     )
     def test_mrt_invalid_args(self, args: list):
         with pytest.raises(TypeError):
