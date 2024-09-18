@@ -16,6 +16,7 @@
 
 #include <Python.h>
 #include <stdbool.h>
+#include <stddef.h>
 
 #include <aerospike/as_error.h>
 #include <aerospike/as_exp.h>
@@ -725,23 +726,95 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-// TODO:
-// no config policy -> config policy -> transaction level policy
-as_status initialize_as_policy_from_pyobject(as_error *err,
-                                             as_policy_read *policy_ref,
-                                             PyObject *py_policy)
+// No way to store C types as C code using the standard library
+struct policy_field {
+    const char *name;
+    const char *type;
+    size_t offset_in_as_policy;
+};
+
+#define POLICY_FIELD_DEF(policy_type, field_type, field_name)                  \
+    {                                                                          \
+        #field_name, #field_type, offsetof(policy_type, field_name)            \
+    }
+
+static struct policy_field base_policy_fields[] = {
+    POLICY_FIELD_DEF(as_policy_base, uint32_t, total_timeout),
+    POLICY_FIELD_DEF(as_policy_base, uint32_t, socket_timeout),
+    POLICY_FIELD_DEF(as_policy_base, uint32_t, max_retries),
+    POLICY_FIELD_DEF(as_policy_base, uint32_t, sleep_between_retries),
+    POLICY_FIELD_DEF(as_policy_base, bool, compress),
+    {0}};
+
+static struct policy_field read_policy_fields[] = {
+    POLICY_FIELD_DEF(as_policy_read, as_policy_key, key),
+    POLICY_FIELD_DEF(as_policy_read, as_policy_replica, replica),
+    POLICY_FIELD_DEF(as_policy_read, bool, deserialize),
+    POLICY_FIELD_DEF(as_policy_read, int, read_touch_ttl_percent),
+    POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_ap, read_mode_ap),
+    POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_sc, read_mode_sc),
+    {0}};
+
+int set_as_policy_fields_using_pyobject(as_error *err, void *policy_ref,
+                                        PyObject *py_policy,
+                                        struct policy_field *policy_fields)
 {
     if (!py_policy || py_policy == Py_None) {
         // Use config-level policy
-        return AEROSPIKE_OK;
+        return 0;
     }
     else if (!PyDict_Check(py_policy)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "policy must be a dict");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
+        goto error;
     }
 
-    // TODO:???
-    // as_policy_read_copy(config_read_policy, policy);
+    struct policy_field *curr_field;
+    while (curr_field != NULL) {
+        PyObject *py_field_value =
+            PyDict_GetItemWithError(py_policy, curr_field->name);
+        if (py_field_value == NULL) {
+            if (PyErr_Occurred()) {
+                goto error;
+            }
+            // Key not found
+            continue;
+        }
+
+        // Convert Python field value to C-type value
+        void *as_policy_field_ref =
+            policy_ref + curr_field->offset_in_as_policy;
+        if (strcmp(curr_field->type, "uint32_t")) {
+            if (!PyLong_Check(py_field_value)) {
+                goto INCORRECT_TYPE_ERROR;
+            }
+            unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
+            if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
+                goto error;
+            }
+            // TODO: need to check that Python int is within 32 bit uint bounds
+            *((uint32_t *)as_policy_field_ref) = (uint32_t)field_value;
+        }
+        else if (strcmp(curr_field->type, "bool")) {
+            if (!PyBool_Check(py_field_value)) {
+                goto INCORRECT_TYPE_ERROR;
+            }
+            int retval = PyObject_IsTrue(py_field_value);
+            if (retval == -1) {
+                goto error;
+            }
+            *((bool *)as_policy_field_ref) = (bool)retval;
+        }
+
+        curr_field++;
+        continue;
+
+    INCORRECT_TYPE_ERROR:
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a %s",
+                        curr_field->name, curr_field->type);
+        break;
+    }
+error:
+    return -1;
 }
 
 /**
@@ -750,6 +823,7 @@ as_status initialize_as_policy_from_pyobject(as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
+// TODO: change return type?
 as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
                                   PyObject *py_policy, as_policy_read *policy,
                                   as_policy_read **policy_p,
@@ -761,28 +835,23 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
         POLICY_INIT(as_policy_read);
     }
 
+    // TODO: do we need to do this?
     //Initialize policy with global defaults
     as_policy_read_copy(config_read_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
+        int retval = set_as_policy_fields_using_pyobject(
+            err, &policy->base, py_policy, base_policy_fields);
+        if (retval == -1) {
+            return -1;
+        }
 
-        POLICY_SET_FIELD(key, as_policy_key);
-        POLICY_SET_FIELD(replica, as_policy_replica);
-        POLICY_SET_FIELD(deserialize, bool);
-        POLICY_SET_FIELD(read_touch_ttl_percent, int);
-
-        // 4.0.0 new policies
-        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
+        retval = set_as_policy_fields_using_pyobject(err, policy, py_policy,
+                                                     read_policy_fields);
+        if (retval == -1) {
+            return -1;
+        }
     }
 
     // Update the policy
