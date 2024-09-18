@@ -41,7 +41,7 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
 
     // Both reads and writes capacities must be specified,
     // or both must be omitted
-    if (py_reads_capacity == NULL ^ py_writes_capacity == NULL) {
+    if ((py_reads_capacity == NULL) ^ (py_writes_capacity == NULL)) {
         // TODO: deallocate
         return NULL;
     }
