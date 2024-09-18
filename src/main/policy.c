@@ -728,14 +728,16 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 
 // No way to store C types as C code using the standard library
 struct policy_field {
-    const char *name;
     const char *type;
+    const char *python_client_name;
     size_t offset_in_as_policy;
+    // Only set if python
+    const char *c_client_name;
 };
 
-#define POLICY_FIELD_DEF(policy_type, field_type, field_name)                  \
+#define POLICY_FIELD_DEF(policy_type, field_type, field_name, ...)             \
     {                                                                          \
-        #field_name, #field_type, offsetof(policy_type, field_name)            \
+        #field_type, #field_name, offsetof(policy_type, field_name)            \
     }
 
 static struct policy_field base_policy_fields[] = {
@@ -744,6 +746,7 @@ static struct policy_field base_policy_fields[] = {
     POLICY_FIELD_DEF(as_policy_base, uint32_t, max_retries),
     POLICY_FIELD_DEF(as_policy_base, uint32_t, sleep_between_retries),
     POLICY_FIELD_DEF(as_policy_base, bool, compress),
+    POLICY_FIELD_DEF(as_policy_base, as_exp *, expressions),
     {0}};
 
 static struct policy_field read_policy_fields[] = {
