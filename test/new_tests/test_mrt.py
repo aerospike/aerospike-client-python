@@ -40,7 +40,7 @@ class TestMRT:
     def test_commit_fail(self):
         mrt = aerospike.Transaction()
         self.as_connection.commit(mrt)
-        with pytest.raises(e.AerospikeError):
+        with pytest.raises(e.RollAlreadyAttempted):
             self.as_connection.commit(mrt)
 
     def test_abort(self):
@@ -50,7 +50,7 @@ class TestMRT:
     def test_abort_fail(self):
         mrt = aerospike.Transaction()
         self.as_connection.abort(mrt)
-        with pytest.raises(e.AerospikeError):
+        with pytest.raises(e.RollAlreadyAttempted):
             self.as_connection.abort(mrt)
 
     # TODO: global config and transaction level config have different codepaths (for now)
