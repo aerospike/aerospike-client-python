@@ -6,8 +6,15 @@ import pytest
 
 @pytest.mark.usefixtures("as_connection")
 class TestMRT:
+    @pytest.mark.parametrize(
+        "args",
+        [
+            [],
+            [256, 256]
+        ]
+    )
     def test_transaction(self):
-        mrt = aerospike.Transaction()
+        mrt = aerospike.Transaction(*args)
         id = mrt.id()
         assert type(id) == int
 

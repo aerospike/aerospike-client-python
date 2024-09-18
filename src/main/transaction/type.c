@@ -20,8 +20,31 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
 {
     AerospikeTransaction *self =
         (AerospikeTransaction *)type->tp_alloc(type, 0);
-    if (self != NULL) {
+    if (self == NULL) {
+        return self;
+    }
+
+    static char *kwlist[] = {"reads_capacity", "writes_capacity", NULL};
+    // We could use unsigned longs directly in the format string
+    // But then we can't tell if they were set or not by the user
+    // So we just use PyObjects for the optional args instead
+    PyObject *py_reads_capacity = NULL;
+    PyObject *py_writes_capacity = NULL;
+
+    // TODO: how to enforce 32-bit size limit
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist,
+                                    &py_reads_capacity,
+                                    &py_writes_capacity) == false) {
+        // TODO: Deallocate
+        return NULL;
+    }
+
+    if (py_reads_capacity && py_writes_capacity) {
         // TODO: how to check if this fails?
+        self->txn =
+            as_txn_create_capacity(py_reads_capacity, py_writes_capacity);
+    }
+    else {
         self->txn = as_txn_create();
     }
 
