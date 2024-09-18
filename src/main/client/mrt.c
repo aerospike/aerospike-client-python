@@ -14,7 +14,7 @@ static PyObject *call_c_client_mrt_method(
     static char *kwlist[] = {"transaction", NULL};
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O!:commit", kwlist,
-                                    AerospikeTransaction_Type,
+                                    &AerospikeTransaction_Type,
                                     (PyObject **)(&py_transaction)) == false) {
         return NULL;
     }
