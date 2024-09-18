@@ -48,3 +48,18 @@ class TestMRT:
         self.as_connection.abort(mrt)
         with pytest.raises(e.AerospikeError):
             self.as_connection.abort(mrt)
+
+    # TODO: global config and transaction level config have different codepaths (for now)
+    def test_basic_usage(self):
+        mrt = aerospike.Transaction()
+
+        policy = {
+            "txn": mrt
+        }
+        # TODO: reuse fixture from another test
+        key = ("test", "demo", 1)
+        key2 = ("test", "demo", 2)
+        self.as_connection.put(key, policy)
+        self.as_connection.get(key2, policy)
+
+        self.as_connection.commit(mrt)
