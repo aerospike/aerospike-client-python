@@ -21,7 +21,7 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
     AerospikeTransaction *self =
         (AerospikeTransaction *)type->tp_alloc(type, 0);
     if (self == NULL) {
-        return self;
+        return NULL;
     }
 
     static char *kwlist[] = {"reads_capacity", "writes_capacity", NULL};
