@@ -39,8 +39,25 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
         return NULL;
     }
 
-    if (py_reads_capacity && py_writes_capacity) {
-        // TODO: how to check if this fails?
+    // Both reads and writes capacities must be specified,
+    // or both must be omitted
+    if (py_reads_capacity == NULL ^ py_writes_capacity == NULL) {
+        // TODO: deallocate
+        return NULL;
+    }
+    else if (py_reads_capacity && py_writes_capacity) {
+        unsigned long reads_capacity =
+            (uint32_t)PyLong_AsUnsignedLong(py_reads_capacity);
+        if (PyErr_Occurred()) {
+            // TODO: deallocate
+            return NULL;
+        }
+        unsigned long writes_capacity =
+            (uint32_t)PyLong_AsUnsignedLong(py_writes_capacity);
+        if (PyErr_Occurred()) {
+            // TODO: deallocate
+            return NULL;
+        }
         self->txn =
             as_txn_create_capacity(py_reads_capacity, py_writes_capacity);
     }
