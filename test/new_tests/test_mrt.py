@@ -12,7 +12,7 @@ class TestMRT:
         [
             ([], nullcontext),
             ([256, 256], nullcontext),
-            ([256], pytest.raises((e.TypeError)))
+            ([256], pytest.raises((TypeError)))
         ]
     )
     def test_transaction(self, args: list, context):
