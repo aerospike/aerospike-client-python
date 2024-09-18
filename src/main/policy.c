@@ -768,7 +768,7 @@ int set_as_policy_fields_using_pyobject(as_error *err, void *policy_ref,
         goto error;
     }
 
-    struct policy_field *curr_field;
+    struct policy_field *curr_field = policy_fields;
     while (curr_field != NULL) {
         PyObject *py_field_name = PyUnicode_FromString(curr_field->name);
         if (py_field_name == NULL) {
