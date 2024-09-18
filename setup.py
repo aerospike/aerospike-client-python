@@ -367,7 +367,8 @@ setup(
                 'src/main/client/batch_apply.c',
                 'src/main/client/batch_read.c',
                 'src/main/client/metrics.c',
-                'src/main/transaction/type.c'
+                'src/main/transaction/type.c',
+                'src/main/client/mrt.c'
             ],
 
             # Compile
