@@ -95,21 +95,21 @@ static bool AerospikeClient_InfoAll_each(as_error *err, const as_node *node,
     Py_DECREF(py_res);
 
 CLEANUP:
-    if (udata_ptr->error.code != AEROSPIKE_OK) {
-        // TODO
-        raise_exception(&udata_ptr->error);
-        PyGILState_Release(gil_state);
-        return false;
-    }
-    if (err->code != AEROSPIKE_OK) {
-        // TODO
-        raise_exception(err);
-        PyGILState_Release(gil_state);
-        return false;
+    bool result = true;
+    if (udata_ptr->error.code != AEROSPIKE_OK || err->code != AEROSPIKE_OK) {
+        as_error *error;
+        if (udata_ptr->error.code != AEROSPIKE_OK) {
+            error = &udata_ptr->error;
+        }
+        else {
+            error = err;
+        }
+        raise_exception(error);
+        result = false;
     }
 
     PyGILState_Release(gil_state);
-    return true;
+    return result;
 }
 
 /**
