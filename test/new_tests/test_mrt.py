@@ -13,7 +13,7 @@ class TestMRT:
             [256, 256]
         ]
     )
-    def test_transaction(self):
+    def test_transaction(self, args: list):
         mrt = aerospike.Transaction(*args)
         id = mrt.id()
         assert type(id) == int
