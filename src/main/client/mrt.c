@@ -3,6 +3,7 @@
 #include <aerospike/aerospike_txn.h>
 #include "exceptions.h"
 #include "types.h"
+#include "client.h"
 
 PyObject *AerospikeClient_Commit(AerospikeClient *self, PyObject *args,
                                  PyObject *kwds)
