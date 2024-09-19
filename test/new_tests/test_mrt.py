@@ -16,14 +16,17 @@ class TestMRT:
     @pytest.mark.parametrize(
         "args, context",
         [
-            ([], nullcontext),
-            ([256, 256], nullcontext),
-            ([256], pytest.raises((TypeError)))
+            ({}, nullcontext),
+            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext),
+            ({"reads_capacity": 256}, pytest.raises((TypeError))),
+            ({"writes_capacity": 256}, pytest.raises((TypeError))),
+            ({"reads_capacity": "256", "writes_capacity": 256}, pytest.raises((TypeError))),
+            ({"reads_capacity": 256, "writes_capacity": "256"}, pytest.raises((TypeError))),
         ]
     )
-    def test_transaction(self, args: list, context):
+    def test_transaction(self, kwargs: list, context):
         with context:
-            mrt = aerospike.Transaction(*args)
+            mrt = aerospike.Transaction(**kwargs)
         if context != nullcontext:
             id = mrt.id()
             assert type(id) == int

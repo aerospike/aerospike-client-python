@@ -55,6 +55,14 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
             "Both reads capacity and writes capacity must be specified");
         goto error;
     }
+    else if (!PyLong_Check(py_reads_capacity)) {
+        PyErr_SetString(PyExc_TypeError, "Reads capacity must be an integer");
+        goto error;
+    }
+    else if (!PyLong_Check(py_writes_capacity)) {
+        PyErr_SetString(PyExc_TypeError, "Writes capacity must be an integer");
+        goto error;
+    }
 
     if (py_reads_capacity && py_writes_capacity) {
         unsigned long reads_capacity =
