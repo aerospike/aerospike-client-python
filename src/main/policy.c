@@ -869,13 +869,13 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         retval = set_as_policy_fields_using_pyobject(
-            err, &policy->base, py_policy, base_policy_fields, exp_list);
+            self, err, &policy->base, py_policy, base_policy_fields, exp_list);
         if (retval == -1) {
             return -1;
         }
 
-        retval = set_as_policy_fields_using_pyobject(err, policy, py_policy,
-                                                     read_policy_fields);
+        retval = set_as_policy_fields_using_pyobject(
+            self, err, policy, py_policy, read_policy_fields, NULL);
         if (retval == -1) {
             return -1;
         }
