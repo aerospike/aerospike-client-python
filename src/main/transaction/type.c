@@ -15,7 +15,10 @@ static PyObject *AerospikeTransaction_id(AerospikeTransaction *self)
 
 static void AerospikeTransaction_dealloc(AerospikeTransaction *self)
 {
-    as_txn_destroy(self->txn);
+    // Transaction object can be created but not initialized, so need to check
+    if (self->txn != NULL) {
+        as_txn_destroy(self->txn);
+    }
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -75,9 +78,15 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
         if (PyErr_Occurred()) {
             goto error;
         }
+        if (self->txn) {
+            as_txn_destroy(self->txn);
+        }
         self->txn = as_txn_create_capacity(reads_capacity, writes_capacity);
     }
     else {
+        if (self->txn) {
+            as_txn_destroy(self->txn);
+        }
         self->txn = as_txn_create();
     }
 
