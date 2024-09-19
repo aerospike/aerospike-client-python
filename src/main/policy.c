@@ -856,19 +856,19 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
                                   as_policy_read *config_read_policy,
                                   as_exp *exp_list, as_exp **exp_list_p)
 {
+    int retval = validate_py_policy(py_policy);
+    if (retval == -1) {
+        return -1;
+    }
 
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
         POLICY_INIT(as_policy_read);
     }
 
-    // TODO: do we need to do this?
-    //Initialize policy with global defaults
-    as_policy_read_copy(config_read_policy, policy);
-
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        int retval = set_as_policy_fields_using_pyobject(
+        retval = set_as_policy_fields_using_pyobject(
             err, &policy->base, py_policy, base_policy_fields, exp_list);
         if (retval == -1) {
             return -1;
