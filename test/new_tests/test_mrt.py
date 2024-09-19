@@ -44,7 +44,7 @@ class TestMRT:
             mrt_id = mrt.id()
             assert type(mrt_id) == int
         else:
-            assert excinfo.msg == err_msg
+            assert str(excinfo.value) == err_msg
 
     @pytest.mark.parametrize(
         "args",
