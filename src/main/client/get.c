@@ -49,7 +49,6 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
     // Aerospike Client Arguments
     as_error err;
     as_policy_read read_policy;
-    as_policy_read *read_policy_p = NULL;
     as_key key;
     as_record *rec = NULL;
 
@@ -101,8 +100,7 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
             AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        if (!read_policy_p ||
-            (read_policy_p && read_policy_p->key == AS_POLICY_KEY_DIGEST)) {
+        if (read_policy.key == AS_POLICY_KEY_DIGEST) {
             // This is a special case.
             // C-client returns NULL key, so to the user
             // response will be (<ns>, <set>, None, <digest>)

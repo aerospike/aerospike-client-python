@@ -49,7 +49,6 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     // Aerospike Client Arguments
     as_error err;
     as_policy_read read_policy;
-    as_policy_read *read_policy_p = NULL;
     as_key key;
     as_record *rec = NULL;
     // It's only safe to free the record if this succeeded.
