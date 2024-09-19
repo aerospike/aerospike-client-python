@@ -763,7 +763,7 @@ static struct policy_field read_policy_fields[] = {
 int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
                                         void *policy_ref, PyObject *py_policy,
                                         struct policy_field *policy_fields,
-                                        as_exp *exp_list)
+                                        as_exp *exp_list, as_exp **exp_list_p)
 {
     struct policy_field *curr_field = policy_fields;
     while (curr_field != NULL) {
@@ -814,7 +814,7 @@ int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
         else if (strcmp(curr_field->type, "as_exp*")) {
             if (convert_exp_list(self, py_field_value, &exp_list, err) ==
                 AEROSPIKE_OK) {
-                *((bool *)as_policy_field_ref) = (bool)retval;
+                *((as_exp **)as_policy_field_ref) = exp_list;
                 *exp_list_p = exp_list;
             }
         }
@@ -869,13 +869,14 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list);
+            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            exp_list_p);
         if (retval == -1) {
             return -1;
         }
 
         retval = set_as_policy_fields_using_pyobject(
-            self, err, policy, py_policy, read_policy_fields, NULL);
+            self, err, policy, py_policy, read_policy_fields, NULL, NULL);
         if (retval == -1) {
             return -1;
         }
