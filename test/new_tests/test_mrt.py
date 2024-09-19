@@ -17,8 +17,8 @@ class TestMRT:
     @pytest.mark.parametrize(
         "kwargs, context, err_msg",
         [
-            ({}, nullcontext, None),
-            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext, None),
+            ({}, nullcontext(), None),
+            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext(), None),
             (
                 {"reads_capacity": 256},
                 pytest.raises((TypeError)), "Both reads capacity and writes capacity must be specified"
@@ -40,7 +40,7 @@ class TestMRT:
     def test_transaction(self, kwargs: dict, context, err_msg: Optional[str]):
         with context as excinfo:
             mrt = aerospike.Transaction(**kwargs)
-        if context != nullcontext:
+        if err_msg is not None:
             id = mrt.id()
             assert type(id) == int
         else:
