@@ -48,7 +48,7 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Aerospike Client Arguments
     as_error err;
-    as_policy_read read_policy;
+    as_policy_read transaction_read_policy;
     as_key key;
     as_record *rec = NULL;
 
@@ -83,15 +83,16 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     // Convert python policy object to as_policy_exists
-    int retval = set_as_policy_read_from_pyobject(
-        self, &err, py_policy, &read_policy, &exp_list, &exp_list_p);
+    int retval = override_as_policy_read_fields_from_pyobject(
+        self, &err, py_policy, &transaction_read_policy, &exp_list,
+        &exp_list_p);
     if (retval != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
-    aerospike_key_get(self->as, &err, &read_policy, &key, &rec);
+    aerospike_key_get(self->as, &err, &transaction_read_policy, &key, &rec);
     Py_END_ALLOW_THREADS
     if (err.code == AEROSPIKE_OK) {
         record_initialised = true;
@@ -100,7 +101,7 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
             AEROSPIKE_OK) {
             goto CLEANUP;
         }
-        if (read_policy.key == AS_POLICY_KEY_DIGEST) {
+        if (transaction_read_policy.key == AS_POLICY_KEY_DIGEST) {
             // This is a special case.
             // C-client returns NULL key, so to the user
             // response will be (<ns>, <set>, None, <digest>)
@@ -171,8 +172,8 @@ PyObject *AerospikeClient_Get(AerospikeClient *self, PyObject *args,
     static char *kwlist[] = {"key", "policy", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist, &py_key,
-                                    &py_policy) == false) {
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O!:get", kwlist, &py_key,
+                                    &PyDict_Type, &py_policy) == false) {
         return NULL;
     }
 

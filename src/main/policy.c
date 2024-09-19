@@ -835,6 +835,8 @@ static bool is_valid_py_policy(as_error *err, PyObject *py_policy)
         return true;
     }
     if (!PyDict_Check(py_policy)) {
+        // TODO: leave this here for now for API backwards compatibility
+        // We can validate the policy type when parsing the args tuple
         as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
         return false;
     }
@@ -847,29 +849,27 @@ static bool is_valid_py_policy(as_error *err, PyObject *py_policy)
  * We assume that the error object and the policy object are already allocated
  * and initialized
  */
-int set_as_policy_read_from_pyobject(AerospikeClient *self, as_error *err,
-                                     PyObject *py_policy,
-                                     as_policy_read *transaction_policy,
-                                     as_exp *exp_list, as_exp **exp_list_p)
+int override_as_policy_read_fields_from_pyobject(
+    AerospikeClient *self, as_error *err, as_policy_read *as_policy,
+    PyObject *py_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
     if (is_valid_py_policy(err, py_policy) == false) {
         return -1;
     }
 
     if (py_policy && py_policy != Py_None) {
-        as_policy_read_init(transaction_policy);
+        as_policy_read_init(as_policy);
 
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &transaction_policy->base, py_policy, base_policy_fields,
+            self, err, &as_policy->base, py_policy, base_policy_fields,
             exp_list, exp_list_p);
         if (retval == -1) {
             return -1;
         }
 
         retval = set_as_policy_fields_using_pyobject(
-            self, err, transaction_policy, py_policy, read_policy_fields, NULL,
-            NULL);
+            self, err, as_policy, py_policy, read_policy_fields, NULL, NULL);
         if (retval == -1) {
             return -1;
         }
