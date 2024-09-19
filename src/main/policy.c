@@ -40,16 +40,7 @@
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"
 
-#define POLICY_INIT(__policy)                                                  \
-    as_error_reset(err);                                                       \
-    if (!py_policy || py_policy == Py_None) {                                  \
-        return err->code;                                                      \
-    }                                                                          \
-    if (!PyDict_Check(py_policy)) {                                            \
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,                       \
-                               "policy must be a dict");                       \
-    }                                                                          \
-    __policy##_init(policy);
+#define TRANSACTION_POLICY_INIT(__policy) __policy##_init(transaction_policy);
 
 #define POLICY_UPDATE() *policy_p = policy;
 
@@ -591,7 +582,7 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_admin);
+        TRANSACTION_POLICY_INIT(as_policy_admin);
     }
     //Initialize policy with global defaults
     as_policy_admin_copy(config_admin_policy, policy);
@@ -620,7 +611,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_apply);
+        TRANSACTION_POLICY_INIT(as_policy_apply);
     }
     //Initialize policy with global defaults
     as_policy_apply_copy(config_apply_policy, policy);
@@ -663,7 +654,7 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_info);
+        TRANSACTION_POLICY_INIT(as_policy_info);
     }
     //Initialize policy with global defaults
     as_policy_info_copy(config_info_policy, policy);
@@ -695,7 +686,7 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_query);
+        TRANSACTION_POLICY_INIT(as_policy_query);
     }
     //Initialize policy with global defaults
     as_policy_query_copy(config_query_policy, policy);
@@ -837,53 +828,52 @@ error:
     return -1;
 }
 
-static int validate_py_policy(PyObject *py_policy)
+// If not, return false and set err
+static bool is_valid_py_policy(as_error *err, PyObject *py_policy)
 {
     if (!py_policy || py_policy != Py_None) {
+        return true;
     }
+    if (!PyDict_Check(py_policy)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
+        return false;
+    }
+    return true;
 }
 
 /**
- * Converts a PyObject into an as_policy_read object.
- * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
+ * Initializes and sets as_policy_read instance using a PyObject
+ * Returns 0 on success. On error, return -1.
  * We assume that the error object and the policy object are already allocated
- * and initialized (although, we do reset the error object here).
+ * and initialized
  */
-// TODO: change return type?
-as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
-                                  PyObject *py_policy, as_policy_read *policy,
-                                  as_policy_read **policy_p,
-                                  as_policy_read *config_read_policy,
-                                  as_exp *exp_list, as_exp **exp_list_p)
+int set_as_policy_read_from_pyobject(AerospikeClient *self, as_error *err,
+                                     PyObject *py_policy,
+                                     as_policy_read *transaction_policy,
+                                     as_exp *exp_list, as_exp **exp_list_p)
 {
-    int retval = validate_py_policy(py_policy);
-    if (retval == -1) {
+    if (is_valid_py_policy(err, py_policy) == false) {
         return -1;
     }
 
     if (py_policy && py_policy != Py_None) {
-        // Initialize Policy
-        POLICY_INIT(as_policy_read);
-    }
+        as_policy_read_init(transaction_policy);
 
-    if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
-            exp_list_p);
+        int retval = set_as_policy_fields_using_pyobject(
+            self, err, &transaction_policy->base, py_policy, base_policy_fields,
+            exp_list, exp_list_p);
         if (retval == -1) {
             return -1;
         }
 
         retval = set_as_policy_fields_using_pyobject(
-            self, err, policy, py_policy, read_policy_fields, NULL, NULL);
+            self, err, transaction_policy, py_policy, read_policy_fields, NULL,
+            NULL);
         if (retval == -1) {
             return -1;
         }
     }
-
-    // Update the policy
-    POLICY_UPDATE();
 
     return err->code;
 }
@@ -903,7 +893,7 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_remove);
+        TRANSACTION_POLICY_INIT(as_policy_remove);
     }
     //Initialize policy with global defaults
     as_policy_remove_copy(config_remove_policy, policy);
@@ -948,7 +938,7 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_scan);
+        TRANSACTION_POLICY_INIT(as_policy_scan);
     }
     //Initialize policy with global defaults
     as_policy_scan_copy(config_scan_policy, policy);
@@ -990,7 +980,7 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_write);
+        TRANSACTION_POLICY_INIT(as_policy_write);
     }
     //Initialize policy with global defaults
     as_policy_write_copy(config_write_policy, policy);
@@ -1037,7 +1027,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_operate);
+        TRANSACTION_POLICY_INIT(as_policy_operate);
     }
     //Initialize policy with global defaults
     as_policy_operate_copy(config_operate_policy, policy);
@@ -1087,7 +1077,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
-        POLICY_INIT(as_policy_batch);
+        TRANSACTION_POLICY_INIT(as_policy_batch);
     }
     //Initialize policy with global defaults
     as_policy_batch_copy(config_batch_policy, policy);
@@ -1131,7 +1121,7 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          as_policy_batch_write **policy_p,
                                          as_exp *exp_list, as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_write);
+    TRANSACTION_POLICY_INIT(as_policy_batch_write);
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
@@ -1156,7 +1146,7 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         as_policy_batch_read **policy_p,
                                         as_exp *exp_list, as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_read);
+    TRANSACTION_POLICY_INIT(as_policy_batch_read);
 
     // Set policy fields
     POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -1179,7 +1169,7 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          as_policy_batch_apply **policy_p,
                                          as_exp *exp_list, as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_apply);
+    TRANSACTION_POLICY_INIT(as_policy_batch_apply);
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
@@ -1203,7 +1193,7 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           as_policy_batch_remove **policy_p,
                                           as_exp *exp_list, as_exp **exp_list_p)
 {
-    POLICY_INIT(as_policy_batch_remove);
+    TRANSACTION_POLICY_INIT(as_policy_batch_remove);
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
@@ -1225,7 +1215,7 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
                                  as_bit_policy *policy)
 {
     as_bit_policy_init(policy);
-    POLICY_INIT(as_bit_policy);
+    TRANSACTION_POLICY_INIT(as_bit_policy);
 
     PyObject *py_bit_flags =
         PyDict_GetItemString(py_policy, BIT_WRITE_FLAGS_KEY);
@@ -1249,7 +1239,7 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
                                  as_map_policy *policy)
 {
     // Initialize Policy
-    POLICY_INIT(as_map_policy);
+    TRANSACTION_POLICY_INIT(as_map_policy);
 
     // Defaults
     long map_order = AS_MAP_UNORDERED;

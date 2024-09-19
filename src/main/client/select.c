@@ -144,16 +144,15 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
     // Convert python policy object to as_policy_exists
-    pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-                            &self->as->config.policies.read, &exp_list,
-                            &exp_list_p);
-    if (err.code != AEROSPIKE_OK) {
+    int retval = set_as_policy_read_from_pyobject(
+        self, &err, py_policy, &read_policy, &exp_list, &exp_list_p);
+    if (retval != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
-    aerospike_key_select(self->as, &err, read_policy_p, &key,
+    aerospike_key_select(self->as, &err, &read_policy, &key,
                          (const char **)bins, &rec);
     Py_END_ALLOW_THREADS
 
