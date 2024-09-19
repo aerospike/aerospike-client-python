@@ -818,6 +818,12 @@ int set_as_policy_fields_using_pyobject(as_error *err, void *policy_ref,
             }
             *((bool *)as_policy_field_ref) = (bool)retval;
         }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Unable to parse %s of type %s",
+                            curr_field->python_client_name, curr_field->type);
+            break;
+        }
 
         curr_field++;
         continue;
