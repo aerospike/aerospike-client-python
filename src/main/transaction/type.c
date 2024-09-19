@@ -5,7 +5,11 @@
 static PyObject *AerospikeTransaction_id(AerospikeTransaction *self)
 {
     uint64_t id = self->txn->id;
-    PyObject *py_id = PyLong_FromUnsignedLong(id);
+    PyObject *py_id = PyLong_FromUnsignedLongLong(id);
+    if (py_id != NULL) {
+        return NULL;
+    }
+
     return py_id;
 }
 
@@ -23,7 +27,12 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
     if (self == NULL) {
         return NULL;
     }
+    return (PyObject *)self;
+}
 
+static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
+                                     PyObject *kwds)
+{
     static char *kwlist[] = {"reads_capacity", "writes_capacity", NULL};
     // We could use unsigned longs directly in the format string
     // But then we can't tell if they were set or not by the user
@@ -35,28 +44,28 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
     if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist,
                                     &py_reads_capacity,
                                     &py_writes_capacity) == false) {
-        // TODO: Deallocate
-        return NULL;
+        goto error;
     }
 
     // Both reads and writes capacities must be specified,
     // or both must be omitted
     if ((py_reads_capacity == NULL) ^ (py_writes_capacity == NULL)) {
-        // TODO: deallocate
-        return NULL;
+        PyErr_SetString(
+            PyExc_TypeError,
+            "Both reads capacity and writes capacity must be specified");
+        goto error;
     }
-    else if (py_reads_capacity && py_writes_capacity) {
+
+    if (py_reads_capacity && py_writes_capacity) {
         unsigned long reads_capacity =
             (uint32_t)PyLong_AsUnsignedLong(py_reads_capacity);
         if (PyErr_Occurred()) {
-            // TODO: deallocate
-            return NULL;
+            goto error;
         }
         unsigned long writes_capacity =
             (uint32_t)PyLong_AsUnsignedLong(py_writes_capacity);
         if (PyErr_Occurred()) {
-            // TODO: deallocate
-            return NULL;
+            goto error;
         }
         self->txn = as_txn_create_capacity(reads_capacity, writes_capacity);
     }
@@ -65,6 +74,8 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
     }
 
     return (PyObject *)self;
+error:
+    return -1;
 }
 
 static PyMethodDef AerospikeTransaction_methods[] = {
@@ -79,6 +90,7 @@ PyTypeObject AerospikeTransaction_Type = {
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = AerospikeTransaction_new,
+    .tp_init = AerospikeTransaction_init,
     .tp_methods = AerospikeTransaction_methods,
     .tp_dealloc = (destructor)AerospikeTransaction_dealloc};
 
