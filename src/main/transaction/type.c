@@ -81,7 +81,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
         self->txn = as_txn_create();
     }
 
-    return (PyObject *)self;
+    return 0;
 error:
     return -1;
 }
