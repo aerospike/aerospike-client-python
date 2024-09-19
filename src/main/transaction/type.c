@@ -98,7 +98,7 @@ PyTypeObject AerospikeTransaction_Type = {
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = AerospikeTransaction_new,
-    .tp_init = AerospikeTransaction_init,
+    .tp_init = (initproc)AerospikeTransaction_init,
     .tp_methods = AerospikeTransaction_methods,
     .tp_dealloc = (destructor)AerospikeTransaction_dealloc};
 
