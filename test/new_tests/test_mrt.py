@@ -40,9 +40,9 @@ class TestMRT:
     def test_transaction(self, kwargs: dict, context, err_msg: Optional[str]):
         with context as excinfo:
             mrt = aerospike.Transaction(**kwargs)
-        if err_msg is not None:
-            id = mrt.id()
-            assert type(id) == int
+        if err_msg is None:
+            mrt_id = mrt.id()
+            assert type(mrt_id) == int
         else:
             assert excinfo.msg == err_msg
 
