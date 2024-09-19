@@ -8,8 +8,8 @@ from .conftest import TestBaseClass
 
 @pytest.mark.usefixtures("as_connection")
 class TestMRT:
-    @pytest.fixture(scope="class")
-    def setup(self, as_connection):
+    @pytest.fixture(scope="class", autouse=True)
+    def setup_class(self, as_connection):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
             pytest.skip()
 
