@@ -3,6 +3,7 @@ from aerospike import exception as e
 import pytest
 from contextlib import nullcontext
 from .conftest import TestBaseClass
+from typing import Optional
 # from aerospike.Client import abort, commit
 
 
@@ -14,22 +15,36 @@ class TestMRT:
             pytest.skip()
 
     @pytest.mark.parametrize(
-        "args, context",
+        "args, context, err_msg",
         [
-            ({}, nullcontext),
-            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext),
-            ({"reads_capacity": 256}, pytest.raises((TypeError))),
-            ({"writes_capacity": 256}, pytest.raises((TypeError))),
-            ({"reads_capacity": "256", "writes_capacity": 256}, pytest.raises((TypeError))),
-            ({"reads_capacity": 256, "writes_capacity": "256"}, pytest.raises((TypeError))),
+            ({}, nullcontext, None),
+            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext, None),
+            (
+                {"reads_capacity": 256},
+                pytest.raises((TypeError)), "Both reads capacity and writes capacity must be specified"
+            ),
+            (
+                {"writes_capacity": 256},
+                pytest.raises((TypeError)), "Both reads capacity and writes capacity must be specified"
+            ),
+            (
+                {"reads_capacity": "256", "writes_capacity": 256},
+                pytest.raises((TypeError)), "Reads capacity must be an integer"
+            ),
+            (
+                {"reads_capacity": 256, "writes_capacity": "256"},
+                pytest.raises((TypeError)), "Writes capacity must be an integer"
+            ),
         ]
     )
-    def test_transaction(self, kwargs: list, context):
-        with context:
+    def test_transaction(self, kwargs: list, context, err_msg: Optional[str]):
+        with context as excinfo:
             mrt = aerospike.Transaction(**kwargs)
         if context != nullcontext:
             id = mrt.id()
             assert type(id) == int
+        else:
+            assert excinfo.msg == err_msg
 
     @pytest.mark.parametrize(
         "args",
