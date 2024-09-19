@@ -605,6 +605,41 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+static inline void check_and_set_txn_field(as_error *err,
+                                           as_policy_base *policy_base,
+                                           PyObject *py_policy)
+{
+    PyObject *py_txn_field_name = PyUnicode_FromString("txn");
+    if (py_txn_field_name == NULL) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to create Python string \"txn\"");
+        return;
+    }
+    PyObject *py_obj_txn =
+        PyDict_GetItemWithError(py_policy, py_txn_field_name);
+    Py_DECREF(py_txn_field_name);
+    PyTypeObject *py_expected_field_type = &AerospikeTransaction_Type;
+    if (py_obj_txn == NULL) {
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Getting the transaction field from Python policy "
+                            "dictionary returned a non-KeyError exception");
+            return;
+        }
+    }
+    else if (Py_TYPE(py_obj_txn) != py_expected_field_type) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "txn is not of type %s",
+                        py_expected_field_type->tp_name);
+        return;
+    }
+    else {
+        AerospikeTransaction *py_txn = (AerospikeTransaction *)py_obj_txn;
+        as_txn *txn = py_txn->txn;
+        policy_base->txn = txn;
+    }
+}
+
 /**
  * Converts a PyObject into an as_policy_apply object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
@@ -733,41 +768,6 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     POLICY_UPDATE();
 
     return err->code;
-}
-
-static inline void check_and_set_txn_field(as_error *err,
-                                           as_policy_base *policy_base,
-                                           PyObject *py_policy)
-{
-    PyObject *py_txn_field_name = PyUnicode_FromString("txn");
-    if (py_txn_field_name == NULL) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to create Python string \"txn\"");
-        return;
-    }
-    PyObject *py_obj_txn =
-        PyDict_GetItemWithError(py_policy, py_txn_field_name);
-    Py_DECREF(py_txn_field_name);
-    PyTypeObject *py_expected_field_type = &AerospikeTransaction_Type;
-    if (py_obj_txn == NULL) {
-        if (PyErr_Occurred()) {
-            PyErr_Clear();
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Getting the transaction field from Python policy "
-                            "dictionary returned a non-KeyError exception");
-            return;
-        }
-    }
-    else if (Py_TYPE(py_obj_txn) != py_expected_field_type) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "txn is not of type %s",
-                        py_expected_field_type->tp_name);
-        return;
-    }
-    else {
-        AerospikeTransaction *py_txn = (AerospikeTransaction *)py_obj_txn;
-        as_txn *txn = py_txn->txn;
-        policy_base->txn = txn;
-    }
 }
 
 /**
