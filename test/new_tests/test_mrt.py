@@ -2,11 +2,17 @@ import aerospike
 from aerospike import exception as e
 import pytest
 from contextlib import nullcontext
+from .conftest import TestBaseClass
 # from aerospike.Client import abort, commit
 
 
 @pytest.mark.usefixtures("as_connection")
 class TestMRT:
+    @pytest.fixture(scope="class")
+    def setup(self, as_connection):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
+            pytest.skip()
+
     @pytest.mark.parametrize(
         "args, context",
         [
