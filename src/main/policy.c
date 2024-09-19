@@ -40,7 +40,7 @@
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"
 
-#define TRANSACTION_POLICY_INIT(__policy) __policy##_init(transaction_policy);
+#define TRANSACTION_POLICY_INIT(__policy) __policy##_init(policy);
 
 #define POLICY_UPDATE() *policy_p = policy;
 
