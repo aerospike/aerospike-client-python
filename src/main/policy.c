@@ -850,26 +850,27 @@ static bool is_valid_py_policy(as_error *err, PyObject *py_policy)
  * and initialized
  */
 int override_as_policy_read_fields_from_pyobject(
-    AerospikeClient *self, as_error *err, as_policy_read *as_policy,
+    AerospikeClient *self, as_error *err, as_policy_read *policy,
     PyObject *py_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
     if (is_valid_py_policy(err, py_policy) == false) {
         return -1;
     }
 
+    // Override global config policy field values with transaction field values
+    as_policy_read_copy(
+        (const as_policy_read *)(&self->as->config.policies.read), policy);
     if (py_policy && py_policy != Py_None) {
-        as_policy_read_init(as_policy);
-
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &as_policy->base, py_policy, base_policy_fields,
-            exp_list, exp_list_p);
+            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            exp_list_p);
         if (retval == -1) {
             return -1;
         }
 
         retval = set_as_policy_fields_using_pyobject(
-            self, err, as_policy, py_policy, read_policy_fields, NULL, NULL);
+            self, err, policy, py_policy, read_policy_fields, NULL, NULL);
         if (retval == -1) {
             return -1;
         }
