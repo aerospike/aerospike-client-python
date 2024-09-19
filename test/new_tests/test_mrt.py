@@ -15,7 +15,7 @@ class TestMRT:
             pytest.skip()
 
     @pytest.mark.parametrize(
-        "args, context, err_msg",
+        "kwargs, context, err_msg",
         [
             ({}, nullcontext, None),
             ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext, None),
@@ -37,7 +37,7 @@ class TestMRT:
             ),
         ]
     )
-    def test_transaction(self, kwargs: list, context, err_msg: Optional[str]):
+    def test_transaction(self, kwargs: dict, context, err_msg: Optional[str]):
         with context as excinfo:
             mrt = aerospike.Transaction(**kwargs)
         if context != nullcontext:
