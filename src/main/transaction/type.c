@@ -6,7 +6,7 @@ static PyObject *AerospikeTransaction_id(AerospikeTransaction *self)
 {
     uint64_t id = self->txn->id;
     PyObject *py_id = PyLong_FromUnsignedLongLong(id);
-    if (py_id != NULL) {
+    if (py_id == NULL) {
         return NULL;
     }
 
