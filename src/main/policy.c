@@ -775,7 +775,7 @@ int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
                 goto error;
             }
             // Key not found
-            continue;
+            goto NEXT_FIELD;
         }
 
         // Convert Python field value to C-type value
@@ -816,6 +816,7 @@ int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
             break;
         }
 
+    NEXT_FIELD:
         curr_field++;
         continue;
 
