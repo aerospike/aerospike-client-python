@@ -1762,6 +1762,11 @@ Read Policies
 
             .. note:: Requires Aerospike server version >= 5.2.
 
+        * **txn** :class:`aerospike.Transaction`
+            Multi-record command identifier.
+
+            Default: :py:obj:`None`
+
 .. _aerospike_operate_policies:
 
 Operate Policies
