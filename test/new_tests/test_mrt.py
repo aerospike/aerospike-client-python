@@ -9,8 +9,8 @@ from typing import Optional
 
 @pytest.mark.usefixtures("as_connection")
 class TestMRT:
-    @pytest.fixture(scope="class", autouse=True)
-    def setup_class(self, as_connection):
+    @pytest.fixture
+    def requires_server_mrt_support(self, as_connection):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
             pytest.skip()
 
@@ -57,28 +57,28 @@ class TestMRT:
         with pytest.raises(TypeError):
             self.as_connection.commit(*args)
 
-    def test_commit(self):
+    def test_commit(self, requires_server_mrt_support):
         mrt = aerospike.Transaction()
         self.as_connection.commit(mrt)
 
-    def test_commit_fail(self):
+    def test_commit_fail(self, requires_server_mrt_support):
         mrt = aerospike.Transaction()
         self.as_connection.commit(mrt)
         with pytest.raises(e.RollAlreadyAttempted):
             self.as_connection.commit(mrt)
 
-    def test_abort(self):
+    def test_abort(self, requires_server_mrt_support):
         mrt = aerospike.Transaction()
         self.as_connection.abort(mrt)
 
-    def test_abort_fail(self):
+    def test_abort_fail(self, requires_server_mrt_support):
         mrt = aerospike.Transaction()
         self.as_connection.abort(mrt)
         with pytest.raises(e.RollAlreadyAttempted):
             self.as_connection.abort(mrt)
 
     # TODO: global config and transaction level config have different codepaths (for now)
-    def test_basic_usage(self):
+    def test_basic_usage(self, requires_server_mrt_support):
         mrt = aerospike.Transaction()
 
         policy = {
