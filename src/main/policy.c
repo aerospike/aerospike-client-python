@@ -729,15 +729,16 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 // No way to store C types as C code using the standard library
 struct policy_field {
     const char *type;
-    const char *python_client_name;
-    size_t offset_in_as_policy;
-    // Only set if python
     const char *c_client_name;
+    size_t offset_in_as_policy;
+    // Only set if field name in Python client is different from that of C client
+    const char *python_client_name;
 };
 
-#define POLICY_FIELD_DEF(policy_type, field_type, field_name, ...)             \
+#define POLICY_FIELD_DEF(policy_type, field_type, c_client_field_name, ...)    \
     {                                                                          \
-        #field_type, #field_name, offsetof(policy_type, field_name)            \
+        #field_type, #c_client_field_name,                                     \
+            offsetof(policy_type, c_client_field_name), __VA_ARGS__            \
     }
 
 static struct policy_field base_policy_fields[] = {
@@ -746,7 +747,7 @@ static struct policy_field base_policy_fields[] = {
     POLICY_FIELD_DEF(as_policy_base, uint32_t, max_retries),
     POLICY_FIELD_DEF(as_policy_base, uint32_t, sleep_between_retries),
     POLICY_FIELD_DEF(as_policy_base, bool, compress),
-    POLICY_FIELD_DEF(as_policy_base, as_exp *, expressions),
+    POLICY_FIELD_DEF(as_policy_base, as_exp *, filter_exp, "expressions"),
     {0}};
 
 static struct policy_field read_policy_fields[] = {
@@ -773,7 +774,12 @@ int set_as_policy_fields_using_pyobject(as_error *err, void *policy_ref,
 
     struct policy_field *curr_field = policy_fields;
     while (curr_field != NULL) {
-        PyObject *py_field_name = PyUnicode_FromString(curr_field->name);
+        const char *python_client_field_name =
+            curr_field->python_client_name != NULL
+                ? curr_field->python_client_name
+                : curr_field->c_client_name;
+        PyObject *py_field_name =
+            PyUnicode_FromString(python_client_field_name);
         if (py_field_name == NULL) {
             goto error;
         }
@@ -818,7 +824,7 @@ int set_as_policy_fields_using_pyobject(as_error *err, void *policy_ref,
 
     INCORRECT_TYPE_ERROR:
         as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a %s",
-                        curr_field->name, curr_field->type);
+                        curr_field->python_client_name, curr_field->type);
         break;
     }
 error:
