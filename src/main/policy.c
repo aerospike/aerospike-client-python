@@ -813,7 +813,7 @@ int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "Unable to parse %s of type %s",
                             curr_field->python_client_name, curr_field->type);
-            break;
+            goto error;
         }
 
     NEXT_FIELD:
