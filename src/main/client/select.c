@@ -157,10 +157,10 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
 CLEANUP:
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-        ;
-    }
+    // if (exp_list_p) {
+    //     as_exp_destroy(exp_list_p);
+    //     ;
+    // }
 
     if (py_ustr) {
         Py_DECREF(py_ustr);

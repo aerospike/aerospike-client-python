@@ -114,10 +114,10 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-        ;
-    }
+    // if (exp_list_p) {
+    //     as_exp_destroy(exp_list_p);
+    //     ;
+    // }
 
     if (key_initialised == true) {
         // Destroy key only if it is initialised.

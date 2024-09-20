@@ -116,9 +116,9 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-    }
+    // if (exp_list_p) {
+    //     as_exp_destroy(exp_list_p);
+    // }
 
     if (key_initialised == true) {
         // Destroy the key if it is initialised successfully.
