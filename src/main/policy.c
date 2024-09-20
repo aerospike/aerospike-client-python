@@ -617,6 +617,107 @@ static struct policy_field base_policy_fields[] = {
     // Sentinel value: type name is NULL
     {0}};
 
+// static struct policy_field read_policy_fields[] = {
+//     POLICY_FIELD_DEF(as_policy_read, as_policy_key, key),
+//     POLICY_FIELD_DEF(as_policy_read, as_policy_replica, replica),
+//     POLICY_FIELD_DEF(as_policy_read, bool, deserialize),
+//     POLICY_FIELD_DEF(as_policy_read, int, read_touch_ttl_percent),
+//     POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_ap, read_mode_ap),
+//     POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_sc, read_mode_sc),
+//     {0}};
+
+// TODO: Client object needed to create C client expressions object
+int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
+                                        void *policy_ref, PyObject *py_policy,
+                                        struct policy_field *policy_fields,
+                                        as_exp *exp_list, as_exp **exp_list_p)
+{
+    struct policy_field *curr_field = policy_fields;
+    while (curr_field->type != NULL) {
+        const char *python_client_field_name =
+            curr_field->different_name_in_python != NULL
+                ? curr_field->different_name_in_python
+                : curr_field->name_in_c_client;
+        PyObject *py_field_name =
+            PyUnicode_FromString(python_client_field_name);
+        if (py_field_name == NULL) {
+            goto error;
+        }
+        PyObject *py_field_value =
+            PyDict_GetItemWithError(py_policy, py_field_name);
+        Py_DECREF(py_field_name);
+        if (py_field_value == NULL) {
+            if (PyErr_Occurred()) {
+                goto error;
+            }
+            // Key not found
+            goto NEXT_FIELD;
+        }
+
+        // Convert Python field value to C-type value
+        void *as_policy_field_ref =
+            policy_ref + curr_field->offset_in_as_policy;
+        if (!strcmp(curr_field->type, "uint32_t")) {
+            if (!PyLong_Check(py_field_value)) {
+                goto INCORRECT_TYPE_ERROR;
+            }
+            unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
+            if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
+                goto error;
+            }
+            // TODO: need to check that Python int is within 32 bit uint bounds
+            *((uint32_t *)as_policy_field_ref) = (uint32_t)field_value;
+        }
+        else if (!strcmp(curr_field->type, "bool")) {
+            if (!PyBool_Check(py_field_value)) {
+                goto INCORRECT_TYPE_ERROR;
+            }
+            int retval = PyObject_IsTrue(py_field_value);
+            if (retval == -1) {
+                goto error;
+            }
+            *((bool *)as_policy_field_ref) = (bool)retval;
+        }
+        else if (!strcmp(curr_field->type, "as_exp *")) {
+            if (convert_exp_list(self, py_field_value, &exp_list, err) ==
+                AEROSPIKE_OK) {
+                *((as_exp **)as_policy_field_ref) = exp_list;
+                *exp_list_p = exp_list;
+            }
+        }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Unable to parse %s of type %s",
+                            python_client_field_name, curr_field->type);
+            goto error;
+        }
+
+    NEXT_FIELD:
+        curr_field++;
+        continue;
+
+    INCORRECT_TYPE_ERROR:
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a %s",
+                        python_client_field_name, curr_field->type);
+        break;
+    }
+error:
+    return -1;
+}
+
+// Can be NULL, Py_None, or a dictionary
+// If not, return false and set err
+static bool is_valid_py_policy(as_error *err, PyObject *py_policy)
+{
+    if (py_policy && py_policy != Py_None && !PyDict_Check(py_policy)) {
+        // TODO: leave this here for now for API backwards compatibility
+        // We can validate the policy type when parsing the args tuple
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
+        return false;
+    }
+    return true;
+}
+
 /**
  * Converts a PyObject into an as_policy_apply object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
@@ -718,107 +819,6 @@ int pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     POLICY_UPDATE();
 
     return err->code;
-}
-
-// static struct policy_field read_policy_fields[] = {
-//     POLICY_FIELD_DEF(as_policy_read, as_policy_key, key),
-//     POLICY_FIELD_DEF(as_policy_read, as_policy_replica, replica),
-//     POLICY_FIELD_DEF(as_policy_read, bool, deserialize),
-//     POLICY_FIELD_DEF(as_policy_read, int, read_touch_ttl_percent),
-//     POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_ap, read_mode_ap),
-//     POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_sc, read_mode_sc),
-//     {0}};
-
-// TODO: Client object needed to create C client expressions object
-int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
-                                        void *policy_ref, PyObject *py_policy,
-                                        struct policy_field *policy_fields,
-                                        as_exp *exp_list, as_exp **exp_list_p)
-{
-    struct policy_field *curr_field = policy_fields;
-    while (curr_field->type != NULL) {
-        const char *python_client_field_name =
-            curr_field->different_name_in_python != NULL
-                ? curr_field->different_name_in_python
-                : curr_field->name_in_c_client;
-        PyObject *py_field_name =
-            PyUnicode_FromString(python_client_field_name);
-        if (py_field_name == NULL) {
-            goto error;
-        }
-        PyObject *py_field_value =
-            PyDict_GetItemWithError(py_policy, py_field_name);
-        Py_DECREF(py_field_name);
-        if (py_field_value == NULL) {
-            if (PyErr_Occurred()) {
-                goto error;
-            }
-            // Key not found
-            goto NEXT_FIELD;
-        }
-
-        // Convert Python field value to C-type value
-        void *as_policy_field_ref =
-            policy_ref + curr_field->offset_in_as_policy;
-        if (!strcmp(curr_field->type, "uint32_t")) {
-            if (!PyLong_Check(py_field_value)) {
-                goto INCORRECT_TYPE_ERROR;
-            }
-            unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
-            if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
-                goto error;
-            }
-            // TODO: need to check that Python int is within 32 bit uint bounds
-            *((uint32_t *)as_policy_field_ref) = (uint32_t)field_value;
-        }
-        else if (!strcmp(curr_field->type, "bool")) {
-            if (!PyBool_Check(py_field_value)) {
-                goto INCORRECT_TYPE_ERROR;
-            }
-            int retval = PyObject_IsTrue(py_field_value);
-            if (retval == -1) {
-                goto error;
-            }
-            *((bool *)as_policy_field_ref) = (bool)retval;
-        }
-        else if (!strcmp(curr_field->type, "as_exp *")) {
-            if (convert_exp_list(self, py_field_value, &exp_list, err) ==
-                AEROSPIKE_OK) {
-                *((as_exp **)as_policy_field_ref) = exp_list;
-                *exp_list_p = exp_list;
-            }
-        }
-        else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "Unable to parse %s of type %s",
-                            python_client_field_name, curr_field->type);
-            goto error;
-        }
-
-    NEXT_FIELD:
-        curr_field++;
-        continue;
-
-    INCORRECT_TYPE_ERROR:
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "%s must be a %s",
-                        python_client_field_name, curr_field->type);
-        break;
-    }
-error:
-    return -1;
-}
-
-// Can be NULL, Py_None, or a dictionary
-// If not, return false and set err
-static bool is_valid_py_policy(as_error *err, PyObject *py_policy)
-{
-    if (py_policy && py_policy != Py_None && !PyDict_Check(py_policy)) {
-        // TODO: leave this here for now for API backwards compatibility
-        // We can validate the policy type when parsing the args tuple
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
-        return false;
-    }
-    return true;
 }
 
 /**
