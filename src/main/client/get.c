@@ -172,8 +172,8 @@ PyObject *AerospikeClient_Get(AerospikeClient *self, PyObject *args,
     static char *kwlist[] = {"key", "policy", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O!:get", kwlist, &py_key,
-                                    &PyDict_Type, &py_policy) == false) {
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:get", kwlist, &py_key,
+                                    &py_policy) == false) {
         return NULL;
     }
 
