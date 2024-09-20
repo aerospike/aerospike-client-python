@@ -86,8 +86,9 @@ class TestMRT:
         }
         # TODO: reuse fixture from another test
         key = ("test", "demo", 1)
+        bins = {"a": 1}
         key2 = ("test", "demo", 2)
-        self.as_connection.put(key, policy)
+        self.as_connection.put(key, bins, policy)
         self.as_connection.get(key2, policy)
 
         self.as_connection.commit(mrt)
