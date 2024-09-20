@@ -738,7 +738,7 @@ static struct policy_field base_policy_fields[] = {
     POLICY_FIELD_DEF(as_policy_base, uint32_t, max_retries),
     POLICY_FIELD_DEF(as_policy_base, uint32_t, sleep_between_retries),
     POLICY_FIELD_DEF(as_policy_base, bool, compress),
-    POLICY_FIELD_DEF(as_policy_base, as_exp *, filter_exp, "expressions"),
+    POLICY_FIELD_DEF(as_policy_base, as_exp*, filter_exp, "expressions"),
     // Sentinel value: type name is NULL
     {0}};
 
