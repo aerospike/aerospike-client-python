@@ -739,6 +739,7 @@ static struct policy_field base_policy_fields[] = {
     POLICY_FIELD_DEF(as_policy_base, uint32_t, sleep_between_retries),
     POLICY_FIELD_DEF(as_policy_base, bool, compress),
     POLICY_FIELD_DEF(as_policy_base, as_exp *, filter_exp, "expressions"),
+    // Sentinel value: type name is NULL
     {0}};
 
 static struct policy_field read_policy_fields[] = {
@@ -757,7 +758,7 @@ int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
                                         as_exp *exp_list, as_exp **exp_list_p)
 {
     struct policy_field *curr_field = policy_fields;
-    while (curr_field != NULL) {
+    while (curr_field->type != NULL) {
         const char *python_client_field_name =
             curr_field->python_client_name != NULL
                 ? curr_field->python_client_name
