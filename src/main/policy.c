@@ -830,13 +830,11 @@ error:
     return -1;
 }
 
+// Can be NULL, Py_None, or a dictionary
 // If not, return false and set err
 static bool is_valid_py_policy(as_error *err, PyObject *py_policy)
 {
-    if (!py_policy || py_policy != Py_None) {
-        return true;
-    }
-    if (!PyDict_Check(py_policy)) {
+    if (py_policy && py_policy != Py_None && !PyDict_Check(py_policy)) {
         // TODO: leave this here for now for API backwards compatibility
         // We can validate the policy type when parsing the args tuple
         as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
