@@ -592,6 +592,31 @@ int pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+// No way to store C types as C code using the standard library
+struct policy_field {
+    const char *type;
+    const char *name_in_c_client;
+    size_t offset_in_as_policy;
+    // Only set if field name in Python client is different from that of C client
+    const char *different_name_in_python;
+};
+
+#define POLICY_FIELD_DEF(policy_type, field_type, c_client_field_name, ...)    \
+    {                                                                          \
+        #field_type, #c_client_field_name,                                     \
+            offsetof(policy_type, c_client_field_name), __VA_ARGS__            \
+    }
+
+static struct policy_field base_policy_fields[] = {
+    POLICY_FIELD_DEF(as_policy_base, uint32_t, total_timeout),
+    POLICY_FIELD_DEF(as_policy_base, uint32_t, socket_timeout),
+    POLICY_FIELD_DEF(as_policy_base, uint32_t, max_retries),
+    POLICY_FIELD_DEF(as_policy_base, uint32_t, sleep_between_retries),
+    POLICY_FIELD_DEF(as_policy_base, bool, compress),
+    POLICY_FIELD_DEF(as_policy_base, as_exp *, filter_exp, "expressions"),
+    // Sentinel value: type name is NULL
+    {0}};
+
 /**
  * Converts a PyObject into an as_policy_apply object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
@@ -694,31 +719,6 @@ int pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 
     return err->code;
 }
-
-// No way to store C types as C code using the standard library
-struct policy_field {
-    const char *type;
-    const char *name_in_c_client;
-    size_t offset_in_as_policy;
-    // Only set if field name in Python client is different from that of C client
-    const char *different_name_in_python;
-};
-
-#define POLICY_FIELD_DEF(policy_type, field_type, c_client_field_name, ...)    \
-    {                                                                          \
-        #field_type, #c_client_field_name,                                     \
-            offsetof(policy_type, c_client_field_name), __VA_ARGS__            \
-    }
-
-static struct policy_field base_policy_fields[] = {
-    POLICY_FIELD_DEF(as_policy_base, uint32_t, total_timeout),
-    POLICY_FIELD_DEF(as_policy_base, uint32_t, socket_timeout),
-    POLICY_FIELD_DEF(as_policy_base, uint32_t, max_retries),
-    POLICY_FIELD_DEF(as_policy_base, uint32_t, sleep_between_retries),
-    POLICY_FIELD_DEF(as_policy_base, bool, compress),
-    POLICY_FIELD_DEF(as_policy_base, as_exp *, filter_exp, "expressions"),
-    // Sentinel value: type name is NULL
-    {0}};
 
 // static struct policy_field read_policy_fields[] = {
 //     POLICY_FIELD_DEF(as_policy_read, as_policy_key, key),
