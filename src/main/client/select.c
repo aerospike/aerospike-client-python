@@ -55,10 +55,6 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     bool select_succeeded = false;
     char **bins = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     // Initialisation flags
     bool key_initialised = false;
 

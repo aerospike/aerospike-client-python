@@ -828,6 +828,7 @@ int pyobject_to_policy_query(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized
  */
+// TODO: think this needs to return as_exp* so we can free later?
 int override_as_policy_read_fields_from_pyobject(AerospikeClient *self,
                                                  as_error *err,
                                                  as_policy_read *policy,

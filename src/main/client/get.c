@@ -53,8 +53,8 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
     as_record *rec = NULL;
 
     // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
+    // as_exp exp_list;
+    // as_exp *exp_list_p = NULL;
 
     // Initialised flags
     bool key_initialised = false;
