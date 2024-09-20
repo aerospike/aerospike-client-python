@@ -786,7 +786,7 @@ int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
             }
             *((bool *)as_policy_field_ref) = (bool)retval;
         }
-        else if (!strcmp(curr_field->type, "as_exp*")) {
+        else if (!strcmp(curr_field->type, "as_exp *")) {
             if (convert_exp_list(self, py_field_value, &exp_list, err) ==
                 AEROSPIKE_OK) {
                 *((as_exp **)as_policy_field_ref) = exp_list;
