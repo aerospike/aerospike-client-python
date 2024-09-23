@@ -18,6 +18,8 @@ on:
 
 jobs:
   upload-to-jfrog:
+    env:
+      ARTIFACT_FOLDER_PATH: artifacts
     name: Upload artifacts to JFrog
     runs-on: ubuntu-22.04
     steps:
@@ -26,7 +28,7 @@ jobs:
       with:
         pattern: '*.build'
         merge-multiple: true
-        path: artifacts
+        path: ${{ env.ARTIFACT_FOLDER_PATH }}
 
     - name: Set up JFrog credentials
       uses: jfrog/setup-jfrog-cli@v3
@@ -44,8 +46,7 @@ jobs:
     - name: Upload artifacts to JFrog
       # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload ${{ env.JFROG_BUILD_OPTS }} "*" ${{ inputs.jfrog-repo-name }}/${{ env.REPO_FOLDER_PATH }}
-      working-directory: artifacts
+      run: jf rt upload ${{ env.JFROG_BUILD_OPTS }} "${{ env.ARTIFACT_FOLDER_PATH }}/*" ${{ inputs.jfrog-repo-name }}/${{ env.REPO_FOLDER_PATH }}
 
     - name: Publish build info
       if: ${{ env.JFROG_BUILD_OPTS != '' }}
