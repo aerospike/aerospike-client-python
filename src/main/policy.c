@@ -627,11 +627,12 @@ static struct policy_field base_policy_fields[] = {
 //     {0}};
 
 // TODO: Client object needed to create C client expressions object
+// Maybe we don't need reference to it?
+// Return reference to as_exp* list so we can free it later
 int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
                                         void *policy_ref, PyObject *py_policy,
                                         struct policy_field *policy_fields,
-                                        as_exp *exp_list_unused,
-                                        as_exp **exp_list_p_unused)
+                                        as_exp **exp_list_ref)
 {
     struct policy_field *curr_field = policy_fields;
     while (curr_field->type != NULL) {
@@ -684,6 +685,7 @@ int set_as_policy_fields_using_pyobject(AerospikeClient *self, as_error *err,
             if (convert_exp_list(self, py_field_value, &exp_list, err) ==
                 AEROSPIKE_OK) {
                 *((as_exp **)as_policy_field_ref) = exp_list;
+                *exp_list_ref = exp_list;
             }
         }
         else {
@@ -823,16 +825,16 @@ int pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 }
 
 /**
- * Initializes and sets as_policy_read instance using a PyObject
+ * Initializes and sets as_policy_read instance using a Python policy dictionary
  * Returns 0 on success. On error, return -1.
- * We assume that the error object and the policy object are already allocated
- * and initialized
+ * 
  */
 // TODO: think this needs to return as_exp* so we can free later?
 int override_as_policy_read_fields_from_pyobject(AerospikeClient *self,
                                                  as_error *err,
                                                  as_policy_read *policy,
-                                                 PyObject *py_policy)
+                                                 PyObject *py_policy,
+                                                 as_exp **exp_list_ref)
 {
     if (is_valid_py_policy(err, py_policy) == false) {
         return -1;
@@ -844,8 +846,8 @@ int override_as_policy_read_fields_from_pyobject(AerospikeClient *self,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, NULL,
-            NULL);
+            self, err, &policy->base, py_policy, base_policy_fields,
+            exp_list_ref);
         if (retval == -1) {
             return -1;
         }

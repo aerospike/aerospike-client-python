@@ -53,8 +53,7 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
     as_record *rec = NULL;
 
     // For converting expressions.
-    // as_exp exp_list;
-    // as_exp *exp_list_p = NULL;
+    as_exp *exp_list = NULL;
 
     // Initialised flags
     bool key_initialised = false;
@@ -84,7 +83,7 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Convert python policy object to as_policy_exists
     int retval = override_as_policy_read_fields_from_pyobject(
-        self, &err, &transaction_read_policy, py_policy);
+        self, &err, &transaction_read_policy, py_policy, &exp_list);
     if (retval != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -114,10 +113,9 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
 
 CLEANUP:
 
-    // if (exp_list_p) {
-    //     as_exp_destroy(exp_list_p);
-    //     ;
-    // }
+    if (exp_list) {
+        as_exp_destroy(exp_list);
+    }
 
     if (key_initialised == true) {
         // Destroy key only if it is initialised.

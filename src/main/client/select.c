@@ -55,6 +55,8 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     bool select_succeeded = false;
     char **bins = NULL;
 
+    as_exp *exp_list = NULL;
+
     // Initialisation flags
     bool key_initialised = false;
 
@@ -140,7 +142,7 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Convert python policy object to as_policy_exists
     int retval = override_as_policy_read_fields_from_pyobject(
-        self, &err, &read_policy, py_policy);
+        self, &err, &read_policy, py_policy, &exp_list);
     if (retval != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -157,10 +159,9 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
 CLEANUP:
-    // if (exp_list_p) {
-    //     as_exp_destroy(exp_list_p);
-    //     ;
-    // }
+    if (exp_list) {
+        as_exp_destroy(exp_list);
+    }
 
     if (py_ustr) {
         Py_DECREF(py_ustr);
