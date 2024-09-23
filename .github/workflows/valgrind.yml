@@ -20,15 +20,16 @@ on:
 
 env:
   PYTHON_TAG: cp38
-  PLATFORM_TAG: manylinux_x86_64
+  WHEEL_OS: manylinux
+  WHEEL_ARCH: x86_64
 
 jobs:
   # TODO: handle case where we run valgrind on a "central" branch
   look-for-wheel-in-jfrog:
+    if: ${{ github.ref_name != 'dev' && github.ref_name != 'stage' && github.ref_name != 'master' }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
       python-tag: ${{ env.PYTHON_TAG }}
-      platform-tag: ${{ env.PLATFORM_TAG }}
     env:
       JFROG_FILESPEC_NAME: jfrog-filespec.json
     runs-on: ubuntu-22.04
@@ -72,13 +73,16 @@ jobs:
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
       uses: actions/upload-artifact@v4
       with:
+        # Artifact name doesn't matter. Valgrind job downloads all artifacts to get the one wheel
         if-no-files-found: error
-        name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
         path: './.github/workflows/*.whl'
 
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
-    if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
+    # If previous job was skipped, we are running on a central branch
+    # Always build wheels from a central branch for now
+    # Or if we are running on a feature branch and could not find any wheels in JFrog, build and upload it to JFrog
+    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'skipped' || (needs.look-for-wheel-in-jfrog.result == 'success' && needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0)) }}
     uses: ./.github/workflows/build-wheels.yml
     with:
       python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
@@ -105,10 +109,6 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - name: Convert Python tag to Python version
-      run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
-      shell: bash
-
     - uses: actions/setup-python@v2
       with:
         python-version: '${{ env.PYTHON_VERSION }}'
@@ -116,7 +116,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: ${{ env.PYTHON_TAG }}-${{ env.PLATFORM_TAG }}.build
+        merge-multiple: true
 
     - name: Install client
       run: pip install ./*.whl
