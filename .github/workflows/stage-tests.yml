@@ -82,7 +82,7 @@ jobs:
     - run: echo "DISTRO_DOCKER_IMAGE_PLATFORM=${{ matrix.test-case[2] }}" >> $GITHUB_ENV
     - run: echo "PYTHON_VERSION=${{ matrix.test-case[3] }}" >> $GITHUB_ENV
 
-    - uses: ./.github/actions/get-artifact-for-testing
+    - uses: ./.github/actions/get-artifact-for-stage-tests
       with:
         get_from_jfrog: ${{ inputs.use_jfrog_builds }}
         # This input is only used if above input is true
@@ -169,7 +169,7 @@ jobs:
           test
           .github
 
-    - uses: ./.github/actions/get-artifact-for-testing
+    - uses: ./.github/actions/get-artifact-for-stage-tests
       with:
         # See comments in linux stage tests for how this works
         get_from_jfrog: ${{ inputs.use_jfrog_builds }}
