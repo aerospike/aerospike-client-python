@@ -78,7 +78,7 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
     key_initialised = true;
 
     // Convert python policy object to as_policy_exists
-    int retval = override_as_policy_read_fields_from_pyobject(
+    int retval = initialize_as_policy_read_using_py_policy_dict(
         self, &err, &read_policy, py_policy, &exp_list);
     if (retval != AEROSPIKE_OK) {
         goto CLEANUP;

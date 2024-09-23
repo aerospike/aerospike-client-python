@@ -617,14 +617,49 @@ static struct policy_field base_policy_fields[] = {
     // Sentinel value: type name is NULL
     {0}};
 
-// static struct policy_field read_policy_fields[] = {
-//     POLICY_FIELD_DEF(as_policy_read, as_policy_key, key),
-//     POLICY_FIELD_DEF(as_policy_read, as_policy_replica, replica),
-//     POLICY_FIELD_DEF(as_policy_read, bool, deserialize),
-//     POLICY_FIELD_DEF(as_policy_read, int, read_touch_ttl_percent),
-//     POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_ap, read_mode_ap),
-//     POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_sc, read_mode_sc),
-//     {0}};
+static struct policy_field read_policy_fields[] = {
+    POLICY_FIELD_DEF(as_policy_read, as_policy_key, key),
+    POLICY_FIELD_DEF(as_policy_read, as_policy_replica, replica),
+    POLICY_FIELD_DEF(as_policy_read, bool, deserialize),
+    POLICY_FIELD_DEF(as_policy_read, int, read_touch_ttl_percent),
+    POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_ap, read_mode_ap),
+    POLICY_FIELD_DEF(as_policy_read, as_policy_read_mode_sc, read_mode_sc),
+    {0}};
+
+static struct policy_field query_policy_fields[] = {
+    POLICY_FIELD_DEF(as_policy_query, bool, deserialize),
+    POLICY_FIELD_DEF(as_policy_query, as_policy_replica, replica),
+    POLICY_FIELD_DEF(as_policy_query, bool, short_query),
+    POLICY_FIELD_DEF(as_policy_query, as_query_duration, expected_duration),
+    {0}};
+
+static struct policy_field apply_policy_fields[] = {
+    POLICY_FIELD_DEF(as_policy_apply, as_policy_key, key),
+    POLICY_FIELD_DEF(as_policy_apply, as_policy_replica, replica),
+    POLICY_FIELD_DEF(as_policy_apply, as_policy_commit_level, commit_level),
+    POLICY_FIELD_DEF(as_policy_apply, bool, durable_delete),
+    POLICY_FIELD_DEF(as_policy_apply, uint32_t, ttl),
+};
+
+/*
+        POLICY_SET_FIELD(durable_delete, bool);
+        POLICY_SET_FIELD(records_per_second, uint32_t);
+        POLICY_SET_FIELD(max_records, uint64_t);
+        POLICY_SET_FIELD(replica, as_policy_replica);
+*/
+
+// TODO: maybe the C client has a way to enumerate the policy types
+enum as_policy_type {
+    AS_POLICY_TYPE_READ,
+    AS_POLICY_TYPE_WRITE,
+    AS_POLICY_TYPE_QUERY,
+    AS_POLICY_TYPE_APPLY
+};
+
+static struct policy_field *as_policy_type_to_policy_fields[] = {
+    [AS_POLICY_TYPE_READ] = read_policy_fields,
+    [AS_POLICY_TYPE_APPLY] = apply_policy_fields,
+    [AS_POLICY_TYPE_QUERY] = query_policy_fields};
 
 // TODO: Client object needed to create C client expressions object
 // Maybe we don't need reference to it?
@@ -708,57 +743,6 @@ error:
     return -1;
 }
 
-// Can be NULL, Py_None, or a dictionary
-// If not, return false and set err
-static bool is_valid_py_policy(as_error *err, PyObject *py_policy)
-{
-    if (py_policy && py_policy != Py_None && !PyDict_Check(py_policy)) {
-        // TODO: leave this here for now for API backwards compatibility
-        // We can validate the policy type when parsing the args tuple
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
-        return false;
-    }
-    return true;
-}
-
-/**
- * Converts a PyObject into an as_policy_apply object.
- * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
- * We assume that the error object and the policy object are already allocated
- * and initialized (although, we do reset the error object here).
- */
-int pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
-                             PyObject *py_policy, as_policy_apply *policy,
-                             as_policy_apply **policy_p,
-                             as_policy_apply *config_apply_policy,
-                             as_exp *exp_list, as_exp **exp_list_p)
-{
-    //Initialize policy with global defaults
-    as_policy_apply_copy(config_apply_policy, policy);
-
-    if (py_policy && py_policy != Py_None) {
-        // Set policy fields
-        int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields,
-            exp_list_p);
-        if (retval == -1) {
-            return -1;
-        }
-
-        POLICY_SET_FIELD(key, as_policy_key);
-        POLICY_SET_FIELD(replica, as_policy_replica);
-        //POLICY_SET_FIELD(gen, as_policy_gen); removed
-        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
-        POLICY_SET_FIELD(durable_delete, bool);
-        POLICY_SET_FIELD(ttl, uint32_t);
-    }
-
-    // Update the policy
-    POLICY_UPDATE();
-
-    return err->code;
-}
-
 /**
  * Converts a PyObject into an as_policy_info object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
@@ -785,81 +769,57 @@ int pyobject_to_policy_info(as_error *err, PyObject *py_policy,
 }
 
 /**
- * Converts a PyObject into an as_policy_query object.
- * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
- * We assume that the error object and the policy object are already allocated
- * and initialized (although, we do reset the error object here).
- * exp_list are initialized by this function, caller must free.
- */
-int pyobject_to_policy_query(AerospikeClient *self, as_error *err,
-                             PyObject *py_policy, as_policy_query *policy,
-                             as_policy_query **policy_p,
-                             as_policy_query *config_query_policy,
-                             as_exp *exp_list, as_exp **exp_list_p)
-{
-    //Initialize policy with global defaults
-    as_policy_query_copy(config_query_policy, policy);
-
-    if (py_policy && py_policy != Py_None) {
-        // Set policy fields
-        int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields,
-            exp_list_p);
-        if (retval == -1) {
-            return -1;
-        }
-
-        POLICY_SET_FIELD(deserialize, bool);
-        POLICY_SET_FIELD(replica, as_policy_replica);
-
-        // C client 6.0.0
-        POLICY_SET_FIELD(short_query, bool);
-
-        POLICY_SET_FIELD(expected_duration, as_query_duration);
-    }
-
-    // Update the policy
-    POLICY_UPDATE();
-
-    return err->code;
-}
-
-/**
  * Initializes and sets as_policy_read instance using a Python policy dictionary
  * Returns 0 on success. On error, return -1.
- * 
  */
-// TODO: think this needs to return as_exp* so we can free later?
-int override_as_policy_read_fields_from_pyobject(AerospikeClient *self,
-                                                 as_error *err,
-                                                 as_policy_read *policy,
-                                                 PyObject *py_policy,
-                                                 as_exp **exp_list_ref)
+int initialize_as_policy_using_py_policy_dict(AerospikeClient *self,
+                                              as_error *err, void *policy,
+                                              enum as_policy_type policy_type,
+                                              PyObject *py_policy,
+                                              as_exp **exp_list_ref)
 {
-    if (is_valid_py_policy(err, py_policy) == false) {
+    if (py_policy && py_policy != Py_None && !PyDict_Check(py_policy)) {
+        // TODO: leave this here for now for API backwards compatibility
+        // We can validate the policy type when parsing the args tuple
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
         return -1;
     }
 
     // Override global config policy field values with transaction field values
-    as_policy_read_copy(
-        (const as_policy_read *)(&self->as->config.policies.read), policy);
+    as_policy_base *policy_base = NULL;
+    struct policy_field *policy_fields = NULL;
+    switch (policy_type) {
+    case AS_POLICY_TYPE_READ:
+        as_policy_read_copy(
+            (const as_policy_read *)(&self->as->config.policies.read),
+            (as_policy_read *)policy);
+        policy_base = &((as_policy_read *)policy)->base;
+        break;
+    case AS_POLICY_TYPE_QUERY:
+        as_policy_query_copy(
+            (const as_policy_query *)(&self->as->config.policies.query),
+            (as_policy_query *)policy);
+        policy_base = &((as_policy_query *)policy)->base;
+        break;
+    }
+
     if (py_policy && py_policy != Py_None) {
-        // Set policy fields
+        if (policy_base != NULL) {
+            int retval = set_as_policy_fields_using_pyobject(
+                self, err, policy_base, py_policy, base_policy_fields,
+                exp_list_ref);
+            if (retval == -1) {
+                return -1;
+            }
+        }
+
+        struct policy_field *policy_fields =
+            as_policy_type_to_policy_fields[policy_type];
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields,
-            exp_list_ref);
+            self, err, policy, py_policy, policy_fields, exp_list_ref);
         if (retval == -1) {
             return -1;
         }
-
-        POLICY_SET_FIELD(key, as_policy_key);
-        POLICY_SET_FIELD(replica, as_policy_replica);
-        POLICY_SET_FIELD(deserialize, bool);
-        POLICY_SET_FIELD(read_touch_ttl_percent, int);
-
-        // 4.0.0 new policies
-        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
     }
 
     return err->code;
@@ -912,9 +872,7 @@ int pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
  */
 int pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
                             PyObject *py_policy, as_policy_scan *policy,
-                            as_policy_scan **policy_p,
-                            as_policy_scan *config_scan_policy,
-                            as_exp *exp_list, as_exp **exp_list_p)
+                            as_exp *exp_list)
 {
     //Initialize policy with global defaults
     as_policy_scan_copy(config_scan_policy, policy);
@@ -927,11 +885,6 @@ int pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
         if (retval == -1) {
             return -1;
         }
-
-        POLICY_SET_FIELD(durable_delete, bool);
-        POLICY_SET_FIELD(records_per_second, uint32_t);
-        POLICY_SET_FIELD(max_records, uint64_t);
-        POLICY_SET_FIELD(replica, as_policy_replica);
     }
 
     // Update the policy

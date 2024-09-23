@@ -229,11 +229,11 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    as_policy_query *config_query_policy,
                                    as_exp *exp_list, as_exp **exp_list_p);
 
-int override_as_policy_read_fields_from_pyobject(AerospikeClient *self,
-                                                 as_error *err,
-                                                 as_policy_read *policy,
-                                                 PyObject *py_policy,
-                                                 as_exp **exp_list_ref);
+int initialize_as_policy_read_using_py_policy_dict(AerospikeClient *self,
+                                                   as_error *err,
+                                                   as_policy_read *policy,
+                                                   PyObject *py_policy,
+                                                   as_exp **exp_list_ref);
 
 as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
                                     PyObject *py_policy,
