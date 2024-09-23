@@ -20,8 +20,7 @@ on:
 
 env:
   PYTHON_TAG: cp38
-  WHEEL_OS: manylinux
-  WHEEL_ARCH: x86_64
+  PLATFORM_TAG: manylinux_x86_64
 
 jobs:
   # TODO: handle case where we run valgrind on a "central" branch
@@ -30,6 +29,7 @@ jobs:
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
       python-tag: ${{ env.PYTHON_TAG }}
+      platform-tag: ${{ env.PLATFORM_TAG }}
     env:
       JFROG_FILESPEC_NAME: jfrog-filespec.json
     runs-on: ubuntu-22.04
