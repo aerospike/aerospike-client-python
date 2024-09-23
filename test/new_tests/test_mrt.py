@@ -11,7 +11,7 @@ from typing import Optional
 class TestMRT:
     @pytest.fixture
     def requires_server_mrt_support(self, as_connection):
-        if TestBaseClass.enterprise_in_use() is False or (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
+        if TestBaseClass.enterprise_in_use() is False:
             pytest.skip()
 
     @pytest.mark.parametrize(
