@@ -46,7 +46,7 @@ jobs:
 
     - name: Get shortened commit hash of this workflow run
       # versioningit commit sha is always 8 chars long it seems
-      # We assume this prints out a sha that is unique and at most 8 chars
+      # We assume this prints out a sha that is at most 8 chars
       run: echo SHORT_GITHUB_SHA=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_ENV
 
     - name: Set filespec variables
@@ -108,6 +108,10 @@ jobs:
       with:
         submodules: recursive
         fetch-depth: 0
+
+    - name: Convert Python tag to Python version
+      run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
+      shell: bash
 
     - uses: actions/setup-python@v2
       with:
