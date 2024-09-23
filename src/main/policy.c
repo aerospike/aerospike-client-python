@@ -739,7 +739,7 @@ int pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            self, err, &policy->base, py_policy, base_policy_fields,
             exp_list_p);
         if (retval == -1) {
             return -1;
@@ -803,7 +803,7 @@ int pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            self, err, &policy->base, py_policy, base_policy_fields,
             exp_list_p);
         if (retval == -1) {
             return -1;
@@ -883,7 +883,7 @@ int pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            self, err, &policy->base, py_policy, base_policy_fields,
             exp_list_p);
         if (retval == -1) {
             return -1;
@@ -922,7 +922,7 @@ int pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            self, err, &policy->base, py_policy, base_policy_fields,
             exp_list_p);
         if (retval == -1) {
             return -1;
@@ -958,7 +958,7 @@ int pyobject_to_policy_write(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            self, err, &policy->base, py_policy, base_policy_fields,
             exp_list_p);
         if (retval == -1) {
             return -1;
@@ -997,7 +997,7 @@ int pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            self, err, &policy->base, py_policy, base_policy_fields,
             exp_list_p);
         if (retval == -1) {
             return -1;
@@ -1041,7 +1041,7 @@ int pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         int retval = set_as_policy_fields_using_pyobject(
-            self, err, &policy->base, py_policy, base_policy_fields, exp_list,
+            self, err, &policy->base, py_policy, base_policy_fields,
             exp_list_p);
         if (retval == -1) {
             return -1;
