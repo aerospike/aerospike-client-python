@@ -89,6 +89,10 @@ class TestMRT:
         bins = {"a": 1}
         key2 = ("test", "demo", 2)
         self.as_connection.put(key, bins, policy)
-        self.as_connection.get(key2, policy)
-
+        self.as_connection.put(key2, bins, policy)
         self.as_connection.commit(mrt)
+
+        # Did it work?
+        for key in [key, key2]:
+            _, _, bins = self.as_connection.get(key)
+            assert bins["a"] == 1
