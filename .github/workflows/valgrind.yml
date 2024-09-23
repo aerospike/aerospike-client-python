@@ -20,7 +20,6 @@ on:
 
 env:
   PYTHON_TAG: cp38
-  PLATFORM_TAG: manylinux_x86_64
 
 jobs:
   # TODO: handle case where we run valgrind on a "central" branch
@@ -28,8 +27,9 @@ jobs:
     if: ${{ github.ref_name != 'dev' && github.ref_name != 'stage' && github.ref_name != 'master' }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
+      # We want this environment variable to be available when calling a reusable workflow
+      # so we convert it to a job output so the reusable workflow can access it
       python-tag: ${{ env.PYTHON_TAG }}
-      platform-tag: ${{ env.PLATFORM_TAG }}
     env:
       JFROG_FILESPEC_NAME: jfrog-filespec.json
     runs-on: ubuntu-22.04
@@ -86,7 +86,7 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
     with:
       python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
-      platform-tag: ${{ needs.look-for-wheel-in-jfrog.outputs.platform-tag }}
+      platform-tag: manylinux_x86_64
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
