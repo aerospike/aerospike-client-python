@@ -558,6 +558,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
 
+        if (PyType_Check(py_member)) {
+            // Documentation example shows that we need to increment reference count for static types before adding to module
+            // It doesn't make clear why though
+            Py_INCREF(py_member);
+        }
         retval = PyModule_AddObject(py_aerospike_module,
                                     module_pyobjects[i].obj_name, py_member);
         if (retval == -1) {
