@@ -322,3 +322,19 @@ typedef struct {
 } PyListenerData;
 
 void free_py_listener_data(PyListenerData *py_listener_data);
+
+// TODO: maybe the C client has a way to enumerate the policy types
+enum as_policy_type {
+    AS_POLICY_TYPE_READ,
+    AS_POLICY_TYPE_WRITE,
+    AS_POLICY_TYPE_QUERY,
+    AS_POLICY_TYPE_APPLY,
+    AS_POLICY_TYPE_REMOVE,
+    AS_POLICY_TYPE_OPERATE,
+    AS_POLICY_TYPE_INFO,
+    AS_POLICY_TYPE_BATCH,
+    AS_POLICY_TYPE_BATCH_WRITE,
+    AS_POLICY_TYPE_BATCH_READ,
+    AS_POLICY_TYPE_BATCH_APPLY,
+    AS_POLICY_TYPE_BATCH_REMOVE
+};
