@@ -77,22 +77,42 @@ class TestMRT:
         with pytest.raises(e.RollAlreadyAttempted):
             self.as_connection.abort(mrt)
 
-    # TODO: global config and transaction level config have different codepaths (for now)
-    def test_basic_usage(self, requires_server_mrt_support):
-        mrt = aerospike.Transaction()
+    @pytest.fixture
+    def cleanup_records_before_test(self, request, as_connection):
+        self.keys = []
+        NUM_RECORDS = 5
+        for i in range(NUM_RECORDS):
+            key = ("test", "demo", i)
+            self.keys.append(key)
 
+        # Remove records before adding them because I don't trust that other tests have cleaned up properly
+        for key in self.keys:
+            try:
+                as_connection.remove(key)
+            except e.RecordNotFound:
+                pass
+
+        def teardown():
+            for key in self.keys:
+                try:
+                    as_connection.remove(key)
+                except e.RecordNotFound:
+                    pass
+
+        request.addfinalizer(teardown)
+
+    # TODO: global config and transaction level config have different codepaths (for now)
+    def test_basic_usage(self, requires_server_mrt_support, cleanup_records_before_test):
+        mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
         }
-        # TODO: reuse fixture from another test
-        key = ("test", "demo", 1)
         bins = {"a": 1}
-        key2 = ("test", "demo", 2)
-        self.as_connection.put(key, bins, policy)
-        self.as_connection.put(key2, bins, policy)
+        for i in range(len(self.keys)):
+            self.as_connection.put(self.keys[i], bins, policy)
         self.as_connection.commit(mrt)
 
         # Did it work?
-        for key in [key, key2]:
+        for key in self.keys:
             _, _, bins = self.as_connection.get(key)
-            assert bins["a"] == 1
+            assert bins == {"a": 1}
