@@ -508,8 +508,8 @@ struct submodule_name_to_creation_method {
 };
 
 static struct submodule_name_to_creation_method py_submodules[] = {
-    // We don't use object __name__ attributes because:
-    // 1. The modules' __name__ is the fully qualified name which includes the package name
+    // We don't use module's __name__ attribute
+    // because the modules' __name__ is the fully qualified name which includes the package name
     {"exception", AerospikeException_New},
     {"predicates", AerospikePredicates_New},
 };
@@ -520,8 +520,9 @@ struct type_name_to_creation_method {
 };
 
 static struct type_name_to_creation_method py_module_types[] = {
-    // 2. Some of the objects have names different from the class name when accessed from the package
-    // 3. We don't want to deal with extracting an object's __name__ from a Unicode object.
+    // We also don't retrieve the type's __name__ because:
+    // 1. Some of the objects have names different from the class name when accessed from the package
+    // 2. We don't want to deal with extracting an object's __name__ from a Unicode object.
     // We have to make sure the Unicode object lives as long as we need its internal buffer
     // It's easier to just use a C string directly
     {"Client", AerospikeClient_Ready},
