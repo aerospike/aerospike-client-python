@@ -559,9 +559,9 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     unsigned long i = 0;
     int retval;
     for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
-        PyObject *(*create_pyobject)(void) =
+        PyObject *(*create_py_submodule)(void) =
             py_submodules[i].pyobject_creation_method;
-        PyObject *py_submodule = create_pyobject();
+        PyObject *py_submodule = create_py_submodule();
         if (py_submodule == NULL) {
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
