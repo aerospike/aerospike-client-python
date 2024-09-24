@@ -841,6 +841,8 @@ error:
     return -1;
 }
 
+// TODO: create individual functions for each policy type
+// using an enum to represent types is an antipattern
 /**
  * Initializes and sets as_policy_read instance using a Python policy dictionary
  * Returns 0 on success. On error, return -1.

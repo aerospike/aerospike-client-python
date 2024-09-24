@@ -82,7 +82,7 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     // Convert python policy object to as_policy_exists
-    int retval = initialize_as_policy_read_using_py_policy_dict(
+    int retval = initialize_as_policy_using_py_policy_dict(
         self, &err, &transaction_read_policy, py_policy, &exp_list);
     if (retval != AEROSPIKE_OK) {
         goto CLEANUP;
