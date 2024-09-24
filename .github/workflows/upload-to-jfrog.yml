@@ -41,12 +41,13 @@ jobs:
       run: echo JFROG_BUILD_OPTS="--build-name python-client --build-number ${{ inputs.version }}" >> $GITHUB_ENV
 
     - name: Choose folder to upload artifacts to
-      run: echo REPO_FOLDER_PATH="${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME && format('aerospike/{0}', inputs.version) || github.ref_name }}/" >> $GITHUB_ENV
+      run: echo REPO_FOLDER_PATH="${{ inputs.jfrog-repo-name == vars.JFROG_REPO_NAME && format('aerospike/{0}/{1}', inputs.version, env.ARTIFACT_FOLDER_PATH) || github.ref_name }}/" >> $GITHUB_ENV
 
     - name: Upload artifacts to JFrog
       # Source path must be in quotes if it contains an asterisk
       # https://github.com/jfrog/jfrog-cli/issues/1775#issuecomment-1348986551
-      run: jf rt upload ${{ env.JFROG_BUILD_OPTS }} "${{ env.ARTIFACT_FOLDER_PATH }}/*" ${{ inputs.jfrog-repo-name }}/${{ env.REPO_FOLDER_PATH }}
+      run: jf rt upload ${{ env.JFROG_BUILD_OPTS }} "*" ${{ inputs.jfrog-repo-name }}/${{ env.REPO_FOLDER_PATH }}
+      working-directory: ${{ env.ARTIFACT_FOLDER_PATH }}
 
     - name: Publish build info
       if: ${{ env.JFROG_BUILD_OPTS != '' }}
