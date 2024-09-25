@@ -27,6 +27,9 @@
 #include <aerospike/as_operations.h>
 #include "pool.h"
 
+#define AEROSPIKE_MODULE_NAME "aerospike"
+#define FULLY_QUALIFIED_TYPE_NAME(name) AEROSPIKE_MODULE_NAME "." name
+
 // Bin names can be of type Unicode in Python
 // DB supports 32767 maximum number of bins
 #define MAX_UNICODE_OBJECTS 32767
