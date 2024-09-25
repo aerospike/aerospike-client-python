@@ -48,13 +48,9 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
     // Aerospike Client Arguments
     as_error err;
     as_policy_read read_policy;
-    as_policy_read *read_policy_p = NULL;
     as_key key;
     as_record *rec = NULL;
-
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
+    as_exp *exp_list = NULL;
 
     // Initialisation flags
     bool key_initialised = false;
@@ -81,17 +77,15 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
     // key is initialised successfully
     key_initialised = true;
 
-    // Convert python policy object to as_policy_exists
-    pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-                            &self->as->config.policies.read, &exp_list,
-                            &exp_list_p);
-    if (err.code != AEROSPIKE_OK) {
+    int retval = initialize_as_policy_using_py_policy_dict(
+        self, &err, &read_policy, AS_POLICY_TYPE_READ, py_policy, &exp_list);
+    if (retval != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
-    aerospike_key_exists(self->as, &err, read_policy_p, &key, &rec);
+    aerospike_key_exists(self->as, &err, &read_policy, &key, &rec);
     Py_END_ALLOW_THREADS
 
     if (err.code == AEROSPIKE_OK) {
@@ -122,8 +116,8 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
 
 CLEANUP:
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (exp_list) {
+        as_exp_destroy(exp_list);
     }
 
     if (key_initialised == true) {

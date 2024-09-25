@@ -207,11 +207,11 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    as_policy_query *config_query_policy,
                                    as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
-                                  PyObject *py_policy, as_policy_read *policy,
-                                  as_policy_read **policy_p,
-                                  as_policy_read *config_read_policy,
-                                  as_exp *exp_list, as_exp **exp_list_p);
+int initialize_as_policy_using_py_policy_dict(AerospikeClient *self,
+                                              as_error *err, void *policy,
+                                              enum as_policy_type policy_type,
+                                              PyObject *py_policy,
+                                              as_exp **exp_list_ref);
 
 as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
                                     PyObject *py_policy,
@@ -298,3 +298,19 @@ typedef struct {
 } PyListenerData;
 
 void free_py_listener_data(PyListenerData *py_listener_data);
+
+// TODO: maybe the C client has a way to enumerate the policy types
+enum as_policy_type {
+    AS_POLICY_TYPE_READ,
+    AS_POLICY_TYPE_WRITE,
+    AS_POLICY_TYPE_QUERY,
+    AS_POLICY_TYPE_APPLY,
+    AS_POLICY_TYPE_REMOVE,
+    AS_POLICY_TYPE_OPERATE,
+    AS_POLICY_TYPE_INFO,
+    AS_POLICY_TYPE_BATCH,
+    AS_POLICY_TYPE_BATCH_WRITE,
+    AS_POLICY_TYPE_BATCH_READ,
+    AS_POLICY_TYPE_BATCH_APPLY,
+    AS_POLICY_TYPE_BATCH_REMOVE
+};

@@ -84,6 +84,7 @@ PyObject *AerospikeClient_Remove_Invoke(AerospikeClient *self, PyObject *py_key,
         pyobject_to_policy_remove(
             self, &err, py_policy, &remove_policy, &remove_policy_p,
             &self->as->config.policies.remove, &exp_list, &exp_list_p);
+        remove_policy_p = &remove_policy;
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
