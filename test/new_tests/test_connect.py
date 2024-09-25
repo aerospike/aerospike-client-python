@@ -27,12 +27,6 @@ def open_as_connection(config):
 # adds cls.connection_config to this class
 @pytest.mark.usefixtures("connection_config")
 class TestConnect(object):
-    def test_version(self):
-        """
-        Check for aerospike vrsion
-        """
-        assert aerospike.__version__ is not None
-
     def test_connect_positive(self):
         """
         Invoke connect() with positive parameters.

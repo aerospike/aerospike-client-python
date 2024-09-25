@@ -75,49 +75,6 @@ jobs:
         name: wheel-${{ matrix.py-version }}
         path: ./dist/*.whl
 
-  test-memray:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: "3.8"
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-3.8
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
-
-    - name: Get number of tests
-      run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
-      working-directory: test
-
-    - name: Run tests
-      # Get number of tests since setting to 0 doesn't work properly
-      # pytest-memray currently throws a ZeroDivision error due to having a bug
-      # We ignore this for now
-      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }} || true
-      working-directory: test
-
   generate-coverage-report:
     runs-on: ubuntu-latest
     steps:
@@ -151,8 +108,6 @@ jobs:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - run: sleep 5
 
     - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
@@ -277,13 +232,13 @@ jobs:
     - name: Run Aerospike server
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
     - name: Create config.conf
       run: cp config.conf.template config.conf
       working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests
@@ -337,13 +292,13 @@ jobs:
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
     - name: Create config.conf
       run: cp config.conf.template config.conf
       working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests -vv
@@ -375,13 +330,13 @@ jobs:
     - name: Run lowest supported server
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
     - name: Create config.conf
       run: cp config.conf.template config.conf
       working-directory: test
+
+    - uses: ./.github/actions/wait-for-as-server-to-start
+      with:
+        container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests
@@ -415,9 +370,6 @@ jobs:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Wait for server to start
-      run: sleep 5
 
     - name: Run tests
       run: python -m pytest ./new_tests/test_admin_*.py
@@ -459,3 +411,43 @@ jobs:
     - name: Check spelling
       run: sphinx-build -b linkcheck . links
       working-directory: doc
+
+  test-metrics-node-close-listener:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+    - name: Download aerolab
+      run: wget https://github.com/aerospike/aerolab/releases/download/7.5.2/aerolab-linux-amd64-7.5.2.deb
+    - name: Install aerolab
+      run: sudo dpkg -i *.deb
+    - name: Tell aerolab to use Docker
+      run: aerolab config backend -t docker
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+    - run: python3 -m pip install *.whl
+    - run: python3 test_node_close_listener.py
+      working-directory: test/metrics
+
+  test-metrics-cluster-name:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+    - run: python3 -m pip install *.whl
+    - run: python3 -m pip install -r requirements.txt
+      working-directory: test/metrics
+    - run: python3 test_cluster_name.py
+      working-directory: test/metrics

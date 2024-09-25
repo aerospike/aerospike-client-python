@@ -4,8 +4,8 @@ the control of those automated tests.
 
 ## How to run tests
 
-- `test_node_close_listener.py` requires both Docker and Aerolab configured to use the former. aerolab must also be
-configured to use a `features.conf` that enables multiple node clusters.
+- `test_node_close_listener.py` requires both Docker and Aerolab configured to use the former. If tweaking the test to
+use multiple nodes, aerolab must also be configured to use a valid `features.conf`.
 
 Reason for test: `new_tests` does not manipulate the server.
 

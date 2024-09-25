@@ -1412,12 +1412,6 @@ Bin Types
 Miscellaneous
 -------------
 
-.. data:: __version__
-
-    A :class:`str` containing the module's version.
-
-    .. versionadded:: 1.0.54
-
 .. data:: UDF_TYPE_LUA
 
     UDF type is LUA (which is the only UDF type).
