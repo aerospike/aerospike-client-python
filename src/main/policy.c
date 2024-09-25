@@ -607,8 +607,9 @@ exit:
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_admin(as_error *err, PyObject *py_policy,
-                                   as_policy_admin *policy,
+as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
+                                   PyObject *py_policy, as_policy_admin *policy,
+                                   as_policy_admin **policy_p,
                                    as_policy_admin *config_admin_policy)
 {
 
