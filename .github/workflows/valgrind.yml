@@ -30,8 +30,6 @@ jobs:
       # We want this environment variable to be available when calling a reusable workflow
       # so we convert it to a job output so the reusable workflow can access it
       python-tag: ${{ env.PYTHON_TAG }}
-    env:
-      JFROG_FILESPEC_NAME: jfrog-filespec.json
     runs-on: ubuntu-22.04
     steps:
     - uses: jfrog/setup-jfrog-cli@v4
@@ -39,34 +37,29 @@ jobs:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
-    - uses: actions/checkout@v4
-      with:
-        sparse-checkout-cone-mode: false
-        sparse-checkout: .github/workflows/${{ env.JFROG_FILESPEC_NAME }}
-
     - name: Get shortened commit hash of this workflow run
       # versioningit commit sha is always 8 chars long it seems
-      # We assume this prints out a sha that is at most 8 chars
-      run: echo SHORT_GITHUB_SHA=$(git rev-parse --short ${{ github.sha }}) >> $GITHUB_ENV
-
-    - name: Set filespec variables
-      # TODO: set using env var?
-      run: echo SPEC_VARS_FLAG='--spec-vars="repo_name=${{ vars.JFROG_GENERIC_REPO_NAME }};branch=${{ github.ref_name }};commit_sha=${{ env.SHORT_GITHUB_SHA }};python_tag=${{ env.PYTHON_TAG }}"' >> $GITHUB_ENV
+      run: echo SHORT_GITHUB_SHA=$(echo ${{ github.sha }} | cut -c1-8) >> $GITHUB_ENV
 
     - name: Look for wheel built with default settings in JFrog
-      id: count_num_artifacts_found
-      # We use AQL because we want to exclude builds if they have special labels, like unoptimized builds
-      # We can't use a search pattern to exclude strings, as far as I know
-      run: echo num_artifacts=$(jf rt search --count --spec=./${{ env.JFROG_FILESPEC_NAME }} ${{ env.SPEC_VARS_FLAG }}) >> $GITHUB_OUTPUT
-      working-directory: .github/workflows
+      # AQL has the option to exclude patterns from search results
+      # but it doesn't allow regex, so we can't filter out any type of label in a wheel name
+      # Example: we want to filter out "unoptimized" and "dsym" but in case we add more labels, we want to use regex
+      # to handle those new labels without updating the regex.
+      run: echo $(jf rt search "${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*.whl" | jq '.[].path' | grep --invert-match "${{ env.SHORT_GITHUB_SHA }}\.") > file_matches.txt
+      shell: bash
 
-    - name: Cannot determine which artifact to use, fail out
+    - name: Count artifacts
+      id: count_num_artifacts_found
+      run: echo num_artifacts=$(echo file_matches.txt | wc -l) >> $GITHUB_OUTPUT
+
+    - name: Multiple artifacts found, not sure which one to use. Fail out
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts > 1 }}
       run: exit 1
 
     - name: Found the exact artifact in JFrog, downloading...
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
-      run: jf rt download --flat --fail-no-op --spec=./${{ env.JFROG_FILESPEC_NAME }} ${{ env.SPEC_VARS_FLAG }}
+      run: jf rt download --flat --fail-no-op "$(cat file_matches.txt)"
       working-directory: .github/workflows
 
     - name: Pass to valgrind job
