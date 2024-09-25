@@ -373,7 +373,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_admin_*.py
+      run: python -m pytest ./new_tests/test_{admin_*,mrt}.py
       working-directory: test
 
     - name: Show logs if failed
