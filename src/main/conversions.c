@@ -77,10 +77,16 @@ as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
     as_error_reset(err);
 
     *py_file = PyDict_New();
+    if (*py_file == NULL) {
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Unable to create UDF file object");
+    }
 
     PyObject *py_name = PyUnicode_FromString(entry->name);
     if (!py_name) {
-        Py_XDECREF(py_file);
+        PyErr_Clear();
+        Py_DECREF(py_file);
         return as_error_update(err, AEROSPIKE_ERR,
                                "Unable to parse UDF file name");
     }
@@ -182,11 +188,18 @@ as_status as_user_array_to_pyobject(as_error *err, as_user **users,
     int i;
 
     PyObject *py_users = PyDict_New();
+    if (py_users == NULL) {
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Unable to create users object");
+    }
+
     for (i = 0; i < users_size; i++) {
 
         PyObject *py_user = PyUnicode_FromString(users[i]->name);
         if (!py_user) {
-            Py_XDECREF(py_users);
+            PyErr_Clear();
+            Py_DECREF(py_users);
             return as_error_update(err, AEROSPIKE_ERR,
                                    "Unable to parse user name at index %d", i);
         }
@@ -305,11 +318,18 @@ as_status as_role_array_to_pyobject_old(as_error *err, as_role **roles,
     int i;
 
     PyObject *py_roles = PyDict_New();
+    if (py_roles == NULL) {
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Unable to create roles object");
+    }
+
     for (i = 0; i < roles_size; i++) {
 
         PyObject *py_role = PyUnicode_FromString(roles[i]->name);
         if (!py_role) {
-            Py_XDECREF(py_roles);
+            PyErr_Clear();
+            Py_DECREF(py_roles);
             return as_error_update(err, AEROSPIKE_ERR_CLUSTER,
                                    "Unable to parse role name at index %d", i);
         }
@@ -1809,6 +1829,7 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
         PyObject *py_locstr = PyUnicode_FromString(locstr);
         if (!py_locstr) {
             // An invalid C string was passed (cannot be parsed into unicode)
+            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to parse GeoJSON string");
             return err->code;
@@ -2176,6 +2197,7 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
     if (strlen(key->ns) > 0) {
         py_namespace = PyUnicode_FromString(key->ns);
         if (!py_namespace) {
+            PyErr_Clear();
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "Unable to parse key namespace");
         }
@@ -2184,6 +2206,7 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
     if (strlen(key->set) > 0) {
         py_set = PyUnicode_FromString(key->set);
         if (!py_set) {
+            PyErr_Clear();
             Py_DECREF(py_namespace);
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "Unable to parse key namespace");

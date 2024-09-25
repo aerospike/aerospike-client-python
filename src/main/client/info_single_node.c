@@ -107,6 +107,7 @@ static PyObject *AerospikeClient_InfoSingleNode_Invoke(as_error *err,
         if (response_p != NULL && status == AEROSPIKE_OK) {
             py_response = PyUnicode_FromString(response_p);
             if (!py_response) {
+                PyErr_Clear();
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                 "Unable to parse info operation response");
                 goto CLEANUP;
