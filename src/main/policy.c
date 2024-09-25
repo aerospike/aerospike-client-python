@@ -507,7 +507,12 @@ void set_scan_options(as_error *err, as_scan *scan_p, PyObject *py_options)
         Py_ssize_t pos = 0;
         int64_t val = 0;
         while (PyDict_Next(py_options, &pos, &key, &value)) {
-            char *key_name = (char *)PyUnicode_AsUTF8(key);
+            const char *key_name = PyUnicode_AsUTF8(key);
+            if (key_name == NULL) {
+                as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to parse key unicode object");
+                break;
+            }
             if (!PyUnicode_Check(key)) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "Policy key must be string");
