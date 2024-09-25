@@ -207,9 +207,8 @@ typedef struct Aerospike_JobConstants {
 #define AEROSPIKE_JOB_CONSTANTS_ARR_SIZE                                       \
     (sizeof(aerospike_job_constants) / sizeof(AerospikeJobConstants))
 
-as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_admin *policy,
-                                   as_policy_admin **policy_p,
+as_status pyobject_to_policy_admin(as_error *err, PyObject *py_policy,
+                                   as_policy_admin *policy,
                                    as_policy_admin *config_admin_policy);
 
 as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,

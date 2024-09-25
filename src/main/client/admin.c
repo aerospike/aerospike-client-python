@@ -123,8 +123,8 @@ PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
     password = PyUnicode_AsUTF8(py_password);
 
     // Convert python object to policy_admin
-    pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
-                             &admin_policy_p, &self->as->config.policies.admin);
+    pyobject_to_policy_admin(&err, py_policy, &admin_policy,
+                             &self->as->config.policies.admin);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

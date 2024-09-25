@@ -52,12 +52,25 @@
 
 #define POLICY_UPDATE() *policy_p = policy;
 
-#define POLICY_SET_FIELD(__field, __type)                                      \
+#define POLICY_SET_BASE_FIELD(__field, __type)                                 \
     {                                                                          \
-        PyObject *py_field = PyDict_GetItemString(py_policy, #__field);        \
-        if (py_field) {                                                        \
+        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
+        if (py_field_name == NULL) {                                           \
+            return -1;                                                         \
+        }                                                                      \
+        PyObject *py_field =                                                   \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        Py_DECREF(py_field_name);                                              \
+        if (py_field == NULL && PyErr_Occurred()) {                            \
+            return -1;                                                         \
+        }                                                                      \
+        else if (py_field) {                                                   \
             if (PyLong_Check(py_field)) {                                      \
-                policy->__field = (__type)PyLong_AsLong(py_field);             \
+                long field_val = PyLong_AsLong(py_field);                      \
+                if (field_val == -1 && PyErr_Occurred()) {                     \
+                    return -1;                                                 \
+                }                                                              \
+                policy->base.__field = (__type)field_val;                      \
             }                                                                  \
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
@@ -66,12 +79,25 @@
         }                                                                      \
     }
 
-#define POLICY_SET_BASE_FIELD(__field, __type)                                 \
+#define POLICY_SET_FIELD(__field, __type)                                      \
     {                                                                          \
-        PyObject *py_field = PyDict_GetItemString(py_policy, #__field);        \
-        if (py_field) {                                                        \
+        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
+        if (py_field_name == NULL) {                                           \
+            return -1;                                                         \
+        }                                                                      \
+        PyObject *py_field =                                                   \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        Py_DECREF(py_field_name);                                              \
+        if (py_field == NULL && PyErr_Occurred()) {                            \
+            return -1;                                                         \
+        }                                                                      \
+        else if (py_field) {                                                   \
             if (PyLong_Check(py_field)) {                                      \
-                policy->base.__field = (__type)PyLong_AsLong(py_field);        \
+                long field_val = PyLong_AsLong(py_field);                      \
+                if (field_val == -1 && PyErr_Occurred()) {                     \
+                    return -1;                                                 \
+                }                                                              \
+                policy->__field = (__type)field_val;                           \
             }                                                                  \
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
@@ -581,10 +607,8 @@ exit:
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, // remove self
+as_status pyobject_to_policy_admin(as_error *err, PyObject *py_policy,
                                    as_policy_admin *policy,
-                                   as_policy_admin **policy_p,
                                    as_policy_admin *config_admin_policy)
 {
 
@@ -599,9 +623,6 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
     }
-    // Update the policy
-    POLICY_UPDATE();
-
     return err->code;
 }
 
