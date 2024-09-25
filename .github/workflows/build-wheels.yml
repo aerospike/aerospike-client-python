@@ -123,6 +123,15 @@ env:
   RUN_INTEGRATION_TESTS_IN_CIBW: ${{ inputs.run_tests && (startsWith(inputs.platform-tag, 'manylinux') || inputs.platform-tag == 'macosx_x86_64') }}
 
 jobs:
+  get-server-build-from-qe-registry:
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: tailscale/github-action@v2
+      with:
+        oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+        oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+        tags: tag:ci
+
   # Maps don't exist in Github Actions, so we have to store the map using a script and fetch it in a job
   # This uses up more billing minutes (rounded up to 1 minute for each job run),
   # but this should be ok based on the minutes usage data for the aerospike organization
