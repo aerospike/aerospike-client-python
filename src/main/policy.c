@@ -624,6 +624,9 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
     }
+    // Update the policy
+    POLICY_UPDATE();
+
     return err->code;
 }
 
