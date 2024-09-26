@@ -79,6 +79,11 @@
         }                                                                      \
     }
 
+// This is a copy of the above macro except we are setting the policy's field
+// directly instead of the policy's base.
+// Some policies don't support a base field, so we don't combine these two macros
+// into one because it would cause a compiler error if we accessed a base field
+// that doesn't exist for a as_policy type
 #define POLICY_SET_FIELD(__field, __type)                                      \
     {                                                                          \
         PyObject *py_field_name = PyUnicode_FromString(#__field);              \
@@ -108,10 +113,18 @@
 
 #define POLICY_SET_EXPRESSIONS_BASE_FIELD()                                    \
     {                                                                          \
+        PyObject *py_field_name = PyUnicode_FromString("expressions");         \
+        if (py_field_name == NULL) {                                           \
+            return -1;                                                         \
+        }                                                                      \
         if (exp_list) {                                                        \
             PyObject *py_exp_list =                                            \
-                PyDict_GetItemString(py_policy, "expressions");                \
-            if (py_exp_list) {                                                 \
+                PyDict_GetItemWithError(py_policy, py_field_name);             \
+            Py_DECREF(py_field_name);                                          \
+            if (py_exp_list == NULL && PyErr_Occurred()) {                     \
+                return -1;                                                     \
+            }                                                                  \
+            else if (py_exp_list) {                                            \
                 if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
                     AEROSPIKE_OK) {                                            \
                     policy->base.filter_exp = exp_list;                        \
@@ -123,13 +136,23 @@
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
-        PyObject *py_exp_list =                                                \
-            PyDict_GetItemString(py_policy, "expressions");                    \
-        if (py_exp_list) {                                                     \
-            if (convert_exp_list(self, py_exp_list, &exp_list, err) ==         \
-                AEROSPIKE_OK) {                                                \
-                policy->filter_exp = exp_list;                                 \
-                *exp_list_p = exp_list;                                        \
+        PyObject *py_field_name = PyUnicode_FromString("expressions");         \
+        if (py_field_name == NULL) {                                           \
+            return -1;                                                         \
+        }                                                                      \
+        if (exp_list) {                                                        \
+            PyObject *py_exp_list =                                            \
+                PyDict_GetItemWithError(py_policy, py_field_name);             \
+            Py_DECREF(py_field_name);                                          \
+            if (py_exp_list == NULL && PyErr_Occurred()) {                     \
+                return -1;                                                     \
+            }                                                                  \
+            else if (py_exp_list) {                                            \
+                if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
+                    AEROSPIKE_OK) {                                            \
+                    policy->filter_exp = exp_list;                             \
+                    *exp_list_p = exp_list;                                    \
+                }                                                              \
             }                                                                  \
         }                                                                      \
     }
