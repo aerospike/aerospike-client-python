@@ -139,6 +139,7 @@ void set_scan_options(as_error *err, as_scan *scan_p, PyObject *py_options)
         while (PyDict_Next(py_options, &pos, &key, &value)) {
             const char *key_name = PyUnicode_AsUTF8(key);
             if (key_name == NULL) {
+                PyErr_Clear();
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                 "Unable to parse key unicode object");
                 break;
@@ -201,10 +202,21 @@ as_status set_query_options(as_error *err, PyObject *query_options,
     }
 
     PyObject *py_nobins_str = PyUnicode_FromString("nobins");
+    if (py_nobins_str == NULL) {
+        PyErr_Clear();
+        return as_error_update(
+            err, AEROSPIKE_ERR_CLIENT,
+            "Unable to create Python unicode object containing nobins");
+    }
     no_bins_val = PyDict_GetItemWithError(query_options, py_nobins_str);
     Py_DECREF(py_nobins_str);
-
-    if (no_bins_val) {
+    if (no_bins_val == NULL && PyErr_Occurred()) {
+        PyErr_Clear();
+        return as_error_update(
+            err, AEROSPIKE_ERR_CLIENT,
+            "Unable to get nobins from Python queery options");
+    }
+    else if (no_bins_val) {
         if (!PyBool_Check(no_bins_val)) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "nobins value must be a bool");
@@ -212,6 +224,8 @@ as_status set_query_options(as_error *err, PyObject *query_options,
         int is_true = PyObject_IsTrue(no_bins_val);
         if (is_true == -1) {
             PyErr_Clear();
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Parsing nobins value failed");
         }
         query->no_bins = (bool)is_true;
     }
