@@ -168,7 +168,7 @@ AerospikeGeospatial *self;
     }
 
 CLEANUP:
-    // TODO: need to free initresult?
+    Py_XDECREF(initresult);
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
@@ -178,7 +178,6 @@ CLEANUP:
         return NULL;
     }
 
-    Py_XDECREF(initresult);
     free(new_repr_str);
     return py_return;
 }
