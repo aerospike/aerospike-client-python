@@ -52,11 +52,6 @@
 
 #define POLICY_UPDATE() *policy_p = policy;
 
-// This is a copy of the above macro except we are setting the policy's field
-// directly instead of the policy's base.
-// Some policies don't support a base field, so we don't combine these two macros
-// into one because it would cause a compiler error if we accessed a base field
-// that doesn't exist for a as_policy type
 #define POLICY_SET_FIELD(__field, __type)                                      \
     {                                                                          \
         PyObject *py_field_name = PyUnicode_FromString(#__field);              \
