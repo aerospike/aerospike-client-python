@@ -255,13 +255,20 @@ as_status set_query_options(as_error *err, PyObject *query_options,
                                "query options must be a dictionary");
     }
 
-    no_bins_val = PyDict_GetItemString(query_options, "nobins");
+    PyObject *py_nobins_str = PyUnicode_FromString("nobins");
+    no_bins_val = PyDict_GetItemWithError(query_options, py_nobins_str);
+    Py_DECREF(py_nobins_str);
+
     if (no_bins_val) {
         if (!PyBool_Check(no_bins_val)) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "nobins value must be a bool");
         }
-        query->no_bins = PyObject_IsTrue(no_bins_val);
+        int is_true = PyObject_IsTrue(no_bins_val);
+        if (is_true == -1) {
+            PyErr_Clear();
+        }
+        query->no_bins = (bool)is_true;
     }
     return AEROSPIKE_OK;
 }
