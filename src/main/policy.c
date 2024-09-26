@@ -56,19 +56,27 @@
     {                                                                          \
         PyObject *py_field_name = PyUnicode_FromString(#__field);              \
         if (py_field_name == NULL) {                                           \
-            return -1;                                                         \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
         }                                                                      \
         PyObject *py_field =                                                   \
             PyDict_GetItemWithError(py_policy, py_field_name);                 \
         Py_DECREF(py_field_name);                                              \
         if (py_field == NULL && PyErr_Occurred()) {                            \
-            return -1;                                                         \
+            PyErr_Clear();                                                     \
+            return as_error_update(                                            \
+                err, AEROSPIKE_ERR_CLIENT,                                     \
+                "Unable to fetch field from policy dictionary");               \
         }                                                                      \
         else if (py_field) {                                                   \
             if (PyLong_Check(py_field)) {                                      \
                 long field_val = PyLong_AsLong(py_field);                      \
                 if (field_val == -1 && PyErr_Occurred()) {                     \
-                    return -1;                                                 \
+                    PyErr_Clear();                                             \
+                    return as_error_update(                                    \
+                        err, AEROSPIKE_ERR_CLIENT,                             \
+                        "Unable to fetch long value from policy field");       \
                 }                                                              \
                 policy->__field = (__type)field_val;                           \
             }                                                                  \
@@ -83,14 +91,19 @@
     {                                                                          \
         PyObject *py_field_name = PyUnicode_FromString("expressions");         \
         if (py_field_name == NULL) {                                           \
-            return -1;                                                         \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
         }                                                                      \
         if (exp_list) {                                                        \
             PyObject *py_exp_list =                                            \
                 PyDict_GetItemWithError(py_policy, py_field_name);             \
             Py_DECREF(py_field_name);                                          \
             if (py_exp_list == NULL && PyErr_Occurred()) {                     \
-                return -1;                                                     \
+                PyErr_Clear();                                                 \
+                return as_error_update(                                        \
+                    err, AEROSPIKE_ERR_CLIENT,                                 \
+                    "Unable to fetch field from policy dictionary");           \
             }                                                                  \
             else if (py_exp_list) {                                            \
                 if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
