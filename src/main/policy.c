@@ -273,6 +273,7 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
     POLICY_SET_FIELD(compress, bool);
 
     POLICY_SET_EXPRESSIONS_FIELD();
+    return AEROSPIKE_OK;
 }
 
 /**
