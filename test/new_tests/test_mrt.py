@@ -96,7 +96,7 @@ class TestMRT:
             _, _, bins = self.as_connection.get(key)
             assert bins == {"a": i}
 
-    def test_commit_more_than_once(self):
+    def test_commit_more_than_once(self, requires_server_mrt_support, cleanup_records_before_test):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
