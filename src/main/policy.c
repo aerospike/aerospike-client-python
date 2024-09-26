@@ -52,33 +52,6 @@
 
 #define POLICY_UPDATE() *policy_p = policy;
 
-#define POLICY_SET_BASE_FIELD(__field, __type)                                 \
-    {                                                                          \
-        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
-        if (py_field_name == NULL) {                                           \
-            return -1;                                                         \
-        }                                                                      \
-        PyObject *py_field =                                                   \
-            PyDict_GetItemWithError(py_policy, py_field_name);                 \
-        Py_DECREF(py_field_name);                                              \
-        if (py_field == NULL && PyErr_Occurred()) {                            \
-            return -1;                                                         \
-        }                                                                      \
-        else if (py_field) {                                                   \
-            if (PyLong_Check(py_field)) {                                      \
-                long field_val = PyLong_AsLong(py_field);                      \
-                if (field_val == -1 && PyErr_Occurred()) {                     \
-                    return -1;                                                 \
-                }                                                              \
-                policy->base.__field = (__type)field_val;                      \
-            }                                                                  \
-            else {                                                             \
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
-                                       "%s is invalid", #__field);             \
-            }                                                                  \
-        }                                                                      \
-    }
-
 // This is a copy of the above macro except we are setting the policy's field
 // directly instead of the policy's base.
 // Some policies don't support a base field, so we don't combine these two macros
@@ -107,29 +80,6 @@
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
                                        "%s is invalid", #__field);             \
-            }                                                                  \
-        }                                                                      \
-    }
-
-#define POLICY_SET_EXPRESSIONS_BASE_FIELD()                                    \
-    {                                                                          \
-        PyObject *py_field_name = PyUnicode_FromString("expressions");         \
-        if (py_field_name == NULL) {                                           \
-            return -1;                                                         \
-        }                                                                      \
-        if (exp_list) {                                                        \
-            PyObject *py_exp_list =                                            \
-                PyDict_GetItemWithError(py_policy, py_field_name);             \
-            Py_DECREF(py_field_name);                                          \
-            if (py_exp_list == NULL && PyErr_Occurred()) {                     \
-                return -1;                                                     \
-            }                                                                  \
-            else if (py_exp_list) {                                            \
-                if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
-                    AEROSPIKE_OK) {                                            \
-                    policy->base.filter_exp = exp_list;                        \
-                    *exp_list_p = exp_list;                                    \
-                }                                                              \
             }                                                                  \
         }                                                                      \
     }
@@ -302,6 +252,20 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+static as_status pyobject_to_policy_base(AerospikeClient *self, as_error *err,
+                                         PyObject *py_policy,
+                                         as_policy_base *policy,
+                                         as_exp *exp_list, as_exp **exp_list_p)
+{
+    POLICY_SET_FIELD(total_timeout, uint32_t);
+    POLICY_SET_FIELD(socket_timeout, uint32_t);
+    POLICY_SET_FIELD(max_retries, uint32_t);
+    POLICY_SET_FIELD(sleep_between_retries, uint32_t);
+    POLICY_SET_FIELD(compress, bool);
+
+    POLICY_SET_EXPRESSIONS_FIELD();
+}
+
 /**
  * Converts a PyObject into an as_policy_apply object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
@@ -323,11 +287,11 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (retval != AEROSPIKE_OK) {
+            return retval;
+        }
 
         POLICY_SET_FIELD(key, as_policy_key);
         POLICY_SET_FIELD(replica, as_policy_replica);
@@ -335,9 +299,6 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(commit_level, as_policy_commit_level);
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(ttl, uint32_t);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
     }
 
     // Update the policy
@@ -397,18 +358,13 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     as_policy_query_copy(config_query_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
-        // Set policy fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
-
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (retval != AEROSPIKE_OK) {
+            return retval;
+        }
         POLICY_SET_FIELD(deserialize, bool);
         POLICY_SET_FIELD(replica, as_policy_replica);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
         // C client 6.0.0
         POLICY_SET_FIELD(short_query, bool);
@@ -444,11 +400,11 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (retval != AEROSPIKE_OK) {
+            return retval;
+        }
 
         POLICY_SET_FIELD(key, as_policy_key);
         POLICY_SET_FIELD(replica, as_policy_replica);
@@ -458,9 +414,6 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
         POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
     }
 
     // Update the policy
@@ -491,11 +444,11 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (retval != AEROSPIKE_OK) {
+            return retval;
+        }
 
         POLICY_SET_FIELD(generation, uint16_t);
 
@@ -504,9 +457,6 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(commit_level, as_policy_commit_level);
         POLICY_SET_FIELD(replica, as_policy_replica);
         POLICY_SET_FIELD(durable_delete, bool);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
     }
 
     // Update the policy
@@ -536,19 +486,16 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (retval != AEROSPIKE_OK) {
+            return retval;
+        }
 
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(records_per_second, uint32_t);
         POLICY_SET_FIELD(max_records, uint64_t);
         POLICY_SET_FIELD(replica, as_policy_replica);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
     }
 
     // Update the policy
@@ -578,12 +525,11 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        // Base policy_fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (retval != AEROSPIKE_OK) {
+            return retval;
+        }
 
         POLICY_SET_FIELD(key, as_policy_key);
         POLICY_SET_FIELD(gen, as_policy_gen);
@@ -592,9 +538,6 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(replica, as_policy_replica);
         POLICY_SET_FIELD(compression_threshold, uint32_t);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
     }
 
     // Update the policy
@@ -625,11 +568,11 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (retval != AEROSPIKE_OK) {
+            return retval;
+        }
 
         POLICY_SET_FIELD(key, as_policy_key);
         POLICY_SET_FIELD(gen, as_policy_gen);
@@ -643,9 +586,6 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
         POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
     }
 
     // Update the policy
@@ -675,11 +615,11 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        POLICY_SET_BASE_FIELD(total_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(socket_timeout, uint32_t);
-        POLICY_SET_BASE_FIELD(max_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(sleep_between_retries, uint32_t);
-        POLICY_SET_BASE_FIELD(compress, bool);
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        if (retval != AEROSPIKE_OK) {
+            return retval;
+        }
 
         POLICY_SET_FIELD(concurrent, bool);
         POLICY_SET_FIELD(allow_inline, bool);
@@ -690,9 +630,6 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
         POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
-
-        // C client 5.0 new expressions
-        POLICY_SET_EXPRESSIONS_BASE_FIELD();
 
         // C client 6.0.0 (batch writes)
         POLICY_SET_FIELD(allow_inline_ssd, bool);
