@@ -252,10 +252,10 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static as_status pyobject_to_policy_base(AerospikeClient *self, as_error *err,
-                                         PyObject *py_policy,
-                                         as_policy_base *policy,
-                                         as_exp *exp_list, as_exp **exp_list_p)
+static inline as_status
+pyobject_to_policy_base(AerospikeClient *self, as_error *err,
+                        PyObject *py_policy, as_policy_base *policy,
+                        as_exp *exp_list, as_exp **exp_list_p)
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
