@@ -542,6 +542,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         .m_name = AEROSPIKE_MODULE_NAME,
         .m_doc = "Aerospike Python Client",
         .m_methods = aerospike_methods,
+        .m_size = -1,
     };
 
     PyObject *py_aerospike_module = PyModule_Create(&moduledef);
