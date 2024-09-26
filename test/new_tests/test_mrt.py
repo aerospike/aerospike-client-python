@@ -57,26 +57,6 @@ class TestMRT:
         with pytest.raises(TypeError):
             self.as_connection.commit(*args)
 
-    def test_commit(self, requires_server_mrt_support):
-        mrt = aerospike.Transaction()
-        self.as_connection.commit(mrt)
-
-    def test_commit_fail(self, requires_server_mrt_support):
-        mrt = aerospike.Transaction()
-        self.as_connection.commit(mrt)
-        with pytest.raises(e.RollAlreadyAttempted):
-            self.as_connection.commit(mrt)
-
-    def test_abort(self, requires_server_mrt_support):
-        mrt = aerospike.Transaction()
-        self.as_connection.abort(mrt)
-
-    def test_abort_fail(self, requires_server_mrt_support):
-        mrt = aerospike.Transaction()
-        self.as_connection.abort(mrt)
-        with pytest.raises(e.RollAlreadyAttempted):
-            self.as_connection.abort(mrt)
-
     @pytest.fixture
     def cleanup_records_before_test(self, request, as_connection):
         self.keys = []
@@ -102,17 +82,42 @@ class TestMRT:
         request.addfinalizer(teardown)
 
     # TODO: global config and transaction level config have different codepaths (for now)
-    def test_basic_usage(self, requires_server_mrt_support, cleanup_records_before_test):
+    def test_commit(self, requires_server_mrt_support, cleanup_records_before_test):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
         }
-        bins = {"a": 1}
         for i in range(len(self.keys)):
-            self.as_connection.put(self.keys[i], bins, policy)
+            self.as_connection.put(self.keys[i], {"a": i}, policy)
         self.as_connection.commit(mrt)
 
         # Did it work?
-        for key in self.keys:
+        for i, key in enumerate(self.keys):
             _, _, bins = self.as_connection.get(key)
-            assert bins == {"a": 1}
+            assert bins == {"a": i}
+
+    def test_commit_more_than_once(self):
+        mrt = aerospike.Transaction()
+        policy = {
+            "txn": mrt
+        }
+        self.as_connection.put(self.keys[0], {"a": 0}, policy)
+        self.as_connection.commit(mrt)
+        with pytest.raises(e.RollAlreadyAttempted):
+            self.as_connection.commit(mrt)
+
+    @pytest.mark.parametrize("more_than_once", [False, True])
+    def test_abort(self, requires_server_mrt_support, cleanup_records_before_test, more_than_once: bool):
+        mrt = aerospike.Transaction()
+        policy = {
+            "txn": mrt
+        }
+        self.as_connection.put(self.keys[0], {"a": 0}, policy)
+        self.as_connection.abort(mrt)
+        if more_than_once is False:
+            # Test that transaction didn't go through
+            _, meta = self.as_connection.exists(self.keys[0])
+            assert meta is None
+        else:
+            with pytest.raises(e.RollAlreadyAttempted):
+                self.as_connection.abort(mrt)
