@@ -70,7 +70,7 @@
         PyObject *py_field =                                                   \
             PyDict_GetItemWithError(py_policy, py_field_name);                 \
         if (py_field == NULL && PyErr_Occurred()) {                            \
-            PyErr_Print();                                                     \
+            PyErr_Clear();                                                     \
             Py_DECREF(py_field_name);                                          \
             return as_error_update(                                            \
                 err, AEROSPIKE_ERR_CLIENT,                                     \
@@ -109,7 +109,7 @@
             PyObject *py_exp_list =                                            \
                 PyDict_GetItemWithError(py_policy, py_field_name);             \
             if (py_exp_list == NULL && PyErr_Occurred()) {                     \
-                PyErr_Print();                                                 \
+                PyErr_Clear();                                                 \
                 Py_DECREF(py_field_name);                                      \
                 return as_error_update(err, AEROSPIKE_ERR_CLIENT,              \
                                        "Unable to fetch expressions field "    \
