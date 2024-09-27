@@ -33,6 +33,34 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
     return (PyObject *)self;
 }
 
+// Error indicator must always be checked after this call
+static uint32_t get_uint32_t_from_pyobject(PyObject *pyobject,
+                                           const char *keyword_name_of_pyobj)
+{
+    if (!PyLong_Check(pyobject)) {
+        PyErr_Format(PyExc_TypeError, "%s must be an integer",
+                     keyword_name_of_pyobj);
+        goto error;
+    }
+    unsigned long long_value = PyLong_AsUnsignedLong(pyobject);
+    if (PyErr_Occurred()) {
+        goto error;
+    }
+
+    if (long_value > UINT32_MAX) {
+        PyErr_Format(PyExc_ValueError,
+                     "%s is too large for an unsigned 32-bit integer",
+                     keyword_name_of_pyobj);
+        goto error;
+    }
+
+    uint32_t retval = (uint32_t)long_value;
+    return retval;
+
+error:
+    return 0;
+}
+
 static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
                                      PyObject *kwds)
 {
@@ -43,7 +71,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     PyObject *py_reads_capacity = NULL;
     PyObject *py_writes_capacity = NULL;
 
-    // TODO: how to enforce 32-bit size limit
+    // TODO: needs name after format?
     if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist,
                                     &py_reads_capacity,
                                     &py_writes_capacity) == false) {
@@ -52,6 +80,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
 
     // Both reads and writes capacities must be specified,
     // or both must be omitted
+    as_txn *txn;
     if ((py_reads_capacity == NULL) ^ (py_writes_capacity == NULL)) {
         PyErr_SetString(
             PyExc_TypeError,
@@ -59,38 +88,27 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
         goto error;
     }
     else if (py_reads_capacity && py_writes_capacity) {
-        if (!PyLong_Check(py_reads_capacity)) {
-            PyErr_SetString(PyExc_TypeError,
-                            "Reads capacity must be an integer");
-            goto error;
-        }
-        else if (!PyLong_Check(py_writes_capacity)) {
-            PyErr_SetString(PyExc_TypeError,
-                            "Writes capacity must be an integer");
-            goto error;
-        }
-        unsigned long reads_capacity =
-            (uint32_t)PyLong_AsUnsignedLong(py_reads_capacity);
+        uint32_t reads_capacity =
+            get_uint32_t_from_pyobject(py_reads_capacity, kwlist[0]);
         if (PyErr_Occurred()) {
             goto error;
         }
-        unsigned long writes_capacity =
-            (uint32_t)PyLong_AsUnsignedLong(py_writes_capacity);
+        uint32_t writes_capacity =
+            get_uint32_t_from_pyobject(py_writes_capacity, kwlist[1]);
         if (PyErr_Occurred()) {
             goto error;
         }
-
-        if (self->txn) {
-            as_txn_destroy(self->txn);
-        }
-        self->txn = as_txn_create_capacity(reads_capacity, writes_capacity);
+        txn = as_txn_create_capacity(reads_capacity, writes_capacity);
     }
     else {
-        if (self->txn) {
-            as_txn_destroy(self->txn);
-        }
-        self->txn = as_txn_create();
+        txn = as_txn_create();
     }
+
+    // If this transaction object was already initialized before, reinitialize it
+    if (self->txn) {
+        as_txn_destroy(self->txn);
+    }
+    self->txn = txn;
 
     return 0;
 error:
