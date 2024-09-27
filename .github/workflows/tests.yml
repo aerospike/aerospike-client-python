@@ -127,7 +127,7 @@ jobs:
         mkdir -p nullobject/src/main/nullobject
         mkdir -p query/src/main/query
         mkdir -p scan/src/main/scan
-        mkdir -p scan/src/main/transaction
+        mkdir -p transaction/src/main/transaction
 
         cd ../../../../
         cp src/main/*.c build/temp*/src/main/src/main
