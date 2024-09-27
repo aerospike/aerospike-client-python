@@ -6,11 +6,6 @@
 :class:`aerospike.Transaction` --- Multi Record Transaction Class
 =================================================================
 
-Overview
-========
-
-TODO
-
 Methods
 =======
 
