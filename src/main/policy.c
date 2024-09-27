@@ -89,13 +89,14 @@
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
-        PyObject *py_field_name = PyUnicode_FromString("expressions");         \
-        if (py_field_name == NULL) {                                           \
-            PyErr_Clear();                                                     \
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
-                                   "Unable to create Python unicode object");  \
-        }                                                                      \
         if (exp_list) {                                                        \
+            PyObject *py_field_name = PyUnicode_FromString("expressions");     \
+            if (py_field_name == NULL) {                                       \
+                PyErr_Clear();                                                 \
+                return as_error_update(                                        \
+                    err, AEROSPIKE_ERR_CLIENT,                                 \
+                    "Unable to create Python unicode object");                 \
+            }                                                                  \
             PyObject *py_exp_list =                                            \
                 PyDict_GetItemWithError(py_policy, py_field_name);             \
             Py_DECREF(py_field_name);                                          \
