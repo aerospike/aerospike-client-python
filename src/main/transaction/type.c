@@ -82,9 +82,8 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     // or both must be omitted
     as_txn *txn;
     if ((py_reads_capacity == NULL) ^ (py_writes_capacity == NULL)) {
-        PyErr_SetString(
-            PyExc_TypeError,
-            "Both reads capacity and writes capacity must be specified");
+        PyErr_Format(PyExc_TypeError, "Both %s and %s must be specified",
+                     kwlist[0], kwlist[1]);
         goto error;
     }
     else if (py_reads_capacity && py_writes_capacity) {

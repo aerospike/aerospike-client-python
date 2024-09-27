@@ -15,19 +15,19 @@ class TestMRT:
             ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext(), None),
             (
                 {"reads_capacity": 256},
-                pytest.raises((TypeError)), "Both reads capacity and writes capacity must be specified"
+                pytest.raises((TypeError)), "Both reads_capacity and writes_capacity must be specified"
             ),
             (
                 {"writes_capacity": 256},
-                pytest.raises((TypeError)), "Both reads capacity and writes capacity must be specified"
+                pytest.raises((TypeError)), "Both reads_capacity and writes_capacity must be specified"
             ),
             (
                 {"reads_capacity": "256", "writes_capacity": 256},
-                pytest.raises((TypeError)), "Reads capacity must be an integer"
+                pytest.raises((TypeError)), "reads_capacity must be an integer"
             ),
             (
                 {"reads_capacity": 256, "writes_capacity": "256"},
-                pytest.raises((TypeError)), "Writes capacity must be an integer"
+                pytest.raises((TypeError)), "writes_capacity must be an integer"
             ),
         ]
     )
