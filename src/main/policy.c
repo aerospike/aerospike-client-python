@@ -62,14 +62,16 @@
         }                                                                      \
         PyObject *py_field =                                                   \
             PyDict_GetItemWithError(py_policy, py_field_name);                 \
-        Py_DECREF(py_field_name);                                              \
         if (py_field == NULL && PyErr_Occurred()) {                            \
             PyErr_Clear();                                                     \
+            Py_DECREF(py_field_name);                                          \
             return as_error_update(                                            \
                 err, AEROSPIKE_ERR_CLIENT,                                     \
                 "Unable to fetch field from policy dictionary");               \
         }                                                                      \
-        else if (py_field) {                                                   \
+        Py_DECREF(py_field_name);                                              \
+                                                                               \
+        if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
                 long field_val = PyLong_AsLong(py_field);                      \
                 if (field_val == -1 && PyErr_Occurred()) {                     \
@@ -99,14 +101,15 @@
             }                                                                  \
             PyObject *py_exp_list =                                            \
                 PyDict_GetItemWithError(py_policy, py_field_name);             \
-            Py_DECREF(py_field_name);                                          \
             if (py_exp_list == NULL && PyErr_Occurred()) {                     \
                 PyErr_Clear();                                                 \
+                Py_DECREF(py_field_name);                                      \
                 return as_error_update(                                        \
                     err, AEROSPIKE_ERR_CLIENT,                                 \
                     "Unable to fetch field from policy dictionary");           \
             }                                                                  \
-            else if (py_exp_list) {                                            \
+            Py_DECREF(py_field_name);                                          \
+            if (py_exp_list) {                                                 \
                 if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
                     AEROSPIKE_OK) {                                            \
                     policy->filter_exp = exp_list;                             \
