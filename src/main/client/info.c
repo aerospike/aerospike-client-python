@@ -29,9 +29,6 @@
 #include "policy.h"
 #include "conversions.h"
 #include "exceptions.h"
-#include <arpa/inet.h>
-
-#include "tls_info_host.h"
 
 typedef struct foreach_callback_info_udata_t {
     PyObject *udata_p;

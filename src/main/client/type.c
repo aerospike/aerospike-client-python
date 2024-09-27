@@ -17,7 +17,6 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
-#include <unistd.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/as_config.h>
@@ -32,6 +31,7 @@
 #include "exceptions.h"
 #include "tls_config.h"
 #include "policy_config.h"
+#include "metrics.h"
 
 static int set_rack_aware_config(as_config *conf, PyObject *config_dict);
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict);
@@ -344,6 +344,13 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Checks current connection state."},
     {"shm_key", (PyCFunction)AerospikeClient_shm_key,
      METH_VARARGS | METH_KEYWORDS, "Get the shm key of the cluster"},
+
+    // METRICS
+
+    {"enable_metrics", (PyCFunction)AerospikeClient_EnableMetrics,
+     METH_VARARGS | METH_KEYWORDS, NULL},
+    {"disable_metrics", (PyCFunction)AerospikeClient_DisableMetrics,
+     METH_NOARGS, NULL},
 
     // ADMIN OPERATIONS
 
@@ -747,7 +754,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
     }
 
-    as_policies_init(&config.policies);
     //Set default value of use_batch_direct
 
     PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
@@ -1054,7 +1060,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->as = aerospike_new(&config);
 
     if (AerospikeClientConnect(self) == -1) {
-        aerospike_destroy(self->as);
         return -1;
     }
 
@@ -1285,24 +1290,25 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeClient_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Client", // tp_name
-    sizeof(AerospikeClient),                           // tp_basicsize
-    0,                                                 // tp_itemsize
-    (destructor)AerospikeClient_Type_Dealloc,          // tp_dealloc
-    0,                                                 // tp_print
-    0,                                                 // tp_getattr
-    0,                                                 // tp_setattr
-    0,                                                 // tp_compare
-    0,                                                 // tp_repr
-    0,                                                 // tp_as_number
-    0,                                                 // tp_as_sequence
-    0,                                                 // tp_as_mapping
-    0,                                                 // tp_hash
-    0,                                                 // tp_call
-    0,                                                 // tp_str
-    0,                                                 // tp_getattro
-    0,                                                 // tp_setattro
-    0,                                                 // tp_as_buffer
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
+    sizeof(AerospikeClient),                  // tp_basicsize
+    0,                                        // tp_itemsize
+    (destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
+    0,                                        // tp_print
+    0,                                        // tp_getattr
+    0,                                        // tp_setattr
+    0,                                        // tp_compare
+    0,                                        // tp_repr
+    0,                                        // tp_as_number
+    0,                                        // tp_as_sequence
+    0,                                        // tp_as_mapping
+    0,                                        // tp_hash
+    0,                                        // tp_call
+    0,                                        // tp_str
+    0,                                        // tp_getattro
+    0,                                        // tp_setattro
+    0,                                        // tp_as_buffer
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     // tp_flags
     "The Client class manages the connections and trasactions against\n"
@@ -1362,6 +1368,6 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
     raise_exception(&err);
 
 CLEANUP:
-    AerospikeClient_Type.tp_free(self);
+    AerospikeClient_Type.tp_dealloc((PyObject *)self);
     return NULL;
 }

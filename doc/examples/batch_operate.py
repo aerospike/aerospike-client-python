@@ -11,8 +11,6 @@ for key, bin in zip(keys, bins):
     client.put(key, bin)
 
 # Increment ID by 100 and balance by 500 for all employees
-# NOTE: batch_operate ops must include a write op
-# get_batch_ops or get_many can be used for all read ops use cases.
 ops = [
     op.increment("id", 100),
     op.increment("balance", 500),

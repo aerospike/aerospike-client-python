@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright 2017-2021 Aerospike, Inc.
+ * Copyright 2013-2024 Aerospike, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ******************************************************************************/
-#pragma once
 
-#include <aerospike/aerospike.h>
-as_status send_info_to_tls_host(aerospike *as, as_error *err,
-                                const as_policy_info *info_policy,
-                                const char *hostname, uint16_t port,
-                                const char *tls_name, const char *request,
-                                char **response);
+#include <Python.h>
+
+#include "types.h"
+
+PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
+                                        PyObject *kwds);
+PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args);

@@ -486,47 +486,13 @@ extern as_status deserialize_based_on_as_bytes_type(AerospikeClient *self,
                 "Unable to convert C client's as_bytes to Python bytes");
             goto CLEANUP;
         }
-        // Pass bytes object to new HLL class instance
-        PyObject *py_aerospike_helpers_module =
-            PyImport_ImportModule("aerospike_helpers");
-        if (py_aerospike_helpers_module == NULL) {
-            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
-                            "Unable to import aerospike_helpers module");
-            goto HLL_CLEANUP1;
-        }
-
-        PyObject *py_hll_class =
-            PyObject_GetAttrString(py_aerospike_helpers_module, "HyperLogLog");
-        if (py_hll_class == NULL) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Unable to import HyperLogLog class from "
-                            "aerospike_helpers module");
-            goto HLL_CLEANUP2;
-        }
-
-        if (!PyCallable_Check(py_hll_class)) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Unable to create HyperLogLog instance; "
-                            "HyperLogLog class is not callable");
-            goto HLL_CLEANUP3;
-        }
-
-        PyObject *py_hll_instance =
-            PyObject_CallFunctionObjArgs(py_hll_class, py_bytes, NULL);
-        if (py_hll_instance == NULL) {
-            // An exception has been thrown by calling the HLL constructor
-            // We want to show the original exception instead of throwing our own exception
-            goto HLL_CLEANUP3;
-        }
-
-        *retval = py_hll_instance;
-
-    HLL_CLEANUP3:
-        Py_DECREF(py_hll_class);
-    HLL_CLEANUP2:
-        Py_DECREF(py_aerospike_helpers_module);
-    HLL_CLEANUP1:
+        PyObject *py_hll = create_class_instance_from_module(
+            error_p, "aerospike_helpers", "HyperLogLog", py_bytes);
         Py_DECREF(py_bytes);
+        if (!py_hll) {
+            goto CLEANUP;
+        }
+        *retval = py_hll;
         break;
     }
     default: {

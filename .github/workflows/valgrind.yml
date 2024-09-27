@@ -8,24 +8,47 @@ on:
         required: false
         default: ""
       use-server-rc:
+        type: boolean
+        description: 'Use server release candidate?'
         required: true
+        default: false
+      massif:
+        type: boolean
+        description: 'Use massif for testing memory usage'
+        required: false
         default: false
 
 jobs:
+  build-manylinux-wheel:
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      python-tags: '["cp38"]'
+      platform-tag: manylinux_x86_64
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
+
   valgrind:
-    runs-on: ubuntu-latest
+    env:
+      MASSIF_REPORT_FILE_NAME: massif.out
+    needs: build-manylinux-wheel
+    runs-on: ubuntu-22.04
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: recursive
+        fetch-depth: 0
 
     - uses: actions/setup-python@v2
       with:
         python-version: '3.8'
         architecture: 'x64'
 
+    - uses: actions/download-artifact@v4
+      with:
+        name: cp38-manylinux_x86_64.build
+
     - name: Install client
-      run: pip install .
+      run: pip install ./*.whl
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
@@ -37,11 +60,18 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - name: Wait for database to be ready
-      # Should be ready after 3 seconds
-      run: sleep 3
-
     - run: sudo apt update
     - run: sudo apt install valgrind -y
-    - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+
+    - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
+      if: ${{ inputs.massif }}
+
+    - run: echo VALGRIND_ARGS="--leak-check=full" >> $GITHUB_ENV
+      if: ${{ !inputs.massif }}
+
+    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+      working-directory: test
+
+    - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
+      if: ${{ !cancelled() && inputs.massif }}
       working-directory: test

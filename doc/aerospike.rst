@@ -77,7 +77,7 @@ Client
         tls_host_tuple = (tls_ip, tls_port, tls_name)
         hosts = [tls_host_tuple]
 
-        # Example configuration which will use TLS with the specifed cafile
+        # Example configuration which will use TLS with the specified cafile
         tls_config = {
             "cafile": "/path/to/cacert.pem",
             "enable": True
@@ -462,7 +462,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
-                    `Per-Transaction Consistency Guarantees <http://www.aerospike.com/docs/architecture/consistency.html>`_.
+                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/server/architecture/consistency.html>`_.
 
         * **shm** (:class:`dict`)
             Contains optional shared-memory cluster tending parameters
@@ -498,7 +498,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default: ``0xA9000000``
 
                 .. seealso::
-                    `Shared Memory <https://developer.aerospike.com/client/c/shm>`_
+                    `Shared Memory <https://aerospike.com/developer/client/shm>`_
 
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process.
@@ -507,7 +507,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://www.aerospike.com/docs/guide/security/tls.html>`_.
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/server/guide/security/tls.html>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not.
@@ -807,7 +807,10 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
 .. data:: POLICY_KEY_SEND
 
-    Send the key in addition to the digest. This policy causes a write operation to store the key on the server
+    Send the key in addition to the digest. This policy causes a write operation to store the key on the server.
+
+    .. note:: This option instructs the server to validate the digest by calculating it again from the key sent by the
+        client. Unless this is the explicit intent of the developer, this should be avoided.
 
 .. _POLICY_REPLICA:
 
@@ -1044,6 +1047,9 @@ Flags used by list order.
 .. data:: LIST_ORDERED
 
     Ordered list.
+
+.. note::
+    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
 
 .. _aerospike_list_sort_flag:
 
@@ -1406,12 +1412,6 @@ Bin Types
 Miscellaneous
 -------------
 
-.. data:: __version__
-
-    A :class:`str` containing the module's version.
-
-    .. versionadded:: 1.0.54
-
 .. data:: UDF_TYPE_LUA
 
     UDF type is LUA (which is the only UDF type).
@@ -1432,7 +1432,7 @@ Miscellaneous
 
     An index whose values are of the aerospike GetJSON data type.
 
-.. seealso:: `Data Types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
+.. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
 
 .. data:: INDEX_TYPE_DEFAULT
 
@@ -1542,3 +1542,36 @@ See :ref:`aerospike_operation_helpers.expressions` for more information.
 .. data:: REGEX_NEWLINE
 
     Match-any-character operators don't match a newline.
+
+.. _query_duration_constants:
+
+Query Duration
+--------------
+
+.. data:: QUERY_DURATION_LONG
+
+     The query is expected to return more than 100 records per node. The server optimizes for a
+     large record set in the following ways:
+
+     * Allow query to be run in multiple threads using the server's query threading configuration.
+     * Do not relax read consistency for AP namespaces.
+     * Add the query to the server's query monitor.
+     * Do not add the overall latency to the server's latency histogram.
+     * Do not allow server timeouts.
+
+.. data:: QUERY_DURATION_SHORT
+
+     The query is expected to return less than 100 records per node. The server optimizes for a
+     small record set in the following ways:
+
+     * Always run the query in one thread and ignore the server's query threading configuration.
+     * Allow query to be inlined directly on the server's service thread.
+     * Relax read consistency for AP namespaces.
+     * Do not add the query to the server's query monitor.
+     * Add the overall latency to the server's latency histogram.
+     * Allow server timeouts. The default server timeout for a short query is 1 second.
+
+.. data:: QUERY_DURATION_LONG_RELAX_AP
+
+     Treat query as a LONG query, but relax read consistency for AP namespaces.
+     This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.

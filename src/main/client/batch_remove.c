@@ -312,7 +312,7 @@ PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
     if (!PyList_Check(py_keys)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "keys should be a list of aerospike key tuples");
-        goto ERROR;
+        goto error;
     }
 
     py_results = AerospikeClient_Batch_Remove_Invoke(
@@ -320,7 +320,7 @@ PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
 
     return py_results;
 
-ERROR:
+error:
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
