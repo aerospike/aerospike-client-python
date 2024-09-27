@@ -4,16 +4,10 @@ import pytest
 from contextlib import nullcontext
 from .conftest import TestBaseClass
 from typing import Optional
-# from aerospike.Client import abort, commit
 
 
 @pytest.mark.usefixtures("as_connection")
 class TestMRT:
-    @pytest.fixture
-    def requires_server_mrt_support(self, as_connection):
-        if TestBaseClass.enterprise_in_use() is False or (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
-            pytest.skip()
-
     @pytest.mark.parametrize(
         "kwargs, context, err_msg",
         [
@@ -37,25 +31,14 @@ class TestMRT:
             ),
         ]
     )
-    def test_transaction(self, kwargs: dict, context, err_msg: Optional[str]):
+    def test_transaction_class(self, kwargs: dict, context, err_msg: Optional[str]):
         with context as excinfo:
             mrt = aerospike.Transaction(**kwargs)
-        if err_msg is None:
+        if type(context) == nullcontext:
             mrt_id = mrt.id()
             assert type(mrt_id) == int
         else:
             assert str(excinfo.value) == err_msg
-
-    @pytest.mark.parametrize(
-        "args",
-        [
-            [],
-            ["string"]
-        ]
-    )
-    def test_mrt_invalid_args(self, args: list):
-        with pytest.raises(TypeError):
-            self.as_connection.commit(*args)
 
     @pytest.fixture
     def cleanup_records_before_test(self, request, as_connection):
@@ -81,15 +64,21 @@ class TestMRT:
 
         request.addfinalizer(teardown)
 
+    @pytest.fixture
+    def requires_server_mrt_support(self, as_connection):
+        if TestBaseClass.enterprise_in_use() is False or (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
+            pytest.skip()
+
     # TODO: global config and transaction level config have different codepaths (for now)
-    def test_commit(self, requires_server_mrt_support, cleanup_records_before_test):
+    def test_commit_api_and_functionality(self, requires_server_mrt_support, cleanup_records_before_test):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
         }
         for i in range(len(self.keys)):
             self.as_connection.put(self.keys[i], {"a": i}, policy)
-        self.as_connection.commit(mrt)
+        retval = self.as_connection.commit(transaction=mrt)
+        assert retval is None
 
         # Did it work?
         for i, key in enumerate(self.keys):
@@ -107,13 +96,14 @@ class TestMRT:
             self.as_connection.commit(mrt)
 
     @pytest.mark.parametrize("more_than_once", [False, True])
-    def test_abort(self, requires_server_mrt_support, cleanup_records_before_test, more_than_once: bool):
+    def test_abort_api_and_functionality(self, requires_server_mrt_support, cleanup_records_before_test, more_than_once: bool):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
         }
         self.as_connection.put(self.keys[0], {"a": 0}, policy)
-        self.as_connection.abort(mrt)
+        retval = self.as_connection.abort(transaction=mrt)
+        assert retval is None
         if more_than_once is False:
             # Test that transaction didn't go through
             _, meta = self.as_connection.exists(self.keys[0])
@@ -121,3 +111,16 @@ class TestMRT:
         else:
             with pytest.raises(e.RollAlreadyAttempted):
                 self.as_connection.abort(mrt)
+
+    # Don't need to test abort() for invalid args since it shares the same codepath as commit() for input
+    # validation
+    @pytest.mark.parametrize(
+        "args",
+        [
+            [],
+            ["string"]
+        ]
+    )
+    def test_mrt_invalid_args(self, args: list):
+        with pytest.raises(TypeError):
+            self.as_connection.commit(*args)
