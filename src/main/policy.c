@@ -122,6 +122,9 @@
                     policy->filter_exp = exp_list;                             \
                     *exp_list_p = exp_list;                                    \
                 }                                                              \
+                else {                                                         \
+                    return err->code;                                          \
+                }                                                              \
             }                                                                  \
         }                                                                      \
     }
