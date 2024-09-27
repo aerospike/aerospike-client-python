@@ -40,6 +40,11 @@ class TestMRT:
         else:
             assert str(excinfo.value) == err_msg
 
+    # Even though this is an unlikely use case, this should not cause problems.
+    def test_transaction_reinit(self):
+        mrt = aerospike.Transaction()
+        mrt.__init__()
+
     @pytest.fixture
     def cleanup_records_before_test(self, request, as_connection):
         self.keys = []
@@ -96,7 +101,10 @@ class TestMRT:
             self.as_connection.commit(mrt)
 
     @pytest.mark.parametrize("more_than_once", [False, True])
-    def test_abort_api_and_functionality(self, requires_server_mrt_support, cleanup_records_before_test, more_than_once: bool):
+    def test_abort_api_and_functionality(self,
+                                         requires_server_mrt_support,
+                                         cleanup_records_before_test,
+                                         more_than_once: bool):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
