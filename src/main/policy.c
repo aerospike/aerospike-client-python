@@ -111,9 +111,9 @@
             if (py_exp_list == NULL && PyErr_Occurred()) {                     \
                 PyErr_Print();                                                 \
                 Py_DECREF(py_field_name);                                      \
-                return as_error_update(                                        \
-                    err, AEROSPIKE_ERR_CLIENT,                                 \
-                    "Unable to fetch field from policy dictionary");           \
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT,              \
+                                       "Unable to fetch expressions field "    \
+                                       "from policy dictionary");              \
             }                                                                  \
             Py_DECREF(py_field_name);                                          \
             if (py_exp_list) {                                                 \
