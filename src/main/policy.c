@@ -52,6 +52,13 @@
 
 #define POLICY_UPDATE() *policy_p = policy;
 
+// TODO: Python exceptions should be propagated up instead of being cleared
+// but the policy helper functions don't handle this case and they only populate
+// an as_error object and return a status code.
+// That will take too much time to refactor, so just clear the exception and
+// populate the as_error object instead. This currently makes it harder to
+// debug why a C-API call failed though, because we don't have the exact
+// exception that was thrown
 #define POLICY_SET_FIELD(__field, __type)                                      \
     {                                                                          \
         PyObject *py_field_name = PyUnicode_FromString(#__field);              \
