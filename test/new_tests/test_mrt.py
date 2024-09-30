@@ -158,4 +158,6 @@ class TestMRT:
     def test_invalid_txn_in_policy(self):
         policy = {"txn": True}
         key = ("test", "demo", 1)
-        self.as_connection.get(key, policy)
+        with pytest.raises(TypeError) as excinfo:
+            self.as_connection.get(key, policy)
+        assert excinfo.value.msg == f"txn is not of type {aerospike.Transaction.__name__}"
