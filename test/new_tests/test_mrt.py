@@ -29,6 +29,10 @@ class TestMRT:
                 {"reads_capacity": 256, "writes_capacity": "256"},
                 pytest.raises((TypeError)), "writes_capacity must be an integer"
             ),
+            # Only need to test codepath once for uint32_t conversion helper function
+            (
+                {"reads_capacity": 2**32, "writes_capacity": 256}
+            )
         ]
     )
     def test_transaction_class(self, kwargs: dict, context, err_msg: Optional[str]):
