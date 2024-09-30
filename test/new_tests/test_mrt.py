@@ -65,15 +65,6 @@ class TestMRT:
             except e.RecordNotFound:
                 pass
 
-        def teardown():
-            for key in self.keys:
-                try:
-                    self.as_connection.remove(key)
-                except e.RecordNotFound:
-                    pass
-
-        request.addfinalizer(teardown)
-
     # TODO: global config and transaction level config have different codepaths (for now)
     def test_commit_api_and_functionality(self, cleanup_records_before_test):
         mrt = aerospike.Transaction()
