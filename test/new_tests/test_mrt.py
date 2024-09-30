@@ -76,7 +76,7 @@ class TestMRT:
 
         # For now, we must clean up to avoid interfering with future tests after MRTs
         # But every test should set up known values instead of relying on the server being empty
-        def remove_records(self):
+        def remove_records():
             for key in self.keys:
                 try:
                     self.as_connection.remove(key)
