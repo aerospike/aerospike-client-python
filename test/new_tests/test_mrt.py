@@ -46,7 +46,12 @@ class TestMRT:
         mrt.__init__()
 
     @pytest.fixture
-    def cleanup_records_before_test(self, request, as_connection):
+    def requires_server_mrt_support(self, as_connection):
+        if TestBaseClass.enterprise_in_use() is False or (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
+            pytest.skip()
+
+    @pytest.fixture
+    def cleanup_records_before_test(self, request, requires_server_mrt_support):
         self.keys = []
         NUM_RECORDS = 5
         for i in range(NUM_RECORDS):
@@ -56,26 +61,21 @@ class TestMRT:
         # Remove records before adding them because I don't trust that other tests have cleaned up properly
         for key in self.keys:
             try:
-                as_connection.remove(key)
+                self.as_connection.remove(key)
             except e.RecordNotFound:
                 pass
 
         def teardown():
             for key in self.keys:
                 try:
-                    as_connection.remove(key)
+                    self.as_connection.remove(key)
                 except e.RecordNotFound:
                     pass
 
         request.addfinalizer(teardown)
 
-    @pytest.fixture
-    def requires_server_mrt_support(self, as_connection):
-        if TestBaseClass.enterprise_in_use() is False or (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
-            pytest.skip()
-
     # TODO: global config and transaction level config have different codepaths (for now)
-    def test_commit_api_and_functionality(self, requires_server_mrt_support, cleanup_records_before_test):
+    def test_commit_api_and_functionality(self, cleanup_records_before_test):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
@@ -90,7 +90,7 @@ class TestMRT:
             _, _, bins = self.as_connection.get(key)
             assert bins == {"a": i}
 
-    def test_commit_more_than_once(self, requires_server_mrt_support, cleanup_records_before_test):
+    def test_commit_more_than_once(self, cleanup_records_before_test):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
@@ -102,7 +102,6 @@ class TestMRT:
 
     @pytest.mark.parametrize("more_than_once", [False, True])
     def test_abort_api_and_functionality(self,
-                                         requires_server_mrt_support,
                                          cleanup_records_before_test,
                                          more_than_once: bool):
         mrt = aerospike.Transaction()
