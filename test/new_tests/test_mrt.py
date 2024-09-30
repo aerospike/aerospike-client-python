@@ -15,7 +15,7 @@ class TestMRT:
             ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext(), None),
             (
                 {"reads_capacity": 256, "writes_capacity": 256, "invalid_arg": 1},
-                pytest.raises((TypeError)), "function takes at most 2 arguments (3 given)"
+                pytest.raises((TypeError)), "function takes at most 2 keyword arguments (3 given)"
             ),
             (
                 {"reads_capacity": 256},
@@ -98,7 +98,7 @@ class TestMRT:
         _, _, bins = self.as_connection.get(self.keys[0], policy)
         # Check that original value was overwritten
         assert bins == {"a": 1}
-        _, _, bins = self.as_connection.put(self.keys[1], {"a": 2}, policy)
+        self.as_connection.put(self.keys[1], {"a": 2}, policy)
 
         retval = self.as_connection.commit(transaction=mrt)
         assert retval is None
