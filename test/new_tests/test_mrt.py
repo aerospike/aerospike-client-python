@@ -15,7 +15,7 @@ class TestMRT:
             ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext(), None),
             (
                 {"reads_capacity": 256, "writes_capacity": 256, "invalid_arg": 1},
-                pytest.raises((TypeError)), "???"
+                pytest.raises((TypeError)), "function takes at most 2 arguments (3 given)"
             ),
             (
                 {"reads_capacity": 256},
