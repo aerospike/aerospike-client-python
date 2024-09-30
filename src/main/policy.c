@@ -266,6 +266,8 @@ static inline void check_and_set_txn_field(as_error *err,
         }
     }
     else if (Py_TYPE(py_obj_txn) != py_expected_field_type) {
+        // TypeError should be set here,
+        // but there is no Aerospike exception to represent that error
         as_error_update(err, AEROSPIKE_ERR_PARAM, "txn is not of type %s",
                         py_expected_field_type->tp_name);
         return;
