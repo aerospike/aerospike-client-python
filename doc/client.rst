@@ -1663,6 +1663,11 @@ Write Policies
 
             Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
+        * **txn** :class:`aerospike.Transaction`
+            Multi-record command identifier.
+
+            Default: :py:obj:`None`
+
 .. _aerospike_read_policies:
 
 Read Policies
@@ -1894,6 +1899,10 @@ Operate Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
+        * **txn** :class:`aerospike.Transaction`
+            Multi-record command identifier.
+
+            Default: :py:obj:`None`
 
 .. _aerospike_apply_policies:
 
@@ -1972,6 +1981,10 @@ Apply Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
+        * **txn** :class:`aerospike.Transaction`
+            Multi-record command identifier.
+
+            Default: :py:obj:`None`
 
 
 .. _aerospike_remove_policies:
@@ -2055,6 +2068,10 @@ Remove Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
+        * **txn** :class:`aerospike.Transaction`
+            Multi-record command identifier.
+
+            Default: :py:obj:`None`
 
 .. _aerospike_batch_policies:
 
@@ -2187,6 +2204,10 @@ Batch Policies
             Server versions < 6.0 do not support this field and treat this value as false for key specific errors.
 
             Default: ``True``
+        * **txn** :class:`aerospike.Transaction`
+            Multi-record command identifier.
+
+            Default: :py:obj:`None`
 
 .. _aerospike_batch_write_policies:
 
