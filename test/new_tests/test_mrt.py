@@ -14,6 +14,10 @@ class TestMRT:
             ({}, nullcontext(), None),
             ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext(), None),
             (
+                {"reads_capacity": 256, "writes_capacity": 256, "invalid_arg": 1},
+                pytest.raises((TypeError)), "???"
+            ),
+            (
                 {"reads_capacity": 256},
                 pytest.raises((TypeError)), "Both reads_capacity and writes_capacity must be specified"
             ),
@@ -31,7 +35,8 @@ class TestMRT:
             ),
             # Only need to test codepath once for uint32_t conversion helper function
             (
-                {"reads_capacity": 2**32, "writes_capacity": 256}
+                {"reads_capacity": 2**32, "writes_capacity": 256},
+                pytest.raises((ValueError)), "reads_capacity is too large for an unsigned 32-bit integer"
             )
         ]
     )
