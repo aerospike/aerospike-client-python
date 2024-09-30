@@ -61,6 +61,9 @@ error:
     return 0;
 }
 
+// We don't initialize in __new__ because it's not documented how to raise
+// exceptions in __new__
+// We can raise an exception and fail out in __init__ though
 static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
                                      PyObject *kwds)
 {
