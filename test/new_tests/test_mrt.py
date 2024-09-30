@@ -154,3 +154,8 @@ class TestMRT:
     def test_mrt_invalid_args(self, args: list):
         with pytest.raises(TypeError):
             self.as_connection.commit(*args)
+
+    def test_invalid_txn_in_policy(self):
+        policy = {"txn": True}
+        key = ("test", "demo", 1)
+        self.as_connection.get(key, policy)
