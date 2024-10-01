@@ -110,8 +110,7 @@ class TestMRT:
 
     # Test case 57: "Execute the MRT. Before issuing commit, give abort request using abort API" (P1)
     def test_abort_api_and_functionality(self,
-                                         insert_records,
-                                         more_than_once: bool):
+                                         insert_records):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
