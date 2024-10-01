@@ -21,12 +21,32 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 jobs:
-  build-wheels:
+  build-select-wheels:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64"
+        ]
+      # Need all the artifacts to run all the stage tests, so fail fast
     uses: ./.github/workflows/build-wheels.yml
+    with:
+      platform-tag: ${{ matrix.platform-tag }}
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
+
+  build-sdist:
+    uses: ./.github/workflows/build-sdist.yml
+    with:
+      sha_to_build: ${{ github.sha }}
 
   run-stage-tests:
     uses: ./.github/workflows/stage-tests.yml
-    needs: build-wheels
+    needs: [
+      build-select-wheels,
+      build-sdist
+    ]
     secrets: inherit
     with:
       use_jfrog_builds: false
