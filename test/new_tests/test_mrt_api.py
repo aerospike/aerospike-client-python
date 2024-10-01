@@ -2,7 +2,6 @@ import aerospike
 from aerospike import exception as e
 import pytest
 from contextlib import nullcontext
-from .conftest import TestBaseClass
 from typing import Optional
 
 
