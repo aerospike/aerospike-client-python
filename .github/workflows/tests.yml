@@ -344,6 +344,20 @@ jobs:
       run: python -m pytest ./new_tests
       working-directory: test
 
+  test-mrt:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Get features.conf
+      run: echo ${{ secrets.BASE64_ENCODED_FEATURE_KEY }} | base64 --decode --output ./features.conf
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: true
+        server-tag: '8.0.0.0-alpha4'
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
   test-ee:
     runs-on: ubuntu-latest
     needs: build
@@ -374,7 +388,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_{admin_*,mrt}.py
+      run: python -m pytest ./new_tests/test_admin_*.py
       working-directory: test
 
     - name: Show logs if failed
