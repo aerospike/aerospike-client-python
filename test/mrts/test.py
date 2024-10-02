@@ -67,10 +67,10 @@ class TestMRTBasicFunctionality:
         _, _, bins = self.as_connection.get(self.keys[0], policy)
         assert bins == {self.bin_name: 1}
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy)
-        digest = aerospike.calc_digest("test", "demo", self.keys[0])
+        digest = aerospike.calc_digest(*self.keys[0])
         res = self.as_connection.info_all(f"debug-record:namespace=test;keyd={digest}")
         print(res)
-        digest = aerospike.calc_digest("test", "demo", self.keys[1])
+        digest = aerospike.calc_digest(*self.keys[1])
         res = self.as_connection.info_all(f"debug-record:namespace=test;keyd={digest}")
         print(res)
         retval = self.as_connection.abort(transaction=mrt, get_abort_status=get_status)
