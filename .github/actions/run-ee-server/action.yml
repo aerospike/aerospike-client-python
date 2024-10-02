@@ -76,16 +76,23 @@ runs:
       # so we have to manually enable it
       load: true
 
-  - run: docker run -d --name aerospike -p 3000:3000 ${{ env.SECURITY_IMAGE_NAME }}
+  # TODO: make sure this doesn't cause side effects
+  - run: echo CONTAINER_NAME="aerospike" >> $GITHUB_ENV
+    shell: bash
+
+  - run: docker run -d --name ${{ env.CONTAINER_NAME }} -p 3000:3000 ${{ env.SECURITY_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
-      container-name: aerospike
+      container-name: ${{ env.CONTAINER_NAME }}
       is-security-enabled: ${{ inputs.feature-to-enable == 'security' }}
 
   # TODO: way to get namespace programmatically?
-  - run: docker exec aerospike asinfo -v 'roster:namespace=test'
+  - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage roster stage observed ns test"
+    shell: bash
+
+  - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage recluster"
     shell: bash
 
   # For debugging
