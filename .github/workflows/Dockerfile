@@ -15,8 +15,8 @@ COPY security.smd /opt/aerospike/smd/
 
 FROM $image AS strong-consistency
 RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" /etc/aerospike/aerospike.template.conf
-RUN sed -i "s/\(service.*{\)/\1\n\node-id a1/" /etc/aerospike/aerospike.template.conf
-COPY roster.smd /opt/aerospike/smd/
+RUN sed -i "s/\(service {\)/\1\n\tnode-id a1/" /etc/aerospike/aerospike.template.conf
+#COPY roster.smd /opt/aerospike/smd/
 
 # Choose which stage to use
 FROM $feature_to_enable
