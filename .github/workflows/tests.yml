@@ -352,6 +352,18 @@ jobs:
     # - name: Get features.conf
     #   run: echo ${{ secrets.BASE64_ENCODED_FEATURE_KEY }} | base64 --decode --output ./features.conf
 
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+
+    - uses: actions/download-artifact@v3
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+
+    - name: Install client
+      run: pip install *.whl
+
     - uses: ./.github/actions/run-ee-server
       with:
         # TODO: Way to get least version?
@@ -361,6 +373,9 @@ jobs:
         feature-to-enable: strong-consistency
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - run: python3 -m pip install pytest -c requirements.txt
+      working-directory: test/
 
     - run: python3 test.py
       working-directory: test/mrts
