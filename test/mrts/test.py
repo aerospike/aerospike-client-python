@@ -59,7 +59,7 @@ class TestMRTBasicFunctionality:
         # Should return intermediate overwritten value from MRT
         # TODO: broken
         _, _, bins = self.as_connection.get(self.keys[0], policy)
-        assert bins == {self.bin_name, 1}
+        assert bins == {self.bin_name: 1}
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy)
         retval = self.as_connection.abort(transaction=mrt, get_abort_status=get_status)
         if get_status:
