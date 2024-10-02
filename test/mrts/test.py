@@ -51,6 +51,12 @@ class TestMRTBasicFunctionality:
     # Test case 57: "Execute the MRT. Before issuing commit, give abort request using abort API" (P1)
     @pytest.mark.parametrize("get_status", [False, True])
     def test_abort_api_and_functionality(self, get_status: bool):
+        # Make sure test fixture worked
+        _, _, bins = self.as_connection.get(self.keys[0])
+        assert bins == {self.bin_name: 0}
+        _, _, bins = self.as_connection.get(self.keys[1])
+        assert bins == {self.bin_name: 1}
+
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
