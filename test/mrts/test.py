@@ -7,15 +7,15 @@ import aerospike
 # We can't detect if the server has strong consistency or not
 class TestMRTBasicFunctionality:
     @pytest.fixture(scope="class", autouse=True)
-    def set_record_keys(self):
-        self.keys = []
+    def set_record_keys(request):
+        request.cls.keys = []
         NUM_RECORDS = 2
         for i in range(NUM_RECORDS):
             key = ("test", "demo", i)
-            self.keys.append(key)
-        self.bin_name = "a"
+            request.cls.keys.append(key)
+        request.cls.bin_name = "a"
 
-    @pytest.fixture(scope="function", autouse=True)
+    @pytest.fixture(autouse=True)
     def insert_or_update_records(self):
         config = {"hosts": [("127.0.0.1", 3000)]}
         self.as_connection = aerospike.client(config)
