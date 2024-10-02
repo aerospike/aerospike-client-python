@@ -30,12 +30,12 @@ class TestMRTBasicFunctionality:
         policy = {
             "txn": mrt
         }
-        self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy)
+        self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         # Reads in an MRT should read the intermediate values of the MRT
         _, _, bins = self.as_connection.get(self.keys[0], policy)
         # Check that original value was overwritten
         assert bins == {self.bin_name: 1}
-        self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy)
+        self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
 
         retval = self.as_connection.commit(transaction=mrt, get_commit_status=get_status)
         if get_status:
@@ -81,7 +81,7 @@ class TestMRTBasicFunctionality:
         policy = {
             "txn": mrt
         }
-        self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy)
+        self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         self.as_connection.commit(mrt)
         with pytest.raises(e.RollAlreadyAttempted):
             self.as_connection.abort(mrt)
