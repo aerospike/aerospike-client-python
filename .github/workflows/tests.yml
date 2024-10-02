@@ -365,14 +365,14 @@ jobs:
       run: pip install *.whl
 
     - uses: ./.github/actions/run-ee-server
-      with:
+    #   with:
         # TODO: Way to get least version?
-        server-tag: '8.0.0.0-alpha4'
+        # server-tag: '8.0.0.0-alpha4'
         # TODO: make this a fallback
-        use-server-rc: true
-        feature-to-enable: strong-consistency
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        # use-server-rc: true
+        # feature-to-enable: strong-consistency
+        # docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        # docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - run: python3 -m pip install pytest -c requirements.txt
       working-directory: test/
