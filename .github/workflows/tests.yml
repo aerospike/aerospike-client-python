@@ -348,6 +348,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
+    - uses: actions/checkout@v4
     # - name: Get features.conf
     #   run: echo ${{ secrets.BASE64_ENCODED_FEATURE_KEY }} | base64 --decode --output ./features.conf
 
