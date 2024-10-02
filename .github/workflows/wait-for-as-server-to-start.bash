@@ -38,6 +38,7 @@ done
 while true; do
     echo "Waiting for server to stabilize (i.e return a cluster key)..."
     # We assume that when an ERROR is returned, the cluster is not stable yet (i.e not fully initialized)
+    # TODO: add note about ignore-migrations
     if docker exec "$container_name" asinfo $user_credentials -v "cluster-stable:ignore-migrations=true" 2>&1 | (! grep -qE "^ERROR"); then
         echo "Server is in a stable state."
         break
