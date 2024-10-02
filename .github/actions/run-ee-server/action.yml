@@ -85,7 +85,7 @@ runs:
       is-security-enabled: ${{ inputs.feature-to-enable == 'security' }}
 
   # TODO: way to get namespace programmatically?
-  - run: docker exec aerospike asinfo -v 'roster:namespace="test"'
+  - run: docker exec aerospike asinfo -v 'roster:namespace=test'
     shell: bash
 
   # For debugging
