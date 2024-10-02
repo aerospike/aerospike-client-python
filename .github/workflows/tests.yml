@@ -362,6 +362,9 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - run: python3 test.py
+      working-directory: test/mrts
+
   test-ee:
     runs-on: ubuntu-latest
     needs: build
