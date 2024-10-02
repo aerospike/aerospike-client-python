@@ -8,6 +8,9 @@ inputs:
   server-tag:
     required: true
     default: 'latest'
+  feature-to-enable:
+    required: false
+    default: security
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
@@ -25,6 +28,7 @@ runs:
       server-tag: ${{ inputs.server-tag }}
       docker-hub-username: ${{ inputs.docker-hub-username }}
       docker-hub-password: ${{ inputs.docker-hub-password }}
+      feature-to-enable: ${{ inputs.feature-to-enable }}
 
   - name: Get IP address of Docker container hosting server
     id: get-server-ip-address

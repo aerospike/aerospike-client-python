@@ -1,5 +1,9 @@
 ARG image
-FROM $image AS security-enabled
+ARG feature_to_enable
+
+# Authentication
+
+FROM $image AS security
 RUN echo -e "security {\n\tenable-quotas true\n}\n" >> /etc/aerospike/aerospike.template.conf
 # security.smd was generated manually by
 # 1. Starting a new Aerospike EE server using Docker
@@ -9,5 +13,8 @@ RUN echo -e "security {\n\tenable-quotas true\n}\n" >> /etc/aerospike/aerospike.
 # TODO: generate this automatically, somehow
 COPY security.smd /opt/aerospike/smd/
 
-FROM $image AS strong-consistency-enabled
+FROM $image AS strong-consistency
 RUN sed "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" /etc/aerospike/aerospike.template.conf
+
+# Choose which stage to use
+FROM $feature_to_enable

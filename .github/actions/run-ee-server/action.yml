@@ -10,6 +10,9 @@ inputs:
   server-tag:
     required: true
     default: 'latest'
+  feature-to-enable:
+    required: false
+    default: security
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
@@ -66,6 +69,7 @@ runs:
       context: .github/workflows
       build-args: |
         image=${{ env.IMAGE_NAME }}
+        feature_to_enable=${{ inputs.feature-to-enable }}
       tags: ${{ env.SECURITY_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
