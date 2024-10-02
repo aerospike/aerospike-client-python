@@ -6,14 +6,14 @@ import aerospike
 # We don't include this in the new_tests/ suite because this requires strong consistency
 # We can't detect if the server has strong consistency or not
 class TestMRTBasicFunctionality:
-    @pytest.fixture(scope="class", autouse=True)
-    def set_record_keys(request):
-        request.cls.keys = []
+    @classmethod
+    def setup_class(cls):
+        cls.keys = []
         NUM_RECORDS = 2
         for i in range(NUM_RECORDS):
             key = ("test", "demo", i)
-            request.cls.keys.append(key)
-        request.cls.bin_name = "a"
+            cls.keys.append(key)
+        cls.bin_name = "a"
 
     @pytest.fixture(autouse=True)
     def insert_or_update_records(self):
