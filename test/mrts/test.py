@@ -20,14 +20,12 @@ class TestMRTBasicFunctionality:
         config = {"hosts": [("127.0.0.1", 3000)]}
         self.as_connection = aerospike.client(config)
         for i, key in enumerate(self.keys):
-            try:
-                self.as_connection.put(key, {self.bin_name: i})
-            except e.RecordNotFound:
-                pass
+            self.as_connection.put(key, {self.bin_name: i})
 
     # Test case 1: Execute a simple MRT with multiple SRTs(Read and Write) in any sequence (P3)
     # Validate that all operations complete successfully.
-    def test_commit_api_and_functionality(self):
+    @pytest.mark.parametrize("get_status", [False, True])
+    def test_commit_api_and_functionality(self, get_status: bool):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
@@ -39,8 +37,11 @@ class TestMRTBasicFunctionality:
         assert bins == {self.bin_name: 1}
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy)
 
-        retval = self.as_connection.commit(transaction=mrt, get_commit_status=True)
-        assert retval is None
+        retval = self.as_connection.commit(transaction=mrt, get_commit_status=get_status)
+        if get_status:
+            assert retval is None
+        else:
+            assert type(retval) is int
 
         # Were the writes committed?
         for i in range(len(self.keys)):
@@ -48,7 +49,8 @@ class TestMRTBasicFunctionality:
             assert bins == {self.bin_name: i + 1}
 
     # Test case 57: "Execute the MRT. Before issuing commit, give abort request using abort API" (P1)
-    def test_abort_api_and_functionality(self):
+    @pytest.mark.parametrize("get_status", [False, True])
+    def test_abort_api_and_functionality(self, get_status: bool):
         mrt = aerospike.Transaction()
         policy = {
             "txn": mrt
@@ -58,8 +60,11 @@ class TestMRTBasicFunctionality:
         # TODO: broken
         self.as_connection.get(self.keys[0])
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy)
-        retval = self.as_connection.abort(transaction=mrt, get_abort_status=True)
-        assert retval is None
+        retval = self.as_connection.abort(transaction=mrt, get_abort_status=get_status)
+        if get_status:
+            assert retval is None
+        else:
+            assert type(retval) is int
 
         # Test that MRT didn't go through
         for i in range(len(self.keys)):
