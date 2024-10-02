@@ -90,9 +90,11 @@ runs:
 
   # TODO: way to get namespace programmatically?
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage roster stage observed ns test"
+    if: ${{ inputs.feature-to-enable == 'strong-consistency' }}
     shell: bash
 
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage recluster"
+    if: ${{ inputs.feature-to-enable == 'strong-consistency' }}
     shell: bash
 
   # For debugging
