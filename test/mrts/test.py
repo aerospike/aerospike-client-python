@@ -39,9 +39,9 @@ class TestMRTBasicFunctionality:
 
         retval = self.as_connection.commit(transaction=mrt, get_commit_status=get_status)
         if get_status:
-            assert retval is None
-        else:
             assert type(retval) is int
+        else:
+            assert retval is None
 
         # Were the writes committed?
         for i in range(len(self.keys)):
@@ -62,9 +62,9 @@ class TestMRTBasicFunctionality:
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy)
         retval = self.as_connection.abort(transaction=mrt, get_abort_status=get_status)
         if get_status:
-            assert retval is None
-        else:
             assert type(retval) is int
+        else:
+            assert retval is None
 
         # Test that MRT didn't go through
         for i in range(len(self.keys)):
