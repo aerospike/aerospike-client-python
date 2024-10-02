@@ -61,7 +61,7 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     int get_status = 0;
 
     if (PyArg_ParseTupleAndKeywords(
-            args, kwds, "O!p:abort", kwlist, &AerospikeTransaction_Type,
+            args, kwds, "O!|p:abort", kwlist, &AerospikeTransaction_Type,
             (PyObject **)(&py_transaction), &get_status) == false) {
         return NULL;
     }
