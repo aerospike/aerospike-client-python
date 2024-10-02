@@ -61,12 +61,12 @@ class TestMRTBasicFunctionality:
         policy = {
             "txn": mrt
         }
-        self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy)
+        self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         # Should return intermediate overwritten value from MRT
         # TODO: broken
         _, _, bins = self.as_connection.get(self.keys[0], policy)
         assert bins == {self.bin_name: 1}
-        self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy)
+        self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
         digest = aerospike.calc_digest(*self.keys[0])
         print(digest)
         res = self.as_connection.info_all(f"debug-record:namespace=test;keyd={digest.hex()}")
