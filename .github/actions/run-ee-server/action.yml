@@ -82,7 +82,7 @@ runs:
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
       container-name: aerospike
-      is-security-enabled: true
+      is-security-enabled: ${{ inputs.feature-to-enable == 'security' }}
 
   - run: docker logs aerospike
     shell: bash
