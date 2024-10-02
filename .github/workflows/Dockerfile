@@ -14,7 +14,7 @@ RUN echo -e "security {\n\tenable-quotas true\n}\n" >> /etc/aerospike/aerospike.
 COPY security.smd /opt/aerospike/smd/
 
 FROM $image AS strong-consistency
-RUN sed "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" /etc/aerospike/aerospike.template.conf
+RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" /etc/aerospike/aerospike.template.conf
 
 # Choose which stage to use
 FROM $feature_to_enable
