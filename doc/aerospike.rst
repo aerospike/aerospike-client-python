@@ -1595,7 +1595,7 @@ MRT Commit Status
 .. data:: MRT_COMMIT_MARK_ROLL_FORWARD_ABANDONED
 
     Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
-	If the error is in doubt (usually timeout), the commit is in doubt.
+    If the error is in doubt (usually timeout), the commit is in doubt.
 
 .. data:: MRT_COMMIT_ROLL_FORWARD_ABANDONED
 
@@ -1604,7 +1604,7 @@ MRT Commit Status
 .. data:: MRT_COMMIT_CLOSE_ABANDONED
 
     Transaction has been rolled forward, but client transaction close was abandoned.
-	Server will eventually close the transaction.
+    Server will eventually close the transaction.
 
 MRT Abort Status
 ----------------
@@ -1624,4 +1624,4 @@ MRT Abort Status
 .. data:: ABORT_CLOSE_ABANDONED
 
     Transaction has been rolled back, but client transaction close was abandoned.
-	Server will eventually close the transaction.
+    Server will eventually close the transaction.
