@@ -91,6 +91,9 @@ runs:
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage revive ns test"
     shell: bash
 
+  - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage recluster"
+    shell: bash
+
   # For debugging
   - run: docker logs aerospike
     shell: bash
