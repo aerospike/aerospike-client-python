@@ -1575,3 +1575,53 @@ Query Duration
 
      Treat query as a LONG query, but relax read consistency for AP namespaces.
      This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
+
+MRT Commit Status
+-----------------
+
+.. data:: MRT_COMMIT_OK
+
+    Commit succeeded.
+
+.. This doesn't make sense TODO
+.. data:: MRT_COMMIT_ALREADY_ATTEMPTED
+
+    Commit or abort already attempted.
+
+.. data:: MRT_COMMIT_VERIFY_FAILED
+
+    Transaction verify failed. Transaction will be aborted.
+
+.. data:: MRT_COMMIT_MARK_ROLL_FORWARD_ABANDONED
+
+    Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
+	If the error is in doubt (usually timeout), the commit is in doubt.
+
+.. data:: MRT_COMMIT_ROLL_FORWARD_ABANDONED
+
+    Client roll forward abandoned. Server will eventually commit the transaction.
+
+.. data:: MRT_COMMIT_CLOSE_ABANDONED
+
+    Transaction has been rolled forward, but client transaction close was abandoned.
+	Server will eventually close the transaction.
+
+MRT Abort Status
+----------------
+
+.. data:: MRT_ABORT_OK
+
+    Abort succeeded.
+
+.. data:: ABORT_ALREADY_ATTEMPTED
+
+    Abort or commit already attempted.
+
+.. data:: ABORT_ROLL_BACK_ABANDONED
+
+    Client roll back abandoned. Server will eventually abort the transaction.
+
+.. data:: ABORT_CLOSE_ABANDONED
+
+    Transaction has been rolled back, but client transaction close was abandoned.
+	Server will eventually close the transaction.

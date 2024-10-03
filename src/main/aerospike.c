@@ -40,6 +40,7 @@
 #include <aerospike/as_admin.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_exp_operations.h>
+#include <aerospike/aerospike_txn.h>
 
 PyObject *py_global_hosts;
 int counter = 0xA8000000;
@@ -499,6 +500,18 @@ static struct module_constant_name_to_value module_constants[] = {
     {"LOG_LEVEL_INFO", .value.integer = AS_LOG_LEVEL_INFO},
     {"LOG_LEVEL_DEBUG", .value.integer = AS_LOG_LEVEL_DEBUG},
     {"LOG_LEVEL_TRACE", .value.integer = AS_LOG_LEVEL_TRACE},
+
+    {"MRT_COMMIT_OK", .value.integer = AS_COMMIT_OK},
+    {"MRT_COMMIT_ALREADY_ATTEMPTED", .value.integer = AS_COMMIT_ALREADY_ATTEMPTED},
+    {"MRT_COMMIT_VERIFY_FAILED", .value.integer = AS_COMMIT_VERIFY_FAILED},
+    {"MRT_COMMIT_MARK_ROLL_FORWARD_ABANDONED", .value.integer = AS_COMMIT_MARK_ROLL_FORWARD_ABANDONED},
+    {"MRT_COMMIT_ROLL_FORWARD_ABANDONED", .value.integer = AS_COMMIT_ROLL_FORWARD_ABANDONED},
+    {"MRT_COMMIT_CLOSE_ABANDONED", .value.integer = AS_COMMIT_CLOSE_ABANDONED},
+
+    {"MRT_ABORT_OK", .value.integer = AS_ABORT_OK},
+    {"MRT_ABORT_ALREADY_ATTEMPTED", .value.integer = AS_ABORT_ALREADY_ATTEMPTED},
+    {"MRT_ABORT_ROLL_BACK_ABANDONED", .value.integer = AS_ABORT_ROLL_BACK_ABANDONED},
+    {"MRT_ABORT_CLOSE_ABANDONED", .value.integer = AS_ABORT_CLOSE_ABANDONED},
 
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
     {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};
