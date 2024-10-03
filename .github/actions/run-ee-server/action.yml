@@ -88,6 +88,9 @@ runs:
       container-name: ${{ env.CONTAINER_NAME }}
       is-security-enabled: ${{ inputs.feature-to-enable == 'security' }}
 
+  - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage revive ns test"
+    shell: bash
+
   # For debugging
   - run: docker logs aerospike
     shell: bash
