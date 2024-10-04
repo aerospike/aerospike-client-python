@@ -116,12 +116,12 @@ def as_connection(request):
             print("Node returned error while getting config for namespace test")
             break
         ns_properties = result.split(";")
-        strong_consistency_key = "strong-consistency"
-        if strong_consistency_key not in ns_properties:
-            print(ns_properties)
-            print("Node does not have strong consistency enabled")
+        ns_properties = filter(lambda prop: prop.contains("strong-consistency="), ns_properties)
+        if len(ns_properties) == 0:
+            print("Strong consistency not found in node properties, so assuming it's disabled by default")
             break
-        if ns_properties[strong_consistency_key] == 'false':
+        _, sc_enabled = ns_properties.split("=")
+        if sc_enabled == 'false':
             print("One of the nodes is not SC enabled")
             break
         if i == len(ns_info) - 1:
