@@ -85,10 +85,13 @@ runs:
       is-security-enabled: true
       is-strong-consistency-enabled: true
 
-  - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage revive ns test"
+  - run: echo ASADM_AUTH_FLAGS="--user=superuser --password=superuser" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage recluster"
+  - run: docker exec ${{ env.CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
+    shell: bash
+
+  - run: docker exec ${{ env.CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
   # For debugging
