@@ -368,7 +368,6 @@ jobs:
         server-tag: '8.0.0.0-alpha4'
         # TODO: make this a fallback
         use-server-rc: true
-        feature-to-enable: strong-consistency
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 

@@ -10,9 +10,6 @@ inputs:
   server-tag:
     required: true
     default: 'latest'
-  feature-to-enable:
-    required: false
-    default: security
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
@@ -69,7 +66,6 @@ runs:
       context: .github/workflows/docker-build-context
       build-args: |
         image=${{ env.IMAGE_NAME }}
-        feature_to_enable=${{ inputs.feature-to-enable }}
       tags: ${{ env.SECURITY_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
@@ -86,15 +82,13 @@ runs:
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
       container-name: ${{ env.CONTAINER_NAME }}
-      is-security-enabled: ${{ inputs.feature-to-enable == 'security' }}
-      is-strong-consistency-enabled: ${{ inputs.feature-to-enable == 'strong-consistency' }}
+      is-security-enabled: true
+      is-strong-consistency-enabled: true
 
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage revive ns test"
-    if: ${{ inputs.feature-to-enable == 'strong-consistency' }}
     shell: bash
 
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage recluster"
-    if: ${{ inputs.feature-to-enable == 'strong-consistency' }}
     shell: bash
 
   # For debugging
