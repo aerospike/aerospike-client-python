@@ -1,5 +1,5 @@
 ARG image
-FROM image
+FROM $image
 
 # Enable authentication
 RUN echo -e "security {\n\tenable-quotas true\n}\n" >> /etc/aerospike/aerospike.template.conf
