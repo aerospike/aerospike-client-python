@@ -120,16 +120,12 @@ class TestCDTIndexB64(object):
         """
         Invoke get_cdtctx_base64() with invalid arguments
         """
-        try:
+        with pytest.raises(e.ParamError):
             self.as_connection.get_cdtctx_base64({})
-        except e.ParamError:
-            pass
 
     def test_get_cdtctxb64_with_invalid_ctx(self):
         """
         Invoke get_cdtctx_base64() with invalid arguments
         """
-        try:
+        with pytest.raises(e.ParamError):
             self.as_connection.get_cdtctx_base64(ctx_empty)
-        except e.ParamError:
-            pass
