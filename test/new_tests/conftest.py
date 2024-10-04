@@ -117,6 +117,7 @@ def as_connection(request):
             break
         ns_properties = result.split(";")
         ns_properties = filter(lambda prop: prop.contains("strong-consistency="), ns_properties)
+        ns_properties = list(ns_properties)
         if len(ns_properties) == 0:
             print("Strong consistency not found in node properties, so assuming it's disabled by default")
             break
