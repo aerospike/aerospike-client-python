@@ -107,30 +107,31 @@ def as_connection(request):
     request.cls.as_connection = as_client
 
     # Check that strong consistency is enabled for all nodes
-    ns_info = as_client.info_all("get-config:context=namespace;namespace=test")
-    are_all_nodes_sc_enabled = False
-    for i, (error, result) in enumerate(ns_info.values()):
-        if error:
-            # If we can't determine SC is enabled, just assume it isn't
-            # We don't want to break the tests if this code fails
-            print("Node returned error while getting config for namespace test")
-            break
-        ns_properties = result.split(";")
-        ns_properties = filter(lambda prop: "strong-consistency=" in prop, ns_properties)
-        ns_properties = list(ns_properties)
-        if len(ns_properties) == 0:
-            print("Strong consistency not found in node properties, so assuming it's disabled by default")
-            break
-        elif len(ns_properties) > 1:
-            print("Only one strong-consistency property should be present")
-            break
-        _, sc_enabled = ns_properties[0].split("=")
-        if sc_enabled == 'false':
-            print("One of the nodes is not SC enabled")
-            break
-        if i == len(ns_info) - 1:
-            are_all_nodes_sc_enabled = True
-    TestBaseClass.strong_consistency_enabled = are_all_nodes_sc_enabled
+    if TestBaseClass.enterprise_in_use():
+        ns_info = as_client.info_all("get-config:context=namespace;namespace=test")
+        are_all_nodes_sc_enabled = False
+        for i, (error, result) in enumerate(ns_info.values()):
+            if error:
+                # If we can't determine SC is enabled, just assume it isn't
+                # We don't want to break the tests if this code fails
+                print("Node returned error while getting config for namespace test")
+                break
+            ns_properties = result.split(";")
+            ns_properties = filter(lambda prop: "strong-consistency=" in prop, ns_properties)
+            ns_properties = list(ns_properties)
+            if len(ns_properties) == 0:
+                print("Strong consistency not found in node properties, so assuming it's disabled by default")
+                break
+            elif len(ns_properties) > 1:
+                print("Only one strong-consistency property should be present")
+                break
+            _, sc_enabled = ns_properties[0].split("=")
+            if sc_enabled == 'false':
+                print("One of the nodes is not SC enabled")
+                break
+            if i == len(ns_info) - 1:
+                are_all_nodes_sc_enabled = True
+    TestBaseClass.strong_consistency_enabled = TestBaseClass.enterprise_in_use() and are_all_nodes_sc_enabled
 
     def close_connection():
         as_client.close()
