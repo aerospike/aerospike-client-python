@@ -89,9 +89,11 @@ runs:
       is-security-enabled: ${{ inputs.feature-to-enable == 'security' }}
 
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage revive ns test"
+    if: ${{ inputs.feature-to-enable == 'strong-consistency' }}
     shell: bash
 
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage recluster"
+    if: ${{ inputs.feature-to-enable == 'strong-consistency' }}
     shell: bash
 
   # For debugging
