@@ -66,7 +66,7 @@ runs:
     uses: docker/build-push-action@v6
     with:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
-      context: .github/workflows
+      context: .github/workflows/docker-build-context
       build-args: |
         image=${{ env.IMAGE_NAME }}
         feature_to_enable=${{ inputs.feature-to-enable }}
