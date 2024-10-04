@@ -7,11 +7,7 @@ from .test_base_class import TestBaseClass
 # We don't include this in the new_tests/ suite because this requires strong consistency
 # The logic for checking the server is properly enabled for MRTs is complicated
 class TestMRTBasicFunctionality:
-    @classmethod
-    def setup_class(cls, as_connection):
-        if TestBaseClass.strong_consistency_enabled is False:
-            pytest.skip("Strong consistency is not enabled")
-
+    def setup_class(cls):
         cls.keys = []
         NUM_RECORDS = 2
         for i in range(NUM_RECORDS):
@@ -20,7 +16,10 @@ class TestMRTBasicFunctionality:
         cls.bin_name = "a"
 
     @pytest.fixture(autouse=True)
-    def insert_or_update_records(self):
+    def insert_or_update_records(self, as_connection):
+        if TestBaseClass.strong_consistency_enabled is False:
+            pytest.skip("Strong consistency is not enabled")
+
         for i, key in enumerate(self.keys):
             self.as_connection.put(key, {self.bin_name: i})
 
