@@ -1613,15 +1613,15 @@ MRT Abort Status
 
     Abort succeeded.
 
-.. data:: ABORT_ALREADY_ATTEMPTED
+.. data:: MRT_ABORT_ALREADY_ATTEMPTED
 
     Abort or commit already attempted.
 
-.. data:: ABORT_ROLL_BACK_ABANDONED
+.. data:: MRT_ABORT_ROLL_BACK_ABANDONED
 
     Client roll back abandoned. Server will eventually abort the transaction.
 
-.. data:: ABORT_CLOSE_ABANDONED
+.. data:: MRT_ABORT_CLOSE_ABANDONED
 
     Transaction has been rolled back, but client transaction close was abandoned.
     Server will eventually close the transaction.
