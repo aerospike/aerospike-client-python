@@ -41,6 +41,9 @@ while true; do
     # We assume that when an ERROR is returned, the cluster is not stable yet (i.e not fully initialized)
     cluster_stable_info_cmd="cluster-stable"
     if [[ $is_strong_consistency_enabled == true ]]; then
+        # The Dockerfile uses a roster from a previously running Aerospike server in a Docker container
+        # When we reuse this roster, the server assumes all of its partitions are dead because it's running on a new
+        # storage device.
         cluster_stable_info_cmd="$cluster_stable_info_cmd:ignore-migrations=true"
     fi
     if docker exec "$container_name" asinfo $user_credentials -v $cluster_stable_info_cmd 2>&1 | (! grep -qE "^ERROR"); then
