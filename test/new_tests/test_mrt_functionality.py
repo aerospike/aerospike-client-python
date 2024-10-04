@@ -17,6 +17,8 @@ class TestMRTBasicFunctionality:
 
     @pytest.fixture(autouse=True)
     def insert_or_update_records(self, as_connection):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 0):
+            pytest.skip("MRT is only supported in server version 8.0 or higher")
         if TestBaseClass.strong_consistency_enabled is False:
             pytest.skip("Strong consistency is not enabled")
 
