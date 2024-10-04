@@ -375,7 +375,7 @@ jobs:
     - run: python3 -m pip install pytest -c requirements.txt
       working-directory: test/
 
-    - run: python3 -m pytest new_tests/test_mrt_functionality.py
+    - run: python3 -m pytest -svv new_tests/test_mrt_functionality.py
       working-directory: test/
 
   test-ee:
