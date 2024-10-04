@@ -106,6 +106,27 @@ def as_connection(request):
 
     request.cls.as_connection = as_client
 
+    # Check that strong consistency is enabled for all nodes
+    ns_info = as_client.info_all("get-config:context=namespace;namespace=test")
+    are_all_nodes_sc_enabled = False
+    for i, (error, result) in enumerate(ns_info.values()):
+        if error:
+            # If we can't determine SC is enabled, just assume it isn't
+            # We don't want to break the tests if this code fails
+            print("Node returned error while getting config for namespace test")
+            break
+        ns_properties = result.split(";")
+        strong_consistency_key = "strong-consistency"
+        if strong_consistency_key not in ns_properties:
+            print("Node does not have strong consistency enabled")
+            break
+        if ns_properties[strong_consistency_key] == 'false':
+            print("One of the nodes is not SC enabled")
+            break
+        if i == len(ns_info) - 1:
+            are_all_nodes_sc_enabled = True
+    TestBaseClass.strong_consistency_enabled = are_all_nodes_sc_enabled
+
     def close_connection():
         as_client.close()
 
