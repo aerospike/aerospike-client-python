@@ -182,6 +182,27 @@ class TestBaseClass(object):
             # minor_ver = res[1]
             # print("major_ver:", major_ver, "minor_ver:", minor_ver)
 
+            # Check that strong consistency is enabled for all nodes
+            ns_info = client.info_all("get-config:context=namespace;namespace=test")
+            are_all_nodes_sc_enabled = True
+            for (error, result) in ns_info.values():
+                if error:
+                    # If we can't determine SC is enabled, just assume it isn't
+                    # We don't want to break the tests if this code fails
+                    print("Node returned error while getting config for namespace test")
+                    are_all_nodes_sc_enabled = False
+                    break
+                ns_properties = result.split(";")
+                strong_consistency_key = "strong-consistency"
+                if strong_consistency_key not in ns_properties:
+                    print("Node does not have strong consistency enabled")
+                    are_all_nodes_sc_enabled = False
+                    break
+                if ns_properties[strong_consistency_key] == 'false':
+                    print("One of the nodes is not SC enabled")
+                    are_all_nodes_sc_enabled = False
+                    break
+            TestBaseClass.strong_consistency_enabled = are_all_nodes_sc_enabled
         return client
 
     @staticmethod
