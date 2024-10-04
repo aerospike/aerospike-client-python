@@ -349,8 +349,6 @@ jobs:
     needs: build
     steps:
     - uses: actions/checkout@v4
-    # - name: Get features.conf
-    #   run: echo ${{ secrets.BASE64_ENCODED_FEATURE_KEY }} | base64 --decode --output ./features.conf
 
     - uses: actions/setup-python@v2
       with:
