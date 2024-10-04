@@ -6,6 +6,7 @@ set -o pipefail
 
 container_name=$1
 is_security_enabled=$2
+is_strong_consistency_enabled=$3
 
 if [[ $is_security_enabled == true ]]; then
     # We need to pass credentials to asinfo if server requires it
@@ -38,8 +39,11 @@ done
 while true; do
     echo "Waiting for server to stabilize (i.e return a cluster key)..."
     # We assume that when an ERROR is returned, the cluster is not stable yet (i.e not fully initialized)
-    # TODO: add note about ignore-migrations
-    if docker exec "$container_name" asinfo $user_credentials -v "cluster-stable:ignore-migrations=true" 2>&1 | (! grep -qE "^ERROR"); then
+    cluster_stable_info_cmd="cluster-stable"
+    if [[ $is_strong_consistency_enabled == true ]]; then
+        cluster_stable_info_cmd="$cluster_stable_info_cmd:ignore-migrations=true"
+    fi
+    if docker exec "$container_name" asinfo $user_credentials -v $cluster_stable_info_cmd 2>&1 | (! grep -qE "^ERROR"); then
         echo "Server is in a stable state."
         break
     fi
