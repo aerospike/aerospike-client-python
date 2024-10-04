@@ -87,6 +87,7 @@ runs:
     with:
       container-name: ${{ env.CONTAINER_NAME }}
       is-security-enabled: ${{ inputs.feature-to-enable == 'security' }}
+      is-strong-consistency-enabled: ${{ inputs.feature-to-enable == 'strong-consistency' }}
 
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm --enable --execute "manage revive ns test"
     if: ${{ inputs.feature-to-enable == 'strong-consistency' }}
