@@ -118,6 +118,7 @@ def as_connection(request):
         ns_properties = result.split(";")
         strong_consistency_key = "strong-consistency"
         if strong_consistency_key not in ns_properties:
+            print(ns_properties)
             print("Node does not have strong consistency enabled")
             break
         if ns_properties[strong_consistency_key] == 'false':
