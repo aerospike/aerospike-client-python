@@ -121,7 +121,10 @@ def as_connection(request):
         if len(ns_properties) == 0:
             print("Strong consistency not found in node properties, so assuming it's disabled by default")
             break
-        _, sc_enabled = ns_properties.split("=")
+        elif len(ns_properties) > 1:
+            print("Only one strong-consistency property should be present")
+            break
+        _, sc_enabled = ns_properties[0].split("=")
         if sc_enabled == 'false':
             print("One of the nodes is not SC enabled")
             break
