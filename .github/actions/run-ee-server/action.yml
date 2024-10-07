@@ -79,26 +79,25 @@ runs:
       # so we have to manually enable it
       load: true
 
-  # TODO: make sure this doesn't cause side effects
-  - run: echo CONTAINER_NAME="aerospike" >> $GITHUB_ENV
+  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker run -d --name ${{ env.CONTAINER_NAME }} -p 3000:3000 ${{ env.SECURITY_IMAGE_NAME }}
+  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 ${{ env.SECURITY_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
-      container-name: ${{ env.CONTAINER_NAME }}
+      container-name: ${{ env.SERVER_CONTAINER_NAME }}
       is-security-enabled: true
       is-strong-consistency-enabled: true
 
   - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker exec ${{ env.CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
     shell: bash
 
-  - run: docker exec ${{ env.CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
   # For debugging
