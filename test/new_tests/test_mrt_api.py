@@ -35,7 +35,8 @@ class TestMRT:
             # Only need to test codepath once for uint32_t conversion helper function
             (
                 {"reads_capacity": 2**32, "writes_capacity": 256},
-                pytest.raises((ValueError)), "reads_capacity is too large for an unsigned 32-bit integer"
+                pytest.raises((ValueError | OverflowError)),
+                "reads_capacity is too large for an unsigned 32-bit integer"
             )
         ]
     )
@@ -46,7 +47,13 @@ class TestMRT:
             mrt_id = mrt.id()
             assert type(mrt_id) == int
         else:
-            assert str(excinfo.value) == err_msg
+            # Linux x64's unsigned long is 8 bytes long
+            # but Windows x64's unsigned long is 4 bytes long
+            # Python in Windows x64 will throw an internal error when trying to convert a Python int to an unsigned long
+            if excinfo.type == ValueError:
+                assert str(excinfo.value) == err_msg
+            else:
+                assert str(excinfo.value) == "Python int too large to convert to C unsigned long"
 
     # Even though this is an unlikely use case, this should not cause problems.
     def test_transaction_reinit(self):
