@@ -20,5 +20,4 @@ ENV ROSTER_FILE_NAME=roster.smd
 COPY $ROSTER_FILE_NAME .
 # TODO: uninstall jq
 RUN sudo apt-get install -y jq
-ENV NODE_ID=$(jq ".[1].value" $SMD_FOLDER/$ROSTER_FILE_NAME)
-RUN sed -i "s/\(^service {\)/\1\n\tnode-id $NODE_ID/" /etc/aerospike/aerospike.template.conf
+RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(jq --raw-output ".[1].value" $SMD_FOLDER/$ROSTER_FILE_NAME)/" /etc/aerospike/aerospike.template.conf
