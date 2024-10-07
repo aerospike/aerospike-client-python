@@ -35,8 +35,15 @@ runs:
     run: |
       crudini --existing=param --set config.conf enterprise-edition hosts ''
       crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
-      crudini --existing=param --set config.conf enterprise-edition user superuser
-      crudini --existing=param --set config.conf enterprise-edition password superuser
+    working-directory: test
+    shell: bash
+
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
+    shell: bash
+
+  - run: |
+      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
     working-directory: test
     shell: bash
 
@@ -85,7 +92,7 @@ runs:
       is-security-enabled: true
       is-strong-consistency-enabled: true
 
-  - run: echo ASADM_AUTH_FLAGS="--user=superuser --password=superuser" >> $GITHUB_ENV
+  - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
     shell: bash
 
   - run: docker exec ${{ env.CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
