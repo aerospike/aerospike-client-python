@@ -1583,7 +1583,6 @@ MRT Commit Status
 
     Commit succeeded.
 
-.. This doesn't make sense TODO
 .. data:: MRT_COMMIT_ALREADY_ATTEMPTED
 
     Commit or abort already attempted.
