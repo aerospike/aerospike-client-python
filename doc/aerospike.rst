@@ -1576,6 +1576,8 @@ Query Duration
      Treat query as a LONG query, but relax read consistency for AP namespaces.
      This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
 
+.. _mrt_commit_status_constants:
+
 MRT Commit Status
 -----------------
 
@@ -1604,6 +1606,8 @@ MRT Commit Status
 
     Transaction has been rolled forward, but client transaction close was abandoned.
     Server will eventually close the transaction.
+
+.. _mrt_abort_status_constants:
 
 MRT Abort Status
 ----------------
