@@ -35,7 +35,7 @@ class TestMRT:
             # Only need to test codepath once for uint32_t conversion helper function
             (
                 {"reads_capacity": 2**32, "writes_capacity": 256},
-                pytest.raises((ValueError | OverflowError)),
+                pytest.raises((ValueError, OverflowError)),
                 "reads_capacity is too large for an unsigned 32-bit integer"
             )
         ]
