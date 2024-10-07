@@ -110,6 +110,10 @@ on:
         type: string
         default: 'latest'
         description: 'Server docker image tag'
+      test-file:
+        required: false
+        type: string
+        default: ''
     secrets:
       # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
