@@ -602,7 +602,7 @@ Multi-Record Transactions
         Requires server version 8.0+
 
         :param transaction: Multi-record transaction.
-        :type transaction: :class:`aerospike.Transaction`, optional
+        :type transaction: :class:`aerospike.Transaction`
         :param bool get_commit_status:
             If :py:obj:`True`, return one of :ref:`mrt_commit_status_constants`.
             Otherwise, return :py:obj:`None`.
@@ -614,7 +614,7 @@ Multi-Record Transactions
         Requires server version 8.0+
 
         :param transaction: Multi-record transaction.
-        :type transaction: :class:`aerospike.Transaction`, optional
+        :type transaction: :class:`aerospike.Transaction`
         :param bool get_abort_status:
             If :py:obj:`True`, return one of :ref:`mrt_abort_status_constants`.
             Otherwise, return :py:obj:`None`.
