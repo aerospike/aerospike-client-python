@@ -18,6 +18,8 @@ Methods
 .. class:: Transaction
     :noindex:
 
-    .. method:: id()
+    .. method:: id() -> int
 
         Get the random transaction id that was generated on class instance creation.
+
+        The value is an unsigned 64-bit integer.
