@@ -26,7 +26,7 @@ COPY $ROSTER_FILE_NAME .
 FROM ghcr.io/jqlang/jq:1.7 as get-node-id
 COPY --from=configure-server $ROSTER_FILE_NAME .
 ENV NODE_ID_FILE_NAME=node_id
-RUN echo $(jq --raw-output ".[1].value" $ROSTER_FILE_NAME) > $NODE_ID_FILE_NAME
+RUN jq --raw-output ".[1].value" $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
 
 FROM configure-server as set-node-id
 COPY --from=get-node-id $NODE_ID_FILE_NAME .
