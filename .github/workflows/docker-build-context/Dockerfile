@@ -37,6 +37,9 @@ ARG NODE_ID_FILE_NAME
 RUN jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
 
 FROM configure-server as set-node-id
+# Not sure if this stage will inherit this arg from the previous stage
+# Just include this to be safe
+ARG AEROSPIKE_CONF_TEMPLATE_PATH
 ARG NODE_ID_FILE_NAME
 COPY --from=get-node-id $NODE_ID_FILE_NAME .
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
