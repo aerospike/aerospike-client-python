@@ -43,7 +43,7 @@ class TestMRTAPI:
                 pytest.raises((ValueError, OverflowError)),
                 "reads_capacity is too large for an unsigned 32-bit integer"
             )
-        ]
+        ],
     )
     def test_transaction_class(self, kwargs: dict, context, err_msg: Optional[str]):
         with context as excinfo:
@@ -52,11 +52,12 @@ class TestMRTAPI:
             mrt_id = mrt.id()
             assert type(mrt_id) == int
         else:
-            if excinfo.type == ValueError:
-                assert str(excinfo.value) == err_msg
-            else:
+            # Just use kwargs to id the test case
+            if kwargs == {"reads_capacity": 2**32, "writes_capacity": 256} and excinfo.type == OverflowError:
                 # Internal Python error thrown in Windows
                 assert str(excinfo.value) == "Python int too large to convert to C unsigned long"
+            else:
+                assert str(excinfo.value) == err_msg
 
     # Even though this is an unlikely use case, this should not cause problems.
     def test_transaction_reinit(self):
