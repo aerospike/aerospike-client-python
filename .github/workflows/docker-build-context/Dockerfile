@@ -1,4 +1,6 @@
 ARG image
+ARG ROSTER_FILE_NAME=roster.smd
+
 FROM $image as configure-server
 
 WORKDIR /opt/aerospike/smd
@@ -18,7 +20,6 @@ COPY security.smd .
 # Enable strong consistency
 RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" $AEROSPIKE_CONF_TEMPLATE_PATH
-ARG ROSTER_FILE_NAME=roster.smd
 COPY $ROSTER_FILE_NAME .
 
 FROM busybox as get-sh
