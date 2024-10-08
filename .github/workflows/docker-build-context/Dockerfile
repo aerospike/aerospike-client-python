@@ -28,8 +28,8 @@ COPY --from=configure-server $ROSTER_FILE_NAME .
 ENV NODE_ID_FILE_NAME=node_id
 RUN echo $(jq --raw-output ".[1].value" $ROSTER_FILE_NAME) > $NODE_ID_FILE_NAME
 
-FROM configure-server
+FROM configure-server as set-node-id
 COPY --from=get-node-id $NODE_ID_FILE_NAME .
-RUN sed -i "s/\(^service {\)/\1\n\tnode-id $NODE_ID_FILE_NAME/" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
 # Delete temp file
 RUN rm $NODE_ID_FILE_NAME
