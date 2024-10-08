@@ -19,5 +19,5 @@ RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" /et
 ENV ROSTER_FILE_NAME=roster.smd
 COPY $ROSTER_FILE_NAME .
 # TODO: uninstall jq
-RUN sudo apt-get install -y jq
+RUN apt-get install -y jq
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(jq --raw-output ".[1].value" $SMD_FOLDER/$ROSTER_FILE_NAME)/" /etc/aerospike/aerospike.template.conf
