@@ -1,10 +1,11 @@
 ARG image
-FROM $image
+FROM $image as configure-server
 
 WORKDIR /opt/aerospike/smd
 
+ENV AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 # Enable authentication
-RUN echo -e "security {\n\tenable-quotas true\n}\n" >> /etc/aerospike/aerospike.template.conf
+RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_PATH
 # security.smd was generated manually by
 # 1. Starting a new Aerospike EE server using Docker
 # 2. Creating the superuser user
@@ -14,11 +15,16 @@ RUN echo -e "security {\n\tenable-quotas true\n}\n" >> /etc/aerospike/aerospike.
 COPY security.smd .
 
 # Enable strong consistency
-RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" /etc/aerospike/aerospike.template.conf
-RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" /etc/aerospike/aerospike.template.conf
+RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" $AEROSPIKE_CONF_TEMPLATE_PATH
 ENV ROSTER_FILE_NAME=roster.smd
 COPY $ROSTER_FILE_NAME .
-RUN apt update
-RUN apt-get install -y jq
-RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(jq --raw-output '.[1].value' $ROSTER_FILE_NAME)/" /etc/aerospike/aerospike.template.conf
-# TODO: uninstall jq
+
+# There's no tag for the latest major version to prevent breaking changes in jq
+# This is the next best thing
+FROM ghcr.io/jqlang/jq:1.7
+COPY --from=configure-server $ROSTER_FILE_NAME $ROSTER_FILE_NAME
+ENV NODE_ID=$(jq --raw-output '.[1].value' $ROSTER_FILE_NAME)
+
+FROM configure-server
+RUN sed -i "s/\(^service {\)/\1\n\tnode-id $NODE_ID/" $AEROSPIKE_CONF_TEMPLATE_PATH
