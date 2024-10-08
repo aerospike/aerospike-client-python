@@ -30,7 +30,7 @@ FROM ghcr.io/jqlang/jq:1.7 as get-jq
 FROM busybox as get-node-id
 COPY --from=get-jq /jq /bin/
 COPY $ROSTER_FILE_NAME .
-RUN ["/bin/busybox", "sh", "-c", "\"jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME\""]
+RUN jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
 
 FROM configure-server as set-node-id
 COPY --from=get-node-id $NODE_ID_FILE_NAME .
