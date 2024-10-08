@@ -275,28 +275,29 @@ static inline void check_and_set_txn_field(as_error *err,
     PyObject *py_obj_txn =
         PyDict_GetItemWithError(py_policy, py_txn_field_name);
     Py_DECREF(py_txn_field_name);
-    PyTypeObject *py_expected_field_type = &AerospikeTransaction_Type;
     if (py_obj_txn == NULL) {
         if (PyErr_Occurred()) {
             PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Getting the transaction field from Python policy "
                             "dictionary returned a non-KeyError exception");
-            return;
         }
+        // Whether or not a key error was raised
+        return;
     }
-    else if (Py_TYPE(py_obj_txn) != py_expected_field_type) {
+
+    PyTypeObject *py_expected_field_type = &AerospikeTransaction_Type;
+    if (Py_TYPE(py_obj_txn) != py_expected_field_type) {
         // TypeError should be set here,
         // but there is no Aerospike exception to represent that error
         as_error_update(err, AEROSPIKE_ERR_PARAM, "txn is not of type %s",
                         py_expected_field_type->tp_name);
         return;
     }
-    else {
-        AerospikeTransaction *py_txn = (AerospikeTransaction *)py_obj_txn;
-        as_txn *txn = py_txn->txn;
-        policy_base->txn = txn;
-    }
+
+    AerospikeTransaction *py_txn = (AerospikeTransaction *)py_obj_txn;
+    as_txn *txn = py_txn->txn;
+    policy_base->txn = txn;
 }
 
 static inline as_status
