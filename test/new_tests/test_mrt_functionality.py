@@ -4,8 +4,6 @@ import aerospike
 from .test_base_class import TestBaseClass
 
 
-# We don't include this in the new_tests/ suite because this requires strong consistency
-# The logic for checking the server is properly enabled for MRTs is complicated
 class TestMRTBasicFunctionality:
     def setup_class(cls):
         cls.keys = []
@@ -71,14 +69,22 @@ class TestMRTBasicFunctionality:
             assert retval is None
 
         # Test that MRT didn't go through
+        # i.e write commands were rolled back
         for i in range(len(self.keys)):
             _, _, bins = self.as_connection.get(self.keys[i])
-            # Write transaction was rolled back
             assert bins == {self.bin_name: i}
 
+    def test_commit_fail(self):
+        mrt = aerospike.Transaction()
+        policy = {
+            "txn": mrt
+        }
+        self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
+        self.as_connection.abort(mrt)
+        with pytest.raises(e.RollAlreadyAttempted):
+            self.as_connection.commit(mrt)
+
     # Test case 10: Issue abort after issung commit. (P1)
-    # Don't need to test negative case for commit()
-    # Both Python client's commit() and abort() share the same code path for handling exceptions
     def test_abort_fail(self):
         mrt = aerospike.Transaction()
         policy = {
