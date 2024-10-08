@@ -6,7 +6,7 @@ from typing import Optional
 
 
 @pytest.mark.usefixtures("as_connection")
-class TestMRT:
+class TestMRTAPI:
     @pytest.mark.parametrize(
         "kwargs, context, err_msg",
         [
@@ -35,6 +35,11 @@ class TestMRT:
             # Only need to test codepath once for uint32_t conversion helper function
             (
                 {"reads_capacity": 2**32, "writes_capacity": 256},
+                # Linux x64's unsigned long is 8 bytes long at most
+                # but Windows x64's unsigned long is 4 bytes long at most
+                # Python in Windows x64 will throw an internal error (OverflowError) when trying to convert a Python
+                # int that is larger than 4 bytes into an unsigned long.
+                # That error doesn't happen in Linux for that same scenario, so we throw our own error
                 pytest.raises((ValueError, OverflowError)),
                 "reads_capacity is too large for an unsigned 32-bit integer"
             )
@@ -47,17 +52,16 @@ class TestMRT:
             mrt_id = mrt.id()
             assert type(mrt_id) == int
         else:
-            # Linux x64's unsigned long is 8 bytes long
-            # but Windows x64's unsigned long is 4 bytes long
-            # Python in Windows x64 will throw an internal error when trying to convert a Python int to an unsigned long
             if excinfo.type == ValueError:
                 assert str(excinfo.value) == err_msg
             else:
+                # Internal Python error thrown in Windows
                 assert str(excinfo.value) == "Python int too large to convert to C unsigned long"
 
     # Even though this is an unlikely use case, this should not cause problems.
     def test_transaction_reinit(self):
         mrt = aerospike.Transaction()
+        # Create a new transaction object using the same Python class instance
         mrt.__init__()
 
     # Don't need to test abort() for invalid args since it shares the same codepath as commit() for input
@@ -72,6 +76,9 @@ class TestMRT:
     def test_mrt_invalid_args(self, args: list):
         with pytest.raises(TypeError):
             self.as_connection.commit(*args)
+
+        with pytest.raises(TypeError):
+            self.as_connection.abort(*args)
 
     def test_invalid_txn_in_policy(self):
         policy = {"txn": True}
