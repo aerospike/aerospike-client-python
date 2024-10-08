@@ -25,6 +25,7 @@ FROM busybox as get-sh
 # There's no tag for the latest major version to prevent breaking changes in jq
 # This is the next best thing
 FROM ghcr.io/jqlang/jq:1.7 as get-node-id
+ARG ROSTER_FILE_NAME
 COPY $ROSTER_FILE_NAME .
 COPY --from=get-sh /bin/busybox .
 ARG NODE_ID_FILE_NAME=node_id
