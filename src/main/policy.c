@@ -312,7 +312,7 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
     POLICY_SET_FIELD(compress, bool);
 
     // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
-    // so this is safe
+    // so this is safe to call for a scan/query policy's base policy
     check_and_set_txn_field(err, policy, py_policy);
     if (err->code != AEROSPIKE_OK) {
         return err->code;
