@@ -24,7 +24,7 @@ COPY $ROSTER_FILE_NAME .
 # This is the next best thing
 FROM ghcr.io/jqlang/jq:1.7
 COPY --from=configure-server $ROSTER_FILE_NAME .
-ENV NODE_ID=$(jq --raw-output '.[1].value' $ROSTER_FILE_NAME)
+ENV NODE_ID=$(--raw-output '.[1].value' $ROSTER_FILE_NAME)
 
 FROM configure-server
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $NODE_ID/" $AEROSPIKE_CONF_TEMPLATE_PATH
