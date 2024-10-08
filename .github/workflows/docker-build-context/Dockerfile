@@ -5,6 +5,7 @@ WORKDIR /opt/aerospike/smd
 
 ENV AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 # Enable authentication
+# Not using asconfig to edit config because this is a template file, which may not have valid values yet
 RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_PATH
 # security.smd was generated manually by
 # 1. Starting a new Aerospike EE server using Docker
