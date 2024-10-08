@@ -28,6 +28,7 @@ COPY $ROSTER_FILE_NAME .
 # This is the next best thing
 FROM ghcr.io/jqlang/jq:1.7 as get-jq
 # jq docker image doesn't have a shell
+# We need a shell to fetch and pass the node id to the next build stage
 FROM busybox as get-node-id
 COPY --from=get-jq /jq /bin/
 ARG ROSTER_FILE_NAME
