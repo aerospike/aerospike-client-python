@@ -29,6 +29,7 @@ FROM ghcr.io/jqlang/jq:1.7 as get-jq
 # jq docker image doesn't have a shell
 FROM busybox as get-node-id
 COPY --from=get-jq /jq /bin/
+ARG ROSTER_FILE_NAME
 COPY $ROSTER_FILE_NAME .
 RUN jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
 
