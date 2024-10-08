@@ -30,7 +30,7 @@ ARG ROSTER_FILE_NAME
 COPY $ROSTER_FILE_NAME .
 COPY --from=get-sh /bin/busybox .
 ARG NODE_ID_FILE_NAME=node_id
-RUN ["./busybox", "sh", "-c", "\"jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME\""]
+RUN ["/bin/busybox", "sh", "-c", "\"jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME\""]
 
 FROM configure-server as set-node-id
 COPY --from=get-node-id $NODE_ID_FILE_NAME .
