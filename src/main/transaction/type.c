@@ -34,12 +34,13 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
 }
 
 // Error indicator must always be checked after this call
+// Constructor parameter name needed for constructing error message
 static uint32_t get_uint32_t_from_pyobject(PyObject *pyobject,
-                                           const char *keyword_name_of_pyobj)
+                                           const char *param_name_of_pyobj)
 {
     if (!PyLong_Check(pyobject)) {
         PyErr_Format(PyExc_TypeError, "%s must be an integer",
-                     keyword_name_of_pyobj);
+                     param_name_of_pyobj);
         goto error;
     }
     unsigned long long_value = PyLong_AsUnsignedLong(pyobject);
@@ -50,12 +51,12 @@ static uint32_t get_uint32_t_from_pyobject(PyObject *pyobject,
     if (long_value > UINT32_MAX) {
         PyErr_Format(PyExc_ValueError,
                      "%s is too large for an unsigned 32-bit integer",
-                     keyword_name_of_pyobj);
+                     param_name_of_pyobj);
         goto error;
     }
 
-    uint32_t retval = (uint32_t)long_value;
-    return retval;
+    uint32_t value = (uint32_t)long_value;
+    return value;
 
 error:
     return 0;
@@ -74,7 +75,6 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     PyObject *py_reads_capacity = NULL;
     PyObject *py_writes_capacity = NULL;
 
-    // TODO: needs name after format?
     if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO", kwlist,
                                     &py_reads_capacity,
                                     &py_writes_capacity) == false) {
@@ -124,7 +124,8 @@ static PyMethodDef AerospikeTransaction_methods[] = {
 };
 
 PyTypeObject AerospikeTransaction_Type = {
-    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "aerospike.Transaction",
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name =
+        FULLY_QUALIFIED_TYPE_NAME("Transaction"),
     .tp_basicsize = sizeof(AerospikeTransaction),
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
