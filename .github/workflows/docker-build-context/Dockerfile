@@ -28,7 +28,7 @@ FROM busybox as get-sh
 FROM ghcr.io/jqlang/jq:1.7 as get-node-id
 ARG ROSTER_FILE_NAME
 COPY $ROSTER_FILE_NAME .
-COPY --from=get-sh /bin/busybox .
+COPY --from=get-sh /bin/busybox /
 ARG NODE_ID_FILE_NAME=node_id
 RUN ["/bin/busybox", "sh", "-c", "\"jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME\""]
 
