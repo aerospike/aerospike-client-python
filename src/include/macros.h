@@ -21,20 +21,3 @@
 // pyval is a PyObject* classname is a string
 #define AS_Matches_Classname(pyval, classname)                                 \
     (strcmp((pyval)->ob_type->tp_name, (classname)) == 0)
-
-// If we call PyObject_SetAttrString with value equal to NULL, it will cause a memory error in PyPy leading to a
-// seg fault.
-// This workaround seems to be safe and doesn't cause memory errors
-// TODO: in the future, file a ticket with PyPy to fix this bug
-// We can't declare a macro called PyObject_SetAttrString because PyPy's Python header file already defines
-// a header named PyObject_SetAttrString to point to its own implementation
-inline void PyObject_SetAttrStringSafe(PyObject *obj, const char *attr_name,
-                                       PyObject *value)
-{
-    if (value == NULL) {
-        PyObject_DelAttrString(obj, attr_name);
-    }
-    else {
-        PyObject_SetAttrString(obj, attr_name, value);
-    }
-}
