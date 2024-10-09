@@ -378,6 +378,25 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
         as_operations_list_append(ops, bin, (ctx_in_use ? &ctx : NULL),
                                   (policy_in_use ? &list_policy : NULL), val);
         break;
+    case AS_OPERATOR_TOUCH:
+        if (py_value) {
+            if (pyobject_to_index(self, err, py_value, &ttl) != AEROSPIKE_OK) {
+                goto CLEANUP;
+            }
+            ops->ttl = ttl;
+        }
+        as_operations_add_touch(ops);
+        break;
+    case AS_OPERATOR_READ:
+        as_operations_add_read(ops, bin);
+        break;
+    case AS_OPERATOR_DELETE:
+        as_operations_add_delete(ops);
+        break;
+    case AS_OPERATOR_WRITE:
+        CONVERT_VAL_TO_AS_VAL();
+        as_operations_add_write(ops, bin, (as_bin_value *)put_val);
+        break;
     }
 
     /* Handle the list operations with a helper in the cdt_list_operate.c file */
@@ -612,26 +631,6 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
             }
         }
         break;
-    case AS_OPERATOR_TOUCH:
-        if (py_value) {
-            if (pyobject_to_index(self, err, py_value, &ttl) != AEROSPIKE_OK) {
-                goto CLEANUP;
-            }
-            ops->ttl = ttl;
-        }
-        as_operations_add_touch(ops);
-        break;
-    case AS_OPERATOR_READ:
-        as_operations_add_read(ops, bin);
-        break;
-    case AS_OPERATOR_DELETE:
-        as_operations_add_delete(ops);
-        break;
-    case AS_OPERATOR_WRITE:
-        CONVERT_VAL_TO_AS_VAL();
-        as_operations_add_write(ops, bin, (as_bin_value *)put_val);
-        break;
-
     //------- MAP OPERATIONS ---------
     case OP_MAP_SET_POLICY:
         as_operations_map_set_policy(ops, bin, ctx_ref, &map_policy);
