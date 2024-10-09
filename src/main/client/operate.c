@@ -328,9 +328,6 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
     PyObject *py_ustr1 = NULL;
     PyObject *py_bin = NULL;
 
-    as_map_policy map_policy;
-    as_map_policy_init(&map_policy);
-
     PyObject *py_dict_key = NULL, *value = NULL;
     PyObject *py_value = NULL;
     PyObject *py_key = NULL;
@@ -498,6 +495,8 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
                                "Operation requires key parameter");
     }
 
+    as_map_policy map_policy;
+    as_map_policy_init(&map_policy);
     if (py_map_policy) {
         if (pyobject_to_map_policy(err, py_map_policy, &map_policy) !=
             AEROSPIKE_OK) {
