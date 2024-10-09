@@ -16,6 +16,7 @@ Methods
 =======
 
 .. class:: Transaction
+
     Initialize multi-record transaction (MRT), assign random transaction id and initialize
     reads/writes hashmaps with given capacities. If settings any parameters, both parameters must be specified.
 
