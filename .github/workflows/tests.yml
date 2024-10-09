@@ -2,7 +2,7 @@ name: PR tests
 
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.8'
-
+  COVERAGE_REPORT_ARTIFACT_NAME: coverage-report
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
 # 2. Commits are pushed directly to the dev, stage or master branch
@@ -156,11 +156,13 @@ jobs:
       if: ${{ !cancelled() }}
       uses: actions/upload-artifact@v3
       with:
-        name: coverage-report
+        name: ${{ env.COVERAGE_REPORT_ARTIFACT_NAME }}
         path: build/temp*/src/main/
 
   coverage-upload:
     needs: generate-coverage-report
+    env:
+      COVERAGE_REPORT_FOLDER: coverage-report
     if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
@@ -170,12 +172,12 @@ jobs:
 
     - uses: actions/download-artifact@v3
       with:
-        name: coverage-report
-        path: ./coverage-report
+        name: ${{ env.COVERAGE_REPORT_ARTIFACT_NAME }}
+        path: ./${{ env.COVERAGE_REPORT_FOLDER }}
 
     - uses: codecov/codecov-action@v3
       with:
-        directory: coverage-report
+        directory: ${{ env.COVERAGE_REPORT_FOLDER }}
         verbose: true # optional (default = false)
         fail_ci_if_error: true
       env:
