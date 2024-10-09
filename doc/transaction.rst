@@ -19,9 +19,11 @@ Methods
     Initialize multi-record transaction (MRT), assign random transaction id and initialize
     reads/writes hashmaps with given capacities. If settings any parameters, both parameters must be specified.
 
-    :param reads_capacity: expected number of record reads in the MRT. Minimum value is 16. Defaults to 128.
+    :param reads_capacity: (unsigned 32-bit integer) expected number of record reads in the MRT. Minimum value is 16.
+        Defaults to 128.
     :type reads_capacity: int, optional
-    :param writes_capacity: expected number of record writes in the MRT. Minimum value is 16. Defaults to 128.
+    :param writes_capacity: (unsigned 32-bit integer) expected number of record writes in the MRT. Minimum value is 16.
+        Defaults to 128.
     :type writes_capacity: int, optional
 
     :noindex:
