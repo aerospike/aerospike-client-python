@@ -75,49 +75,6 @@ jobs:
         name: wheel-${{ matrix.py-version }}
         path: ./dist/*.whl
 
-  test-memray:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: "3.8"
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-3.8
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
-
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
-
-    - uses: ./.github/actions/wait-for-as-server-to-start
-      with:
-        container-name: aerospike
-
-    - name: Get number of tests
-      run: echo "NUM_TESTS=$(python3 -m pytest new_tests/ --collect-only -q | tail -n 1 | awk '{print $1;}')" >> $GITHUB_ENV
-      working-directory: test
-
-    - name: Run tests
-      # Get number of tests since setting to 0 doesn't work properly
-      # pytest-memray currently throws a ZeroDivision error due to having a bug
-      # We ignore this for now
-      run: python -m pytest ./new_tests --memray --memray-bin-path=./ --most-allocations=${{ env.NUM_TESTS }} || true
-      working-directory: test
-
   generate-coverage-report:
     runs-on: ubuntu-latest
     steps:
@@ -468,7 +425,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - name: Download aerolab
-      run: wget https://github.com/aerospike/aerolab/releases/download/7.6.0-7b5bbde/aerolab-linux-amd64-7.6.0.deb
+      run: wget https://github.com/aerospike/aerolab/releases/download/7.5.2/aerolab-linux-amd64-7.5.2.deb
     - name: Install aerolab
       run: sudo dpkg -i *.deb
     - name: Tell aerolab to use Docker

@@ -12,13 +12,25 @@ on:
         description: 'Use server release candidate?'
         required: true
         default: false
+      massif:
+        type: boolean
+        description: 'Use massif for testing memory usage'
+        required: false
+        default: false
 
 jobs:
-  build-manylinux-wheels:
+  build-manylinux-wheel:
     uses: ./.github/workflows/build-wheels.yml
+    with:
+      python-tags: '["cp38"]'
+      platform-tag: manylinux_x86_64
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
 
   valgrind:
-    needs: build-manylinux-wheels
+    env:
+      MASSIF_REPORT_FILE_NAME: massif.out
+    needs: build-manylinux-wheel
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
@@ -50,5 +62,16 @@ jobs:
 
     - run: sudo apt update
     - run: sudo apt install valgrind -y
-    - run: PYTHONMALLOC=malloc valgrind --leak-check=full --error-exitcode=1 python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+
+    - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
+      if: ${{ inputs.massif }}
+
+    - run: echo VALGRIND_ARGS="--leak-check=full" >> $GITHUB_ENV
+      if: ${{ !inputs.massif }}
+
+    - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
+      working-directory: test
+
+    - run: ms_print ./${{ env.MASSIF_REPORT_FILE_NAME }}
+      if: ${{ !cancelled() && inputs.massif }}
       working-directory: test

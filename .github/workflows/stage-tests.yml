@@ -64,7 +64,7 @@ jobs:
       fail-fast: false
     env:
       LINUX_DISTRO_CONTAINER_NAME: linux-distro
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.test-case[2] == 'linux/amd64' && 'ubuntu-22.04' || 'aerospike_arm_runners_2' }}
     steps:
     # TODO: the checkout code is also duplicated in the macOS stage tests
     # But it's only a few lines of code so I didn't bother to create a composite action for it.
@@ -95,12 +95,6 @@ jobs:
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
-
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ env.DISTRO_DOCKER_IMAGE_PLATFORM == 'linux/arm64' }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
 
     - uses: ./.github/actions/run-ee-server
       with:
@@ -192,14 +186,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install Docker Engine
-      run: brew install colima
-
-    - name: Install Docker client
-      run: brew install docker
-
-    - name: Start Docker Engine
-      run: colima start
+    - uses: ./.github/actions/setup-docker-on-macos
 
     - uses: ./.github/actions/run-ee-server
       with:
