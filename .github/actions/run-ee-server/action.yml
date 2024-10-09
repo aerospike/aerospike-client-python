@@ -72,7 +72,7 @@ runs:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
       context: .github/workflows/docker-build-context
       build-args: |
-        image=${{ env.IMAGE_NAME }}
+        server_image=${{ env.IMAGE_NAME }}
       tags: ${{ env.SECURITY_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
