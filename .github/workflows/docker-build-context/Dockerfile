@@ -1,21 +1,25 @@
-ARG image
+ARG server_image
 ARG ROSTER_FILE_NAME=roster.smd
+# Temp file for passing node id from one build stage to another
+# Docker doesn't support command substitution for setting values for ARG variables, so we have to do this
 ARG NODE_ID_FILE_NAME=node_id
 
-FROM $image as configure-server
+FROM $server_image as configure-server
 
 WORKDIR /opt/aerospike/smd
 
-ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 # Enable authentication
-# Not using asconfig to edit config because this is a template file, which may not have valid values yet
+
+ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
+
+# Not using asconfig to edit config because we are working with a template file, which may not have valid values yet
 RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_PATH
 # security.smd was generated manually by
 # 1. Starting a new Aerospike EE server using Docker
 # 2. Creating the superuser user
 # 3. Copying /opt/aerospike/smd/security.smd from the container and committing it to this repo
 # This file should always work
-# TODO: generate this automatically, somehow
+# TODO: generate this automatically, somehow.
 COPY security.smd .
 
 # Enable strong consistency
@@ -23,6 +27,8 @@ RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" $AEROSPIKE_CONF_T
 RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" $AEROSPIKE_CONF_TEMPLATE_PATH
 ARG ROSTER_FILE_NAME
 COPY $ROSTER_FILE_NAME .
+
+# Fetch node id from roster.smd
 
 # There's no tag for the latest major version to prevent breaking changes in jq
 # This is the next best thing
@@ -37,11 +43,7 @@ ARG NODE_ID_FILE_NAME
 RUN jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
 
 FROM configure-server as set-node-id
-# Not sure if this stage will inherit this arg from the previous stage
-# Just include this to be safe
-ARG AEROSPIKE_CONF_TEMPLATE_PATH
 ARG NODE_ID_FILE_NAME
 COPY --from=get-node-id $NODE_ID_FILE_NAME .
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
-# Delete temp file
 RUN rm $NODE_ID_FILE_NAME
