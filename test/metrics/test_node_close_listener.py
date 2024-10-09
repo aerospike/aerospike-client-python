@@ -70,8 +70,6 @@ SERVER_PORT_NUMBER = 3000
 container = docker_client.containers.run("aerospike/aerospike-server", detach=True,
                                          ports={"3000/tcp": SERVER_PORT_NUMBER})
 print("Waiting for server to initialize...")
-
-print("Wait for server to fully start up...")
 time.sleep(5)
 
 try:
