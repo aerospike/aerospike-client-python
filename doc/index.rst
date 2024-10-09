@@ -85,7 +85,6 @@ Content
     exception
     aerospike_helpers
     data_mapping
-    command_vs_transaction
 
 Indices and tables
 ##################
