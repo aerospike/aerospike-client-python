@@ -65,7 +65,7 @@ class Node:
         error_count (int): Command error count since node was initialized. If the error is retryable,
             multiple errors per command may occur.
         timeout_count (int): Command timeout count since node was initialized.
-            If the timeout is retryable (ie socketTimeout), multiple timeouts per command may occur.
+            If the timeout is retryable (i.e socketTimeout), multiple timeouts per command may occur.
         metrics (:py:class:`NodeMetrics`): Node metrics
     """
     pass
