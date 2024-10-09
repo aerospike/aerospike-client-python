@@ -18,7 +18,13 @@
 
 #include <Python.h>
 
+typedef struct {
+    const char *attr_name;
+    PyObject *py_value;
+} as_exc_extra_info;
+
 PyObject *AerospikeException_New(void);
-void raise_exception(as_error *err);
-PyObject *raise_exception_old(as_error *err);
+int raise_exception(as_error *err);
+int raise_exception_with_api_call_extra_info(as_error *err,
+                                             as_exc_extra_info *extra_info);
 void remove_exception(as_error *err);

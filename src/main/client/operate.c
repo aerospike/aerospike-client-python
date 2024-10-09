@@ -76,17 +76,9 @@ static inline bool isExprOp(int op);
 
 #define EXCEPTION_ON_ERROR()                                                   \
     if (err.code != AEROSPIKE_OK) {                                            \
-        PyObject *py_err = NULL;                                               \
-        error_to_pyobject(&err, &py_err);                                      \
-        PyObject *exception_type = raise_exception_old(&err);                  \
-        if (PyObject_HasAttrString(exception_type, "key")) {                   \
-            PyObject_SetAttrString(exception_type, "key", py_key);             \
-        }                                                                      \
-        if (PyObject_HasAttrString(exception_type, "bin")) {                   \
-            PyObject_SetAttrString(exception_type, "bin", py_bin);             \
-        }                                                                      \
-        PyErr_SetObject(exception_type, py_err);                               \
-        Py_DECREF(py_err);                                                     \
+        as_exc_extra_info extra_info[] = {                                     \
+            {"key", py_key}, {"bin", py_bin}, {0}};                            \
+        raise_exception_with_api_call_extra_info(&err, extra_info);            \
         return NULL;                                                           \
     }
 
@@ -1203,14 +1195,8 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        as_exc_extra_info extra_info[] = {{"key", py_key}, {0}};
+        raise_exception_with_api_call_extra_info(&err, extra_info);
         return NULL;
     }
     return py_result;
