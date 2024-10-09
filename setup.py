@@ -87,14 +87,18 @@ extra_link_args = []
 
 SANITIZER=os.getenv('SANITIZER')
 if SANITIZER:
-    sanitizer_flags = [
+    sanitizer_cflags = [
         '-fsanitize=address',
-        '-fsanitize-recover=all'
+        '-fsanitize-recover=all',
+        '-fno-omit-frame-pointer'
     ]
-    extra_compile_args.extend(sanitizer_flags)
+    extra_compile_args.extend(sanitizer_cflags)
 
-    extra_link_args.append("-static-libasan")
-    extra_link_args.extend(sanitizer_flags)
+    sanitizer_ldflags = [
+        "-static-libasan"
+    ]
+    extra_link_args.extend(sanitizer_ldflags)
+    extra_link_args.extend(sanitizer_cflags)
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
@@ -232,6 +236,11 @@ class CClientBuild(build):
             ]
             if UNOPTIMIZED:
                 cmd.append('O=0')
+            if SANITIZER:
+                ext_cflags = " ".join(sanitizer_cflags)
+                cmd.append(f"EXT_CFLAGS={ext_cflags}")
+                ldflags = " ".join(sanitizer_ldflags)
+                cmd.append(f"LDFLAGS={ldflags}")
 
         def compile():
             print(cmd, library_dirs, libraries)
