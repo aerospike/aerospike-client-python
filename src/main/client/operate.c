@@ -306,10 +306,9 @@ bool opRequiresKey(int op)
 //         {OP_LIST_APPEND, as_operations_list_append},
 // };
 
-//
-void add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
-            as_vector *unicodeStrVector, as_static_pool *static_pool,
-            as_operations *ops, long *op, long *ret_type)
+as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
+                 as_vector *unicodeStrVector, as_static_pool *static_pool,
+                 as_operations *ops, long *op, long *ret_type)
 {
     as_val *put_val = NULL;
     as_val *put_key = NULL;
@@ -329,7 +328,7 @@ void add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
     PyObject *py_ustr1 = NULL;
     PyObject *py_bin = NULL;
 
-    PyObject *py_dict_key = NULL, *value = NULL;
+    PyObject *py_dict_key = NULL, *py_dict_value = NULL;
     PyObject *py_value = NULL;
     PyObject *py_key = NULL;
     PyObject *py_index = NULL;
@@ -342,14 +341,28 @@ void add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
 
     Py_ssize_t pos = 0;
 
-    get_op_code_from_py_op_dict(err, py_op_dict, &op_code);
-    if (PyErr_Occurred() || err->code == AEROSPIKE_OK) {
+    // Get required op dictionary entries
+    if (get_op_code_from_py_op_dict(err, py_op_dict, &op_code)) {
         return err->code;
     }
 
-    // TODO: get bin if it exists. Don't fail out if it doesn't
-    if (get_bin(err, py_op_dict, unicodeStrVector, &bin) != AEROSPIKE_OK) {
-        return err->code;
+    // Validate op dictionary using hashset?
+    while (PyDict_Next(py_op_dict, &pos, &py_dict_key, &py_dict_value)) {
+        if (!PyUnicode_Check(py_dict_key)) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "An operation key must be a string.");
+        }
+        else if (strcmp(dict_key, "ctx") == 0) {
+            CONVERT_PY_CTX_TO_AS_CTX();
+            ctx_ref = (ctx_in_use ? &ctx : NULL);
+        }
+        else {
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "Operation can contain only op, bin, index, key, val, "
+                "return_type and map_policy keys");
+            goto CLEANUP;
+        }
     }
 
     // No way to define an array of function pointers with differing arguments
@@ -389,60 +402,6 @@ void add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
     if (isExprOp(op_code)) {
         return add_new_expr_op(self, err, py_op_dict, unicodeStrVector, ops,
                                op_code, SERIALIZER_PYTHON);
-    }
-
-    while (PyDict_Next(py_op_dict, &pos, &py_dict_key, &value)) {
-        if (!PyUnicode_Check(py_dict_key)) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "An operation key must be a string.");
-        }
-        else {
-            char *name = (char *)PyUnicode_AsUTF8(py_dict_key);
-            if (!strcmp(name, "op")) {
-                continue;
-            }
-            else if (!strcmp(name, "bin")) {
-                py_bin = value;
-            }
-            else if (!strcmp(name, "index")) {
-                py_index = value;
-            }
-            else if (!strcmp(name, "val")) {
-                py_value = value;
-            }
-            else if (!strcmp(name, "key")) {
-                py_key = value;
-            }
-            else if (!strcmp(name, "range")) {
-                py_range = value;
-            }
-            else if (!strcmp(name, "map_policy")) {
-                py_map_policy = value;
-            }
-            else if (!strcmp(name, "return_type")) {
-                py_return_type = value;
-            }
-            else if (strcmp(name, "inverted") == 0) {
-                continue;
-            }
-            else if (strcmp(name, "ctx") == 0) {
-                CONVERT_PY_CTX_TO_AS_CTX();
-                ctx_ref = (ctx_in_use ? &ctx : NULL);
-            }
-            else if (strcmp(name, "map_order") == 0) {
-                py_map_order = value;
-            }
-            else if (strcmp(name, "persist_index") == 0) {
-                py_persist_index = value;
-            }
-            else {
-                as_error_update(
-                    err, AEROSPIKE_ERR_PARAM,
-                    "Operation can contain only op, bin, index, key, val, "
-                    "return_type and map_policy keys");
-                goto CLEANUP;
-            }
-        }
     }
 
     *op = op_code;
@@ -1425,33 +1384,35 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
-// error indicator must be checked after this call
-static void get_op_code_from_py_op_dict(as_error *err, PyObject *op_dict,
-                                        long *op_code_ref)
+static as_status get_op_code_from_py_op_dict(as_error *err, PyObject *op_dict,
+                                             long *op_code_ref)
 {
     PyObject *py_operation = PyDict_GetItemString(op_dict, PY_OPERATION_KEY);
     if (!py_operation) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Operation must contain an \"op\" entry");
-        goto error;
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Operation must contain an \"op\" entry");
     }
     if (!PyLong_Check(py_operation)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Operation must be an integer");
-        goto error;
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "Operation must be an integer");
     }
 
     long op_code = PyLong_AsLong(py_operation);
     if (op_code == -1 && PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Operation code too large");
+        }
+        else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Unable to convert Python operation to C long");
+        }
         PyErr_Clear();
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "Operation must be an integer");
-        goto error;
+        return err->code;
     }
-    *op_code_ref = op_code;
 
-error:
-    return;
+    *op_code_ref = op_code;
+    return AEROSPIKE_OK;
 }
 
 static as_status invertIfSpecified(as_error *err, PyObject *op_dict,
