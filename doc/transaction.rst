@@ -28,8 +28,6 @@ Methods
     :param writes_capacity: (unsigned 32-bit integer) expected number of record writes in the MRT.
     :type writes_capacity: int, optional
 
-    :noindex:
-
     .. method:: id() -> int
 
         Get the random transaction id that was generated on class instance creation.
