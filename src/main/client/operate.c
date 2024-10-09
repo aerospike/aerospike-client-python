@@ -306,6 +306,7 @@ bool opRequiresKey(int op)
 //         {OP_LIST_APPEND, as_operations_list_append},
 // };
 
+// as_
 as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
                  as_vector *unicodeStrVector, as_static_pool *static_pool,
                  as_operations *ops, long *op, long *ret_type)
@@ -340,6 +341,12 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
     PyObject *py_persist_index = NULL;
 
     Py_ssize_t pos = 0;
+
+    if (!PyDict_Check(py_op_dict)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Op is not a Python dictionary");
+        return err->code;
+    }
 
     // Get required op dictionary entries
     if (get_op_code_from_py_op_dict(err, py_op_dict, &op_code)) {
@@ -843,13 +850,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     for (Py_ssize_t i = 0; i < size; i++) {
         PyObject *py_op_dict = PyList_GetItem(py_list, i);
         if (py_op_dict == NULL) {
-            goto CLEANUP;
-        }
-
-        if (!PyDict_Check(py_op_dict)) {
-            as_error_update(
-                err, AEROSPIKE_ERR_PARAM,
-                "Operation at list index %d is not a Python dictionary", i);
             goto CLEANUP;
         }
 
