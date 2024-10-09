@@ -21,11 +21,12 @@ Methods
     reads/writes hashmaps with given capacities.
 
     If settings any parameters, both parameters must be specified.
-    For both parameters, the minimum value is 16. If neither is specified, both parameters are set to 128 by default.
+    For both parameters, an unsigned 32-bit integer must be passed and the minimum value is 16.
+    If neither is specified, both parameters are set to 128 by default.
 
-    :param reads_capacity: (unsigned 32-bit integer) expected number of record reads in the MRT.
+    :param reads_capacity: expected number of record reads in the MRT.
     :type reads_capacity: int, optional
-    :param writes_capacity: (unsigned 32-bit integer) expected number of record writes in the MRT.
+    :param writes_capacity: expected number of record writes in the MRT.
     :type writes_capacity: int, optional
 
     .. method:: id() -> int
