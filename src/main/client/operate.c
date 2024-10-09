@@ -42,8 +42,8 @@
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_nil.h>
 
-static as_status get_op_code_from_py_op_dict(as_error *err, PyObject *op_dict,
-                                             long *operation_ptr);
+static void get_op_code_from_py_op_dict(as_error *err, PyObject *op_dict,
+                                        long *op_code_ref);
 
 static inline bool isNewMapOp(int op);
 static inline bool isBitOp(int op);
@@ -306,9 +306,10 @@ bool opRequiresKey(int op)
 //         {OP_LIST_APPEND, as_operations_list_append},
 // };
 
-as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
-                 as_vector *unicodeStrVector, as_static_pool *static_pool,
-                 as_operations *ops, long *op, long *ret_type)
+//
+void add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
+            as_vector *unicodeStrVector, as_static_pool *static_pool,
+            as_operations *ops, long *op, long *ret_type)
 {
     as_val *put_val = NULL;
     as_val *put_key = NULL;
@@ -341,8 +342,8 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
 
     Py_ssize_t pos = 0;
 
-    if (get_op_code_from_py_op_dict(err, py_op_dict, &op_code) !=
-        AEROSPIKE_OK) {
+    get_op_code_from_py_op_dict(err, py_op_dict, &op_code);
+    if (PyErr_Occurred() || err->code == AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -351,10 +352,11 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
         return err->code;
     }
 
-    // TODO: no way to define an array of function pointers with differing arguments
+    // No way to define an array of function pointers with differing arguments
     switch (op_code) {
     case OP_LIST_APPEND:
-        // as_operations_list_append();
+        as_operations_list_append(ops, bin, (ctx_in_use ? &ctx : NULL),
+                                  (policy_in_use ? &list_policy : NULL), val);
         break;
     }
 
@@ -1423,33 +1425,33 @@ CLEANUP:
     return PyLong_FromLong(0);
 }
 
-static as_status get_op_code_from_py_op_dict(as_error *err, PyObject *op_dict,
-                                             long *op_code_ref)
+// error indicator must be checked after this call
+static void get_op_code_from_py_op_dict(as_error *err, PyObject *op_dict,
+                                        long *op_code_ref)
 {
     PyObject *py_operation = PyDict_GetItemString(op_dict, PY_OPERATION_KEY);
     if (!py_operation) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must contain an \"op\" entry");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation must contain an \"op\" entry");
+        goto error;
     }
     if (!PyLong_Check(py_operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation must be an integer");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation must be an integer");
+        goto error;
     }
 
     long op_code = PyLong_AsLong(py_operation);
-    if (PyErr_Occurred()) {
-        if (op_code == -1 && PyErr_ExceptionMatches(PyExc_OverflowError)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Operation code too large");
-        }
-        else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Invalid operation");
-        }
+    if (op_code == -1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation must be an integer");
+        goto error;
     }
     *op_code_ref = op_code;
 
-    return AEROSPIKE_OK;
+error:
+    return;
 }
 
 static as_status invertIfSpecified(as_error *err, PyObject *op_dict,
