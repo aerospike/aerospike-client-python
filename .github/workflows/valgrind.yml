@@ -59,7 +59,7 @@ jobs:
         echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
       shell: bash
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v5
       with:
         python-version: ${{ env.PYTHON_VERSION }}
         architecture: 'x64'
