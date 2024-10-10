@@ -18,9 +18,9 @@ on:
         required: false
         default: false
       python-tag:
-        type: boolean
+        type: string
         required: false
-        default: false
+        default: cp38
 
 jobs:
   build-manylinux-wheel:
