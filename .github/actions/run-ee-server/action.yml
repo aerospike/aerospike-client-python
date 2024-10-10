@@ -16,6 +16,9 @@ inputs:
     required: false
   docker-hub-password:
     required: false
+  connecting-from-another-docker-container:
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
@@ -79,3 +82,15 @@ runs:
     with:
       container-name: aerospike
       is-security-enabled: true
+
+  - name: Get IP address of Docker container hosting server
+    id: get-server-ip-address
+    if: ${{ inputs.connecting-from-another-docker-container == 'true' }}
+    run: echo server-ip=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_OUTPUT
+    shell: bash
+
+  - name: Configure tests to connect to that Docker container
+    if: ${{ inputs.connecting-from-another-docker-container == 'true' }}
+    run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000
+    working-directory: test
+    shell: bash
