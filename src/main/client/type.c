@@ -36,22 +36,6 @@
 static int set_rack_aware_config(as_config *conf, PyObject *config_dict);
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict);
 
-enum {
-    INIT_SUCCESS,
-    INIT_NO_CONFIG_ERR,
-    INIT_CONFIG_TYPE_ERR,
-    INIT_LUA_USER_ERR,
-    INIT_LUA_SYS_ERR,
-    INIT_HOST_TYPE_ERR,
-    INIT_EMPTY_HOSTS_ERR,
-    INIT_INVALID_ADRR_ERR,
-    INIT_SERIALIZE_ERR,
-    INIT_DESERIALIZE_ERR,
-    INIT_COMPRESSION_ERR,
-    INIT_POLICY_PARAM_ERR,
-    INIT_INVALID_AUTHMODE_ERR
-};
-
 /*******************************************************************************
  * PYTHON DOC METHODS
  ******************************************************************************/
@@ -544,6 +528,22 @@ static PyObject *AerospikeClient_Type_New(PyTypeObject *type, PyObject *args,
 
     return (PyObject *)self;
 }
+
+enum {
+    INIT_SUCCESS,
+    INIT_NO_CONFIG_ERR,
+    INIT_CONFIG_TYPE_ERR,
+    INIT_LUA_USER_ERR,
+    INIT_LUA_SYS_ERR,
+    INIT_HOST_TYPE_ERR,
+    INIT_EMPTY_HOSTS_ERR,
+    INIT_INVALID_ADRR_ERR,
+    INIT_SERIALIZE_ERR,
+    INIT_DESERIALIZE_ERR,
+    INIT_COMPRESSION_ERR,
+    INIT_POLICY_PARAM_ERR,
+    INIT_INVALID_AUTHMODE_ERR
+};
 
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
