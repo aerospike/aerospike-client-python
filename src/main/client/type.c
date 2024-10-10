@@ -1144,39 +1144,63 @@ CONSTRUCTOR_ERROR:
     return -1;
 }
 
-static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
+static int set_rack_aware_config(as_config *conf, PyObject *py_config_dict)
 {
-    PyObject *py_config_value;
+    PyObject *py_rack_aware_key = PyUnicode_FromString("rack_aware");
+    if (py_rack_aware_key == NULL) {
+        PyErr_Clear();
+        return INIT_POLICY_PARAM_ERR;
+    }
+    PyObject *py_config_value =
+        PyDict_GetItemWithError(py_config_dict, py_rack_aware_key);
+    if (py_config_value == NULL) {
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+            return INIT_POLICY_PARAM_ERR;
+        }
+        // KeyError is ok
+    }
+    else if (!PyBool_Check(py_config_value)) {
+        return INIT_POLICY_PARAM_ERR;
+    }
+    else {
+        int config_value = PyObject_IsTrue(py_config_value);
+        if (config_value == -1) {
+            PyErr_Clear();
+            return INIT_POLICY_PARAM_ERR;
+        }
+    }
+
+    PyObject *py_rack_id_key = PyUnicode_FromString("rack_id");
+    if (py_rack_id_key == NULL) {
+        PyErr_Clear();
+        return INIT_POLICY_PARAM_ERR;
+    }
     long rack_id;
-    py_config_value = PyDict_GetItemString(config_dict, "rack_aware");
-    if (py_config_value) {
-        if (PyBool_Check(py_config_value)) {
-            conf->rack_aware = PyObject_IsTrue(py_config_value);
-        }
-        else {
-            return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of rack_aware
+    py_config_value = PyDict_GetItemWithError(py_config_dict, py_rack_id_key);
+    if (py_config_value == NULL) {
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+            return INIT_POLICY_PARAM_ERR;
         }
     }
-
-    py_config_value = PyDict_GetItemString(config_dict, "rack_id");
-    if (py_config_value) {
-        if (PyLong_Check(py_config_value)) {
-            rack_id = PyLong_AsLong(py_config_value);
-        }
-        else {
-            return INIT_POLICY_PARAM_ERR; // A non integer passed in.
-        }
-        if (rack_id == -1 && PyErr_Occurred()) {
-            return INIT_POLICY_PARAM_ERR; // We had overflow.
-        }
-
-        if (rack_id > INT_MAX || rack_id < INT_MIN) {
-            return INIT_POLICY_PARAM_ERR; // Magnitude too great for an integer in C.
-        }
-        conf->rack_id = (int)rack_id;
+    else if (!PyLong_Check(py_config_value)) {
+        return INIT_POLICY_PARAM_ERR;
+    }
+    else {
+        rack_id = PyLong_AsLong(py_config_value);
+    }
+    if (rack_id == -1 && PyErr_Occurred()) {
+        return INIT_POLICY_PARAM_ERR; // We had overflow.
     }
 
-    PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
+    if (rack_id > INT_MAX || rack_id < INT_MIN) {
+        return INIT_POLICY_PARAM_ERR; // Magnitude too great for an integer in C.
+    }
+    conf->rack_id = (int)rack_id;
+
+    PyObject *rack_ids_pylist =
+        PyDict_GetItemString(py_config_dict, "rack_ids");
     if (rack_ids_pylist == NULL) {
         return INIT_SUCCESS;
     }
