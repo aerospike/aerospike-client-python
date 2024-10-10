@@ -548,17 +548,18 @@ enum {
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
-    PyObject *py_config = NULL;
-    int error_code = 0;
     as_error constructor_err;
     as_error_init(&constructor_err);
-    static char *kwlist[] = {"config", NULL};
 
     self->has_connected = false;
     self->use_shared_connection = false;
     self->as = NULL;
     self->send_bool_as = SEND_BOOL_AS_AS_BOOL;
 
+    int error_code = 0;
+
+    static char *kwlist[] = {"config", NULL};
+    PyObject *py_config = NULL;
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist,
                                     &py_config) == false) {
         error_code = INIT_NO_CONFIG_ERR;
