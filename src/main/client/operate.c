@@ -102,12 +102,6 @@ static inline bool isExprOp(int op);
         }                                                                      \
     }
 
-#define CONVERT_VAL_TO_AS_VAL()                                                \
-    if (pyobject_to_val(self, err, py_value, &put_val, static_pool,            \
-                        SERIALIZER_PYTHON) != AEROSPIKE_OK) {                  \
-        return err->code;                                                      \
-    }
-
 #define CONVERT_KEY_TO_AS_VAL()                                                \
     if (pyobject_to_val(self, err, py_key, &put_key, static_pool,              \
                         SERIALIZER_PYTHON) != AEROSPIKE_OK) {                  \
@@ -294,17 +288,22 @@ bool opRequiresKey(int op)
             op == OP_MAP_GET_BY_KEY_RANGE);
 }
 
-static bool op_requires_bin_name[] = {
-    [AS_OPERATOR_READ] = true,    [AS_OPERATOR_WRITE] = true,
-    [AS_OPERATOR_INCR] = true,    [AS_OPERATOR_APPEND] = true,
-    [AS_OPERATOR_PREPEND] = true,
-};
+static bool op_requires_bin_name[] = {[AS_OPERATOR_READ] = true,
+                                      [AS_OPERATOR_WRITE] = true,
+                                      [AS_OPERATOR_INCR] = true,
+                                      [AS_OPERATOR_APPEND] = true,
+                                      [AS_OPERATOR_PREPEND] = true,
+                                      // Last element of enum
+                                      [AS_OPERATOR_HLL_MODIFY] = false};
+
+static bool op_requires_value[] = {[AS_OPERATOR_WRITE] = true,
+                                   // TODO
+                                   [AS_OPERATOR_HLL_MODIFY] = false};
 
 as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
                  as_vector *unicodeStrVector, as_static_pool *static_pool,
                  as_operations *ops, long *op, long *ret_type)
 {
-    as_val *put_val = NULL;
     as_val *put_key = NULL;
     as_val *put_range = NULL;
     as_cdt_ctx ctx;
@@ -373,6 +372,14 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
         }
     }
 
+    as_val *put_val = NULL;
+    if (op_requires_value[op_code]) {
+        if (pyobject_to_val(self, err, py_value, &put_val, static_pool,
+                            SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+            return err->code;
+        }
+    }
+
     // TODO: use python hashset?
     const char *valid_keys[] = {"op",  "bin_name", "index",
                                 "key", "val",      "return_type"};
@@ -397,6 +404,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_op_dict,
 
     // No way to define an array of function pointers with differing arguments
     switch (op_code) {
+    // TODO
     case AS_OPERATOR_TOUCH:
         if (py_value) {
             if (pyobject_to_index(self, err, py_value, &ttl) != AEROSPIKE_OK) {
