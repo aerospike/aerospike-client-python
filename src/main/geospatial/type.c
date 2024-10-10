@@ -169,16 +169,15 @@ AerospikeGeospatial *self;
 
 CLEANUP:
     Py_XDECREF(initresult);
+    if (new_repr_str) {
+        free(new_repr_str);
+    }
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
-        if (new_repr_str) {
-            free(new_repr_str);
-        }
         return NULL;
     }
 
-    free(new_repr_str);
     return py_return;
 }
 
