@@ -28,7 +28,7 @@ class ConnectionStats:
     """Connection statistics.
 
     Attributes:
-        in_use (int): Connections actively being used in database transactions on this node.
+        in_use (int): Connections actively being used in database commands on this node.
             There can be multiple pools per node. This value is a summary of those pools on this node.
         in_pool (int): Connections residing in pool(s) on this node.
             There can be multiple pools per node. This value is a summary of those pools on this node.
@@ -62,10 +62,10 @@ class Node:
         address (str): The IP address / host name of the node (not including the port number).
         port (int): Port number of the node's address.
         conns (:py:class:`ConnectionStats`): Synchronous connection stats on this node.
-        error_count (int): Transaction error count since node was initialized. If the error is retryable,
-            multiple errors per transaction may occur.
-        timeout_count (int): Transaction timeout count since node was initialized.
-            If the timeout is retryable (ie socketTimeout), multiple timeouts per transaction may occur.
+        error_count (int): Command error count since node was initialized. If the error is retryable,
+            multiple errors per command may occur.
+        timeout_count (int): Command timeout count since node was initialized.
+            If the timeout is retryable (i.e socketTimeout), multiple timeouts per command may occur.
         metrics (:py:class:`NodeMetrics`): Node metrics
     """
     pass
@@ -77,8 +77,8 @@ class Cluster:
     Attributes:
         cluster_name (Optional[str]): Expected cluster name for all nodes. May be :py:obj:`None`.
         invalid_node_count (int): Count of add node failures in the most recent cluster tend iteration.
-        tran_count (int): Transaction count. The value is cumulative and not reset per metrics interval.
-        retry_count (int): Transaction retry count. There can be multiple retries for a single transaction.
+        command_count (int): Command count. The value is cumulative and not reset per metrics interval.
+        retry_count (int): Command retry count. There can be multiple retries for a single command.
             The value is cumulative and not reset per metrics interval.
         nodes (list[:py:class:`Node`]): Active nodes in cluster.
     """

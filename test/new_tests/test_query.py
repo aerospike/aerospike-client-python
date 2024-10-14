@@ -1148,6 +1148,8 @@ class TestQuery(TestBaseClass):
         ]
     )
     def test_query_expected_duration(self, duration: int):
+        if duration == aerospike.QUERY_DURATION_LONG_RELAX_AP and TestBaseClass.strong_consistency_enabled:
+            pytest.skip("Using aerospike.QUERY_DURATION_LONG_RELAX_AP will fail if server is in SC mode")
         query: aerospike.Query = self.as_connection.query("test", "demo")
         policy = {
             "expected_duration": duration

@@ -12,6 +12,9 @@ on:
         description: 'Use server release candidate?'
         required: true
         default: false
+      server-tag:
+        required: false
+        default: latest
       massif:
         type: boolean
         description: 'Use massif for testing memory usage'
@@ -57,6 +60,7 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
