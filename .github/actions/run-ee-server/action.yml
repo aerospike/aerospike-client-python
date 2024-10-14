@@ -18,7 +18,7 @@ inputs:
     required: false
   where-should-client-connect-from:
     required: false
-    # docker-host, other-docker-container, "remote-connection" via DOCKER_HOST
+    # docker-host, docker-container, "remote-connection" via DOCKER_HOST
     default: 'docker-host'
 
 runs:

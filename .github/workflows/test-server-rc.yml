@@ -40,7 +40,7 @@ jobs:
         server-tag: latest
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-        connecting-from-another-docker-container: true
+        where-should-client-connect-from: 'docker-container'
 
     - uses: actions/download-artifact@v4
       with:
