@@ -1,4 +1,4 @@
-name: 'Run EE Server'
+name: 'Run EE Server in a Docker container'
 description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
 # NOTE: do not share this server container with others
 # since it's using the default admin / admin credentials
@@ -16,9 +16,10 @@ inputs:
     required: false
   docker-hub-password:
     required: false
-  connecting-from-another-docker-container:
+  where-should-client-connect-from:
     required: false
-    default: 'false'
+    # docker-host, other-docker-container, "remote-connection" via DOCKER_HOST
+    default: 'docker-host'
 
 runs:
   using: "composite"
@@ -85,12 +86,19 @@ runs:
 
   - name: Get IP address of Docker container hosting server
     id: get-server-ip-address
-    if: ${{ inputs.connecting-from-another-docker-container == 'true' }}
-    run: echo server-ip=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_OUTPUT
+    if: ${{ inputs.docker-client-location == 'docker-container' }}
+    run: echo CUSTOM_SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_ENV
+    shell: bash
+
+  - name: Parse DOCKER_HOST
+    run: |
+      DOCKER_HOST_IP=${DOCKER_HOST/tcp:\/\//}
+      echo DOCKER_HOST_IP=${DOCKER_HOST_IP/:2375/} >> $GITHUB_ENV
+    working-directory: test
     shell: bash
 
   - name: Configure tests to connect to that Docker container
-    if: ${{ inputs.connecting-from-another-docker-container == 'true' }}
-    run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ steps.get-server-ip-address.outputs.server-ip }}:3000
+    if: ${{ inputs.docker-client-location != 'docker-host' }}
+    run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ env.CUSTOM_SERVER_IP }}:3000
     working-directory: test
     shell: bash
