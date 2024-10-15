@@ -108,7 +108,7 @@ as_status convert_partition_filter(AerospikeClient *self,
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "invalid begin for partition id: %d, \
 						begin must fit in long",
-                        ps->part_id);
+                        begin);
         goto ERROR_CLEANUP;
     }
 
@@ -138,7 +138,7 @@ as_status convert_partition_filter(AerospikeClient *self,
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "invalid count for partition id: %d, \
 						count must fit in long",
-                        ps->part_id);
+                        count);
         goto ERROR_CLEANUP;
     }
 
@@ -219,6 +219,8 @@ as_status convert_partition_filter(AerospikeClient *self,
         }
 
         for (uint16_t i = 0; i < filter->count; i++) {
+            ps = &parts_all->parts[i];
+
             PyObject *key = PyLong_FromLong(filter->begin + i);
             PyObject *status_dict = PyDict_GetItem(parts_stat, key);
             Py_DECREF(key);
