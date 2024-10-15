@@ -26,7 +26,7 @@
 PyObject *AerospikeScan_Get_Partitions_status(AerospikeScan *self)
 {
     PyObject *py_parts = NULL;
-    const as_partitions_status *all_parts = NULL;
+    as_partitions_status *all_parts = NULL;
     as_error err;
     as_error_init(&err);
 
