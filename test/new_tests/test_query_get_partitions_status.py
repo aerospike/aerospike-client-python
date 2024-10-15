@@ -91,6 +91,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
+        query_obj.paginate()
         query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         assert records == 5
@@ -108,7 +109,6 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         }
 
         query_obj2.foreach(resume_callback, policy)
-
         assert records + resumed_records == self.partition_1001_count
 
     def test_query_get_partitions_status_results(self):
