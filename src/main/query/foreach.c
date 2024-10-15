@@ -209,17 +209,17 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     // Invoke operation
     if (partition_filter_p) {
-        if (ps) {
-            as_partition_filter_set_partitions(partition_filter_p, ps);
-        }
+        // if (ps) {
+        //     as_partition_filter_set_partitions(partition_filter_p, ps);
+        // }
 
         aerospike_query_partitions(self->client->as, &data.error,
                                    query_policy_p, &self->query,
                                    partition_filter_p, each_result, &data);
 
-        if (ps) {
-            as_partitions_status_release(ps);
-        }
+        // if (ps) {
+        //     as_partitions_status_release(ps);
+        // }
     }
     else {
         aerospike_query_foreach(self->client->as, &err, query_policy_p,

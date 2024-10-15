@@ -217,15 +217,15 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     Py_BEGIN_ALLOW_THREADS
     // Invoke operation
     if (partition_filter_p) {
-        if (ps) {
-            as_partition_filter_set_partitions(partition_filter_p, ps);
-        }
+        // if (ps) {
+        //     as_partition_filter_set_partitions(partition_filter_p, ps);
+        // }
         aerospike_scan_partitions(self->client->as, &data.error, scan_policy_p,
                                   &self->scan, partition_filter_p, each_result,
                                   &data);
-        if (ps) {
-            as_partitions_status_release(ps);
-        }
+        // if (ps) {
+        //     as_partitions_status_release(ps);
+        // }
     }
     else if (nodename) {
         aerospike_scan_node(self->client->as, &data.error, scan_policy_p,
