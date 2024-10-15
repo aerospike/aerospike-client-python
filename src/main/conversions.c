@@ -404,6 +404,8 @@ as_status as_partitions_status_to_pyobject(
         goto END;
     }
 
+    parts_status = as_partitions_status_reserve(parts_status);
+
     PyObject *py_done = PyBool_FromLong(parts_status->done);
     PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_DONE, py_done);
     Py_DECREF(py_done);
