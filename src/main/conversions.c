@@ -386,8 +386,9 @@ END:
 // creates a python dict of tuples from an as_partitions_status
 // EX: {id:(id, init, done, digest, bval) for id in range (1000, 1004,1)}
 // returns and empty dict if parts_status == NULL
-as_status as_partitions_status_to_pyobject(
-    as_error *err, const as_partitions_status *parts_status, PyObject **py_dict)
+as_status as_partitions_status_to_pyobject(as_error *err,
+                                           as_partitions_status *parts_status,
+                                           PyObject **py_dict)
 {
     as_error_reset(err);
 
