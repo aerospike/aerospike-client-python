@@ -219,14 +219,12 @@ as_status convert_partition_filter(AerospikeClient *self,
         }
 
         for (uint16_t i = 0; i < filter->count; i++) {
-            ps = &parts_all->parts[i];
-
-            PyObject *key = PyLong_FromLong(ps->part_id);
+            PyObject *key = PyLong_FromLong(filter->begin + i);
             PyObject *status_dict = PyDict_GetItem(parts_stat, key);
             Py_DECREF(key);
 
             if (!status_dict || !PyTuple_Check(status_dict)) {
-                as_log_debug("invalid id for part_id: %d", ps->part_id);
+                as_log_debug("invalid id for part_id: %d", filter->begin + i);
                 continue;
             }
 
@@ -236,7 +234,8 @@ as_status convert_partition_filter(AerospikeClient *self,
             }
             else if (init) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "invalid init for part_id: %d", ps->part_id);
+                                "invalid init for part_id: %d",
+                                filter->begin + i);
                 goto ERROR_CLEANUP;
             }
 
@@ -246,7 +245,8 @@ as_status convert_partition_filter(AerospikeClient *self,
             }
             else if (retry) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "invalid retry for part_id: %d", ps->part_id);
+                                "invalid retry for part_id: %d",
+                                filter->begin + i);
                 goto ERROR_CLEANUP;
             }
 
@@ -259,7 +259,7 @@ as_status convert_partition_filter(AerospikeClient *self,
             else if (value) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "invalid digest value for part_id: %d",
-                                ps->part_id);
+                                filter->begin + i);
                 goto ERROR_CLEANUP;
             }
 
@@ -278,13 +278,14 @@ as_status convert_partition_filter(AerospikeClient *self,
                     as_error_update(err, AEROSPIKE_ERR_PARAM,
                                     "invalid bval for partition id: %d, bval "
                                     "must fit in unsigned long long",
-                                    ps->part_id);
+                                    filter->begin + i);
                     goto ERROR_CLEANUP;
                 }
             }
             else if (py_bval) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "invalid bval for part_id: %d", ps->part_id);
+                                "invalid bval for part_id: %d",
+                                filter->begin + i);
                 goto ERROR_CLEANUP;
             }
         }
