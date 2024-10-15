@@ -176,11 +176,9 @@ as_status convert_partition_filter(AerospikeClient *self,
         }
     }
 
-    parts_all =
-        parts_setup(filter->begin, filter->count, //cluster->n_partitions,
-                    &filter->digest);
-
     if (parts_stat && PyDict_Check(parts_stat)) {
+        parts_all = cf_malloc(sizeof(as_partitions_status) +
+                              (sizeof(as_partition_status) * filter->count));
 
         PyObject *py_done =
             PyDict_GetItemString(parts_stat, PARTITIONS_STATUS_KEY_DONE);
