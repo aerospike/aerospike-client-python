@@ -218,7 +218,7 @@ as_status convert_partition_filter(AerospikeClient *self,
             goto ERROR_CLEANUP;
         }
 
-        for (uint16_t i = 0; i < parts_all->part_count; i++) {
+        for (uint16_t i = 0; i < filter->count; i++) {
             ps = &parts_all->parts[i];
 
             PyObject *key = PyLong_FromLong(ps->part_id);
