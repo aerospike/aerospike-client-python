@@ -91,7 +91,6 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        query_obj.paginate()
         query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         assert records == 5
