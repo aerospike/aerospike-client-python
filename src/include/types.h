@@ -99,3 +99,7 @@ typedef struct {
 typedef struct {
     PyDictObject dict;
 } AerospikeKeyOrderedDict;
+
+typedef struct {
+    as_partitions_status *parts_all
+} AerospikePartitionsStatusObject;
