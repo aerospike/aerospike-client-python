@@ -355,6 +355,7 @@ setup(
                 'src/main/nullobject/type.c',
                 'src/main/cdt_types/type.c',
                 'src/main/key_ordered_dict/type.c',
+                'src/main/partitions_status/type.c',
                 'src/main/client/set_xdr_filter.c',
                 'src/main/client/get_expression_base64.c',
                 'src/main/client/get_cdtctx_base64.c',
