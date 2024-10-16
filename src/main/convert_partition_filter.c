@@ -54,7 +54,7 @@ as_status convert_partition_filter(AerospikeClient *self,
     PyObject *parts_stat =
         PyDict_GetItemString(py_partition_filter, "partition_status");
 
-    if (parts_stat && !PyDict_Check(parts_stat)) {
+    if (parts_stat) {
         as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "invalid partition_filter policy, partition_status must be a dict");
@@ -130,6 +130,27 @@ as_status convert_partition_filter(AerospikeClient *self,
     }
 
     filter->digest.init = 0;
+    if (digest && PyDict_Check(digest)) {
+
+        // TODO check these for overflow
+        PyObject *init = PyDict_GetItemString(digest, "init");
+        if (init && PyLong_Check(init)) {
+            filter->digest.init = PyLong_AsLong(init);
+        }
+
+        PyObject *value = PyDict_GetItemString(digest, "value");
+        if (value && PyUnicode_Check(value)) {
+            strncpy((char *)filter->digest.value,
+                    (char *)PyUnicode_AsUTF8(value), AS_DIGEST_VALUE_SIZE);
+        }
+    }
+
+    // TODO fix input validation
+    if (parts_stat) {
+        AerospikePartitionsStatusObject *py_parts_stat =
+            (AerospikePartitionsStatusObject *)parts_stat;
+        parts_all = py_parts_stat->parts_all;
+    }
 
     if (parts_all) {
         *pss = parts_all;
@@ -140,7 +161,7 @@ as_status convert_partition_filter(AerospikeClient *self,
 ERROR_CLEANUP:
 
     if (parts_all) {
-        free(parts_all);
+        as_partitions_status_release(parts_all);
     }
 
     return err->code;
