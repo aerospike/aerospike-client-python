@@ -17,6 +17,7 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
+#include "partitions_status.h"
 
 #include "nullobject.h"
 
