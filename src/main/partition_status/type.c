@@ -44,7 +44,20 @@ static PyObject *AerospikePartitionsStatusObject_Type_New(PyTypeObject *type,
     }
     return (PyObject *)self;
 }
-static PyTypeObject AerospikePartitionsStatusObject_Type = {
+
+PyObject *create_py_partitions_status_object(as_partitions_status *parts_all)
+{
+    if (parts_all == NULL) {
+        return NULL;
+    }
+    parts_all = as_partitions_status_reserve(parts_all);
+    AerospikePartitionsStatusObject *py_parts_all = PyObject_New(
+        AerospikePartitionsStatusObject, &AerospikePartitionsStatusObject_Type);
+    py_parts_all->parts_all = parts_all;
+    return py_parts_all;
+}
+
+PyTypeObject AerospikePartitionsStatusObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
         FULLY_QUALIFIED_TYPE_NAME("PartitionsStatus"), // tp_name
     sizeof(AerospikePartitionsStatusObject),           // tp_basicsize

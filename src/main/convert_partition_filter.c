@@ -25,37 +25,6 @@
 #include "client.h"
 #include "conversions.h"
 
-as_partitions_status *parts_setup(uint16_t part_begin, uint16_t part_count,
-                                  const as_digest *digest)
-{
-    as_partitions_status *parts_all =
-        cf_malloc(sizeof(as_partitions_status) +
-                  (sizeof(as_partition_status) * part_count));
-
-    memset(parts_all, 0,
-           sizeof(as_partitions_status) +
-               (sizeof(as_partition_status) * part_count));
-    parts_all->ref_count = 1;
-    parts_all->part_begin = part_begin;
-    parts_all->part_count = part_count;
-    parts_all->done = false;
-    parts_all->retry = true;
-
-    for (uint16_t i = 0; i < part_count; i++) {
-        as_partition_status *ps = &parts_all->parts[i];
-        ps->part_id = part_begin + i;
-        ps->retry = true;
-        ps->digest.init = false;
-        ps->bval = 0;
-    }
-
-    if (digest && digest->init) {
-        parts_all->parts[0].digest = *digest;
-    }
-
-    return parts_all;
-}
-
 /*
 * convert_partition_filter
 * Converts partition filter from python object into partition_filter struct.
