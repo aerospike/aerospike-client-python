@@ -1,5 +1,7 @@
 #include <Python.h>
 
+#include <aerospike/as_partition_filter.h>
+
 PyTypeObject *AerospikePartitionsStatusObject_Ready();
 
 PyObject *AerospikePartitionsStatusObject_Type_New(PyTypeObject *type,

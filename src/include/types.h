@@ -101,5 +101,5 @@ typedef struct {
 } AerospikeKeyOrderedDict;
 
 typedef struct {
-    as_partitions_status *parts_all
+    as_partitions_status *parts_all;
 } AerospikePartitionsStatusObject;
