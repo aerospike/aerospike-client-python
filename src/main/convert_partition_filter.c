@@ -37,7 +37,6 @@ as_status convert_partition_filter(AerospikeClient *self,
                                    as_partitions_status **pss, as_error *err)
 {
     as_partitions_status *parts_all = NULL;
-    as_partition_status *ps = NULL;
 
     // TODO what if py_partition_filter is NULL?
 
