@@ -34,9 +34,9 @@ static void AerospikePartitionsStatusObject_Type_Dealloc(
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
-static PyObject *AerospikePartitionsStatusObject_Type_New(PyTypeObject *type,
-                                                          PyObject *args,
-                                                          PyObject *kwds)
+PyObject *AerospikePartitionsStatusObject_Type_New(PyTypeObject *type,
+                                                   PyObject *args,
+                                                   PyObject *kwds)
 {
     AerospikePartitionsStatusObject *self =
         (AerospikePartitionsStatusObject *)type->tp_alloc(type, 0);
