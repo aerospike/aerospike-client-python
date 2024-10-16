@@ -55,7 +55,7 @@ PyObject *create_py_partitions_status_object(as_partitions_status *parts_all)
     AerospikePartitionsStatusObject *py_parts_all = PyObject_New(
         AerospikePartitionsStatusObject, &AerospikePartitionsStatusObject_Type);
     py_parts_all->parts_all = parts_all;
-    return py_parts_all;
+    return (PyObject *)py_parts_all;
 }
 
 PyTypeObject AerospikePartitionsStatusObject_Type = {
