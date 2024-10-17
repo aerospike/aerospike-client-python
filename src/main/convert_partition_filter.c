@@ -34,11 +34,8 @@
 */
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
-                                   as_partition_filter *filter,
-                                   as_partitions_status **pss, as_error *err)
+                                   as_partition_filter *filter, as_error *err)
 {
-    as_partitions_status *parts_all = NULL;
-
     // TODO what if py_partition_filter is NULL?
 
     if (!PyDict_Check(py_partition_filter)) {
@@ -147,11 +144,8 @@ as_status convert_partition_filter(AerospikeClient *self,
     }
 
     if (parts_stat) {
-        parts_all = ((AerospikePartitionsStatusObject *)parts_stat)->parts_all;
-    }
-
-    if (parts_all) {
-        *pss = parts_all;
+        filter->parts_all =
+            ((AerospikePartitionsStatusObject *)parts_stat)->parts_all;
     }
 
 EXIT:

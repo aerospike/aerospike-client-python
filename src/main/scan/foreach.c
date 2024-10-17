@@ -140,7 +140,6 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
 
     as_partition_filter partition_filter = {0};
     as_partition_filter *partition_filter_p = NULL;
-    as_partitions_status *ps = NULL;
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"callback", "policy", "options", "nodename", NULL};
@@ -186,7 +185,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
             PyDict_GetItemString(py_policy, "partition_filter");
         if (py_partition_filter) {
             if (convert_partition_filter(self->client, py_partition_filter,
-                                         &partition_filter, &ps,
+                                         &partition_filter,
                                          &data.error) == AEROSPIKE_OK) {
                 partition_filter_p = &partition_filter;
             }
@@ -217,15 +216,9 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     Py_BEGIN_ALLOW_THREADS
     // Invoke operation
     if (partition_filter_p) {
-        if (ps) {
-            as_partition_filter_set_partitions(partition_filter_p, ps);
-        }
         aerospike_scan_partitions(self->client->as, &data.error, scan_policy_p,
                                   &self->scan, partition_filter_p, each_result,
                                   &data);
-        if (ps) {
-            as_partitions_status_release(ps);
-        }
     }
     else if (nodename) {
         aerospike_scan_node(self->client->as, &data.error, scan_policy_p,
