@@ -93,7 +93,6 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
 
     as_partition_filter partition_filter = {0};
     as_partition_filter *partition_filter_p = NULL;
-    as_partitions_status *ps = NULL;
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -123,7 +122,7 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
             PyDict_GetItemString(py_policy, "partition_filter");
         if (py_partition_filter) {
             if (convert_partition_filter(self->client, py_partition_filter,
-                                         &partition_filter, &ps,
+                                         &partition_filter,
                                          &err) == AEROSPIKE_OK) {
                 partition_filter_p = &partition_filter;
             }
@@ -140,17 +139,9 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
     Py_BEGIN_ALLOW_THREADS
 
     if (partition_filter_p) {
-        if (ps) {
-            as_partition_filter_set_partitions(partition_filter_p, ps);
-        }
-
         aerospike_query_partitions(self->client->as, &err, query_policy_p,
                                    &self->query, partition_filter_p,
                                    each_result, &data);
-
-        if (ps) {
-            as_partitions_status_release(ps);
-        }
     }
     else {
         aerospike_query_foreach(self->client->as, &err, query_policy_p,
