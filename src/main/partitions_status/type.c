@@ -59,7 +59,7 @@ PyObject *create_py_partitions_status_object(as_error *err,
 
     AerospikePartitionsStatusObject *py_parts_all =
         (AerospikePartitionsStatusObject *)PyObject_CallNoArgs(
-            &AerospikePartitionsStatusObject_Type);
+            (PyObject *)&AerospikePartitionsStatusObject_Type);
     if (py_parts_all == NULL) {
         PyErr_Clear();
         as_error_update(
