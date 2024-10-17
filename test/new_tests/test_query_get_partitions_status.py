@@ -74,7 +74,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         stats = query_obj.get_partitions_status()
-        assert stats == {}
+        assert stats is None
 
     def test_get_partitions_status_after_foreach(self):
         """
