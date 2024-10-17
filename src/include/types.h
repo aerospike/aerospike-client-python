@@ -101,5 +101,5 @@ typedef struct {
 } AerospikeKeyOrderedDict;
 
 typedef struct {
-    as_partitions_status *parts_all;
+    PyObject_HEAD as_partitions_status *parts_all;
 } AerospikePartitionsStatusObject;
