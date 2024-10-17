@@ -54,8 +54,8 @@ as_status convert_partition_filter(AerospikeClient *self,
     PyObject *parts_stat =
         PyDict_GetItemString(py_partition_filter, "partition_status");
 
-    if (parts_stat &&
-        PyObject_TypeCheck(parts_stat, &AerospikePartitionsStatusObject_Type)) {
+    if (parts_stat && !PyObject_TypeCheck(
+                          parts_stat, &AerospikePartitionsStatusObject_Type)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "invalid partition_filter policy, partition_status "
                         "must be of type aerospike.PartitionsStatus");
