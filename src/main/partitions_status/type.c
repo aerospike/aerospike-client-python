@@ -49,7 +49,7 @@ PyObject *AerospikePartitionsStatusObject_Type_New(PyTypeObject *type,
 // We don't want the user to define a PartitionsStatus object in the public API
 // This object should only be created internally by an API method
 // parts_all may be NULL if the partitions status isn't being tracked by the C client
-// Returns Optional[aerospike.PartitionsStatus] and sets as_error on error
+// Returns Optional[aerospike.PartitionsStatus] or sets as_error on error
 PyObject *create_py_partitions_status_object(as_error *err,
                                              as_partitions_status *parts_all)
 {
