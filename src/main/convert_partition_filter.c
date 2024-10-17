@@ -24,6 +24,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "partitions_status.h"
 
 /*
 * convert_partition_filter
@@ -44,7 +45,7 @@ as_status convert_partition_filter(AerospikeClient *self,
         as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "invalid partition_filter policy, partition_filter must be a dict");
-        goto ERROR_CLEANUP;
+        goto EXIT;
     }
 
     PyObject *begin = PyDict_GetItemString(py_partition_filter, "begin");
@@ -53,11 +54,12 @@ as_status convert_partition_filter(AerospikeClient *self,
     PyObject *parts_stat =
         PyDict_GetItemString(py_partition_filter, "partition_status");
 
-    if (parts_stat) {
-        as_error_update(
-            err, AEROSPIKE_ERR_PARAM,
-            "invalid partition_filter policy, partition_status must be a dict");
-        goto ERROR_CLEANUP;
+    if (parts_stat &&
+        PyObject_TypeCheck(parts_stat, &AerospikePartitionsStatusObject_Type)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "invalid partition_filter policy, partition_status "
+                        "must be of type aerospike.PartitionsStatus");
+        goto EXIT;
     }
 
     long tmp_begin = 0;
@@ -69,15 +71,15 @@ as_status convert_partition_filter(AerospikeClient *self,
                         "invalid partition_filter policy begin, begin must \
 						be an int between 0 and %d inclusive",
                         CLUSTER_NPARTITIONS - 1);
-        goto ERROR_CLEANUP;
+        goto EXIT;
     }
 
     if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_OverflowError)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "invalid begin for partition id: %d, \
 						begin must fit in long",
-                        begin);
-        goto ERROR_CLEANUP;
+                        tmp_begin);
+        goto EXIT;
     }
 
     if (tmp_begin >= CLUSTER_NPARTITIONS || tmp_begin < 0) {
@@ -85,7 +87,7 @@ as_status convert_partition_filter(AerospikeClient *self,
                         "invalid partition_filter policy begin, begin must \
 						be an int between 0 and %d inclusive",
                         CLUSTER_NPARTITIONS - 1);
-        goto ERROR_CLEANUP;
+        goto EXIT;
     }
 
     filter->begin = tmp_begin;
@@ -99,15 +101,15 @@ as_status convert_partition_filter(AerospikeClient *self,
                         "invalid partition_filter policy count, count must \
 						be an int between 1 and %d inclusive",
                         CLUSTER_NPARTITIONS);
-        goto ERROR_CLEANUP;
+        goto EXIT;
     }
 
     if (PyErr_Occurred() && PyErr_ExceptionMatches(PyExc_OverflowError)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "invalid count for partition id: %d, \
 						count must fit in long",
-                        count);
-        goto ERROR_CLEANUP;
+                        tmp_count);
+        goto EXIT;
     }
 
     if (tmp_count > CLUSTER_NPARTITIONS || tmp_count < 1) {
@@ -115,7 +117,7 @@ as_status convert_partition_filter(AerospikeClient *self,
                         "invalid partition_filter policy count, count must \
 						be an int between 1 and %d inclusive",
                         CLUSTER_NPARTITIONS);
-        goto ERROR_CLEANUP;
+        goto EXIT;
     }
 
     filter->count = tmp_count;
@@ -125,7 +127,7 @@ as_status convert_partition_filter(AerospikeClient *self,
                         "invalid partition filter range,\
 						begin: %u count: %u, valid range when begin + count <= %d",
                         filter->begin, filter->count, CLUSTER_NPARTITIONS);
-        goto ERROR_CLEANUP;
+        goto EXIT;
     }
 
     filter->digest.init = 0;
@@ -144,24 +146,15 @@ as_status convert_partition_filter(AerospikeClient *self,
         }
     }
 
-    // TODO fix input validation
     if (parts_stat) {
-        AerospikePartitionsStatusObject *py_parts_stat =
-            (AerospikePartitionsStatusObject *)parts_stat;
-        parts_all = py_parts_stat->parts_all;
+        parts_all = ((AerospikePartitionsStatusObject *)parts_stat)->parts_all;
     }
 
     if (parts_all) {
         *pss = parts_all;
     }
 
-    return err->code;
-
-ERROR_CLEANUP:
-
-    if (parts_all) {
-        as_partitions_status_release(parts_all);
-    }
+EXIT:
 
     return err->code;
 }

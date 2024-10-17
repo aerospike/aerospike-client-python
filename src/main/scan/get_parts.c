@@ -37,7 +37,7 @@ PyObject *AerospikeScan_Get_Partitions_status(AerospikeScan *self)
     }
 
     all_parts = self->scan.parts_all;
-    py_parts = create_py_partitions_status_object(all_parts);
+    py_parts = create_py_partitions_status_object(&err, all_parts);
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
