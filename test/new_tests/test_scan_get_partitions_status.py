@@ -70,7 +70,7 @@ class TestScanGetPartitionsStatus(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
         stats = scan_obj.get_partitions_status()
-        assert stats == {}
+        assert stats is None
 
     def test_get_partitions_status_after_foreach(self):
         """
@@ -86,12 +86,13 @@ class TestScanGetPartitionsStatus(TestBaseClass):
             records += 1
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-
+        scan_obj.paginate()
         scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         assert records == 5
 
         partition_status = scan_obj.get_partitions_status()
+        assert partition_status
 
         def resume_callback(part_id, input_tuple):
             nonlocal resumed_records
@@ -128,6 +129,7 @@ class TestScanGetPartitionsStatus(TestBaseClass):
 
     def test_scan_get_partitions_status_results_parts(self):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        scan_obj.paginate()
 
         policy = {"partition_filter": {"begin": 1001, "count": 1}}
         results = scan_obj.results(policy)
@@ -138,6 +140,7 @@ class TestScanGetPartitionsStatus(TestBaseClass):
 
     def test_scan_get_partitions_status_foreach_parts(self):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
+        scan_obj.paginate()
         ids = []
 
         def callback(part_id, input_tuple):
