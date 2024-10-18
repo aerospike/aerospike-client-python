@@ -72,7 +72,7 @@ runs:
       # so we have to manually enable it
       load: true
 
-  - run: docker run -d --name aerospike -p 3000:3000 -e DEFAULT_TTL=30d ${{ env.SECURITY_IMAGE_NAME }}
+  - run: docker run -d --name aerospike -p 3000:3000 -e DEFAULT_TTL=30D ${{ env.SECURITY_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start

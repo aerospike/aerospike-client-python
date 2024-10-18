@@ -230,7 +230,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=30d aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=30D aerospike/aerospike-server
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
@@ -286,11 +286,11 @@ jobs:
 
     - name: Run Aerospike server release candidate with latest tag
       if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=30d aerospike/aerospike-server-rc:latest
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=30D aerospike/aerospike-server-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=30d aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=30D aerospike/aerospike-server
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
@@ -330,7 +330,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run lowest supported server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=30d aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=30D aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
