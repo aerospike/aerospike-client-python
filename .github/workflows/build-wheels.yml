@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp313t"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -76,7 +76,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp313t"]'
       platform-tag:
         type: string
         required: true
@@ -149,10 +149,6 @@ jobs:
     strategy:
       matrix:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
-        free-threaded: [false]
-        include:
-        - python-tag: 'cp313t'
-          free-threaded: true
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
@@ -254,7 +250,7 @@ jobs:
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-        CIBW_FREE_THREADED_SUPPORT: ${{ matrix.free-threaded && '1' || '0' }}
+        CIBW_FREE_THREADED_SUPPORT: ${{ matrix.python-tag == 'cp313t' && '1' || '0' }}
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
