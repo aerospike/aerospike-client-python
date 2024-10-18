@@ -75,10 +75,10 @@ runs:
   - run: docker run -d --name aerospike -p 3000:3000 -e DEFAULT_TTL=30d ${{ env.SECURITY_IMAGE_NAME }}
     shell: bash
 
-  - run: docker logs aerospike
-    shell: bash
-
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
       container-name: aerospike
       is-security-enabled: true
+
+  - run: docker logs aerospike
+    shell: bash
