@@ -151,7 +151,7 @@ jobs:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
         free-threaded: [false]
         include:
-        - python-tag: '3.13'
+        - python-tag: 'cp313'
           free-threaded: true
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
