@@ -149,6 +149,10 @@ jobs:
     strategy:
       matrix:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
+        free-threaded: [false]
+        include:
+        - python-tag: '3.13'
+          free-threaded: true
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
@@ -250,6 +254,7 @@ jobs:
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
+        CIBW_FREE_THREADED_SUPPORT: ${{ matrix.free-threaded }}
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
