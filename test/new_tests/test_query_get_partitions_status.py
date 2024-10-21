@@ -75,7 +75,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         request.addfinalizer(teardown)
 
     def test_query_get_partitions_status_foreach_one_partition(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
         query_obj.paginate()
         ids = []
 
@@ -102,7 +102,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
                 return False
             records += 1
 
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
         query_obj.paginate()
         query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
@@ -115,7 +115,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
             nonlocal resumed_records
             resumed_records += 1
 
-        query_obj2 = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj2 = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
 
         policy = {
             "partition_filter": {"begin": 1001, "count": 1, "partition_status": partition_status},
@@ -129,7 +129,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         {"partition_filter": {"begin": 1001, "count": 1}}
     ])
     def test_query_get_partitions_status_results(self, policy):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
 
         query_obj.paginate()
         results = query_obj.results(policy)
@@ -144,13 +144,13 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
     def test_query_get_partitions_status_no_tracking(self):
         # Non-paginated queries don't support getting partitions status
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
 
         stats = query_obj.get_partitions_status()
         assert stats is None
 
     def test_query_get_partitions_status_results_no_tracking(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
 
         # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
         query_obj.results()
