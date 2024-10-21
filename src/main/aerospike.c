@@ -613,6 +613,10 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
     }
 
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(m, Py_MOD_GIL_NOT_USED);
+#endif
+
     return py_aerospike_module;
 
 GLOBAL_HOSTS_CLEANUP_ON_ERROR:
