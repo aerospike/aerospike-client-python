@@ -295,6 +295,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          sparse-checkout: |
+            test
+            .github
 
       # Need to be able to save Docker Hub credentials to keychain
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
@@ -354,7 +357,7 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: uv run --no-build --module pytest new_tests/
+      - run: uv run --module pytest new_tests/
         working-directory: test
         shell: bash
 
