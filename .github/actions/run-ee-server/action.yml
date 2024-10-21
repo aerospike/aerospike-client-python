@@ -79,6 +79,3 @@ runs:
     with:
       container-name: aerospike
       is-security-enabled: true
-
-  - run: docker logs aerospike
-    shell: bash

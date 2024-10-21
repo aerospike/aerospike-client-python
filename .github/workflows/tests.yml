@@ -300,8 +300,6 @@ jobs:
       with:
         container-name: aerospike
 
-    - run: docker logs aerospike
-
     - name: Run tests
       run: python -m pytest ./new_tests -vv
       working-directory: test
