@@ -6,8 +6,9 @@ import aerospike
 
 
 class TestQueryGetPartitionsStatus(TestBaseClass):
+    @pytest.mark.parametrize("query_type", [aerospike.Client.scan, aerospike.Client.query])
     @pytest.fixture(autouse=True)
-    def setup(self, request, as_connection):
+    def setup(self, request, as_connection, query_type):
         if self.server_version < [6, 0]:
             pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
             pytest.xfail()
@@ -48,6 +49,8 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
                 }
                 as_connection.put(key, rec)
 
+        self.query_creation_method = query_type
+
         def teardown():
             for i in range(1, 100000):
                 put = 0
@@ -71,13 +74,22 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    def test_query_get_partitions_status_no_tracking(self):
+    def test_query_get_partitions_status_foreach_one_partition(self):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        query_obj.paginate()
+        ids = []
+
+        def callback(part_id, input_tuple):
+            ids.append(part_id)
+
+        policy = {"partition_filter": {"begin": 1001, "count": 1}}
+        query_obj.foreach(callback, policy)
+        assert len(ids) == self.partition_1001_count
 
         stats = query_obj.get_partitions_status()
-        assert stats is None
+        assert type(stats) == aerospike.PartitionsStatus
 
-    def test_get_partitions_status_after_foreach(self):
+    def test_get_partitions_status_terminate_resume(self):
         """
         Resume a query using foreach.
         """
@@ -112,15 +124,30 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         query_obj2.foreach(resume_callback, policy)
         assert records + resumed_records == self.partition_1001_count
 
-    def test_query_get_partitions_status_results(self):
+    @pytest.mark.parametrize("policy", [
+        {},
+        {"partition_filter": {"begin": 1001, "count": 1}}
+    ])
+    def test_query_get_partitions_status_results(self, policy):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
-        # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
         query_obj.paginate()
-        query_obj.results()
+        results = query_obj.results(policy)
 
         stats = query_obj.get_partitions_status()
         assert type(stats) == aerospike.PartitionsStatus
+
+        if "partition_filter" in policy:
+            assert len(results) == self.partition_1001_count
+
+    # Negative tests
+
+    def test_query_get_partitions_status_no_tracking(self):
+        # Non-paginated queries don't support getting partitions status
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+
+        stats = query_obj.get_partitions_status()
+        assert stats is None
 
     def test_query_get_partitions_status_results_no_tracking(self):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
@@ -130,29 +157,3 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
         stats = query_obj.get_partitions_status()
         assert stats is None
-
-    def test_query_get_partitions_status_results_parts(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
-        query_obj.paginate()
-
-        policy = {"partition_filter": {"begin": 1001, "count": 1}}
-        results = query_obj.results(policy)
-        assert len(results) == self.partition_1001_count
-
-        stats = query_obj.get_partitions_status()
-        assert type(stats) == aerospike.PartitionsStatus
-
-    def test_query_get_partitions_status_foreach_parts(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
-        query_obj.paginate()
-        ids = []
-
-        def callback(part_id, input_tuple):
-            ids.append(part_id)
-
-        policy = {"partition_filter": {"begin": 1001, "count": 1}}
-        query_obj.foreach(callback, policy)
-        assert len(ids) == self.partition_1001_count
-
-        stats = query_obj.get_partitions_status()
-        assert type(stats) == aerospike.PartitionsStatus
