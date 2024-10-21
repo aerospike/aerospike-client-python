@@ -339,7 +339,7 @@ jobs:
           echo PATH=$PATH >> $GITHUB_ENV
 
       - name: Install wheel
-        run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
+        run: pip install aerospike --force-reinstall --no-index --find-links=./
         shell: bash
 
       - name: Connect to Docker container on remote machine with Docker daemon
@@ -350,7 +350,7 @@ jobs:
           crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
         working-directory: test
 
-      - run: python3 -m pip install pytest -c requirements.txt
+      - run: pip install pytest -c requirements.txt
         working-directory: test
         shell: bash
 
