@@ -6,8 +6,7 @@ import aerospike
 
 
 class TestQueryGetPartitionsStatus(TestBaseClass):
-    @pytest.mark.parametrize("query_type", [aerospike.Client.scan, aerospike.Client.query])
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True, params=[aerospike.Client.scan, aerospike.Client.query])
     def setup(self, request, as_connection, query_type):
         if self.server_version < [6, 0]:
             pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
@@ -49,7 +48,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
                 }
                 as_connection.put(key, rec)
 
-        self.query_creation_method = query_type
+        self.query_creation_method = request.param
 
         def teardown():
             for i in range(1, 100000):
