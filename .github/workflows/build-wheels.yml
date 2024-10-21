@@ -338,14 +338,18 @@ jobs:
           version: "0.4.x"
 
       - if: ${{ matrix.python-tag == 'cp313t' }}
+        # TODO: double check that uv automatically uses python in venv
         run: |
           uv python install 3.13t
           uv venv --python 3.13t
-          . .venv/bin/activate
-          echo PATH=$PATH >> $GITHUB_ENV
+        shell: bash
+
+      # TODO: check if uv is installed, instead
+      - run: echo PIP_COMMAND="${{ matrix.python-tag == 'cp313t' && 'uv' || '' }} pip" >> $GITHUB_ENV
+        shell: bash
 
       - name: Install wheel
-        run: uv pip install aerospike --force-reinstall --no-index --find-links=./
+        run: ${{ env.PIP_COMMAND }} install aerospike --force-reinstall --no-index --find-links=./
         shell: bash
 
       - name: Connect to Docker container on remote machine with Docker daemon
@@ -356,11 +360,14 @@ jobs:
           crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
         working-directory: test
 
-      - run: uv pip install pytest -c requirements.txt
+      - run: ${{ env.PIP_COMMAND }} install pytest -c requirements.txt
         working-directory: test
         shell: bash
 
-      - run: uv run --module pytest new_tests/
+      - run: echo PYTHON_M_COMMAND=${{ matrix.python-tag == 'cp313t' && 'python3 -m' || 'uv run --module' }} >> $GITHUB_ENV
+        shell: bash
+
+      - run: ${{ env.PYTHON_M_COMMAND }} pytest new_tests/
         working-directory: test
         shell: bash
 
