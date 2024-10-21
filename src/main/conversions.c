@@ -747,6 +747,7 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         }
     }
 
+    Py_BEGIN_CRITICAL_SECTION(py_dict);
     while (PyDict_Next(py_dict, &pos, &py_key, &py_val)) {
         as_val *key = NULL;
         as_val *val = NULL;
@@ -763,6 +764,7 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         }
         as_map_set(*map, key, val);
     }
+    Py_END_CRITICAL_SECTION();
 
     if (err->code != AEROSPIKE_OK) {
         as_map_destroy(*map);
@@ -1289,6 +1291,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
 
         as_record_init(rec, size);
 
+        Py_BEGIN_CRITICAL_SECTION(py_rec);
         while (PyDict_Next(py_rec, &pos, &key, &value)) {
 
             if (!PyUnicode_Check(key)) {
@@ -1462,6 +1465,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
             }
         }
+        Py_END_CRITICAL_SECTION();
 
         if (py_meta && py_meta != Py_None) {
             if (!PyDict_Check(py_meta)) {

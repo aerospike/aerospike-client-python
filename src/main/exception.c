@@ -362,9 +362,11 @@ void remove_exception(as_error *err)
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_module);
 
+    Py_BEGIN_CRITICAL_SECTION(py_module_dict);
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         Py_DECREF(py_value);
     }
+    Py_END_CRITICAL_SECTION();
 }
 
 // TODO: idea. Use python dict to map error code to exception
@@ -375,6 +377,7 @@ void raise_exception(as_error *err)
     PyObject *py_module_dict = PyModule_GetDict(py_module);
     bool found = false;
 
+    Py_BEGIN_CRITICAL_SECTION(py_module_dict);
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
             PyObject *py_code = PyObject_GetAttrString(py_value, "code");
@@ -416,6 +419,8 @@ void raise_exception(as_error *err)
             Py_DECREF(py_code);
         }
     }
+    Py_END_CRITICAL_SECTION();
+
     // We haven't found the right exception, just use AerospikeError
     if (!found) {
         PyObject *base_exception =
@@ -446,6 +451,7 @@ PyObject *raise_exception_old(as_error *err)
     PyObject *py_module_dict = PyModule_GetDict(py_module);
     bool found = false;
 
+    Py_BEGIN_CRITICAL_SECTION(py_module_dict);
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
             PyObject *py_code = PyObject_GetAttrString(py_value, "code");
@@ -486,6 +492,7 @@ PyObject *raise_exception_old(as_error *err)
             Py_DECREF(py_code);
         }
     }
+    Py_END_CRITICAL_SECTION();
     // We haven't found the right exception, just use AerospikeError
     if (!found) {
         PyObject *base_exception =

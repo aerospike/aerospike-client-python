@@ -100,6 +100,7 @@ int AerospikeClientConnect(AerospikeClient *self)
         }
         while (1) {
             flag = 0;
+            Py_BEGIN_CRITICAL_SECTION(py_global_hosts);
             while (PyDict_Next(py_global_hosts, &pos, &py_key, &py_value)) {
                 if (((AerospikeGlobalHosts *)py_value)->as->config.use_shm) {
                     if (((AerospikeGlobalHosts *)py_value)->shm_key ==
@@ -109,6 +110,7 @@ int AerospikeClientConnect(AerospikeClient *self)
                     }
                 }
             }
+            Py_END_CRITICAL_SECTION();
             if (!flag) {
                 self->as->config.shm_key = shm_key;
                 break;

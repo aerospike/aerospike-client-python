@@ -163,6 +163,7 @@ void set_scan_options(as_error *err, as_scan *scan_p, PyObject *py_options)
         PyObject *key = NULL, *value = NULL;
         Py_ssize_t pos = 0;
         int64_t val = 0;
+        Py_BEGIN_CRITICAL_SECTION(py_options);
         while (PyDict_Next(py_options, &pos, &key, &value)) {
             char *key_name = (char *)PyUnicode_AsUTF8(key);
             if (!PyUnicode_Check(key)) {
@@ -203,6 +204,7 @@ void set_scan_options(as_error *err, as_scan *scan_p, PyObject *py_options)
                 break;
             }
         }
+        Py_END_CRITICAL_SECTION();
     }
     else {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid option(type)");

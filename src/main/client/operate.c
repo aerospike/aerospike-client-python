@@ -386,6 +386,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                                operation, SERIALIZER_PYTHON);
     }
 
+    Py_BEGIN_CRITICAL_SECTION(py_val);
     while (PyDict_Next(py_val, &pos, &key_op, &value)) {
         if (!PyUnicode_Check(key_op)) {
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -439,6 +440,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             }
         }
     }
+    Py_END_CRITICAL_SECTION();
 
     *op = operation;
 
