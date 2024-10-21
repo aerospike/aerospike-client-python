@@ -295,9 +295,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          sparse-checkout-cone-mode: false
           sparse-checkout: |
-            test
-            .github
+            !pyproject.toml
+            test/**
+            .github/**
 
       # Need to be able to save Docker Hub credentials to keychain
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
