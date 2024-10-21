@@ -354,7 +354,7 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: uv run --module pytest new_tests/
+      - run: uv run --no-build --module pytest new_tests/
         working-directory: test
         shell: bash
 
