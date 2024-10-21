@@ -318,6 +318,7 @@ jobs:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
       - name: Convert Python tag to Python version
+        if: ${{ matrix.python-tag != 'cp313t' }}
         # Don't use sed because we want this command to work on both mac and windows
         # The command used in GNU sed is different than in macOS sed
         run: |
