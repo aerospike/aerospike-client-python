@@ -322,8 +322,21 @@ jobs:
         shell: bash
 
       - uses: actions/setup-python@v5
+        if: ${{ matrix.python-tag != 'cp313t' }}
         with:
           python-version: ${{ env.PYTHON_VERSION }}
+
+      - if: ${{ matrix.python-tag == 'cp313t' }}
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.x"
+
+      - if: ${{ matrix.python-tag == 'cp313t' }}
+        run: |
+          uv python install 3.13t
+          uv venv --python 3.13t
+          . .venv/bin/activate
+          echo PATH=$PATH >> $GITHUB_ENV
 
       - name: Install wheel
         run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
