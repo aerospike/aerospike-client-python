@@ -119,7 +119,7 @@ static inline bool isExprOp(int op);
 #define CONVERT_PY_CTX_TO_AS_CTX()                                             \
     if (get_cdt_ctx(self, err, &ctx, py_val, &ctx_in_use, static_pool,         \
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {                      \
-        return err->code;                                                      \
+        goto EXIT_CS;                                                          \
     }
 
 #define CONVERT_RANGE_TO_AS_VAL()                                              \
@@ -390,8 +390,9 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     Py_BEGIN_CRITICAL_SECTION(py_val);
     while (PyDict_Next(py_val, &pos, &key_op, &value)) {
         if (!PyUnicode_Check(key_op)) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "An operation key must be a string.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "An operation key must be a string.");
+            goto EXIT_CS;
         }
         else {
             char *name = (char *)PyUnicode_AsUTF8(key_op);
@@ -437,11 +438,15 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                     err, AEROSPIKE_ERR_PARAM,
                     "Operation can contain only op, bin, index, key, val, "
                     "return_type and map_policy keys");
-                goto CLEANUP;
+                goto EXIT_CS;
             }
         }
     }
+EXIT_CS:
     Py_END_CRITICAL_SECTION();
+    if (err->code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
 
     *op = operation;
 
