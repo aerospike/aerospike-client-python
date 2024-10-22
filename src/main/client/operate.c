@@ -36,6 +36,7 @@
 #include "bit_operations.h"
 #include "hll_operations.h"
 #include "expression_operations.h"
+#include "pythoncapi_compat.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
