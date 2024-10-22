@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -382,7 +384,7 @@ void raise_exception(as_error *err)
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
             PyObject *py_code = PyObject_GetAttrString(py_value, "code");
-            if (py_code == Py_None) {
+            if (Py_IsNone(py_code)) {
                 continue;
             }
             if (err->code == PyLong_AsLong(py_code)) {
@@ -456,7 +458,7 @@ PyObject *raise_exception_old(as_error *err)
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
             PyObject *py_code = PyObject_GetAttrString(py_value, "code");
-            if (py_code == Py_None) {
+            if (Py_IsNone(py_code)) {
                 continue;
             }
             if (err->code == PyLong_AsLong(py_code)) {

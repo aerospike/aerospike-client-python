@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -171,7 +173,7 @@ static int query_where_add(as_query **query, as_predicate_type predicate,
                 return 1;
             }
 
-            if (py_val1 == Py_None || py_val2 == Py_None) {
+            if (Py_IsNone(py_val1) || Py_IsNone(py_val2)) {
                 Py_XDECREF(py_ubin);
                 as_error_update(
                     err, AEROSPIKE_ERR_PARAM,

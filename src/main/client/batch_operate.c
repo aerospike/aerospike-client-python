@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2022 Aerospike, Inc.
  *
@@ -224,7 +226,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         }
     }
 
-    if (py_ttl == NULL || py_ttl == Py_None) {
+    if (py_ttl == NULL || Py_IsNone(py_ttl)) {
         // If ttl in this transaction's batch write policy isn't set, use the client config's default batch write
         // policy ttl
         ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
@@ -373,7 +375,7 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
         goto error;
     }
 
-    if (py_ttl && py_ttl != Py_None && !PyLong_Check(py_ttl)) {
+    if (py_ttl && !Py_IsNone(py_ttl) && !PyLong_Check(py_ttl)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "ttl should be an integer");
         goto error;
     }

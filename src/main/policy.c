@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -41,7 +43,7 @@
 
 #define POLICY_INIT(__policy)                                                  \
     as_error_reset(err);                                                       \
-    if (!py_policy || py_policy == Py_None) {                                  \
+    if (!py_policy || Py_IsNone(py_policy)) {                                  \
         return err->code;                                                      \
     }                                                                          \
     if (!PyDict_Check(py_policy)) {                                            \
@@ -215,7 +217,7 @@ as_status set_query_options(as_error *err, PyObject *query_options,
                             as_query *query)
 {
     PyObject *no_bins_val = NULL;
-    if (!query_options || query_options == Py_None) {
+    if (!query_options || Py_IsNone(query_options)) {
         return AEROSPIKE_OK;
     }
 
@@ -247,14 +249,14 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
                                    as_policy_admin *config_admin_policy)
 {
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_admin);
     }
     //Initialize policy with global defaults
     as_policy_admin_copy(config_admin_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
     }
@@ -291,14 +293,14 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
                                    as_policy_apply *config_apply_policy,
                                    as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_apply);
     }
     //Initialize policy with global defaults
     as_policy_apply_copy(config_apply_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
@@ -331,14 +333,14 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
                                   as_policy_info **policy_p,
                                   as_policy_info *config_info_policy)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_info);
     }
     //Initialize policy with global defaults
     as_policy_info_copy(config_info_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
         POLICY_SET_FIELD(send_as_is, bool);
@@ -363,14 +365,14 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    as_policy_query *config_query_policy,
                                    as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_query);
     }
     //Initialize policy with global defaults
     as_policy_query_copy(config_query_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
@@ -403,7 +405,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
                                   as_policy_read *config_read_policy,
                                   as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_read);
     }
@@ -411,7 +413,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     //Initialize policy with global defaults
     as_policy_read_copy(config_read_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
@@ -448,14 +450,14 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
                                     as_policy_remove *config_remove_policy,
                                     as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_remove);
     }
     //Initialize policy with global defaults
     as_policy_remove_copy(config_remove_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
@@ -490,14 +492,14 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
                                   as_policy_scan *config_scan_policy,
                                   as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_scan);
     }
     //Initialize policy with global defaults
     as_policy_scan_copy(config_scan_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
@@ -529,14 +531,14 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
                                    as_policy_write *config_write_policy,
                                    as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_write);
     }
     //Initialize policy with global defaults
     as_policy_write_copy(config_write_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
@@ -572,14 +574,14 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
                                      as_policy_operate *config_operate_policy,
                                      as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_operate);
     }
     //Initialize policy with global defaults
     as_policy_operate_copy(config_operate_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
@@ -619,14 +621,14 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
                                    as_policy_batch *config_batch_policy,
                                    as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Initialize Policy
         POLICY_INIT(as_policy_batch);
     }
     //Initialize policy with global defaults
     as_policy_batch_copy(config_batch_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy && !Py_IsNone(py_policy)) {
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
@@ -816,7 +818,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     long list_order = AS_LIST_UNORDERED;
     long flags = AS_LIST_WRITE_DEFAULT;
 
-    if (!py_policy || py_policy == Py_None) {
+    if (!py_policy || Py_IsNone(py_policy)) {
         return AEROSPIKE_OK;
     }
 
@@ -826,7 +828,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     }
 
     py_val = PyDict_GetItemString(py_policy, "list_order");
-    if (py_val && py_val != Py_None) {
+    if (py_val && !Py_IsNone(py_val)) {
         if (PyLong_Check(py_val)) {
             list_order = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
@@ -841,7 +843,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     }
 
     py_val = PyDict_GetItemString(py_policy, "write_flags");
-    if (py_val && py_val != Py_None) {
+    if (py_val && !Py_IsNone(py_val)) {
         if (PyLong_Check(py_val)) {
             flags = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
@@ -868,7 +870,7 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     as_hll_policy_init(hll_policy);
     PyObject *py_val = NULL;
 
-    if (!py_policy || py_policy == Py_None) {
+    if (!py_policy || Py_IsNone(py_policy)) {
         return AEROSPIKE_OK;
     }
 
@@ -878,7 +880,7 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     }
 
     py_val = PyDict_GetItemString(py_policy, "flags");
-    if (py_val && py_val != Py_None) {
+    if (py_val && !Py_IsNone(py_val)) {
         if (PyLong_Check(py_val)) {
             flags = (int64_t)PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
@@ -1085,7 +1087,7 @@ set_as_metrics_listeners_using_pyobject(as_error *err,
                                         PyObject *py_metricslisteners,
                                         as_metrics_listeners *listeners)
 {
-    if (!py_metricslisteners || py_metricslisteners == Py_None) {
+    if (!py_metricslisteners || Py_IsNone(py_metricslisteners)) {
         // Use default metrics writer callbacks that were set when initializing metrics policy
         return AEROSPIKE_OK;
     }
@@ -1165,7 +1167,7 @@ init_and_set_as_metrics_policy_using_pyobject(as_error *err,
 {
     as_metrics_policy_init(metrics_policy);
 
-    if (!py_metrics_policy || py_metrics_policy == Py_None) {
+    if (!py_metrics_policy || Py_IsNone(py_metrics_policy)) {
         // Use default metrics policy
         return AEROSPIKE_OK;
     }
@@ -1292,7 +1294,7 @@ init_and_set_as_metrics_policy_using_pyobject(as_error *err,
 
 error:
     // udata would've been allocated if MetricsListener was successfully converted to C code
-    if (py_metrics_listeners && py_metrics_listeners != Py_None) {
+    if (py_metrics_listeners && !Py_IsNone(py_metrics_listeners)) {
         free_py_listener_data(
             (PyListenerData *)metrics_policy->metrics_listeners.udata);
     }

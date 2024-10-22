@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2020 Aerospike, Inc.
  *
@@ -39,7 +41,7 @@
     {                                                                          \
         PyObject *py___policy =                                                \
             PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);  \
-        if (py___policy != Py_None) {                                          \
+        if (!Py_IsNone(py___policy)) {                                         \
             as_exp *expr = NULL;                                               \
             as_exp *expr_p = expr;                                             \
             if (py___policy != NULL) {                                         \
@@ -239,7 +241,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             !PyList_Size(py_ops_list)) {
 
             // batch Read can have None ops if it is using read_all_bins
-            if ((batch_type == BATCH_TYPE_READ && py_ops_list != Py_None) ||
+            if ((batch_type == BATCH_TYPE_READ && !Py_IsNone(py_ops_list)) ||
                 batch_type == BATCH_TYPE_WRITE) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "py_ops_list is NULL or not a list, %s must be "
@@ -263,7 +265,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         }
 
         Py_ssize_t py_ops_size = 0;
-        if (py_ops_list != NULL && py_ops_list != Py_None) {
+        if (py_ops_list != NULL && !Py_IsNone(py_ops_list)) {
             py_ops_size = PyList_Size(py_ops_list);
         }
 
@@ -272,7 +274,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
         as_operations *ops = NULL;
         if ((batch_type == AS_BATCH_READ || batch_type == AS_BATCH_WRITE) &&
-            (py_ops_size || (py_meta != NULL && py_meta != Py_None))) {
+            (py_ops_size || (py_meta != NULL && !Py_IsNone(py_meta)))) {
 
             ops = as_operations_new(py_ops_size);
             garb->ops_to_free = ops;

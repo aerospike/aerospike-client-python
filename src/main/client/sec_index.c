@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -580,7 +582,7 @@ static PyObject *createIndexWithDataAndCollectionType(
         py_ustr_set = PyUnicode_AsUTF8String(py_set);
         set_ptr = PyBytes_AsString(py_ustr_set);
     }
-    else if (py_set != Py_None) {
+    else if (!Py_IsNone(py_set)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Set should be string, unicode or None");
         goto CLEANUP;

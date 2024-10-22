@@ -174,7 +174,7 @@ PyObject *create_pylist(PyObject *py_list, long operation, PyObject *py_bin,
 int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
 {
     if ((!PyLong_Check(py_value) &&
-         strcmp(py_value->ob_type->tp_name, "aerospike.null")) &&
+         strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) &&
         (op == AS_OPERATOR_TOUCH)) {
         as_error_update(
             err, AEROSPIKE_ERR_PARAM,
@@ -182,7 +182,7 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
         return 1;
     }
     else if ((!PyLong_Check(py_value) && (!PyFloat_Check(py_value)) &&
-              strcmp(py_value->ob_type->tp_name, "aerospike.null")) &&
+              strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) &&
              op == AS_OPERATOR_INCR) {
         as_error_update(
             err, AEROSPIKE_ERR_PARAM,
@@ -191,7 +191,7 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
     }
     else if ((!PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) &&
               !PyBytes_Check(py_value) &&
-              strcmp(py_value->ob_type->tp_name, "aerospike.null")) &&
+              strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) &&
              (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "Cannot concatenate 'str' and 'non-str' objects");
@@ -572,7 +572,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
         else {
             if (!self->strict_types ||
-                !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+                !strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) {
                 as_operations *pointer_ops = ops;
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
@@ -605,7 +605,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
         else {
             if (!self->strict_types ||
-                !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+                !strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) {
                 as_operations *pointer_ops = ops;
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
@@ -632,7 +632,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
         else {
             if (!self->strict_types ||
-                !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+                !strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) {
                 as_operations *pointer_ops = ops;
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];

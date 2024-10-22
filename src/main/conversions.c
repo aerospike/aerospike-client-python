@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -1065,13 +1067,13 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
                                       const char *expected_type_name)
 {
-    if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
+    if (strcmp(Py_TYPE(obj)->tp_name, expected_type_name)) {
         // Expected class name does not match object's class name
         return false;
     }
 
     PyObject *py_module_name =
-        PyDict_GetItemString(obj->ob_type->tp_dict, "__module__");
+        PyDict_GetItemString(Py_TYPE(obj)->tp_dict, "__module__");
     if (!py_module_name) {
         // Class does not belong to any module
         return false;
@@ -1195,7 +1197,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
             bytes->type = AS_BYTES_HLL;
         }
     }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
+    else if (!strcmp(Py_TYPE(py_obj)->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
@@ -1236,7 +1238,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
     else if (Py_None == py_obj) {
         *val = as_val_reserve(&as_nil);
     }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
+    else if (!strcmp(Py_TYPE(py_obj)->tp_name, "aerospike.null")) {
         *val = (as_val *)as_val_reserve(&as_nil);
     }
     else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) {
@@ -1325,7 +1327,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     value)) { //TODO Change to true bool support post jump version.
                 switch (self->send_bool_as) {
                 case SEND_BOOL_AS_AS_BOOL:;
-                    bool converted_value = (value == Py_True);
+                    bool converted_value = (Py_IsTrue(value));
                     ret_val = as_record_set_bool(rec, name, converted_value);
                     break;
                 case SEND_BOOL_AS_INTEGER:;
@@ -1353,7 +1355,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
                 ret_val = as_record_set_int64(rec, name, val);
             }
-            else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
+            else if (!strcmp(Py_TYPE(value)->tp_name, "aerospike.Geospatial")) {
                 PyObject *py_geo_string = PyUnicode_FromString("geo_data");
                 PyObject *py_data =
                     PyObject_GenericGetAttr(value, py_geo_string);
@@ -1436,7 +1438,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
                 ret_val = as_record_set_map(rec, name, map);
             }
-            else if (!strcmp(value->ob_type->tp_name, "aerospike.null")) {
+            else if (!strcmp(Py_TYPE(value)->tp_name, "aerospike.null")) {
                 ret_val = as_record_set_nil(rec, name);
             }
             else {
@@ -1467,7 +1469,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
         }
         Py_END_CRITICAL_SECTION();
 
-        if (py_meta && py_meta != Py_None) {
+        if (py_meta && !Py_IsNone(py_meta)) {
             if (!PyDict_Check(py_meta)) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "meta must be a dictionary");
@@ -1586,7 +1588,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
         ns = (char *)PyUnicode_AsUTF8(py_ns);
     }
 
-    if (py_set && py_set != Py_None) {
+    if (py_set && !Py_IsNone(py_set)) {
         if (PyUnicode_Check(py_set)) {
             set = (char *)PyUnicode_AsUTF8(py_set);
         }
@@ -1598,7 +1600,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
 
     as_key *returnResult = key;
 
-    if (py_key && py_key != Py_None) {
+    if (py_key && !Py_IsNone(py_key)) {
         if (PyUnicode_Check(py_key)) {
             PyObject *py_ustr = PyUnicode_AsUTF8String(py_key);
             char *k = PyBytes_AsString(py_ustr);
@@ -1638,7 +1640,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
         }
     }
-    else if (py_digest && py_digest != Py_None) {
+    else if (py_digest && !Py_IsNone(py_digest)) {
         if (PyByteArray_Check(py_digest)) {
             uint32_t sz = (uint32_t)PyByteArray_Size(py_digest);
 
@@ -2462,7 +2464,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)map;
     }
-    else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
+    else if (!strcmp(Py_TYPE(py_value)->tp_name, "aerospike.Geospatial")) {
         PyObject *geo_data = PyObject_GetAttrString(py_value, "geo_data");
         PyObject *geo_data_py_str = AerospikeGeospatial_DoDumps(geo_data, err);
         const char *geo_data_str = PyUnicode_AsUTF8(geo_data_py_str);
@@ -2479,7 +2481,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         Py_XDECREF(geo_data_py_str);
         Py_XDECREF(geo_data);
     }
-    else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+    else if (!strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) {
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)&as_nil;
     }
@@ -2597,7 +2599,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             ops->gen = gen;
         }
     }
-    else if (py_meta && (py_meta != Py_None)) {
+    else if (py_meta && (!Py_IsNone(py_meta))) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
     }
