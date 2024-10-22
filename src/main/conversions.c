@@ -1297,30 +1297,32 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
         while (PyDict_Next(py_rec, &pos, &key, &value)) {
 
             if (!PyUnicode_Check(key)) {
-                return as_error_update(
+                as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
                     "A bin name must be a string or unicode string.");
+                goto EXIT_CS;
             }
 
             name = PyUnicode_AsUTF8(key);
             if (!name) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_CLIENT,
-                    "Unable to convert unicode object to C string");
+                as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to convert unicode object to C string");
+                goto EXIT_CS;
             }
 
             if (self->strict_types) {
                 if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-                    return as_error_update(
+                    as_error_update(
                         err, AEROSPIKE_ERR_BIN_NAME,
                         "A bin name should not exceed 15 characters limit");
+                    goto EXIT_CS;
                 }
             }
 
             if (!value) {
                 // this should never happen, but if it did...
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                       "record is null");
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+                goto EXIT_CS;
             }
             else if (
                 PyBool_Check(
@@ -1340,17 +1342,18 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                         as_record_set_integer(rec, name, converted_integer);
                     break;
                 default:
-                    return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                           "Unknown value for send_bool_as.");
+                    as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unknown value for send_bool_as.");
+                    goto EXIT_CS;
                 }
             }
             else if (PyLong_Check(value)) {
                 int64_t val = (int64_t)PyLong_AsLong(value);
                 if (val == -1 && PyErr_Occurred()) {
                     if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                        return as_error_update(
-                            err, AEROSPIKE_ERR_PARAM,
-                            "integer value exceeds sys.maxsize");
+                        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                        "integer value exceeds sys.maxsize");
+                        goto EXIT_CS;
                     }
                 }
                 ret_val = as_record_set_int64(rec, name, val);
@@ -1367,9 +1370,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 if (PyUnicode_Check(py_dumps)) {
                     py_ustr = PyUnicode_AsUTF8String(py_dumps);
                     if (!py_ustr) {
-                        return as_error_update(
-                            err, AEROSPIKE_ERR_CLIENT,
-                            "Unicode value not encoded in utf-8.");
+                        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                        "Unicode value not encoded in utf-8.");
+                        goto EXIT_CS;
                     }
                     geo_value = PyBytes_AsString(py_ustr);
                 }
@@ -1388,9 +1391,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
             else if (PyUnicode_Check(value)) {
                 PyObject *py_ustr = PyUnicode_AsUTF8String(value);
                 if (!py_ustr) {
-                    return as_error_update(
-                        err, AEROSPIKE_ERR_CLIENT,
-                        "Unicode value not encoded in utf-8.");
+                    as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unicode value not encoded in utf-8.");
+                    goto EXIT_CS;
                 }
                 char *val = PyBytes_AsString(py_ustr);
                 ret_val = as_record_set_strp(rec, name, strdup(val), true);
@@ -1462,12 +1465,17 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
 
             if (self->strict_types) {
                 if (!ret_val) {
-                    return as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
-                                           "Unable to set key-value pair");
+                    as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
+                                    "Unable to set key-value pair");
+                    goto EXIT_CS;
                 }
             }
         }
+    EXIT_CS:
         Py_END_CRITICAL_SECTION();
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
+        }
 
         if (py_meta && !Py_IsNone(py_meta)) {
             if (!PyDict_Check(py_meta)) {
