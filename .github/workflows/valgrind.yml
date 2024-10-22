@@ -12,11 +12,14 @@ on:
         description: 'Use server release candidate?'
         required: true
         default: false
-      massif:
-        type: boolean
-        description: 'Use massif for testing memory usage'
+      tool:
+        type: choice
+        options:
+        - memcheck
+        - massif
+        - drd
         required: false
-        default: false
+        default: memcheck
 
 jobs:
   build-manylinux-wheel:
@@ -63,11 +66,14 @@ jobs:
     - run: sudo apt update
     - run: sudo apt install valgrind -y
 
-    - run: echo VALGRIND_ARGS="--tool=massif --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
-      if: ${{ inputs.massif }}
+    - run: echo VALGRIND_ARGS="--tool=${{ inputs.tool }} --massif-out-file=./${{ env.MASSIF_REPORT_FILE_NAME }}" >> $GITHUB_ENV
+      if: ${{ inputs.tool == 'massif' }}
 
     - run: echo VALGRIND_ARGS="--leak-check=full" >> $GITHUB_ENV
-      if: ${{ !inputs.massif }}
+      if: ${{ inputs.tool == 'memcheck' }}
+
+    - run: echo VALGRIND_ARGS="--tool=${{ inputs.tool }}" >> $GITHUB_ENV
+      if: ${{ inputs.tool == 'drd' }}
 
     - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
