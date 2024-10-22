@@ -377,6 +377,7 @@ void raise_exception(as_error *err)
     PyObject *py_module_dict = PyModule_GetDict(py_module);
     bool found = false;
 
+    // TODO: this is not atomic enough
     Py_BEGIN_CRITICAL_SECTION(py_module_dict);
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
