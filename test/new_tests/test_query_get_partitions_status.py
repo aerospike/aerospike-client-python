@@ -73,7 +73,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    def test_query_get_partitions_status_foreach_one_partition(self):
+    def test_get_partitions_status_after_running_paginated_and_partitioned_query(self):
         query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
         query_obj.paginate()
         ids = []
@@ -88,10 +88,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         stats = query_obj.get_partitions_status()
         assert type(stats) == aerospike.PartitionsStatus
 
-    def test_get_partitions_status_terminate_resume(self):
-        """
-        Resume a query using foreach.
-        """
+    def test_resume_terminated_paginated_query(self):
         records = 0
         resumed_records = 0
 
@@ -127,7 +124,7 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         {},
         {"partition_filter": {"begin": 1001, "count": 1}}
     ])
-    def test_query_get_partitions_status_results(self, policy):
+    def test_get_partitions_status_after_finishing_paginated_query(self, policy):
         query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
 
         query_obj.paginate()
@@ -141,14 +138,14 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
     # Negative tests
 
-    def test_query_get_partitions_status_no_tracking(self):
+    def test_get_partitions_status_without_running_query(self):
         # Non-paginated queries don't support getting partitions status
         query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
 
         stats = query_obj.get_partitions_status()
         assert stats is None
 
-    def test_query_get_partitions_status_results_no_tracking(self):
+    def test_get_partitions_status_after_finishing_nonpaginated_query(self):
         query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
 
         # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
