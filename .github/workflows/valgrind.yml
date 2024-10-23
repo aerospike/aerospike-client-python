@@ -18,6 +18,7 @@ on:
         - memcheck
         - massif
         - drd
+        - helgrind
         required: false
         default: memcheck
 
@@ -73,7 +74,7 @@ jobs:
       if: ${{ inputs.tool == 'memcheck' }}
 
     - run: echo VALGRIND_ARGS="--tool=${{ inputs.tool }}" >> $GITHUB_ENV
-      if: ${{ inputs.tool == 'drd' }}
+      if: ${{ inputs.tool == 'helgrind' && inputs.tool == 'drd' }}
 
     - run: PYTHONMALLOC=malloc valgrind --error-exitcode=1 ${{ env.VALGRIND_ARGS }} python3 -m pytest -v new_tests/${{ github.event.inputs.test-file }}
       working-directory: test
