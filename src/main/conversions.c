@@ -252,7 +252,12 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
 {
     as_error_reset(err);
     for (int i = 0; i < privileges_size; i++) {
-        PyObject *py_val = PyList_GetItem(py_privileges, i);
+        PyObject *py_val = PyList_GetItemRef(py_privileges, i);
+        if (py_val == NULL) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get privilege at index %d", i);
+        }
         if (PyDict_Check(py_val)) {
             PyObject *py_dict_key = PyUnicode_FromString("code");
             if (PyDict_Contains(py_val, py_dict_key)) {
@@ -286,6 +291,7 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
             }
             Py_DECREF(py_dict_key);
         }
+        Py_DECREF(py_val);
     }
     return err->code;
 }
