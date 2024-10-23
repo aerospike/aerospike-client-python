@@ -1336,7 +1336,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     as_integer *converted_integer = NULL;
                     if (py_bool_to_as_integer(err, value, &converted_integer) !=
                         AEROSPIKE_OK) {
-                        return err->code;
+                        goto EXIT_CS;
                     }
                     ret_val =
                         as_record_set_integer(rec, name, converted_integer);
@@ -1456,7 +1456,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                         if (serialize_based_on_serializer_policy(
                                 self, serializer_type, &bytes, value, err) !=
                             AEROSPIKE_OK) {
-                            return err->code;
+                            goto EXIT_CS;
                         }
                         ret_val = as_record_set_bytes(rec, name, bytes);
                     }
