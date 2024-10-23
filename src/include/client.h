@@ -601,3 +601,10 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op,
 
 PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
                                    PyObject *kwds);
+
+// MRT
+
+PyObject *AerospikeClient_Commit(AerospikeClient *self, PyObject *args,
+                                 PyObject *kwds);
+PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
+                                PyObject *kwds);

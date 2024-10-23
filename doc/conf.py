@@ -255,7 +255,7 @@ todo_include_todos = True
 
 # Spelling check
 
-spelling_ignore_pypi_package_names = True
+spelling_ignore_pypi_package_names = False
 
 linkcheck_anchors_ignore = [
     'truncate',
