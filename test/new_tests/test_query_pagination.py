@@ -174,6 +174,7 @@ class TestQueryPagination(TestBaseClass):
         all_recs = 0
 
         query_obj = self.as_connection.query(ns, st)
+        query_obj.paginate()
 
         max_records = self.partition_1001_count / 2
 

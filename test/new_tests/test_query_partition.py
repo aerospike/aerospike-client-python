@@ -138,6 +138,7 @@ class TestQueryPartition(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
         query_obj.max_records = 1000
+        query_obj.paginate()
         query_obj.records_per_second = 4000
         query_obj.where(p.equals("s", "xyz"))
 
@@ -343,7 +344,7 @@ class TestQueryPartition(TestBaseClass):
             records += 1
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
-
+        query_obj.paginate()
         query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 2}})
 
         assert records == 5
@@ -378,7 +379,7 @@ class TestQueryPartition(TestBaseClass):
             records += 1
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
-
+        query_obj.paginate()
         query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         assert records == 5
@@ -511,123 +512,9 @@ class TestQueryPartition(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
         assert "invalid partition filter range" in err_info.value.msg
 
-    @pytest.mark.parametrize(
-        "p_stats, expected, msg",
-        [
-            (
-                {
-                    "done": False,
-                    "retry": True,
-                    1001: (1001, True, False, bytearray(b"\xe9\xe31\x01sS\xedafw\x00W\xcdM\x80\xd0L\xee\\d"), 0),
-                    1002: (
-                        1002,
-                        "bad_init",
-                        False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
-                        0,
-                    ),
-                },
-                e.ParamError,
-                "invalid init for part_id: 1002",
-            ),
-            (
-                {
-                    "done": False,
-                    "retry": True,
-                    1002: (
-                        1002,
-                        False,
-                        "bad_done",
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
-                        0,
-                    ),
-                },
-                e.ParamError,
-                "invalid retry for part_id: 1002",
-            ),
-            (
-                {"done": False, "retry": True, 1003: (1003, False, False, "bad_digest", 0)},
-                e.ParamError,
-                "invalid digest value for part_id: 1003",
-            ),
-            (
-                {
-                    "done": False,
-                    "retry": True,
-                    1004: (
-                        1004,
-                        False,
-                        False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
-                        "bad_bval",
-                    ),
-                },
-                e.ParamError,
-                "invalid bval for part_id: 1004",
-            ),
-            (
-                {
-                    "done": "bad_done",
-                    "retry": True,
-                    1004: (
-                        1004,
-                        False,
-                        False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
-                        0,
-                    ),
-                },
-                e.ParamError,
-                "partition_status dict key 'done' must be an int",
-            ),
-            (
-                {
-                    "done": False,
-                    "retry": "bad_retry",
-                    1004: (
-                        1004,
-                        False,
-                        False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
-                        0,
-                    ),
-                },
-                e.ParamError,
-                "partition_status dict key 'retry' must be an int",
-            ),
-            (
-                {
-                    "retry": True,
-                    1004: (
-                        1004,
-                        False,
-                        False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
-                        0,
-                    ),
-                },
-                e.ParamError,
-                "partition_status dict missing key 'done'",
-            ),
-            (
-                {
-                    "done": False,
-                    1004: (
-                        1004,
-                        False,
-                        False,
-                        bytearray(b"\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"),
-                        0,
-                    ),
-                },
-                e.ParamError,
-                "partition_status dict missing key 'retry'",
-            ),
-        ],
-    )
-    def test_query_partition_with_bad_status(self, p_stats, expected, msg):
+    def test_query_partition_with_bad_status(self):
         records = []
-        policy = {"partition_filter": {"begin": 1000, "count": 5, "partition_status": p_stats}}
+        policy = {"partition_filter": {"begin": 1000, "count": 5, "partition_status": None}}
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
 
         def callback(part_id, input_tuple):
@@ -635,7 +522,7 @@ class TestQueryPartition(TestBaseClass):
             records.append(record)
 
         # query_obj.foreach(callback, policy)
-        with pytest.raises(expected) as exc:
+        with pytest.raises(e.ParamError) as exc:
             query_obj.foreach(callback, policy)
-
-        assert msg in exc.value.msg
+        assert exc.value.msg == "invalid partition_filter policy, "
+        "partition_status must be of type aerospike.PartitionsStatus"
