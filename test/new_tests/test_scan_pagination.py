@@ -270,7 +270,7 @@ class TestScanPagination(TestBaseClass):
     def test_scan_pagination_with_multiple_results_call_on_same_scan_object(self):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-
+        scan_obj.paginate()
         records = scan_obj.results({"partition_filter": {"begin": 1002, "count": 1}})
         assert len(records) == self.partition_1002_count
 
