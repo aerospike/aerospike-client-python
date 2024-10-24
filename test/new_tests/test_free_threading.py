@@ -15,6 +15,7 @@ def test_unsafe(as_connection):
     config = {"hosts": [("127.0.0.1", 3000)]}
 
     def read_bin():
+        nonlocal barrier
         barrier.wait()
         client = aerospike.client(config)
         _, _, bins = client.get(key)
@@ -31,5 +32,4 @@ def test_unsafe(as_connection):
     for worker in workers:
         worker.join()
 
-    # Do something about the results
     assert bin_value_sum == THREAD_COUNT * BIN_VALUE
