@@ -36,6 +36,7 @@
 #include "bit_operations.h"
 #include "hll_operations.h"
 #include "expression_operations.h"
+#include "pythoncapi_compat.h"
 
 #include <aerospike/as_double.h>
 #include <aerospike/as_integer.h>
@@ -118,7 +119,7 @@ static inline bool isExprOp(int op);
 #define CONVERT_PY_CTX_TO_AS_CTX()                                             \
     if (get_cdt_ctx(self, err, &ctx, py_val, &ctx_in_use, static_pool,         \
                     SERIALIZER_PYTHON) != AEROSPIKE_OK) {                      \
-        return err->code;                                                      \
+        goto EXIT_CS;                                                          \
     }
 
 #define CONVERT_RANGE_TO_AS_VAL()                                              \
@@ -174,7 +175,7 @@ PyObject *create_pylist(PyObject *py_list, long operation, PyObject *py_bin,
 int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
 {
     if ((!PyLong_Check(py_value) &&
-         strcmp(py_value->ob_type->tp_name, "aerospike.null")) &&
+         strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) &&
         (op == AS_OPERATOR_TOUCH)) {
         as_error_update(
             err, AEROSPIKE_ERR_PARAM,
@@ -182,7 +183,7 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
         return 1;
     }
     else if ((!PyLong_Check(py_value) && (!PyFloat_Check(py_value)) &&
-              strcmp(py_value->ob_type->tp_name, "aerospike.null")) &&
+              strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) &&
              op == AS_OPERATOR_INCR) {
         as_error_update(
             err, AEROSPIKE_ERR_PARAM,
@@ -191,7 +192,7 @@ int check_type(AerospikeClient *self, PyObject *py_value, int op, as_error *err)
     }
     else if ((!PyUnicode_Check(py_value) && !PyByteArray_Check(py_value) &&
               !PyBytes_Check(py_value) &&
-              strcmp(py_value->ob_type->tp_name, "aerospike.null")) &&
+              strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) &&
              (op == AS_OPERATOR_APPEND || op == AS_OPERATOR_PREPEND)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "Cannot concatenate 'str' and 'non-str' objects");
@@ -386,10 +387,12 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                                operation, SERIALIZER_PYTHON);
     }
 
+    Py_BEGIN_CRITICAL_SECTION(py_val);
     while (PyDict_Next(py_val, &pos, &key_op, &value)) {
         if (!PyUnicode_Check(key_op)) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "An operation key must be a string.");
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "An operation key must be a string.");
+            goto EXIT_CS;
         }
         else {
             char *name = (char *)PyUnicode_AsUTF8(key_op);
@@ -435,9 +438,14 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                     err, AEROSPIKE_ERR_PARAM,
                     "Operation can contain only op, bin, index, key, val, "
                     "return_type and map_policy keys");
-                goto CLEANUP;
+                goto EXIT_CS;
             }
         }
+    }
+EXIT_CS:
+    Py_END_CRITICAL_SECTION();
+    if (err->code != AEROSPIKE_OK) {
+        goto CLEANUP;
     }
 
     *op = operation;
@@ -570,7 +578,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
         else {
             if (!self->strict_types ||
-                !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+                !strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) {
                 as_operations *pointer_ops = ops;
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
@@ -603,7 +611,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
         else {
             if (!self->strict_types ||
-                !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+                !strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) {
                 as_operations *pointer_ops = ops;
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
@@ -630,7 +638,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
         else {
             if (!self->strict_types ||
-                !strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+                !strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) {
                 as_operations *pointer_ops = ops;
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];

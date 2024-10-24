@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13", "3.13t"]
       fail-fast: false
 
     steps:
@@ -53,7 +53,7 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
@@ -254,7 +254,9 @@ jobs:
           "3.9",
           "3.10",
           "3.11",
-          "3.12"
+          "3.12",
+          "3.13",
+          "3.13t"
         ]
       fail-fast: false
 
@@ -263,7 +265,7 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'

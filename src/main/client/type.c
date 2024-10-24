@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -733,7 +735,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyDict_GetItemString(py_config, "serialization");
     if (py_serializer_option && PyTuple_Check(py_serializer_option)) {
         PyObject *py_serializer = PyTuple_GetItem(py_serializer_option, 0);
-        if (py_serializer && py_serializer != Py_None) {
+        if (py_serializer && !Py_IsNone(py_serializer)) {
             if (!PyCallable_Check(py_serializer)) {
                 error_code = INIT_SERIALIZE_ERR;
                 goto CONSTRUCTOR_ERROR;
@@ -743,7 +745,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             self->user_serializer_call_info.callback = py_serializer;
         }
         PyObject *py_deserializer = PyTuple_GetItem(py_serializer_option, 1);
-        if (py_deserializer && py_deserializer != Py_None) {
+        if (py_deserializer && !Py_IsNone(py_deserializer)) {
             if (!PyCallable_Check(py_deserializer)) {
                 error_code = INIT_DESERIALIZE_ERR;
                 goto CONSTRUCTOR_ERROR;
@@ -1282,7 +1284,7 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
             }
         }
     }
-    self->ob_type->tp_free((PyObject *)self);
+    Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 /*******************************************************************************

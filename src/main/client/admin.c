@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -610,7 +612,7 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    if (py_policy == Py_None) {
+    if (Py_IsNone(py_policy)) {
         py_policy = PyDict_New();
     }
 
@@ -1258,7 +1260,7 @@ PyObject *AerospikeClient_Admin_Set_Whitelist(AerospikeClient *self,
             goto CLEANUP;
         }
     }
-    else if (py_whitelist == Py_None) {
+    else if (Py_IsNone(py_whitelist)) {
         whitelist_size = 0;
     }
     else {
