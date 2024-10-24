@@ -3,6 +3,7 @@ import pytest
 
 import aerospike
 from aerospike_helpers.operations import operations
+import time
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -34,11 +35,16 @@ class TestFreeThreading:
         for _ in range(THREAD_COUNT):
             workers.append(threading.Thread(target=increment_bin))
 
+        start = time.time_ns()
+
         for worker in workers:
             worker.start()
 
         for worker in workers:
             worker.join()
 
+        end = time.time_ns()
+
         _, _, bins = self.as_connection.get(key)
         assert bins[BIN_NAME] == INIT_BIN_VALUE + BIN_VALUE_AMOUNT_TO_ADD_IN_EACH_THREAD * THREAD_COUNT
+        print(f"Threads took {end - start} ns to run.")
