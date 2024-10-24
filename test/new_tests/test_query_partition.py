@@ -524,5 +524,5 @@ class TestQueryPartition(TestBaseClass):
         # query_obj.foreach(callback, policy)
         with pytest.raises(e.ParamError) as exc:
             query_obj.foreach(callback, policy)
-        assert exc.value.msg == "invalid partition_filter policy, "
-        "partition_status must be of type aerospike.PartitionsStatus"
+        assert exc.value.msg == "invalid partition_filter policy, " \
+            "partition_status must be of type aerospike.PartitionsStatus"
