@@ -1,9 +1,10 @@
 import threading
 import pytest
+import time
 
 import aerospike
 from aerospike_helpers.operations import operations
-import time
+from .test_base_class import TestBaseClass
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -17,11 +18,11 @@ class TestFreeThreading:
 
         THREAD_COUNT = 10
         barrier = threading.Barrier(parties=THREAD_COUNT)
-        config = {"hosts": [("127.0.0.1", 3000)]}
 
         ops = [
             operations.increment(bin_name=BIN_NAME, amount=BIN_VALUE_AMOUNT_TO_ADD_IN_EACH_THREAD)
         ]
+        config = TestBaseClass.get_connection_config()
 
         def increment_bin():
             nonlocal barrier
