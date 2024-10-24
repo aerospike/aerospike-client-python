@@ -17,7 +17,7 @@ class TestFreeThreading:
         config = {"hosts": [("127.0.0.1", 3000)]}
 
         def read_bin():
-            nonlocal barrier
+            nonlocal barrier, config
             barrier.wait()
             client = aerospike.client(config)
             _, _, bins = client.get(key)
