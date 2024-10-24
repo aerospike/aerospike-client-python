@@ -15,14 +15,17 @@ class TestFreeThreading:
         THREAD_COUNT = 10
         barrier = threading.Barrier(parties=THREAD_COUNT)
         config = {"hosts": [("127.0.0.1", 3000)]}
+        lock = threading.Lock()
 
         def read_bin():
-            nonlocal barrier, config
+            nonlocal barrier, config, lock
             barrier.wait()
             client = aerospike.client(config)
             _, _, bins = client.get(key)
             nonlocal bin_value_sum
+            lock.acquire()
             bin_value_sum += bins["a"]
+            lock.release()
 
         workers = []
         for _ in range(THREAD_COUNT):
