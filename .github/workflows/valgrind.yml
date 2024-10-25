@@ -23,6 +23,7 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
     with:
       python-tags: '["cp38"]'
+      unoptimized: true
       platform-tag: manylinux_x86_64
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
