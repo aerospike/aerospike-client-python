@@ -171,6 +171,8 @@ Then once you install the build with sanitizer, you may run a Python script usin
 LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.6 python3 -c "import aerospike"
 ```
 
+This is only supported for building with GCC.
+
 ### Troubleshooting macOS
 
 In some versions of macOS, Python 2.7 is installed as ``python`` with
