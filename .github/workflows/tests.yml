@@ -45,6 +45,8 @@ jobs:
     strategy:
       matrix:
         py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        # Make sure we can build and run tests on an instrumented build that uses libasan
+        # We aren't necessarily checking for memory errors / leaks in this test
         sanitizer: [false]
         include:
         - py-version: 3.8
