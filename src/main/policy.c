@@ -296,8 +296,7 @@ static inline void check_and_set_txn_field(as_error *err,
     }
 
     AerospikeTransaction *py_txn = (AerospikeTransaction *)py_obj_txn;
-    as_txn *txn = py_txn->txn;
-    policy_base->txn = txn;
+    policy_base->txn = py_txn->txn;
 }
 
 static inline as_status
