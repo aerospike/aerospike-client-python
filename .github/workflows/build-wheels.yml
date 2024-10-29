@@ -248,6 +248,9 @@ jobs:
           yum install openssl-devel -y &&
           yum install python-devel -y &&
           yum install python-setuptools -y
+        CIBW_REPAIR_WHEEL_COMMAND_LINUX: >
+          auditwheel show {wheel} &&
+          auditwheel repair -w {dest_dir} {wheel}
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
