@@ -607,7 +607,7 @@ Multi-Record Transactions
             If :py:obj:`True`, return one of :ref:`mrt_commit_status_constants`.
             Otherwise, return :py:obj:`None`.
 
-    .. method:: abort(transaction_id: aerospike.Transaction) -> Optional[int]:
+    .. method:: abort(transaction_id: aerospike.Transaction, get_abort_status: bool = False) -> Optional[int]:
 
         Abort and rollback the given multi-record transaction.
 
