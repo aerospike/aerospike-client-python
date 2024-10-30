@@ -147,6 +147,7 @@ static int AerospikeTransaction_set_timeout(AerospikeTransaction *self,
     }
 
     self->txn->timeout = timeout;
+    return 0;
 }
 
 static PyObject *AerospikeTransaction_get_id(AerospikeTransaction *self,
