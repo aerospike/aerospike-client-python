@@ -2,17 +2,6 @@
 
 #include "types.h"
 
-static PyObject *AerospikeTransaction_id(AerospikeTransaction *self)
-{
-    uint64_t id = self->txn->id;
-    PyObject *py_id = PyLong_FromUnsignedLongLong(id);
-    if (py_id == NULL) {
-        return NULL;
-    }
-
-    return py_id;
-}
-
 static void AerospikeTransaction_dealloc(AerospikeTransaction *self)
 {
     // Transaction object can be created but not initialized, so need to check
@@ -117,9 +106,55 @@ error:
     return -1;
 }
 
-static PyMethodDef AerospikeTransaction_methods[] = {
-    {"id", (PyCFunction)AerospikeTransaction_id, METH_NOARGS,
-     "Return multi-record transaction ID"},
+// TODO: Does this handle exceptions properly?
+static PyObject *AerospikeTransaction_get_in_doubt(AerospikeTransaction *self,
+                                                   void *closure)
+{
+    PyObject *py_in_doubt = PyBool_Check(self->txn->in_doubt);
+    if (py_in_doubt == NULL) {
+        return NULL;
+    }
+    return py_in_doubt;
+}
+
+static PyObject *AerospikeTransaction_get_state(AerospikeTransaction *self,
+                                                void *closure)
+{
+    PyObject *py_state = PyLong_FromLong((long)self->txn->state);
+    if (py_state == NULL) {
+        return NULL;
+    }
+    return py_state;
+}
+
+static PyObject *AerospikeTransaction_get_timeout(AerospikeTransaction *self,
+                                                  void *closure)
+{
+    PyObject *py_timeout =
+        PyLong_FromUnsignedLong((unsigned long)self->txn->timeout);
+    if (py_timeout == NULL) {
+        return NULL;
+    }
+    return py_timeout;
+}
+
+static int AerospikeTransaction_set_timeout(AerospikeTransaction *self,
+                                            PyObject *py_value, void *closure)
+{
+    uint32_t timeout = get_uint32_t_from_pyobject(py_value, "timeout");
+    if (PyErr_Occurred()) {
+        return -1;
+    }
+
+    self->txn->timeout = timeout;
+}
+
+static PyGetSetDef AerospikeTransaction_getsetters[] = {
+    {.name = "timeout",
+     .get = (getter)AerospikeTransaction_get_timeout,
+     .set = (setter)AerospikeTransaction_set_timeout},
+    {.name = "in_doubt", .get = (getter)AerospikeTransaction_get_in_doubt},
+    {.name = "state", .get = (getter)AerospikeTransaction_get_state},
     {NULL} /* Sentinel */
 };
 
@@ -131,8 +166,8 @@ PyTypeObject AerospikeTransaction_Type = {
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = AerospikeTransaction_new,
     .tp_init = (initproc)AerospikeTransaction_init,
-    .tp_methods = AerospikeTransaction_methods,
-    .tp_dealloc = (destructor)AerospikeTransaction_dealloc};
+    .tp_dealloc = (destructor)AerospikeTransaction_dealloc,
+    .tp_getset = AerospikeTransaction_getsetters};
 
 PyTypeObject *AerospikeTransaction_Ready()
 {
