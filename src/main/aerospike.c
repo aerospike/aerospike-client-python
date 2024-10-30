@@ -502,8 +502,9 @@ static struct module_constant_name_to_value module_constants[] = {
     {"LOG_LEVEL_TRACE", .value.integer = AS_LOG_LEVEL_TRACE},
 
     {"MRT_COMMIT_OK", .value.integer = AS_COMMIT_OK},
-    {"MRT_COMMIT_ALREADY_ATTEMPTED",
-     .value.integer = AS_COMMIT_ALREADY_ATTEMPTED},
+    {"MRT_COMMIT_ALREADY_COMMITTED",
+     .value.integer = AS_COMMIT_ALREADY_COMMITTED},
+    {"MRT_COMMIT_ALREADY_ABORTED", .value.integer = AS_COMMIT_ALREADY_ABORTED},
     {"MRT_COMMIT_VERIFY_FAILED", .value.integer = AS_COMMIT_VERIFY_FAILED},
     {"MRT_COMMIT_MARK_ROLL_FORWARD_ABANDONED",
      .value.integer = AS_COMMIT_MARK_ROLL_FORWARD_ABANDONED},
@@ -512,8 +513,9 @@ static struct module_constant_name_to_value module_constants[] = {
     {"MRT_COMMIT_CLOSE_ABANDONED", .value.integer = AS_COMMIT_CLOSE_ABANDONED},
 
     {"MRT_ABORT_OK", .value.integer = AS_ABORT_OK},
-    {"MRT_ABORT_ALREADY_ATTEMPTED",
-     .value.integer = AS_ABORT_ALREADY_ATTEMPTED},
+    {"MRT_ABORT_ALREADY_COMMITTED",
+     .value.integer = AS_ABORT_ALREADY_COMMITTED},
+    {"MRT_ABORT_ALREADY_ABORTED", .value.integer = AS_ABORT_ALREADY_ABORTED},
     {"MRT_ABORT_ROLL_BACK_ABANDONED",
      .value.integer = AS_ABORT_ROLL_BACK_ABANDONED},
     {"MRT_ABORT_CLOSE_ABANDONED", .value.integer = AS_ABORT_CLOSE_ABANDONED},
