@@ -110,7 +110,7 @@ error:
 static PyObject *AerospikeTransaction_get_in_doubt(AerospikeTransaction *self,
                                                    void *closure)
 {
-    PyObject *py_in_doubt = PyBool_Check(self->txn->in_doubt);
+    PyObject *py_in_doubt = PyBool_FromLong(self->txn->in_doubt);
     if (py_in_doubt == NULL) {
         return NULL;
     }
