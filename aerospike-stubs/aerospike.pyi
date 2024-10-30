@@ -1,4 +1,4 @@
-from typing import Any, Callable, Union, final, Literal, Optional
+from typing import Any, Callable, Union, final, Literal, Optional, Final
 
 from aerospike_helpers.batch.records import BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
@@ -316,7 +316,10 @@ class CDTWildcard:
 @final
 class Transaction:
     def __init__(self, reads_capacity: int = 128, writes_capacity: int = 128) -> None: ...
-    def id(self) -> int: ...
+    id: Final[int]
+    in_doubt: Final[bool]
+    state: Final[int]
+    timeout: int
 
 class Client:
     def __init__(self, *args, **kwargs) -> None: ...
