@@ -1316,7 +1316,9 @@ static inline int PyDict_SetDefaultRef(PyObject *d, PyObject *key,
 
 #if PY_VERSION_HEX < 0x030D00B3
     #define Py_BEGIN_CRITICAL_SECTION(op) {
-    #define Py_END_CRITICAL_SECTION() }
+    #define Py_END_CRITICAL_SECTION()                                          \
+        ;                                                                      \
+        }
     #define Py_BEGIN_CRITICAL_SECTION2(a, b) {
     #define Py_END_CRITICAL_SECTION2() }
 #endif
