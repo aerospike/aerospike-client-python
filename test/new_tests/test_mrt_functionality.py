@@ -2,6 +2,7 @@ import pytest
 from aerospike import exception as e
 import aerospike
 from .test_base_class import TestBaseClass
+import time
 
 
 class TestMRTBasicFunctionality:
@@ -48,6 +49,17 @@ class TestMRTBasicFunctionality:
         for i in range(len(self.keys)):
             _, _, bins = self.as_connection.get(self.keys[i])
             assert bins == {self.bin_name: i + 1}
+
+    def test_timeout_mrt(self):
+        mrt = aerospike.Transaction()
+        mrt.timeout = 1
+        policy = {
+            "txn": mrt
+        }
+        self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
+        time.sleep(2)
+        commit_status = self.as_connection.commit(mrt)
+        assert commit_status == aerospike.MRT_COMMIT_ALREADY_ABORTED
 
     # Test case 57: "Execute the MRT. Before issuing commit, give abort request using abort API" (P1)
     @pytest.mark.parametrize("get_abort_status", [False, True])
