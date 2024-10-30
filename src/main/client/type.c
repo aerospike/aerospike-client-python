@@ -978,7 +978,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_share_connect =
         PyDict_GetItemString(py_config, "use_shared_connection");
     if (py_share_connect) {
+#ifndef Py_GIL_DISABLED
         self->use_shared_connection = PyObject_IsTrue(py_share_connect);
+#endif
     }
 
     PyObject *py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
