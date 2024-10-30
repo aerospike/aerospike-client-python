@@ -149,12 +149,24 @@ static int AerospikeTransaction_set_timeout(AerospikeTransaction *self,
     self->txn->timeout = timeout;
 }
 
+static PyObject *AerospikeTransaction_get_id(AerospikeTransaction *self,
+                                             void *closure)
+{
+    PyObject *py_id =
+        PyLong_FromUnsignedLongLong((unsigned long long)self->txn->id);
+    if (py_id == NULL) {
+        return NULL;
+    }
+    return py_id;
+}
+
 static PyGetSetDef AerospikeTransaction_getsetters[] = {
     {.name = "timeout",
      .get = (getter)AerospikeTransaction_get_timeout,
      .set = (setter)AerospikeTransaction_set_timeout},
     {.name = "in_doubt", .get = (getter)AerospikeTransaction_get_in_doubt},
     {.name = "state", .get = (getter)AerospikeTransaction_get_state},
+    {.name = "id", .get = (getter)AerospikeTransaction_get_id},
     {NULL} /* Sentinel */
 };
 
