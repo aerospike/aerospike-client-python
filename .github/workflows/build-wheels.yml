@@ -161,6 +161,7 @@ jobs:
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
+      CIBW_BEFORE_ALL_LINUX: yum install openssl-devel -y
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -245,6 +246,10 @@ jobs:
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
+    - name: Add manylinux2014 build dependencies
+      if: ${{ inputs.manylinux-image == 'manylinux2014' }}
+      run: echo CIBW_BEFORE_ALL_LINUX="${{ env.CIBW_BEFORE_ALL_LINUX }} && yum install python-devel -y && yum install python-setuptools -y" >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.20.0
       env:
@@ -252,8 +257,6 @@ jobs:
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/" CPATH="$(brew --prefix openssl@1.1)/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
-        CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         # TODO: need to create lockfile for delvewheel or the workflow might break unexpectedly
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
