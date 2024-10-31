@@ -1,5 +1,5 @@
 name: 'Build wheels'
-run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
+run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, manylinux-image=${{ inputs.manylinux-image }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
@@ -28,6 +28,10 @@ on:
         description: Valid JSON list of Python tags to build the client for
         required: false
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+      manylinux-image:
+        required: true
+        default: manylinux2014
+        description: If building a manylinux wheel, which image to use
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -65,10 +69,6 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
-      manylinux-image:
-        required: true
-        default: manylinux2014
-        description: If building a manylinux wheel, which image to use
 
   workflow_call:
     inputs:
@@ -81,6 +81,10 @@ on:
         type: string
         required: false
         default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+      manylinux-image:
+        required: true
+        type: string
+        default: manylinux2014
       platform-tag:
         type: string
         required: true
@@ -110,10 +114,6 @@ on:
         type: string
         default: 'latest'
         description: 'Server docker image tag'
-      manylinux-image:
-        required: true
-        type: string
-        default: manylinux2014
     secrets:
       # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
