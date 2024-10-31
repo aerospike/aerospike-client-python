@@ -157,7 +157,6 @@ jobs:
     strategy:
       matrix:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
-        manylinux-image: ${{ inputs.manylinux-image }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
