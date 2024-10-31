@@ -153,6 +153,7 @@ jobs:
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
+      MACOS_OPENSSL_VERSION: 3
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -241,7 +242,7 @@ jobs:
       uses: pypa/cibuildwheel@v2.20.0
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
-        CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@3)/lib/" CPATH="$(brew --prefix openssl@3)/include/" STATIC_SSL=1
+        CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
