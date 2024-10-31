@@ -98,8 +98,12 @@ jobs:
         ]
         manylinux-image: [
           "manylinux2014",
-          "manylinux_2_28"
         ]
+        include:
+        - platform-tag: manylinux_x86_64
+          manylinux-image: manylinux_2_28
+        - platform-tag: manylinux_aarch64
+          manylinux-image: manylinux_2_28
       fail-fast: false
     uses: ./.github/workflows/build-wheels.yml
     with:
