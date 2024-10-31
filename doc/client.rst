@@ -593,7 +593,7 @@ Multi-Record Transactions
 .. class:: Client
     :noindex:
 
-    .. method:: commit(transaction: aerospike.Transaction, get_commit_status: bool = False) -> Optional[int]:
+    .. method:: commit(transaction: aerospike.Transaction) -> int:
 
         Attempt to commit the given multi-record transaction. First, the expected record versions are
         sent to the server nodes for verification. If all nodes return success, the transaction is
@@ -603,11 +603,9 @@ Multi-Record Transactions
 
         :param transaction: Multi-record transaction.
         :type transaction: :py:class:`aerospike.Transaction`
-        :param bool get_commit_status:
-            If :py:obj:`True`, return one of :ref:`mrt_commit_status_constants`.
-            Otherwise, return :py:obj:`None`.
+        :return: One of :ref:`mrt_commit_status_constants`.
 
-    .. method:: abort(transaction_id: aerospike.Transaction, get_abort_status: bool = False) -> Optional[int]:
+    .. method:: abort(transaction_id: aerospike.Transaction) -> int:
 
         Abort and rollback the given multi-record transaction.
 
@@ -615,9 +613,7 @@ Multi-Record Transactions
 
         :param transaction: Multi-record transaction.
         :type transaction: :py:class:`aerospike.Transaction`
-        :param bool get_abort_status:
-            If :py:obj:`True`, return one of :ref:`mrt_abort_status_constants`.
-            Otherwise, return :py:obj:`None`.
+        :return: One of :ref:`mrt_abort_status_constants`.
 
     .. _aerospike_udf_operations:
 
