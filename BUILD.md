@@ -87,8 +87,7 @@ By default macOS will be missing command line tools.
 
 The dependencies can be installed through the macOS package manager [Homebrew](http://brew.sh/).
 
-    brew install openssl@1
-    # brew uninstall openssl@3
+    brew uninstall openssl@3
 
 ### All distros
 
@@ -109,8 +108,8 @@ using the wrong version of the C client. This can causes strange issues when bui
 Also, for macOS or any other operating system that doesn't have OpenSSL installed by default, you must install it and
 specify its location when building the wheel. In macOS, you would run these commands:
 ```
-export SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/"
-export CPATH="$(brew --prefix openssl@1.1)/include/"
+export SSL_LIB_PATH="$(brew --prefix openssl@3)/lib/"
+export CPATH="$(brew --prefix openssl@3)/include/"
 export STATIC_SSL=1
 ```
 
