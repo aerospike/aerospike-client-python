@@ -65,6 +65,10 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+      manylinux-image:
+        required: true
+        default: manylinux2014
+        description: If building a manylinux wheel, which image to use
 
   workflow_call:
     inputs:
@@ -106,6 +110,10 @@ on:
         type: string
         default: 'latest'
         description: 'Server docker image tag'
+      manylinux-image:
+        required: true
+        type: string
+        default: manylinux2014
     secrets:
       # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
@@ -149,6 +157,7 @@ jobs:
     strategy:
       matrix:
         python-tag: ${{ fromJSON(inputs.python-tags) }}
+        manylinux-image: ${{ inputs.manylinux-image }}
       fail-fast: false
     runs-on: ${{ needs.get-runner-os.outputs.runner-os }}
     env:
@@ -249,7 +258,8 @@ jobs:
         # delvewheel is not enabled by default but we do need to repair the wheel
         # TODO: need to create lockfile for delvewheel or the workflow might break unexpectedly
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-        CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
+        CIBW_MANYLINUX_X86_64_IMAGE: ${{ inputs.manylinux-image }}
+        CIBW_MANYLINUX_AARCH64_IMAGE: ${{ inputs.manylinux-image }}
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
