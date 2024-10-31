@@ -96,9 +96,14 @@ jobs:
           "macosx_arm64",
           "win_amd64"
         ]
+        manylinux-image: [
+          "manylinux2014",
+          "manylinux_2_28"
+        ]
       fail-fast: false
     uses: ./.github/workflows/build-wheels.yml
     with:
+      manylinux-image: ${{ matrix.manylinux-image }}
       platform-tag: ${{ matrix.platform-tag }}
       # Can't use env context here, so just copy from build-sdist env var
       sha-to-build-and-test: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
