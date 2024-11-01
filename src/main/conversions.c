@@ -1306,14 +1306,14 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
                     "A bin name must be a string or unicode string.");
-                goto EXIT_CS;
+                break;
             }
 
             name = PyUnicode_AsUTF8(key);
             if (!name) {
                 as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                 "Unable to convert unicode object to C string");
-                goto EXIT_CS;
+                break;
             }
 
             if (self->strict_types) {
@@ -1321,18 +1321,19 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     as_error_update(
                         err, AEROSPIKE_ERR_BIN_NAME,
                         "A bin name should not exceed 15 characters limit");
-                    goto EXIT_CS;
+                    break;
                 }
             }
 
             if (!value) {
                 // this should never happen, but if it did...
                 as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
-                goto EXIT_CS;
+                break;
             }
             else if (
                 PyBool_Check(
                     value)) { //TODO Change to true bool support post jump version.
+                bool error_raised = false;
                 switch (self->send_bool_as) {
                 case SEND_BOOL_AS_AS_BOOL:;
                     bool converted_value = (Py_IsTrue(value));
@@ -1342,7 +1343,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     as_integer *converted_integer = NULL;
                     if (py_bool_to_as_integer(err, value, &converted_integer) !=
                         AEROSPIKE_OK) {
-                        goto EXIT_CS;
+                        error_raised = true;
                     }
                     ret_val =
                         as_record_set_integer(rec, name, converted_integer);
@@ -1350,7 +1351,12 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 default:
                     as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                     "Unknown value for send_bool_as.");
-                    goto EXIT_CS;
+                    error_raised = true;
+                    break;
+                }
+
+                if (error_raised == true) {
+                    break;
                 }
             }
             else if (PyLong_Check(value)) {
@@ -1359,7 +1365,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                         as_error_update(err, AEROSPIKE_ERR_PARAM,
                                         "integer value exceeds sys.maxsize");
-                        goto EXIT_CS;
+                        break;
                     }
                 }
                 ret_val = as_record_set_int64(rec, name, val);
@@ -1378,7 +1384,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                     if (!py_ustr) {
                         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                         "Unicode value not encoded in utf-8.");
-                        goto EXIT_CS;
+                        break;
                     }
                     geo_value = PyBytes_AsString(py_ustr);
                 }
@@ -1399,7 +1405,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 if (!py_ustr) {
                     as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                     "Unicode value not encoded in utf-8.");
-                    goto EXIT_CS;
+                    break;
                 }
                 char *val = PyBytes_AsString(py_ustr);
                 ret_val = as_record_set_strp(rec, name, strdup(val), true);
@@ -1462,7 +1468,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                         if (serialize_based_on_serializer_policy(
                                 self, serializer_type, &bytes, value, err) !=
                             AEROSPIKE_OK) {
-                            goto EXIT_CS;
+                            break;
                         }
                         ret_val = as_record_set_bytes(rec, name, bytes);
                     }
@@ -1473,11 +1479,10 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 if (!ret_val) {
                     as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
                                     "Unable to set key-value pair");
-                    goto EXIT_CS;
+                    break;
                 }
             }
         }
-    EXIT_CS:
         Py_END_CRITICAL_SECTION();
         if (err->code != AEROSPIKE_OK) {
             return err->code;
