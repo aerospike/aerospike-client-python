@@ -249,7 +249,7 @@ jobs:
         CIBW_BEFORE_ALL_LINUX: >
           yum install wget -y &&
           wget https://www.openssl.org/source/${{ env.MANYLINUX_OPENSSL_VERSION }}.tar.gz &&
-          tar xzvf ${{ env.MANYLINUX_OPENSSL_VERSION }} &&
+          tar xzvf ${{ env.MANYLINUX_OPENSSL_VERSION }}.tar.gz &&
           cd ${{ env.MANYLINUX_OPENSSL_VERSION }} &&
           ./Configure --prefix=/opt/openssl --openssldir=/usr/local/ssl &&
           make &&
