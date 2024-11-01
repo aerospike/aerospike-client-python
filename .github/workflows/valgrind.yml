@@ -24,6 +24,7 @@ jobs:
     with:
       python-tags: '["cp38"]'
       platform-tag: manylinux_x86_64
+      manylinux-image: manylinux2014
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
