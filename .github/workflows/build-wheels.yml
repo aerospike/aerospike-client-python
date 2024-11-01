@@ -247,6 +247,7 @@ jobs:
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
+          yum install wget -y &&
           wget https://www.openssl.org/source/${{ env.MANYLINUX_OPENSSL_VERSION }}.tar.gz &&
           tar xzvf ${{ env.MANYLINUX_OPENSSL_VERSION }} &&
           cd ${{ env.MANYLINUX_OPENSSL_VERSION }} &&
