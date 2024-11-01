@@ -87,7 +87,7 @@ By default macOS will be missing command line tools.
 
 The dependencies can be installed through the macOS package manager [Homebrew](http://brew.sh/).
 
-    brew uninstall openssl@3
+    brew install openssl@3
 
 ### All distros
 
