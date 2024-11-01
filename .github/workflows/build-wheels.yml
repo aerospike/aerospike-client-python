@@ -154,6 +154,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
+      MANYLINUX_OPENSSL_VERSION: openssl-3.0.15
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -246,7 +247,14 @@ jobs:
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y &&
+          # Build openssl 3 from source
+          wget https://www.openssl.org/source/${{ env.MANYLINUX_OPENSSL_VERSION }}.tar.gz &&
+          tar xzvf ${{ env.MANYLINUX_OPENSSL_VERSION }} &&
+          cd ${{ env.MANYLINUX_OPENSSL_VERSION }} &&
+          ./Configure --prefix=/opt/openssl --openssldir=/usr/local/ssl &&
+          make &&
+          make test &&
+          make install &&
           yum install python-devel -y &&
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
