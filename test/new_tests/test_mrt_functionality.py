@@ -54,8 +54,9 @@ class TestMRTBasicFunctionality:
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         time.sleep(3)
-        # with pytest.raises(e.AerospikeError):
-        self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
+        # Server should indicate that MRT has expired
+        with pytest.raises(e.AerospikeError):
+            self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
 
     # Test case 57: "Execute the MRT. Before issuing commit, give abort request using abort API" (P1)
     def test_abort_api_and_functionality(self):
