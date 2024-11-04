@@ -84,7 +84,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     }
 
     if (py_writes_capacity) {
-        uint32_t writes_capacity =
+        writes_capacity =
             get_uint32_t_from_pyobject(py_writes_capacity, kwlist[1]);
         if (PyErr_Occurred()) {
             goto error;
