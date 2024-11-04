@@ -17,14 +17,6 @@ class TestMRTAPI:
                 pytest.raises((TypeError)), "function takes at most 2 keyword arguments (3 given)"
             ),
             (
-                {"reads_capacity": 256},
-                pytest.raises((TypeError)), "Both reads_capacity and writes_capacity must be specified"
-            ),
-            (
-                {"writes_capacity": 256},
-                pytest.raises((TypeError)), "Both reads_capacity and writes_capacity must be specified"
-            ),
-            (
                 {"reads_capacity": "256", "writes_capacity": 256},
                 pytest.raises((TypeError)), "reads_capacity must be an integer"
             ),
@@ -60,6 +52,7 @@ class TestMRTAPI:
                 # Internal Python error thrown in Windows
                 assert str(excinfo.value) == "Python int too large to convert to C unsigned long"
             else:
+                # Custom error thrown by Python client other platforms
                 assert str(excinfo.value) == err_msg
 
     # Even though this is an unlikely use case, this should not cause problems.

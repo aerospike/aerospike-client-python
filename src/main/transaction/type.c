@@ -70,30 +70,30 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
         goto error;
     }
 
-    // Both reads and writes capacities must be specified,
-    // or both must be omitted
     as_txn *txn;
-    if ((py_reads_capacity == NULL) ^ (py_writes_capacity == NULL)) {
-        PyErr_Format(PyExc_TypeError, "Both %s and %s must be specified",
-                     kwlist[0], kwlist[1]);
-        goto error;
-    }
-    else if (py_reads_capacity && py_writes_capacity) {
-        uint32_t reads_capacity =
+    uint32_t reads_capacity, writes_capacity;
+    if (py_reads_capacity) {
+        reads_capacity =
             get_uint32_t_from_pyobject(py_reads_capacity, kwlist[0]);
         if (PyErr_Occurred()) {
             goto error;
         }
+    }
+    else {
+        reads_capacity = AS_TXN_READ_CAPACITY_DEFAULT;
+    }
+
+    if (py_writes_capacity) {
         uint32_t writes_capacity =
             get_uint32_t_from_pyobject(py_writes_capacity, kwlist[1]);
         if (PyErr_Occurred()) {
             goto error;
         }
-        txn = as_txn_create_capacity(reads_capacity, writes_capacity);
     }
     else {
-        txn = as_txn_create();
+        writes_capacity = AS_TXN_WRITE_CAPACITY_DEFAULT;
     }
+    txn = as_txn_create_capacity(reads_capacity, writes_capacity);
 
     // If this transaction object was already initialized before, reinitialize it
     if (self->txn) {
