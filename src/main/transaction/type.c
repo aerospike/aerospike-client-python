@@ -106,7 +106,6 @@ error:
     return -1;
 }
 
-// TODO: Does this handle exceptions properly?
 static PyObject *AerospikeTransaction_get_in_doubt(AerospikeTransaction *self,
                                                    void *closure)
 {
