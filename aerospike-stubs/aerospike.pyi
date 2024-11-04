@@ -320,9 +320,9 @@ class CDTWildcard:
 @final
 class Transaction:
     def __init__(self, reads_capacity: int = 128, writes_capacity: int = 128) -> None: ...
-    id: Final[int]
-    in_doubt: Final[bool]
-    state: Final[int]
+    id: int
+    in_doubt: bool
+    state: int
     timeout: int
 
 class Client:
