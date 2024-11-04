@@ -605,7 +605,7 @@ Multi-Record Transactions
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the commit. One of :ref:`mrt_commit_status_constants`.
 
-    .. method:: abort(transaction_id: aerospike.Transaction) -> int:
+    .. method:: abort(transaction: aerospike.Transaction) -> int:
 
         Abort and rollback the given multi-record transaction.
 
