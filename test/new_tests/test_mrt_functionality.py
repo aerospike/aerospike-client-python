@@ -53,7 +53,7 @@ class TestMRTBasicFunctionality:
             "txn": mrt
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
-        time.sleep(2)
+        time.sleep(3)
         commit_status = self.as_connection.commit(mrt)
         assert commit_status == aerospike.MRT_COMMIT_ALREADY_ABORTED
 
