@@ -58,7 +58,7 @@ class TestMRTBasicFunctionality:
         with pytest.raises(e.AerospikeError):
             self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
 
-        # Cleanup MRT on server side before continuing to run tests
+        # Cleanup MRT on server side before continuing to run test
         self.as_connection.abort(mrt)
 
     # Test case 57: "Execute the MRT. Before issuing commit, give abort request using abort API" (P1)
@@ -89,8 +89,8 @@ class TestMRTBasicFunctionality:
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         self.as_connection.abort(mrt)
-        with pytest.raises(e.RollAlreadyAttempted):
-            self.as_connection.commit(mrt)
+        status = self.as_connection.commit(mrt)
+        assert status == aerospike.MRT_COMMIT_ALREADY_ABORTED
 
     # Test case 10: Issue abort after issung commit. (P1)
     def test_abort_fail(self):
@@ -100,5 +100,5 @@ class TestMRTBasicFunctionality:
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         self.as_connection.commit(mrt)
-        with pytest.raises(e.RollAlreadyAttempted):
-            self.as_connection.abort(mrt)
+        status = self.as_connection.abort(mrt)
+        assert status == aerospike.MRT_ABORT_ALREADY_COMMITTED
