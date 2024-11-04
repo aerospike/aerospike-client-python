@@ -93,6 +93,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     else {
         writes_capacity = AS_TXN_WRITE_CAPACITY_DEFAULT;
     }
+
     txn = as_txn_create_capacity(reads_capacity, writes_capacity);
 
     // If this transaction object was already initialized before, reinitialize it
