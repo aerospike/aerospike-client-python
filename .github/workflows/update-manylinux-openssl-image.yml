@@ -6,6 +6,9 @@ on:
 
 jobs:
   main:
+    env:
+      # TODO: get a better name
+      CUSTOM_MANYLINUX_IMAGE_NAME: manylinux2014-openssl
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
@@ -21,8 +24,10 @@ jobs:
         file: .github/workflows/manylinux2014-openssl.Dockerfile
         build-args: |
           OPENSSL_VERSION=3.0.15
-        # tags: ${{ env.SECURITY_IMAGE_NAME }}
+        tags: ${{ env.CUSTOM_MANYLINUX_IMAGE_NAME }}
         # setup-buildx-action configures Docker to use the docker-container build driver
         # This driver doesn't publish an image locally by default
         # so we have to manually enable it
         load: true
+        cache-from: type=registry,ref=${{ env.CUSTOM_MANYLINUX_IMAGE_NAME }}
+        cache-to: type=inline
