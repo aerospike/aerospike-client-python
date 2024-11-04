@@ -8,7 +8,7 @@ RUN wget https://www.openssl.org/source/$OPENSSL_TAR_NAME.tar.gz
 RUN tar xzvf $OPENSSL_TAR_NAME.tar.gz
 WORKDIR $OPENSSL_TAR_NAME
 
-RUN ./Configure --prefix=/opt/openssl --openssldir=/usr/local/ssl
+RUN ./Configure
 RUN make
 RUN make test
 RUN make install
