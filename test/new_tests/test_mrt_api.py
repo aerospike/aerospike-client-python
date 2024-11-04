@@ -2,7 +2,7 @@ import aerospike
 from aerospike import exception as e
 import pytest
 from contextlib import nullcontext
-from typing import Optional
+from typing import Optional, Callable
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -67,8 +67,6 @@ class TestMRTAPI:
         # Create a new transaction object using the same Python class instance
         mrt.__init__()
 
-    # Don't need to test abort() for invalid args since it shares the same codepath as commit() for input
-    # validation
     @pytest.mark.parametrize(
         "args",
         [
@@ -76,12 +74,16 @@ class TestMRTAPI:
             ["string"]
         ]
     )
-    def test_mrt_invalid_args(self, args: list):
+    @pytest.mark.parametrize(
+        "api_call",
+        [
+            aerospike.Client.commit,
+            aerospike.Client.abort
+        ]
+    )
+    def test_mrt_invalid_args(self, args: list, api_call: Callable):
         with pytest.raises(TypeError):
-            self.as_connection.commit(*args)
-
-        with pytest.raises(TypeError):
-            self.as_connection.abort(*args)
+            api_call(self.as_connection, *args)
 
     def test_invalid_txn_in_policy(self):
         policy = {"txn": True}
