@@ -35,13 +35,23 @@ Methods
 
         The value is an unsigned 64-bit integer.
 
+        This attribute is read-only.
+
         :type: int
     .. py:attribute:: in_doubt
+
+        This attribute is read-only.
+
         :type: bool
     .. py:attribute:: state
 
         One of the :ref:`mrt_state` constants.
 
+        This attribute is read-only.
+
         :type: int
     .. py:attribute:: timeout
+
+        This attribute can be read and written to.
+
         :type: int
