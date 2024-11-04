@@ -1636,3 +1636,16 @@ MRT Abort Status
 
     Transaction has been rolled back, but client transaction close was abandoned.
     Server will eventually close the transaction.
+
+.. _mrt_state:
+
+Multi-record Transaction State
+------------------------------
+
+.. data:: MRT_STATE_OPEN
+
+.. data:: MRT_STATE_VERIFIED
+
+.. data:: MRT_STATE_COMMITTED
+
+.. data:: MRT_STATE_ABORTED
