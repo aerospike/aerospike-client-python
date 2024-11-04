@@ -45,7 +45,7 @@ jobs:
 
     - uses: actions/download-artifact@v4
       with:
-        name: cp38-manylinux_x86_64.build
+        name: cp39-manylinux_x86_64.build
 
     - name: Install client
       run: pip install ./*.whl
