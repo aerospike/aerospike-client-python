@@ -247,14 +247,6 @@ jobs:
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
-          yum install perl-IPC-Cmd perl-Test-Simple wget -y &&
-          wget https://www.openssl.org/source/${{ env.MANYLINUX_OPENSSL_VERSION }}.tar.gz &&
-          tar xzvf ${{ env.MANYLINUX_OPENSSL_VERSION }}.tar.gz &&
-          cd ${{ env.MANYLINUX_OPENSSL_VERSION }} &&
-          ./Configure --prefix=/opt/openssl --openssldir=/usr/local/ssl &&
-          make &&
-          make test &&
-          make install &&
           yum install python-devel -y &&
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
