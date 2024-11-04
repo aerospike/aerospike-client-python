@@ -39,6 +39,9 @@ Methods
     .. py:attribute:: in_doubt
         :type: bool
     .. py:attribute:: state
-        :type: int. One of the :ref:`mrt_state` constants.
+
+        One of the :ref:`mrt_state` constants.
+
+        :type: int
     .. py:attribute:: timeout
         :type: int
