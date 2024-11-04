@@ -3,7 +3,6 @@ on:
     # * is a special character in YAML so you have to quote this string
     - cron:  '0 17 * * 1-5'
   workflow_dispatch:
-  pull_request:
 
 jobs:
   main:
