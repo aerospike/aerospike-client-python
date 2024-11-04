@@ -22,10 +22,9 @@ PyObject *AerospikeClient_Commit(AerospikeClient *self, PyObject *args,
     as_error_init(&err);
 
     as_commit_status status;
-    as_commit_status *status_ref = &status;
 
     Py_BEGIN_ALLOW_THREADS
-    aerospike_commit(self->as, &err, py_transaction->txn, status_ref);
+    aerospike_commit(self->as, &err, py_transaction->txn, &status);
     Py_END_ALLOW_THREADS
 
     if (err.code != AEROSPIKE_OK) {
@@ -57,10 +56,9 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     as_error_init(&err);
 
     as_abort_status status;
-    as_abort_status *status_ref = &status;
 
     Py_BEGIN_ALLOW_THREADS
-    aerospike_abort(self->as, &err, py_transaction->txn, status_ref);
+    aerospike_abort(self->as, &err, py_transaction->txn, &status);
     Py_END_ALLOW_THREADS
 
     if (err.code != AEROSPIKE_OK) {
