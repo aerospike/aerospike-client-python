@@ -1,7 +1,7 @@
 name: PR tests
 
 env:
-  LOWEST_SUPPORTED_PY_VERSION: '3.8'
+  LOWEST_SUPPORTED_PY_VERSION: '3.9'
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        py-version: ["3.9", "3.10", "3.11", "3.12"]
       fail-fast: false
 
     steps:
@@ -250,7 +250,6 @@ jobs:
     strategy:
       matrix:
         py-version: [
-          "3.8",
           "3.9",
           "3.10",
           "3.11",

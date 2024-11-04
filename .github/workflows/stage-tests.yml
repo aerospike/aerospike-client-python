@@ -48,8 +48,6 @@ jobs:
           ["ubuntu:22.04", 2, "linux/amd64", "3.10"],
           ["ubuntu:22.04", 2, "linux/arm64", "3.10"],
           # Bookworm is Debian 12
-          ["python:3.8-bookworm", 2, "linux/amd64", "3.8"],
-          ["python:3.8-bookworm", 2, "linux/arm64", "3.8"],
           ["python:3.9-bookworm", 2, "linux/amd64", "3.9"],
           ["python:3.9-bookworm", 2, "linux/arm64", "3.9"],
           ["python:3.10-bookworm", 2, "linux/amd64", "3.10"],
@@ -152,7 +150,6 @@ jobs:
           macos-14-large
         ]
         python-version: [
-          "3.8",
           "3.9",
           "3.10",
           "3.11",

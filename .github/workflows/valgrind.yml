@@ -22,7 +22,7 @@ jobs:
   build-manylinux-wheel:
     uses: ./.github/workflows/build-wheels.yml
     with:
-      python-tags: '["cp38"]'
+      python-tags: '["cp39"]'
       platform-tag: manylinux_x86_64
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
@@ -40,7 +40,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.8'
+        python-version: '3.9'
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
