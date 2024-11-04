@@ -1,0 +1,27 @@
+on:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    - cron:  '0 17 * * 1-5'
+  workflow_dispatch:
+
+jobs:
+  main:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        sparse-checkout: |
+          .github/workflows
+
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        # Don't want to use default Git context or else it will clone the whole Python client repo again
+        context: .github/workflows
+        build-args: |
+          MANYLINUX_OPENSSL_VERSION=3.0.15
+        # tags: ${{ env.SECURITY_IMAGE_NAME }}
+        # setup-buildx-action configures Docker to use the docker-container build driver
+        # This driver doesn't publish an image locally by default
+        # so we have to manually enable it
+        load: true
