@@ -42,7 +42,7 @@ extensions = [
     "sphinxcontrib.spelling"
 ]
 napoleon_google_docstring = True
-intersphinx_mapping = {"python": ("https://docs.python.org/3.8", None)}
+# intersphinx_mapping = {"python": ("https://docs.python.org/3.8", None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []
