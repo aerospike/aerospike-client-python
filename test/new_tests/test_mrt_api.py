@@ -53,6 +53,7 @@ class TestMRTAPI:
             assert type(mrt.timeout) == int
             assert type(mrt.state) == int
             assert type(mrt.in_doubt) == bool
+            mrt.timeout = 10
         else:
             # Just use kwargs to id the test case
             if kwargs == {"reads_capacity": 2**32, "writes_capacity": 256} and excinfo.type == OverflowError:
