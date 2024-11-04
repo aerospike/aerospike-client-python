@@ -58,6 +58,9 @@ class TestMRTBasicFunctionality:
         with pytest.raises(e.AerospikeError):
             self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
 
+        # Cleanup MRT on server side before continuing to run tests
+        self.as_connection.abort(mrt)
+
     # Test case 57: "Execute the MRT. Before issuing commit, give abort request using abort API" (P1)
     def test_abort_api_and_functionality(self):
         mrt = aerospike.Transaction()
