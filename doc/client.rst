@@ -603,7 +603,7 @@ Multi-Record Transactions
 
         :param transaction: Multi-record transaction.
         :type transaction: :py:class:`aerospike.Transaction`
-        :return: One of :ref:`mrt_commit_status_constants`.
+        :return: The status of the commit. One of :ref:`mrt_commit_status_constants`.
 
     .. method:: abort(transaction_id: aerospike.Transaction) -> int:
 
@@ -613,7 +613,7 @@ Multi-Record Transactions
 
         :param transaction: Multi-record transaction.
         :type transaction: :py:class:`aerospike.Transaction`
-        :return: One of :ref:`mrt_abort_status_constants`.
+        :return: The status of the abort. One of :ref:`mrt_abort_status_constants`.
 
     .. _aerospike_udf_operations:
 

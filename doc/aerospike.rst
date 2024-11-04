@@ -1585,9 +1585,13 @@ MRT Commit Status
 
     Commit succeeded.
 
-.. data:: MRT_COMMIT_ALREADY_ATTEMPTED
+.. data:: MRT_COMMIT_ALREADY_COMMITTED
 
-    Commit or abort already attempted.
+    Transaction has already been committed.
+
+.. data:: MRT_COMMIT_ALREADY_ABORTED
+
+    Transaction has already been aborted.
 
 .. data:: MRT_COMMIT_VERIFY_FAILED
 
@@ -1616,9 +1620,13 @@ MRT Abort Status
 
     Abort succeeded.
 
-.. data:: MRT_ABORT_ALREADY_ATTEMPTED
+.. data:: MRT_ABORT_ALREADY_COMMITTED
 
-    Abort or commit already attempted.
+    Transaction has already been committed.
+
+.. data:: MRT_ABORT_ALREADY_ABORTED
+
+    Transaction has already been aborted.
 
 .. data:: MRT_ABORT_ROLL_BACK_ABANDONED
 
