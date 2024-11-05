@@ -32,5 +32,5 @@ jobs:
         # This driver doesn't publish an image locally by default
         # so we have to manually enable it
         load: true
-        cache-from: type=local,ref=${{ env.CUSTOM_MANYLINUX_IMAGE_NAME }}
-        cache-to: type=inline
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
