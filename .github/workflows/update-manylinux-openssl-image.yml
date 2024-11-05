@@ -7,14 +7,22 @@ on:
 jobs:
   main:
     env:
-      # TODO: get a better name
-      CUSTOM_MANYLINUX_IMAGE_NAME: manylinux2014-openssl
+      OPENSSL_VERSION: '3.0.15'
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
       with:
         sparse-checkout: |
           .github/workflows
+
+    - run: docker pull quay.io/pypa/manylinux2014_x86_64
+
+    - name: Get digest of latest manylinux2014 image
+      # Example: quay.io/pypa/manylinux2014_x86_64@sha256:1b6743f7785bd1630d5fc985c898b1ac46d64ad7a39173bbfc8ad2ba315a70cf
+      run: echo MANYLINUX_IMAGE_REVISION=$(docker image inspect quay.io/pypa/manylinux2014_x86_64 --format json | jq -r ".[0].RepoDigests[0]") > $GITHUB_ENV
+      shell: bash
+
+    - run: echo CUSTOM_MANYLINUX_IMAGE_NAME="${{ env.MANYLINUX_IMAGE_REVISION }}-${{ env.OPENSSL_VERSION }}" >> $GITHUB_ENV
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -26,7 +34,7 @@ jobs:
         context: .github/workflows
         file: .github/workflows/manylinux2014-openssl.Dockerfile
         build-args: |
-          OPENSSL_VERSION=3.0.15
+          OPENSSL_VERSION=${{ env.OPENSSL_VERSION }}
         tags: ${{ env.CUSTOM_MANYLINUX_IMAGE_NAME }}
         # setup-buildx-action configures Docker to use the docker-container build driver
         # This driver doesn't publish an image locally by default
