@@ -24,8 +24,8 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
 
 // Error indicator must always be checked after this call
 // Constructor parameter name needed for constructing error message
-static uint32_t get_uint32_t_from_pyobject(PyObject *pyobject,
-                                           const char *param_name_of_pyobj)
+static uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
+                                             const char *param_name_of_pyobj)
 {
     if (!PyLong_Check(pyobject)) {
         PyErr_Format(PyExc_TypeError, "%s must be an integer",
@@ -74,7 +74,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     uint32_t reads_capacity, writes_capacity;
     if (py_reads_capacity) {
         reads_capacity =
-            get_uint32_t_from_pyobject(py_reads_capacity, kwlist[0]);
+            convert_pyobject_to_uint32_t(py_reads_capacity, kwlist[0]);
         if (PyErr_Occurred()) {
             goto error;
         }
@@ -85,7 +85,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
 
     if (py_writes_capacity) {
         writes_capacity =
-            get_uint32_t_from_pyobject(py_writes_capacity, kwlist[1]);
+            convert_pyobject_to_uint32_t(py_writes_capacity, kwlist[1]);
         if (PyErr_Occurred()) {
             goto error;
         }
@@ -141,7 +141,7 @@ static PyObject *AerospikeTransaction_get_timeout(AerospikeTransaction *self,
 static int AerospikeTransaction_set_timeout(AerospikeTransaction *self,
                                             PyObject *py_value, void *closure)
 {
-    uint32_t timeout = get_uint32_t_from_pyobject(py_value, "timeout");
+    uint32_t timeout = convert_pyobject_to_uint32_t(py_value, "timeout");
     if (PyErr_Occurred()) {
         return -1;
     }
