@@ -3,6 +3,7 @@ ARG OPENSSL_VERSION
 
 # https://computingforgeeks.com/how-to-install-openssl-3-x-on-centos-rhel-7/
 RUN yum install -y centos-release-scl devtoolset-11 perl-Text-Template.noarch perl-IPC-Cmd perl-Test-Simple wget
+# binutils 2.36 contains a bug fix for missing symbols
 SHELL ["/usr/bin/scl", "enable", "devtoolset-11"]
 
 ARG OPENSSL_TAR_NAME=openssl-$OPENSSL_VERSION
