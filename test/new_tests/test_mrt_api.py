@@ -52,7 +52,7 @@ class TestMRTAPI:
                 # Internal Python error thrown in Windows
                 assert str(excinfo.value) == "Python int too large to convert to C unsigned long"
             else:
-                # Custom error thrown by Python client other platforms
+                # Custom error thrown by Python client for other platforms
                 assert str(excinfo.value) == err_msg
 
     # Even though this is an unlikely use case, this should not cause problems.
