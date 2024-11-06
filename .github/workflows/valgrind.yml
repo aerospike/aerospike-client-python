@@ -104,8 +104,11 @@ jobs:
   valgrind:
     env:
       MASSIF_REPORT_FILE_NAME: massif.out
-    needs: build-manylinux-wheel
-    if: ${{ !cancelled() && (needs.build-manylinux-wheel.result == 'success' || needs.build-manylinux-wheel.result == 'skipped') }}
+    needs: [
+      look-for-wheel-in-jfrog,
+      build-manylinux-wheel
+    ]
+    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' || needs.build-manylinux-wheel.result == 'success') }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
