@@ -31,6 +31,8 @@ jobs:
       # so we convert it to a job output so the reusable workflow can access it
       python-tag: ${{ env.PYTHON_TAG }}
     runs-on: ubuntu-22.04
+    env:
+      JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
     steps:
     - uses: jfrog/setup-jfrog-cli@v4
       env:
@@ -46,12 +48,15 @@ jobs:
       # but it doesn't allow regex, so we can't filter out any type of label in a wheel name
       # Example: we want to filter out "unoptimized" and "dsym" but in case we add more labels, we want to use regex
       # to handle those new labels without updating the regex.
-      run: echo $(jf rt search "${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*.whl" | jq '.[].path' | grep --invert-match "${{ env.SHORT_GITHUB_SHA }}\.") > file_matches.txt
+      run: jf rt search "${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*.whl" | jq -r '.[].path' > ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
       shell: bash
+
+    - name: Filter out wheels with labels in results
+      run: sed -i "s/${{ env.SHORT_GITHUB_SHA }}\./d" ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
     - name: Count artifacts
       id: count_num_artifacts_found
-      run: echo num_artifacts=$(echo file_matches.txt | wc -l) >> $GITHUB_OUTPUT
+      run: echo num_artifacts=$(echo ${{ env.JF_SEARCH_RESULTS_FILE_NAME }} | wc -l) >> $GITHUB_OUTPUT
 
     - name: Multiple artifacts found, not sure which one to use. Fail out
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts > 1 }}
@@ -59,7 +64,7 @@ jobs:
 
     - name: Found the exact artifact in JFrog, downloading...
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
-      run: jf rt download --flat --fail-no-op "$(cat file_matches.txt)"
+      run: jf rt download --flat --fail-no-op < file_matches.txt
 
     - name: Pass to valgrind job
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
