@@ -65,9 +65,11 @@ jobs:
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts > 1 }}
       run: exit 1
 
-    - name: Found the exact artifact in JFrog, downloading...
+    - name: Found the exact artifact in JFrog. Get the name
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
-      run: jf rt download --flat --fail-no-op $(cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }})
+      run: echo ARTIFACT_PATH=$(jq -r .[0].path ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}) >> $GITHUB_ENV
+
+    - run: jf rt download --flat --fail-no-op ${{ env.ARTIFACT_PATH }}
 
     - name: Pass to valgrind job
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
