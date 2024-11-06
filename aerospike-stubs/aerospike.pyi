@@ -468,8 +468,19 @@ class Scan:
 class null:
     def __init__(self, *args, **kwargs) -> None: ...
 
-class ClientConfigDict(TypedDict):
-    test: str
+class LuaDict(TypedDict):
+    system_path: str = "/usr/local/aerospike/lua"
+    user_path: str = "./"
+
+class ClientConfigDict(TypedDict, total=False):
+    # TODO: create named tuple for host
+    hosts: list
+    user: str
+    password: str
+    lua: LuaDict
+    policies: dict
+    shm: dict
+    # TODO: not done
 
 def calc_digest(ns: str, set: str, key: Union[str, int, bytearray]) -> bytearray: ...
 def client(config: ClientConfigDict) -> Client: ...
