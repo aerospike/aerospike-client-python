@@ -51,8 +51,12 @@ jobs:
       run: jf rt search "${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*.whl" | jq -r '.[].path' > ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
       shell: bash
 
+    - run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+
     - name: Filter out wheels with labels in results
       run: sed -i "/${{ env.SHORT_GITHUB_SHA }}\./d" ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+
+    - run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
     - name: Count artifacts
       id: count_num_artifacts_found
