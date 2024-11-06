@@ -55,7 +55,7 @@ jobs:
     - run: sudo apt install -y moreutils
 
     - name: Filter out wheels with labels in results
-      run: jq '.[] | select(.path | test("${{ env.SHORT_GITHUB_SHA }}\\.") | not)' ${{ env.JF_SEARCH_RESULTS_FILE_NAME }} | sponge ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+      run: jq 'map(select(.path | test("${{ env.SHORT_GITHUB_SHA }}\\.") | not))' ${{ env.JF_SEARCH_RESULTS_FILE_NAME }} | sponge ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
     - run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
