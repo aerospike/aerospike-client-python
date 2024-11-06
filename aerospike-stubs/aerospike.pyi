@@ -469,8 +469,8 @@ class null:
     def __init__(self, *args, **kwargs) -> None: ...
 
 class LuaDict(TypedDict):
-    system_path: str = "/usr/local/aerospike/lua"
-    user_path: str = "./"
+    system_path: str
+    user_path: str
 
 class ClientConfigDict(TypedDict, total=False):
     # TODO: create named tuple for host
