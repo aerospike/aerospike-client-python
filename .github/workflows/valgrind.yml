@@ -60,7 +60,6 @@ jobs:
     - name: Found the exact artifact in JFrog, downloading...
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
       run: jf rt download --flat --fail-no-op "$(cat file_matches.txt)"
-      working-directory: .github/workflows
 
     - name: Pass to valgrind job
       if: ${{ steps.count_num_artifacts_found.outputs.num_artifacts == 1 }}
@@ -68,7 +67,7 @@ jobs:
       with:
         # Artifact name doesn't matter. Valgrind job downloads all artifacts to get the one wheel
         if-no-files-found: error
-        path: './.github/workflows/*.whl'
+        path: './*.whl'
 
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
