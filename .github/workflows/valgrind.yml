@@ -52,7 +52,7 @@ jobs:
       shell: bash
 
     - name: Filter out wheels with labels in results
-      run: sed -i "s/${{ env.SHORT_GITHUB_SHA }}\./d" ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+      run: sed -i "/${{ env.SHORT_GITHUB_SHA }}\./d" ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
     - name: Count artifacts
       id: count_num_artifacts_found
