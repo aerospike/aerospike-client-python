@@ -188,9 +188,9 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeScan_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Scan", // tp_name
-    sizeof(AerospikeScan),                           // tp_basicsize
-    0,                                               // tp_itemsize
+    PyVarObject_HEAD_INIT(NULL, 0) FULLY_QUALIFIED_TYPE_NAME("Scan"), // tp_name
+    sizeof(AerospikeScan), // tp_basicsize
+    0,                     // tp_itemsize
     (destructor)AerospikeScan_Type_Dealloc,
     // tp_dealloc
     0, // tp_print
