@@ -24,7 +24,7 @@ env:
 jobs:
   # TODO: handle case where we run valgrind on a "central" branch
   look-for-wheel-in-jfrog:
-    if: ${{ github.ref_name != 'dev' && github.ref_name != 'stage' && github.ref_name != 'master' }}
+    if: ${{ !startsWith(github.ref_name, 'dev') && !startsWith(github.ref_name, 'stage') && !startsWith(github.ref_name, 'master') }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
       # We want this environment variable to be available when calling a reusable workflow
