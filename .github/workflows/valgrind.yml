@@ -56,6 +56,7 @@ jobs:
 
     - name: Filter out wheels with labels in results
       run: jq 'map(select(.path | test("${{ env.SHORT_GITHUB_SHA }}\\.") | not))' ${{ env.JF_SEARCH_RESULTS_FILE_NAME }} | sponge ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+      shell: bash
 
     - name: Check if artifacts with labels were filtered out
       run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
