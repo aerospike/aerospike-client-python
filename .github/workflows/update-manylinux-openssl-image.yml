@@ -8,6 +8,7 @@ jobs:
   main:
     env:
       OPENSSL_VERSION: '3.0.15'
+      REGISTRY: ghcr.io
     runs-on: ubuntu-24.04
     steps:
     - uses: actions/checkout@v4
@@ -17,23 +18,23 @@ jobs:
 
     - run: docker pull quay.io/pypa/manylinux2014_x86_64
 
-    - name: Get digest of latest manylinux2014 image
-      # Example: quay.io/pypa/manylinux2014_x86_64@sha256:1b6743f7785bd1630d5fc985c898b1ac46d64ad7a39173bbfc8ad2ba315a70cf
-      run: echo MANYLINUX_IMAGE_REVISION=$(docker image inspect quay.io/pypa/manylinux2014_x86_64 --format json | jq -r ".[0].RepoDigests[0]") > $GITHUB_ENV
+    - name: Get digest of latest manylinux image
+      # Example: 1b6743f7785bd1630d5fc985c898b1ac46d64ad7a39173bbfc8ad2ba315a70cf
+      run: echo MANYLINUX_IMAGE_DIGEST=$(docker image inspect quay.io/pypa/manylinux2014_x86_64 --format json | jq -r ".[0].RepoDigests[0]" | sed "s/.*@sha256://") > $GITHUB_ENV
       shell: bash
 
-    - run: echo CUSTOM_MANYLINUX_IMAGE_NAME="${{ env.MANYLINUX_IMAGE_REVISION }}-${{ env.OPENSSL_VERSION }}" >> $GITHUB_ENV
+    - run: echo CUSTOM_MANYLINUX_IMAGE_NAME="aerospike/manylinux2014_x86_64-${{ env.MANYLINUX_IMAGE_DIGEST }}-${{ env.OPENSSL_VERSION }}" >> $GITHUB_ENV
 
     - uses: docker/login-action@v3
       with:
-        registry: ghcr.io
+        registry: ${{ env.REGISTRY }}
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - uses: docker/metadata-action@v5
+      id: meta
       with:
-        # TODO: not done
-        images: aerospike/python-client-manylinux2014_x86_64
+        images: ${{ env.REGISTRY }}/${{ env.CUSTOM_MANYLINUX_IMAGE_NAME }}
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -50,6 +51,8 @@ jobs:
         # This driver doesn't publish an image locally by default
         # so we have to manually enable it
         push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
         # Also cache intermediate layers to make development faster
         cache-from: type=gha
         cache-to: type=gha,mode=max
