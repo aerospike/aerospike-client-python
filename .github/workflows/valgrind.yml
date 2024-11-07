@@ -111,7 +111,7 @@ jobs:
       look-for-wheel-in-jfrog,
       build-manylinux-wheel
     ]
-    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' || needs.build-manylinux-wheel.result == 'success') }}
+    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' || (needs.look-for-wheel-in-jfrog.result == 'skipped' && needs.build-manylinux-wheel.result == 'success')) }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
