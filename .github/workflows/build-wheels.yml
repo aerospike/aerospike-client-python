@@ -245,6 +245,7 @@ jobs:
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
+        CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/aerospike/manylinux2014_x86_64-016083a19da2a4889db06d8f0a4d195c0ff1d53033c07eb7223aabea243be501-3.0.15
         CIBW_BEFORE_ALL_LINUX: >
           yum install python-devel -y &&
           yum install python-setuptools -y
