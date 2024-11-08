@@ -2,6 +2,9 @@ FROM quay.io/pypa/manylinux2014_x86_64
 ARG OPENSSL_VERSION
 LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
+RUN useradd nonroot
+USER nonroot
+
 # https://computingforgeeks.com/how-to-install-openssl-3-x-on-centos-rhel-7/
 RUN yum install -y perl-Text-Template.noarch perl-IPC-Cmd perl-Test-Simple wget
 
@@ -18,9 +21,6 @@ WORKDIR $OPENSSL_TAR_NAME
 ARG OPENSSL_INSTALL_DIR=/opt/openssl3
 RUN ./Configure --prefix=$OPENSSL_INSTALL_DIR --openssldir=/etc/opt/openssl3
 RUN make
-
-RUN useradd nonroot
-USER nonroot
 
 RUN make test
 
