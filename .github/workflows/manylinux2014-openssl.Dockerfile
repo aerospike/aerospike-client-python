@@ -1,5 +1,6 @@
 FROM quay.io/pypa/manylinux2014_x86_64
 ARG OPENSSL_VERSION
+LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
 # https://computingforgeeks.com/how-to-install-openssl-3-x-on-centos-rhel-7/
 RUN yum install -y centos-release-scl devtoolset-11 perl-Text-Template.noarch perl-IPC-Cmd perl-Test-Simple wget
