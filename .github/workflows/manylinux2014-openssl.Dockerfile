@@ -4,6 +4,9 @@ LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
 # https://computingforgeeks.com/how-to-install-openssl-3-x-on-centos-rhel-7/
 RUN yum install -y centos-release-scl devtoolset-11 perl-Text-Template.noarch perl-IPC-Cmd perl-Test-Simple wget
+
+RUN yum update
+
 # devtoolset-11 contains a newer version of binutils 2.36, which contains a bug fix for missing symbols
 SHELL ["/usr/bin/scl", "enable", "devtoolset-11"]
 
