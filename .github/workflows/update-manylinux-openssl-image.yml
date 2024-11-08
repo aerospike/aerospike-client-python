@@ -23,7 +23,7 @@ jobs:
       run: echo MANYLINUX_IMAGE_DIGEST=$(docker image inspect quay.io/pypa/manylinux2014_x86_64 --format json | jq -r ".[0].RepoDigests[0]" | sed "s/.*@sha256://") > $GITHUB_ENV
       shell: bash
 
-    - run: echo CUSTOM_IMAGE_TAG="aerospike/manylinux2014_x86_64-${{ env.MANYLINUX_IMAGE_DIGEST }}-${{ env.OPENSSL_VERSION }}" >> $GITHUB_ENV
+    - run: echo CUSTOM_IMAGE_TAG="${{ env.MANYLINUX_IMAGE_DIGEST }}-${{ env.OPENSSL_VERSION }}" >> $GITHUB_ENV
 
     - uses: docker/login-action@v3
       with:
