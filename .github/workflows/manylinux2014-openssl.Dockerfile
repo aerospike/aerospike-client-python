@@ -12,9 +12,11 @@ RUN wget https://www.openssl.org/source/$OPENSSL_TAR_NAME.tar.gz
 RUN tar xzvf $OPENSSL_TAR_NAME.tar.gz
 WORKDIR $OPENSSL_TAR_NAME
 
-# The folders pointed to by default --openssldir and --prefix don't exist in the base image
-# So installing this openssl version shouldn't interfere with the default openssl install in the base image
-RUN ./Configure
+# The default folder pointed to by --prefix contains a default openssl installation
+ARG OPENSSL_INSTALL_DIR=/opt/openssl3
+RUN ./Configure --prefix=$OPENSSL_INSTALL_DIR --openssldir=/etc/opt/openssl3
 RUN make
 RUN make test
 RUN make install
+RUN ln -s $OPENSSL_INSTALL_DIR/libssl.so.3 /usr/local/libssl.so.3
+RUN ln -s $OPENSSL_INSTALL_DIR/libcrypto.so.3 /usr/local/libcrypto.so.3
