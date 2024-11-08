@@ -18,5 +18,5 @@ RUN ./Configure --prefix=$OPENSSL_INSTALL_DIR --openssldir=/etc/opt/openssl3
 RUN make
 RUN make test
 RUN make install
-RUN ln -s $OPENSSL_INSTALL_DIR/libssl.so.3 /usr/local/libssl.so.3
-RUN ln -s $OPENSSL_INSTALL_DIR/libcrypto.so.3 /usr/local/libcrypto.so.3
+RUN ln -s $OPENSSL_INSTALL_DIR/lib64/libssl.so.3 /usr/local/libssl.so.3
+RUN ln -s $OPENSSL_INSTALL_DIR/lib64/libcrypto.so.3 /usr/local/libcrypto.so.3
