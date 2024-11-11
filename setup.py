@@ -233,7 +233,8 @@ class CClientBuild(build):
             cmd = [
                 'make',
                 'V=' + str(self.verbose),
-                f"EXT_CFLAGS=-L{OPENSSL3_INSTALL_DIR}/lib64 -I{OPENSSL3_INSTALL_DIR}/include"
+                f"EXT_CFLAGS=-I{OPENSSL3_INSTALL_DIR}/include",
+                f"LDFLAGS=-L{OPENSSL3_INSTALL_DIR}/lib64"
             ]
             if UNOPTIMIZED:
                 cmd.append('O=0')
