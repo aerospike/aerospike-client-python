@@ -250,7 +250,7 @@ jobs:
       env:
         # Need to link openssl with both C client and Python client
         # For compiling C client
-        CIBW_ENVIRONMENT_LINUX: EXT_CFLAGS=-I${{ env.OPENSSL3_INSTALL_DIR }}/include LDFLAGS=-L${{ env.OPENSSL3_INSTALL_DIR }}/lib64
+        CIBW_ENVIRONMENT_LINUX: EXT_CFLAGS="-I${{ env.OPENSSL3_INSTALL_DIR }}/include" LDFLAGS="-L${{ env.OPENSSL3_INSTALL_DIR }}/lib64"
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
