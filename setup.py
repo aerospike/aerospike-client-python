@@ -96,9 +96,10 @@ if SANITIZER:
     extra_link_args.append("-static-libasan")
     extra_link_args.extend(sanitizer_flags)
 
+# Our custom manylinux2014 image uses this directory to install openssl3
+OPENSSL3_INSTALL_DIR='/opt/openssl3/lib64'
+
 library_dirs = [
-    # Our custom manylinux2014 image uses this directory to install openssl3
-    '/opt/openssl3/lib64',
     '/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
@@ -232,6 +233,7 @@ class CClientBuild(build):
             cmd = [
                 'make',
                 'V=' + str(self.verbose),
+                f"EXT_CFLAGS=-I{OPENSSL3_INSTALL_DIR}"
             ]
             if UNOPTIMIZED:
                 cmd.append('O=0')
