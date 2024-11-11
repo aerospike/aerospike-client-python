@@ -98,7 +98,7 @@ if SANITIZER:
 
 library_dirs = [
     # Our custom manylinux2014 image uses this directory to install openssl3
-    '/opt/openssl3'
+    '/opt/openssl3',
     '/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
