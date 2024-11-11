@@ -22,5 +22,3 @@ RUN make
 # https://github.com/openssl/openssl/issues/18953
 RUN make V=1 TESTS='-test_symbol_presence*' test
 RUN make install
-RUN ln -s $OPENSSL_INSTALL_DIR/lib64/libssl.so.3 /usr/local/lib64/libssl.so.3
-RUN ln -s $OPENSSL_INSTALL_DIR/lib64/libcrypto.so.3 /usr/local/lib64/libcrypto.so.3

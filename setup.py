@@ -96,7 +96,10 @@ if SANITIZER:
     extra_link_args.append("-static-libasan")
     extra_link_args.extend(sanitizer_flags)
 
-library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
+library_dirs = [
+    # Our custom manylinux2014 image uses this directory to install openssl3
+    '/opt/openssl3'
+    '/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
     'crypto',
