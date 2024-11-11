@@ -247,6 +247,10 @@ jobs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.20.0
       env:
+        # Need to link openssl with both C client and Python client
+        LDFLAGS: -L${{ env.OPENSSL3_INSTALL_DIR }}/lib64
+        # For compiling C client
+        CIBW_ENVIRONMENT_LINUX: EXT_CFLAGS=-I${{ env.OPENSSL3_INSTALL_DIR }}/include
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
@@ -256,7 +260,7 @@ jobs:
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
-        CIBW_REPAIR_WHEEL_COMMAND_LINUX: "LD_LIBRARY_PATH=\"/opt/openssl3/lib64:$LD_LIBRARY_PATH\" auditwheel repair -w {dest_dir} {wheel}"
+        CIBW_REPAIR_WHEEL_COMMAND_LINUX: "LD_LIBRARY_PATH=\"${{ env.OPENSSL3_INSTALL_DIR }}/lib64:$LD_LIBRARY_PATH\" auditwheel repair -w {dest_dir} {wheel}"
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
