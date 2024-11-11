@@ -1,4 +1,4 @@
-FROM quay.io/pypa/manylinux_2_28
+FROM quay.io/pypa/manylinux_2_28_x86_64
 ARG OPENSSL_VERSION
 LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
