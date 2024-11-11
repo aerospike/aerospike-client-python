@@ -47,3 +47,6 @@ ARG NODE_ID_FILE_NAME
 COPY --from=get-node-id $NODE_ID_FILE_NAME .
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN rm $NODE_ID_FILE_NAME
+
+RUN apt update
+RUN apt install -y openssl
