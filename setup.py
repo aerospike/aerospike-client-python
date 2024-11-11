@@ -100,6 +100,7 @@ if SANITIZER:
 OPENSSL3_INSTALL_DIR='/opt/openssl3'
 
 library_dirs = [
+    f"{OPENSSL3_INSTALL_DIR}/lib64",
     '/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
@@ -172,7 +173,7 @@ else:
 
 include_dirs = include_dirs + [
     '/usr/local/opt/openssl/include',
-
+    f"{OPENSSL3_INSTALL_DIR}/include"
 ]
 if not WINDOWS:
     include_dirs.append(AEROSPIKE_C_TARGET + '/include')
