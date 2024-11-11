@@ -40,12 +40,9 @@ on:
         - win_amd64
         # Makes debugging via gh cli easier.
         default: manylinux_x86_64
-      unoptimized:
-        description: 'macOS or Linux: Apply -O0 flag?'
-        # Windows supports a different flag to disable optimizations, but we haven't added support for it yet
-        type: boolean
+      CFLAGS:
+        type: string
         required: false
-        default: false
       include-debug-info-for-macos:
         description: 'macOS: Build wheels for debugging?'
         type: boolean
@@ -246,10 +243,12 @@ jobs:
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
+    - run: echo CFLAGS=${{ inputs.CFLAGS }} >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.20.0
       env:
-        CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
+        CIBW_ENVIRONMENT_PASS_LINUX: CFLAGS
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build

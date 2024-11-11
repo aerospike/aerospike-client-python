@@ -53,9 +53,6 @@ SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 # Not for developers to use, unless you know what the workflow is doing!
 COVERAGE = os.getenv('COVERAGE')
 
-# Applies no optimizations on both the C client and Python client
-UNOPTIMIZED = os.getenv('UNOPTIMIZED')
-
 # Include debug information on macOS (not included by default)
 INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 
@@ -113,9 +110,6 @@ if COVERAGE:
     extra_compile_args.append('-fprofile-arcs')
     extra_compile_args.append('-ftest-coverage')
     extra_link_args.append('-lgcov')
-
-if UNOPTIMIZED:
-    extra_compile_args.append('-O0')
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -228,10 +222,9 @@ class CClientBuild(build):
         else:
             cmd = [
                 'make',
+                "-e",
                 'V=' + str(self.verbose),
             ]
-            if UNOPTIMIZED:
-                cmd.append('O=0')
 
         def compile():
             print(cmd, library_dirs, libraries)
