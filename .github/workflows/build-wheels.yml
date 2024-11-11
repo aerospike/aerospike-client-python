@@ -154,6 +154,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
+      OPENSSL3_INSTALL_DIR: "/opt/openssl3"
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -247,7 +248,6 @@ jobs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.20.0
       env:
-        OPENSSL3_INSTALL_DIR: "/opt/openssl3"
         # Need to link openssl with both C client and Python client
         LDFLAGS: -L${{ env.OPENSSL3_INSTALL_DIR }}/lib64
         # For compiling C client
