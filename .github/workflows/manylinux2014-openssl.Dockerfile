@@ -1,4 +1,4 @@
-FROM quay.io/pypa/manylinux2014_x86_64
+FROM quay.io/pypa/manylinux_2_28
 ARG OPENSSL_VERSION
 LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
@@ -19,7 +19,7 @@ ARG OPENSSL_INSTALL_DIR=/opt/openssl3
 RUN ./Configure --prefix=$OPENSSL_INSTALL_DIR --openssldir=/etc/opt/openssl3
 RUN make
 # There are 2 expected tests to fail
-# RUN make test
+RUN make test
 RUN make install
 RUN ln -s $OPENSSL_INSTALL_DIR/lib64/libssl.so.3 /usr/local/lib64/libssl.so.3
 RUN ln -s $OPENSSL_INSTALL_DIR/lib64/libcrypto.so.3 /usr/local/lib64/libcrypto.so.3
