@@ -59,7 +59,7 @@ ARG ROOT_KEY_REL_PATH=private/ca.pem
 ARG ROOT_CERT_REL_PATH=certs/ca.cer
 ARG SERVER_KEY_REL_PATH=private/server.pem
 ARG SERVER_CSR_REL_PATH=server.csr
-ARG SERVER_CERT_REL_PATH=certs/server.cert
+ARG SERVER_CERT_REL_PATH=certs/server.pem
 # TODO: fetch this dynamically
 ARG CLUSTER_NAME=docker
 
@@ -74,6 +74,5 @@ RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $CLUSTER_NAME|" $AEROSPIKE_CONF_
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port 4333|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
-RUN sed -i "s|\(^network {\)|\1\n\ttls $CLUSTER_NAME {\n\t\tca-file $SSL_WORKING_DIR/$ROOT_CERT_REL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^network {\)|\1\n\ttls $CLUSTER_NAME {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_REL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\ttls $CLUSTER_NAME {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_REL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
