@@ -66,6 +66,7 @@ RUN openssl req -x509 -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -out $SERVER
 # Service sub-stanza under network stanza
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $CLUSTER_NAME|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port 4333|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
 RUN sed -i "s|\(^network {\)|\1\n\ttls {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_REL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\ttls {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_REL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
