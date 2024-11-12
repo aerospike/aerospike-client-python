@@ -59,7 +59,7 @@ ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
 ARG SERVER_KEY_REL_PATH=private/server_key.pem
 ARG SERVER_CERT_REL_PATH=certs/server_cert.pem
-RUN CLUSTER_NAME=docker
+ARG CLUSTER_NAME=docker
 RUN openssl req -x509 -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -out $SERVER_CERT_REL_PATH -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$CLUSTER_NAME"
 
 # Service sub-stanza under network stanza
