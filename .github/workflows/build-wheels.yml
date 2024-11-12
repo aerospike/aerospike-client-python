@@ -262,6 +262,11 @@ jobs:
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
+    # For debugging
+    - run: docker logs aerospike
+      if: ${{ always() }}
+      shell: bash
+
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
