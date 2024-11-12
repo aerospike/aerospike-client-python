@@ -66,8 +66,8 @@ ARG CLUSTER_NAME=docker
 # Generate server private key and CSR
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -nodes -new -out $SERVER_CSR_REL_PATH -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$CLUSTER_NAME"
 # Send CSR to CA and get server certificate
-COPY ca.pem $ROOT_KEY_REL_PATH
-COPY ca.cer $ROOT_CERT_REL_PATH
+COPY ca.pem private/
+COPY ca.cer certs/
 RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA $ROOT_CERT_REL_PATH -CAkey $ROOT_KEY_REL_PATH -out $SERVER_CERT_REL_PATH
 
 # Service sub-stanza under network stanza
