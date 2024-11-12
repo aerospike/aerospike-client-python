@@ -37,7 +37,7 @@ runs:
 
   - name: Use enterprise edition instead of community edition in config.conf
     run: |
-      crudini --existing=param --set config.conf enterprise-edition hosts ''
+      crudini --existing=param --set config.conf community-edition hosts ''
       crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
     working-directory: test
     shell: bash
