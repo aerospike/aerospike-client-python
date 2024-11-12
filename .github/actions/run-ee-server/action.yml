@@ -45,11 +45,16 @@ runs:
   - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
 
+  - run: openssl req -x509 -newkey rsa:2048 -keyout ca.pem -out ca.cer
+    working-directory: .github/workflows/docker-build-context
+    shell: bash
+
   - name: Set credentials in config file
     run: |
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
+      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/ca.cer
     working-directory: test
     shell: bash
 
