@@ -49,6 +49,7 @@ runs:
     run: |
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --set config.conf tls enable true
     working-directory: test
     shell: bash
 
