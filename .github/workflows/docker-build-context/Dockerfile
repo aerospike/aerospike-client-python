@@ -67,7 +67,7 @@ ARG CLUSTER_NAME=docker
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -nodes -new -out $SERVER_CSR_REL_PATH -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$CLUSTER_NAME"
 # Send CSR to CA and get server certificate
 COPY ca.pem ca.cer private/
-RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -signkey $ROOT_KEY_REL_PATH -out $SERVER_CERT_REL_PATH
+RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA $ROOT_CERT_REL_PATH -CAkey $ROOT_KEY_REL_PATH -out $SERVER_CERT_REL_PATH
 
 # Service sub-stanza under network stanza
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $CLUSTER_NAME|" $AEROSPIKE_CONF_TEMPLATE_PATH
