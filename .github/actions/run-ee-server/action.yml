@@ -104,7 +104,7 @@ runs:
   - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
-  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm --port 4333
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm --port 4333 --tls_name docker
     shell: bash
 
   # For debugging
