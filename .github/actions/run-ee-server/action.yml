@@ -104,6 +104,9 @@ runs:
   - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm --port 4333
+    shell: bash
+
   # For debugging
   - run: docker logs aerospike
     shell: bash
