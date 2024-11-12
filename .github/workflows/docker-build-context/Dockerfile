@@ -59,8 +59,8 @@ ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
 ARG SERVER_KEY_REL_PATH=private/server_key.pem
 ARG SERVER_CERT_REL_PATH=certs/server_cert.pem
-ARG SERVER_CERT_COMMON_NAME=server
-RUN openssl req -x509 -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -out $SERVER_CERT_REL_PATH -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$SERVER_CERT_COMMON_NAME"
-RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $SERVER_CERT_COMMON_NAME|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN CLUSTER_NAME=docker
+RUN openssl req -x509 -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -out $SERVER_CERT_REL_PATH -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$CLUSTER_NAME"
+RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $CLUSTER_NAME|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^network {\)|\1\n\ttls {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_REL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\ttls {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_REL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
