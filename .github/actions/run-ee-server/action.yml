@@ -109,7 +109,7 @@ runs:
   - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
-  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm --tls_enable --tls-cafile ca.cer --port 4333 --tls_name docker
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm --tls_enable --tls-cafile /etc/ssl/certs/ca.cer --port 4333 --tls_name docker
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
