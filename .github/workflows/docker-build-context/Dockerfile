@@ -48,5 +48,19 @@ COPY --from=get-node-id $NODE_ID_FILE_NAME .
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN rm $NODE_ID_FILE_NAME
 
+# Configure TLS
+
 RUN apt update
 RUN apt install -y openssl
+
+# Generate self signed server certificate
+
+ARG SSL_WORKING_DIR=/etc/ssl
+WORKDIR $SSL_WORKING_DIR
+ARG SERVER_KEY_REL_PATH=private/server_key.pem
+ARG SERVER_CERT_REL_PATH=certs/server_cert.pem
+ARG SERVER_CERT_COMMON_NAME=server
+RUN openssl req -x509 -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -out $SERVER_CERT_REL_PATH -sha256 -days 3650 -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$SERVER_CERT_COMMON_NAME"
+RUN sed -i "s|\(^service {\)|\1\n\ttls-name $SERVER_CERT_COMMON_NAME|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^network {\)|\1\n\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_REL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^network {\)|\1\n\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_REL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
