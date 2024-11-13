@@ -50,6 +50,8 @@ RUN rm $NODE_ID_FILE_NAME
 
 # Configure TLS
 
+FROM $server_image as generate-server-cert
+
 RUN apt update
 RUN apt install -y openssl
 
@@ -69,6 +71,10 @@ RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -nodes -new -out $
 COPY ca.pem private/
 COPY ca.cer certs/
 RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA $ROOT_CERT_REL_PATH -CAkey $ROOT_KEY_REL_PATH -out $SERVER_CERT_REL_PATH
+
+FROM set-node-id as configure-tls
+
+COPY --from=generate-server-cert $SSL_WORKING_DIR $SSL_WORKING_DIR
 
 # Service sub-stanza under network stanza
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|" $AEROSPIKE_CONF_TEMPLATE_PATH
