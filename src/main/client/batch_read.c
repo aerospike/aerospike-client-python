@@ -121,10 +121,15 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
 
     uint64_t processed_key_count = 0;
     for (int i = 0; i < keys_size; i++) {
-        PyObject *py_key = PyList_GetItem(py_keys, i);
+        PyObject *py_key = PyList_GetItemRef(py_keys, i);
+        if (!py_key) {
+            PyErr_Clear();
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get key at index %d", i);
+            goto CLEANUP2;
+        }
         as_key *tmp_key = (as_key *)as_vector_get(&tmp_keys, i);
 
-        Py_INCREF(py_key);
         if (!PyTuple_Check(py_key)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "key should be an aerospike key tuple");
@@ -230,7 +235,14 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
             filter_bins = (const char **)malloc(sizeof(char *) * bin_count);
 
             for (Py_ssize_t i = 0; i < bin_count; i++) {
-                PyObject *py_bin = PyList_GetItem(py_bins, i);
+                PyObject *py_bin = PyList_GetItemRef(py_bins, i);
+                if (!py_bin) {
+                    PyErr_Clear();
+                    as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                                    "Unable to get python object at index %d.",
+                                    i);
+                    goto CLEANUP5;
+                }
                 if (PyUnicode_Check(py_bin)) {
                     filter_bins[i] = PyUnicode_AsUTF8(py_bin);
                 }

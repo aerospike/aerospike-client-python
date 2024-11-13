@@ -256,9 +256,10 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
         if (py_val == NULL) {
             PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to get privilege at index %d", i);
+                            "Unable to get privilege dictionary at index %d",
+                            i);
         }
-        if (PyDict_Check(py_val)) {
+        else if (PyDict_Check(py_val)) {
             PyObject *py_dict_key = PyUnicode_FromString("code");
             if (PyDict_Contains(py_val, py_dict_key)) {
                 PyObject *py_code = NULL;
@@ -291,7 +292,7 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
             }
             Py_DECREF(py_dict_key);
         }
-        Py_DECREF(py_val);
+        Py_XDECREF(py_val);
     }
     return err->code;
 }
@@ -674,7 +675,12 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 
     char *s;
     for (int i = 0; i < size; i++) {
-        PyObject *py_val = PyList_GetItem(py_list, i);
+        PyObject *py_val = PyList_GetItemRef(py_list, i);
+        if (!py_val) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get python object at index %d", i);
+        }
 
         if (PyUnicode_Check(py_val)) {
             s = (char *)PyUnicode_AsUTF8(py_val);
@@ -692,6 +698,7 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
             as_error_update(err, AEROSPIKE_ERR_CLIENT, "Item is not a string");
             return err->code;
         }
+        Py_XDECREF(py_val);
     }
 
     return err->code;
@@ -710,9 +717,16 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     }
 
     for (int i = 0; i < size; i++) {
-        PyObject *py_val = PyList_GetItem(py_list, i);
+        PyObject *py_val = PyList_GetItemRef(py_list, i);
+        if (!py_val) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get python object at index %d", i);
+            break;
+        }
         as_val *val = NULL;
         pyobject_to_val(self, err, py_val, &val, static_pool, serializer_type);
+        Py_DECREF(py_val);
         if (err->code != AEROSPIKE_OK) {
             break;
         }
@@ -2802,11 +2816,19 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
         as_cdt_ctx_init(cdt_ctx, (int)py_list_size);
 
         for (int i = 0; i < py_list_size; i++) {
-            PyObject *py_val = PyList_GetItem(py_ctx, (Py_ssize_t)i);
+            PyObject *py_val = PyList_GetItemRef(py_ctx, (Py_ssize_t)i);
+            if (!py_val) {
+                PyErr_Clear();
+                as_cdt_ctx_destroy(cdt_ctx);
+                return as_error_update(
+                    err, AEROSPIKE_ERR_CLIENT,
+                    "Unable to get python object at index %d", i);
+            }
 
             PyObject *id_temp = PyObject_GetAttrString(py_val, "id");
             if (PyErr_Occurred()) {
                 as_cdt_ctx_destroy(cdt_ctx);
+                Py_DECREF(py_val);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert %s, id", CTX_KEY);
             }
@@ -2814,6 +2836,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             PyObject *value_temp = PyObject_GetAttrString(py_val, "value");
             if (PyErr_Occurred()) {
                 as_cdt_ctx_destroy(cdt_ctx);
+                Py_DECREF(py_val);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert %s, value", CTX_KEY);
             }
@@ -2822,9 +2845,12 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 PyObject_GetAttrString(py_val, "extra_args");
             if (PyErr_Occurred()) {
                 as_cdt_ctx_destroy(cdt_ctx);
+                Py_DECREF(py_val);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert %s", CTX_KEY);
             }
+
+            Py_DECREF(py_val);
 
             uint64_t item_type = PyLong_AsUnsignedLong(id_temp);
             if (PyErr_Occurred()) {

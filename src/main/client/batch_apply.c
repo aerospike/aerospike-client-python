@@ -155,7 +155,13 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     }
 
     for (int i = 0; i < keys_size; i++) {
-        PyObject *py_key = PyList_GetItem(py_keys, i);
+        PyObject *py_key = PyList_GetItemRef(py_keys, i);
+        if (!py_key) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get key at index %d", i);
+            goto CLEANUP;
+        }
         as_key *tmp_key = (as_key *)as_vector_get(&tmp_keys, i);
 
         if (!PyTuple_Check(py_key)) {

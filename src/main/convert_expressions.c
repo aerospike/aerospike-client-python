@@ -1675,7 +1675,13 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         // Reset flag for next temp expr being built
         is_ctx_initialized = false;
 
-        py_expr_tuple = PyList_GetItem(py_exp_list, (Py_ssize_t)i);
+        py_expr_tuple = PyList_GetItemRef(py_exp_list, (Py_ssize_t)i);
+        if (!py_expr_tuple) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get expression at index %d", i);
+            goto CLEANUP;
+        }
         if (!PyTuple_Check(py_expr_tuple) || PyTuple_Size(py_expr_tuple) != 4) {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
