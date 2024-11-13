@@ -72,6 +72,11 @@ runs:
     run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_ENV
     shell: bash
 
+  - name: Invalid input
+    if: ${{ env.SERVER_IP == '' }}
+    run: exit 1
+    shell: bash
+
   - name: Set EE server's IP address
     run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ env.SERVER_IP }}:3000
     working-directory: test

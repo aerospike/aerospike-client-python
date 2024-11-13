@@ -205,7 +205,7 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
+    - name: 'Run Aerospike server in Docker container and configure tests accordingly'
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       uses: ./.github/actions/run-ee-server
       with:
