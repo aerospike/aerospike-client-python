@@ -206,23 +206,14 @@ jobs:
       uses: ./.github/actions/setup-docker-on-macos
 
     - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
-      uses: ./.github/actions/run-ee-server
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-        where-should-client-connect-from: 'docker-container'
+        where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
