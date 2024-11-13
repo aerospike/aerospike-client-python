@@ -3,14 +3,14 @@ ARG ROSTER_FILE_NAME=roster.smd
 # Temp file for passing node id from one build stage to another
 # Docker doesn't support command substitution for setting values for ARG variables, so we have to do this
 ARG NODE_ID_FILE_NAME=node_id
+ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 
 FROM $server_image as configure-server
 
 WORKDIR /opt/aerospike/smd
+ARG AEROSPIKE_CONF_TEMPLATE_PATH
 
 # Enable authentication
-
-ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 
 # Not using asconfig to edit config because we are working with a template file, which may not have valid values yet
 RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_PATH
@@ -63,6 +63,7 @@ ARG SERVER_KEY_REL_PATH=private/server.pem
 ARG SERVER_CSR_REL_PATH=server.csr
 ARG SERVER_CERT_REL_PATH=certs/server.pem
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
+ARG AEROSPIKE_CONF_TEMPLATE_PATH
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_TEMPLATE_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
 
 # Generate server private key and CSR
