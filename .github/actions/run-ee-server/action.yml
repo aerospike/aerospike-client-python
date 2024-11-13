@@ -70,6 +70,9 @@ runs:
       is-security-enabled: true
       is-strong-consistency-enabled: true
 
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
+    shell: bash
+
   - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
     shell: bash
 
@@ -100,9 +103,6 @@ runs:
   - name: Disable enterprise edition connection
     run: crudini --existing=param --set config.conf community-edition hosts ''
     working-directory: test
-    shell: bash
-
-  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
 
   - name: Set credentials in config file
