@@ -984,9 +984,9 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
                            py_invalid_node_count);
     Py_DECREF(py_invalid_node_count);
 
-    PyObject *py_transaction_count = PyLong_FromLong(cluster->tran_count);
-    PyObject_SetAttrString(py_cluster, "tran_count", py_transaction_count);
-    Py_DECREF(py_transaction_count);
+    PyObject *py_command_count = PyLong_FromLong(cluster->command_count);
+    PyObject_SetAttrString(py_cluster, "command_count", py_command_count);
+    Py_DECREF(py_command_count);
 
     PyObject *py_retry_count = PyLong_FromLong(cluster->retry_count);
     PyObject_SetAttrString(py_cluster, "retry_count", py_retry_count);
