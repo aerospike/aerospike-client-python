@@ -255,7 +255,7 @@ jobs:
 
     # For debugging
     - run: docker logs aerospike
-      if: ${{ always() }}
+      if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       shell: bash
 
     - name: Upload wheels to GitHub
