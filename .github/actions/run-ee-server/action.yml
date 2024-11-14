@@ -1,4 +1,4 @@
-name: 'Run EE Server'
+name: 'Run EE Server in a Docker container'
 description: 'Run EE server. Returns once server is ready. Only tested on Linux and macOS'
 # NOTE: do not share this server container with others
 # since it's using the default admin / admin credentials
@@ -20,43 +20,15 @@ inputs:
   docker-hub-password:
     description: Required for using release candidates
     required: false
+  where-is-client-connecting-from:
+    required: false
+    description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
+    default: 'docker-host'
 
 runs:
   using: "composite"
   steps:
-  - name: Install crudini to manipulate config.conf
-    # This will only work on the Github hosted runners.
-    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
-    working-directory: .github/workflows
-    shell: bash
-
-  - name: Create config.conf
-    run: cp config.conf.template config.conf
-    working-directory: test
-    shell: bash
-
-  - name: Use enterprise edition instead of community edition in config.conf
-    run: |
-      crudini --existing=param --set config.conf community-edition hosts ''
-      crudini --existing=param --set config.conf enterprise-edition hosts 127.0.0.1:3000
-    working-directory: test
-    shell: bash
-
-  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
-    shell: bash
-
-  - run: openssl req -x509 -newkey rsa:2048 -keyout ca.pem -out ca.cer -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=null"
-    working-directory: .github/workflows/docker-build-context
-    shell: bash
-
-  - name: Set credentials in config file
-    run: |
-      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --set config.conf tls enable true
-      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/ca.cer
-    working-directory: test
-    shell: bash
+  # Start up server
 
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
@@ -66,12 +38,17 @@ runs:
   - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-security-and-sc >> $GITHUB_ENV
+  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-python-client-testing >> $GITHUB_ENV
     shell: bash
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
   - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
     uses: docker/setup-buildx-action@v3
+
+  - name: Create a certificate authority
+    run: openssl req -x509 -newkey rsa:2048 -keyout ca.pem -out ca.cer -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=null"
+    working-directory: .github/workflows/docker-build-context
+    shell: bash
 
   - name: Build and push
     uses: docker/build-push-action@v6
@@ -98,6 +75,9 @@ runs:
       is-security-enabled: true
       is-strong-consistency-enabled: true
 
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
+    shell: bash
+
   - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
     shell: bash
 
@@ -115,4 +95,59 @@ runs:
 
   # For debugging
   - run: docker logs aerospike
+    shell: bash
+
+  # Configure tests
+
+  - name: Install crudini to manipulate config.conf
+    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Create config.conf
+    run: cp config.conf.template config.conf
+    working-directory: test
+    shell: bash
+
+  - name: Disable enterprise edition connection
+    run: crudini --existing=param --set config.conf community-edition hosts ''
+    working-directory: test
+    shell: bash
+
+  - name: Set credentials in config file
+    run: |
+      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --set config.conf tls enable true
+      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/ca.cer
+    working-directory: test
+    shell: bash
+
+  - name: Set IP address to localhost
+    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
+    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
+    working-directory: test
+    shell: bash
+
+  - name: Set IP address to remote machine running the Docker daemon
+    if: ${{ inputs.where-is-client-connecting-from == 'remote-connection' }}
+    run: |
+      SERVER_IP=${DOCKER_HOST/tcp:\/\//}
+      echo SERVER_IP=${SERVER_IP/:2375/} >> $GITHUB_ENV
+    working-directory: test
+    shell: bash
+
+  - name: Set IP address to Docker container for the server
+    if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
+    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_ENV
+    shell: bash
+
+  - name: Invalid input
+    if: ${{ env.SERVER_IP == '' }}
+    run: exit 1
+    shell: bash
+
+  - name: Set EE server's IP address
+    run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ env.SERVER_IP }}:3000
+    working-directory: test
     shell: bash

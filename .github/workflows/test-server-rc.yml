@@ -34,12 +34,13 @@ jobs:
 
     - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
 
-    - uses: ./.github/actions/run-ee-server-for-ext-container
+    - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: true
         server-tag: latest
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        where-should-client-connect-from: 'docker-container'
 
     - uses: actions/download-artifact@v4
       with:
