@@ -82,13 +82,13 @@ static PyObject *__getitem__(PyObject *self, PyObject *py_key)
         return NULL;
     }
 
+    AerospikePartitionsStatusObject *py_partitions_status =
+        (AerospikePartitionsStatusObject *)self;
     if (PyUnicode_Check(py_key)) {
         const char *key = PyUnicode_AsUTF8(py_key);
         if (!key) {
             return NULL;
         }
-        AerospikePartitionsStatusObject *py_partitions_status =
-            (AerospikePartitionsStatusObject *)self;
         if (!strcmp(key, "retry")) {
             bool retry = py_partitions_status->parts_all->retry;
             PyObject *py_retry = PyBool_FromLong(retry);
@@ -98,6 +98,11 @@ static PyObject *__getitem__(PyObject *self, PyObject *py_key)
             return py_retry;
         }
     }
+    else if (PyLong_Check(py_key)) {
+        unsigned long partition_id = PyLong_AsUnsignedLong(py_key);
+        // TODO: need to create a new as_partition_status wrapper obj
+    }
+
     // TODO: remove
     Py_RETURN_NONE;
 }
