@@ -3,12 +3,11 @@ ARG ROSTER_FILE_NAME=roster.smd
 # Temp file for passing node id from one build stage to another
 # Docker doesn't support command substitution for setting values for ARG variables, so we have to do this
 ARG NODE_ID_FILE_NAME=node_id
-ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 
 FROM $server_image as configure-server
 
 WORKDIR /opt/aerospike/smd
-ARG AEROSPIKE_CONF_TEMPLATE_PATH
+ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 ARG SSL_WORKING_DIR=/etc/ssl
 
 # Enable authentication
