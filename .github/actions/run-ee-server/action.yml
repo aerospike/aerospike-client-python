@@ -45,8 +45,14 @@ runs:
   - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
     uses: docker/setup-buildx-action@v3
 
+  - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
+    shell: bash
+
+  - run: echo CA_KEY_FILE_NAME="ca.pem" >> $GITHUB_ENV
+    shell: bash
+
   - name: Create a certificate authority
-    run: openssl req -x509 -newkey rsa:2048 -keyout ca.pem -out ca.cer -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=null"
+    run: openssl req -x509 -newkey rsa:2048 -keyout ${{ env.CA_KEY_FILE_NAME }} -out ${{ env.CA_CERT_FILE_NAME }} -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=null"
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
@@ -119,7 +125,7 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
-      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/ca.cer
+      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
     working-directory: test
     shell: bash
 

@@ -57,21 +57,23 @@ RUN apt install -y openssl
 
 ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
-ARG ROOT_KEY_REL_PATH=private/ca.pem
-ARG ROOT_CERT_REL_PATH=certs/ca.cer
 ARG SERVER_KEY_REL_PATH=private/server.pem
 ARG SERVER_CSR_REL_PATH=server.csr
 ARG SERVER_CERT_REL_PATH=certs/server.pem
-ARG CLUSTER_NAME_FILE_NAME=cluster_name
+
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
+
+ARG CLUSTER_NAME_FILE_NAME=cluster_name
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_TEMPLATE_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
 
 # Generate server private key and CSR
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -nodes -new -out $SERVER_CSR_REL_PATH -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 # Send CSR to CA and get server certificate
-COPY ca.pem private/
-COPY ca.cer certs/
-RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA $ROOT_CERT_REL_PATH -CAkey $ROOT_KEY_REL_PATH -out $SERVER_CERT_REL_PATH
+ARG CA_KEY_FILE_NAME
+ARG CA_CERT_FILE_NAME
+COPY $CA_KEY_FILE_NAME private/
+COPY $CA_CERT_FILE_NAME certs/
+RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA certs/$CA_KEY_FILE_NAME -CAkey private/$CA_KEY_FILE_NAME -out $SERVER_CERT_REL_PATH
 
 FROM set-node-id as configure-tls
 
