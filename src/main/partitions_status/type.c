@@ -100,7 +100,9 @@ static PyObject *__getitem__(PyObject *self, PyObject *py_key)
     }
     else if (PyLong_Check(py_key)) {
         unsigned long partition_id = PyLong_AsUnsignedLong(py_key);
-        // TODO: need to create a new as_partition_status wrapper obj
+        as_partition_status *part_status =
+            &py_partitions_status->parts_all->parts[partition_id];
+        // TODO
     }
 
     // TODO: remove
