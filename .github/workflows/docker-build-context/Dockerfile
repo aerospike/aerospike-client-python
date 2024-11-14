@@ -9,6 +9,7 @@ FROM $server_image as configure-server
 
 WORKDIR /opt/aerospike/smd
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
+ARG SSL_WORKING_DIR=/etc/ssl
 
 # Enable authentication
 
@@ -55,13 +56,10 @@ FROM $server_image as generate-server-cert
 RUN apt update
 RUN apt install -y openssl
 
-ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
 ARG SERVER_KEY_REL_PATH=private/server.pem
 ARG SERVER_CSR_REL_PATH=server.csr
 ARG SERVER_CERT_REL_PATH=certs/server.pem
-
-ARG AEROSPIKE_CONF_TEMPLATE_PATH
 
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_TEMPLATE_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
