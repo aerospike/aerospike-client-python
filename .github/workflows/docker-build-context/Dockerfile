@@ -83,6 +83,7 @@ FROM set-node-id as configure-tls
 
 ARG SSL_WORKING_DIR
 COPY --from=generate-server-cert $SSL_WORKING_DIR $SSL_WORKING_DIR
+WORKDIR $SSL_WORKING_DIR
 ARG TLS_PORT=4333
 
 # Service sub-stanza under network stanza
