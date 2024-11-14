@@ -4,6 +4,7 @@ ARG ROSTER_FILE_NAME=roster.smd
 # Docker doesn't support command substitution for setting values for ARG variables, so we have to do this
 ARG NODE_ID_FILE_NAME=node_id
 ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
+ARG SSL_WORKING_DIR=/etc/ssl
 
 FROM $server_image as configure-server
 
@@ -56,7 +57,7 @@ FROM $server_image as generate-server-cert
 RUN apt update
 RUN apt install -y openssl
 
-ARG SSL_WORKING_DIR=/etc/ssl
+ARG SSL_WORKING_DIR
 WORKDIR $SSL_WORKING_DIR
 ARG SERVER_KEY_REL_PATH=private/server.pem
 ARG SERVER_CSR_REL_PATH=server.csr
@@ -77,6 +78,7 @@ RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA certs/$CA_CERT_FILE_NAME -CAk
 
 FROM set-node-id as configure-tls
 
+ARG SSL_WORKING_DIR
 COPY --from=generate-server-cert $SSL_WORKING_DIR $SSL_WORKING_DIR
 ARG TLS_PORT=4333
 
