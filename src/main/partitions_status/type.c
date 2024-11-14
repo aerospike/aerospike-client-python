@@ -99,7 +99,7 @@ static PyObject *__getitem__(PyObject *self, PyObject *py_key)
         }
     }
     // TODO: remove
-    Py_RETURN_NONE
+    Py_RETURN_NONE;
 }
 
 static PyMethodDef AerospikePartitionsStatus_Type_Methods[] = {
