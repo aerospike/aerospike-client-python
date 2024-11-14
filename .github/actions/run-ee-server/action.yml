@@ -101,10 +101,6 @@ runs:
   - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
-  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --tls_enable --tls-cafile /etc/ssl/certs/${{ env.CA_CERT_FILE_NAME }} --port ${{ env.TLS_PORT }} --tls_name docker
-    working-directory: .github/workflows/docker-build-context
-    shell: bash
-
   # For debugging
   - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
     shell: bash
