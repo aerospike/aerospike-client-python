@@ -78,11 +78,12 @@ RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA certs/$CA_KEY_FILE_NAME -CAke
 FROM set-node-id as configure-tls
 
 COPY --from=generate-server-cert $SSL_WORKING_DIR $SSL_WORKING_DIR
+ARG TLS_PORT=4333
 
 # Service sub-stanza under network stanza
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
-RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port 4333|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
 RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_REL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_REL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH

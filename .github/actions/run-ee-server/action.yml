@@ -56,6 +56,9 @@ runs:
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
+  - run: echo TLS_PORT="4333" >> $GITHUB_ENV
+    shell: bash
+
   - name: Build and push
     uses: docker/build-push-action@v6
     with:
@@ -65,6 +68,7 @@ runs:
         server_image=${{ env.IMAGE_NAME }}
         CA_KEY_FILE_NAME=${{ env.CA_KEY_FILE_NAME }}
         CA_CERT_FILE_NAME=${{ env.CA_CERT_FILE_NAME }}
+        TLS_PORT=${{ env.TLS_PORT }}
       tags: ${{ env.NEW_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
@@ -97,7 +101,7 @@ runs:
   - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
-  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --tls_enable --tls-cafile /etc/ssl/certs/${{ env.CA_CERT_FILE_NAME }} --port 4333 --tls_name docker
+  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --tls_enable --tls-cafile /etc/ssl/certs/${{ env.CA_CERT_FILE_NAME }} --port ${{ env.TLS_PORT }} --tls_name docker
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
