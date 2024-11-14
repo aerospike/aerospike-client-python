@@ -25,6 +25,7 @@
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_txn.h>
 #include "pool.h"
 
 #define AEROSPIKE_MODULE_NAME "aerospike"
@@ -103,3 +104,11 @@ typedef struct {
 typedef struct {
     PyObject_HEAD as_partitions_status *parts_all;
 } AerospikePartitionsStatusObject;
+
+typedef struct {
+    PyObject_HEAD
+        /* Type-specific fields go here. */
+        as_txn *txn;
+} AerospikeTransaction;
+
+extern PyTypeObject AerospikeTransaction_Type;
