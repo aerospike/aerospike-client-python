@@ -63,6 +63,8 @@ runs:
       context: .github/workflows/docker-build-context
       build-args: |
         server_image=${{ env.IMAGE_NAME }}
+        CA_KEY_FILE_NAME=${{ env.CA_KEY_FILE_NAME }}
+        CA_CERT_FILE_NAME=${{ env.CA_CERT_FILE_NAME }}
       tags: ${{ env.NEW_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
