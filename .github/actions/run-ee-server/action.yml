@@ -161,7 +161,7 @@ runs:
 
   - name: Get cluster name
     run: |
-      docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name
+      docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l
       echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
     shell: bash
 
