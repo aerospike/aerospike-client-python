@@ -52,7 +52,7 @@ runs:
     shell: bash
 
   - name: Create a certificate authority
-    run: openssl req -x509 -newkey rsa:2048 -keyout ${{ env.CA_KEY_FILE_NAME }} -out ${{ env.CA_CERT_FILE_NAME }} -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=null"
+    run: openssl req -x509 -newkey rsa:2048 -keyout ${{ env.CA_KEY_FILE_NAME }} -out ${{ env.CA_CERT_FILE_NAME }} -nodes -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=mydummyca"
     working-directory: .github/workflows/docker-build-context
     shell: bash
 
