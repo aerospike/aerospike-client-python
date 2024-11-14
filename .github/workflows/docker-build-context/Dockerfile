@@ -83,6 +83,7 @@ COPY --from=generate-server-cert $SSL_WORKING_DIR $SSL_WORKING_DIR
 ARG TLS_PORT=4333
 
 # Service sub-stanza under network stanza
+COPY --from=generate-server-cert $CLUSTER_NAME_FILE_NAME .
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMPLATE_PATH
