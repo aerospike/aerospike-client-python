@@ -10,7 +10,6 @@ FROM $server_image as configure-server
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
 
 WORKDIR /opt/aerospike/smd
-ARG SSL_WORKING_DIR=/etc/ssl
 
 # Enable authentication
 
@@ -57,6 +56,7 @@ FROM $server_image as generate-server-cert
 RUN apt update
 RUN apt install -y openssl
 
+ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
 ARG SERVER_KEY_REL_PATH=private/server.pem
 ARG SERVER_CSR_REL_PATH=server.csr
