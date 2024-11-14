@@ -5,6 +5,7 @@ ARG ROSTER_FILE_NAME=roster.smd
 ARG NODE_ID_FILE_NAME=node_id
 ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 ARG SSL_WORKING_DIR=/etc/ssl
+ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
 FROM $server_image as configure-server
 
@@ -63,8 +64,8 @@ ARG SERVER_KEY_REL_PATH=private/server.pem
 ARG SERVER_CSR_REL_PATH=server.csr
 ARG SERVER_CERT_REL_PATH=certs/server.pem
 
-ARG CLUSTER_NAME_FILE_NAME=cluster_name
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
+ARG CLUSTER_NAME_FILE_NAME
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_TEMPLATE_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
 
 # Generate server private key and CSR
@@ -83,6 +84,7 @@ COPY --from=generate-server-cert $SSL_WORKING_DIR $SSL_WORKING_DIR
 ARG TLS_PORT=4333
 
 # Service sub-stanza under network stanza
+ARG CLUSTER_NAME_FILE_NAME
 COPY --from=generate-server-cert $CLUSTER_NAME_FILE_NAME .
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
