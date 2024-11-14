@@ -7,6 +7,9 @@ ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 ARG SSL_WORKING_DIR=/etc/ssl
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
+ARG SERVER_KEY_REL_PATH=private/server.pem
+ARG SERVER_CERT_REL_PATH=certs/server.pem
+
 FROM $server_image as configure-server
 
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
@@ -60,10 +63,9 @@ RUN apt install -y openssl
 
 ARG SSL_WORKING_DIR
 WORKDIR $SSL_WORKING_DIR
-ARG SERVER_KEY_REL_PATH=private/server.pem
 ARG SERVER_CSR_REL_PATH=server.csr
-ARG SERVER_CERT_REL_PATH=certs/server.pem
-
+ARG SERVER_KEY_REL_PATH
+ARG SERVER_CERT_REL_PATH
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
 ARG CLUSTER_NAME_FILE_NAME
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_TEMPLATE_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
@@ -89,6 +91,8 @@ RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|"
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
+ARG SERVER_KEY_REL_PATH
+ARG SERVER_CERT_REL_PATH
 RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_REL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_REL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
