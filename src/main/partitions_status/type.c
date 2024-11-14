@@ -73,6 +73,38 @@ PyObject *create_py_partitions_status_object(as_error *err,
     return (PyObject *)py_parts_all;
 }
 
+static PyObject *__getitem__(PyObject *self, PyObject *py_key)
+{
+    // assume py_key is non-NULL
+    bool is_valid_key_type = PyUnicode_Check(py_key) || PyLong_Check(py_key);
+    if (!is_valid_key_type) {
+        PyErr_SetString(PyExc_TypeError, "Key is an invalid type");
+        return NULL;
+    }
+
+    if (PyUnicode_Check(py_key)) {
+        const char *key = PyUnicode_AsUTF8(py_key);
+        if (!key) {
+            return NULL;
+        }
+        AerospikePartitionsStatusObject *py_partitions_status =
+            (AerospikePartitionsStatusObject *)self;
+        if (!strcmp(key, "retry")) {
+            bool retry = py_partitions_status->parts_all->retry;
+            PyObject *py_retry = PyBool_FromLong(retry);
+            if (!py_retry) {
+                return NULL;
+            }
+            return py_retry;
+        }
+    }
+    // TODO
+}
+
+static PyMethodDef AerospikePartitionsStatus_Type_Methods[] = {
+    {.ml_name = "__getitem__", .ml_meth = __getitem__, .ml_flags = METH_O},
+    {NULL}};
+
 PyTypeObject AerospikePartitionsStatusObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_name =
         FULLY_QUALIFIED_TYPE_NAME("PartitionsStatus"),
@@ -80,7 +112,7 @@ PyTypeObject AerospikePartitionsStatusObject_Type = {
     .tp_dealloc = (destructor)AerospikePartitionsStatusObject_Type_Dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_new = AerospikePartitionsStatusObject_Type_New,
-};
+    .tp_methods = AerospikePartitionsStatus_Type_Methods};
 
 PyTypeObject *AerospikePartitionsStatusObject_Ready()
 {
