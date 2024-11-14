@@ -70,10 +70,13 @@ static PyObject *AerospikePartitionStatus__getitem__(PyObject *self,
 }
 
 static PyMethodDef AerospikePartitionStatus_Type_Methods[] = {
-    {.ml_name = "__getitem__",
-     .ml_meth = AerospikePartitionStatus__getitem__,
-     .ml_flags = METH_O},
+    // {.ml_name = "__getitem__",
+    //  .ml_meth = AerospikePartitionStatus__getitem__,
+    //  .ml_flags = METH_O},
     {NULL}};
+
+static PyMappingMethods AerospikePartitionStatus_Type_AsMapping = {
+    .mp_subscript = AerospikePartitionStatus__getitem__};
 
 PyTypeObject AerospikePartitionStatusObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_name =
@@ -82,7 +85,8 @@ PyTypeObject AerospikePartitionStatusObject_Type = {
     .tp_dealloc = (destructor)AerospikePartitionStatusObject_Type_Dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_new = AerospikePartitionStatusObject_Type_New,
-    .tp_methods = AerospikePartitionStatus_Type_Methods};
+    .tp_methods = AerospikePartitionStatus_Type_Methods,
+    .tp_as_mapping = &AerospikePartitionStatus_Type_AsMapping};
 
 static PyObject *
 create_py_partition_status_object(as_partition_status *part_status)
@@ -191,10 +195,13 @@ static PyObject *AerospikePartitionsStatus__getitem__(PyObject *self,
 }
 
 static PyMethodDef AerospikePartitionsStatus_Type_Methods[] = {
-    {.ml_name = "__getitem__",
-     .ml_meth = AerospikePartitionsStatus__getitem__,
-     .ml_flags = METH_O},
+    // {.ml_name = "__getitem__",
+    //  .ml_meth = AerospikePartitionsStatus__getitem__,
+    //  .ml_flags = METH_O},
     {NULL}};
+
+static PyMappingMethods AerospikePartitionsStatus_Type_AsMapping = {
+    .mp_subscript = AerospikePartitionsStatus__getitem__};
 
 PyTypeObject AerospikePartitionsStatusObject_Type = {
     PyVarObject_HEAD_INIT(NULL, 0).tp_name =
@@ -203,7 +210,8 @@ PyTypeObject AerospikePartitionsStatusObject_Type = {
     .tp_dealloc = (destructor)AerospikePartitionsStatusObject_Type_Dealloc,
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     .tp_new = AerospikePartitionsStatusObject_Type_New,
-    .tp_methods = AerospikePartitionsStatus_Type_Methods};
+    .tp_methods = AerospikePartitionsStatus_Type_Methods,
+    .tp_as_mapping = &AerospikePartitionsStatus_Type_AsMapping};
 
 PyTypeObject *AerospikePartitionsStatusObject_Ready()
 {
