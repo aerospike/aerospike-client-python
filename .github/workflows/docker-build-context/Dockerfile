@@ -73,7 +73,7 @@ ARG CA_KEY_FILE_NAME
 ARG CA_CERT_FILE_NAME
 COPY $CA_KEY_FILE_NAME private/
 COPY $CA_CERT_FILE_NAME certs/
-RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA certs/$CA_KEY_FILE_NAME -CAkey private/$CA_KEY_FILE_NAME -out $SERVER_CERT_REL_PATH
+RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA certs/$CA_CERT_FILE_NAME -CAkey private/$CA_KEY_FILE_NAME -out $SERVER_CERT_REL_PATH
 
 FROM set-node-id as configure-tls
 
