@@ -374,7 +374,7 @@ jobs:
       - run: echo PYTHON_M_COMMAND=${{ matrix.python-tag == 'cp313t' && 'uv run --module' || 'python3 -m' }} >> $GITHUB_ENV
         shell: bash
 
-      - run: python3 -m pytest -vv new_tests/${{ inputs.test-file }}
+      - run: ${{ env.PYTHON_M_COMMAND }} pytest -vv new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
