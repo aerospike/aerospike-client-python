@@ -88,6 +88,13 @@ PyTypeObject AerospikePartitionStatusObject_Type = {
     .tp_methods = AerospikePartitionStatus_Type_Methods,
     .tp_as_mapping = &AerospikePartitionStatus_Type_AsMapping};
 
+PyTypeObject *AerospikePartitionStatusObject_Ready()
+{
+    return PyType_Ready(&AerospikePartitionStatusObject_Type) == 0
+               ? &AerospikePartitionStatusObject_Type
+               : NULL;
+}
+
 static PyObject *
 create_py_partition_status_object(as_partition_status *part_status)
 {

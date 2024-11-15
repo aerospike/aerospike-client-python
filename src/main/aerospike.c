@@ -561,6 +561,7 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"CDTWildcard", AerospikeWildcardObject_Ready},
     {"CDTInfinite", AerospikeInfiniteObject_Ready},
     {"PartitionsStatus", AerospikePartitionsStatusObject_Ready},
+    {"PartitionStatus", AerospikePartitionStatusObject_Ready},
     {"Transaction", AerospikeTransaction_Ready},
 };
 
