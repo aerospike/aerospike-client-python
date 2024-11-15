@@ -39,6 +39,9 @@ PyObject *AerospikePartitionStatusObject_Type_New(PyTypeObject *type,
 static void AerospikePartitionStatusObject_Type_Dealloc(
     AerospikePartitionStatusObject *self)
 {
+    if (self->part_status) {
+        free(self->part_status);
+    }
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -119,7 +122,10 @@ create_py_partition_status_object(as_partition_status *part_status)
         return NULL;
     }
 
-    py_part_status->part_status = part_status;
+    as_partition_status *part_status_copy = malloc(sizeof(as_partition_status));
+    memcpy(part_status_copy, part_status, sizeof(as_partition_status));
+    py_part_status->part_status = part_status_copy;
+
     return (PyObject *)py_part_status;
 }
 
