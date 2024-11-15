@@ -200,8 +200,10 @@ static PyObject *AerospikePartitionsStatus__getitem__(PyObject *self,
     }
     else if (PyLong_Check(py_key)) {
         unsigned long partition_id = PyLong_AsUnsignedLong(py_key);
+        unsigned long partition_idx =
+            partition_id - py_partitions_status->parts_all->part_begin;
         as_partition_status *part_status =
-            &py_partitions_status->parts_all->parts[partition_id];
+            &py_partitions_status->parts_all->parts[partition_idx];
         PyObject *py_partition_status =
             create_py_partition_status_object(part_status);
         if (py_partition_status == NULL) {
