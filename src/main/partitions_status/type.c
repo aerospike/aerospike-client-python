@@ -71,7 +71,8 @@ static PyObject *AerospikePartitionStatus__getitem__(PyObject *self,
 
     if (get_bval) {
         uint64_t bval = py_partition_status->part_status->bval;
-        PyObject *py_bval = PyLong_FromUnsignedLongLong((uint64_t)bval);
+        PyObject *py_bval =
+            PyLong_FromUnsignedLongLong((unsigned long long)bval);
         if (!py_bval) {
             return NULL;
         }
