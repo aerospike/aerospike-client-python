@@ -14,7 +14,7 @@ ARG SERVER_CERT_FILE_NAME=server.cer
 # Cluster name fetched from stage to generate cert also needs to be set in aerospike.conf in our final image
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
-FROM $server_image as configure-server
+FROM $server_image AS configure-server
 
 WORKDIR /opt/aerospike/smd
 
@@ -42,7 +42,7 @@ COPY $ROSTER_FILE_NAME .
 
 # jq docker image doesn't have a shell
 # We need a shell to fetch and pass the node id to the next build stage
-FROM busybox as get-node-id-for-sc
+FROM busybox AS get-node-id-for-sc
 # There's no tag for the latest major version to prevent breaking changes in jq
 # This is the next best thing
 COPY --from=ghcr.io/jqlang/jq:1.7 /jq /bin/
@@ -51,7 +51,7 @@ COPY $ROSTER_FILE_NAME .
 ARG NODE_ID_FILE_NAME
 RUN jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
 
-FROM enable-sc-part1 as enable-sc-part2
+FROM enable-sc-part1 AS enable-sc-part2
 ARG NODE_ID_FILE_NAME
 COPY --from=get-node-id-for-sc $NODE_ID_FILE_NAME .
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
@@ -59,7 +59,7 @@ RUN rm $NODE_ID_FILE_NAME
 
 # Use separate build stage since we don't want openssl bundled in the final image
 
-FROM $server_image as generate-server-cert-for-tls
+FROM $server_image AS generate-server-cert-for-tls
 
 RUN apt update
 RUN apt install -y openssl
@@ -83,7 +83,7 @@ COPY $CA_CERT_FILE_NAME .
 ARG SERVER_CERT_FILE_NAME
 RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
 
-FROM enable-sc-part2 as enable-tls
+FROM enable-sc-part2 AS enable-tls
 
 ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
