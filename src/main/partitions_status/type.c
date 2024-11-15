@@ -45,12 +45,6 @@ static void AerospikePartitionStatusObject_Type_Dealloc(
 static PyObject *AerospikePartitionStatus__getitem__(PyObject *self,
                                                      PyObject *py_key)
 {
-    // TODO: py_key is always non-NULL?
-    if (!PyUnicode_Check(py_key)) {
-        PyErr_SetString(PyExc_TypeError, "Key must be a string type");
-        return NULL;
-    }
-
     const char *key = PyUnicode_AsUTF8(py_key);
     if (!key) {
         return NULL;
@@ -65,7 +59,8 @@ static PyObject *AerospikePartitionStatus__getitem__(PyObject *self,
         }
         return py_bval;
     }
-    // TODO: remove
+
+    PyErr_SetNone(PyExc_KeyError);
     return NULL;
 }
 
@@ -197,8 +192,8 @@ static PyObject *AerospikePartitionsStatus__getitem__(PyObject *self,
         return py_partition_status;
     }
 
-    // TODO: remove
-    Py_RETURN_NONE;
+    PyErr_SetNone(PyExc_KeyError);
+    return NULL;
 }
 
 static PyMethodDef AerospikePartitionsStatus_Type_Methods[] = {
