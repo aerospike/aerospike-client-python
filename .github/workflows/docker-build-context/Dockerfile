@@ -53,7 +53,7 @@ RUN jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
 
 FROM enable-sc-part1 as enable-sc-part2
 ARG NODE_ID_FILE_NAME
-COPY --from=get-node-id $NODE_ID_FILE_NAME .
+COPY --from=get-node-id-for-sc $NODE_ID_FILE_NAME .
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN rm $NODE_ID_FILE_NAME
 
