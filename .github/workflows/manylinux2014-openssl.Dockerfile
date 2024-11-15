@@ -1,4 +1,5 @@
-FROM quay.io/pypa/manylinux2014_x86_64
+ARG CPU_ARCH=x86_64
+FROM quay.io/pypa/manylinux2014_$CPU_ARCH
 ARG OPENSSL_VERSION
 LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
