@@ -3,8 +3,7 @@ FROM quay.io/pypa/manylinux2014_$CPU_ARCH
 ARG OPENSSL_VERSION
 LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
-# https://computingforgeeks.com/how-to-install-openssl-3-x-on-centos-rhel-7/
-RUN yum install -y perl-Text-Template.noarch perl-IPC-Cmd perl-Test-Simple wget
+RUN yum install -y perl-core wget
 
 # devtoolset-11 contains a newer version of binutils 2.36, which contains a bug fix for missing symbols
 # We don't use it though because we want to make sure the compiled openssl 3 library is compatible with manylinux2014's
