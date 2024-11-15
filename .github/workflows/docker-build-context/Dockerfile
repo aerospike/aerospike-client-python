@@ -102,8 +102,8 @@ RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|"
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
-RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_ABS_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
-RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_ABS_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SERVER_KEY_ABS_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SERVER_CERT_ABS_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
