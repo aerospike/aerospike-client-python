@@ -75,8 +75,8 @@ RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_TEMPLATE_PATH | awk '{print $
 # Generate server private key and CSR
 ARG SERVER_KEY_REL_PATH
 ARG SERVER_CERT_REL_PATH
-ARG SERVER_CSR_REL_PATH=server.csr
-RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -nodes -new -out $SERVER_CSR_REL_PATH -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
+ARG SERVER_CSR_FILE_NAME=server.csr
+RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 
 # Send CSR to CA and get server certificate
 # We use an external CA because we want the client to use that same CA to connect to the server
@@ -84,7 +84,7 @@ ARG CA_KEY_FILE_NAME
 ARG CA_CERT_FILE_NAME
 COPY $CA_KEY_FILE_NAME private/
 COPY $CA_CERT_FILE_NAME certs/
-RUN openssl x509 -req -in $SERVER_CSR_REL_PATH -CA certs/$CA_CERT_FILE_NAME -CAkey private/$CA_KEY_FILE_NAME -out $SERVER_CERT_REL_PATH
+RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA certs/$CA_CERT_FILE_NAME -CAkey private/$CA_KEY_FILE_NAME -out $SERVER_CERT_REL_PATH
 
 FROM set-node-id as configure-tls
 
