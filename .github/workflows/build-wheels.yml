@@ -245,7 +245,7 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - if: ${{ startsWith(env.BUILD_IDENTIFIER, 'manylinux') }}
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo CPU_ARCH=${{ endsWith(env.BUILD_IDENTIFIER, 'x86_64') && 'x86_64' || 'aarch64' }} >> $GITHUB_ENV
 
     - name: Build wheel
