@@ -157,13 +157,6 @@ PyObject *create_py_partitions_status_object(as_error *err,
 static PyObject *AerospikePartitionsStatus__getitem__(PyObject *self,
                                                       PyObject *py_key)
 {
-    // assume py_key is non-NULL
-    bool is_valid_key_type = PyUnicode_Check(py_key) || PyLong_Check(py_key);
-    if (!is_valid_key_type) {
-        PyErr_SetString(PyExc_TypeError, "Key is an invalid type");
-        return NULL;
-    }
-
     AerospikePartitionsStatusObject *py_partitions_status =
         (AerospikePartitionsStatusObject *)self;
     if (PyUnicode_Check(py_key)) {
