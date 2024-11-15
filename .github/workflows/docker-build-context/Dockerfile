@@ -92,14 +92,15 @@ ARG SERVER_CERT_FILE_NAME
 ARG SERVER_KEY_ABS_PATH=$SSL_WORKING_DIR/private/$SERVER_KEY_FILE_NAME
 ARG SERVER_CERT_ABS_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 
-COPY --from=generate-server-cert $SERVER_KEY_FILE_NAME $SERVER_KEY_ABS_PATH
-COPY --from=generate-server-cert $SERVER_CERT_FILE_NAME $SERVER_CERT_ABS_PATH
+COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_ABS_PATH
+COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_ABS_PATH
 
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
 
 # Service sub-stanza under network stanza
 ARG CLUSTER_NAME_FILE_NAME
+COPY --from=generate-server-cert-for-tls $CLUSTER_NAME_FILE_NAME .
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMPLATE_PATH
