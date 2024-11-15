@@ -65,6 +65,10 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+      test-file:
+        required: false
+        default: ''
+        description: 'new_tests/<value>'
 
   workflow_call:
     inputs:
@@ -106,6 +110,10 @@ on:
         type: string
         default: 'latest'
         description: 'Server docker image tag'
+      test-file:
+        required: false
+        type: string
+        default: ''
     secrets:
       # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
@@ -228,7 +236,7 @@ jobs:
 
     - name: Otherwise, enable integration tests
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vv new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set unoptimize flag
@@ -351,7 +359,7 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest new_tests/
+      - run: python3 -m pytest -vv new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
