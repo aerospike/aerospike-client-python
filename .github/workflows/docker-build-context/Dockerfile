@@ -3,13 +3,13 @@ ARG ROSTER_FILE_NAME=roster.smd
 # Temp file for passing node id from one build stage to another
 # Docker doesn't support command substitution for setting values for ARG variables, so we have to do this
 ARG NODE_ID_FILE_NAME=node_id
-# Shared by stage to generate certificates and stage for building final image
-# The former uses the config file to get the cluster name for generating the certificate signing request
+
 ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
-# In the stage for generating certificates and keys, we save them in the same location as the final image
-ARG SSL_WORKING_DIR=/etc/ssl
-ARG SERVER_KEY_REL_PATH=private/server.pem
-ARG SERVER_CERT_REL_PATH=certs/server.pem
+
+# Shared between stages to generate certificates and configure the server
+ARG SERVER_KEY_FILE_NAME=server.pem
+ARG SERVER_CERT_FILE_NAME=server.cer
+
 # Temp file to pass cluster name from stage to generate certificates to stage for building final image
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
@@ -65,32 +65,37 @@ FROM $server_image as generate-server-cert
 RUN apt update
 RUN apt install -y openssl
 
-ARG SSL_WORKING_DIR
-WORKDIR $SSL_WORKING_DIR
-
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
 ARG CLUSTER_NAME_FILE_NAME
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_TEMPLATE_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
 
 # Generate server private key and CSR
-ARG SERVER_KEY_REL_PATH
-ARG SERVER_CERT_REL_PATH
+
 ARG SERVER_CSR_FILE_NAME=server.csr
-RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_REL_PATH -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
+ARG SERVER_KEY_FILE_NAME
+RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 
 # Send CSR to CA and get server certificate
 # We use an external CA because we want the client to use that same CA to connect to the server
 ARG CA_KEY_FILE_NAME
 ARG CA_CERT_FILE_NAME
-COPY $CA_KEY_FILE_NAME private/
-COPY $CA_CERT_FILE_NAME certs/
-RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA certs/$CA_CERT_FILE_NAME -CAkey private/$CA_KEY_FILE_NAME -out $SERVER_CERT_REL_PATH
+COPY $CA_KEY_FILE_NAME .
+COPY $CA_CERT_FILE_NAME .
+ARG SERVER_CERT_FILE_NAME
+RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
 
 FROM set-node-id as configure-tls
 
-ARG SSL_WORKING_DIR
-COPY --from=generate-server-cert $SSL_WORKING_DIR $SSL_WORKING_DIR
+ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
+ARG SERVER_KEY_FILE_NAME
+ARG SERVER_CERT_FILE_NAME
+ARG SERVER_KEY_ABS_PATH=$SSL_WORKING_DIR/private/$SERVER_KEY_FILE_NAME
+ARG SERVER_CERT_ABS_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
+
+COPY --from=generate-server-cert $SERVER_KEY_FILE_NAME $SERVER_KEY_ABS_PATH
+COPY --from=generate-server-cert $SERVER_CERT_FILE_NAME $SERVER_CERT_ABS_PATH
+
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
 
@@ -100,10 +105,8 @@ RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|"
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
-ARG SERVER_KEY_REL_PATH
-ARG SERVER_CERT_REL_PATH
-RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_REL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
-RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_REL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_ABS_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_ABS_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
 # Cleanup
 RUN rm $CLUSTER_NAME_FILE_NAME
