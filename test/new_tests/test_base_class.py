@@ -64,6 +64,9 @@ class TestBaseClass(object):
             config.get("tls", "enable") != "" and config.get("tls", "enable") != "0"
         ):
             TestBaseClass.using_tls = True
+            # The C client prints a debug log stating that the server certificate was verified
+            # This makes sure that the bundled OpenSSL library in the wheel is used
+            aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
             tls_dict["enable"] = True
 
             if config.has_option("tls", "cafile"):
