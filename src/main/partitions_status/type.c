@@ -45,13 +45,31 @@ static void AerospikePartitionStatusObject_Type_Dealloc(
 static PyObject *AerospikePartitionStatus__getitem__(PyObject *self,
                                                      PyObject *py_key)
 {
-    const char *key = PyUnicode_AsUTF8(py_key);
-    if (!key) {
-        return NULL;
-    }
     AerospikePartitionStatusObject *py_partition_status =
         (AerospikePartitionStatusObject *)self;
-    if (!strcmp(key, "bval")) {
+    bool get_bval = false;
+    if (PyUnicode_Check(py_key)) {
+        const char *key = PyUnicode_AsUTF8(py_key);
+        if (!key) {
+            return NULL;
+        }
+        if (!strcmp(key, "bval")) {
+            get_bval = true;
+        }
+    }
+    else if (PyLong_Check(py_key)) {
+        unsigned long long index = PyLong_AsUnsignedLongLong(py_key);
+        if (index == (unsigned long long)-1 && PyErr_Occurred()) {
+            return NULL;
+        }
+        switch (index) {
+        case 4:
+            get_bval = true;
+            break;
+        }
+    }
+
+    if (get_bval) {
         uint64_t bval = py_partition_status->part_status->bval;
         PyObject *py_bval = PyLong_FromUnsignedLongLong((uint64_t)bval);
         if (!py_bval) {
