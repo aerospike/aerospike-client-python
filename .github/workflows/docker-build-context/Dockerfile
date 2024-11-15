@@ -95,9 +95,6 @@ ARG SERVER_CERT_ABS_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_ABS_PATH
 COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_ABS_PATH
 
-ARG TLS_PORT=4333
-EXPOSE $TLS_PORT
-
 # Service sub-stanza under network stanza
 ARG CLUSTER_NAME_FILE_NAME
 COPY --from=generate-server-cert-for-tls $CLUSTER_NAME_FILE_NAME .
@@ -107,6 +104,9 @@ RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMP
 
 RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SSL_WORKING_DIR/$SERVER_KEY_ABS_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SSL_WORKING_DIR/$SERVER_CERT_ABS_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
+
+ARG TLS_PORT=4333
+EXPOSE $TLS_PORT
 
 # Cleanup
 RUN rm $CLUSTER_NAME_FILE_NAME
