@@ -14,8 +14,8 @@
  * limitations under the License.
  ******************************************************************************/
 
-#include <Python.h>
 #include "pythoncapi_compat.h"
+#include <Python.h>
 
 #include <stdbool.h>
 #include <stdlib.h>

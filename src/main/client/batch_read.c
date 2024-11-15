@@ -1,3 +1,4 @@
+#include "pythoncapi_compat.h"
 #include <Python.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
