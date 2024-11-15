@@ -15,6 +15,7 @@ jobs:
           [x86_64, ubuntu-24.04],
           [aarch64, aerospike_arm_runners_2]
         ]
+      fail-fast: false
 
     runs-on: ${{ matrix.arch-and-runner-os[1] }}
     steps:
