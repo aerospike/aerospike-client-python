@@ -378,8 +378,14 @@ void raise_exception(as_error *err)
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
-            found = true;
-            break;
+            PyObject *py_code = PyObject_GetAttrString(py_value, "code");
+            if (py_code == Py_None) {
+                continue;
+            }
+            if (err->code == PyLong_AsLong(py_code)) {
+                found = true;
+                break;
+            }
         }
     }
     // We haven't found the right exception, just use AerospikeError
