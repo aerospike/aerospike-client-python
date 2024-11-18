@@ -58,6 +58,8 @@ jobs:
           ["python:3.11-bookworm", 2, "linux/arm64", "3.11"],
           ["python:3.12-bookworm", 2, "linux/amd64", "3.12"],
           ["python:3.12-bookworm", 2, "linux/arm64", "3.12"],
+          ["python:3.13-bookworm", 2, "linux/amd64", "3.13"],
+          ["python:3.13-bookworm", 2, "linux/arm64", "3.13"],
           ["amazonlinux:2023", 1, "linux/amd64", "3.9"],
           ["redhat/ubi9", 1, "linux/amd64", "3.9"],
         ]
@@ -157,6 +159,7 @@ jobs:
           "3.10",
           "3.11",
           "3.12",
+          "3.13",
         ]
       fail-fast: false
     runs-on: ${{ matrix.runner-os }}
