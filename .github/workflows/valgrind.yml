@@ -53,7 +53,8 @@ jobs:
       # to handle those new labels without updating the regex.
       run: jf rt search "${{ vars.JFROG_GENERIC_REPO_NAME }}/${{ github.ref_name }}/*${{ env.SHORT_GITHUB_SHA }}*${{ env.PYTHON_TAG }}*manylinux*x86_64*.whl" > ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
-    - run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
+    - name: Show unfiltered results
+      run: cat ${{ env.JF_SEARCH_RESULTS_FILE_NAME }}
 
     - name: Install sponge
       run: sudo apt install -y moreutils
