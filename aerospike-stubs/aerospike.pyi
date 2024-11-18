@@ -1,4 +1,4 @@
-from typing import Any, Callable, Union, final, Literal, Optional, Final
+from typing import Any, Callable, Union, final, Literal, Optional, Final, Mapping
 
 from aerospike_helpers.batch.records import BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
@@ -467,3 +467,9 @@ def set_log_handler(callback: Callable = ...) -> None: ...
 def set_log_level(log_level: int) -> None: ...
 def set_serializer(callback: Callable) -> None: ...
 def unset_serializers() -> None: ...
+
+class PartitionStatus(Mapping):
+    pass
+
+class PartitionsStatus(Mapping):
+    pass
