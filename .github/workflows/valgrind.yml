@@ -27,7 +27,7 @@ env:
 jobs:
   # TODO: handle case where we run valgrind on a "central" branch
   look-for-wheel-in-jfrog:
-    if: ${{ !startsWith(github.ref_name, 'dev') && !startsWith(github.ref_name, 'stage') && !startsWith(github.ref_name, 'master') }}
+    if: ${{ startsWith(github.ref_name, 'dev') == false && startsWith(github.ref_name, 'stage') == false && startsWith(github.ref_name, 'master') == false }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
     runs-on: ubuntu-22.04
