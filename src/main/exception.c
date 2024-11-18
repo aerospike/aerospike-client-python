@@ -68,7 +68,8 @@ struct exception_def {
 // No exception should have an error code of 0, so this should be ok
 #define NO_ERROR_CODE 0
 
-const char *const aerospike_err_attrs[] = {"code", "file", "msg", "line", NULL};
+const char *const aerospike_err_attrs[] = {"code", "file",     "msg",
+                                           "line", "in_doubt", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
@@ -377,43 +378,7 @@ void raise_exception(as_error *err)
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
-            PyObject *py_code = PyObject_GetAttrString(py_value, "code");
-            if (py_code == Py_None) {
-                continue;
-            }
-            if (err->code == PyLong_AsLong(py_code)) {
-                found = true;
-                PyObject *py_attr = NULL;
-                py_attr = PyUnicode_FromString(err->message);
-                PyObject_SetAttrString(py_value, "msg", py_attr);
-                Py_DECREF(py_attr);
-
-                // as_error.file is a char* so this may be null
-                if (err->file) {
-                    py_attr = PyUnicode_FromString(err->file);
-                    PyObject_SetAttrString(py_value, "file", py_attr);
-                    Py_DECREF(py_attr);
-                }
-                else {
-                    PyObject_SetAttrString(py_value, "file", Py_None);
-                }
-                // If the line is 0, set it as None
-                if (err->line > 0) {
-                    py_attr = PyLong_FromLong(err->line);
-                    PyObject_SetAttrString(py_value, "line", py_attr);
-                    Py_DECREF(py_attr);
-                }
-                else {
-                    PyObject_SetAttrString(py_value, "line", Py_None);
-                }
-
-                py_attr = PyBool_FromLong(err->in_doubt);
-                PyObject_SetAttrString(py_value, "in_doubt", py_attr);
-                Py_DECREF(py_attr);
-
-                break;
-            }
-            Py_DECREF(py_code);
+            break;
         }
     }
     // We haven't found the right exception, just use AerospikeError
@@ -431,6 +396,20 @@ void raise_exception(as_error *err)
     // Convert C error to Python exception
     PyObject *py_err = NULL;
     error_to_pyobject(err, &py_err);
+
+    // Set exception attrs
+    for (unsigned long i = 0;
+         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
+         i++) {
+        PyObject *py_arg = PyTuple_GetItem(py_err, i);
+        if (py_arg == NULL) {
+            // Don't fail out if no more attrs can be set
+            // TODO: print a warning?
+            PyErr_Clear();
+            break;
+        }
+        PyObject_SetAttrString(py_value, aerospike_err_attrs[i], py_arg);
+    }
 
     // Raise exception
     PyErr_SetObject(py_value, py_err);
