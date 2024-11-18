@@ -163,6 +163,7 @@ jobs:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
       OPENSSL3_INSTALL_DIR: "/opt/openssl3"
+      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}:CLIENT-2217-openssl3-manylinux
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -245,9 +246,6 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CPU_ARCH=${{ endsWith(env.BUILD_IDENTIFIER, 'x86_64') && 'x86_64' || 'aarch64' }} >> $GITHUB_ENV
-
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.20.0
       env:
@@ -258,7 +256,8 @@ jobs:
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
-        CIBW_MANYLINUX_X86_64_IMAGE: ghcr.io/aerospike/manylinux2014_${{ env.CPU_ARCH }}:CLIENT-2217-openssl3-manylinux
+        CIBW_MANYLINUX_X86_64_IMAGE: ${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64') }}
+        CIBW_MANYLINUX_AARCH64_IMAGE: ${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }}
         CIBW_BEFORE_ALL_LINUX: >
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
