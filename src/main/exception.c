@@ -378,6 +378,7 @@ void raise_exception(as_error *err)
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         if (PyObject_HasAttrString(py_value, "code")) {
+            found = true;
             break;
         }
     }
