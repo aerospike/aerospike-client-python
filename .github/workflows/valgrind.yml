@@ -99,7 +99,7 @@ jobs:
 
   upload-built-wheel-to-jfrog:
     needs: build-manylinux-wheel
-    if: ${{ ! startsWith(github.ref_name, 'dev') && ! startsWith(github.ref_name, 'stage') && ! startsWith(github.ref_name, 'master') }}
+    if: ${{ !startsWith(github.event.ref, 'dev') && !startsWith(github.event.ref, 'stage') && !startsWith(github.event.ref, 'master') }}
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
