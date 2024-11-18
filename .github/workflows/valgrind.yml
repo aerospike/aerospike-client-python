@@ -28,6 +28,7 @@ jobs:
   look-for-wheel-in-jfrog:
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
+      python-tag: ${{ env.PYTHON_TAG }}
     runs-on: ubuntu-22.04
     env:
       JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
@@ -92,7 +93,7 @@ jobs:
     with:
       # TODO: need to update this manually each time we change the Python version
       # Get this dynamically, instead
-      python-tags: '["cp38"]'
+      python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
       platform-tag: manylinux_x86_64
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
