@@ -246,12 +246,16 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo LIB_POSTFIX=${{ endsWith(inputs.platform-tag, 'aarch64') && '64' || '' }} >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.20.0
       env:
         # Need to link openssl with both C client and Python client
         # For compiling C client
-        CIBW_ENVIRONMENT_LINUX: EXT_CFLAGS="-I${{ env.OPENSSL3_INSTALL_DIR }}/include" LDFLAGS="-L${{ env.OPENSSL3_INSTALL_DIR }}/lib64"
+        # TODO: try to set this dynamically
+        CIBW_ENVIRONMENT_LINUX: EXT_CFLAGS="-I${{ env.OPENSSL3_INSTALL_DIR }}/include" LDFLAGS="-L${{ env.OPENSSL3_INSTALL_DIR }}/lib${{ env.LIB_POSTFIX }}"
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
