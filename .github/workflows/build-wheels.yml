@@ -247,7 +247,7 @@ jobs:
         password: ${{ secrets.GITHUB_TOKEN }}
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo LIB_POSTFIX=${{ endsWith(inputs.platform-tag, 'aarch64') && '64' || '' }} >> $GITHUB_ENV
+      run: echo LIB_POSTFIX=${{ endsWith(inputs.platform-tag, 'x86_64') && '64' || '' }} >> $GITHUB_ENV
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.20.0
