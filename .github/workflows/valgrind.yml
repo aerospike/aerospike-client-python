@@ -30,9 +30,6 @@ jobs:
     if: ${{ !startsWith(github.ref_name, 'dev') && !startsWith(github.ref_name, 'stage') && !startsWith(github.ref_name, 'master') }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
-      # We want this environment variable to be available when calling a reusable workflow
-      # so we convert it to a job output so the reusable workflow can access it
-      python-tag: ${{ env.PYTHON_TAG }}
     runs-on: ubuntu-22.04
     env:
       JF_SEARCH_RESULTS_FILE_NAME: wheel_commit_matches.txt
@@ -98,7 +95,9 @@ jobs:
     if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'skipped' || (needs.look-for-wheel-in-jfrog.result == 'success' && needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0)) }}
     uses: ./.github/workflows/build-wheels.yml
     with:
-      python-tags: '["${{ needs.look-for-wheel-in-jfrog.outputs.python-tag }}"]'
+      # TODO: need to update this manually each time we change the Python version
+      # Get this dynamically, instead
+      python-tags: '["cp38"]'
       platform-tag: manylinux_x86_64
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
