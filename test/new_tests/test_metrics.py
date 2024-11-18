@@ -158,7 +158,7 @@ class TestMetrics:
             assert type(cluster) == Cluster
             assert cluster.cluster_name is None or type(cluster.cluster_name) == str
             assert type(cluster.invalid_node_count) == int
-            assert type(cluster.tran_count) == int
+            assert type(cluster.command_count) == int
             assert type(cluster.retry_count) == int
             assert type(cluster.nodes) == list
             # Also check the Node and ConnectionStats objects in the Cluster object were populated

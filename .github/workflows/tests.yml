@@ -127,6 +127,7 @@ jobs:
         mkdir -p nullobject/src/main/nullobject
         mkdir -p query/src/main/query
         mkdir -p scan/src/main/scan
+        mkdir -p transaction/src/main/transaction
 
         cd ../../../../
         cp src/main/*.c build/temp*/src/main/src/main
@@ -138,6 +139,7 @@ jobs:
         cp src/main/nullobject/*.c build/temp*/src/main/nullobject/src/main/nullobject/
         cp src/main/query/*.c build/temp*/src/main/query/src/main/query/
         cp src/main/scan/*.c build/temp*/src/main/scan/src/main/scan/
+        cp src/main/transaction/*.c build/temp*/src/main/transaction/src/main/transaction/
 
     - name: Generate coverage report for all object files
       if: ${{ !cancelled() }}
@@ -230,7 +232,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
@@ -286,11 +288,11 @@ jobs:
 
     - name: Run Aerospike server release candidate with latest tag
       if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
@@ -328,7 +330,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run lowest supported server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
@@ -372,7 +374,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_admin_*.py
+      run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*}.py
       working-directory: test
 
     - name: Show logs if failed
@@ -412,30 +414,14 @@ jobs:
       run: sphinx-build -b linkcheck . links
       working-directory: doc
 
-  test-metrics-node-close-listener:
+  test-metrics:
     needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-    - name: Download aerolab
-      run: wget https://github.com/aerospike/aerolab/releases/download/7.5.2/aerolab-linux-amd64-7.5.2.deb
-    - name: Install aerolab
-      run: sudo dpkg -i *.deb
-    - name: Tell aerolab to use Docker
-      run: aerolab config backend -t docker
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-    - run: python3 -m pip install *.whl
-    - run: python3 test_node_close_listener.py
-      working-directory: test/metrics
-
-  test-metrics-cluster-name:
-    needs: build
+    strategy:
+      matrix:
+        suffix:
+        - node_close_listener
+        - cluster_name
+      fail-fast: false
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -449,5 +435,5 @@ jobs:
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/metrics
-    - run: python3 test_cluster_name.py
+    - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/metrics

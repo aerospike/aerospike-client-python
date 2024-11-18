@@ -301,8 +301,8 @@ class BlobBin(_BaseExpr):
 
 
 class GeoBin(_BaseExpr):
-    """Create an expression that returns a bin as a geojson. Returns the unknown-value
-    if the bin is not a geojson.
+    """Create an expression that returns a bin as a GeoJSON. Returns the unknown-value
+    if the bin is not a GeoJSON.
     """
 
     _op = _ExprOp.BIN
@@ -312,7 +312,7 @@ class GeoBin(_BaseExpr):
         """Args:
             bin (str): Bin name.
 
-        :return: (geojson bin)
+        :return: (GeoJSON bin)
 
         Example::
 
