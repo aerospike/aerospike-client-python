@@ -87,6 +87,8 @@ jobs:
         if-no-files-found: error
         path: './*.whl'
 
+  # TODO: combine these two below jobs into one using a reusable workflow
+
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
     # If previous job was skipped, we are running on a central branch
@@ -104,6 +106,8 @@ jobs:
 
   upload-built-wheel-to-jfrog:
     needs: build-manylinux-wheel
+    # By default, this job will be skipped if look-for-wheel-in-jfrog (ancestor job) was skipped
+    if: ${{ !cancelled() && needs.build-manylinux-wheel.result == 'success' }}
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
