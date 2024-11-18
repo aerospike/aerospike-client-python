@@ -68,7 +68,7 @@ struct exception_def {
 // No exception should have an error code of 0, so this should be ok
 #define NO_ERROR_CODE 0
 
-const char *const aerospike_err_attrs[] = {"code", "file",     "msg",
+const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
                                            "line", "in_doubt", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
