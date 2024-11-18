@@ -25,9 +25,7 @@ env:
   PYTHON_TAG: cp38
 
 jobs:
-  # TODO: handle case where we run valgrind on a "central" branch
   look-for-wheel-in-jfrog:
-    if: ${{ !cancelled() && !startsWith(github.ref_name, 'dev') && !startsWith(github.ref_name, 'stage') && !startsWith(github.ref_name, 'master') }}
     outputs:
       num_artifacts_found: ${{ steps.count_num_artifacts_found.outputs.num_artifacts }}
     runs-on: ubuntu-22.04
@@ -87,14 +85,9 @@ jobs:
         if-no-files-found: error
         path: './*.whl'
 
-  # TODO: combine these two below jobs into one using a reusable workflow
-
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
-    # If previous job was skipped, we are running on a central branch
-    # Always build wheels from a central branch for now
-    # Or if we are running on a feature branch and could not find any wheels in JFrog, build and upload it to JFrog
-    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'skipped' || (needs.look-for-wheel-in-jfrog.result == 'success' && needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0)) }}
+    if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
     uses: ./.github/workflows/build-wheels.yml
     with:
       # TODO: need to update this manually each time we change the Python version
@@ -106,8 +99,6 @@ jobs:
 
   upload-built-wheel-to-jfrog:
     needs: build-manylinux-wheel
-    # By default, this job will be skipped if look-for-wheel-in-jfrog (ancestor job) was skipped
-    if: ${{ !cancelled() && needs.build-manylinux-wheel.result == 'success' }}
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
@@ -120,7 +111,9 @@ jobs:
       look-for-wheel-in-jfrog,
       build-manylinux-wheel
     ]
-    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' || (needs.look-for-wheel-in-jfrog.result == 'skipped' && needs.build-manylinux-wheel.result == 'success')) }}
+    # Case 1: Found artifact in JFrog
+    # Case 2: Did not find artifact in JFrog, had to build it in GHA
+    if: ${{ !cancelled() && (needs.look-for-wheel-in-jfrog.result == 'success' && (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 1) || (needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 && needs.build-manylinux-wheel.result == 'success')) }}
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
