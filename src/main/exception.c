@@ -380,6 +380,7 @@ void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
         PyObject *py_arg = PyTuple_GetItem(py_tuple, i);
         if (py_arg == NULL) {
             // Don't fail out if number of attrs > number of tuple members
+            // This condition should never be true, though
             PyErr_Clear();
             break;
         }
