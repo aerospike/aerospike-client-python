@@ -106,10 +106,6 @@ typedef struct {
 } AerospikePartitionsStatusObject;
 
 typedef struct {
-    PyObject_HEAD as_partition_status *part_status;
-} AerospikePartitionStatusObject;
-
-typedef struct {
     PyObject_HEAD
         /* Type-specific fields go here. */
         as_txn *txn;
