@@ -99,7 +99,7 @@ CLEANUP:
         PyObject *py_err = NULL;
         error_to_pyobject(&udata_ptr->error, &py_err);
         PyObject *exception_type = raise_exception_old(&udata_ptr->error);
-        set_exception_class_attrs_using_tuple_of_attrs(exception_type, py_err);
+        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);
         PyGILState_Release(gil_state);
@@ -109,7 +109,7 @@ CLEANUP:
         PyObject *py_err = NULL;
         error_to_pyobject(err, &py_err);
         PyObject *exception_type = raise_exception_old(err);
-        set_exception_class_attrs_using_tuple_of_attrs(exception_type, py_err);
+        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);
         PyGILState_Release(gil_state);
@@ -215,7 +215,7 @@ CLEANUP:
         error_to_pyobject(&info_callback_udata.error, &py_err);
         PyObject *exception_type =
             raise_exception_old(&info_callback_udata.error);
-        set_exception_class_attrs_using_tuple_of_attrs(exception_type, py_err);
+        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         PyErr_SetObject(exception_type, py_err);
         Py_DECREF(py_err);
         if (py_nodes) {

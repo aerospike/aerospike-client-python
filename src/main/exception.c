@@ -370,8 +370,9 @@ void remove_exception(as_error *err)
     }
 }
 
-void set_exception_class_attrs_using_tuple_of_attrs(PyObject *py_exc,
-                                                    PyObject *py_tuple)
+// We have this as a separate method because both raise_exception and raise_exception_old need to use it
+void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
+                                                  PyObject *py_tuple)
 {
     for (unsigned long i = 0;
          i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
@@ -422,7 +423,7 @@ void raise_exception(as_error *err)
     // Convert C error to Python exception
     PyObject *py_err = NULL;
     error_to_pyobject(err, &py_err);
-    set_exception_class_attrs_using_tuple_of_attrs(py_value, py_err);
+    set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
 
     // Raise exception
     PyErr_SetObject(py_value, py_err);

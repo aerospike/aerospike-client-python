@@ -22,5 +22,5 @@ PyObject *AerospikeException_New(void);
 void raise_exception(as_error *err);
 PyObject *raise_exception_old(as_error *err);
 void remove_exception(as_error *err);
-void set_exception_class_attrs_using_tuple_of_attrs(PyObject *py_exc,
-                                                    PyObject *py_tuple);
+void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
+                                                  PyObject *py_tuple);
