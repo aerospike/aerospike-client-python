@@ -370,6 +370,23 @@ void remove_exception(as_error *err)
     }
 }
 
+void set_exception_class_attrs_using_tuple_of_attrs(PyObject *py_exc,
+                                                    PyObject *py_tuple)
+{
+    for (unsigned long i = 0;
+         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
+         i++) {
+        PyObject *py_arg = PyTuple_GetItem(py_tuple, i);
+        if (py_arg == NULL) {
+            // Don't fail out if no more attrs can be set
+            // TODO: print a warning?
+            PyErr_Clear();
+            break;
+        }
+        PyObject_SetAttrString(py_exc, aerospike_err_attrs[i], py_arg);
+    }
+}
+
 // TODO: idea. Use python dict to map error code to exception
 void raise_exception(as_error *err)
 {
@@ -405,20 +422,7 @@ void raise_exception(as_error *err)
     // Convert C error to Python exception
     PyObject *py_err = NULL;
     error_to_pyobject(err, &py_err);
-
-    // Set exception attrs
-    for (unsigned long i = 0;
-         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
-         i++) {
-        PyObject *py_arg = PyTuple_GetItem(py_err, i);
-        if (py_arg == NULL) {
-            // Don't fail out if no more attrs can be set
-            // TODO: print a warning?
-            PyErr_Clear();
-            break;
-        }
-        PyObject_SetAttrString(py_value, aerospike_err_attrs[i], py_arg);
-    }
+    set_exception_class_attrs_using_tuple_of_attrs(py_value, py_err);
 
     // Raise exception
     PyErr_SetObject(py_value, py_err);
