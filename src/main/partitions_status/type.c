@@ -200,8 +200,18 @@ static PyObject *AerospikePartitionsStatus__getitem__(PyObject *self,
     }
     else if (PyLong_Check(py_key)) {
         unsigned long partition_id = PyLong_AsUnsignedLong(py_key);
+        if (partition_id == (unsigned long)-1 && PyErr_Occurred()) {
+            return NULL;
+        }
         unsigned long partition_idx =
             partition_id - py_partitions_status->parts_all->part_begin;
+        // Check this is a valid partition index
+        if (partition_idx >= py_partitions_status->parts_all->part_count) {
+            PyErr_Format(PyExc_ValueError,
+                         "Partition index must be between 0 and %d exclusive",
+                         py_partitions_status->parts_all->part_count);
+            return NULL;
+        }
         as_partition_status *part_status =
             &py_partitions_status->parts_all->parts[partition_idx];
         PyObject *py_partition_status =
