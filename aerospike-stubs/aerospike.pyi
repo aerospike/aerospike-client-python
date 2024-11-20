@@ -1,4 +1,4 @@
-from typing import Any, Callable, Union, final, Literal, Optional, Final, Mapping
+from typing import Any, Callable, Union, final, Literal, Optional
 
 from aerospike_helpers.batch.records import BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
