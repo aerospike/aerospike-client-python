@@ -101,7 +101,7 @@ jobs:
     needs: build-manylinux-wheel
     # github.ref_name does not work for workflow_dispatch. Have to use this instead
     # Cannot use format() and env var together for prefixing each branch name
-    if: ${{ !contains(github.ref, '/refs/heads/dev') && !contains(github.ref, '/refs/heads/stage') && !contains(github.ref, '/refs/heads/master') }}
+    if: ${{ !startsWith(github.ref, 'refs/heads/dev') && !startsWith(github.ref, 'refs/heads/stage') && !startsWith(github.ref, 'refs/heads/master') }}
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
