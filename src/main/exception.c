@@ -71,7 +71,6 @@ struct exception_def {
 // Same order as the tuple of args passed into the exception
 const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
                                            "line", "in_doubt", NULL};
-// TODO: need to also include these in code
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
