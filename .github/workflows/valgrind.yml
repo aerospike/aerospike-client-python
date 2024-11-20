@@ -87,8 +87,6 @@ jobs:
         if-no-files-found: error
         path: './*.whl'
 
-    - run: echo ${{ github.ref }}
-
   build-manylinux-wheel:
     needs: look-for-wheel-in-jfrog
     if: ${{ needs.look-for-wheel-in-jfrog.outputs.num_artifacts_found == 0 }}
