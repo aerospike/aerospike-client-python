@@ -189,13 +189,21 @@ static PyObject *AerospikePartitionsStatus__getitem__(PyObject *self,
         if (!key) {
             return NULL;
         }
+
+        bool *bool_attr = NULL;
         if (!strcmp(key, "retry")) {
-            bool retry = py_partitions_status->parts_all->retry;
-            PyObject *py_retry = PyBool_FromLong(retry);
-            if (!py_retry) {
+            bool_attr = &py_partitions_status->parts_all->retry;
+        }
+        else if (!strcmp(key, "done")) {
+            bool_attr = &py_partitions_status->parts_all->done;
+        }
+
+        PyObject *py_attr = NULL;
+        if (bool_attr) {
+            py_attr = PyBool_FromLong(*bool_attr);
+            if (!py_attr) {
                 return NULL;
             }
-            return py_retry;
         }
     }
     else if (PyLong_Check(py_key)) {
