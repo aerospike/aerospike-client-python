@@ -101,9 +101,10 @@ jobs:
 
   upload-built-wheel-to-jfrog:
     needs: build-manylinux-wheel
-    # github.ref_name does not work for workflow_dispatch. Have to use this instead
-    # Cannot use format() and env var together for prefixing each branch name
-    if: ${{ !startsWith(github.ref, 'refs/heads/dev') && !startsWith(github.ref, 'refs/heads/stage') && !startsWith(github.ref, 'refs/heads/master') }}
+    # TODO: this job should skip when this workflow is run on central branches
+    # We already have artifacts available for central branches in the PyPI-type JFrog repo
+    # The problem is we have to conditionally skip this job, but using the github context to get the branch name
+    # doesn't work for some reason. Just leave this alone for now.
     uses: ./.github/workflows/upload-to-jfrog.yml
     with:
       jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
