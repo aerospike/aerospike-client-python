@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -80,7 +80,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
       platform-tag:
         type: string
         required: true
@@ -238,7 +238,7 @@ jobs:
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.20.0
+      uses: pypa/cibuildwheel@v2.21.3
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
