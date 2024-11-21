@@ -29,13 +29,6 @@ RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_
 # TODO: generate this automatically, somehow.
 COPY security.smd .
 
-FROM enable-security AS enable-sc-part1
-
-RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" $AEROSPIKE_CONF_TEMPLATE_PATH
-RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" $AEROSPIKE_CONF_TEMPLATE_PATH
-ARG ROSTER_FILE_NAME
-COPY $ROSTER_FILE_NAME .
-
 # Strong consistency only: fetch node id from roster.smd
 
 # jq docker image doesn't have a shell
@@ -49,7 +42,13 @@ COPY $ROSTER_FILE_NAME .
 ARG NODE_ID_FILE_NAME
 RUN jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
 
-FROM enable-sc-part1 AS enable-sc-part2
+FROM enable-security AS enable-strong-consistency
+
+RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" $AEROSPIKE_CONF_TEMPLATE_PATH
+ARG ROSTER_FILE_NAME
+COPY $ROSTER_FILE_NAME .
+
 ARG NODE_ID_FILE_NAME
 COPY --from=get-node-id-for-sc $NODE_ID_FILE_NAME .
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
@@ -81,7 +80,7 @@ COPY $CA_CERT_FILE_NAME .
 ARG SERVER_CERT_FILE_NAME
 RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
 
-FROM enable-sc-part2 AS enable-tls
+FROM enable-strong-consistency AS enable-tls
 
 ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
