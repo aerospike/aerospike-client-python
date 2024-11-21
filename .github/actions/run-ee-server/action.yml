@@ -68,7 +68,7 @@ runs:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
       context: .github/workflows/docker-build-context
       build-args: |
-        server_image=${{ env.IMAGE_NAME }}
+        SERVER_IMAGE=${{ env.IMAGE_NAME }}
         CA_KEY_FILE_NAME=${{ env.CA_KEY_FILE_NAME }}
         CA_CERT_FILE_NAME=${{ env.CA_CERT_FILE_NAME }}
         TLS_PORT=${{ env.TLS_PORT }}

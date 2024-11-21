@@ -1,4 +1,4 @@
-ARG server_image=aerospike/aerospike-server-enterprise
+ARG SERVER_IMAGE=aerospike/aerospike-server-enterprise
 
 # Shared between build stages to get node ID from roster file and to build final image
 ARG ROSTER_FILE_NAME=roster.smd
@@ -14,7 +14,7 @@ ARG SERVER_CERT_FILE_NAME=server.cer
 # Cluster name fetched from stage to generate cert also needs to be set in aerospike.conf in our final image
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
-FROM configure-server AS enable-security
+FROM $SERVER_IMAGE AS enable-security
 
 WORKDIR /opt/aerospike/smd
 
@@ -57,7 +57,7 @@ RUN rm $NODE_ID_FILE_NAME
 
 # Use separate build stage since we don't want openssl bundled in the final image
 
-FROM $server_image AS generate-server-cert-for-tls
+FROM $SERVER_IMAGE AS generate-server-cert-for-tls
 
 RUN apt update
 RUN apt install -y openssl
