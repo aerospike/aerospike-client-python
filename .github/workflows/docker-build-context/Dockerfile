@@ -11,6 +11,7 @@ ARG NODE_ID_FILE_NAME=node_id
 ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
 ARG SERVER_KEY_FILE_NAME=server.pem
 ARG SERVER_CERT_FILE_NAME=server.cer
+# Temp file
 # Cluster name fetched from stage to generate cert also needs to be set in aerospike.conf in our final image
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
@@ -29,11 +30,12 @@ RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_
 # TODO: generate this automatically, somehow.
 COPY security.smd .
 
-# Strong consistency only: fetch node id from roster.smd
+# Strong consistency only: fetch node id from roster.smd (JSON file)
 
 # jq docker image doesn't have a shell
 # We need a shell to fetch and pass the node id to the next build stage
 FROM busybox AS get-node-id-for-sc
+
 # There's no tag for the latest major version to prevent breaking changes in jq
 # This is the next best thing
 COPY --from=ghcr.io/jqlang/jq:1.7 /jq /bin/
@@ -52,9 +54,10 @@ COPY $ROSTER_FILE_NAME .
 ARG NODE_ID_FILE_NAME
 COPY --from=get-node-id-for-sc $NODE_ID_FILE_NAME .
 RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
+# We don't want to clutter final image with temp files (junk)
 RUN rm $NODE_ID_FILE_NAME
 
-# Use separate build stage since we don't want openssl bundled in the final image
+# Use a separate build stage to generate certs since we don't want openssl bundled in the final image
 
 FROM $SERVER_IMAGE AS generate-server-cert-for-tls
 
@@ -72,7 +75,7 @@ ARG SERVER_KEY_FILE_NAME
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 
 # Send CSR to CA and get server certificate
-# We use an external CA because we want the client to use that same CA to connect to the server
+# We use an external CA because we want the client to use that same CA to verify the server certificate upon connecting
 ARG CA_KEY_FILE_NAME
 ARG CA_CERT_FILE_NAME
 COPY $CA_KEY_FILE_NAME .
@@ -86,22 +89,22 @@ ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
 ARG SERVER_KEY_FILE_NAME
 ARG SERVER_CERT_FILE_NAME
-ARG SERVER_KEY_ABS_PATH=$SSL_WORKING_DIR/private/$SERVER_KEY_FILE_NAME
-ARG SERVER_CERT_ABS_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
+ARG SERVER_KEY_INSTALL_PATH=$SSL_WORKING_DIR/private/$SERVER_KEY_FILE_NAME
+ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 
-COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_ABS_PATH
-COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_ABS_PATH
+COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_INSTALL_PATH
+COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INSTALL_PATH
 
-# Service sub-stanza under network stanza
 ARG CLUSTER_NAME_FILE_NAME
 COPY --from=generate-server-cert-for-tls $CLUSTER_NAME_FILE_NAME .
+# Service sub-stanza under network stanza
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|" $AEROSPIKE_CONF_TEMPLATE_PATH
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
 ARG TLS_PORT=4333
 RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
-RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SERVER_CERT_ABS_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
-RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SERVER_KEY_ABS_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SERVER_CERT_INSTALL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
+RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SERVER_KEY_INSTALL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
 
 EXPOSE $TLS_PORT
 
