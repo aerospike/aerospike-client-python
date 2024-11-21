@@ -120,7 +120,7 @@ runs:
     working-directory: test
     shell: bash
 
-  - name: Disable enterprise edition connection
+  - name: Disable community edition connection
     run: crudini --existing=param --set config.conf community-edition hosts ''
     working-directory: test
     shell: bash
