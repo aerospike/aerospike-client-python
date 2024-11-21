@@ -56,6 +56,7 @@ runs:
     working-directory: .github/workflows/docker-build-context
     shell: bash
     env:
+      # Makes sure that the subject isn't interpreted as a path
       MSYS_NO_PATHCONV: 1
 
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
