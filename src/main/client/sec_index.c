@@ -234,6 +234,7 @@ CLEANUP:
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
+        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         if (PyObject_HasAttrString(exception_type, "name")) {
             PyObject_SetAttrString(exception_type, "name", py_name);
         }
@@ -335,6 +336,7 @@ CLEANUP:
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
+        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         if (PyObject_HasAttrString(exception_type, "name")) {
             PyObject_SetAttrString(exception_type, "name", py_name);
         }
