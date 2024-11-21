@@ -77,7 +77,6 @@ def as_connection(request):
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
     config["lua"] = lua_info
-    config["use_shared_connection"] = True
     # print(config)
     as_client = None
     if len(config["hosts"]) == 2:
