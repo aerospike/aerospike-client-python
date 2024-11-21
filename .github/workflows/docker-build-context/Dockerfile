@@ -14,11 +14,9 @@ ARG SERVER_CERT_FILE_NAME=server.cer
 # Cluster name fetched from stage to generate cert also needs to be set in aerospike.conf in our final image
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
-FROM $server_image AS configure-server
+FROM configure-server AS enable-security
 
 WORKDIR /opt/aerospike/smd
-
-FROM configure-server AS enable-security
 
 # Not using asconfig to edit config because we are working with a template file, which may not have valid values yet
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
