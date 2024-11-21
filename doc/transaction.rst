@@ -18,7 +18,7 @@ Methods
 .. class:: Transaction
 
     Initialize multi-record transaction (MRT), assign random transaction id and initialize
-    reads/writes hashmaps with default capacities. The default MRT timeout is 10 seconds.
+    reads/writes hashmaps with default capacities.
 
     For both parameters, an unsigned 32-bit integer must be passed and the minimum value should be 16.
 
@@ -49,6 +49,14 @@ Methods
 
         :type: int
     .. py:attribute:: timeout
+
+        MRT timeout in seconds. The timer starts when the MRT monitor record is created.
+        This occurs when the first command in the MRT is executed. If the timeout is reached before
+        :py:meth:`~aerospike.Client.commit` or :py:meth:`aerospike.Client.abort` is called, the server will expire and
+        rollback the MRT.
+
+        The default client MRT timeout is zero. This means use the server configuration ``mrt-duration``
+        as the MRT timeout. The default ``mrt-duration`` is 10 seconds.
 
         This attribute can be read and written to.
 
