@@ -165,3 +165,56 @@ runs:
     run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.TLS_PORT }}|${{ env.CLUSTER_NAME }}"
     working-directory: test
     shell: bash
+
+  # Configure tests
+
+  - name: Install crudini to manipulate config.conf
+    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Create config.conf
+    run: cp config.conf.template config.conf
+    working-directory: test
+    shell: bash
+
+  - name: Disable community edition connection
+    run: crudini --existing=param --set config.conf community-edition hosts ''
+    working-directory: test
+    shell: bash
+
+  - name: Set credentials in config file
+    run: |
+      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+    working-directory: test
+    shell: bash
+
+  - name: Set IP address to localhost
+    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
+    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
+    working-directory: test
+    shell: bash
+
+  - name: Set IP address to remote machine running the Docker daemon
+    if: ${{ inputs.where-is-client-connecting-from == 'remote-connection' }}
+    run: |
+      SERVER_IP=${DOCKER_HOST/tcp:\/\//}
+      echo SERVER_IP=${SERVER_IP/:2375/} >> $GITHUB_ENV
+    working-directory: test
+    shell: bash
+
+  - name: Set IP address to Docker container for the server
+    if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
+    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' aerospike) >> $GITHUB_ENV
+    shell: bash
+
+  - name: Invalid input
+    if: ${{ env.SERVER_IP == '' }}
+    run: exit 1
+    shell: bash
+
+  - name: Set EE server's IP address
+    run: crudini --existing=param --set config.conf enterprise-edition hosts ${{ env.SERVER_IP }}:3000
+    working-directory: test
+    shell: bash
