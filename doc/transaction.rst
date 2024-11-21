@@ -52,7 +52,7 @@ Methods
 
         MRT timeout in seconds. The timer starts when the MRT monitor record is created.
         This occurs when the first command in the MRT is executed. If the timeout is reached before
-        :py:meth:`~aerospike.Client.commit` or :py:meth:`aerospike.Client.abort` is called, the server will expire and
+        :py:meth:`~aerospike.Client.commit` or :py:meth:`~aerospike.Client.abort` is called, the server will expire and
         rollback the MRT.
 
         The default client MRT timeout is zero. This means use the server configuration ``mrt-duration``
