@@ -62,7 +62,9 @@ runs:
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
-  - name: Build and push
+  - name: Build Aerospike server Docker image for testing
+    # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
+    # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
     uses: docker/build-push-action@v6
     with:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
