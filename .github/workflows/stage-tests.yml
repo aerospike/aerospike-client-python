@@ -99,11 +99,16 @@ jobs:
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
     - uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
         where-is-client-connecting-from: 'separate-docker-container'
 
     - name: Run distro container
@@ -193,11 +198,16 @@ jobs:
     - uses: ./.github/actions/setup-docker-on-macos
 
     - uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
         where-is-client-connecting-from: 'docker-host'
 
     - name: Install wheel

@@ -20,10 +20,10 @@ inputs:
   docker-hub-password:
     description: Required for using release candidates
     required: false
-  where-is-client-connecting-from:
-    required: false
-    description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
-    default: 'docker-host'
+outputs:
+  server-container-name:
+    description: "_"
+    value: ${{ steps.set-server-container-name.outputs.container-name }}
 
 runs:
   using: "composite"
@@ -80,15 +80,16 @@ runs:
       # so we have to manually enable it
       load: true
 
-  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
+  - id: set-server-container-name
+    run: echo container-name="aerospike" >> $GITHUB_OUTPUT
     shell: bash
 
-  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run -d --name ${{ steps.set-server-container-name.outputs.container-name }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
-      container-name: ${{ env.SERVER_CONTAINER_NAME }}
+      container-name: ${{ steps.set-server-container-name.outputs.container-name }}
       is-security-enabled: true
       is-strong-consistency-enabled: true
 
@@ -99,72 +100,13 @@ runs:
     shell: bash
 
   # All the partitions are assumed to be dead when reusing a roster file
-  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
+  - run: docker exec ${{ steps.set-server-container-name.outputs.container-name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
     shell: bash
 
   # Apply changes
-  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
+  - run: docker exec ${{ steps.set-server-container-name.outputs.container-name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
   # For debugging
-  - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
-    shell: bash
-
-  # Configure tests
-
-  - name: Install crudini to manipulate config.conf
-    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
-    working-directory: .github/workflows
-    shell: bash
-
-  - name: Create config.conf
-    run: cp config.conf.template config.conf
-    working-directory: test
-    shell: bash
-
-  - name: Disable community edition connection
-    run: crudini --existing=param --set config.conf community-edition hosts ''
-    working-directory: test
-    shell: bash
-
-  - name: Set credentials in config file
-    run: |
-      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --set config.conf tls enable true
-      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
-    working-directory: test
-    shell: bash
-
-  - name: Set IP address to localhost
-    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
-    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
-    working-directory: test
-    shell: bash
-
-  - name: Set IP address to remote machine running the Docker daemon
-    if: ${{ inputs.where-is-client-connecting-from == 'remote-connection' }}
-    run: |
-      SERVER_IP=${DOCKER_HOST/tcp:\/\//}
-      echo SERVER_IP=${SERVER_IP/:2375/} >> $GITHUB_ENV
-    working-directory: test
-    shell: bash
-
-  - name: Set IP address to Docker container for the server
-    if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
-    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ env.SERVER_CONTAINER_NAME }}) >> $GITHUB_ENV
-    shell: bash
-
-  - name: Invalid input
-    if: ${{ env.SERVER_IP == '' }}
-    run: exit 1
-    shell: bash
-
-  - name: Get cluster name
-    run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo $ASADM_AUTH_FLAGS -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
-    shell: bash
-
-  - name: Set EE server's IP address
-    run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.TLS_PORT }}|${{ env.CLUSTER_NAME }}"
-    working-directory: test
+  - run: docker logs ${{ steps.set-server-container-name.outputs.container-name }}
     shell: bash
