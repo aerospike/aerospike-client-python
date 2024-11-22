@@ -96,8 +96,7 @@ if SANITIZER:
     extra_link_args.append("-static-libasan")
     extra_link_args.extend(sanitizer_flags)
 
-library_dirs = [
-    '/usr/local/opt/openssl/lib', '/usr/local/lib']
+library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
     'crypto',
@@ -169,6 +168,7 @@ else:
 
 include_dirs = include_dirs + [
     '/usr/local/opt/openssl/include',
+
 ]
 if not WINDOWS:
     include_dirs.append(AEROSPIKE_C_TARGET + '/include')
