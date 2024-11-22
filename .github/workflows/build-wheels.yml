@@ -245,7 +245,8 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
-    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+    - name: Set OpenSSL shared library location
+      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo OPENSSL_LIB_FOLDER=lib${{ endsWith(inputs.platform-tag, 'x86_64') && '64' || '' }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
