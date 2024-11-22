@@ -226,6 +226,7 @@ jobs:
 
     - name: Otherwise, enable integration tests
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      # Run with capture output disabled to check that TLS works (i.e we are using the bundled openssl)
       run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vv new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
       shell: bash
 
@@ -252,6 +253,11 @@ jobs:
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel==1.*"
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
+
+    # For debugging
+    - run: docker logs aerospike
+      if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      shell: bash
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
