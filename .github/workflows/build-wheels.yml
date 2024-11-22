@@ -162,7 +162,6 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
-      OPENSSL3_INSTALL_DIR: "/opt/openssl3"
       CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}:CLIENT-2217-openssl3-manylinux
     steps:
     - name: Create status check message
@@ -249,6 +248,19 @@ jobs:
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo OPENSSL_LIB_FOLDER=lib${{ endsWith(inputs.platform-tag, 'x86_64') && '64' || '' }} >> $GITHUB_ENV
 
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64') }} >> $GITHUB_ENV
+
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }} >> $GITHUB_ENV
+
+    - name: Which manylinux image are we using?
+      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_IMAGE_USED=${{ endsWith(inputs.platform-tag, 'x86_64') && env.CIBW_MANYLINUX_X86_64_IMAGE || env.CIBW_MANYLINUX_AARCH64_IMAGE }} >> $GITHUB_ENV
+
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo OPENSSL3_INSTALL_DIR=$(docker image inspect -f '{{ index .Config.Labels "com.aerospike.clients.openssl-install-dir" }}' ${{ env.CIBW_MANYLINUX_IMAGE_USED }} )
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
       env:
@@ -260,8 +272,6 @@ jobs:
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
-        CIBW_MANYLINUX_X86_64_IMAGE: ${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64') }}
-        CIBW_MANYLINUX_AARCH64_IMAGE: ${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }}
         CIBW_BEFORE_ALL_LINUX: >
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel

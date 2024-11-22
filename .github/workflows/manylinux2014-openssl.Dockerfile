@@ -16,6 +16,8 @@ WORKDIR $OPENSSL_TAR_NAME
 
 # The default folder pointed to by --prefix contains a default openssl installation
 ARG OPENSSL_INSTALL_DIR=/opt/openssl3
+LABEL com.aerospike.clients.openssl-install-dir=$OPENSSL_INSTALL_DIR
+
 RUN ./Configure --prefix=$OPENSSL_INSTALL_DIR --openssldir=/etc/opt/openssl3
 RUN make
 # These tests are expected to fail because we are using a buggy version of nm
