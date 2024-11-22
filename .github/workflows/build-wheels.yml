@@ -265,9 +265,8 @@ jobs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
       env:
+        # Our openssl install location isn't in the default include search path, so we need to tell the C client where it is
         # Need to link openssl with both C client and Python client
-        # For compiling C client
-        # TODO: try to set this dynamically
         CIBW_ENVIRONMENT_LINUX: EXT_CFLAGS="-I${{ env.OPENSSL3_INSTALL_DIR }}/include" LDFLAGS="-L${{ env.OPENSSL3_INSTALL_DIR }}/${{ env.OPENSSL_LIB_FOLDER }}"
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
