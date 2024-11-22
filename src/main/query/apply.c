@@ -67,6 +67,12 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
+    if (self->query.ops) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Query can have either a UDF or operations, not both");
+        goto CLEANUP;
+    }
+
     self->client->is_client_put_serializer = false;
 
     // Aerospike API Arguments
