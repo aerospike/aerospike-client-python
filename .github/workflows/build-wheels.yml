@@ -260,7 +260,7 @@ jobs:
       run: echo CIBW_MANYLINUX_IMAGE_USED=${{ endsWith(inputs.platform-tag, 'x86_64') && env.CIBW_MANYLINUX_X86_64_IMAGE || env.CIBW_MANYLINUX_AARCH64_IMAGE }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo OPENSSL3_INSTALL_DIR=$(docker image inspect -f '{{ index .Config.Labels "com.aerospike.clients.openssl-install-dir" }}' ${{ env.CIBW_MANYLINUX_IMAGE_USED }} )
+      run: echo OPENSSL3_INSTALL_DIR=$(docker image inspect -f '{{ index .Config.Labels "com.aerospike.clients.openssl-install-dir" }}' ${{ env.CIBW_MANYLINUX_IMAGE_USED }}) >> $GITHUB_ENV
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
