@@ -38,7 +38,7 @@ jobs:
       with:
         images: ${{ env.REGISTRY }}/aerospike/manylinux2014_${{ matrix.arch-and-runner-os[0] }}
 
-    - name: Set up Docker Buildx
+    - name: Set up Docker Buildx so we can cache our Docker image layers
       uses: docker/setup-buildx-action@v3
 
     - name: Build and push
