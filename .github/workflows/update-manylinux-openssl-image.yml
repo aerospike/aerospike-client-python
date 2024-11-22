@@ -7,6 +7,7 @@ on:
 jobs:
   main:
     env:
+      # We want granular control over the openssl version bundled with our wheels
       OPENSSL_VERSION: '3.0.15'
       REGISTRY: ghcr.io
     strategy:
