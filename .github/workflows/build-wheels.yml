@@ -239,12 +239,6 @@ jobs:
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
-    - uses: docker/login-action@v3
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-
     - name: Set OpenSSL shared library location
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo OPENSSL_LIB_FOLDER=lib${{ endsWith(inputs.platform-tag, 'x86_64') && '64' || '' }} >> $GITHUB_ENV
@@ -259,7 +253,19 @@ jobs:
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo CIBW_MANYLINUX_IMAGE_USED=${{ endsWith(inputs.platform-tag, 'x86_64') && env.CIBW_MANYLINUX_X86_64_IMAGE || env.CIBW_MANYLINUX_AARCH64_IMAGE }} >> $GITHUB_ENV
 
-    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+    - uses: docker/login-action@v3
+      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Get Docker image metadata
+      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: docker pull ${{ env.CIBW_MANYLINUX_IMAGE_USED }}
+
+    - name: Get openssl install location from image metadata
+      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo OPENSSL3_INSTALL_DIR=$(docker image inspect -f '{{ index .Config.Labels "com.aerospike.clients.openssl-install-dir" }}' ${{ env.CIBW_MANYLINUX_IMAGE_USED }}) >> $GITHUB_ENV
 
     - name: Build wheel
