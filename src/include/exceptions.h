@@ -28,3 +28,5 @@ int raise_exception(as_error *err);
 int raise_exception_with_api_call_extra_info(as_error *err,
                                              as_exc_extra_info *extra_info);
 void remove_exception(as_error *err);
+void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
+                                                  PyObject *py_tuple);

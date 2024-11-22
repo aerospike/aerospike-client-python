@@ -68,7 +68,7 @@ struct exception_def {
 // No exception should have an error code of 0, so this should be ok
 #define NO_ERROR_CODE 0
 
-// TODO: need to document that in_doubt is included as an attribute with None as default value
+// Same order as the tuple of args passed into the exception
 const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
                                            "line", "in_doubt", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
