@@ -851,6 +851,10 @@ class TestOperate(object):
 
         assert bins[bin] == expected
 
+    def test_operate_empty_list(self):
+        key = ("test", "demo", "list_key")
+        self.as_connection.operate(key, [])
+
     def test_pos_operate_with_list_size(self):
         """
         Invoke operate() with list_size operation
