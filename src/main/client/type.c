@@ -51,7 +51,8 @@ enum {
     INIT_DESERIALIZE_ERR,
     INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
-    INIT_INVALID_AUTHMODE_ERR
+    INIT_INVALID_AUTHMODE_ERR,
+    INIT_USING_SHARED_MEMORY_WITH_NOGIL_ERR
 };
 
 /*******************************************************************************
@@ -983,7 +984,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_share_connect =
         PyDict_GetItemString(py_config, "use_shared_connection");
     if (py_share_connect) {
+#ifdef Py_GIL_DISABLED
+        /* code that only runs in the free-threaded build */
+        error_code = INIT_USING_SHARED_MEMORY_WITH_NOGIL_ERR;
+        goto CONSTRUCTOR_ERROR;
+#else
         self->use_shared_connection = PyObject_IsTrue(py_share_connect);
+#endif
     }
 
     PyObject *py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
@@ -1137,6 +1144,12 @@ CONSTRUCTOR_ERROR:
     case INIT_INVALID_AUTHMODE_ERR: {
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                         "Specify valid auth_mode");
+        break;
+    }
+    case INIT_USING_SHARED_MEMORY_WITH_NOGIL_ERR: {
+        as_error_update(
+            &constructor_err, AEROSPIKE_ERR_PARAM,
+            "Shared connection cannot be enabled with free threading mode");
         break;
     }
     default:
