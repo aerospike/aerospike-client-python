@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -80,7 +80,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
       platform-tag:
         type: string
         required: true
@@ -229,7 +229,7 @@ jobs:
     - name: Otherwise, enable integration tests
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       # Run with capture output disabled to check that TLS works (i.e we are using the bundled openssl)
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vvs new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vv new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set unoptimize flag
@@ -250,7 +250,7 @@ jobs:
       run: echo OPENSSL_LIB_FOLDER=lib${{ endsWith(inputs.platform-tag, 'x86_64') && '64' || '' }} >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.20.0
+      uses: pypa/cibuildwheel@v2.21.3
       env:
         # Need to link openssl with both C client and Python client
         # For compiling C client

@@ -41,10 +41,12 @@ class TestMRTAPI:
         with context as excinfo:
             mrt = aerospike.Transaction(**kwargs)
         if type(context) == nullcontext:
+            # Can we read these fields
             assert type(mrt.id) == int
             assert type(mrt.timeout) == int
             assert type(mrt.state) == int
             assert type(mrt.in_doubt) == bool
+            # Can we change the timeout?
             mrt.timeout = 10
         else:
             # Just use kwargs to id the test case
