@@ -15,7 +15,12 @@ ARG SERVER_CERT_FILE_NAME=server.cer
 # Cluster name fetched from stage to generate cert also needs to be set in aerospike.conf in our final image
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
-FROM $SERVER_IMAGE AS enable-security
+FROM $SERVER_IMAGE AS set-default-ttl
+
+# The Python client tests (and other client tests like node.js) depend on this specific setting value
+RUN sed -i "s/\(namespace.*{\)/\1\n\tdefault-ttl 30D/" $AEROSPIKE_CONF_TEMPLATE_PATH
+
+FROM set-default-ttl AS enable-security
 
 WORKDIR /opt/aerospike/smd
 
