@@ -22,6 +22,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include "exceptions.h"
+#include "exception_attrs.h"
 
 static PyObject *py_module;
 
@@ -65,8 +66,6 @@ struct exception_def {
 // No exception should have an error code of 0, so this should be ok
 #define NO_ERROR_CODE 0
 
-const char *const aerospike_err_attrs[6] = {"code", "msg",      "file",
-                                            "line", "in_doubt", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};

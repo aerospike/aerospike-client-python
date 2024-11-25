@@ -367,7 +367,8 @@ setup(
                 'src/main/client/batch_read.c',
                 'src/main/client/metrics.c',
                 'src/main/transaction/type.c',
-                'src/main/client/mrt.c'
+                'src/main/client/mrt.c',
+                "src/main/exception_attrs.c"
             ],
 
             # Compile
@@ -383,7 +384,8 @@ setup(
         Extension(
             name='aerospike._exception',
             sources = [
-                "src/main/exception.c"
+                "src/main/exception.c",
+                "src/main/exception_attrs.c"
             ],
             # Compile
             include_dirs=include_dirs,
