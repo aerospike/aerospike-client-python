@@ -562,7 +562,7 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"Transaction", AerospikeTransaction_Ready},
 };
 
-PyMODINIT_FUNC PyInit_aerospike(void)
+PyMODINIT_FUNC PyInit__aerospike(void)
 {
     static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
