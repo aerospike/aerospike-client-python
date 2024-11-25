@@ -15,12 +15,18 @@ ARG SERVER_CERT_FILE_NAME=server.cer
 # Cluster name fetched from stage to generate cert also needs to be set in aerospike.conf in our final image
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
-FROM $SERVER_IMAGE AS enable-security
+FROM $SERVER_IMAGE AS set-default-ttl
+
+ARG AEROSPIKE_CONF_TEMPLATE_PATH
+
+# The Python client tests (and other client tests like node.js) depend on this specific setting value
+RUN sed -i "s/\(namespace.*{\)/\1\n\tdefault-ttl 30D/" $AEROSPIKE_CONF_TEMPLATE_PATH
+
+FROM set-default-ttl AS enable-security
 
 WORKDIR /opt/aerospike/smd
 
 # Not using asconfig to edit config because we are working with a template file, which may not have valid values yet
-ARG AEROSPIKE_CONF_TEMPLATE_PATH
 RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_PATH
 # security.smd was generated manually by
 # 1. Starting a new Aerospike EE server using Docker
