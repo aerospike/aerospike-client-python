@@ -673,8 +673,9 @@ void raise_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
+    PyObject *py_locals = Py_BuildValue("[s]", "exception");
     PyObject *py_module =
-        PyImport_ImportModule(FULLY_QUALIFIED_TYPE_NAME("exception"));
+        PyImport_ImportModuleEx("aerospike", NULL, py_locals, NULL);
     if (py_module == NULL) {
         // This should never happen
         // TODO: return an error if it does
