@@ -11,10 +11,9 @@ RUN tar xzvf $OPENSSL_TAR_NAME.tar.gz
 WORKDIR $OPENSSL_TAR_NAME
 
 # The default folder pointed to by --prefix contains a default openssl installation
-ARG OPENSSL_INSTALL_DIR=/opt/openssl3
-LABEL com.aerospike.clients.openssl-install-dir=$OPENSSL_INSTALL_DIR
-
-RUN ./Configure --prefix=$OPENSSL_INSTALL_DIR --openssldir=/etc/opt/openssl3
+# But we're assuming it's fine to replace the default openssl that comes with the image
+# We aren't going to use this image in production, anyways
+RUN ./Configure
 RUN make
 # These tests are expected to fail because we are using a buggy version of nm
 # https://github.com/openssl/openssl/issues/18953
