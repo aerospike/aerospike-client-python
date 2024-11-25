@@ -673,9 +673,8 @@ void raise_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_locals = Py_BuildValue("[s]", "exception");
     PyObject *py_module =
-        PyImport_ImportModuleEx("aerospike", NULL, py_locals, NULL);
+        PyImport_ImportModule(FULLY_QUALIFIED_TYPE_NAME("exception"));
     if (py_module == NULL) {
         // This should never happen
         // TODO: return an error if it does
@@ -733,14 +732,25 @@ PyObject *raise_exception_old(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_locals = Py_BuildValue("[s]", "exception");
-    PyObject *py_module =
-        PyImport_ImportModuleEx("aerospike", NULL, py_locals, NULL);
-    if (py_module == NULL) {
+    PyObject *py_importlib = PyImport_ImportModule("importlib");
+    if (py_importlib == NULL) {
         // This should never happen
         // TODO: return an error if it does
         return NULL;
     }
+    PyObject *py_result = PyObject_CallMethod(py_importlib, "import_module",
+                                              "ss", "exception", "aerospike");
+    if (py_result == NULL) {
+        return NULL;
+    }
+
+    PyObject *py_exception_module_name =
+        PyUnicode_FromString("aerospike.exception");
+    PyObject *py_module = PyImport_GetModule(py_exception_module_name);
+    if (py_module == NULL) {
+        return NULL;
+    }
+
     PyObject *py_module_dict = PyModule_GetDict(py_module);
     if (py_module_dict == NULL) {
         // Shouldn't happen either
