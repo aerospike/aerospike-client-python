@@ -537,7 +537,6 @@ struct submodule_name_to_creation_method {
 static struct submodule_name_to_creation_method py_submodules[] = {
     // We don't use module's __name__ attribute
     // because the modules' __name__ is the fully qualified name which includes the package name
-    {"exception", AerospikeException_New},
     {"predicates", AerospikePredicates_New},
 };
 
