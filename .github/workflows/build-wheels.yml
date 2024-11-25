@@ -239,6 +239,12 @@ jobs:
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64') }} >> $GITHUB_ENV
+ 
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }} >> $GITHUB_ENV
+
     - uses: docker/login-action@v3
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       with:
