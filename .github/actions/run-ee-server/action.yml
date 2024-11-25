@@ -20,10 +20,14 @@ inputs:
   docker-hub-password:
     description: Required for using release candidates
     required: false
+  server-container-name:
+    description: "_"
+    default: 'aerospike'
+    required: false
 outputs:
   server-container-name:
     description: "_"
-    value: ${{ steps.set-server-container-name.outputs.container-name }}
+    value: ${{ inputs.server-container-name }}
 
 runs:
   using: "composite"
@@ -80,16 +84,12 @@ runs:
       # so we have to manually enable it
       load: true
 
-  - id: set-server-container-name
-    run: echo container-name="aerospike" >> $GITHUB_OUTPUT
-    shell: bash
-
-  - run: docker run -d --name ${{ steps.set-server-container-name.outputs.container-name }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run -d --name ${{ inputs.server-container-name }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
-      container-name: ${{ steps.set-server-container-name.outputs.container-name }}
+      container-name: ${{ inputs.server-container-name }}
       is-security-enabled: true
       is-strong-consistency-enabled: true
 
@@ -100,13 +100,13 @@ runs:
     shell: bash
 
   # All the partitions are assumed to be dead when reusing a roster file
-  - run: docker exec ${{ steps.set-server-container-name.outputs.container-name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
+  - run: docker exec ${{ inputs.server-container-name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
     shell: bash
 
   # Apply changes
-  - run: docker exec ${{ steps.set-server-container-name.outputs.container-name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
+  - run: docker exec ${{ inputs.server-container-name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
   # For debugging
-  - run: docker logs ${{ steps.set-server-container-name.outputs.container-name }}
+  - run: docker logs ${{ inputs.server-container-name }}
     shell: bash
