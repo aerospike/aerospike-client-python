@@ -253,7 +253,7 @@ struct exception_def exception_defs[] = {
 #define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
 
 // Returns NULL if an error occurred
-PyObject *PyInit__exception(void)
+PyMODINIT_FUNC PyInit__exception(void)
 {
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
                                            FULLY_QUALIFIED_MODULE_NAME,
