@@ -282,12 +282,11 @@ setup(
     ext_modules=[
         Extension(
             # Extension Name
-            'aerospike',
+            'aerospike._aerospike',
 
             # Source Files
             [
                 'src/main/aerospike.c',
-                'src/main/exception.c',
                 'src/main/log.c',
                 'src/main/client/type.c',
                 'src/main/client/apply.c',
@@ -380,6 +379,21 @@ setup(
             libraries=libraries,
             extra_objects=extra_objects,
             extra_link_args=extra_link_args,
+        ),
+        Extension(
+            name='aerospike._exception',
+            sources = [
+                "src/main/exception.c"
+            ],
+            # Compile
+            include_dirs=include_dirs,
+            extra_compile_args=extra_compile_args,
+
+            # Link
+            library_dirs=library_dirs,
+            libraries=libraries,
+            extra_objects=extra_objects,
+            extra_link_args=extra_link_args,
         )
     ],
     package_data={
@@ -393,7 +407,8 @@ setup(
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions',
               'aerospike_helpers.metrics',
-              'aerospike-stubs'],
+              'aerospike-stubs',
+              'aerospike'],
     cmdclass={
         'build': CClientBuild,
         'clean': CClientClean

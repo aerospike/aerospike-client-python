@@ -24,3 +24,7 @@ PyObject *raise_exception_old(as_error *err);
 void remove_exception(as_error *err);
 void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
                                                   PyObject *py_tuple);
+
+// Same order as the tuple of args passed into the exception
+const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
+                                           "line", "in_doubt", NULL};
