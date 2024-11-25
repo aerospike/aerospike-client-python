@@ -382,7 +382,7 @@ setup(
             extra_link_args=extra_link_args,
         ),
         Extension(
-            name='aerospike._exception',
+            name='aerospike.exception',
             sources = [
                 "src/main/exception.c",
                 "src/main/exception_attrs.c"
