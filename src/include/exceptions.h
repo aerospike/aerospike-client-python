@@ -26,4 +26,4 @@ void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
                                                   PyObject *py_tuple);
 
 // Same order as the tuple of args passed into the exception
-extern const char *const aerospike_err_attrs[];
+extern const char *const aerospike_err_attrs[6];
