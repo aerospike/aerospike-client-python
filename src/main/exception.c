@@ -351,4 +351,3 @@ MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_module);
     return NULL;
 }
-
