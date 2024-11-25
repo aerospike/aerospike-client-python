@@ -1,4 +1,4 @@
-name: 'Setup config.conf'
+name: 'Setup tests to connect to server Docker container'
 description: '_'
 inputs:
   server-container-name:
