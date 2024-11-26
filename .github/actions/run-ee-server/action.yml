@@ -21,12 +21,12 @@ inputs:
     description: Required for using release candidates
     required: false
   server-container-name:
-    description: "_"
+    description: "What do you want the server's container name to be?"
     default: 'aerospike'
     required: false
 outputs:
   server-container-name:
-    description: "_"
+    description: "The container name of the server"
     value: ${{ inputs.server-container-name }}
 
 runs:
