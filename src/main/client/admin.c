@@ -222,6 +222,8 @@ PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
     aerospike_drop_user(self->as, &err, admin_policy_p, user);
     Py_END_ALLOW_THREADS
 
+    // Assuming this is only used for deleting item in global hosts
+#ifndef Py_GIL_DISABLED
     char *alias_to_search = NULL;
     alias_to_search = return_search_string(self->as);
     PyObject *py_persistent_item = NULL;
@@ -233,6 +235,7 @@ PyObject *AerospikeClient_Admin_Drop_User(AerospikeClient *self, PyObject *args,
     }
     PyMem_Free(alias_to_search);
     alias_to_search = NULL;
+#endif
 
 CLEANUP:
 
@@ -416,6 +419,7 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
     aerospike_change_password(self->as, &err, admin_policy_p, user, password);
     Py_END_ALLOW_THREADS
 
+#ifndef Py_GIL_DISABLED
     char *alias_to_search = NULL;
     alias_to_search = return_search_string(self->as);
     PyObject *py_persistent_item = NULL;
@@ -427,6 +431,7 @@ PyObject *AerospikeClient_Admin_Change_Password(AerospikeClient *self,
     }
     PyMem_Free(alias_to_search);
     alias_to_search = NULL;
+#endif
 
 CLEANUP:
 

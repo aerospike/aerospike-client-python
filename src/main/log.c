@@ -29,8 +29,6 @@
     #define __sync_fetch_and_add InterlockedExchangeAdd64
 #endif
 
-static AerospikeLogCallback user_callback;
-
 PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
                                   PyObject *kwds)
 {
@@ -113,7 +111,8 @@ static bool log_cb(as_log_level level, const char *func, const char *file,
     va_end(ap);
 
     // Extract pyhton user callback
-    PyObject *py_callback = user_callback.callback;
+    // TODO: need aerospike module to access callback
+    PyObject *py_callback = user_callback;
     // User callback's argument list
     PyObject *py_arglist = NULL;
 
@@ -164,9 +163,8 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
                                 &py_callback);
 
     if (py_callback && PyCallable_Check(py_callback)) {
-        // Store user callback
-        Py_INCREF(py_callback);
-        user_callback.callback = py_callback;
+        // Store user callback in aerospike module
+        PyObject_SetAttrString(parent, "__callback", py_callback);
 
         // Register callback to C-SDK
         as_log_set_callback((as_log_callback)log_cb);

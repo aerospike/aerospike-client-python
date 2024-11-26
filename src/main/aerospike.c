@@ -43,6 +43,8 @@
 #include <aerospike/aerospike_txn.h>
 
 PyObject *py_global_hosts = NULL;
+
+// The following are only used when config["use_shm"] is True
 int counter = 0xA8000000;
 bool user_shm_key = false;
 
