@@ -677,12 +677,12 @@ void raise_exception(as_error *err)
     if (py_importlib == NULL) {
         // This should never happen
         // TODO: return an error if it does
-        return NULL;
+        return;
     }
     PyObject *py_exception_module = PyObject_CallMethod(
         py_importlib, "import_module", "s", "aerospike.exception");
     if (py_exception_module == NULL) {
-        return NULL;
+        return;
     }
 
     PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
