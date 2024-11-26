@@ -741,6 +741,7 @@ PyObject *raise_exception_old(as_error *err)
     if (py_importlib == NULL) {
         // This should never happen
         // TODO: return an error if it does
+        PyErr_Print();
         return NULL;
     }
     PyObject *py_exception_module = PyObject_CallMethod(
