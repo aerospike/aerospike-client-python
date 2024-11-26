@@ -566,7 +566,7 @@ PyMODINIT_FUNC PyInit__aerospike(void)
 {
     static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
-        .m_name = AEROSPIKE_MODULE_NAME,
+        .m_name = "_aerospike",
         .m_doc = "Aerospike Python Client",
         .m_methods = aerospike_methods,
         .m_size = -1,

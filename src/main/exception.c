@@ -256,7 +256,7 @@ struct exception_def exception_defs[] = {
 PyMODINIT_FUNC PyInit_exception(void)
 {
     static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
-                                           FULLY_QUALIFIED_MODULE_NAME,
+                                           SUBMODULE_NAME,
                                            "Exception objects",
                                            -1,
                                            NULL,
