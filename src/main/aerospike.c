@@ -673,23 +673,28 @@ void raise_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module =
-        PyImport_ImportModule(FULLY_QUALIFIED_TYPE_NAME("exception"));
-    if (py_module == NULL) {
+    PyObject *py_importlib = PyImport_ImportModule("importlib");
+    if (py_importlib == NULL) {
         // This should never happen
         // TODO: return an error if it does
-        return;
+        return NULL;
     }
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
+    PyObject *py_exception_module = PyObject_CallMethod(
+        py_importlib, "import_module", "s", "aerospike.exception");
+    if (py_exception_module == NULL) {
+        return NULL;
+    }
+
+    PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
     if (py_module_dict == NULL) {
         // Shouldn't happen either
         // TODO
-        Py_DECREF(py_module);
+        Py_DECREF(py_exception_module);
         return;
     }
 
     Py_INCREF(py_module_dict);
-    Py_DECREF(py_module);
+    Py_DECREF(py_exception_module);
 
     bool found = false;
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
@@ -738,29 +743,22 @@ PyObject *raise_exception_old(as_error *err)
         // TODO: return an error if it does
         return NULL;
     }
-    PyObject *py_result = PyObject_CallMethod(py_importlib, "import_module",
-                                              "ss", "exception", "aerospike");
-    if (py_result == NULL) {
+    PyObject *py_exception_module = PyObject_CallMethod(
+        py_importlib, "import_module", "s", "aerospike.exception");
+    if (py_exception_module == NULL) {
         return NULL;
     }
 
-    PyObject *py_exception_module_name =
-        PyUnicode_FromString("aerospike.exception");
-    PyObject *py_module = PyImport_GetModule(py_exception_module_name);
-    if (py_module == NULL) {
-        return NULL;
-    }
-
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
+    PyObject *py_module_dict = PyModule_GetDict(py_exception_module);
     if (py_module_dict == NULL) {
         // Shouldn't happen either
         // TODO
-        Py_DECREF(py_module);
+        Py_DECREF(py_exception_module);
         return NULL;
     }
 
     Py_INCREF(py_module_dict);
-    Py_DECREF(py_module);
+    Py_DECREF(py_exception_module);
 
     bool found = false;
 
