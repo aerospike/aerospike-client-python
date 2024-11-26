@@ -18,6 +18,7 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_log_macros.h>
 
 #include <string.h>
 #include <stdlib.h>
@@ -251,6 +252,7 @@ struct exception_def exception_defs[] = {
 
 // TODO: define aerospike module name somewhere else
 #define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
+#define NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS "__errcode_to_exc_class"
 
 // Returns NULL if an error occurred
 PyMODINIT_FUNC PyInit_exception(void)
@@ -265,8 +267,23 @@ PyMODINIT_FUNC PyInit_exception(void)
                                            NULL};
     py_module = PyModule_Create(&moduledef);
     if (py_module == NULL) {
-        return NULL;
+        goto error;
     }
+
+    PyObject *py_dict_errcode_to_exc_class = PyDict_New();
+    if (py_dict_errcode_to_exc_class == NULL) {
+        goto MODULE_CLEANUP_ON_ERROR;
+    }
+
+    int retval = PyModule_AddObject(
+        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS,
+        py_dict_errcode_to_exc_class);
+    if (retval == -1) {
+        Py_DECREF(py_dict_errcode_to_exc_class);
+        goto MODULE_CLEANUP_ON_ERROR;
+    }
+    // Getting another strong ref to the error code dict isn't necessary
+    // As long as the module exists, so will the dictionary
 
     unsigned long exception_count =
         sizeof(exception_defs) / sizeof(exception_defs[0]);
@@ -329,6 +346,12 @@ PyMODINIT_FUNC PyInit_exception(void)
         }
         int retval =
             PyObject_SetAttrString(py_exception_class, "code", py_code);
+        if (retval == -1) {
+            goto EXC_CLASS_CLEANUP_ON_ERROR;
+        }
+
+        retval = PyDict_SetItem(py_dict_errcode_to_exc_class, py_code,
+                                py_exception_class);
         Py_DECREF(py_code);
         if (retval == -1) {
             goto EXC_CLASS_CLEANUP_ON_ERROR;
@@ -350,5 +373,6 @@ PyMODINIT_FUNC PyInit_exception(void)
 
 MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_module);
+error:
     return NULL;
 }

@@ -568,6 +568,7 @@ PyMODINIT_FUNC PyInit__aerospike(void)
         PyModuleDef_HEAD_INIT,
         .m_name = "_aerospike",
         .m_doc = "Aerospike Python Client",
+        .m_size = -1,
         .m_methods = aerospike_methods,
         .m_size = -1,
     };
@@ -812,4 +813,195 @@ PyObject *raise_exception_old(as_error *err)
         }
     }
     return py_value;
+}
+
+// Return NULL on error
+// Otherwise returns strong reference to exception class
+PyObject *get_py_exc_class_from_err_code(as_status err_code)
+{
+    PyObject *py_dict_err_code = PyObject_GetAttrString(
+        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS);
+    if (py_dict_err_code == NULL) {
+        goto error;
+    }
+
+    PyObject *py_err_code = PyLong_FromLong(err_code);
+    if (py_err_code == NULL) {
+        Py_DECREF(py_dict_err_code);
+        goto error;
+    }
+
+    PyObject *py_exc_class =
+        PyDict_GetItemWithError(py_dict_err_code, py_err_code);
+    Py_DECREF(py_dict_err_code);
+    Py_XDECREF(py_err_code);
+
+    if (py_exc_class == NULL) {
+        if (PyErr_Occurred()) {
+            goto error;
+        }
+
+        // KeyError
+        // Exception class could not be found with the error code
+
+        PyObject *py_aerospike_error_class =
+            PyObject_GetAttrString(py_module, AEROSPIKE_ERR_EXCEPTION_NAME);
+        if (py_aerospike_error_class == NULL) {
+            goto error;
+        }
+    }
+    else {
+        Py_INCREF(py_exc_class);
+    }
+
+    return py_exc_class;
+error:
+    return NULL;
+}
+
+enum {
+    AS_PY_ERR_TUPLE_CODE = 0,
+    AS_PY_ERR_TUPLE_MSG = 1,
+    AS_PY_ERR_TUPLE_FILE = 2,
+    AS_PY_ERR_TUPLE_LINE = 3,
+    AS_PY_ERR_TUPLE_IN_DOUBT = 4
+};
+
+#define ERROR_TUPLE_SIZE 5
+
+PyObject *create_pytuple_using_as_error(const as_error *err)
+{
+    PyObject *py_err_tuple = PyTuple_New(ERROR_TUPLE_SIZE);
+    if (py_err_tuple == NULL) {
+        goto error;
+    }
+
+    Py_ssize_t size_of_py_tuple = PyTuple_Size(py_err_tuple);
+    if (size_of_py_tuple == -1) {
+        goto CLEANUP_TUPLE_ON_ERROR;
+    }
+
+    for (Py_ssize_t i = 0; i < size_of_py_tuple; i++) {
+        PyObject *py_member_of_tuple = NULL;
+        switch (i) {
+        case AS_PY_ERR_TUPLE_CODE:
+            py_member_of_tuple = PyLong_FromLongLong(err->code);
+            break;
+        case AS_PY_ERR_TUPLE_MSG:
+            py_member_of_tuple = PyUnicode_FromString(err->message);
+            break;
+        case AS_PY_ERR_TUPLE_FILE:
+            if (err->file) {
+                py_member_of_tuple = PyUnicode_FromString(err->file);
+            }
+            else {
+                Py_INCREF(Py_None);
+                py_member_of_tuple = Py_None;
+            }
+            break;
+        case AS_PY_ERR_TUPLE_LINE:
+            if (err->line > 0) {
+                py_member_of_tuple = PyLong_FromLong(err->line);
+            }
+            else {
+                Py_INCREF(Py_None);
+                py_member_of_tuple = Py_None;
+            }
+            break;
+        case AS_PY_ERR_TUPLE_IN_DOUBT:
+            py_member_of_tuple = PyBool_FromLong(err->in_doubt);
+            break;
+        default:
+            // This codepath should not have executed
+            as_log_warn("Invalid index %d when creating a Python error tuple",
+                        i);
+            break;
+        }
+
+        if (py_member_of_tuple == NULL) {
+            // One of the above methods to create the member failed
+            goto CLEANUP_TUPLE_ON_ERROR;
+        }
+
+        int retval = PyTuple_SetItem(py_err_tuple, i, py_member_of_tuple);
+        if (retval == -1) {
+            goto CLEANUP_TUPLE_ON_ERROR;
+        }
+    }
+
+    return py_err_tuple;
+
+CLEANUP_TUPLE_ON_ERROR:
+    Py_DECREF(py_err_tuple);
+error:
+    return NULL;
+}
+
+int raise_exception_with_api_call_extra_info(as_error *err,
+                                             as_exc_extra_info *extra_info)
+{
+    int retval = -1;
+    PyObject *py_exc_class = get_py_exc_class_from_err_code(err->code);
+    if (py_exc_class == NULL) {
+        goto finish;
+    }
+
+    PyObject *py_err_tuple = create_pytuple_using_as_error(err);
+    if (py_err_tuple == NULL) {
+        goto cleanup_exc_class;
+    }
+
+    // Set exception class attributes as well
+    for (int i = 0; i < ERROR_TUPLE_SIZE; i++) {
+        PyObject *py_tuple_item = PyTuple_GetItem(py_err_tuple, i);
+        if (py_tuple_item == NULL) {
+            goto cleanup_err_tuple;
+        }
+
+        retval = PyObject_SetAttrString(py_exc_class, aerospike_err_attrs[i],
+                                        py_tuple_item);
+        if (retval == -1) {
+            goto cleanup_err_tuple;
+        }
+    }
+
+    if (extra_info != NULL) {
+        as_exc_extra_info *curr_pair = extra_info;
+        while (curr_pair->attr_name != NULL) {
+            if (PyObject_HasAttrString(py_exc_class, curr_pair->attr_name)) {
+                // Some API methods that raise an exception will set an attribute value to be NULL
+                // i.e operate() sets bin to be NULL when raising an exception
+                // We don't want those API methods to remove the attribute from the exception class, so just change to None
+                // TODO: make sure those API methods aren't deleting the attributes
+                if (curr_pair->py_value == NULL) {
+                    Py_INCREF(Py_None);
+                    curr_pair->py_value = Py_None;
+                }
+                retval = PyObject_SetAttrString(
+                    py_exc_class, curr_pair->attr_name, curr_pair->py_value);
+                Py_DECREF(Py_None);
+                if (retval == -1) {
+                    goto cleanup_err_tuple;
+                }
+            }
+            curr_pair++;
+        }
+    }
+
+    // TODO: not sure how to check if this fails
+    PyErr_SetObject(py_exc_class, py_err_tuple);
+    retval = 0;
+
+cleanup_err_tuple:
+    Py_DECREF(py_err_tuple);
+cleanup_exc_class:
+    Py_DECREF(py_exc_class);
+finish:
+    return retval;
+}
+
+// Return -1 on error
+int raise_exception(as_error *err)
+{
+    return raise_exception_with_api_call_extra_info(err, NULL);
 }
