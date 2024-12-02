@@ -1,4 +1,4 @@
-from typing import Any, Callable, Union, final, Literal, Optional, TypedDict
+from typing import Any, Callable, Union, final, Literal, Optional, TypedDict, type_check_only
 
 from aerospike_helpers.batch.records import BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
@@ -455,22 +455,24 @@ class Scan:
 class null:
     def __init__(self, *args, **kwargs) -> None: ...
 
-class LuaDict(TypedDict):
+@type_check_only
+class _LuaDict(TypedDict):
     system_path: str
     user_path: str
 
-class ClientConfigDict(TypedDict, total=False):
+@type_check_only
+class _ClientConfigDict(TypedDict, total=False):
     # TODO: create named tuple for host
     hosts: list
     user: str
     password: str
-    lua: LuaDict
+    lua: _LuaDict
     policies: dict
     shm: dict
     # TODO: not done
 
 def calc_digest(ns: str, set: str, key: Union[str, int, bytearray]) -> bytearray: ...
-def client(config: ClientConfigDict) -> Client: ...
+def client(config: _ClientConfigDict) -> Client: ...
 def geodata(geo_data: dict) -> GeoJSON: ...
 def geojson(geojson_str: str) -> GeoJSON: ...
 def get_cdtctx_base64(ctx: list) -> str: ...
