@@ -264,7 +264,7 @@ jobs:
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel==1.*"
         # We want to check that our new openssl 3 install is used, not the system default
-        CIBW_REPAIR_WHEEL_COMMAND_LINUX: auditwheel repair -w {dest_dir} {wheel} && auditwheel show {wheel}
+        CIBW_REPAIR_WHEEL_COMMAND_LINUX: auditwheel repair -w {dest_dir} {wheel} && auditwheel show {dest_dir}/*
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
