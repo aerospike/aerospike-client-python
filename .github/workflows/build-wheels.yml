@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -65,6 +65,10 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag'
+      test-file:
+        required: false
+        default: ''
+        description: 'new_tests/<value>'
 
   workflow_call:
     inputs:
@@ -76,7 +80,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
       platform-tag:
         type: string
         required: true
@@ -106,6 +110,10 @@ on:
         type: string
         default: 'latest'
         description: 'Server docker image tag'
+      test-file:
+        required: false
+        type: string
+        default: ''
     secrets:
       # Just make all the secrets required to make things simpler...
       DOCKER_HUB_BOT_USERNAME:
@@ -197,24 +205,15 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: 'macOS x86: run Aerospike server in Docker container and connect via localhost'
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
+    - name: 'Run Aerospike server in Docker container and configure tests accordingly'
+      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    # TODO: combine this composite action and the above into one
-    - name: "Linux: run Aerospike server in Docker container and configure config.conf to connect to the server container's Docker IP address"
-      if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && startsWith(inputs.platform-tag, 'manylinux') }}
-      uses: ./.github/actions/run-ee-server-for-ext-container
-      with:
-        use-server-rc: ${{ inputs.use-server-rc }}
-        server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
@@ -227,7 +226,8 @@ jobs:
 
     - name: Otherwise, enable integration tests
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest new_tests/" >> $GITHUB_ENV
+      # Run with capture output disabled to check that TLS works (i.e we are using the bundled openssl)
+      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vv new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set unoptimize flag
@@ -239,7 +239,7 @@ jobs:
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
     - name: Build wheel
-      uses: pypa/cibuildwheel@v2.20.0
+      uses: pypa/cibuildwheel@v2.21.3
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
@@ -250,9 +250,14 @@ jobs:
           yum install python-devel -y &&
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
-        CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel"
+        CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel==1.*"
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
+
+    # For debugging
+    - run: docker logs aerospike
+      if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      shell: bash
 
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
@@ -306,6 +311,7 @@ jobs:
           server-tag: ${{ inputs.server-tag }}
           docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
           docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+          where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
       - name: Download wheel
         uses: actions/download-artifact@v4
@@ -329,19 +335,11 @@ jobs:
         run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
         shell: bash
 
-      - name: Connect to Docker container on remote machine with Docker daemon
-        if: ${{ inputs.platform-tag == 'win_amd64' }}
-        # DOCKER_HOST contains the IP address of the remote machine
-        run: |
-          $env:DOCKER_HOST_IP = $env:DOCKER_HOST | foreach {$_.replace("tcp://","")} | foreach {$_.replace(":2375", "")}
-          crudini --set config.conf enterprise-edition hosts ${env:DOCKER_HOST_IP}:3000
-        working-directory: test
-
       - run: python3 -m pip install pytest -c requirements.txt
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest new_tests/
+      - run: python3 -m pytest -vv new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
