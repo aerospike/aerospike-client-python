@@ -228,7 +228,6 @@ class CClientBuild(build):
         else:
             cmd = [
                 'make',
-                '-e',
                 'V=' + str(self.verbose),
             ]
             if UNOPTIMIZED:
