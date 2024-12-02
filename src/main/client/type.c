@@ -570,7 +570,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         goto CONSTRUCTOR_ERROR;
     }
 
-    if (!PyMapping_Check(py_config)) {
+    if (!PyDict_Check(py_config)) {
         error_code = INIT_CONFIG_TYPE_ERR;
         goto CONSTRUCTOR_ERROR;
     }
