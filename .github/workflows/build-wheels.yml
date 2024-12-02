@@ -162,6 +162,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
+      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}:latest
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -227,7 +228,7 @@ jobs:
     - name: Otherwise, enable integration tests
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       # Run with capture output disabled to check that TLS works (i.e we are using the bundled openssl)
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vv new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vvs new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set unoptimize flag
@@ -238,6 +239,19 @@ jobs:
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64') }} >> $GITHUB_ENV
+ 
+    - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }} >> $GITHUB_ENV
+
+    - uses: docker/login-action@v3
+      if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
       env:
@@ -246,11 +260,11 @@ jobs:
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
-          yum install openssl-devel -y &&
-          yum install python-devel -y &&
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel==1.*"
+        # We want to check that our new openssl 3 install is used, not the system default
+        CIBW_REPAIR_WHEEL_COMMAND_LINUX: auditwheel repair -w {dest_dir} {wheel} && auditwheel show {dest_dir}/*
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
