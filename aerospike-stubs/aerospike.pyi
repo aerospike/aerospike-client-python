@@ -456,23 +456,23 @@ class null:
     def __init__(self, *args, **kwargs) -> None: ...
 
 @type_check_only
-class _LuaDict(TypedDict):
+class LuaDict(TypedDict):
     system_path: str
     user_path: str
 
 @type_check_only
-class _ClientConfigDict(TypedDict, total=False):
+class ClientConfigDict(TypedDict, total=False):
     # TODO: create named tuple for host
     hosts: list
     user: str
     password: str
-    lua: _LuaDict
+    lua: LuaDict
     policies: dict
     shm: dict
     # TODO: not done
 
 def calc_digest(ns: str, set: str, key: Union[str, int, bytearray]) -> bytearray: ...
-def client(config: _ClientConfigDict) -> Client: ...
+def client(config: ClientConfigDict) -> Client: ...
 def geodata(geo_data: dict) -> GeoJSON: ...
 def geojson(geojson_str: str) -> GeoJSON: ...
 def get_cdtctx_base64(ctx: list) -> str: ...
