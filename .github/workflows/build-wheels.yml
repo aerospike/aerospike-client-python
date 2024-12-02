@@ -228,7 +228,7 @@ jobs:
     - name: Otherwise, enable integration tests
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       # Run with capture output disabled to check that TLS works (i.e we are using the bundled openssl)
-      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vv new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
+      run: echo "TEST_COMMAND=cd {project}/test/ && pip install -r requirements.txt && python -m pytest -vvs new_tests/${{ inputs.test-file }}" >> $GITHUB_ENV
       shell: bash
 
     - name: Set unoptimize flag
@@ -353,7 +353,7 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest -vvs new_tests/${{ inputs.test-file }}
+      - run: python3 -m pytest -vv new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
