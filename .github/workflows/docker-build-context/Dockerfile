@@ -110,3 +110,7 @@ EXPOSE $TLS_PORT
 
 # Cleanup
 RUN rm $CLUSTER_NAME_FILE_NAME
+
+# Run our own set up steps after server finishes starting up
+COPY entrypoint-finalize-setup.sh /
+ENTRYPOINT /entrypoint-finalize-setup.sh
