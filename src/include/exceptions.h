@@ -18,9 +18,17 @@
 
 #include <Python.h>
 
-PyObject *AerospikeException_New(void);
-void raise_exception(as_error *err);
-PyObject *raise_exception_old(as_error *err);
+typedef struct {
+    const char *attr_name;
+    PyObject *py_value;
+} as_exc_extra_info;
+
+#define NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS "__errcode_to_exc_class"
+#define AEROSPIKE_ERR_EXCEPTION_NAME "AerospikeError"
+
+int raise_exception(as_error *err);
+int raise_exception_with_api_call_extra_info(as_error *err,
+                                             as_exc_extra_info *extra_info);
 void remove_exception(as_error *err);
 void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
                                                   PyObject *py_tuple);
