@@ -25,8 +25,6 @@
 #include "exceptions.h"
 #include "exception_attrs.h"
 
-static PyObject *py_module;
-
 #define SUBMODULE_NAME "exception"
 
 //  Used to create a Python Exception class
@@ -265,7 +263,7 @@ PyMODINIT_FUNC PyInit_exception(void)
                                            NULL,
                                            NULL,
                                            NULL};
-    py_module = PyModule_Create(&moduledef);
+    PyObject *py_module = PyModule_Create(&moduledef);
     if (py_module == NULL) {
         goto error;
     }
