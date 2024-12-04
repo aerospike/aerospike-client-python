@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -250,8 +252,14 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
 {
     as_error_reset(err);
     for (int i = 0; i < privileges_size; i++) {
-        PyObject *py_val = PyList_GetItem(py_privileges, i);
-        if (PyDict_Check(py_val)) {
+        PyObject *py_val = PyList_GetItemRef(py_privileges, i);
+        if (py_val == NULL) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get privilege dictionary at index %d",
+                            i);
+        }
+        else if (PyDict_Check(py_val)) {
             PyObject *py_dict_key = PyUnicode_FromString("code");
             if (PyDict_Contains(py_val, py_dict_key)) {
                 PyObject *py_code = NULL;
@@ -284,6 +292,7 @@ as_status pyobject_to_as_privileges(as_error *err, PyObject *py_privileges,
             }
             Py_DECREF(py_dict_key);
         }
+        Py_XDECREF(py_val);
     }
     return err->code;
 }
@@ -666,7 +675,12 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 
     char *s;
     for (int i = 0; i < size; i++) {
-        PyObject *py_val = PyList_GetItem(py_list, i);
+        PyObject *py_val = PyList_GetItemRef(py_list, i);
+        if (!py_val) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get python object at index %d", i);
+        }
 
         if (PyUnicode_Check(py_val)) {
             s = (char *)PyUnicode_AsUTF8(py_val);
@@ -684,6 +698,7 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
             as_error_update(err, AEROSPIKE_ERR_CLIENT, "Item is not a string");
             return err->code;
         }
+        Py_XDECREF(py_val);
     }
 
     return err->code;
@@ -702,9 +717,16 @@ as_status pyobject_to_list(AerospikeClient *self, as_error *err,
     }
 
     for (int i = 0; i < size; i++) {
-        PyObject *py_val = PyList_GetItem(py_list, i);
+        PyObject *py_val = PyList_GetItemRef(py_list, i);
+        if (!py_val) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get python object at index %d", i);
+            break;
+        }
         as_val *val = NULL;
         pyobject_to_val(self, err, py_val, &val, static_pool, serializer_type);
+        Py_DECREF(py_val);
         if (err->code != AEROSPIKE_OK) {
             break;
         }
@@ -747,6 +769,7 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         }
     }
 
+    Py_BEGIN_CRITICAL_SECTION(py_dict);
     while (PyDict_Next(py_dict, &pos, &py_key, &py_val)) {
         as_val *key = NULL;
         as_val *val = NULL;
@@ -763,6 +786,7 @@ as_status pyobject_to_map(AerospikeClient *self, as_error *err,
         }
         as_map_set(*map, key, val);
     }
+    Py_END_CRITICAL_SECTION();
 
     if (err->code != AEROSPIKE_OK) {
         as_map_destroy(*map);
@@ -1063,13 +1087,13 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
                                       const char *expected_type_name)
 {
-    if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
+    if (strcmp(Py_TYPE(obj)->tp_name, expected_type_name)) {
         // Expected class name does not match object's class name
         return false;
     }
 
     PyObject *py_module_name =
-        PyDict_GetItemString(obj->ob_type->tp_dict, "__module__");
+        PyDict_GetItemString(Py_TYPE(obj)->tp_dict, "__module__");
     if (!py_module_name) {
         // Class does not belong to any module
         return false;
@@ -1193,7 +1217,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
             bytes->type = AS_BYTES_HLL;
         }
     }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
+    else if (!strcmp(Py_TYPE(py_obj)->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
@@ -1234,7 +1258,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
     else if (Py_None == py_obj) {
         *val = as_val_reserve(&as_nil);
     }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
+    else if (!strcmp(Py_TYPE(py_obj)->tp_name, "aerospike.null")) {
         *val = (as_val *)as_val_reserve(&as_nil);
     }
     else if (AS_Matches_Classname(py_obj, AS_CDT_WILDCARD_NAME)) {
@@ -1289,68 +1313,78 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
 
         as_record_init(rec, size);
 
+        Py_BEGIN_CRITICAL_SECTION(py_rec);
         while (PyDict_Next(py_rec, &pos, &key, &value)) {
 
             if (!PyUnicode_Check(key)) {
-                return as_error_update(
+                as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
                     "A bin name must be a string or unicode string.");
+                break;
             }
 
             name = PyUnicode_AsUTF8(key);
             if (!name) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_CLIENT,
-                    "Unable to convert unicode object to C string");
+                as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                "Unable to convert unicode object to C string");
+                break;
             }
 
             if (self->strict_types) {
                 if (strlen(name) > AS_BIN_NAME_MAX_LEN) {
-                    return as_error_update(
+                    as_error_update(
                         err, AEROSPIKE_ERR_BIN_NAME,
                         "A bin name should not exceed 15 characters limit");
+                    break;
                 }
             }
 
             if (!value) {
                 // this should never happen, but if it did...
-                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                       "record is null");
+                as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
+                break;
             }
             else if (
                 PyBool_Check(
                     value)) { //TODO Change to true bool support post jump version.
+                bool error_raised = false;
                 switch (self->send_bool_as) {
                 case SEND_BOOL_AS_AS_BOOL:;
-                    bool converted_value = (value == Py_True);
+                    bool converted_value = (Py_IsTrue(value));
                     ret_val = as_record_set_bool(rec, name, converted_value);
                     break;
                 case SEND_BOOL_AS_INTEGER:;
                     as_integer *converted_integer = NULL;
                     if (py_bool_to_as_integer(err, value, &converted_integer) !=
                         AEROSPIKE_OK) {
-                        return err->code;
+                        error_raised = true;
                     }
                     ret_val =
                         as_record_set_integer(rec, name, converted_integer);
                     break;
                 default:
-                    return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                           "Unknown value for send_bool_as.");
+                    as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unknown value for send_bool_as.");
+                    error_raised = true;
+                    break;
+                }
+
+                if (error_raised == true) {
+                    break;
                 }
             }
             else if (PyLong_Check(value)) {
                 int64_t val = (int64_t)PyLong_AsLong(value);
                 if (val == -1 && PyErr_Occurred()) {
                     if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                        return as_error_update(
-                            err, AEROSPIKE_ERR_PARAM,
-                            "integer value exceeds sys.maxsize");
+                        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                        "integer value exceeds sys.maxsize");
+                        break;
                     }
                 }
                 ret_val = as_record_set_int64(rec, name, val);
             }
-            else if (!strcmp(value->ob_type->tp_name, "aerospike.Geospatial")) {
+            else if (!strcmp(Py_TYPE(value)->tp_name, "aerospike.Geospatial")) {
                 PyObject *py_geo_string = PyUnicode_FromString("geo_data");
                 PyObject *py_data =
                     PyObject_GenericGetAttr(value, py_geo_string);
@@ -1362,9 +1396,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 if (PyUnicode_Check(py_dumps)) {
                     py_ustr = PyUnicode_AsUTF8String(py_dumps);
                     if (!py_ustr) {
-                        return as_error_update(
-                            err, AEROSPIKE_ERR_CLIENT,
-                            "Unicode value not encoded in utf-8.");
+                        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                        "Unicode value not encoded in utf-8.");
+                        break;
                     }
                     geo_value = PyBytes_AsString(py_ustr);
                 }
@@ -1383,9 +1417,9 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
             else if (PyUnicode_Check(value)) {
                 PyObject *py_ustr = PyUnicode_AsUTF8String(value);
                 if (!py_ustr) {
-                    return as_error_update(
-                        err, AEROSPIKE_ERR_CLIENT,
-                        "Unicode value not encoded in utf-8.");
+                    as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                    "Unicode value not encoded in utf-8.");
+                    break;
                 }
                 char *val = PyBytes_AsString(py_ustr);
                 ret_val = as_record_set_strp(rec, name, strdup(val), true);
@@ -1433,7 +1467,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
                 ret_val = as_record_set_map(rec, name, map);
             }
-            else if (!strcmp(value->ob_type->tp_name, "aerospike.null")) {
+            else if (!strcmp(Py_TYPE(value)->tp_name, "aerospike.null")) {
                 ret_val = as_record_set_nil(rec, name);
             }
             else {
@@ -1448,7 +1482,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                         if (serialize_based_on_serializer_policy(
                                 self, serializer_type, &bytes, value, err) !=
                             AEROSPIKE_OK) {
-                            return err->code;
+                            break;
                         }
                         ret_val = as_record_set_bytes(rec, name, bytes);
                     }
@@ -1457,13 +1491,18 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
 
             if (self->strict_types) {
                 if (!ret_val) {
-                    return as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
-                                           "Unable to set key-value pair");
+                    as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
+                                    "Unable to set key-value pair");
+                    break;
                 }
             }
         }
+        Py_END_CRITICAL_SECTION();
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
+        }
 
-        if (py_meta && py_meta != Py_None) {
+        if (py_meta && !Py_IsNone(py_meta)) {
             if (!PyDict_Check(py_meta)) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "meta must be a dictionary");
@@ -1582,7 +1621,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
         ns = (char *)PyUnicode_AsUTF8(py_ns);
     }
 
-    if (py_set && py_set != Py_None) {
+    if (py_set && !Py_IsNone(py_set)) {
         if (PyUnicode_Check(py_set)) {
             set = (char *)PyUnicode_AsUTF8(py_set);
         }
@@ -1594,7 +1633,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
 
     as_key *returnResult = key;
 
-    if (py_key && py_key != Py_None) {
+    if (py_key && !Py_IsNone(py_key)) {
         if (PyUnicode_Check(py_key)) {
             PyObject *py_ustr = PyUnicode_AsUTF8String(py_key);
             char *k = PyBytes_AsString(py_ustr);
@@ -1634,7 +1673,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
             as_error_update(err, AEROSPIKE_ERR_PARAM, "key is invalid");
         }
     }
-    else if (py_digest && py_digest != Py_None) {
+    else if (py_digest && !Py_IsNone(py_digest)) {
         if (PyByteArray_Check(py_digest)) {
             uint32_t sz = (uint32_t)PyByteArray_Size(py_digest);
 
@@ -2458,7 +2497,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)map;
     }
-    else if (!strcmp(py_value->ob_type->tp_name, "aerospike.Geospatial")) {
+    else if (!strcmp(Py_TYPE(py_value)->tp_name, "aerospike.Geospatial")) {
         PyObject *geo_data = PyObject_GetAttrString(py_value, "geo_data");
         PyObject *geo_data_py_str = AerospikeGeospatial_DoDumps(geo_data, err);
         const char *geo_data_str = PyUnicode_AsUTF8(geo_data_py_str);
@@ -2475,7 +2514,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
         Py_XDECREF(geo_data_py_str);
         Py_XDECREF(geo_data);
     }
-    else if (!strcmp(py_value->ob_type->tp_name, "aerospike.null")) {
+    else if (!strcmp(Py_TYPE(py_value)->tp_name, "aerospike.null")) {
         ((as_val *)&binop_bin->value)->type = AS_UNKNOWN;
         binop_bin->valuep = (as_bin_value *)&as_nil;
     }
@@ -2593,7 +2632,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             ops->gen = gen;
         }
     }
-    else if (py_meta && (py_meta != Py_None)) {
+    else if (py_meta && (!Py_IsNone(py_meta))) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Metadata should be of type dictionary");
     }
@@ -2777,11 +2816,19 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
         as_cdt_ctx_init(cdt_ctx, (int)py_list_size);
 
         for (int i = 0; i < py_list_size; i++) {
-            PyObject *py_val = PyList_GetItem(py_ctx, (Py_ssize_t)i);
+            PyObject *py_val = PyList_GetItemRef(py_ctx, (Py_ssize_t)i);
+            if (!py_val) {
+                PyErr_Clear();
+                as_cdt_ctx_destroy(cdt_ctx);
+                return as_error_update(
+                    err, AEROSPIKE_ERR_CLIENT,
+                    "Unable to get python object at index %d", i);
+            }
 
             PyObject *id_temp = PyObject_GetAttrString(py_val, "id");
             if (PyErr_Occurred()) {
                 as_cdt_ctx_destroy(cdt_ctx);
+                Py_DECREF(py_val);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert %s, id", CTX_KEY);
             }
@@ -2789,6 +2836,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             PyObject *value_temp = PyObject_GetAttrString(py_val, "value");
             if (PyErr_Occurred()) {
                 as_cdt_ctx_destroy(cdt_ctx);
+                Py_DECREF(py_val);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert %s, value", CTX_KEY);
             }
@@ -2797,9 +2845,12 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 PyObject_GetAttrString(py_val, "extra_args");
             if (PyErr_Occurred()) {
                 as_cdt_ctx_destroy(cdt_ctx);
+                Py_DECREF(py_val);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert %s", CTX_KEY);
             }
+
+            Py_DECREF(py_val);
 
             uint64_t item_type = PyLong_AsUnsignedLong(id_temp);
             if (PyErr_Occurred()) {

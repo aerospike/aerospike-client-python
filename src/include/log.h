@@ -19,13 +19,6 @@
 #include <Python.h>
 #include <aerospike/as_status.h>
 
-/*
- * Structure to hold user's log_callback object
- */
-typedef struct Aerospike_log_callback {
-    PyObject *callback;
-} AerospikeLogCallback;
-
 /**
  * Set log level for C-SDK
  *          aerospike.set_log_level( aerospike.LOG_LEVEL_WARN )

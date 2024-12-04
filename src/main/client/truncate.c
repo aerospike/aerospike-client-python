@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -108,7 +110,7 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
             goto CLEANUP;
         }
     }
-    else if (py_set != Py_None) {
+    else if (!Py_IsNone(py_set)) {
         // If the set is none, this is fine
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Set must be None, or unicode or string type");

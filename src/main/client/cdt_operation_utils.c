@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 #include <Python.h>
 
 #include "cdt_operation_utils.h"
@@ -83,7 +85,7 @@ as_status get_asval(AerospikeClient *self, as_error *err, char *key,
     }
 
     /* If the value isn't required, None indicates that it isn't provided */
-    if (py_val == Py_None && !required) {
+    if (Py_IsNone(py_val) && !required) {
         *val = NULL;
         return AEROSPIKE_OK;
     }

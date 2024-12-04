@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp313t"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -80,7 +80,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313", "cp313t"]'
       platform-tag:
         type: string
         required: true
@@ -263,6 +263,7 @@ jobs:
           yum install python-setuptools -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel==1.*"
+        CIBW_FREE_THREADED_SUPPORT: ${{ matrix.python-tag == 'cp313t' && '1' || '0' }}
         # We want to check that our wheel links to the new openssl 3 install, not the system default
         # This assumes that ldd prints out the "soname" for the libraries
         # We can also manually verify the repair worked by checking the repaired wheel's compatibility tag
@@ -323,6 +324,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            !pyproject.toml
+            test/**
+            .github/**
 
       # Need to be able to save Docker Hub credentials to keychain
       - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
@@ -342,6 +348,7 @@ jobs:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
       - name: Convert Python tag to Python version
+        if: ${{ matrix.python-tag != 'cp313t' }}
         # Don't use sed because we want this command to work on both mac and windows
         # The command used in GNU sed is different than in macOS sed
         run: |
@@ -351,18 +358,36 @@ jobs:
         shell: bash
 
       - uses: actions/setup-python@v5
+        if: ${{ matrix.python-tag != 'cp313t' }}
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install wheel
-        run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
+      - if: ${{ matrix.python-tag == 'cp313t' }}
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.4.x"
+
+      - if: ${{ matrix.python-tag == 'cp313t' }}
+        # Will automatically install Python 3.13t if not present
+        run: uv venv --python 3.13t
         shell: bash
 
-      - run: python3 -m pip install pytest -c requirements.txt
+      # TODO: check if uv is installed, instead
+      - run: echo PIP_COMMAND="${{ matrix.python-tag == 'cp313t' && 'uv' || '' }} pip" >> $GITHUB_ENV
+        shell: bash
+
+      - name: Install wheel
+        run: ${{ env.PIP_COMMAND }} install aerospike --force-reinstall --no-index --find-links=./
+        shell: bash
+
+      - run: ${{ env.PIP_COMMAND }} install pytest -c requirements.txt
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest -vv new_tests/${{ inputs.test-file }}
+      - run: echo PYTHON_M_COMMAND=${{ matrix.python-tag == 'cp313t' && 'uv run --module' || 'python3 -m' }} >> $GITHUB_ENV
+        shell: bash
+
+      - run: ${{ env.PYTHON_M_COMMAND }} pytest -vv new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 

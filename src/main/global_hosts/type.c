@@ -42,7 +42,7 @@ static PyObject *AerospikeGlobalHosts_Type_New(PyTypeObject *type,
 
 static void AerospikeGlobalHosts_Type_Dealloc(PyObject *self)
 {
-    PyObject_Del(self);
+    PyObject_Free(self);
 }
 
 /*******************************************************************************

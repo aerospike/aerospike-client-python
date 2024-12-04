@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -200,7 +202,7 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
         if (PyUnicode_Check(py_set)) {
             set = (char *)PyUnicode_AsUTF8(py_set);
         }
-        else if (py_set != Py_None) {
+        else if (!Py_IsNone(py_set)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "Set should be string, unicode or None");
             goto CLEANUP;
