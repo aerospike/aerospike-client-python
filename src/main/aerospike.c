@@ -654,17 +654,14 @@ MODULE_CLEANUP_ON_ERROR:
 // Otherwise returns strong reference to exception class
 PyObject *get_py_exc_class_from_err_code(as_status err_code)
 {
-    PyObject *py_importlib = PyImport_ImportModule("importlib");
-    if (py_importlib == NULL) {
-        // This should never happen
-        // TODO: return an error if it does
-        PyErr_Print();
-        return NULL;
-    }
-    PyObject *py_exception_module = PyObject_CallMethod(
-        py_importlib, "import_module", "s", "aerospike.exception");
+    // TODO: make a var
+    // TODO: suspect I have to import this from the beginning
+    PyObject *py_exception_module = PyImport_GetModule("aerospike.exception");
     if (py_exception_module == NULL) {
-        return NULL;
+        py_exception_module = PyImport_ImportModule("aerospike.exception");
+        if (py_exception_module == NULL) {
+            goto error;
+        }
     }
 
     PyObject *py_dict_err_code = PyObject_GetAttrString(
