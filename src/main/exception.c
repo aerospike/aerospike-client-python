@@ -421,9 +421,9 @@ PyObject *get_py_exc_class_from_err_code(as_status err_code)
         // KeyError
         // Exception class could not be found with the error code
 
-        PyObject *py_aerospike_error_class =
+        py_exc_class =
             PyObject_GetAttrString(py_module, AEROSPIKE_ERR_EXCEPTION_NAME);
-        if (py_aerospike_error_class == NULL) {
+        if (py_exc_class == NULL) {
             goto error;
         }
     }
