@@ -5,6 +5,7 @@ LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
 RUN yum install -y perl-core wget
 
+WORKDIR /
 ARG OPENSSL_TAR_NAME=openssl-$OPENSSL_VERSION
 RUN wget https://www.openssl.org/source/$OPENSSL_TAR_NAME.tar.gz
 RUN tar xzvf $OPENSSL_TAR_NAME.tar.gz
