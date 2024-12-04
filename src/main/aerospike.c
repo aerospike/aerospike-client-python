@@ -650,25 +650,6 @@ MODULE_CLEANUP_ON_ERROR:
     return NULL;
 }
 
-// We have this as a separate method because both raise_exception and raise_exception_old need to use it
-void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
-                                                  PyObject *py_tuple)
-{
-    for (unsigned long i = 0;
-         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
-         i++) {
-        // Here, we are assuming the number of attrs is the same as the number of tuple members
-        PyObject *py_arg = PyTuple_GetItem(py_tuple, i);
-        if (py_arg == NULL) {
-            // Don't fail out if number of attrs > number of tuple members
-            // This condition should never be true, though
-            PyErr_Clear();
-            break;
-        }
-        PyObject_SetAttrString(py_exc, aerospike_err_attrs[i], py_arg);
-    }
-}
-
 // Return NULL on error
 // Otherwise returns strong reference to exception class
 PyObject *get_py_exc_class_from_err_code(as_status err_code)
