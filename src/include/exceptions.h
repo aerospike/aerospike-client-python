@@ -23,6 +23,9 @@ typedef struct {
     PyObject *py_value;
 } as_exc_extra_info;
 
+#define NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS "__errcode_to_exc_class"
+#define AEROSPIKE_ERR_EXCEPTION_NAME "AerospikeError"
+
 int raise_exception(as_error *err);
 int raise_exception_with_api_call_extra_info(as_error *err,
                                              as_exc_extra_info *extra_info);

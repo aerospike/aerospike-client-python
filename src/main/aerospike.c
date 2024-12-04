@@ -654,8 +654,21 @@ MODULE_CLEANUP_ON_ERROR:
 // Otherwise returns strong reference to exception class
 PyObject *get_py_exc_class_from_err_code(as_status err_code)
 {
+    PyObject *py_importlib = PyImport_ImportModule("importlib");
+    if (py_importlib == NULL) {
+        // This should never happen
+        // TODO: return an error if it does
+        PyErr_Print();
+        return NULL;
+    }
+    PyObject *py_exception_module = PyObject_CallMethod(
+        py_importlib, "import_module", "s", "aerospike.exception");
+    if (py_exception_module == NULL) {
+        return NULL;
+    }
+
     PyObject *py_dict_err_code = PyObject_GetAttrString(
-        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS);
+        py_exception_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS);
     if (py_dict_err_code == NULL) {
         goto error;
     }
@@ -679,8 +692,8 @@ PyObject *get_py_exc_class_from_err_code(as_status err_code)
         // KeyError
         // Exception class could not be found with the error code
 
-        PyObject *py_aerospike_error_class =
-            PyObject_GetAttrString(py_module, AEROSPIKE_ERR_EXCEPTION_NAME);
+        PyObject *py_aerospike_error_class = PyObject_GetAttrString(
+            py_exception_module, AEROSPIKE_ERR_EXCEPTION_NAME);
         if (py_aerospike_error_class == NULL) {
             goto error;
         }

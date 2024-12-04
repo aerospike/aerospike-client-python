@@ -51,7 +51,6 @@ struct exception_def {
     }
 
 // Base exception names
-#define AEROSPIKE_ERR_EXCEPTION_NAME "AerospikeError"
 #define CLIENT_ERR_EXCEPTION_NAME "ClientError"
 #define SERVER_ERR_EXCEPTION_NAME "ServerError"
 #define CLUSTER_ERR_EXCEPTION_NAME "ClusterError"
@@ -250,7 +249,6 @@ struct exception_def exception_defs[] = {
 
 // TODO: define aerospike module name somewhere else
 #define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
-#define NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS "__errcode_to_exc_class"
 
 // Returns NULL if an error occurred
 PyMODINIT_FUNC PyInit_exception(void)
