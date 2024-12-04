@@ -272,7 +272,8 @@ jobs:
           ldd $WHEEL_DIR/*.so | awk '{print $1}' | grep libssl.so.3 &&
           ldd $WHEEL_DIR/*.so | awk '{print $1}' | grep libcrypto.so.3 &&
           auditwheel repair -w {dest_dir} {wheel} &&
-          auditwheel show {dest_dir}/*
+          auditwheel show {dest_dir}/* &&
+          rm -rf $WHEEL_DIR
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "delvewheel repair --add-path ./aerospike-client-c/vs/x64/Release -w {dest_dir} {wheel}"
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
