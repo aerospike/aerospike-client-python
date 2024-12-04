@@ -656,7 +656,14 @@ PyObject *get_py_exc_class_from_err_code(as_status err_code)
 {
     // TODO: make a var
     // TODO: suspect I have to import this from the beginning
-    PyObject *py_exception_module = PyImport_GetModule("aerospike.exception");
+    PyObject *py_exception_module_name =
+        PyUnicode_FromString("aerospike.exception");
+    if (py_exception_module_name == NULL) {
+        goto error;
+    }
+
+    PyObject *py_exception_module =
+        PyImport_GetModule(py_exception_module_name);
     if (py_exception_module == NULL) {
         py_exception_module = PyImport_ImportModule("aerospike.exception");
         if (py_exception_module == NULL) {
