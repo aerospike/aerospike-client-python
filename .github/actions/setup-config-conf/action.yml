@@ -1,5 +1,5 @@
-name: 'Setup tests to connect to server Docker container'
-description: 'This only works for the Python client.'
+name: 'Setup Python client tests to connect to server Docker container'
+description: '_'
 inputs:
   server-container-name:
     required: true
