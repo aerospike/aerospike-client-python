@@ -20,14 +20,16 @@ inputs:
   docker-hub-password:
     description: Required for using release candidates
     required: false
-  server-container-name:
-    description: "What do you want the server's container name to be?"
-    default: 'aerospike'
-    required: false
 outputs:
   server-container-name:
     description: "The container name of the server"
-    value: ${{ inputs.server-container-name }}
+    value: ${{ steps.get-server-container-name.outputs.server_container_name }}
+  admin-username:
+    description: Test username for admin (security) tests
+    value: ${{ steps.get-superuser.outputs.superuser_name_and_password }}
+  admin-password:
+    description: Test user password for admin (security) tests
+    value: ${{ steps.get-superuser.outputs.superuser_name_and_password }}
 
 runs:
   using: "composite"
@@ -84,29 +86,35 @@ runs:
       # so we have to manually enable it
       load: true
 
-  - run: docker run -d --name ${{ inputs.server-container-name }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  # Use an output because we don't want to set environment variables that persist after this action and may affect the caller
+  - run: echo server_container_name="aerospike" >> $GITHUB_OUTPUT
+    id: get-server-container-name
+    shell: bash
+
+  - run: docker run -d --name ${{ steps.get-server-container-name.outputs.server_container_name }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
   - uses: ./.github/actions/wait-for-as-server-to-start
     with:
-      container-name: ${{ inputs.server-container-name }}
+      container-name: ${{ env.SERVER_CONTAINER_NAME }}
       is-security-enabled: true
       is-strong-consistency-enabled: true
 
-  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
+  - run: echo superuser_name_and_password="superuser" >> $GITHUB_OUTPUT
+    id: get-superuser
     shell: bash
 
-  - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
+  - run: echo ASADM_AUTH_FLAGS="--user=${{ steps.get-superuser.outputs.superuser_name_and_password }} --password=${{ steps.get-superuser.outputs.superuser_name_and_password }}" >> $GITHUB_ENV
     shell: bash
 
   # All the partitions are assumed to be dead when reusing a roster file
-  - run: docker exec ${{ inputs.server-container-name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
+  - run: docker exec ${{ steps.get-server-container-name.outputs.server_container_name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
     shell: bash
 
   # Apply changes
-  - run: docker exec ${{ inputs.server-container-name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
+  - run: docker exec ${{ steps.get-server-container-name.outputs.server_container_name }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
     shell: bash
 
   # For debugging
-  - run: docker logs ${{ inputs.server-container-name }}
+  - run: docker logs ${{ steps.get-server-container-name.outputs.server_container_name }}
     shell: bash

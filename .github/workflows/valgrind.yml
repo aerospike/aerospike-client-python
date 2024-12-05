@@ -157,6 +157,8 @@ jobs:
       with:
         server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
         where-is-client-connecting-from: 'docker-host'
+        connecting-username: ${{ steps.run-ee-server.outputs.admin-username }}
+        connecting-password: ${{ steps.run-ee-server.outputs.admin-password }}
 
     - run: sudo apt update
     - run: sudo apt install valgrind -y

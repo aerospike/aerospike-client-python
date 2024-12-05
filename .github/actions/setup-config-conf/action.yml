@@ -1,4 +1,4 @@
-name: 'Setup Python client tests to connect to server Docker container'
+name: 'Setup Python client tests to connect to EE server Docker container'
 description: '_'
 inputs:
   server-container-name:
@@ -8,6 +8,12 @@ inputs:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
     default: 'docker-host'
+  connecting-username:
+    required: true
+    description: "Username to log into server with security enabled"
+  connecting-password:
+    required: true
+    description: "User password to log into server with security enabled"
 
 runs:
   using: "composite"
@@ -29,8 +35,8 @@ runs:
 
   - name: Set credentials in config file
     run: |
-      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition user ${{ inputs.connecting-username }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ inputs.connecting-password }}
       crudini --set config.conf tls enable true
       crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
     working-directory: test

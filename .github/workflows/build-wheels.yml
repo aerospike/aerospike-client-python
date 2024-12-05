@@ -220,6 +220,8 @@ jobs:
       with:
         server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
+        connecting-username: ${{ steps.run-ee-server.outputs.admin-username }}
+        connecting-password: ${{ steps.run-ee-server.outputs.admin-password }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
@@ -336,7 +338,9 @@ jobs:
         with:
           server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
-
+          connecting-username: ${{ steps.run-ee-server.outputs.admin-username }}
+          connecting-password: ${{ steps.run-ee-server.outputs.admin-password }}
+  
       - name: Download wheel
         uses: actions/download-artifact@v4
         with:
