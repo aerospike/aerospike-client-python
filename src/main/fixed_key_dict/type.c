@@ -1,13 +1,13 @@
 #include <Python.h>
 
 #include "types.h"
-#include "client_config_dict.h"
+#include "fixed_key_dict.h"
 
 // TODO: eventually we need to move this to a per-module state
 PyObject *py_set_of_valid_keys = NULL;
 
-static PyObject *ClientConfigDict___setitem__(PyObject *self, PyObject *py_key,
-                                              PyObject *py_value)
+static PyObject *FixedKeyDict___setitem__(PyObject *self, PyObject *py_key,
+                                          PyObject *py_value)
 {
     if (py_key == NULL) {
         // Cannot validate a NULL key
@@ -36,17 +36,17 @@ static PyObject *ClientConfigDict___setitem__(PyObject *self, PyObject *py_key,
     return py_retval;
 }
 
-static PyMappingMethods ClientConfigDict_Type_AsMapping = {
-    .mp_subscript = ClientConfigDict___setitem__};
+static PyMappingMethods FixedKeyDict_Type_AsMapping = {
+    .mp_subscript = FixedKeyDict___setitem__};
 
-PyTypeObject ClientConfigDict_Type = {
+PyTypeObject FixedKeyDict_Type = {
     .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name =
-        FULLY_QUALIFIED_TYPE_NAME("ClientConfigDict"),
-    .tp_basicsize = sizeof(ClientConfigDict),
+        FULLY_QUALIFIED_TYPE_NAME("FixedKeyDict"),
+    .tp_basicsize = sizeof(FixedKeyDict),
     .tp_flags = Py_TPFLAGS_DEFAULT,
-    .tp_as_mapping = &ClientConfigDict_Type_AsMapping};
+    .tp_as_mapping = &FixedKeyDict_Type_AsMapping};
 
-PyTypeObject *AerospikeClientConfigDict_Ready()
+PyTypeObject *AerospikeFixedKeyDict_Ready()
 {
     // TODO: use frozen set with fixed size
     py_set_of_valid_keys = PySet_New(NULL);
@@ -97,6 +97,5 @@ PyTypeObject *AerospikeClientConfigDict_Ready()
         }
     }
 
-    return PyType_Ready(&ClientConfigDict_Type) == 0 ? &ClientConfigDict_Type
-                                                     : NULL;
+    return PyType_Ready(&FixedKeyDict_Type) == 0 ? &FixedKeyDict_Type : NULL;
 }

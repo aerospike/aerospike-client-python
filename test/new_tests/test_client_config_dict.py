@@ -1,11 +1,11 @@
 import pytest
 
-from aerospike import ClientConfigDict
+from aerospike import FixedKeyDict
 
 
-class TestClientConfigDict(object):
+class TestFixedKeyDict(object):
     def test_api(self):
-        config = ClientConfigDict()
+        config = FixedKeyDict()
         config["hosts"] = []
         with pytest.raises(KeyError) as excinfo:
             config["invalid_key"] = 1
