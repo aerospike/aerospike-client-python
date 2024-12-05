@@ -206,15 +206,22 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' && inputs.platform-tag == 'macosx_x86_64' }}
       uses: ./.github/actions/setup-docker-on-macos
 
-    - name: 'Run Aerospike server in Docker container and configure tests accordingly'
+    - name: 'Run Aerospike server in Docker container'
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      id: run-ee-server
       uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
+        connecting-username: ${{ steps.run-ee-server.outputs.admin-username }}
+        connecting-password: ${{ steps.run-ee-server.outputs.admin-password }}
 
     - name: If not running tests against server, only run basic import test
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'false' }}
@@ -329,13 +336,20 @@ jobs:
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
       - uses: ./.github/actions/run-ee-server
+        id: run-ee-server
         with:
           use-server-rc: ${{ inputs.use-server-rc }}
           server-tag: ${{ inputs.server-tag }}
           docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
           docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-          where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
+      - uses: ./.github/actions/setup-config-conf
+        with:
+          server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
+          where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
+          connecting-username: ${{ steps.run-ee-server.outputs.admin-username }}
+          connecting-password: ${{ steps.run-ee-server.outputs.admin-password }}
+  
       - name: Download wheel
         uses: actions/download-artifact@v4
         with:

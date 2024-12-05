@@ -99,12 +99,19 @@ jobs:
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
     - uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
         where-is-client-connecting-from: 'separate-docker-container'
+        connecting-username: ${{ steps.run-ee-server.outputs.admin-username }}
+        connecting-password: ${{ steps.run-ee-server.outputs.admin-password }}
 
     - name: Run distro container
       # Run distro container on host network to access the Aerospike server using localhost (without having to change config.conf)
@@ -193,12 +200,19 @@ jobs:
     - uses: ./.github/actions/setup-docker-on-macos
 
     - uses: ./.github/actions/run-ee-server
+      id: run-ee-server
       with:
         use-server-rc: ${{ inputs.use-server-rc }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        server-container-name: ${{ steps.run-ee-server.outputs.server-container-name }}
         where-is-client-connecting-from: 'docker-host'
+        connecting-username: ${{ steps.run-ee-server.outputs.admin-username }}
+        connecting-password: ${{ steps.run-ee-server.outputs.admin-password }}
 
     - name: Install wheel
       run: python3 -m pip install *.whl
