@@ -336,6 +336,11 @@ Client Configuration
 
 These are the keys and expected values for the ``config`` dictionary passed to :meth:`aerospike.client`.
 
+You may either pass in a regular Python dictionary or the :class:`aerospike.ClientConfigDict` subclass of a dictionary,
+which validates that the correct keys are used and raises an error if an invalid key is passed. We will keep accepting
+a regular Python dictionary for backwards compatibility, but for new users, it is recommended to use a
+:class:`aerospike.ClientConfigDict` instead.
+
 Only the `hosts` key is required; the rest of the keys are optional.
 
 .. object:: config
