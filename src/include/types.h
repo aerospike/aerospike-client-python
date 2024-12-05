@@ -112,5 +112,3 @@ extern PyTypeObject AerospikeTransaction_Type;
 typedef struct {
     PyDictObject py_dict;
 } ClientConfigDict;
-
-PyTypeObject *AerospikeClientConfigDict_Ready();
