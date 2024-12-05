@@ -1,6 +1,7 @@
 #include <Python.h>
 
 #include "types.h"
+#include "client_config_dict.h"
 
 // TODO: eventually we need to move this to a per-module state
 PyObject *py_set_of_valid_keys = NULL;
