@@ -55,31 +55,7 @@ PyTypeObject *AerospikeFixedKeyDict_Ready()
     }
 
     // TODO: centralize this
-    const char *valid_keys[] = {"hosts",
-                                "user",
-                                "password",
-                                "lua",
-                                "policies",
-                                "shm",
-                                "use_shared_connection",
-                                "tls",
-                                "send_bool_as",
-                                "serialization",
-                                "thread_pool_size",
-                                "max_socket_idle",
-                                "min_conns_per_node",
-                                "max_conns_per_node",
-                                "max_error_rate",
-                                "error_rate_window",
-                                "tend_interval",
-                                "compression_threshold",
-                                "cluster_name",
-                                "rack_id",
-                                "rack_ids",
-                                "rack_aware",
-                                "use_services_alternate",
-                                "connect_timeout",
-                                "fail_if_not_connected"};
+    const char *valid_keys[] = {""};
 
     for (unsigned long i = 0; i < sizeof(valid_keys) / sizeof(valid_keys[0]);
          i++) {
