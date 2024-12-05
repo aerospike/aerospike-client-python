@@ -560,6 +560,7 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"CDTWildcard", AerospikeWildcardObject_Ready},
     {"CDTInfinite", AerospikeInfiniteObject_Ready},
     {"Transaction", AerospikeTransaction_Ready},
+    {"ClientConfigDict", AerospikeClientConfigDict_Ready},
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)
