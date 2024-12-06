@@ -13,5 +13,5 @@ runs:
     shell: bash
 
   - name: Start Docker Engine
-    run: colima start
+    run: colima start --vm-type vz
     shell: bash
