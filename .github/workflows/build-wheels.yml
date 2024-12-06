@@ -255,6 +255,12 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    # It is not documented in Github that openssl 3 is installed in their macos images
+    # so we install it here to be safe
+    - if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
+      name: Ensure openssl 3 is installed on Github macOS runners.
+      run: brew install openssl@3
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
       env:
