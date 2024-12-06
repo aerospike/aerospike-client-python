@@ -245,6 +245,9 @@ jobs:
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }} >> $GITHUB_ENV
 
+    - if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
+      run: echo MACOSX_DEPLOYMENT_TARGET=12.0 >> $GITHUB_ENV
+
     - uses: docker/login-action@v3
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       with:
