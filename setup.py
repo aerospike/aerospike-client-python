@@ -47,8 +47,6 @@ DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 WINDOWS = 'Windows' in PLATFORM
 
 CWD = os.path.abspath(os.path.dirname(__file__))
-STATIC_SSL = os.getenv('STATIC_SSL')
-SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 # COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
 # Not for developers to use, unless you know what the workflow is doing!
 COVERAGE = os.getenv('COVERAGE')
@@ -121,13 +119,6 @@ if UNOPTIMIZED:
 # STATIC SSL LINKING BUILD SETTINGS
 ################################################################################
 
-if STATIC_SSL:
-    extra_objects.extend(
-        [SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
-    libraries.remove('ssl')
-    libraries.remove('crypto')
-    library_dirs.remove('/usr/local/opt/openssl/lib')
-
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
 ################################################################################
@@ -180,9 +171,6 @@ else:
     library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.{c_client_dependencies_version}/build/native/lib/x64/Release")
     # Needed for linking the Python client with the C client
     extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
-
-os.putenv('CPATH', ':'.join(include_dirs))
-os.environ['CPATH'] = ':'.join(include_dirs)
 
 ################################################################################
 # SETUP
