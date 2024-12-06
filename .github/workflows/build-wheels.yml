@@ -333,7 +333,8 @@ jobs:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
       # Need to be able to save Docker Hub credentials to keychain
-      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
+      # Unable to do this via the ansible script for self hosted mac m1 runners
+      - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
       - uses: ./.github/actions/run-ee-server
