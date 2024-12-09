@@ -270,7 +270,7 @@ jobs:
     - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
       name: Ensure that linker can find openssl
       # On mac m1, openssl@3 installed via brew is not in the linker's default library path
-      run: echo LIBRARY_PATH=$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }}):$LIBRARY_PATH >> $GITHUB_ENV
+      run: echo CFLAGS="-L$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }}) $CFLAGS" >> $GITHUB_ENV
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
