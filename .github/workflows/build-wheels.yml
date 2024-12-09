@@ -262,9 +262,9 @@ jobs:
       uses: pypa/cibuildwheel@v2.21.3
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
-        # We use delocate to repair the wheel because it verifies that the macOS version tag in the wheel name is correct
-        # Linking the static libraries produces a warning that the library version is newer than the wheel's macOS version tag
-        # but it doesn't throw an error.
+        # We use delocate to repair the wheel because it throws an error if
+        # the openssl library version is newer than the wheel's macOS version tag
+        # Linking the static libraries produces a warning for that same reason that but it doesn't throw an error.
         # macOS wheel is only backwards compatible with the macOS major version it is built from
         # Use single dash for backwards compatibility with older sw_vers
         CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d"." -f 1).0
