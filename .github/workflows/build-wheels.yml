@@ -245,11 +245,6 @@ jobs:
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }} >> $GITHUB_ENV
 
-    - name: The macOS wheel is only backwards compatible with the macOS major version it is built from
-      if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
-      # Use single dash for backwards compatibility
-      run: echo MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d"." -f 1).0 >> $GITHUB_ENV
-
     - uses: docker/login-action@v3
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
       with:
@@ -267,7 +262,9 @@ jobs:
       uses: pypa/cibuildwheel@v2.21.3
       env:
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
-        CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
+        # macOS wheel is only backwards compatible with the macOS major version it is built from
+        # Use single dash for backwards compatibility with older sw_vers
+        CIBW_ENVIRONMENT_MACOS: MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d"." -f 1).0
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
