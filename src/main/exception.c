@@ -18,12 +18,12 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_status.h>
+#include <aerospike/as_log_macros.h>
 
 #include "conversions.h"
 #include <string.h>
 #include <stdlib.h>
 #include "exceptions.h"
-#include "exception_types.h"
 #include "macros.h"
 
 static PyObject *py_module;
@@ -258,6 +258,7 @@ struct exception_def exception_defs[] = {
 
 // TODO: define aerospike module name somewhere else
 #define FULLY_QUALIFIED_MODULE_NAME "aerospike." SUBMODULE_NAME
+#define NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS "__errcode_to_exc_class"
 
 // Returns NULL if an error occurred
 PyObject *AerospikeException_New(void)
@@ -272,8 +273,23 @@ PyObject *AerospikeException_New(void)
                                            NULL};
     py_module = PyModule_Create(&moduledef);
     if (py_module == NULL) {
-        return NULL;
+        goto error;
     }
+
+    PyObject *py_dict_errcode_to_exc_class = PyDict_New();
+    if (py_dict_errcode_to_exc_class == NULL) {
+        goto MODULE_CLEANUP_ON_ERROR;
+    }
+
+    int retval = PyModule_AddObject(
+        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS,
+        py_dict_errcode_to_exc_class);
+    if (retval == -1) {
+        Py_DECREF(py_dict_errcode_to_exc_class);
+        goto MODULE_CLEANUP_ON_ERROR;
+    }
+    // Getting another strong ref to the error code dict isn't necessary
+    // As long as the module exists, so will the dictionary
 
     unsigned long exception_count =
         sizeof(exception_defs) / sizeof(exception_defs[0]);
@@ -336,6 +352,12 @@ PyObject *AerospikeException_New(void)
         }
         int retval =
             PyObject_SetAttrString(py_exception_class, "code", py_code);
+        if (retval == -1) {
+            goto EXC_CLASS_CLEANUP_ON_ERROR;
+        }
+
+        retval = PyDict_SetItem(py_dict_errcode_to_exc_class, py_code,
+                                py_exception_class);
         Py_DECREF(py_code);
         if (retval == -1) {
             goto EXC_CLASS_CLEANUP_ON_ERROR;
@@ -357,6 +379,7 @@ PyObject *AerospikeException_New(void)
 
 MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_module);
+error:
     return NULL;
 }
 
@@ -371,123 +394,193 @@ void remove_exception(as_error *err)
     }
 }
 
-// We have this as a separate method because both raise_exception and raise_exception_old need to use it
-void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
-                                                  PyObject *py_tuple)
+// Return NULL on error
+// Otherwise returns strong reference to exception class
+PyObject *get_py_exc_class_from_err_code(as_status err_code)
 {
-    for (unsigned long i = 0;
-         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
-         i++) {
-        // Here, we are assuming the number of attrs is the same as the number of tuple members
-        PyObject *py_arg = PyTuple_GetItem(py_tuple, i);
-        if (py_arg == NULL) {
-            // Don't fail out if number of attrs > number of tuple members
-            // This condition should never be true, though
-            PyErr_Clear();
+    PyObject *py_dict_err_code = PyObject_GetAttrString(
+        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS);
+    if (py_dict_err_code == NULL) {
+        goto error;
+    }
+
+    PyObject *py_err_code = PyLong_FromLong(err_code);
+    if (py_err_code == NULL) {
+        Py_DECREF(py_dict_err_code);
+        goto error;
+    }
+
+    PyObject *py_exc_class =
+        PyDict_GetItemWithError(py_dict_err_code, py_err_code);
+    Py_DECREF(py_dict_err_code);
+    Py_XDECREF(py_err_code);
+
+    if (py_exc_class == NULL) {
+        if (PyErr_Occurred()) {
+            goto error;
+        }
+
+        // KeyError
+        // Exception class could not be found with the error code
+
+        py_exc_class =
+            PyObject_GetAttrString(py_module, AEROSPIKE_ERR_EXCEPTION_NAME);
+        if (py_exc_class == NULL) {
+            goto error;
+        }
+    }
+    else {
+        Py_INCREF(py_exc_class);
+    }
+
+    return py_exc_class;
+error:
+    return NULL;
+}
+
+enum {
+    AS_PY_ERR_TUPLE_CODE = 0,
+    AS_PY_ERR_TUPLE_MSG = 1,
+    AS_PY_ERR_TUPLE_FILE = 2,
+    AS_PY_ERR_TUPLE_LINE = 3,
+    AS_PY_ERR_TUPLE_IN_DOUBT = 4
+};
+
+#define ERROR_TUPLE_SIZE 5
+
+PyObject *create_pytuple_using_as_error(const as_error *err)
+{
+    PyObject *py_err_tuple = PyTuple_New(ERROR_TUPLE_SIZE);
+    if (py_err_tuple == NULL) {
+        goto error;
+    }
+
+    Py_ssize_t size_of_py_tuple = PyTuple_Size(py_err_tuple);
+    if (size_of_py_tuple == -1) {
+        goto CLEANUP_TUPLE_ON_ERROR;
+    }
+
+    for (Py_ssize_t i = 0; i < size_of_py_tuple; i++) {
+        PyObject *py_member_of_tuple = NULL;
+        switch (i) {
+        case AS_PY_ERR_TUPLE_CODE:
+            py_member_of_tuple = PyLong_FromLongLong(err->code);
+            break;
+        case AS_PY_ERR_TUPLE_MSG:
+            py_member_of_tuple = PyUnicode_FromString(err->message);
+            break;
+        case AS_PY_ERR_TUPLE_FILE:
+            if (err->file) {
+                py_member_of_tuple = PyUnicode_FromString(err->file);
+            }
+            else {
+                Py_INCREF(Py_None);
+                py_member_of_tuple = Py_None;
+            }
+            break;
+        case AS_PY_ERR_TUPLE_LINE:
+            if (err->line > 0) {
+                py_member_of_tuple = PyLong_FromLong(err->line);
+            }
+            else {
+                Py_INCREF(Py_None);
+                py_member_of_tuple = Py_None;
+            }
+            break;
+        case AS_PY_ERR_TUPLE_IN_DOUBT:
+            py_member_of_tuple = PyBool_FromLong(err->in_doubt);
+            break;
+        default:
+            // This codepath should not have executed
+            as_log_warn("Invalid index %d when creating a Python error tuple",
+                        i);
             break;
         }
-        PyObject_SetAttrString(py_exc, aerospike_err_attrs[i], py_arg);
+
+        if (py_member_of_tuple == NULL) {
+            // One of the above methods to create the member failed
+            goto CLEANUP_TUPLE_ON_ERROR;
+        }
+
+        int retval = PyTuple_SetItem(py_err_tuple, i, py_member_of_tuple);
+        if (retval == -1) {
+            goto CLEANUP_TUPLE_ON_ERROR;
+        }
     }
+
+    return py_err_tuple;
+
+CLEANUP_TUPLE_ON_ERROR:
+    Py_DECREF(py_err_tuple);
+error:
+    return NULL;
 }
 
-// TODO: idea. Use python dict to map error code to exception
-void raise_exception(as_error *err)
+int raise_exception_with_api_call_extra_info(as_error *err,
+                                             as_exc_extra_info *extra_info)
 {
-    PyObject *py_key = NULL, *py_value = NULL;
-    Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
-    bool found = false;
-
-    while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
-        if (PyObject_HasAttrString(py_value, "code")) {
-            PyObject *py_code = PyObject_GetAttrString(py_value, "code");
-            if (py_code == Py_None) {
-                continue;
-            }
-            if (err->code == PyLong_AsLong(py_code)) {
-                found = true;
-                break;
-            }
-        }
-    }
-    // We haven't found the right exception, just use AerospikeError
-    if (!found) {
-        PyObject *base_exception =
-            PyDict_GetItemString(py_module_dict, "AerospikeError");
-        if (base_exception) {
-            py_value = base_exception;
-        }
+    int retval = -1;
+    PyObject *py_exc_class = get_py_exc_class_from_err_code(err->code);
+    if (py_exc_class == NULL) {
+        goto finish;
     }
 
-    // Convert borrowed reference of exception class to strong reference
-    Py_INCREF(py_value);
+    PyObject *py_err_tuple = create_pytuple_using_as_error(err);
+    if (py_err_tuple == NULL) {
+        goto cleanup_exc_class;
+    }
 
-    // Convert C error to Python exception
-    PyObject *py_err = NULL;
-    error_to_pyobject(err, &py_err);
-    set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
+    // Set exception class attributes as well
+    for (int i = 0; i < ERROR_TUPLE_SIZE; i++) {
+        PyObject *py_tuple_item = PyTuple_GetItem(py_err_tuple, i);
+        if (py_tuple_item == NULL) {
+            goto cleanup_err_tuple;
+        }
 
-    // Raise exception
-    PyErr_SetObject(py_value, py_err);
+        retval = PyObject_SetAttrString(py_exc_class, aerospike_err_attrs[i],
+                                        py_tuple_item);
+        if (retval == -1) {
+            goto cleanup_err_tuple;
+        }
+    }
 
-    Py_DECREF(py_value);
-    Py_DECREF(py_err);
+    if (extra_info != NULL) {
+        as_exc_extra_info *curr_pair = extra_info;
+        while (curr_pair->attr_name != NULL) {
+            if (PyObject_HasAttrString(py_exc_class, curr_pair->attr_name)) {
+                // Some API methods that raise an exception will set an attribute value to be NULL
+                // i.e operate() sets bin to be NULL when raising an exception
+                // We don't want those API methods to remove the attribute from the exception class, so just change to None
+                // TODO: make sure those API methods aren't deleting the attributes
+                if (curr_pair->py_value == NULL) {
+                    Py_INCREF(Py_None);
+                    curr_pair->py_value = Py_None;
+                }
+                retval = PyObject_SetAttrString(
+                    py_exc_class, curr_pair->attr_name, curr_pair->py_value);
+                Py_DECREF(Py_None);
+                if (retval == -1) {
+                    goto cleanup_err_tuple;
+                }
+            }
+            curr_pair++;
+        }
+    }
+
+    // TODO: not sure how to check if this fails
+    PyErr_SetObject(py_exc_class, py_err_tuple);
+    retval = 0;
+
+cleanup_err_tuple:
+    Py_DECREF(py_err_tuple);
+cleanup_exc_class:
+    Py_DECREF(py_exc_class);
+finish:
+    return retval;
 }
 
-PyObject *raise_exception_old(as_error *err)
+// Return -1 on error
+int raise_exception(as_error *err)
 {
-    PyObject *py_key = NULL, *py_value = NULL;
-    Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
-    bool found = false;
-
-    while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
-        if (PyObject_HasAttrString(py_value, "code")) {
-            PyObject *py_code = PyObject_GetAttrString(py_value, "code");
-            if (py_code == Py_None) {
-                continue;
-            }
-            if (err->code == PyLong_AsLong(py_code)) {
-                found = true;
-                PyObject *py_attr = NULL;
-                py_attr = PyUnicode_FromString(err->message);
-                PyObject_SetAttrString(py_value, "msg", py_attr);
-                Py_DECREF(py_attr);
-
-                // as_error.file is a char* so this may be null
-                if (err->file) {
-                    py_attr = PyUnicode_FromString(err->file);
-                    PyObject_SetAttrString(py_value, "file", py_attr);
-                    Py_DECREF(py_attr);
-                }
-                else {
-                    PyObject_SetAttrString(py_value, "file", Py_None);
-                }
-                // If the line is 0, set it as None
-                if (err->line > 0) {
-                    py_attr = PyLong_FromLong(err->line);
-                    PyObject_SetAttrString(py_value, "line", py_attr);
-                    Py_DECREF(py_attr);
-                }
-                else {
-                    PyObject_SetAttrString(py_value, "line", Py_None);
-                }
-
-                PyObject_SetAttrString(py_value, "in_doubt",
-                                       PyBool_FromLong(err->in_doubt));
-
-                break;
-            }
-            Py_DECREF(py_code);
-        }
-    }
-    // We haven't found the right exception, just use AerospikeError
-    if (!found) {
-        PyObject *base_exception =
-            PyDict_GetItemString(py_module_dict, "AerospikeError");
-        if (base_exception) {
-            py_value = base_exception;
-        }
-    }
-    return py_value;
+    return raise_exception_with_api_call_extra_info(err, NULL);
 }
