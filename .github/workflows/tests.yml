@@ -45,6 +45,12 @@ jobs:
     strategy:
       matrix:
         py-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        # Make sure we can build and run tests on an instrumented build that uses libasan
+        # We aren't necessarily checking for memory errors / leaks in this test
+        sanitizer: [false]
+        include:
+        - py-version: 3.8
+          sanitizer: true
       fail-fast: false
 
     steps:
@@ -64,15 +70,23 @@ jobs:
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
 
+    - if: ${{ matrix.sanitizer }}
+      run: echo SANITIZER=1 >> $GITHUB_ENV
+
     - name: Build client
       run: python3 -m build
       env:
         CFLAGS: '-Werror'
 
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
+
+    - if: ${{ matrix.sanitizer }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
+
     - name: Send wheel to test jobs
       uses: actions/upload-artifact@v3
       with:
-        name: wheel-${{ matrix.py-version }}
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
         path: ./dist/*.whl
 
   generate-coverage-report:
@@ -259,6 +273,10 @@ jobs:
           "3.12",
           "3.13"
         ]
+        sanitizer: [false]
+        include:
+          - py-version: 3.8
+            sanitizer: true
       fail-fast: false
 
     steps:
@@ -271,9 +289,14 @@ jobs:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
 
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
+
+    - if: ${{ matrix.sanitizer }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
+
     - uses: actions/download-artifact@v3
       with:
-        name: wheel-${{ matrix.py-version }}
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
       run: pip install *.whl
@@ -302,6 +325,11 @@ jobs:
     - uses: ./.github/actions/wait-for-as-server-to-start
       with:
         container-name: aerospike
+
+    - if: ${{ matrix.sanitizer }}
+      run: |
+        echo ASAN_OPTIONS='halt_on_error=0' >> $GITHUB_ENV
+        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
 
     - name: Run tests
       run: python -m pytest ./new_tests -vv
