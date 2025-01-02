@@ -111,7 +111,7 @@ struct exception_def exception_defs[] = {
                   AEROSPIKE_ERR_ASYNC_CONNECTION, NULL),
     EXCEPTION_DEF("ClientAbortError", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_CLIENT_ABORT, NULL),
-    EXCEPTION_DEF("TranactionFailed", CLIENT_ERR_EXCEPTION_NAME,
+    EXCEPTION_DEF("TransactionFailed", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_TXN_FAILED, NULL),
     // Server errors
     EXCEPTION_DEF("InvalidRequest", SERVER_ERR_EXCEPTION_NAME,
