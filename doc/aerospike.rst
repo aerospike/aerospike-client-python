@@ -1589,10 +1589,6 @@ MRT Commit Status
 
     Transaction has already been committed.
 
-.. data:: MRT_COMMIT_ALREADY_ABORTED
-
-    Transaction has already been aborted.
-
 .. data:: MRT_COMMIT_VERIFY_FAILED
 
     Transaction verify failed. Transaction will be aborted.
@@ -1619,10 +1615,6 @@ MRT Abort Status
 .. data:: MRT_ABORT_OK
 
     Abort succeeded.
-
-.. data:: MRT_ABORT_ALREADY_COMMITTED
-
-    Transaction has already been committed.
 
 .. data:: MRT_ABORT_ALREADY_ABORTED
 
