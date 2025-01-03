@@ -538,6 +538,8 @@ Policies
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
+            | This compression feature requires the Enterprise Edition Server.
+            |
             | Default: ``False``
         * **durable_delete** :class:`bool`
             | Perform durable delete (requires Enterprise server version >= 3.10)
