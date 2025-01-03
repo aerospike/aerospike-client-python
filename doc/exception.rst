@@ -152,6 +152,30 @@ Client Errors
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
+.. py:exception:: TransactionFailed
+
+    Multi-record transaction failed.
+
+    Error code: ``-17``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: TransactionAlreadyCommitted
+
+    Multi-record transaction abort called, but the transaction was already committed.
+
+    Error code: ``-18``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: TransactionAlreadyAborted
+
+    Multi-record transaction commit called, but the transaction was already aborted.
+
+    Error code: ``-19``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
 Server Errors
 -------------
 
