@@ -89,8 +89,8 @@ class TestMRTBasicFunctionality:
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         self.as_connection.abort(mrt)
-        status = self.as_connection.commit(mrt)
-        assert status == aerospike.MRT_COMMIT_ALREADY_ABORTED
+        with pytest.raises(e.TransactionAlreadyAborted):
+            self.as_connection.commit(mrt)
 
     # Test case 10: Issue abort after issung commit. (P1)
     def test_abort_fail(self):
@@ -100,5 +100,5 @@ class TestMRTBasicFunctionality:
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         self.as_connection.commit(mrt)
-        status = self.as_connection.abort(mrt)
-        assert status == aerospike.MRT_ABORT_ALREADY_COMMITTED
+        with pytest.raises(e.TransactionAlreadyCommitted):
+            self.as_connection.abort(mrt)
