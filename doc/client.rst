@@ -1622,6 +1622,8 @@ Write Policies
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
+            | This compression feature requires the Enterprise Edition Server.
+            |
             | Default: ``False``
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
@@ -1716,6 +1718,8 @@ Read Policies
             | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
+            |
+            | This compression feature requires the Enterprise Edition Server.
             |
             | Default: ``False``
         * **deserialize** (:class:`bool`)
@@ -1824,6 +1828,8 @@ Operate Policies
             | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
+            |
+            | This compression feature requires the Enterprise Edition Server.
             |
             | Default: ``False``
         * **key**
@@ -1957,6 +1963,8 @@ Apply Policies
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
+            | This compression feature requires the Enterprise Edition Server.
+            |
             | Default: ``False``
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
@@ -2038,6 +2046,8 @@ Remove Policies
             | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
+            |
+            | This compression feature requires the Enterprise Edition Server.
             |
             | Default: ``False``
         * **key**
@@ -2124,6 +2134,8 @@ Batch Policies
             | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
+            |
+            | This compression feature requires the Enterprise Edition Server.
             |
             | Default: ``False``
         * **read_mode_ap**
