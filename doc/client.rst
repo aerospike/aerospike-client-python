@@ -1572,7 +1572,7 @@ The metadata dictionary has the following key-value pairs:
 Policies
 ========
 
-.. |on_locking_only| **on_locking_only** (:class:`bool`)
+.. |on_locking_only| replace:: **on_locking_only** (:class:`bool`)
 
     Execute the write command only if the record is not already locked by this transaction.
     If this field is true and the record is already locked by this transaction, the command will
