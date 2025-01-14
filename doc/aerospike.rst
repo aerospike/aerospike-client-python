@@ -1575,3 +1575,69 @@ Query Duration
 
      Treat query as a LONG query, but relax read consistency for AP namespaces.
      This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
+
+.. _mrt_commit_status_constants:
+
+MRT Commit Status
+-----------------
+
+.. data:: MRT_COMMIT_OK
+
+    Commit succeeded.
+
+.. data:: MRT_COMMIT_ALREADY_COMMITTED
+
+    Transaction has already been committed.
+
+.. data:: MRT_COMMIT_VERIFY_FAILED
+
+    Transaction verify failed. Transaction will be aborted.
+
+.. data:: MRT_COMMIT_MARK_ROLL_FORWARD_ABANDONED
+
+    Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
+    If the error is in doubt (usually timeout), the commit is in doubt.
+
+.. data:: MRT_COMMIT_ROLL_FORWARD_ABANDONED
+
+    Client roll forward abandoned. Server will eventually commit the transaction.
+
+.. data:: MRT_COMMIT_CLOSE_ABANDONED
+
+    Transaction has been rolled forward, but client transaction close was abandoned.
+    Server will eventually close the transaction.
+
+.. _mrt_abort_status_constants:
+
+MRT Abort Status
+----------------
+
+.. data:: MRT_ABORT_OK
+
+    Abort succeeded.
+
+.. data:: MRT_ABORT_ALREADY_ABORTED
+
+    Transaction has already been aborted.
+
+.. data:: MRT_ABORT_ROLL_BACK_ABANDONED
+
+    Client roll back abandoned. Server will eventually abort the transaction.
+
+.. data:: MRT_ABORT_CLOSE_ABANDONED
+
+    Transaction has been rolled back, but client transaction close was abandoned.
+    Server will eventually close the transaction.
+
+.. _mrt_state:
+
+Multi-record Transaction State
+------------------------------
+
+.. data:: MRT_STATE_OPEN
+
+.. data:: MRT_STATE_VERIFIED
+
+.. data:: MRT_STATE_COMMITTED
+
+.. data:: MRT_STATE_ABORTED

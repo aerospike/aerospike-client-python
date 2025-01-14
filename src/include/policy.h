@@ -29,14 +29,6 @@
 #include <aerospike/as_partition_filter.h>
 #include <aerospike/as_metrics.h>
 
-#define MAX_CONSTANT_STR_SIZE 512
-
-/*
- *******************************************************************************************************
- *Structure to map constant number to constant name string for Aerospike constants.
- *******************************************************************************************************
- */
-
 enum Aerospike_serializer_values {
     SERIALIZER_NONE, /* default handler for serializer type */
     SERIALIZER_PYTHON,
@@ -193,20 +185,6 @@ enum aerospike_cdt_ctx_identifiers {
     CDT_CTX_MAP_KEY_CREATE = 0x24
 };
 
-typedef struct Aerospike_Constants {
-    long constantno;
-    char constant_str[MAX_CONSTANT_STR_SIZE];
-} AerospikeConstants;
-
-typedef struct Aerospike_JobConstants {
-    char job_str[MAX_CONSTANT_STR_SIZE];
-    char exposed_job_str[MAX_CONSTANT_STR_SIZE];
-} AerospikeJobConstants;
-#define AEROSPIKE_CONSTANTS_ARR_SIZE                                           \
-    (sizeof(aerospike_constants) / sizeof(AerospikeConstants))
-#define AEROSPIKE_JOB_CONSTANTS_ARR_SIZE                                       \
-    (sizeof(aerospike_job_constants) / sizeof(AerospikeJobConstants))
-
 as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_admin *policy,
                                    as_policy_admin **policy_p,
@@ -269,8 +247,6 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 
 as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
                                  as_map_policy *policy);
-
-as_status declare_policy_constants(PyObject *aerospike);
 
 void set_scan_options(as_error *err, as_scan *scan_p, PyObject *py_options);
 

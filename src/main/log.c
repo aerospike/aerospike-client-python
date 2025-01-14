@@ -31,32 +31,6 @@
 
 static AerospikeLogCallback user_callback;
 
-/*
- * Declare's log level constants.
- */
-as_status declare_log_constants(PyObject *aerospike)
-{
-
-    // Status to be returned.
-    as_status status = AEROSPIKE_OK;
-
-    // Check if aerospike object is present or no.
-    if (!aerospike) {
-        status = AEROSPIKE_ERR;
-        goto exit;
-    }
-
-    // Add incidividual constants to aerospike module.
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_OFF", LOG_LEVEL_OFF);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_WARN", LOG_LEVEL_WARN);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_INFO", LOG_LEVEL_INFO);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
-exit:
-    return status;
-}
-
 PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
                                   PyObject *kwds)
 {
@@ -208,7 +182,7 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
 void Aerospike_Enable_Default_Logging()
 {
     // Invoke C API to set log level
-    as_log_set_level((as_log_level)LOG_LEVEL_ERROR);
+    as_log_set_level((as_log_level)AS_LOG_LEVEL_ERROR);
     // Register callback to C-SDK
     as_log_set_callback((as_log_callback)console_log_cb);
 
