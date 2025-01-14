@@ -1674,7 +1674,7 @@ Write Policies
 
             Default: :py:obj:`None`
 
-        * .. include:: ./on_locking_only.rst
+        .. include:: ./on_locking_only.rst
 
 .. _aerospike_read_policies:
 
