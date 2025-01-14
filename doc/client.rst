@@ -1916,6 +1916,8 @@ Operate Policies
 
             Default: :py:obj:`None`
 
+        * .. include:: ./on_locking_only.rst
+
 .. _aerospike_apply_policies:
 
 Apply Policies
@@ -2000,6 +2002,7 @@ Apply Policies
 
             Default: :py:obj:`None`
 
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_remove_policies:
 
@@ -2280,6 +2283,8 @@ Batch Write Policies
 
             Default: ``0``
 
+        * .. include:: ./on_locking_only.rst
+
 .. _aerospike_batch_apply_policies:
 
 Batch Apply Policies
@@ -2316,6 +2321,8 @@ Batch Apply Policies
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
             |
             | Default: None
+
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_batch_remove_policies:
 
