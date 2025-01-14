@@ -16,6 +16,7 @@
 #include <stdint.h>
 
 #include "policy_config.h"
+#include "policy.h"
 
 as_status set_optional_key(as_policy_key *target_ptr, PyObject *py_policy,
                            const char *name);
@@ -42,9 +43,13 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
 {
 
     as_status set_policy_status = AEROSPIKE_OK;
+    as_error err;
 
     PyObject *read_policy = PyDict_GetItemString(py_policies, "read");
-    set_policy_status = set_read_policy(&config->policies.read, read_policy);
+    set_policy_status =
+        pyobject_to_policy_read(NULL, &err, read_policy, &config->policies.read,
+                                NULL, NULL, NULL, NULL);
+    as_error_reset(&err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
@@ -135,60 +140,6 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
                                          batch_parent_write_policy);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
-    }
-
-    return AEROSPIKE_OK;
-}
-
-as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy)
-{
-
-    as_status status = AEROSPIKE_OK;
-    if (!py_policy) {
-        return AEROSPIKE_OK;
-    }
-
-    if (!PyDict_Check(py_policy)) {
-        return AEROSPIKE_ERR_PARAM;
-    }
-
-    status = set_base_policy(&read_policy->base, py_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_key(&read_policy->key, py_policy, "key");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_replica(&read_policy->replica, py_policy, "replica");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_bool_property(&read_policy->deserialize, py_policy,
-                                        "deserialize");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_ap_read_mode(&read_policy->read_mode_ap, py_policy,
-                                       "read_mode_ap");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_sc_read_mode(&read_policy->read_mode_sc, py_policy,
-                                       "read_mode_sc");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_int_property(&read_policy->read_touch_ttl_percent,
-                                       py_policy, "read_touch_ttl_percent");
-    if (status != AEROSPIKE_OK) {
-        return status;
     }
 
     return AEROSPIKE_OK;
