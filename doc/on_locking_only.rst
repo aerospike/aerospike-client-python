@@ -1,5 +1,7 @@
 **on_locking_only** (:class:`bool`)
 
+    NOTE: this policy only works for transaction level policies, not config level policies.
+
     Execute the write command only if the record is not already locked by this transaction.
     If this field is true and the record is already locked by this transaction, the command will
     raise an Aerospike exception with server error code ``AEROSPIKE_MRT_ALREADY_LOCKED`` (``126``).
