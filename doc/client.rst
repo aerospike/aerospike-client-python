@@ -1572,6 +1572,17 @@ The metadata dictionary has the following key-value pairs:
 Policies
 ========
 
+.. |on_locking_only| **on_locking_only** (:class:`bool`)
+
+    Execute the write command only if the record is not already locked by this transaction.
+    If this field is true and the record is already locked by this transaction, the command will
+    raise an Aerospike exception with server error code ``AEROSPIKE_MRT_ALREADY_LOCKED`` (``126``).
+
+    This field is useful for safely retrying non-idempotent writes as an alternative to simply
+    aborting the transaction.
+
+    Default: :py:obj:`False`
+
 .. _aerospike_write_policies:
 
 Write Policies
@@ -1674,7 +1685,7 @@ Write Policies
 
             Default: :py:obj:`None`
 
-        * .. include:: ./on_locking_only.rst
+        * |on_locking_only|
 
 .. _aerospike_read_policies:
 
