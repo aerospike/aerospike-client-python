@@ -45,6 +45,7 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
 
     as_status set_policy_status = AEROSPIKE_OK;
     as_error err;
+    as_error_init(&err);
 
     PyObject *read_policy = PyDict_GetItemString(py_policies, "read");
     set_policy_status =
