@@ -29,6 +29,8 @@
 #include <aerospike/as_partition_filter.h>
 #include <aerospike/as_metrics.h>
 
+#include "types.h"
+
 enum Aerospike_serializer_values {
     SERIALIZER_NONE, /* default handler for serializer type */
     SERIALIZER_PYTHON,
