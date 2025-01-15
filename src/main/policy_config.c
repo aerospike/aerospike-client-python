@@ -140,7 +140,7 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
     const char *batch_policy_names[] = {"txn_verify", "txn_roll"};
     as_policy_batch *batch_policies[] = {&config->policies.txn_verify,
                                          &config->policies.txn_roll};
-    for (int i = 0;
+    for (unsigned long i = 0;
          i < sizeof(batch_policy_names) / sizeof(batch_policy_names[0]); i++) {
         PyObject *py_batch_policy =
             PyDict_GetItemString(py_policies, batch_policy_names[i]);
