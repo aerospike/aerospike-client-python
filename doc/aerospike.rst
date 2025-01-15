@@ -1583,8 +1583,8 @@ Query Duration
 
 .. _mrt_commit_status_constants:
 
-MRT Commit Status
------------------
+Transaction Commit Status
+-------------------------
 
 .. data:: MRT_COMMIT_OK
 
@@ -1614,8 +1614,8 @@ MRT Commit Status
 
 .. _mrt_abort_status_constants:
 
-MRT Abort Status
-----------------
+Transaction Abort Status
+------------------------
 
 .. data:: MRT_ABORT_OK
 
@@ -1636,7 +1636,7 @@ MRT Abort Status
 
 .. _mrt_state:
 
-Multi-record Transaction State
+Transaction State
 ------------------------------
 
 .. data:: MRT_STATE_OPEN
