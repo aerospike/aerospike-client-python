@@ -1,4 +1,4 @@
-**txn** :class:`aerospike.Transaction`
+**txn** (:class:`aerospike.Transaction`)
 
     NOTE: this policy only works for transaction level policies, not config level policies.
 
