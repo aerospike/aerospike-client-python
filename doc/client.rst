@@ -1669,10 +1669,7 @@ Write Policies
 
             Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
-
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
         * .. include:: ./on_locking_only.rst
 
@@ -1777,10 +1774,7 @@ Read Policies
 
             .. note:: Requires Aerospike server version >= 5.2.
 
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
-
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
 .. _aerospike_operate_policies:
 
@@ -1911,10 +1905,7 @@ Operate Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
-
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
         * .. include:: ./on_locking_only.rst
 
@@ -1997,10 +1988,8 @@ Apply Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
 
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
         * .. include:: ./on_locking_only.rst
 
@@ -2087,10 +2076,8 @@ Remove Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
 
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
 .. _aerospike_batch_policies:
 
@@ -2225,10 +2212,8 @@ Batch Policies
             Server versions < 6.0 do not support this field and treat this value as false for key specific errors.
 
             Default: ``True``
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
 
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
 .. _aerospike_batch_write_policies:
 
