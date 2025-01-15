@@ -587,7 +587,7 @@ Single-Record Transactions
     .. index::
         single: User Defined Functions
 
-Multi-Record Transactions
+Transactions
 --------------------------
 
 .. class:: Client
@@ -595,23 +595,23 @@ Multi-Record Transactions
 
     .. method:: commit(transaction: aerospike.Transaction) -> int:
 
-        Attempt to commit the given multi-record transaction. First, the expected record versions are
+        Attempt to commit the given transaction. First, the expected record versions are
         sent to the server nodes for verification. If all nodes return success, the transaction is
         committed. Otherwise, the transaction is aborted.
 
         Requires server version 8.0+
 
-        :param transaction: Multi-record transaction.
+        :param transaction: Transaction.
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the commit. One of :ref:`mrt_commit_status_constants`.
 
     .. method:: abort(transaction: aerospike.Transaction) -> int:
 
-        Abort and rollback the given multi-record transaction.
+        Abort and rollback the given transaction.
 
         Requires server version 8.0+
 
-        :param transaction: Multi-record transaction.
+        :param transaction: Transaction.
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the abort. One of :ref:`mrt_abort_status_constants`.
 

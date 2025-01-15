@@ -154,7 +154,7 @@ Client Errors
 
 .. py:exception:: TransactionFailed
 
-    Multi-record transaction failed.
+    Transaction failed.
 
     Error code: ``-17``
 
@@ -162,7 +162,7 @@ Client Errors
 
 .. py:exception:: TransactionAlreadyCommitted
 
-    Multi-record transaction abort called, but the transaction was already committed.
+    Transaction abort called, but the transaction was already committed.
 
     Error code: ``-18``
 
@@ -170,7 +170,7 @@ Client Errors
 
 .. py:exception:: TransactionAlreadyAborted
 
-    Multi-record transaction commit called, but the transaction was already aborted.
+    Transaction commit called, but the transaction was already aborted.
 
     Error code: ``-19``
 
