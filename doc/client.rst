@@ -1669,10 +1669,9 @@ Write Policies
 
             Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
 
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
+        * .. include:: ./txn.rst
 
-            Default: :py:obj:`None`
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_read_policies:
 
@@ -1775,10 +1774,7 @@ Read Policies
 
             .. note:: Requires Aerospike server version >= 5.2.
 
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
-
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
 .. _aerospike_operate_policies:
 
@@ -1909,10 +1905,9 @@ Operate Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
+        * .. include:: ./txn.rst
 
-            Default: :py:obj:`None`
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_apply_policies:
 
@@ -1993,11 +1988,10 @@ Apply Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
 
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_remove_policies:
 
@@ -2082,10 +2076,8 @@ Remove Policies
             | Default: None
 
             .. note:: Requires Aerospike server version >= 5.2.
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
 
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
 .. _aerospike_batch_policies:
 
@@ -2220,10 +2212,8 @@ Batch Policies
             Server versions < 6.0 do not support this field and treat this value as false for key specific errors.
 
             Default: ``True``
-        * **txn** :class:`aerospike.Transaction`
-            Multi-record command identifier.
 
-            Default: :py:obj:`None`
+        * .. include:: ./txn.rst
 
 .. _aerospike_batch_write_policies:
 
@@ -2278,6 +2268,8 @@ Batch Write Policies
 
             Default: ``0``
 
+        * .. include:: ./on_locking_only.rst
+
 .. _aerospike_batch_apply_policies:
 
 Batch Apply Policies
@@ -2314,6 +2306,8 @@ Batch Apply Policies
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
             |
             | Default: None
+
+        * .. include:: ./on_locking_only.rst
 
 .. _aerospike_batch_remove_policies:
 
