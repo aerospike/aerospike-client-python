@@ -137,6 +137,20 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
         return set_policy_status;
     }
 
+    const char *batch_policy_names[] = {"txn_verify", "txn_roll"};
+    as_policy_batch *batch_policies[] = {&config->policies.txn_verify,
+                                         &config->policies.txn_roll};
+    for (int i = 0;
+         i < sizeof(batch_policy_names) / sizeof(batch_policy_names[0]); i++) {
+        PyObject *py_batch_policy =
+            PyDict_GetItemString(py_policies, batch_policy_names[i]);
+        set_policy_status =
+            set_batch_policy(batch_policies[i], batch_parent_write_policy);
+        if (set_policy_status != AEROSPIKE_OK) {
+            return set_policy_status;
+        }
+    }
+
     return AEROSPIKE_OK;
 }
 

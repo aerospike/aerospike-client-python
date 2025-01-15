@@ -406,6 +406,11 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Contains :ref:`aerospike_info_policies`.
             * **admin** (:class:`dict`)
                 Contains :ref:`aerospike_admin_policies`.
+            * **txn_verify** (:class:`dict`)
+                Default transaction policy when verifying record versions in a batch. Contains :ref:`aerospike_batch_policies`.
+            * **txn_roll** (:class:`dict`)
+                Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
+                Contains :ref:`aerospike_batch_policies`.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
