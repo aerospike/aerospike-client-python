@@ -145,7 +145,7 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
         PyObject *py_batch_policy =
             PyDict_GetItemString(py_policies, batch_policy_names[i]);
         set_policy_status =
-            set_batch_policy(batch_policies[i], batch_parent_write_policy);
+            set_batch_policy(batch_policies[i], py_batch_policy);
         if (set_policy_status != AEROSPIKE_OK) {
             return set_policy_status;
         }
