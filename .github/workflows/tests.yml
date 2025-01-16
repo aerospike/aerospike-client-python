@@ -359,7 +359,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run lowest supported server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:6.3
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
