@@ -560,7 +560,7 @@ Admin Errors
 
 .. py:exception:: SecuritySchemeNotSupported
 
-    Security type not supported by connected server.
+    Security scheme not supported.
 
     Error code: ``53``
 
@@ -680,7 +680,7 @@ Admin Errors
 
 .. py:exception:: NotAuthenticated
 
-    User must be authentication before performing database operations.
+    User must be authenticated before performing database operations.
 
     Error code: ``80``
 
