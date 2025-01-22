@@ -1639,10 +1639,10 @@ Transaction Abort Status
 Transaction State
 ------------------------------
 
-.. data:: MRT_STATE_OPEN
+.. data:: TXN_STATE_OPEN
 
-.. data:: MRT_STATE_VERIFIED
+.. data:: TXN_STATE_VERIFIED
 
-.. data:: MRT_STATE_COMMITTED
+.. data:: TXN_STATE_COMMITTED
 
-.. data:: MRT_STATE_ABORTED
+.. data:: TXN_STATE_ABORTED
