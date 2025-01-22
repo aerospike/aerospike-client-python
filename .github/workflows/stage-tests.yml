@@ -119,12 +119,12 @@ jobs:
       if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' && env.PYTHON_VERSION == '3.11' }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} yum install -y python3.11
 
-    - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 1)'
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'ubuntu:22.04' }}
+    - name: 'Ubuntu 22.04 Install python 3 that comes by default (step 1)'
+      if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt update
 
-    - name: 'Ubuntu 22.04 Install python 3.10 that comes by default (step 2)'
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'ubuntu:22.04' }}
+    - name: 'Ubuntu 22.04 Install python 3 that comes by default (step 2)'
+      if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt install python3 python3-pip -y
 
     - name: Make sure pip is installed
