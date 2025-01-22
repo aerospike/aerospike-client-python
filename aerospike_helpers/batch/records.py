@@ -58,7 +58,7 @@ class BatchRecord:
 
 
 class Write(BatchRecord):
-    """ Write is used for executing Batch write operations with batch_write and retrieving batch write results.
+    """ Write is used for executing Batch write commands with batch_write and retrieving batch write results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.
@@ -109,7 +109,7 @@ class Write(BatchRecord):
 
 
 class Read(BatchRecord):
-    """ Read is used for executing Batch read operations with batch_write and retrieving results.
+    """ Read is used for executing Batch read commands with batch_write and retrieving results.
 
         Attributes:
             key (:obj:`tuple`): The aerospike key to operate on.

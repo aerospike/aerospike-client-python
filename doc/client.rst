@@ -364,7 +364,7 @@ Batch Operations
 
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
 
-        Perform the same read/write commands on multiple keys.
+        Perform the same read/write operations on multiple keys.
 
         .. note:: Prior to Python client 14.0.0, using the :meth:`~batch_operate()` method with only read operations caused an error.
             This bug was fixed in version 14.0.0.
@@ -1498,7 +1498,7 @@ Record Tuple
 
 .. object:: record
 
-    The record tuple which is returned by various read operations. It has the structure:
+    The record tuple which is returned by various read commands. It has the structure:
 
     ``(key, meta, bins)``
 
