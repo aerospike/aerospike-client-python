@@ -1586,28 +1586,28 @@ Query Duration
 Transaction Commit Status
 -------------------------
 
-.. data:: MRT_COMMIT_OK
+.. data:: COMMIT_OK
 
     Commit succeeded.
 
-.. data:: MRT_COMMIT_ALREADY_COMMITTED
+.. data:: COMMIT_ALREADY_COMMITTED
 
     Transaction has already been committed.
 
-.. data:: MRT_COMMIT_VERIFY_FAILED
+.. data:: COMMIT_VERIFY_FAILED
 
     Transaction verify failed. Transaction will be aborted.
 
-.. data:: MRT_COMMIT_MARK_ROLL_FORWARD_ABANDONED
+.. data:: COMMIT_MARK_ROLL_FORWARD_ABANDONED
 
     Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
     If the error is in doubt (usually timeout), the commit is in doubt.
 
-.. data:: MRT_COMMIT_ROLL_FORWARD_ABANDONED
+.. data:: COMMIT_ROLL_FORWARD_ABANDONED
 
     Client roll forward abandoned. Server will eventually commit the transaction.
 
-.. data:: MRT_COMMIT_CLOSE_ABANDONED
+.. data:: COMMIT_CLOSE_ABANDONED
 
     Transaction has been rolled forward, but client transaction close was abandoned.
     Server will eventually close the transaction.
@@ -1617,19 +1617,19 @@ Transaction Commit Status
 Transaction Abort Status
 ------------------------
 
-.. data:: MRT_ABORT_OK
+.. data:: ABORT_OK
 
     Abort succeeded.
 
-.. data:: MRT_ABORT_ALREADY_ABORTED
+.. data:: ABORT_ALREADY_ABORTED
 
     Transaction has already been aborted.
 
-.. data:: MRT_ABORT_ROLL_BACK_ABANDONED
+.. data:: ABORT_ROLL_BACK_ABANDONED
 
     Client roll back abandoned. Server will eventually abort the transaction.
 
-.. data:: MRT_ABORT_CLOSE_ABANDONED
+.. data:: ABORT_CLOSE_ABANDONED
 
     Transaction has been rolled back, but client transaction close was abandoned.
     Server will eventually close the transaction.
