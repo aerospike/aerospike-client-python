@@ -46,7 +46,7 @@ Layout
     * :mod:`aerospike_helpers`
         * Bin operations (list, map, bitwise, etc.)
         * Aerospike expressions
-        * Batch operations
+        * Batch commands
         * Complex data type context
 
 The :class:`aerospike` module contains these classes:

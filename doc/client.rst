@@ -215,9 +215,9 @@ Record Operations
             :code: python
 
     .. index::
-        single: Batch Operations
+        single: Batched Commands
 
-Batch Operations
+Batched Commands
 ----------------
 
 .. class:: Client
