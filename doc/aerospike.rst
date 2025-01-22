@@ -51,7 +51,7 @@ Client
 
         # Configure the client to first connect to a cluster node at 127.0.0.1
         # The client will learn about the other nodes in the cluster from the seed node.
-        # Also sets a top level policy for read operations
+        # Also sets a top level policy for read commands
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
             'policies': {'read': {'total_timeout': 1000}},
