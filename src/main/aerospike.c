@@ -517,10 +517,10 @@ static struct module_constant_name_to_value module_constants[] = {
      .value.integer = AS_ABORT_ROLL_BACK_ABANDONED},
     {"MRT_ABORT_CLOSE_ABANDONED", .value.integer = AS_ABORT_CLOSE_ABANDONED},
 
-    {"MRT_STATE_OPEN", .value.integer = AS_TXN_STATE_OPEN},
-    {"MRT_STATE_VERIFIED", .value.integer = AS_TXN_STATE_VERIFIED},
-    {"MRT_STATE_COMMITTED", .value.integer = AS_TXN_STATE_COMMITTED},
-    {"MRT_STATE_ABORTED", .value.integer = AS_TXN_STATE_ABORTED},
+    {"TXN_STATE_OPEN", .value.integer = AS_TXN_STATE_OPEN},
+    {"TXN_STATE_VERIFIED", .value.integer = AS_TXN_STATE_VERIFIED},
+    {"TXN_STATE_COMMITTED", .value.integer = AS_TXN_STATE_COMMITTED},
+    {"TXN_STATE_ABORTED", .value.integer = AS_TXN_STATE_ABORTED},
 
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
     {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};
