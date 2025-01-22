@@ -29,7 +29,7 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -41,7 +41,7 @@ jobs:
     - uses: pre-commit/action@v3.0.0
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         py-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
@@ -90,7 +90,7 @@ jobs:
         path: ./dist/*.whl
 
   generate-coverage-report:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -175,7 +175,7 @@ jobs:
   coverage-upload:
     needs: generate-coverage-report
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
@@ -196,7 +196,7 @@ jobs:
 
   stubtest:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -221,7 +221,7 @@ jobs:
   # Run this when testing new server features on server release candidate
   # to make sure the tests don't regress on the last server release.
   test-ce-latest-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
     needs: build
 
@@ -261,7 +261,7 @@ jobs:
       working-directory: test
 
   test-ce:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     strategy:
       matrix:
@@ -336,7 +336,7 @@ jobs:
       working-directory: test
 
   test-lowest-supported-server:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     steps:
     - uses: actions/checkout@v2
@@ -374,7 +374,7 @@ jobs:
       working-directory: test
 
   test-ee:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     steps:
     - uses: actions/checkout@v2
@@ -413,7 +413,7 @@ jobs:
         cat ./configs/aerospike.conf
 
   spellcheck-docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -430,7 +430,7 @@ jobs:
       working-directory: doc
 
   check-links-docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
@@ -451,7 +451,7 @@ jobs:
         - node_close_listener
         - cluster_name
       fail-fast: false
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
