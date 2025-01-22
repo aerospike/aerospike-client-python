@@ -1038,7 +1038,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     bool *bool_config_refs[] = {&config.force_single_node,
-                                config.fail_if_not_connected};
+                                &config.fail_if_not_connected};
     const char *bool_config_name[] = {"force_single_node",
                                       "fail_if_not_connected"};
 
