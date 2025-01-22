@@ -90,8 +90,8 @@ Connection
 
         You may call :meth:`~aerospike.Client.connect` again after closing the connection.
 
-Record Operations
------------------
+Record Commands
+---------------
 
 .. class:: Client
     :noindex:
