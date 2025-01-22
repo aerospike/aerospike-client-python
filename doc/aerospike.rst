@@ -15,7 +15,7 @@ Overview
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
-cluster and handles the transactions performed against it.
+cluster and handles the commands performed against it.
 
 Methods
 =======
@@ -441,7 +441,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **max_retries** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
-                Representing the number of times to retry a transaction
+                Representing the number of times to retry a command
             * **replica**
                 **Deprecated**: set this in one or all of the following policy dictionaries:
 
@@ -604,7 +604,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             so the client does not attempt to use a socket that has already been reaped by the server.
 
             If server's ``proto-fd-idle-ms`` is zero (no reap), then ``max_socket_idle`` should also be zero.
-            Connections retrieved from a pool in transactions will not be checked for ``max_socket_idle`` when ``max_socket_idle`` is zero.
+            Connections retrieved from a pool in commands will not be checked for ``max_socket_idle`` when ``max_socket_idle`` is zero.
             Idle connections will still be trimmed down from peak connections to min connections \
             (``min_conns_per_node`` and ``async_min_conns_per_node``) using a hard-coded 55 second limit in the cluster tend thread.
 
@@ -629,7 +629,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             The counted error types are any error that causes the connection to close (socket errors and client timeouts), server device overload and server timeouts.
 
-            The application should backoff or reduce the transaction load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
+            The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
 
             Default: ``100``
         * **error_rate_window** (:class:`int`)
@@ -665,7 +665,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             This is useful for:
 
-                - Directing read operations to run on the same rack as the client.
+                - Directing read commands to run on the same rack as the client.
                 - Lowering cloud provider costs when nodes are distributed across different availability zones (represented as racks).
 
             In order to enable this functionality:
@@ -871,7 +871,7 @@ Specifies the TTL constants.
     NOTE: only applies to the policies mentioned below.
 
     Use the applicable policy ttl in write, operate, batch write, and scan policies.
-    If the policy is not defined for the transaction, use the default client-level policy's ttl.
+    If the policy is not defined for the command, use the default client-level policy's ttl.
 
 .. _auth_mode:
 

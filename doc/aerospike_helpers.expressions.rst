@@ -9,7 +9,7 @@ Overview
 --------
 
 Aerospike expressions are a small domain specific language that allow for filtering
-records in transactions by manipulating and comparing bins and record metadata.
+records in commands by manipulating and comparing bins and record metadata.
 Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
@@ -28,8 +28,8 @@ Example::
     from aerospike_helpers import expressions as exp
     expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 
-By passing these compiled expressions to transactions via the "expressions" policy field,
-these transactions will filter the results.
+By passing a compiled expression to a command via the "expressions" policy field,
+the command will filter the results.
 
 Example:
 
@@ -39,7 +39,6 @@ Example:
 Currently, Aerospike expressions are supported for:
 - Record commands
 - Batched commands
-- Transactions
 - UDF apply methods (apply, scan apply, and query apply)
 - Query invoke methods (foreach, results, execute background)
 - Scan invoke methods (same as query invoke methods)
@@ -53,7 +52,6 @@ For:
   * Record operations
   * Numeric operations
   * String operations
-  * Single record transactions
 
 An exception :exc:`~aerospike.exception.FilteredOut` is thrown.
 
