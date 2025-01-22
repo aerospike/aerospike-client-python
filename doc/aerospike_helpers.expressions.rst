@@ -49,7 +49,7 @@ Filter Behavior
 This section describes the behavior of methods when a record is filtered out by an expression.
 
 For:
-  * Record operations
+  * Record commands
   * Numeric operations
   * String operations
 
