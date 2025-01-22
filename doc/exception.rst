@@ -54,7 +54,7 @@ Base Class
 
     .. py:attribute:: in_doubt
 
-        ``True`` if it is possible that the operation succeeded. See :ref:`indoubt`.
+        ``True`` if it is possible that the command succeeded. See :ref:`indoubt`.
 
     In addition to accessing these attributes by their names, \
     they can also be checked by calling ``exc.args[i]``, where ``exc`` is the exception object and \
@@ -276,7 +276,7 @@ Server Errors
 
 .. py:exception:: FilteredOut
 
-    The transaction was not performed because the expression was false.
+    The command was not performed because the expression was false.
 
     Error code: ``27``
 
@@ -415,7 +415,7 @@ Record Errors
 
 .. py:exception:: RecordKeyMismatch
 
-    Record key sent with transaction did not match key stored on server.
+    Record key sent with command did not match key stored on server.
 
     Error code: ``19``
 

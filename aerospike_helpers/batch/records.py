@@ -45,7 +45,7 @@ class BatchRecord:
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
             result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
     """
@@ -64,7 +64,7 @@ class Write(BatchRecord):
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
             result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): A list of aerospike operation dictionaries to perform
@@ -115,7 +115,7 @@ class Read(BatchRecord):
             key (:obj:`tuple`): The aerospike key to send the command to.
             record (:obj:`tuple`): The record corresponding to the requested key.
             result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             ops (:ref:`aerospike_operation_helpers.operations`): list of aerospike operation dictionaries to perform on
@@ -225,7 +225,7 @@ class Remove(BatchRecord):
             key (:obj:`tuple`): The aerospike key to operate on.
             record (:ref:`aerospike_record_tuple`): The record corresponding to the requested key.
             result (int): The status code of the command.
-            in_doubt (bool): Is it possible that the write transaction completed even though an error was generated. \
+            in_doubt (bool): Is it possible that the write command completed even though an error was generated. \
             This may be the case when a client error occurs (like timeout) after the command was sent \
             to the server.
             policy (:ref:`aerospike_batch_remove_policies`, optional): An optional dictionary of batch remove policy
@@ -264,10 +264,10 @@ class BatchRecords:
             define batched commands and hold results. BatchRecord Types can be Remove, Write, \
             Read, and Apply.
             result (int): The status code of the last batch call that used this BatchRecords.
-                ``0`` if all batch subtransactions succeeded (or if the only failures were \
+                ``0`` if all batched commands succeeded (or if the only failures were \
                     ``FILTERED_OUT`` or ``RECORD_NOT_FOUND``)
                 Not ``0`` if an error occurred. The most common error is ``-16`` \
-                    (One or more batch sub transactions failed).
+                    (One or more batched commands failed).
     """
 
     def __init__(self, batch_records: Optional[TypeBatchRecordList] = None) -> None:
