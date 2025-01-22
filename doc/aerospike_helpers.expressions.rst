@@ -37,11 +37,11 @@ Example:
   :code: python
 
 Currently, Aerospike expressions are supported for:
-- Record commands
-- Batched commands
-- UDF apply methods (apply, scan apply, and query apply)
-- Query invoke methods (foreach, results, execute background)
-- Scan invoke methods (same as query invoke methods)
+  * Record commands
+  * Batched commands
+  * UDF apply methods (apply, scan apply, and query apply)
+  * Query invoke methods (foreach, results, execute background)
+  * Scan invoke methods (same as query invoke methods)
 
 Filter Behavior
 ---------------
