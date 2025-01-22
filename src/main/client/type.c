@@ -1037,20 +1037,20 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         goto CONSTRUCTOR_ERROR;
     }
 
-    PyObject *py_max_socket_idle = NULL;
-    py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
-    if (py_max_socket_idle && PyLong_Check(py_max_socket_idle)) {
-        long max_socket_idle = PyLong_AsLong(py_max_socket_idle);
-        if (max_socket_idle >= 0) {
-            config.max_socket_idle = (uint32_t)max_socket_idle;
-        }
-    }
+    bool *bool_config_refs[] = {&config.force_single_node,
+                                config.fail_if_not_connected};
+    const char *bool_config_name[] = {"force_single_node",
+                                      "fail_if_not_connected"};
 
-    PyObject *py_fail_if_not_connected =
-        PyDict_GetItemString(py_config, "fail_if_not_connected");
-    if (py_fail_if_not_connected && PyBool_Check(py_fail_if_not_connected)) {
-        config.fail_if_not_connected =
-            PyObject_IsTrue(py_fail_if_not_connected);
+    // TODO: needs better input validation.
+    // i.e throw an exception if value is not a bool type
+    for (unsigned long i = 0;
+         i < sizeof(bool_config_name) / sizeof(bool_config_name[0]); i++) {
+        PyObject *py_bool_value =
+            PyDict_GetItemString(py_config, bool_config_name[i]);
+        if (py_bool_value && PyBool_Check(py_bool_value)) {
+            *bool_config_refs[i] = PyObject_IsTrue(py_bool_value);
+        }
     }
 
     PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
