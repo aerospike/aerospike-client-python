@@ -110,9 +110,16 @@ def test_neg_setting_rack_ids(rack_ids):
         aerospike.client(config)
 
 
-def test_setting_use_services_alternate():
+@pytest.mark.parametrize(
+    "setting",
+    [
+        "use_services_alternate",
+        "force_single_node"
+     ]
+)
+def test_bool_settings(setting):
     config = copy.deepcopy(gconfig)
-    config["use_services_alternate"] = True
+    config[setting] = True
     client = aerospike.client(config)
     assert client is not None
 
