@@ -23,9 +23,7 @@ base_class_to_attrs = {
         "msg",
         "file",
         "line",
-        # in_doubt is only added when an AerospikeError or subclass of it is raised by the client
-        # This attribute is not set when initializing the exception classes in `aerospike.exception`
-        # "in_doubt"
+        "in_doubt"
     ],
     e.RecordError: [
         "key",
