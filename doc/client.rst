@@ -90,8 +90,8 @@ Connection
 
         You may call :meth:`~aerospike.Client.connect` again after closing the connection.
 
-Record Operations
------------------
+Record Commands
+---------------
 
 .. class:: Client
     :noindex:
@@ -172,6 +172,54 @@ Record Operations
 
         .. versionchanged:: 2.0.0
 
+    .. method:: operate(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+
+        Lookup a record by key, then perform specified operations.
+
+        Starting with Aerospike server version 3.6.0, non-existent bins are not present in the returned :ref:`aerospike_record_tuple`. \
+        The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin. \
+        (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
+        :py:obj:`None` value. )
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list list: See :ref:`aerospike_operation_helpers.operations`.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+        :return: a :ref:`aerospike_record_tuple`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. include:: examples/operate.py
+            :code: python
+
+        .. note::
+
+            :meth:`operate` can now have multiple write operations on a single
+            bin.
+
+        .. versionchanged:: 2.1.3
+
+    .. method:: operate_ordered(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
+
+        Lookup a record by key, then perform specified operations. \
+        The results will be returned as a list of (bin-name, result) tuples. The order of the \
+        elements in the list will correspond to the order of the operations \
+        from the input parameters.
+
+        Write operations or read operations that fail will not return a ``(bin-name, result)`` tuple.
+
+        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
+        :param list list: See :ref:`aerospike_operation_helpers.operations`.
+        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
+        :param dict policy: optional :ref:`aerospike_operate_policies`.
+
+        :return: a :ref:`aerospike_record_tuple`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
+        .. include:: examples/operate_ordered.py
+            :code: python
+
+        .. versionchanged:: 2.1.3
+
     .. method:: touch(key[, val=0[, meta: dict[, policy: dict]]])
 
         Touch the given record, setting its time-to-live and incrementing its generation.
@@ -215,9 +263,9 @@ Record Operations
             :code: python
 
     .. index::
-        single: Batch Operations
+        single: Batched Commands
 
-Batch Operations
+Batched Commands
 ----------------
 
 .. class:: Client
@@ -364,7 +412,7 @@ Batch Operations
 
     .. method:: batch_operate(keys: list, ops: list, [policy_batch: dict], [policy_batch_write: dict], [ttl: int]) -> BatchRecords
 
-        Perform the same read/write commands on multiple keys.
+        Perform the same read/write operations on multiple keys.
 
         .. note:: Prior to Python client 14.0.0, using the :meth:`~batch_operate()` method with only read operations caused an error.
             This bug was fixed in version 14.0.0.
@@ -527,67 +575,7 @@ Map Operations
                 Old style map operations are deprecated. The docs for old style map operations were removed in client 6.0.0.
                 The code supporting these methods will be removed in a coming release.
 
-    .. index::
-        single: Multi-Ops
-
-Single-Record Transactions
---------------------------
-
-.. class:: Client
-    :noindex:
-
-    .. method:: operate(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
-
-        Performs an atomic command, with multiple bin operations, against a single record with a given *key*.
-
-        Starting with Aerospike server version 3.6.0, non-existent bins are not present in the returned :ref:`aerospike_record_tuple`. \
-        The returned record tuple will only contain one element per bin, even if multiple operations were performed on the bin. \
-        (In Aerospike server versions prior to 3.6.0, non-existent bins being read will have a \
-        :py:obj:`None` value. )
-
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list list: See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-        :return: a :ref:`aerospike_record_tuple`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. include:: examples/operate.py
-            :code: python
-
-        .. note::
-
-            :meth:`operate` can now have multiple write operations on a single
-            bin.
-
-        .. versionchanged:: 2.1.3
-
-    .. method:: operate_ordered(key, list: list[, meta: dict[, policy: dict]]) -> (key, meta, bins)
-
-        Performs an atomic command, with multiple bin operations, against a single record with a given *key*. \
-        The results will be returned as a list of (bin-name, result) tuples. The order of the \
-        elements in the list will correspond to the order of the operations \
-        from the input parameters.
-
-        Write operations or read operations that fail will not return a ``(bin-name, result)`` tuple.
-
-        :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
-        :param list list: See :ref:`aerospike_operation_helpers.operations`.
-        :param dict meta: record metadata to be set. See :ref:`metadata_dict`.
-        :param dict policy: optional :ref:`aerospike_operate_policies`.
-
-        :return: a :ref:`aerospike_record_tuple`.
-        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
-
-        .. include:: examples/operate_ordered.py
-            :code: python
-
-        .. versionchanged:: 2.1.3
-
-    .. index::
-        single: User Defined Functions
-
-Multi-Record Transactions
+Transactions
 --------------------------
 
 .. class:: Client
@@ -595,27 +583,30 @@ Multi-Record Transactions
 
     .. method:: commit(transaction: aerospike.Transaction) -> int:
 
-        Attempt to commit the given multi-record transaction. First, the expected record versions are
+        Attempt to commit the given transaction. First, the expected record versions are
         sent to the server nodes for verification. If all nodes return success, the transaction is
         committed. Otherwise, the transaction is aborted.
 
         Requires server version 8.0+
 
-        :param transaction: Multi-record transaction.
+        :param transaction: Transaction.
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the commit. One of :ref:`mrt_commit_status_constants`.
 
     .. method:: abort(transaction: aerospike.Transaction) -> int:
 
-        Abort and rollback the given multi-record transaction.
+        Abort and rollback the given transaction.
 
         Requires server version 8.0+
 
-        :param transaction: Multi-record transaction.
+        :param transaction: Transaction.
         :type transaction: :py:class:`aerospike.Transaction`
         :return: The status of the abort. One of :ref:`mrt_abort_status_constants`.
 
     .. _aerospike_udf_operations:
+
+    .. index::
+        single: User Defined Functions
 
 User Defined Functions
 ----------------------
@@ -1498,7 +1489,7 @@ Record Tuple
 
 .. object:: record
 
-    The record tuple which is returned by various read operations. It has the structure:
+    The record tuple which is returned by various read commands. It has the structure:
 
     ``(key, meta, bins)``
 
