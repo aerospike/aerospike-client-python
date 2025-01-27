@@ -244,22 +244,13 @@ CLEANUP:
     self->query.apply.arglist = NULL;
 
     if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        PyObject *exception_type = NULL;
+        as_exc_extra_info extra_info[] = {{"name", Py_None}, {0}};
         if (err.code != AEROSPIKE_OK) {
-            error_to_pyobject(&err, &py_err);
-            exception_type = raise_exception_old(&err);
+            raise_exception_with_api_call_extra_info(&err, extra_info);
         }
         if (data.error.code != AEROSPIKE_OK) {
-            error_to_pyobject(&data.error, &py_err);
-            exception_type = raise_exception_old(&data.error);
+            raise_exception_with_api_call_extra_info(&data.error, extra_info);
         }
-        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
-        if (PyObject_HasAttrString(exception_type, "name")) {
-            PyObject_SetAttrString(exception_type, "name", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
         return NULL;
     }
 
