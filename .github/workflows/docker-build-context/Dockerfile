@@ -114,6 +114,3 @@ RUN rm $CLUSTER_NAME_FILE_NAME
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.sh"]
-# We do not inherit CMD from the base image
-# so we need to respecify it here.
-CMD ["asd"]
