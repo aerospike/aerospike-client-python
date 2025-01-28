@@ -113,4 +113,5 @@ RUN rm $CLUSTER_NAME_FILE_NAME
 
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
+COPY wait-for-as-server-to-start.bash /
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.sh"]
