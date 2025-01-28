@@ -1,4 +1,4 @@
-/entrypoint.sh
+/entrypoint.sh $1
 
 SUPERUSER_NAME_AND_PASSWORD=superuser
 ASADM_AUTH_FLAGS="--user=$SUPERUSER_NAME_AND_PASSWORD --password=$SUPERUSER_NAME_AND_PASSWORD"
