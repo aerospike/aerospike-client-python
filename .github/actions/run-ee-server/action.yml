@@ -86,12 +86,6 @@ runs:
   - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
-  - uses: ./.github/actions/wait-for-as-server-to-start
-    with:
-      container-name: ${{ env.SERVER_CONTAINER_NAME }}
-      is-security-enabled: true
-      is-strong-consistency-enabled: true
-
   - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
 

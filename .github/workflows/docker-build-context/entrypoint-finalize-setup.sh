@@ -28,7 +28,7 @@ while true; do
         # docker container inspect "$container_name"
         break
     fi
-
+    asinfo $user_credentials -v status
     echo "Server didn't return ok via the service port. Polling again..."
 done
 
