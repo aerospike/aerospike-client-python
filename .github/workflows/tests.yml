@@ -36,7 +36,7 @@ jobs:
         submodules: recursive
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
@@ -99,7 +99,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: "3.9"
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - name: Build client
@@ -274,7 +274,7 @@ jobs:
         ]
         sanitizer: [false]
         include:
-          - py-version: 3.8
+          - py-version: 3.9
             sanitizer: true
       fail-fast: false
 
@@ -419,7 +419,7 @@ jobs:
         submodules: recursive
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - name: Install dependencies for checking spelling in docs
       # TODO: find way to split up dependencies
@@ -434,7 +434,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - name: Install documentation dependencies
       run: python -m pip install -r doc/requirements.txt
