@@ -52,25 +52,19 @@ ARG SERVER_CSR_FILE_NAME=server.csr
 ARG SERVER_KEY_FILE_NAME
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 
-# Generate CA
 ARG CA_KEY_FILE_NAME=ca.pem
-ARG CA_CERT_FILE_NAME
-RUN openssl req -x509 -newkey rsa:2048 -keyout $CA_KEY_FILE_NAME -out $CA_CERT_FILE_NAME -nodes -subj '/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=mydummyca'
+ARG CA_CERT_FILE_NAME=ca.cer
 
 # Send CSR to CA and get server certificate
 # We use an external CA because we want the client to use that same CA to verify the server certificate upon connecting
 
 # TODO: also make this an option.
-# COPY $CA_KEY_FILE_NAME .
-# COPY $CA_CERT_FILE_NAME .
+COPY $CA_KEY_FILE_NAME .
+COPY $CA_CERT_FILE_NAME .
 ARG SERVER_CERT_FILE_NAME
 RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
 
 FROM enable-strong-consistency AS enable-tls
-
-# The client needs the same CA certificate to connect to the server
-ARG CA_CERT_FILE_NAME
-COPY --from=generate-server-cert-for-tls $CA_CERT_FILE_NAME /
 
 ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
