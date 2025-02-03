@@ -354,6 +354,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(commit_level, as_policy_commit_level);
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(ttl, uint32_t);
+        POLICY_SET_FIELD(on_locking_only, bool);
     }
 
     // Update the policy
@@ -593,6 +594,7 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(durable_delete, bool);
         POLICY_SET_FIELD(replica, as_policy_replica);
         POLICY_SET_FIELD(compression_threshold, uint32_t);
+        POLICY_SET_FIELD(on_locking_only, bool);
     }
 
     // Update the policy
@@ -637,6 +639,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(deserialize, bool);
         POLICY_SET_FIELD(exists, as_policy_exists);
         POLICY_SET_FIELD(read_touch_ttl_percent, int);
+        POLICY_SET_FIELD(on_locking_only, bool);
 
         // 4.0.0 new policies
         POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -712,6 +715,7 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
     POLICY_SET_FIELD(gen, as_policy_gen);
     POLICY_SET_FIELD(exists, as_policy_exists);
     POLICY_SET_FIELD(durable_delete, bool);
+    POLICY_SET_FIELD(on_locking_only, bool);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
@@ -759,6 +763,7 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
     POLICY_SET_FIELD(commit_level, as_policy_commit_level);
     POLICY_SET_FIELD(ttl, uint32_t);
     POLICY_SET_FIELD(durable_delete, bool);
+    POLICY_SET_FIELD(on_locking_only, bool);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();

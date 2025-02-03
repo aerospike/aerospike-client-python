@@ -14,6 +14,15 @@ class InvalidHostError(ClientError):
 class ParamError(ClientError):
     pass
 
+class TransactionFailed(ClientError):
+    pass
+
+class TransactionAlreadyAborted(ClientError):
+    pass
+
+class TransactionAlreadyCommitted(ClientError):
+    pass
+
 class ServerError(AerospikeError):
     pass
 
