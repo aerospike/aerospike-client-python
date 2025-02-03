@@ -41,6 +41,7 @@ RUN apt install -y openssl
 
 ARG AEROSPIKE_CONF_TEMPLATE_PATH
 ARG CLUSTER_NAME_FILE_NAME
+COPY aerospike-dev.conf /etc/aerospike/
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_TEMPLATE_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
 
 # Generate server private key and CSR
@@ -72,8 +73,6 @@ COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INS
 
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
-
-COPY aerospike-dev.conf /etc/aerospike/
 
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
