@@ -50,12 +50,19 @@ ARG SERVER_CSR_FILE_NAME=server.csr
 ARG SERVER_KEY_FILE_NAME
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 
+# Generate CA
+ARG CA_KEY_FILE_NAME=ca.pem
+ARG CA_CERT_FILE_NAME=ca.cer
+RUN openssl req -x509 -newkey rsa:2048 -keyout $CA_KEY_FILE_NAME -out $CA_CERT_FILE_NAME -nodes -subj '/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=mydummyca'
+
+# TODO: we need to output CA certificate for clients to connect to server via TLS
+
 # Send CSR to CA and get server certificate
 # We use an external CA because we want the client to use that same CA to verify the server certificate upon connecting
-ARG CA_KEY_FILE_NAME
-ARG CA_CERT_FILE_NAME
-COPY $CA_KEY_FILE_NAME .
-COPY $CA_CERT_FILE_NAME .
+
+# TODO: also make this an option.
+# COPY $CA_KEY_FILE_NAME .
+# COPY $CA_CERT_FILE_NAME .
 ARG SERVER_CERT_FILE_NAME
 RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
 
@@ -70,6 +77,8 @@ ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 
 COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_INSTALL_PATH
 COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INSTALL_PATH
+
+COPY aerospike-dev.conf /etc/aerospike/
 
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT

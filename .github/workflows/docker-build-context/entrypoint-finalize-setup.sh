@@ -1,10 +1,12 @@
 #!/bin/bash
 
-asd --fgdaemon --config-file /etc/aerospike/aerospike-dev.conf &
-
 set -x
 # Makes sure that if the "docker exec" command fails, it is not ignored
 set -o pipefail
+set -m
+
+asd --fgdaemon --config-file /etc/aerospike/aerospike-dev.conf &
+jobs
 
 # We need to pass credentials to asinfo if server requires it
 # TODO: passing in credentials via command line flags since I can't figure out how to use --instance with global astools.conf
@@ -53,4 +55,5 @@ ASADM_AUTH_FLAGS="--user=$SUPERUSER_NAME_AND_PASSWORD --password=$SUPERUSER_NAME
 asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
 asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
 
+jobs
 fg
