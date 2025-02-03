@@ -15,6 +15,8 @@ ARG SERVER_CERT_FILE_NAME=server.cer
 # Cluster name fetched from stage to generate cert also needs to be set in aerospike.conf in our final image
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 
+ARG CA_CERT_FILE_NAME=ca.cer
+
 FROM $SERVER_IMAGE AS enable-security
 
 WORKDIR /opt/aerospike/smd
@@ -52,10 +54,8 @@ RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out 
 
 # Generate CA
 ARG CA_KEY_FILE_NAME=ca.pem
-ARG CA_CERT_FILE_NAME=ca.cer
+ARG CA_CERT_FILE_NAME
 RUN openssl req -x509 -newkey rsa:2048 -keyout $CA_KEY_FILE_NAME -out $CA_CERT_FILE_NAME -nodes -subj '/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=mydummyca'
-
-# TODO: we need to output CA certificate for clients to connect to server via TLS
 
 # Send CSR to CA and get server certificate
 # We use an external CA because we want the client to use that same CA to verify the server certificate upon connecting
@@ -67,6 +67,10 @@ ARG SERVER_CERT_FILE_NAME
 RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
 
 FROM enable-strong-consistency AS enable-tls
+
+# The client needs the same CA certificate to connect to the server
+ARG CA_CERT_FILE_NAME
+COPY --from=generate-server-cert-for-tls $CA_CERT_FILE_NAME /
 
 ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR

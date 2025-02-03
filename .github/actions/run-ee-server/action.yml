@@ -48,17 +48,6 @@ runs:
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
     shell: bash
 
-  - run: echo CA_KEY_FILE_NAME="ca.pem" >> $GITHUB_ENV
-    shell: bash
-
-  - name: Create a certificate authority
-    run: openssl req -x509 -newkey rsa:2048 -keyout ${{ env.CA_KEY_FILE_NAME }} -out ${{ env.CA_CERT_FILE_NAME }} -nodes -subj '/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=mydummyca'
-    working-directory: .github/workflows/docker-build-context
-    shell: bash
-    env:
-      # Makes sure that the subject isn't interpreted as a path
-      MSYS_NO_PATHCONV: 1
-
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
@@ -71,8 +60,6 @@ runs:
       context: .github/workflows/docker-build-context
       build-args: |
         SERVER_IMAGE=${{ env.IMAGE_NAME }}
-        CA_KEY_FILE_NAME=${{ env.CA_KEY_FILE_NAME }}
-        CA_CERT_FILE_NAME=${{ env.CA_CERT_FILE_NAME }}
         TLS_PORT=${{ env.TLS_PORT }}
       tags: ${{ env.NEW_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
@@ -83,7 +70,7 @@ runs:
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
   - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
@@ -113,12 +100,16 @@ runs:
     working-directory: test
     shell: bash
 
+  - name: Retrieve CA from server container
+    run: docker cp ${{ env.SERVER_CONTAINER_NAME }}:/${{ env.CA_CERT_FILE_NAME }} .
+    working-directory: test
+
   - name: Set credentials in config file
     run: |
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
-      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
+      crudini --set config.conf tls cafile ./${{ env.CA_CERT_FILE_NAME }}
     working-directory: test
     shell: bash
 
