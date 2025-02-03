@@ -100,11 +100,6 @@ runs:
     working-directory: test
     shell: bash
 
-  - name: Retrieve CA from server container
-    run: docker cp ${{ env.SERVER_CONTAINER_NAME }}:/${{ env.CA_CERT_FILE_NAME }} .
-    shell: bash
-    working-directory: test
-
   - name: Set credentials in config file
     run: |
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
