@@ -1,8 +1,6 @@
 #!/bin/bash
 
-asd --fgdaemon &
-
-# timeout 30 bash /wait-for-as-server-to-start.bash ${{ inputs.container-name }} ${{ inputs.is-security-enabled }} ${{ inputs.is-strong-consistency-enabled }} || true
+asd --fgdaemon --config-file /etc/aerospike/aerospike-dev.conf &
 
 set -x
 # Makes sure that if the "docker exec" command fails, it is not ignored

@@ -8,7 +8,7 @@ ARG NODE_ID_FILE_NAME=node_id
 
 # Shared between build stages to generate the server certificate and to build final image
 # aerospike.conf needed to get cluster name for certificate
-ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike.template.conf
+ARG AEROSPIKE_CONF_TEMPLATE_PATH=/etc/aerospike/aerospike-dev.conf
 ARG SERVER_KEY_FILE_NAME=server.pem
 ARG SERVER_CERT_FILE_NAME=server.cer
 # Temp file
@@ -19,9 +19,6 @@ FROM $SERVER_IMAGE AS enable-security
 
 WORKDIR /opt/aerospike/smd
 
-# Not using asconfig to edit config because we are working with a template file, which may not have valid values yet
-ARG AEROSPIKE_CONF_TEMPLATE_PATH
-RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_PATH
 # security.smd was generated manually by
 # 1. Starting a new Aerospike EE server using Docker
 # 2. Creating the superuser user
@@ -30,32 +27,10 @@ RUN echo -e "security {\n\tenable-quotas true\n}\n" >> $AEROSPIKE_CONF_TEMPLATE_
 # TODO: generate this automatically, somehow.
 COPY security.smd .
 
-# Strong consistency only: fetch node id from roster.smd (JSON file)
-
-# jq docker image doesn't have a shell
-# We need a shell to fetch and pass the node id to the next build stage
-FROM busybox AS get-node-id-for-sc
-
-# There's no tag for the latest major version to prevent breaking changes in jq
-# This is the next best thing
-COPY --from=ghcr.io/jqlang/jq:1.7 /jq /bin/
-ARG ROSTER_FILE_NAME
-COPY $ROSTER_FILE_NAME .
-ARG NODE_ID_FILE_NAME
-RUN jq --raw-output '.[1].value' $ROSTER_FILE_NAME > $NODE_ID_FILE_NAME
-
 FROM enable-security AS enable-strong-consistency
 
-RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency true/" $AEROSPIKE_CONF_TEMPLATE_PATH
-RUN sed -i "s/\(namespace.*{\)/\1\n\tstrong-consistency-allow-expunge true/" $AEROSPIKE_CONF_TEMPLATE_PATH
 ARG ROSTER_FILE_NAME
 COPY $ROSTER_FILE_NAME .
-
-ARG NODE_ID_FILE_NAME
-COPY --from=get-node-id-for-sc $NODE_ID_FILE_NAME .
-RUN sed -i "s/\(^service {\)/\1\n\tnode-id $(cat $NODE_ID_FILE_NAME)/" $AEROSPIKE_CONF_TEMPLATE_PATH
-# We don't want to clutter final image with temp files (junk)
-RUN rm $NODE_ID_FILE_NAME
 
 # Use a separate build stage to generate certs since we don't want openssl bundled in the final image
 
@@ -95,21 +70,10 @@ ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_INSTALL_PATH
 COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INSTALL_PATH
 
-ARG CLUSTER_NAME_FILE_NAME
-COPY --from=generate-server-cert-for-tls $CLUSTER_NAME_FILE_NAME .
-# Service sub-stanza under network stanza
-RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-name $(cat $CLUSTER_NAME_FILE_NAME)|" $AEROSPIKE_CONF_TEMPLATE_PATH
-RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-authenticate-client false|" $AEROSPIKE_CONF_TEMPLATE_PATH
 ARG TLS_PORT=4333
-RUN sed -i "s|\(^\tservice {\)|\1\n\t\ttls-port $TLS_PORT|" $AEROSPIKE_CONF_TEMPLATE_PATH
-
-RUN sed -i "s|\(^network {\)|\1\n\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\n\t\tcert-file $SERVER_CERT_INSTALL_PATH\n\t}|" $AEROSPIKE_CONF_TEMPLATE_PATH
-RUN sed -i "s|\(^\ttls $(cat $CLUSTER_NAME_FILE_NAME) {\)|\1\n\t\tkey-file $SERVER_KEY_INSTALL_PATH|" $AEROSPIKE_CONF_TEMPLATE_PATH
-
 EXPOSE $TLS_PORT
 
-# Cleanup
-RUN rm $CLUSTER_NAME_FILE_NAME
+COPY aerospike.conf /etc/aerospike/aerospike-dev.conf
 
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
