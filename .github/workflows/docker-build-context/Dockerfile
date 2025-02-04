@@ -4,6 +4,7 @@ ARG SERVER_IMAGE=aerospike/aerospike-server-enterprise
 
 # aerospike.conf needed to get cluster name for generating server certificate
 ARG AEROSPIKE_CONF_FILE_NAME=aerospike-dev.conf
+# TODO: use ENV
 ARG AEROSPIKE_CONF_PATH=/etc/aerospike/$AEROSPIKE_CONF_FILE_NAME
 
 ARG SERVER_KEY_FILE_NAME=server.pem
@@ -86,4 +87,6 @@ HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
+# Both Github Actions and the entrypoint script can reuse this
+COPY wait-for-as-server-to-start.sh /
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.sh"]
