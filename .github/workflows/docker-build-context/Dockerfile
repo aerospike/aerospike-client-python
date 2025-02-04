@@ -50,12 +50,11 @@ RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out 
 # Send CSR to CA and get server certificate
 # We use an external CA because we want the client to use that same CA to verify the server certificate upon connecting
 
-# TODO: also make this an option.
 ARG CA_KEY_FILE_NAME=ca.pem
+ARG CA_CERT_FILE_NAME=ca.cer
 COPY $CA_KEY_FILE_NAME .
 COPY $CA_CERT_FILE_NAME .
 ARG SERVER_CERT_FILE_NAME
-ARG CA_CERT_FILE_NAME=ca.cer
 RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
 
 FROM enable-strong-consistency AS enable-tls
