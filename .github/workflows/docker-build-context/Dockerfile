@@ -81,6 +81,8 @@ COPY aerospike-dev.conf /etc/aerospike/
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
 
+HEALTHCHECK --interval=1s --timeout=1s CMD test -f /finalized
+
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.sh"]
