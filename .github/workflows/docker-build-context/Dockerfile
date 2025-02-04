@@ -9,6 +9,8 @@ ARG SERVER_CERT_FILE_NAME=server.cer
 
 FROM $SERVER_IMAGE AS enable-security
 
+COPY aerospike-dev.conf /etc/aerospike/
+
 WORKDIR /opt/aerospike/smd
 
 # security.smd was generated manually by
@@ -18,6 +20,9 @@ WORKDIR /opt/aerospike/smd
 # This file should always work
 # TODO: generate this automatically, somehow.
 COPY security.smd .
+
+# Do this so we don't have to pass in user credentials every time we use asinfo in the entrypoint script
+COPY astools.conf /etc/aerospike/
 
 FROM enable-security AS enable-strong-consistency
 
@@ -31,7 +36,8 @@ RUN apt update
 RUN apt install -y openssl
 
 ARG AEROSPIKE_CONF_PATH
-ARG CLUSTER_NAME_FILE_NAME
+# Need to pass cluster name to openssl command
+ARG CLUSTER_NAME_FILE_NAME=cluster_name
 COPY aerospike-dev.conf /etc/aerospike/
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
 
@@ -68,6 +74,8 @@ COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
+
+FROM enable-tls AS finish-setup
 
 HEALTHCHECK --interval=1s --timeout=1s CMD test -f /finalized
 
