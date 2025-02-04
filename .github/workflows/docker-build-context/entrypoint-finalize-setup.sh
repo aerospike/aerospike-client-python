@@ -1,8 +1,6 @@
 #!/bin/bash
 
 set -x
-# Makes sure that if the "docker exec" command fails, it is not ignored
-set -o pipefail
 set -m
 
 asd --fgdaemon --config-file /etc/aerospike/aerospike-dev.conf &

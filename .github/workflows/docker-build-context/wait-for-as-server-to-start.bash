@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Makes sure that if the "docker exec" command fails, it is not ignored
+set -o pipefail
+
 # We use bash because we need the not (!) operator
 
 while true; do
