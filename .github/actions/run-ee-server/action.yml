@@ -83,12 +83,6 @@ runs:
       timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }})" == "healthy" ]]; do sleep 0.1; done'
     shell: bash
 
-  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
-    shell: bash
-
-  - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
-    shell: bash
-
   # For debugging
   - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
     shell: bash
@@ -108,6 +102,9 @@ runs:
   - name: Disable community edition connection
     run: crudini --existing=param --set config.conf community-edition hosts ''
     working-directory: test
+    shell: bash
+
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
 
   - name: Set credentials in config file
@@ -141,6 +138,9 @@ runs:
   - name: Invalid input
     if: ${{ env.SERVER_IP == '' }}
     run: exit 1
+    shell: bash
+
+  - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
     shell: bash
 
   - name: Get cluster name
