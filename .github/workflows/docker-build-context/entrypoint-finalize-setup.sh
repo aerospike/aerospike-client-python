@@ -55,7 +55,6 @@ asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
 asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
 
 # Allows HEALTHCHECK to report this container as healthy, now
-sleep 30
 touch /finalized
 
 fg
