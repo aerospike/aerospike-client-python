@@ -75,9 +75,9 @@ runs:
 
   - name: Wait for container to be healthy
     run: |
-      until [ "`docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }}`"=="healthy" ]; do
-        sleep 0.1;
-      done;
+      until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }})" == "healthy" ]]; do
+        sleep 0.1
+      done
     shell: bash
 
   - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
