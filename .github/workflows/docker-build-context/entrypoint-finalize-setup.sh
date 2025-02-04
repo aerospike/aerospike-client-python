@@ -49,6 +49,6 @@ asadm --enable --execute "manage revive ns test"
 asadm --enable --execute "manage recluster"
 
 # Allows HEALTHCHECK to report this container as healthy, now
-touch /finalized
+touch $HEALTHCHECK_FILE_PATH
 
 fg

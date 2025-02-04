@@ -79,7 +79,8 @@ EXPOSE $TLS_PORT
 
 FROM enable-tls AS finish-setup
 
-HEALTHCHECK --interval=1s --timeout=1s CMD test -f /finalized
+ENV HEALTHCHECK_FILE_PATH=/finalized
+HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
