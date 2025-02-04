@@ -73,6 +73,13 @@ runs:
   - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
+  - name: Wait for container to be healthy
+    run: |
+      until [ "`docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }}`"=="healthy" ]; do
+        sleep 0.1;
+      done;
+    shell: bash
+
   - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
     shell: bash
 
