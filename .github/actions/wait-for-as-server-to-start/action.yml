@@ -16,11 +16,8 @@ runs:
   # There is no healthcheck by default in the server Docker image,
   # and we use the default image for community edition.
   - name: Wait for EE server to start
-    # Composite actions doesn't support step-level timeout-minutes
-    # Use timeout command and store polling logic in file to make it easier to read
+    # Composite actions doesn't support step-level timeout-minutes, so we use timeout command.
     # Call bash shell explicitly since timeout uses "sh" shell by default, for some reason
-    # Also, we don't want to fail if we timeout in case the server *did* finish starting up but the script couldn't detect it due to a bug
-    # Effectively, this composite action is like calling "sleep" that is optimized to exit early when it detects an ok from the server
-    run: docker exec ${{ inputs.container-name }} timeout 30 bash wait-for-as-server-to-start.bash || true
+    run: docker exec ${{ inputs.container-name }} timeout 30 bash wait-for-as-server-to-start.bash
     working-directory: .github/workflows/docker-build-context
     shell: bash
