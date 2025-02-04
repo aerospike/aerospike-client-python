@@ -1,4 +1,5 @@
-name: 'Wait for Aerospike server to start'
+name: 'Wait for Aerospike server (default base image) to start'
+# The custom Docker image with EE features enabled does not use this action.
 description: Only tested on Linux and macOS
 inputs:
   container-name:
