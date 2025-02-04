@@ -1,6 +1,7 @@
 ARG SERVER_IMAGE=aerospike/aerospike-server-enterprise
 
 # Shared between build stages to generate the server certificate and to build final server image
+
 # aerospike.conf needed to get cluster name for generating server certificate
 ARG AEROSPIKE_CONF_FILE_NAME=aerospike-dev.conf
 ARG AEROSPIKE_CONF_PATH=/etc/aerospike/$AEROSPIKE_CONF_FILE_NAME
@@ -12,6 +13,7 @@ FROM $SERVER_IMAGE AS enable-security
 
 ARG AEROSPIKE_CONF_FILE_NAME
 ARG AEROSPIKE_CONF_PATH
+# Use our own conf file for the final server image.
 COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
 WORKDIR /opt/aerospike/smd
@@ -24,7 +26,7 @@ WORKDIR /opt/aerospike/smd
 # TODO: generate this automatically, somehow.
 COPY security.smd .
 
-# Do this so we don't have to pass in user credentials every time we use asinfo in the entrypoint script
+# Do this so we don't have to pass in user credentials every time we use Aerospike tools in the entrypoint script
 COPY astools.conf /etc/aerospike/
 
 FROM enable-security AS enable-strong-consistency
@@ -38,16 +40,18 @@ FROM $SERVER_IMAGE AS generate-server-cert-for-tls
 RUN apt update
 RUN apt install -y openssl
 
+ARG AEROSPIKE_CONF_FILE_NAME
 ARG AEROSPIKE_CONF_PATH
 # Need to pass cluster name to openssl command
+COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
+
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
-COPY aerospike-dev.conf /etc/aerospike/
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
 
 # Generate server private key and CSR
 
-ARG SERVER_CSR_FILE_NAME=server.csr
 ARG SERVER_KEY_FILE_NAME
+ARG SERVER_CSR_FILE_NAME=server.csr
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 
 # Send CSR to CA and get server certificate
@@ -71,8 +75,6 @@ ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 
 COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_INSTALL_PATH
 COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INSTALL_PATH
-
-COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
