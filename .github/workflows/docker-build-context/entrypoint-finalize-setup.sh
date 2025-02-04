@@ -8,7 +8,7 @@ set -m
 asd --fgdaemon --config-file /etc/aerospike/aerospike-dev.conf &
 
 # timeout uses sh shell by default, so we need to be specific
-timeout 30s bash ./wait-for-as-server-to-start.bash
+timeout 30s bash /wait-for-as-server-to-start.bash
 
 asadm --enable --execute "manage revive ns test"
 asadm --enable --execute "manage recluster"
