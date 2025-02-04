@@ -1,15 +1,16 @@
 ARG SERVER_IMAGE=aerospike/aerospike-server-enterprise
 
-# Shared between build stages to generate the server certificate and to build final image
-# aerospike.conf needed to get cluster name for certificate
+# Shared between build stages to generate the server certificate and to build final server image
+# aerospike.conf needed to get cluster name for generating server certificate
 ARG AEROSPIKE_CONF_FILE_NAME=aerospike-dev.conf
 ARG AEROSPIKE_CONF_PATH=/etc/aerospike/$AEROSPIKE_CONF_FILE_NAME
+
 ARG SERVER_KEY_FILE_NAME=server.pem
 ARG SERVER_CERT_FILE_NAME=server.cer
 
 FROM $SERVER_IMAGE AS enable-security
 
-COPY aerospike-dev.conf /etc/aerospike/
+COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
 WORKDIR /opt/aerospike/smd
 
@@ -68,8 +69,6 @@ ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 
 COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_INSTALL_PATH
 COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INSTALL_PATH
-
-COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
