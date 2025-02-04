@@ -13,7 +13,7 @@ runs:
     run: brew install coreutils
     shell: bash
 
-  # * There is no healthcheck by default in the server Docker image,
+  # There is no healthcheck by default in the server Docker image,
   # and we use the default image for community edition.
   - name: Wait for EE server to start
     # Composite actions doesn't support step-level timeout-minutes
