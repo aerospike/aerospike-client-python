@@ -7,7 +7,7 @@ FROM $SERVER_IMAGE AS shared
 
 # Use our own conf file for the final server image.
 ARG AEROSPIKE_CONF_FILE_NAME=aerospike-dev.conf
-# Our entrypoint script needs to pass this custom conf to the server binary
+# Our entrypoint script needs to pass this custom aerospike conf to the server binary
 ENV AEROSPIKE_CONF_PATH=/etc/aerospike/$AEROSPIKE_CONF_FILE_NAME
 COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
@@ -49,8 +49,9 @@ RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_PATH | awk '{print $2}' > $CL
 ARG SERVER_CSR_FILE_NAME=server.csr
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 
-# Send CSR to CA and get server certificate
-# We use an external CA because we want the client to use that same CA to verify the server certificate upon connecting
+# Send CSR to CA. CA will output a server certificate
+# We use an external CA because we want the client to use that same CA to verify the server certificate when connecting
+# via TLS.
 
 ARG CA_KEY_FILE_NAME=ca.pem
 ARG CA_CERT_FILE_NAME=ca.cer
@@ -68,6 +69,7 @@ ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 COPY --from=generate-server-cert-for-tls $SERVER_KEY_FILE_NAME $SERVER_KEY_INSTALL_PATH
 COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INSTALL_PATH
 
+# User can set their own TLS port if they want
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
 
@@ -78,7 +80,7 @@ HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
-# Both Github Actions and the entrypoint script can reuse this
+# Both Github Actions and the entrypoint script can reuse this wait script
 ENV WAIT_SCRIPT_FILE_PATH=/wait-for-as-server-to-start.bash
 COPY wait-for-as-server-to-start.bash $WAIT_SCRIPT_FILE_PATH
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.sh"]
