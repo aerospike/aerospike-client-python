@@ -6,9 +6,12 @@ set -o pipefail
 # We use bash because we need the not (!) operator
 
 while true; do
-    # Intermediate step is to print docker exec command's output in case it fails
+    # Intermediate step is to send docker exec command's output to stdout in case it fails
     # Sometimes, errors only appear in stdout and not stderr, like if asinfo throws an error because of no credentials
     # (This is a bug in asinfo since all error messages should be sent to stderr)
+    # But piping and passing stdin to grep will hide the first command's stdout.
+    # grep doesn't have a way to print all lines passed as input.
+    # ack does have an option but it doesn't come installed by default
     echo "Checking if we can reach the server via the service port..."
     if asinfo -v status | tee >(cat) | grep -qE "^ok"; then
         # Server is ready when asinfo returns ok
