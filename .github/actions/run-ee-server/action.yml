@@ -112,7 +112,7 @@ runs:
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
-      crudini --set config.conf tls cafile $GITHUB_WORKSPACE/.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
+      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
     working-directory: test
     shell: bash
 
