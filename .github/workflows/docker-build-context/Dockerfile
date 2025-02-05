@@ -7,7 +7,8 @@ FROM $SERVER_IMAGE AS shared
 
 # Use our own conf file for the final server image.
 ARG AEROSPIKE_CONF_FILE_NAME=aerospike-dev.conf
-ARG AEROSPIKE_CONF_PATH=/etc/aerospike/$AEROSPIKE_CONF_FILE_NAME
+# Our entrypoint script needs to pass this custom conf to the server binary
+ENV AEROSPIKE_CONF_PATH=/etc/aerospike/$AEROSPIKE_CONF_FILE_NAME
 COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
 ARG SERVER_KEY_FILE_NAME=server.pem
@@ -78,5 +79,6 @@ HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 # Run our own set up steps after server finishes starting up
 COPY entrypoint-finalize-setup.sh /
 # Both Github Actions and the entrypoint script can reuse this
-COPY wait-for-as-server-to-start.bash /
+ENV WAIT_SCRIPT_FILE_PATH=/wait-for-as-server-to-start.bash
+COPY wait-for-as-server-to-start.bash $WAIT_SCRIPT_FILE_PATH
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.sh"]
