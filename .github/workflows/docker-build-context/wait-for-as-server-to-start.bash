@@ -28,7 +28,7 @@ while true; do
     # We assume that when an ERROR is returned, the cluster is not stable yet (i.e not fully initialized)
     # The Dockerfile uses a roster from a previously running Aerospike server in a Docker container
     # When we reuse this roster, the server assumes all of its partitions are dead because it's running on a new
-    # storage device.
+    # storage device. That is why we ignore-migrations here
     if asinfo -v "cluster-stable:ignore-migrations=true" 2>&1 | (! grep -qE "^ERROR"); then
         echo "Server is in a stable state."
         break
