@@ -20,6 +20,6 @@ runs:
   - name: Wait for EE server to start
     # Composite actions doesn't support step-level timeout-minutes, so we use timeout command.
     # Call bash shell explicitly since timeout uses "sh" shell by default, for some reason
-    run: docker exec ${{ inputs.container-name }} timeout 30s bash wait-for-as-server-to-start.bash
+    run: timeout 30s bash wait-for-as-server-to-start.bash
     working-directory: .github/workflows/docker-build-context
     shell: bash
