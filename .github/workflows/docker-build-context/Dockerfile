@@ -1,21 +1,19 @@
 ARG SERVER_IMAGE=aerospike/aerospike-server-enterprise
 
+FROM $SERVER_IMAGE AS shared
+
+# Define our variables once, here.
 # Shared between build stages to generate the server certificate and to build final server image
 
-# aerospike.conf needed to get cluster name for generating server certificate
+# Use our own conf file for the final server image.
 ARG AEROSPIKE_CONF_FILE_NAME=aerospike-dev.conf
-# TODO: use ENV
 ARG AEROSPIKE_CONF_PATH=/etc/aerospike/$AEROSPIKE_CONF_FILE_NAME
+COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
 ARG SERVER_KEY_FILE_NAME=server.pem
 ARG SERVER_CERT_FILE_NAME=server.cer
 
-FROM $SERVER_IMAGE AS enable-security
-
-ARG AEROSPIKE_CONF_FILE_NAME
-ARG AEROSPIKE_CONF_PATH
-# Use our own conf file for the final server image.
-COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
+FROM shared AS enable-security
 
 WORKDIR /opt/aerospike/smd
 
@@ -36,22 +34,17 @@ COPY roster.smd .
 
 # Use a separate build stage to generate certs since we don't want openssl bundled in the final image
 
-FROM $SERVER_IMAGE AS generate-server-cert-for-tls
+FROM shared AS generate-server-cert-for-tls
 
 RUN apt update
 RUN apt install -y openssl
 
-ARG AEROSPIKE_CONF_FILE_NAME
-ARG AEROSPIKE_CONF_PATH
 # Need to pass cluster name to openssl command
-COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
-
 ARG CLUSTER_NAME_FILE_NAME=cluster_name
 RUN grep -Eo "cluster-name [a-z]+" $AEROSPIKE_CONF_PATH | awk '{print $2}' > $CLUSTER_NAME_FILE_NAME
 
 # Generate server private key and CSR
 
-ARG SERVER_KEY_FILE_NAME
 ARG SERVER_CSR_FILE_NAME=server.csr
 RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out $SERVER_CSR_FILE_NAME -subj "/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=$(cat $CLUSTER_NAME_FILE_NAME)"
 
@@ -62,15 +55,12 @@ ARG CA_KEY_FILE_NAME=ca.pem
 ARG CA_CERT_FILE_NAME=ca.cer
 COPY $CA_KEY_FILE_NAME .
 COPY $CA_CERT_FILE_NAME .
-ARG SERVER_CERT_FILE_NAME
 RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
 
 FROM enable-strong-consistency AS enable-tls
 
 ARG SSL_WORKING_DIR=/etc/ssl
 WORKDIR $SSL_WORKING_DIR
-ARG SERVER_KEY_FILE_NAME
-ARG SERVER_CERT_FILE_NAME
 ARG SERVER_KEY_INSTALL_PATH=$SSL_WORKING_DIR/private/$SERVER_KEY_FILE_NAME
 ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
 
