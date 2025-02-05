@@ -16,6 +16,7 @@ runs:
 
   # There is no healthcheck by default in the server Docker image,
   # and we use the default image for community edition.
+  # We can just reuse our wait script because the CE server should be ready after it finishes.
   - name: Wait for EE server to start
     # Composite actions doesn't support step-level timeout-minutes, so we use timeout command.
     # Call bash shell explicitly since timeout uses "sh" shell by default, for some reason
