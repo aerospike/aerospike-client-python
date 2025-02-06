@@ -309,11 +309,6 @@ jobs:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
-      - if: ${{ inputs.platform-tag == 'win_amd64' }}
-        name: "Windows: Don't change line endings in Git files"
-        # https://stackoverflow.com/a/53165472
-        run: git config --global core.autocrlf false
-
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
