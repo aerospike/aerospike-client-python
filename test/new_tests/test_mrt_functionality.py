@@ -91,7 +91,7 @@ class TestMRTBasicFunctionality:
         self.as_connection.abort(mrt)
         with pytest.raises(e.TransactionAlreadyAborted) as excinfo:
             self.as_connection.commit(mrt)
-        print(excinfo.value.commit_status)
+        assert type(excinfo.value.commit_status) == int
 
     # Test case 10: Issue abort after issung commit. (P1)
     def test_abort_fail(self):
@@ -103,4 +103,4 @@ class TestMRTBasicFunctionality:
         self.as_connection.commit(mrt)
         with pytest.raises(e.TransactionAlreadyCommitted) as excinfo:
             self.as_connection.abort(mrt)
-        print(excinfo.value.abort_status)
+        assert type(excinfo.value.abort_status) == int
