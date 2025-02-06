@@ -20,8 +20,8 @@
 
 PyObject *AerospikeException_New(void);
 void raise_exception(as_error *err);
-void raise_exception_with_status(as_error *err, PyObject *py_status,
-                                 bool is_commit_status);
+void raise_exception_with_status(as_error *err, PyObject *py_commit_status,
+                                 PyObject *py_abort_status);
 PyObject *raise_exception_old(as_error *err);
 void remove_exception(as_error *err);
 void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
