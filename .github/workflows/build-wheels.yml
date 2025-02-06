@@ -313,6 +313,9 @@ jobs:
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
+      - run: |
+          git ls-files | git check-attr -a --stdin
+
       # Need to be able to save Docker Hub credentials to keychain
       # Unable to do this via the ansible script for self hosted mac m1 runners
       - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
