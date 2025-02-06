@@ -397,12 +397,12 @@ void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
 
 void raise_exception(as_error *err)
 {
-    // -1 means to ignore status
     raise_exception_with_status(err, NULL, false);
 }
 
 // TODO: idea. Use python dict to map error code to exception
 // Status is abort status if is_commit_status = false
+// py_status = NULL means ignore py_status
 void raise_exception_with_status(as_error *err, PyObject *py_status,
                                  bool is_commit_status)
 {
