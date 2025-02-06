@@ -1,3 +1,4 @@
 # When building the server EE docker image on Windows,
 # we want to make sure these files do not have their line endings changed
-.github/workflows/docker-build-context/* text eol=lf
+# since they are copied into the image which is Linux based
+* text eol=lf
