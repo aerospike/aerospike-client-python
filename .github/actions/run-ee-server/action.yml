@@ -85,6 +85,7 @@ runs:
 
   # For debugging
   - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
+    if: ${{ always() }}
     shell: bash
 
   # Configure tests
