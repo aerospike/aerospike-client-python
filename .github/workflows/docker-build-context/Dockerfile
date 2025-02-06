@@ -79,8 +79,8 @@ ENV HEALTHCHECK_FILE_PATH=/finalized
 HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 
 # Run our own set up steps after server finishes starting up
-COPY entrypoint-finalize-setup.sh /
+COPY entrypoint-finalize-setup.bash /
 # Both Github Actions and the entrypoint script can reuse this wait script
 ENV WAIT_SCRIPT_FILE_PATH=/wait-for-as-server-to-start.bash
 COPY wait-for-as-server-to-start.bash $WAIT_SCRIPT_FILE_PATH
-ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.sh"]
+ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.bash"]
