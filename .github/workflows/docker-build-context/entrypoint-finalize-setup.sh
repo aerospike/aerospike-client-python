@@ -3,6 +3,7 @@
 
 set -x
 set -m
+set -e
 
 asd --fgdaemon --config-file $AEROSPIKE_CONF_PATH &
 
