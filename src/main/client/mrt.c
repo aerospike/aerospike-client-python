@@ -33,7 +33,7 @@ PyObject *AerospikeClient_Commit(AerospikeClient *self, PyObject *args,
     }
 
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_with_status(&err, py_status, true);
+        raise_exception_with_status(&err, py_status, NULL);
         return NULL;
     }
 
@@ -68,7 +68,7 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     }
 
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_with_status(&err, py_status, false);
+        raise_exception_with_status(&err, NULL, py_status);
         return NULL;
     }
 
