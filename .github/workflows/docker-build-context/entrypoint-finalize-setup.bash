@@ -1,6 +1,8 @@
 #!/bin/bash
 # Entrypoint script used by our custom EE server image
 
+# Bash required for using job control
+
 set -x
 set -m
 set -e
