@@ -69,8 +69,9 @@ struct exception_def {
 #define NO_ERROR_CODE 0
 
 // Same order as the tuple of args passed into the exception
-const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
-                                           "line", "in_doubt", NULL};
+const char *const aerospike_err_attrs[] = {
+    "code",     "msg",           "file",         "line",
+    "in_doubt", "commit_status", "abort_status", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
@@ -380,6 +381,15 @@ void remove_exception(as_error *err)
 void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
                                                   PyObject *py_tuple)
 {
+    set_aerospike_exc_attrs_using_tuple_of_attrs_and_mrt_statuses(
+        py_exc, py_tuple, NULL, NULL);
+}
+
+// Steals reference to both status objects
+void set_aerospike_exc_attrs_using_tuple_of_attrs_and_mrt_statuses(
+    PyObject *py_exc, PyObject *py_tuple, PyObject *py_commit_status,
+    PyObject *py_abort_status)
+{
     for (unsigned long i = 0;
          i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
          i++) {
@@ -393,18 +403,36 @@ void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
         }
         PyObject_SetAttrString(py_exc, aerospike_err_attrs[i], py_arg);
     }
+
+    const char *status_attr_name = "commit_status";
+    if (py_commit_status) {
+        PyObject_SetAttrString(py_exc, status_attr_name, py_commit_status);
+        Py_DECREF(py_commit_status);
+    }
+    else {
+        PyObject_SetAttrString(py_exc, status_attr_name, Py_None);
+    }
+
+    status_attr_name = "abort_status";
+    if (py_abort_status) {
+        PyObject_SetAttrString(py_exc, status_attr_name, py_abort_status);
+        Py_DECREF(py_abort_status);
+    }
+    else {
+        PyObject_SetAttrString(py_exc, status_attr_name, Py_None);
+    }
 }
 
 void raise_exception(as_error *err)
 {
-    raise_exception_with_status(err, NULL, false);
+    raise_exception_with_status(err, NULL, NULL);
 }
 
 // TODO: idea. Use python dict to map error code to exception
-// Status is abort status if is_commit_status = false
-// py_status = NULL means ignore py_status
-void raise_exception_with_status(as_error *err, PyObject *py_status,
-                                 bool is_commit_status)
+// If py_commit_status is NULL, ignore it. Same with py_abort_status
+// Steals reference to both status objects
+void raise_exception_with_status(as_error *err, PyObject *py_commit_status,
+                                 PyObject *py_abort_status)
 {
     // Either commit or abort status
     PyObject *py_key = NULL, *py_value = NULL;
@@ -439,18 +467,8 @@ void raise_exception_with_status(as_error *err, PyObject *py_status,
     // Convert C error to Python exception
     PyObject *py_err = NULL;
     error_to_pyobject(err, &py_err);
-    set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
-
-    if (py_status) {
-        const char *status_attr_name;
-        if (is_commit_status) {
-            status_attr_name = "commit_status";
-        }
-        else {
-            status_attr_name = "abort_status";
-        }
-        PyObject_SetAttrString(py_value, status_attr_name, py_status);
-    }
+    set_aerospike_exc_attrs_using_tuple_of_attrs_and_mrt_statuses(
+        py_value, py_err, py_commit_status, py_abort_status);
 
     // Raise exception
     PyErr_SetObject(py_value, py_err);
