@@ -1,4 +1,1 @@
-# When building the server EE docker image on Windows,
-# we want to make sure these files do not have their line endings changed
-# since they are copied into the image which is Linux based
 * text eol=lf
