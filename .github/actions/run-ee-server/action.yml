@@ -84,6 +84,7 @@ runs:
     shell: bash
 
   - name: Setup tmate session
+    if: ${{ always() }}
     uses: mxschmitt/action-tmate@v3
 
   # For debugging
