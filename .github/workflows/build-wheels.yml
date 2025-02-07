@@ -309,6 +309,10 @@ jobs:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
 
+      - run: |
+          git config --system core.autocrlf false
+          git config --system core.eol lf
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
