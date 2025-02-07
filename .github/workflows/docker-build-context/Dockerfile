@@ -73,16 +73,30 @@ COPY --from=generate-server-cert-for-tls $SERVER_CERT_FILE_NAME $SERVER_CERT_INS
 ARG TLS_PORT=4333
 EXPOSE $TLS_PORT
 
+# Could not figure out how to stop Windows self-hosted runners
+# from changing line endings for wait-for-as-server-to-start.bash.
+# .gitattributes does not work, neither does changing git-config settings.
+# This should work for now.
+FROM ubuntu:24.04 AS dos2unix
+
+# Run our own set up steps after server finishes starting up
+WORKDIR /
+COPY entrypoint-finalize-setup.bash .
+# Both Github Actions and the entrypoint script can reuse this wait script
+COPY wait-for-as-server-to-start.bash .
+RUN apt update
+RUN apt install -y dos2unix
+RUN dos2unix *.bash
+
 FROM enable-tls AS finish-setup
 
 ENV HEALTHCHECK_FILE_PATH=/finalized
 HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 
-# Run our own set up steps after server finishes starting up
-COPY entrypoint-finalize-setup.bash /
+WORKDIR /
+COPY --from=dos2unix /entrypoint-finalize-setup.bash .
 # Both Github Actions and the entrypoint script can reuse this wait script
-COPY wait-for-as-server-to-start.bash /
+COPY --from=dos2unix /wait-for-as-server-to-start.bash .
 
 # Entrypoint is in root dir
-WORKDIR /
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.bash"]
