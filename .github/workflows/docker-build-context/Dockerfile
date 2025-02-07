@@ -93,10 +93,10 @@ FROM enable-tls AS finish-setup
 ENV HEALTHCHECK_FILE_PATH=/finalized
 HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 
-WORKDIR /
-COPY --from=dos2unix /entrypoint-finalize-setup.bash .
+COPY --from=dos2unix /entrypoint-finalize-setup.bash /
 # Both Github Actions and the entrypoint script can reuse this wait script
-COPY --from=dos2unix /wait-for-as-server-to-start.bash .
+COPY --from=dos2unix /wait-for-as-server-to-start.bash /
 
 # Entrypoint is in root dir
+WORKDIR /
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.bash"]

@@ -287,7 +287,7 @@ jobs:
         context: ${{ env.STATUS_CHECK_MESSAGE }}
 
   test-self-hosted:
-    # needs: cibuildwheel
+    needs: cibuildwheel
     # There's a top-level env variable for this but we can't use it here, unfortunately
     if: ${{ inputs.run_tests && (inputs.platform-tag == 'macosx_arm64' || inputs.platform-tag == 'win_amd64') }}
     strategy:
@@ -308,10 +308,6 @@ jobs:
         with:
           sha: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
           context: ${{ env.STATUS_CHECK_MESSAGE }}
-
-      - run: |
-          git config --system core.autocrlf false
-          git config --system core.eol lf
 
       - uses: actions/checkout@v4
         with:
