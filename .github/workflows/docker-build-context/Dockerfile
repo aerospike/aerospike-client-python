@@ -82,4 +82,7 @@ HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 COPY entrypoint-finalize-setup.bash /
 # Both Github Actions and the entrypoint script can reuse this wait script
 COPY wait-for-as-server-to-start.bash /
+
+# Entrypoint is in root dir
+WORKDIR /
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.bash"]
