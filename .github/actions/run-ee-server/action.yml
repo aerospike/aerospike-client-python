@@ -51,6 +51,11 @@ runs:
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
+  - name: Show line endings
+    run: cat -e wait-for-as-server-to-start.bash
+    shell: bash
+    working-directory: .github/workflows/docker-build-context
+
   - name: Build Aerospike server Docker image for testing
     # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
     # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
