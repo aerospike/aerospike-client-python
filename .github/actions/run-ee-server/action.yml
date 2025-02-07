@@ -52,7 +52,9 @@ runs:
     shell: bash
 
   - name: Show line endings
-    run: cat -e wait-for-as-server-to-start.bash
+    run: |
+      cat -e wait-for-as-server-to-start.bash
+      cat -e entrypoint-finalize-setup.bash
     shell: bash
     working-directory: .github/workflows/docker-build-context
 
