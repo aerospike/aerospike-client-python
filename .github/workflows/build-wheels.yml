@@ -27,7 +27,7 @@ on:
         type: string
         description: Valid JSON list of Python tags to build the client for
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp39", "cp310", "cp311", "cp312", "cp313"]'
       platform-tag:
         description: Platform to build the client for.
         type: choice
@@ -80,7 +80,7 @@ on:
       python-tags:
         type: string
         required: false
-        default: '["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]'
+        default: '["cp39", "cp310", "cp311", "cp312", "cp313"]'
       platform-tag:
         type: string
         required: true
@@ -181,17 +181,6 @@ jobs:
         ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
         # We need the last tag before the ref, so we can relabel the version if needed
         fetch-depth: 0
-
-    - name: 'macOS arm64: Install experimental Python 3.8 macOS arm64 build'
-      # By default, cibuildwheel installs and uses Python 3.8 x86_64 to cross compile macOS arm64 wheels
-      # There is a bug that builds macOS x86_64 wheels instead, so we install this Python 3.8 native ARM build to ensure
-      # the wheel is compiled for macOS arm64
-      # https://cibuildwheel.pypa.io/en/stable/faq/#macos-building-cpython-38-wheels-on-arm64
-      if: ${{ matrix.python-tag == 'cp38' && inputs.platform-tag == 'macosx_arm64' }}
-      run: |
-        curl -o /tmp/Python38.pkg https://www.python.org/ftp/python/3.8.10/python-3.8.10-macos11.pkg
-        sudo installer -pkg /tmp/Python38.pkg -target /
-        sh "/Applications/Python 3.8/Install Certificates.command"
 
     - name: 'Windows: Add msbuild to PATH'
       if: ${{ inputs.platform-tag == 'win_amd64' }}
@@ -325,7 +314,8 @@ jobs:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
 
       # Need to be able to save Docker Hub credentials to keychain
-      - if: ${{ inputs.platform-tag == 'macosx_arm64' && inputs.use-server-rc }}
+      # Unable to do this via the ansible script for self hosted mac m1 runners
+      - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
         run: security unlock-keychain -p ${{ secrets.MAC_M1_SELF_HOSTED_RUNNER_PW }}
 
       - uses: ./.github/actions/run-ee-server
