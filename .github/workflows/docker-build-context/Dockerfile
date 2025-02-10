@@ -52,7 +52,7 @@ RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out 
 # Send CSR to CA. CA will output a server certificate
 # We use an external CA because we want the client to use that same CA to verify the server certificate when connecting
 # via TLS.
-
+# By default we use the "dummy" CA cert and key that are committed in the repo
 ARG CA_KEY_FILE_NAME=ca.pem
 ARG CA_CERT_FILE_NAME=ca.cer
 COPY $CA_KEY_FILE_NAME .
