@@ -29,7 +29,7 @@ This shows the results of the entrypoint script which sets up strong consistency
 docker logs aerospike
 ```
 
-The logs are no longer printed to stdout; they are printed to this file in the container instead:
+The server logs are no longer printed to stdout; they are printed to this file in the container instead:
 ```sh
 docker exec aerospike head -n 200 /var/log/aerospike/aerospike.log
 ```
