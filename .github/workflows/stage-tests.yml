@@ -149,7 +149,6 @@ jobs:
     strategy:
       matrix:
         runner-os: [
-          macos-13,
           macos-14-large
         ]
         python-version: [
