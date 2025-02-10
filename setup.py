@@ -47,7 +47,6 @@ DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 WINDOWS = 'Windows' in PLATFORM
 
 CWD = os.path.abspath(os.path.dirname(__file__))
-STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 # COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
 # Not for developers to use, unless you know what the workflow is doing!
@@ -118,17 +117,6 @@ if COVERAGE:
 
 if UNOPTIMIZED:
     extra_compile_args.append('-O0')
-
-################################################################################
-# STATIC SSL LINKING BUILD SETTINGS
-################################################################################
-
-if STATIC_SSL:
-    extra_objects.extend(
-        [SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
-    libraries.remove('ssl')
-    libraries.remove('crypto')
-    library_dirs.remove('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
