@@ -252,7 +252,7 @@ jobs:
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
@@ -321,7 +321,7 @@ jobs:
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
@@ -364,7 +364,7 @@ jobs:
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 

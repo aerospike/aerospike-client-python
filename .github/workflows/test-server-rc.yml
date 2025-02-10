@@ -155,7 +155,7 @@ jobs:
     - run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages -r requirements.txt
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
