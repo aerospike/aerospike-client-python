@@ -425,16 +425,15 @@ void set_aerospike_exc_attrs_using_tuple_of_attrs_and_mrt_statuses(
 
 void raise_exception(as_error *err)
 {
-    raise_exception_with_status(err, NULL, NULL);
+    raise_exception_with_mrt_status(err, NULL, NULL);
 }
 
 // TODO: idea. Use python dict to map error code to exception
 // If py_commit_status is NULL, ignore it. Same with py_abort_status
-// Steals reference to both status objects
-void raise_exception_with_status(as_error *err, PyObject *py_commit_status,
+// Steals reference to either status objects
+void raise_exception_with_mrt_status(as_error *err, PyObject *py_commit_status,
                                  PyObject *py_abort_status)
 {
-    // Either commit or abort status
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_module);
