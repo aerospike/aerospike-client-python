@@ -80,10 +80,9 @@ EXPOSE $TLS_PORT
 FROM ubuntu:24.04 AS dos2unix
 
 # Run our own set up steps after server finishes starting up
-WORKDIR /
-COPY entrypoint-finalize-setup.bash .
+WORKDIR /my-scripts
+COPY entrypoint-finalize-setup.bash wait-for-as-server-to-start.bash .
 # Both Github Actions and the entrypoint script can reuse this wait script
-COPY wait-for-as-server-to-start.bash .
 RUN apt update
 RUN apt install -y dos2unix
 RUN dos2unix *.bash
@@ -93,10 +92,8 @@ FROM enable-tls AS finish-setup
 ENV HEALTHCHECK_FILE_PATH=/finalized
 HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 
-COPY --from=dos2unix /entrypoint-finalize-setup.bash /
-# Both Github Actions and the entrypoint script can reuse this wait script
-COPY --from=dos2unix /wait-for-as-server-to-start.bash /
+WORKDIR /
+COPY --from=dos2unix /my-scripts/* .
 
 # Entrypoint is in root dir
-WORKDIR /
 ENTRYPOINT ["/usr/bin/as-tini-static", "-r", "SIGUSR1", "-t", "SIGTERM", "--", "/entrypoint-finalize-setup.bash"]
