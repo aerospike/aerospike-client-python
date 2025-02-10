@@ -146,7 +146,7 @@ jobs:
         hashmap[manylinux_x86_64]="ubuntu-22.04"
         hashmap[manylinux_aarch64]="aerospike_arm_runners_2"
         hashmap[macosx_x86_64]="macos-13"
-        hashmap[macosx_arm64]="macos-14"
+        hashmap[macosx_arm64]="macos-13-xlarge"
         hashmap[win_amd64]="windows-2022"
         echo runner_os=${hashmap[${{ inputs.platform-tag }}]} >> $GITHUB_OUTPUT
       # Bash >= 4 supports hashmaps
@@ -247,14 +247,14 @@ jobs:
       name: Ensure openssl is installed on Github macOS runners.
       run: brew install openssl@${{ env.MACOS_OPENSSL_VERSION }}
 
-    - if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
-      name: Set minimum macos version required to install wheel
-      # - We use delocate to repair the wheel because it throws an error if
-      # the openssl library version is newer than the wheel's macOS version tag
-      # Linking the static libraries produces a warning for that same reason but it doesn't throw an error.
-      # macOS wheel is only backwards compatible with the macOS major version it is built from
-      # - Use single dash for backwards compatibility with older sw_vers
-      run: echo MACOSX_DEPLOYMENT_TARGET=13.0 >> $GITHUB_ENV
+    # - if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
+    #   name: Set minimum macos version required to install wheel
+    #   # - We use delocate to repair the wheel because it throws an error if
+    #   # the openssl library version is newer than the wheel's macOS version tag
+    #   # Linking the static libraries produces a warning for that same reason but it doesn't throw an error.
+    #   # macOS wheel is only backwards compatible with the macOS major version it is built from
+    #   # - Use single dash for backwards compatibility with older sw_vers
+    #   run: echo MACOSX_DEPLOYMENT_TARGET=13.0 >> $GITHUB_ENV
 
     - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
       name: Ensure that linker can find openssl
