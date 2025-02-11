@@ -42,7 +42,9 @@
 #include <aerospike/as_exp_operations.h>
 #include <aerospike/aerospike_txn.h>
 
-PyObject *py_global_hosts;
+PyObject *py_global_hosts = NULL;
+
+// The following are only used when config["use_shm"] is True
 int counter = 0xA8000000;
 bool user_shm_key = false;
 
@@ -575,10 +577,12 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     Aerospike_Enable_Default_Logging();
 
+#ifndef Py_GIL_DISABLED
     py_global_hosts = PyDict_New();
     if (py_global_hosts == NULL) {
         goto MODULE_CLEANUP_ON_ERROR;
     }
+#endif
 
     unsigned long i = 0;
     int retval;
@@ -635,6 +639,10 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
     }
+
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(py_aerospike_module, Py_MOD_GIL_NOT_USED);
+#endif
 
     return py_aerospike_module;
 

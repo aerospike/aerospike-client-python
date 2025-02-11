@@ -25,7 +25,7 @@ static PyObject *AerospikeNullObject_Type_New(PyTypeObject *parent,
 
 static void AerospikeNullObject_Type_Dealloc(AerospikeNullObject *self)
 {
-    PyObject_Del(self);
+    PyObject_Free(self);
 }
 
 /*******************************************************************************

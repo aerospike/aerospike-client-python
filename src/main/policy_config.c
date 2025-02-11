@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2017-2021 Aerospike, Inc.
  *
@@ -925,7 +927,7 @@ as_status set_optional_key(as_policy_key *target_ptr, PyObject *py_policy,
     }
 
     py_policy_val = PyDict_GetItemString(py_policy, name);
-    if (!py_policy_val || py_policy_val == Py_None) {
+    if (!py_policy_val || Py_IsNone(py_policy_val)) {
         return AEROSPIKE_OK;
     }
 
@@ -947,7 +949,7 @@ as_status set_optional_replica(as_policy_replica *target_ptr,
     }
 
     py_policy_val = PyDict_GetItemString(py_policy, name);
-    if (!py_policy_val || py_policy_val == Py_None) {
+    if (!py_policy_val || Py_IsNone(py_policy_val)) {
         return AEROSPIKE_OK;
     }
 
@@ -969,7 +971,7 @@ as_status set_optional_commit_level(as_policy_commit_level *target_ptr,
     }
 
     py_policy_val = PyDict_GetItemString(py_policy, name);
-    if (!py_policy_val || py_policy_val == Py_None) {
+    if (!py_policy_val || Py_IsNone(py_policy_val)) {
         return AEROSPIKE_OK;
     }
 
@@ -991,7 +993,7 @@ as_status set_optional_ap_read_mode(as_policy_read_mode_ap *target_ptr,
     }
 
     py_policy_val = PyDict_GetItemString(py_policy, name);
-    if (!py_policy_val || py_policy_val == Py_None) {
+    if (!py_policy_val || Py_IsNone(py_policy_val)) {
         return AEROSPIKE_OK;
     }
 
@@ -1013,7 +1015,7 @@ as_status set_optional_sc_read_mode(as_policy_read_mode_sc *target_ptr,
     }
 
     py_policy_val = PyDict_GetItemString(py_policy, name);
-    if (!py_policy_val || py_policy_val == Py_None) {
+    if (!py_policy_val || Py_IsNone(py_policy_val)) {
         return AEROSPIKE_OK;
     }
 
@@ -1035,7 +1037,7 @@ as_status set_optional_gen(as_policy_gen *target_ptr, PyObject *py_policy,
     }
 
     py_policy_val = PyDict_GetItemString(py_policy, name);
-    if (!py_policy_val || py_policy_val == Py_None) {
+    if (!py_policy_val || Py_IsNone(py_policy_val)) {
         return AEROSPIKE_OK;
     }
 
@@ -1057,7 +1059,7 @@ as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
     }
 
     py_policy_val = PyDict_GetItemString(py_policy, name);
-    if (!py_policy_val || py_policy_val == Py_None) {
+    if (!py_policy_val || Py_IsNone(py_policy_val)) {
         return AEROSPIKE_OK;
     }
 
