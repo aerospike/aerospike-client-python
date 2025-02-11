@@ -438,7 +438,8 @@ void raise_exception_with_mrt_status(as_error *err, PyObject *py_commit_status,
 
     // Convert C error to Python exception
     PyObject *py_err = NULL;
-    as_error_and_mrt_status_to_pytuple(err, &py_err, py_commit_status, py_abort_status);
+    as_error_and_mrt_status_to_pytuple(err, &py_err, py_commit_status,
+                                       py_abort_status);
     set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
 
     // Raise exception

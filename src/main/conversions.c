@@ -2397,8 +2397,9 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
 }
 
 // Steals reference to MRT statuses
-void as_error_and_mrt_status_to_pytuple(const as_error *err, PyObject **obj, PyObject *py_commit_status,
-    PyObject *py_abort_status)
+void as_error_and_mrt_status_to_pytuple(const as_error *err, PyObject **obj,
+                                        PyObject *py_commit_status,
+                                        PyObject *py_abort_status)
 {
     PyObject *py_file = NULL;
     if (err->file) {

@@ -150,8 +150,9 @@ as_status bins_to_pyobject(AerospikeClient *self, as_error *err,
                            bool cnvt_list_to_map);
 
 void error_to_pyobject(const as_error *err, PyObject **obj);
-void as_error_and_mrt_status_to_pytuple(const as_error *err, PyObject **obj, PyObject *py_commit_status,
-    PyObject *py_abort_status);
+void as_error_and_mrt_status_to_pytuple(const as_error *err, PyObject **obj,
+                                        PyObject *py_commit_status,
+                                        PyObject *py_abort_status);
 
 as_status pyobject_to_astype_write(AerospikeClient *self, as_error *err,
                                    PyObject *py_value, as_val **val,
