@@ -46,7 +46,7 @@ Methods
 
         Transaction timeout in seconds. The timer starts when the transaction monitor record is created.
         This occurs when the first command in the transaction is executed. If the timeout is reached before
-        :py:meth:`~aerospike.Client.commit` or :py:meth:`~aerospike.Client.abort` is called, the server will expire and
+        :meth:`~aerospike.Client.commit` or :meth:`~aerospike.Client.abort` is called, the server will expire and
         rollback the transaction.
 
         The default client transaction timeout is zero. This means use the server configuration ``mrt-duration``
