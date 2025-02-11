@@ -97,7 +97,13 @@ if SANITIZER:
     sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
     extra_link_args.extend(sanitizer_ldflags)
 
-library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
+library_dirs = ['/usr/local/lib']
+
+# On mac m1, if we build with CFLAGS=-Werror,
+# it may fail because /usr/local/opt/openssl/lib doesn't exist
+if not (DARWIN and machine == 'arm64'):
+    library_dirs.append("/usr/local/opt/openssl/lib")
+
 libraries = [
     'ssl',
     'crypto',
@@ -156,10 +162,6 @@ else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
-include_dirs = include_dirs + [
-    '/usr/local/opt/openssl/include',
-
-]
 if not WINDOWS:
     include_dirs.append(AEROSPIKE_C_TARGET + '/include')
     extra_objects = extra_objects + [
