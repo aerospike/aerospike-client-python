@@ -381,15 +381,6 @@ void remove_exception(as_error *err)
 void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
                                                   PyObject *py_tuple)
 {
-    set_aerospike_exc_attrs_using_tuple_of_attrs_and_mrt_status(
-        py_exc, py_tuple, NULL, NULL);
-}
-
-// Steals reference to both status objects
-void set_aerospike_exc_attrs_using_tuple_of_attrs_and_mrt_status(
-    PyObject *py_exc, PyObject *py_tuple, PyObject *py_commit_status,
-    PyObject *py_abort_status)
-{
     for (unsigned long i = 0;
          i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
          i++) {
@@ -402,24 +393,6 @@ void set_aerospike_exc_attrs_using_tuple_of_attrs_and_mrt_status(
             break;
         }
         PyObject_SetAttrString(py_exc, aerospike_err_attrs[i], py_arg);
-    }
-
-    const char *status_attr_name = "commit_status";
-    if (py_commit_status) {
-        PyObject_SetAttrString(py_exc, status_attr_name, py_commit_status);
-        Py_DECREF(py_commit_status);
-    }
-    else {
-        PyObject_SetAttrString(py_exc, status_attr_name, Py_None);
-    }
-
-    status_attr_name = "abort_status";
-    if (py_abort_status) {
-        PyObject_SetAttrString(py_exc, status_attr_name, py_abort_status);
-        Py_DECREF(py_abort_status);
-    }
-    else {
-        PyObject_SetAttrString(py_exc, status_attr_name, Py_None);
     }
 }
 
@@ -465,9 +438,8 @@ void raise_exception_with_mrt_status(as_error *err, PyObject *py_commit_status,
 
     // Convert C error to Python exception
     PyObject *py_err = NULL;
-    error_to_pyobject(err, &py_err);
-    set_aerospike_exc_attrs_using_tuple_of_attrs_and_mrt_status(
-        py_value, py_err, py_commit_status, py_abort_status);
+    as_error_and_mrt_status_to_pytuple(err, &py_err, py_commit_status, py_abort_status);
+    set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
 
     // Raise exception
     PyErr_SetObject(py_value, py_err);
