@@ -2391,6 +2391,7 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
     return err->code;
 }
 
+// TODO: a better name for this is as_error_to_pytuple
 void error_to_pyobject(const as_error *err, PyObject **obj)
 {
     as_error_and_mrt_status_to_pytuple(err, obj, NULL, NULL);
