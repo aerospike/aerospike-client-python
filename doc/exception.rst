@@ -58,13 +58,13 @@ Base Class
 
     .. py:attribute:: commit_status
 
-        Set to one of :ref:`mrt_commit_status_constants` when :ref:`~aerospike.Client.commit` raises an exception.
+        Set to one of :ref:`mrt_commit_status_constants` when :meth:`~aerospike.Client.commit` raises an exception.
 
         Otherwise, :py:obj:`None` if not set.
 
     .. py:attribute:: abort_status
 
-        Set to one of :ref:`mrt_abort_status_constants` when :ref:`~aerospike.Client.abort` raises an exception.
+        Set to one of :ref:`mrt_abort_status_constants` when :meth:`~aerospike.Client.abort` raises an exception.
 
         Otherwise, :py:obj:`None` if not set.
 
