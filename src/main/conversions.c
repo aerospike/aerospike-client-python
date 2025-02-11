@@ -2396,7 +2396,8 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     as_error_and_mrt_status_to_pytuple(err, obj, NULL, NULL);
 }
 
-// Steals reference to MRT statuses
+// Steals reference to MRT statuses, if non-NULL
+// If MRT statuses are NULL, that just means they will be None in the Python tuple
 void as_error_and_mrt_status_to_pytuple(const as_error *err, PyObject **obj,
                                         PyObject *py_commit_status,
                                         PyObject *py_abort_status)
