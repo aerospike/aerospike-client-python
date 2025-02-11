@@ -21,7 +21,8 @@ PyObject *AerospikeClient_Commit(AerospikeClient *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
-    as_commit_status status;
+    // Set a default value in case the C client does not initialize the status.
+    as_commit_status status = AS_COMMIT_OK;
 
     Py_BEGIN_ALLOW_THREADS
     aerospike_commit(self->as, &err, py_transaction->txn, &status);
@@ -56,7 +57,8 @@ PyObject *AerospikeClient_Abort(AerospikeClient *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
-    as_abort_status status;
+    // Set a default value in case the C client does not initialize the status.
+    as_abort_status status = AS_ABORT_OK;
 
     Py_BEGIN_ALLOW_THREADS
     aerospike_abort(self->as, &err, py_transaction->txn, &status);
