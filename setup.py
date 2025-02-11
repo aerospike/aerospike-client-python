@@ -97,7 +97,7 @@ if SANITIZER:
     sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
     extra_link_args.extend(sanitizer_ldflags)
 
-library_dirs = ['/usr/local/lib']
+library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
     'crypto',
