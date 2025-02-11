@@ -437,6 +437,7 @@ void raise_exception_with_mrt_status(as_error *err, PyObject *py_commit_status,
     Py_INCREF(py_value);
 
     // Convert C error to Python exception
+    // Also add commit or abort status to exception, if needed
     PyObject *py_err = NULL;
     as_error_and_mrt_status_to_pytuple(err, &py_err, py_commit_status,
                                        py_abort_status);
