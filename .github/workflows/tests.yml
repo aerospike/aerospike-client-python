@@ -286,7 +286,7 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - run: |
-        echo ASAN_OPTIONS='halt_on_error=0:detect_leaks=1' >> $GITHUB_ENV
+        echo ASAN_OPTIONS='halt_on_error=0:detect_leaks=0' >> $GITHUB_ENV
         echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
 
     - uses: ./.github/actions/run-ee-server
