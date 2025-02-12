@@ -275,6 +275,10 @@ jobs:
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
 
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
+
     - name: Install client
       run: pip install *.whl
 
