@@ -357,6 +357,9 @@ jobs:
       with:
         container-name: aerospike
 
+    - run: |
+        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
+
     - name: Run tests
       run: python -m pytest ./new_tests -vv
       working-directory: test
