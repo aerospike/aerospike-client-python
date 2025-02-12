@@ -296,7 +296,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv
+      run: python -m pytest ./new_tests -vvs
       working-directory: test
 
   test-ce:
