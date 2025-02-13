@@ -149,8 +149,9 @@ jobs:
     strategy:
       matrix:
         runner-os: [
+          # These larger runners run on intel
           macos-14-large,
-          macos-15
+          macos-15-large
         ]
         python-version: [
           "3.9",
