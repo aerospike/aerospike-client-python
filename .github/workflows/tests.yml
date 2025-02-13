@@ -260,6 +260,49 @@ jobs:
       run: python -m pytest ./new_tests
       working-directory: test
 
+  test-sanitizer:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    # We can already detect leaks using valgrind
+    # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
+    - run: |
+        echo ASAN_OPTIONS='halt_on_error=1:detect_leaks=0' >> $GITHUB_ENV
+        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Run tests
+      # We need to disable capturing output or else we cannot see memory errors reported by 
+      # libasan during the test run
+      run: python -m pytest ./new_tests -vvs
+      working-directory: test
+
   test-ce:
     runs-on: ubuntu-22.04
     needs: build
@@ -272,10 +315,6 @@ jobs:
           "3.12",
           "3.13"
         ]
-        sanitizer: [false]
-        include:
-          - py-version: 3.9
-            sanitizer: true
       fail-fast: false
 
     steps:
@@ -289,9 +328,6 @@ jobs:
         architecture: 'x64'
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
-
-    - if: ${{ matrix.sanitizer }}
-      run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
 
     - uses: actions/download-artifact@v4
       with:
@@ -324,11 +360,6 @@ jobs:
     - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
-
-    - if: ${{ matrix.sanitizer }}
-      run: |
-        echo ASAN_OPTIONS='halt_on_error=0' >> $GITHUB_ENV
-        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
 
     - name: Run tests
       run: python -m pytest ./new_tests -vv
