@@ -467,6 +467,8 @@ Policies
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
+            | This compression feature requires the Enterprise Edition Server.
+            |
             | Default: ``False``
         * **deserialize** :class:`bool`
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.

@@ -69,8 +69,9 @@ struct exception_def {
 #define NO_ERROR_CODE 0
 
 // Same order as the tuple of args passed into the exception
-const char *const aerospike_err_attrs[] = {"code", "msg",      "file",
-                                           "line", "in_doubt", NULL};
+const char *const aerospike_err_attrs[] = {
+    "code",     "msg",           "file",         "line",
+    "in_doubt", "commit_status", "abort_status", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
@@ -111,8 +112,13 @@ struct exception_def exception_defs[] = {
                   AEROSPIKE_ERR_ASYNC_CONNECTION, NULL),
     EXCEPTION_DEF("ClientAbortError", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_CLIENT_ABORT, NULL),
-    EXCEPTION_DEF("TranactionFailed", CLIENT_ERR_EXCEPTION_NAME,
+    EXCEPTION_DEF("TransactionFailed", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_TXN_FAILED, NULL),
+    EXCEPTION_DEF("TransactionAlreadyCommitted", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_TXN_ALREADY_COMMITTED, NULL),
+    EXCEPTION_DEF("TransactionAlreadyAborted", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_TXN_ALREADY_ABORTED, NULL),
+
     // Server errors
     EXCEPTION_DEF("InvalidRequest", SERVER_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_REQUEST_INVALID, NULL),
@@ -390,8 +396,16 @@ void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
     }
 }
 
-// TODO: idea. Use python dict to map error code to exception
 void raise_exception(as_error *err)
+{
+    raise_exception_with_mrt_status(err, NULL, NULL);
+}
+
+// TODO: idea. Use python dict to map error code to exception
+// If py_commit_status is NULL, ignore it. Same with py_abort_status
+// Steals reference to either status objects
+void raise_exception_with_mrt_status(as_error *err, PyObject *py_commit_status,
+                                     PyObject *py_abort_status)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
@@ -423,8 +437,10 @@ void raise_exception(as_error *err)
     Py_INCREF(py_value);
 
     // Convert C error to Python exception
+    // Also add commit or abort status to exception, if needed
     PyObject *py_err = NULL;
-    error_to_pyobject(err, &py_err);
+    as_error_and_mrt_status_to_pytuple(err, &py_err, py_commit_status,
+                                       py_abort_status);
     set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
 
     // Raise exception

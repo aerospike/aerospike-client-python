@@ -39,7 +39,7 @@ class TestMRTBasicFunctionality:
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
 
         retval = self.as_connection.commit(transaction=mrt)
-        assert retval == aerospike.MRT_COMMIT_OK
+        assert retval == aerospike.COMMIT_OK
 
         # Were the writes committed?
         for i in range(len(self.keys)):
@@ -74,7 +74,7 @@ class TestMRTBasicFunctionality:
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
 
         retval = self.as_connection.abort(transaction=mrt)
-        assert retval == aerospike.MRT_ABORT_OK
+        assert retval == aerospike.ABORT_OK
 
         # Test that MRT didn't go through
         # i.e write commands were rolled back
@@ -89,8 +89,9 @@ class TestMRTBasicFunctionality:
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         self.as_connection.abort(mrt)
-        status = self.as_connection.commit(mrt)
-        assert status == aerospike.MRT_COMMIT_ALREADY_ABORTED
+        with pytest.raises(e.TransactionAlreadyAborted) as excinfo:
+            self.as_connection.commit(mrt)
+        assert excinfo.value.commit_status == aerospike.COMMIT_ALREADY_ABORTED
 
     # Test case 10: Issue abort after issung commit. (P1)
     def test_abort_fail(self):
@@ -100,5 +101,6 @@ class TestMRTBasicFunctionality:
         }
         self.as_connection.put(self.keys[0], {self.bin_name: 1}, policy=policy)
         self.as_connection.commit(mrt)
-        status = self.as_connection.abort(mrt)
-        assert status == aerospike.MRT_ABORT_ALREADY_COMMITTED
+        with pytest.raises(e.TransactionAlreadyCommitted) as excinfo:
+            self.as_connection.abort(mrt)
+        assert excinfo.value.abort_status == aerospike.ABORT_ALREADY_COMMITTED

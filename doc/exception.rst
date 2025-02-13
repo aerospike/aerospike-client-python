@@ -54,7 +54,19 @@ Base Class
 
     .. py:attribute:: in_doubt
 
-        ``True`` if it is possible that the operation succeeded. See :ref:`indoubt`.
+        ``True`` if it is possible that the command succeeded. See :ref:`indoubt`.
+
+    .. py:attribute:: commit_status
+
+        Set to one of :ref:`mrt_commit_status_constants` when :meth:`~aerospike.Client.commit` raises an exception.
+
+        Otherwise, :py:obj:`None` if not set.
+
+    .. py:attribute:: abort_status
+
+        Set to one of :ref:`mrt_abort_status_constants` when :meth:`~aerospike.Client.abort` raises an exception.
+
+        Otherwise, :py:obj:`None` if not set.
 
     In addition to accessing these attributes by their names, \
     they can also be checked by calling ``exc.args[i]``, where ``exc`` is the exception object and \
@@ -149,6 +161,30 @@ Client Errors
     One or more keys failed in a batch.
 
     Error code: ``-16``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: TransactionFailed
+
+    Transaction failed.
+
+    Error code: ``-17``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: TransactionAlreadyCommitted
+
+    Transaction abort called, but the transaction was already committed.
+
+    Error code: ``-18``
+
+    Subclass of :py:exc:`~aerospike.exception.ClientError`.
+
+.. py:exception:: TransactionAlreadyAborted
+
+    Transaction commit called, but the transaction was already aborted.
+
+    Error code: ``-19``
 
     Subclass of :py:exc:`~aerospike.exception.ClientError`.
 
@@ -252,7 +288,7 @@ Server Errors
 
 .. py:exception:: FilteredOut
 
-    The transaction was not performed because the expression was false.
+    The command was not performed because the expression was false.
 
     Error code: ``27``
 
@@ -391,7 +427,7 @@ Record Errors
 
 .. py:exception:: RecordKeyMismatch
 
-    Record key sent with transaction did not match key stored on server.
+    Record key sent with command did not match key stored on server.
 
     Error code: ``19``
 
@@ -536,7 +572,7 @@ Admin Errors
 
 .. py:exception:: SecuritySchemeNotSupported
 
-    Security type not supported by connected server.
+    Security scheme not supported.
 
     Error code: ``53``
 
@@ -656,7 +692,7 @@ Admin Errors
 
 .. py:exception:: NotAuthenticated
 
-    User must be authentication before performing database operations.
+    User must be authenticated before performing database operations.
 
     Error code: ``80``
 
