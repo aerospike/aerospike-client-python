@@ -17,7 +17,7 @@
 Module with helper functions to create dictionaries used by:
 
 * :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
-* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 """
 import warnings
 

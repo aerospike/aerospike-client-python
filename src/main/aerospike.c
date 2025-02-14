@@ -32,6 +32,7 @@
 #include "module_functions.h"
 #include "nullobject.h"
 #include "cdt_types.h"
+#include "transaction.h"
 
 #include <aerospike/as_operations.h>
 #include <aerospike/as_log_macros.h>
@@ -39,6 +40,7 @@
 #include <aerospike/as_admin.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_exp_operations.h>
+#include <aerospike/aerospike_txn.h>
 
 PyObject *py_global_hosts;
 int counter = 0xA8000000;
@@ -499,6 +501,28 @@ static struct module_constant_name_to_value module_constants[] = {
     {"LOG_LEVEL_DEBUG", .value.integer = AS_LOG_LEVEL_DEBUG},
     {"LOG_LEVEL_TRACE", .value.integer = AS_LOG_LEVEL_TRACE},
 
+    {"COMMIT_OK", .value.integer = AS_COMMIT_OK},
+    {"COMMIT_ALREADY_COMMITTED", .value.integer = AS_COMMIT_ALREADY_COMMITTED},
+    {"COMMIT_ALREADY_ABORTED", .value.integer = AS_COMMIT_ALREADY_ABORTED},
+    {"COMMIT_VERIFY_FAILED", .value.integer = AS_COMMIT_VERIFY_FAILED},
+    {"COMMIT_MARK_ROLL_FORWARD_ABANDONED",
+     .value.integer = AS_COMMIT_MARK_ROLL_FORWARD_ABANDONED},
+    {"COMMIT_ROLL_FORWARD_ABANDONED",
+     .value.integer = AS_COMMIT_ROLL_FORWARD_ABANDONED},
+    {"COMMIT_CLOSE_ABANDONED", .value.integer = AS_COMMIT_CLOSE_ABANDONED},
+
+    {"ABORT_OK", .value.integer = AS_ABORT_OK},
+    {"ABORT_ALREADY_ABORTED", .value.integer = AS_ABORT_ALREADY_ABORTED},
+    {"ABORT_ALREADY_COMMITTED", .value.integer = AS_ABORT_ALREADY_COMMITTED},
+    {"ABORT_ROLL_BACK_ABANDONED",
+     .value.integer = AS_ABORT_ROLL_BACK_ABANDONED},
+    {"ABORT_CLOSE_ABANDONED", .value.integer = AS_ABORT_CLOSE_ABANDONED},
+
+    {"TXN_STATE_OPEN", .value.integer = AS_TXN_STATE_OPEN},
+    {"TXN_STATE_VERIFIED", .value.integer = AS_TXN_STATE_VERIFIED},
+    {"TXN_STATE_COMMITTED", .value.integer = AS_TXN_STATE_COMMITTED},
+    {"TXN_STATE_ABORTED", .value.integer = AS_TXN_STATE_ABORTED},
+
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
     {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};
 
@@ -533,6 +557,7 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"null", AerospikeNullObject_Ready},
     {"CDTWildcard", AerospikeWildcardObject_Ready},
     {"CDTInfinite", AerospikeInfiniteObject_Ready},
+    {"Transaction", AerospikeTransaction_Ready},
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)

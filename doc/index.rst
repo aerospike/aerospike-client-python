@@ -46,7 +46,7 @@ Layout
     * :mod:`aerospike_helpers`
         * Bin operations (list, map, bitwise, etc.)
         * Aerospike expressions
-        * Batch operations
+        * Batch commands
         * Complex data type context
 
 The :class:`aerospike` module contains these classes:
@@ -59,6 +59,7 @@ Class                                Description
 :ref:`aerospike.Query`               Handles queries over secondary indexes.
 :ref:`aerospike.geojson`             Handles GeoJSON type data.
 :ref:`aerospike.KeyOrderedDict`      Key ordered dictionary
+:ref:`aerospike.Transaction`         Transaction
 =================================    ===========
 
 In addition, the :ref:`Data_Mapping` page explains how **Python** types map to **Aerospike Server** types.
@@ -79,6 +80,7 @@ Content
     query
     geojson
     key_ordered_dict
+    transaction
     predicates
     exception
     aerospike_helpers

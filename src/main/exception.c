@@ -68,7 +68,10 @@ struct exception_def {
 // No exception should have an error code of 0, so this should be ok
 #define NO_ERROR_CODE 0
 
-const char *const aerospike_err_attrs[] = {"code", "file", "msg", "line", NULL};
+// Same order as the tuple of args passed into the exception
+const char *const aerospike_err_attrs[] = {
+    "code",     "msg",           "file",         "line",
+    "in_doubt", "commit_status", "abort_status", NULL};
 const char *const record_err_attrs[] = {"key", "bin", NULL};
 const char *const index_err_attrs[] = {"name", NULL};
 const char *const udf_err_attrs[] = {"module", "func", NULL};
@@ -109,6 +112,13 @@ struct exception_def exception_defs[] = {
                   AEROSPIKE_ERR_ASYNC_CONNECTION, NULL),
     EXCEPTION_DEF("ClientAbortError", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_CLIENT_ABORT, NULL),
+    EXCEPTION_DEF("TransactionFailed", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_TXN_FAILED, NULL),
+    EXCEPTION_DEF("TransactionAlreadyCommitted", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_TXN_ALREADY_COMMITTED, NULL),
+    EXCEPTION_DEF("TransactionAlreadyAborted", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_TXN_ALREADY_ABORTED, NULL),
+
     // Server errors
     EXCEPTION_DEF("InvalidRequest", SERVER_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_REQUEST_INVALID, NULL),
@@ -367,8 +377,35 @@ void remove_exception(as_error *err)
     }
 }
 
-// TODO: idea. Use python dict to map error code to exception
+// We have this as a separate method because both raise_exception and raise_exception_old need to use it
+void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
+                                                  PyObject *py_tuple)
+{
+    for (unsigned long i = 0;
+         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
+         i++) {
+        // Here, we are assuming the number of attrs is the same as the number of tuple members
+        PyObject *py_arg = PyTuple_GetItem(py_tuple, i);
+        if (py_arg == NULL) {
+            // Don't fail out if number of attrs > number of tuple members
+            // This condition should never be true, though
+            PyErr_Clear();
+            break;
+        }
+        PyObject_SetAttrString(py_exc, aerospike_err_attrs[i], py_arg);
+    }
+}
+
 void raise_exception(as_error *err)
+{
+    raise_exception_with_mrt_status(err, NULL, NULL);
+}
+
+// TODO: idea. Use python dict to map error code to exception
+// If py_commit_status is NULL, ignore it. Same with py_abort_status
+// Steals reference to either status objects
+void raise_exception_with_mrt_status(as_error *err, PyObject *py_commit_status,
+                                     PyObject *py_abort_status)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
@@ -383,37 +420,8 @@ void raise_exception(as_error *err)
             }
             if (err->code == PyLong_AsLong(py_code)) {
                 found = true;
-                PyObject *py_attr = NULL;
-                py_attr = PyUnicode_FromString(err->message);
-                PyObject_SetAttrString(py_value, "msg", py_attr);
-                Py_DECREF(py_attr);
-
-                // as_error.file is a char* so this may be null
-                if (err->file) {
-                    py_attr = PyUnicode_FromString(err->file);
-                    PyObject_SetAttrString(py_value, "file", py_attr);
-                    Py_DECREF(py_attr);
-                }
-                else {
-                    PyObject_SetAttrString(py_value, "file", Py_None);
-                }
-                // If the line is 0, set it as None
-                if (err->line > 0) {
-                    py_attr = PyLong_FromLong(err->line);
-                    PyObject_SetAttrString(py_value, "line", py_attr);
-                    Py_DECREF(py_attr);
-                }
-                else {
-                    PyObject_SetAttrString(py_value, "line", Py_None);
-                }
-
-                py_attr = PyBool_FromLong(err->in_doubt);
-                PyObject_SetAttrString(py_value, "in_doubt", py_attr);
-                Py_DECREF(py_attr);
-
                 break;
             }
-            Py_DECREF(py_code);
         }
     }
     // We haven't found the right exception, just use AerospikeError
@@ -429,8 +437,11 @@ void raise_exception(as_error *err)
     Py_INCREF(py_value);
 
     // Convert C error to Python exception
+    // Also add commit or abort status to exception, if needed
     PyObject *py_err = NULL;
-    error_to_pyobject(err, &py_err);
+    as_error_and_mrt_status_to_pytuple(err, &py_err, py_commit_status,
+                                       py_abort_status);
+    set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
 
     // Raise exception
     PyErr_SetObject(py_value, py_err);
