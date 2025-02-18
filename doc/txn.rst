@@ -1,7 +1,7 @@
 **txn** (:class:`aerospike.Transaction`)
 
-    NOTE: this policy only works for transaction level policies, not config level policies.
+    NOTE: this policy does not work for config level policies.
 
-    Multi-record command identifier.
+    Transaction command identifier.
 
     Default: :py:obj:`None`

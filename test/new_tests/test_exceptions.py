@@ -23,7 +23,9 @@ base_class_to_attrs = {
         "msg",
         "file",
         "line",
-        "in_doubt"
+        "in_doubt",
+        "commit_status",
+        "abort_status"
     ],
     e.RecordError: [
         "key",

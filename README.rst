@@ -11,9 +11,9 @@ Aerospike Python Client
 Compatibility
 -------------
 
-The Python client for Aerospike works with Python 3.8 - 3.13 and supports the following OS'es:
+The Python client for Aerospike works with Python 3.9 - 3.13 and supports the following OS'es:
 
-* macOS 12 - 14
+* macOS 13 - 14
 * CentOS 7 Linux
 * RHEL 8 and 9
 * Amazon Linux 2023
