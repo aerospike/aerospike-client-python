@@ -352,6 +352,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
               exception in response to the invalid key.
 
+            .. code-block:: python
+
+                import aerospike
+
             Default: :py:obj:`False`
 
         * **hosts** (:class:`list`)
