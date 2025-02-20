@@ -362,12 +362,29 @@ Only the `hosts` key is required; the rest of the keys are optional.
                     "validate_keys": True,
                     "hosts": ("127.0.0.1", 3000),
                     # The correct key is "user", but "username" may be used by accident
-                    "username": "user"
+                    "username": "user",
+                    "password": "password"
                 }
                 # This call will raise a ParamError from aerospike.exceptions
                 # Exception message should be:
                 # "username" is an invalid key
                 client = aerospike.client(config)
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "hosts": ("127.0.0.1", 3000)
+                }
+                client = aerospike.client(config)
+
+                key = ("test", "demo", 1)
+                # "key_policy" is used instead of the correct key named "key"
+                policy = {
+                    "key_policy": aerospike.POLICY_KEY_SEND
+                }
+                client.get(key, policy=policy)
 
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
