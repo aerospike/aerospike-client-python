@@ -342,6 +342,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
     .. hlist::
         :columns: 1
+
         * **validate_keys** (:class:`bool`)
             Validate keys passed into this config dictionary as well as any policy dictionaries.
 
