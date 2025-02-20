@@ -381,6 +381,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 import aerospike
 
                 config = {
+                    "validate_keys": True,
                     "hosts": [
                         ("127.0.0.1", 3000)
                     ],
