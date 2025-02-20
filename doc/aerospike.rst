@@ -362,14 +362,16 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
                 config = {
                     "validate_keys": True,
-                    "hosts": ("127.0.0.1", 3000),
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
                     # The correct key is "user", but "username" may be used by accident
                     "username": "user",
                     "password": "password"
                 }
                 # This call will raise a ParamError from aerospike.exception
                 # Exception message should be:
-                # "username" is an invalid key
+                # "username" is an invalid client config dictionary key
                 client = aerospike.client(config)
 
             Invalid policy example:
@@ -379,7 +381,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 import aerospike
 
                 config = {
-                    "hosts": ("127.0.0.1", 3000)
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
                 }
                 client = aerospike.client(config)
 
@@ -388,6 +392,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 policy = {
                     "key_policy": aerospike.POLICY_KEY_SEND
                 }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "key_policy" is an invalid policy dictionary key
                 client.get(key, policy=policy)
 
         * **hosts** (:class:`list`)
