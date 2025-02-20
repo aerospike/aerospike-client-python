@@ -354,6 +354,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: :py:obj:`False`
 
+            Invalid client config example:
+
             .. code-block:: python
 
                 import aerospike
@@ -369,6 +371,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 # Exception message should be:
                 # "username" is an invalid key
                 client = aerospike.client(config)
+
+            Invalid policy example:
 
             .. code-block:: python
 
