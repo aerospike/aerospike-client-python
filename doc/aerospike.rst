@@ -342,6 +342,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
     .. hlist::
         :columns: 1
+        * **validate_keys** (:class:`bool`)
+            Validate keys passed into this config dictionary as well as any policy dictionaries.
+
+            Default: :py:obj:`False`
 
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
