@@ -365,6 +365,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
                     "username": "user"
                 }
                 # This call will raise a ParamError from aerospike.exceptions
+                # Exception message should be:
+                # "username" is an invalid key
                 client = aerospike.client(config)
 
         * **hosts** (:class:`list`)
