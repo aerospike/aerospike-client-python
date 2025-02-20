@@ -346,6 +346,12 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **validate_keys** (:class:`bool`)
             Validate keys passed into this config dictionary as well as any policy dictionaries.
 
+            If a key that is undefined in this documentation gets passed to a config or policy dictionary:
+
+            * If this option is set to :py:obj:`True`, :py:obj:`ParamError` will be raised.
+            * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
+              exception in response to the invalid key.
+
             Default: :py:obj:`False`
 
         * **hosts** (:class:`list`)
