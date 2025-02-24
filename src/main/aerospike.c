@@ -528,14 +528,17 @@ static struct module_constant_name_to_value module_constants[] = {
 
 struct submodule_name_to_creation_method {
     const char *name;
+    const char *fully_qualified_name;
     PyObject *(*pyobject_creation_method)(void);
 };
+
+#define SHORT_AND_FULLY_QUALIFIED_NAME(s) #s, "aerospike." #s
 
 static struct submodule_name_to_creation_method py_submodules[] = {
     // We don't use module's __name__ attribute
     // because the modules' __name__ is the fully qualified name which includes the package name
-    {"exception", AerospikeException_New},
-    {"predicates", AerospikePredicates_New},
+    {SHORT_AND_FULLY_QUALIFIED_NAME(exception), AerospikeException_New},
+    {SHORT_AND_FULLY_QUALIFIED_NAME(predicates), AerospikePredicates_New},
 };
 
 struct type_name_to_creation_method {
@@ -600,6 +603,12 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             py_submodules[i].pyobject_creation_method;
         PyObject *py_submodule = create_py_submodule();
         if (py_submodule == NULL) {
+            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        }
+
+        int retval = PyDict_SetItemString(py_sys_modules, py_submodules[i].fully_qualified_name, py_submodule);
+        if (retval == -1) {
+            Py_DECREF(py_submodule);
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
 
