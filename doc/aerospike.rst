@@ -1594,10 +1594,6 @@ Transaction Commit Status
 
     Transaction has already been committed.
 
-.. data:: COMMIT_ALREADY_ABORTED
-
-    Transaction has already been aborted.
-
 .. data:: COMMIT_VERIFY_FAILED
 
     Transaction verify failed. Transaction will be aborted.
@@ -1628,10 +1624,6 @@ Transaction Abort Status
 .. data:: ABORT_ALREADY_ABORTED
 
     Transaction has already been aborted.
-
-.. data:: ABORT_ALREADY_COMMITTED
-
-    Transaction has already been committed.
 
 .. data:: ABORT_ROLL_BACK_ABANDONED
 

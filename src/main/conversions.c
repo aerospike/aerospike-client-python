@@ -59,8 +59,6 @@
 #define PY_EXCEPTION_FILE 2
 #define PY_EXCEPTION_LINE 3
 #define AS_PY_EXCEPTION_IN_DOUBT 4
-#define AS_PY_EXCEPTION_COMMIT_STATUS 5
-#define AS_PY_EXCEPTION_ABORT_STATUS 6
 
 #define CTX_KEY "ctx"
 #define CDT_CTX_ORDER_KEY "order_key"
@@ -2391,17 +2389,7 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
     return err->code;
 }
 
-// TODO: a better name for this is as_error_to_pytuple
 void error_to_pyobject(const as_error *err, PyObject **obj)
-{
-    as_error_and_mrt_status_to_pytuple(err, obj, NULL, NULL);
-}
-
-// Steals reference to MRT statuses, if non-NULL
-// If MRT statuses are NULL, that just means they will be None in the Python tuple
-void as_error_and_mrt_status_to_pytuple(const as_error *err, PyObject **obj,
-                                        PyObject *py_commit_status,
-                                        PyObject *py_abort_status)
 {
     PyObject *py_file = NULL;
     if (err->file) {
@@ -2426,24 +2414,12 @@ void as_error_and_mrt_status_to_pytuple(const as_error *err, PyObject **obj,
     PyObject *py_in_doubt = err->in_doubt ? Py_True : Py_False;
     Py_INCREF(py_in_doubt);
 
-    if (py_commit_status == NULL) {
-        Py_INCREF(Py_None);
-        py_commit_status = Py_None;
-    }
-
-    if (py_abort_status == NULL) {
-        Py_INCREF(Py_None);
-        py_abort_status = Py_None;
-    }
-
-    PyObject *py_err = PyTuple_New(7);
+    PyObject *py_err = PyTuple_New(5);
     PyTuple_SetItem(py_err, PY_EXCEPTION_CODE, py_code);
     PyTuple_SetItem(py_err, PY_EXCEPTION_MSG, py_message);
     PyTuple_SetItem(py_err, PY_EXCEPTION_FILE, py_file);
     PyTuple_SetItem(py_err, PY_EXCEPTION_LINE, py_line);
     PyTuple_SetItem(py_err, AS_PY_EXCEPTION_IN_DOUBT, py_in_doubt);
-    PyTuple_SetItem(py_err, AS_PY_EXCEPTION_COMMIT_STATUS, py_commit_status);
-    PyTuple_SetItem(py_err, AS_PY_EXCEPTION_ABORT_STATUS, py_abort_status);
     *obj = py_err;
 }
 
