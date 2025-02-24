@@ -4,7 +4,7 @@ Introduction
 
 The Aerospike Python client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
-cluster and handles the transactions performed against it.
+cluster and handles the commands performed against it.
 
 The Python client is a CPython module built on the Aerospike C client.
 

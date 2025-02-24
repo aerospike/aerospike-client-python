@@ -15,7 +15,7 @@ nodes and establishes connections to them. It also gets the partition map of
 the cluster, which is how it knows where every record actually lives.
 
 The client handles the connections, including re-establishing them ahead of
-executing an operation. It keeps track of changes to the cluster through
+executing an command. It keeps track of changes to the cluster through
 a cluster-tending thread.
 
 .. seealso::
