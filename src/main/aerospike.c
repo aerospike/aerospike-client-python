@@ -582,6 +582,17 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         goto MODULE_CLEANUP_ON_ERROR;
     }
 
+    // Allows submodules to be imported using "import aerospike.<submodule-name>"
+    PyObject *py_sys = PyImport_ImportModule("sys");
+    if (py_sys == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+    PyObject *py_sys_modules = PyObject_GetAttrString(py_sys, "modules");
+    if (py_sys_modules == NULL) {
+        Py_DECREF(py_sys);
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+
     unsigned long i = 0;
     int retval;
     for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
@@ -599,6 +610,8 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
     }
+
+    Py_DECREF(py_sys);
 
     for (i = 0; i < sizeof(py_module_types) / sizeof(py_module_types[0]); i++) {
         PyTypeObject *(*py_type_ready_func)(void) =
