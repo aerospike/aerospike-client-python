@@ -249,7 +249,7 @@ jobs:
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
         CIBW_BEFORE_ALL_LINUX: >
-          yum install python-setuptools -y
+          yum install python-setuptools libyaml-devel -y
         # delvewheel is not enabled by default but we do need to repair the wheel
         CIBW_BEFORE_BUILD_WINDOWS: "pip install delvewheel==1.*"
         # We want to check that our wheel links to the new openssl 3 install, not the system default
