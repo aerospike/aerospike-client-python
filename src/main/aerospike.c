@@ -586,6 +586,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
 
     // Allows submodules to be imported using "import aerospike.<submodule-name>"
+    // https://github.com/python/cpython/issues/87533#issuecomment-2373119452
     PyObject *py_sys = PyImport_ImportModule("sys");
     if (py_sys == NULL) {
         goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
