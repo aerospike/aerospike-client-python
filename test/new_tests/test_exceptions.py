@@ -1,4 +1,6 @@
 import pytest
+# Explicitly test that we can import submodule this way
+import aerospike.exception  # noqa: F401
 from aerospike import exception as e
 from .as_errors import (
     AEROSPIKE_ERR_ASYNC_CONNECTION,

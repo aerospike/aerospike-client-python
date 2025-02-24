@@ -606,7 +606,9 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
 
-        int retval = PyDict_SetItemString(py_sys_modules, py_submodules[i].fully_qualified_name, py_submodule);
+        int retval = PyDict_SetItemString(py_sys_modules,
+                                          py_submodules[i].fully_qualified_name,
+                                          py_submodule);
         if (retval == -1) {
             Py_DECREF(py_submodule);
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
