@@ -1,0 +1,8 @@
+on:
+  workflow_dispatch:
+
+jobs:
+  build-server-image:
+    runs-on: ubuntu-22.04
+    steps:
+    - run: echo asdkjfnkj
