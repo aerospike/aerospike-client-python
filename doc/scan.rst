@@ -20,7 +20,7 @@ bins returned can be filtered using :meth:`select`.
 
 .. seealso::
     `Scans <https://aerospike.com/docs/server/guide/scan.html>`_ and \
-    `Managing Scans <https://aerospike.com/docs/server/operations/manage/scans/>`_.
+    `Managing Scans <https://aerospike.com/docs/server/operations/manage/queries/>`_.
 
 Fields
 ======
