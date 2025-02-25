@@ -450,7 +450,7 @@ Index Errors
 
     Error code: ``204``
 
-    .. py:attribute:: index_name
+    .. py:attribute:: name
 
         The name of the index associated with the error.
 
