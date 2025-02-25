@@ -633,7 +633,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
     PyObject *py_sys_modules = PyObject_GetAttrString(py_sys, "modules");
     if (py_sys_modules == NULL) {
-        goto SYS_CLEANUP_ON_ERROR;
+        goto SYS_CLEANUP;
     }
 
     for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
@@ -641,7 +641,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             py_submodules[i].pyobject_creation_method;
         PyObject *py_submodule = create_py_submodule();
         if (py_submodule == NULL) {
-            goto SYS_MODULES_CLEANUP_ON_ERROR;
+            goto SYS_MODULES_CLEANUP;
         }
 
         int retval = PyDict_SetItemString(py_sys_modules,
@@ -660,14 +660,18 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     SUBMODULE_CLEANUP_ON_ERROR:
         Py_DECREF(py_submodule);
-        goto SYS_MODULES_CLEANUP_ON_ERROR;
+        goto SYS_MODULES_CLEANUP;
     }
+
+    // We don't need these anymore. Only for initializing module
+    Py_DECREF(py_sys_modules);
+    Py_DECREF(py_sys);
 
     return py_aerospike_module;
 
-SYS_MODULES_CLEANUP_ON_ERROR:
+SYS_MODULES_CLEANUP:
     Py_DECREF(py_sys_modules);
-SYS_CLEANUP_ON_ERROR:
+SYS_CLEANUP:
     // TODO: Clean up any submodules that were manually added to sys.modules
     // This isn't a big deal though, so just leave off for now
     Py_DECREF(py_sys);
