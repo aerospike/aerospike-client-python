@@ -503,17 +503,12 @@ static struct module_constant_name_to_value module_constants[] = {
 
     {"COMMIT_OK", .value.integer = AS_COMMIT_OK},
     {"COMMIT_ALREADY_COMMITTED", .value.integer = AS_COMMIT_ALREADY_COMMITTED},
-    {"COMMIT_ALREADY_ABORTED", .value.integer = AS_COMMIT_ALREADY_ABORTED},
-    {"COMMIT_VERIFY_FAILED", .value.integer = AS_COMMIT_VERIFY_FAILED},
-    {"COMMIT_MARK_ROLL_FORWARD_ABANDONED",
-     .value.integer = AS_COMMIT_MARK_ROLL_FORWARD_ABANDONED},
     {"COMMIT_ROLL_FORWARD_ABANDONED",
      .value.integer = AS_COMMIT_ROLL_FORWARD_ABANDONED},
     {"COMMIT_CLOSE_ABANDONED", .value.integer = AS_COMMIT_CLOSE_ABANDONED},
 
     {"ABORT_OK", .value.integer = AS_ABORT_OK},
     {"ABORT_ALREADY_ABORTED", .value.integer = AS_ABORT_ALREADY_ABORTED},
-    {"ABORT_ALREADY_COMMITTED", .value.integer = AS_ABORT_ALREADY_COMMITTED},
     {"ABORT_ROLL_BACK_ABANDONED",
      .value.integer = AS_ABORT_ROLL_BACK_ABANDONED},
     {"ABORT_CLOSE_ABANDONED", .value.integer = AS_ABORT_CLOSE_ABANDONED},
