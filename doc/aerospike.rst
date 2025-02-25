@@ -1594,15 +1594,6 @@ Transaction Commit Status
 
     Transaction has already been committed.
 
-.. data:: COMMIT_VERIFY_FAILED
-
-    Transaction verify failed. Transaction will be aborted.
-
-.. data:: COMMIT_MARK_ROLL_FORWARD_ABANDONED
-
-    Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
-    If the error is in doubt (usually timeout), the commit is in doubt.
-
 .. data:: COMMIT_ROLL_FORWARD_ABANDONED
 
     Client roll forward abandoned. Server will eventually commit the transaction.
