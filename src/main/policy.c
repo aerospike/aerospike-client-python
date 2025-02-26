@@ -452,7 +452,9 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     }
 
     //Initialize policy with global defaults
-    as_policy_read_copy(config_read_policy, policy);
+    if (config_read_policy) {
+        as_policy_read_copy(config_read_policy, policy);
+    }
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
@@ -473,7 +475,9 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     }
 
     // Update the policy
-    POLICY_UPDATE();
+    if (policy_p) {
+        POLICY_UPDATE();
+    }
 
     return err->code;
 }
