@@ -73,7 +73,6 @@ static bool AerospikeClient_InfoAll_each(as_error *err, const as_node *node,
     PyGILState_STATE gil_state = PyGILState_Ensure();
 
     if (err && err->code != AEROSPIKE_OK) {
-        as_error_update(err, err->code, NULL);
         goto CLEANUP;
     }
 
