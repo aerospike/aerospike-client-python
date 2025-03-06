@@ -1,14 +1,12 @@
 on:
-  schedule:
-    # * is a special character in YAML so you have to quote this string
-    - cron:  '0 17 * * 1-5'
   workflow_dispatch:
+    inputs:
+      openssl-version:
+        required: true
 
 jobs:
   main:
     env:
-      # We want granular control over the openssl version bundled with our wheels
-      OPENSSL_VERSION: '3.0.15'
       REGISTRY: ghcr.io
     strategy:
       matrix:
@@ -49,7 +47,7 @@ jobs:
         context: .github/workflows
         file: .github/workflows/manylinux2014-openssl.Dockerfile
         build-args: |
-          OPENSSL_VERSION=${{ env.OPENSSL_VERSION }}
+          OPENSSL_VERSION=${{ inputs.openssl-version }}
           CPU_ARCH=${{ matrix.arch-and-runner-os[0] }}
         # setup-buildx-action configures Docker to use the docker-container build driver
         # This driver doesn't publish an image locally by default
