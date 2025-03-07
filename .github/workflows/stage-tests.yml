@@ -105,6 +105,9 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
+      with:
         where-is-client-connecting-from: 'separate-docker-container'
 
     - name: Run distro container
@@ -200,6 +203,9 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
+      with:
         where-is-client-connecting-from: 'docker-host'
 
     - name: Install wheel

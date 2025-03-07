@@ -203,6 +203,10 @@ jobs:
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
+      uses: ./.github/actions/setup-config-conf
+      with:
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
     - name: If not running tests against server, only run basic import test
@@ -324,6 +328,9 @@ jobs:
           server-tag: ${{ inputs.server-tag }}
           docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
           docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+      - uses: ./.github/actions/setup-config-conf
+        with:
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
 
       - name: Download wheel
