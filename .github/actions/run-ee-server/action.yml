@@ -82,5 +82,3 @@ runs:
   # For debugging
   - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
     shell: bash
-
-  # Configure tests
