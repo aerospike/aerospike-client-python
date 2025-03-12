@@ -26,5 +26,6 @@ templates = [
 for tmpl_name in templates:
     template = env.get_template(tmpl_name)
     output = template.render(**kwargs)
+    print(output)
     with open(f"/etc/aerospike/{tmpl_name}".removesuffix(".jinja"), "w") as f:
         f.write(output)
