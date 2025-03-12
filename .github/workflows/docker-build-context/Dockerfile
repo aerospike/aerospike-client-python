@@ -89,10 +89,17 @@ RUN dos2unix *.bash
 
 FROM enable-tls AS finish-setup
 
+# We need to install jinja2 in our server image
+RUN apt update
+# Python3 and pip are prerequisites for pipx
+RUN apt install -y python3 python3-pip
+RUN python3 -m pip install --break-system-packages jinja2
+WORKDIR /
+COPY render-aerospike-conf.py .
+
 ENV HEALTHCHECK_FILE_PATH=/finalized
 HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
 
-WORKDIR /
 COPY --from=dos2unix /my-scripts/* .
 
 # Entrypoint is in root dir

@@ -7,6 +7,17 @@ set -x
 set -m
 set -e
 
+python3 render-aerospike-conf.py
+
+# Disable features if needed
+cd /opt/aerospike/smd
+if [[ -n "$NO_SECURITY" ]]; then
+    rm security.smd
+fi
+if [[ -n "$NO_SC" ]]; then
+    rm roster.smd
+fi
+
 asd --fgdaemon --config-file $AEROSPIKE_CONF_PATH &
 
 # We don't need to timeout here.
