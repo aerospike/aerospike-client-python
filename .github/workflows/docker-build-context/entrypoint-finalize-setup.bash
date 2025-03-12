@@ -18,6 +18,9 @@ if [[ -n "$NO_SC" ]]; then
     rm roster.smd
 fi
 
+python3 -m crudini --existing=param --set astools.conf cluster user \"\"
+python3 -m crudini --existing=param --set astools.conf cluster password \"\"
+
 asd --fgdaemon --config-file $AEROSPIKE_CONF_PATH &
 
 # We don't need to timeout here.
