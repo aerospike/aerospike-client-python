@@ -5,7 +5,7 @@ This Docker image deploys an Aerospike server with these features enabled by def
 - Security
 - TLS standard authentication
 
-To disable any of the above features, run the Docker image with any combination of these environment variables set:
+To disable any of the above features, start up the Docker container with any combination of these environment variables set:
 ```sh
 # The value of the environment variable doesn't actually matter
 NO_SC=1
