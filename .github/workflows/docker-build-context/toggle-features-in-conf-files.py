@@ -2,7 +2,6 @@ from jinja2 import Environment, FileSystemLoader
 import os
 
 env = Environment(loader = FileSystemLoader('/etc/aerospike/'))
-template = env.get_template('aerospike-dev.conf')
 # By default, all features enabled
 # Disable feature if env var is present
 env_vars = [
@@ -19,7 +18,13 @@ for env_var in env_vars:
     kwargs[jinja_var] = value is None
 # For debugging
 print(kwargs)
-output = template.render(**kwargs)
 
-with open("/etc/aerospike/aerospike-dev.conf", "w") as fh:
-    fh.write(output)
+templates = [
+    "astools.conf.jinja",
+    "aerospike-dev.conf.jinja"
+]
+for tmpl_name in templates:
+    template = env.get_template(tmpl_name)
+    output = template.render(**kwargs)
+    with open(f"/etc/aerospike/{tmpl_name}".removesuffix(".jinja"), "w") as f:
+        f.write(output)

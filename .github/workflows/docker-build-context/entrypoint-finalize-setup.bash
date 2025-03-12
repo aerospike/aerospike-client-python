@@ -7,7 +7,7 @@ set -x
 set -m
 set -e
 
-python3 toggle-features-in-aerospike-conf.py
+python3 toggle-features-in-conf-files.py
 
 # Disable features if needed
 cd /opt/aerospike/smd
@@ -18,9 +18,6 @@ if [[ -n "$NO_SC" ]]; then
     rm roster.smd
 fi
 
-python3 -m crudini --existing=param --set astools.conf cluster user \"\"
-python3 -m crudini --existing=param --set astools.conf cluster password \"\"
-
 asd --fgdaemon --config-file $AEROSPIKE_CONF_PATH &
 
 # We don't need to timeout here.
@@ -30,8 +27,10 @@ asd --fgdaemon --config-file $AEROSPIKE_CONF_PATH &
 bash /wait-for-as-server-to-start.bash
 
 # Finish setting up strong consistency
-asadm --enable --execute "manage revive ns test"
-asadm --enable --execute "manage recluster"
+if [[ -z "$NO_SC" ]]; then
+    asadm --enable --execute "manage revive ns test"
+    asadm --enable --execute "manage recluster"
+fi
 
 # Allows HEALTHCHECK to report this container as healthy, now
 touch $HEALTHCHECK_FILE_PATH

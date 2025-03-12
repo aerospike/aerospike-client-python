@@ -1,0 +1,7 @@
+[cluster]
+# Need special permissions to configure strong consistency via asadm in entrypoint script
+# and to run security tests
+# So we can't use the default admin user.
+{% for key in ["user", "password"] %}
+{{ key }} = "{% if sc is true or security is true %}superuser{% endif %}"
+{% endfor %}
