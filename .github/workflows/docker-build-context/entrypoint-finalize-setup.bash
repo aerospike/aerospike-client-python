@@ -7,7 +7,7 @@ set -x
 set -m
 set -e
 
-python3 render-aerospike-conf.py
+python3 toggle-features-in-aerospike-conf.py
 
 # Disable features if needed
 cd /opt/aerospike/smd

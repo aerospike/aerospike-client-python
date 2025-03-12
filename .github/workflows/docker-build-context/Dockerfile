@@ -95,7 +95,7 @@ RUN apt update
 RUN apt install -y python3 python3-pip
 RUN python3 -m pip install --break-system-packages jinja2
 WORKDIR /
-COPY render-aerospike-conf.py .
+COPY toggle-features-in-aerospike-conf.py .
 
 ENV HEALTHCHECK_FILE_PATH=/finalized
 HEALTHCHECK --interval=1s --timeout=1s CMD test -f $HEALTHCHECK_FILE_PATH
