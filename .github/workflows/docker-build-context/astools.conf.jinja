@@ -1,7 +1,7 @@
 [cluster]
-# Need special permissions to configure strong consistency via asadm in entrypoint script
-# and to run security tests
-# So we can't use the default admin user.
+# If security is enabled:
+# - We need special permissions to run security tests, so we can't use the default admin user.
+# - And if SC is also enabled, we need the superuser to finish configuring SC in our entrypoint script
 {% for key in ["user", "password"] %}
-{{ key }} = "{% if sc is true or security is true %}superuser{% endif %}"
+{{ key }} = "{% if security is true %}superuser{% endif %}"
 {% endfor %}
