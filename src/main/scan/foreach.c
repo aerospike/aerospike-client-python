@@ -171,6 +171,11 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
                         "No connection to aerospike cluster");
         goto CLEANUP;
     }
+    if (self->scan.ops) {
+        as_error_update(&data.error, AEROSPIKE_ERR_PARAM,
+                        "No operations can be used with scan.foreach");
+        goto CLEANUP;
+    }
 
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_scan(
