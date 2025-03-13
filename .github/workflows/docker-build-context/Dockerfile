@@ -91,6 +91,8 @@ FROM enable-tls AS finish-setup
 
 # We need to install jinja2 in our server image
 RUN apt update
+# Verified that installing these should not interfere with the server
+# There are a few packages being upgraded with this command, but it should be ok
 RUN apt install -y python3 python3-pip
 RUN python3 -m pip install --break-system-packages jinja2
 WORKDIR /
