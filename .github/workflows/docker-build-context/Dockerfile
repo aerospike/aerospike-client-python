@@ -6,6 +6,7 @@ FROM $SERVER_IMAGE AS shared
 # Shared between build stages to generate the server certificate and to build final server image
 
 # Use our own conf file for the final server image.
+# The entrypoint script will use these templates to generate conf files
 ARG AEROSPIKE_CONF_FILE_NAME=aerospike-dev.conf.jinja
 # Our entrypoint script needs to pass this custom aerospike conf to the server binary
 ENV AEROSPIKE_CONF_PATH=/etc/aerospike/$AEROSPIKE_CONF_FILE_NAME
