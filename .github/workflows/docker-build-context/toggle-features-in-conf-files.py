@@ -16,6 +16,9 @@ for env_var in env_vars:
     # Our jinja template checks if a feature is True in order to set a feature
     # e.g env var "NO_SC" -> Jinja variable "sc"
     jinja_var = env_var.replace("NO_", "").lower()
+    # Enable a feature if env var is not set
+    # e.g If env var NO_SC is not set, set Jinja variable "sc" to True
+    # otherwise, if NO_SC is set, set "sc" to False
     kwargs[jinja_var] = value is None
 # For debugging
 print(kwargs)
