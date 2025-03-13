@@ -1,7 +1,7 @@
 from jinja2 import Environment, FileSystemLoader
 import os
 
-env = Environment(loader = FileSystemLoader('/etc/aerospike/'))
+env = Environment(loader = FileSystemLoader('/etc/aerospike/'), trim_blocks=True, lstrip_blocks=True)
 # By default, all features enabled
 # Disable feature if env var is present
 env_vars = [
