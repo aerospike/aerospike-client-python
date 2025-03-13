@@ -27,8 +27,8 @@ asd --fgdaemon --config-file ${AEROSPIKE_CONF_PATH%.*} &
 # And our Github Actions code will wait for the container to be healthy or timeout after 30 seconds.
 bash /wait-for-as-server-to-start.bash
 
-# Finish setting up strong consistency
 if [[ -z "$NO_SC" ]]; then
+    # Finish setting up strong consistency
     asadm --enable --execute "manage revive ns test"
     asadm --enable --execute "manage recluster"
 fi
