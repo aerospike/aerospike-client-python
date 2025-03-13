@@ -18,7 +18,8 @@ if [[ -n "$NO_SC" ]]; then
     rm roster.smd
 fi
 
-asd --fgdaemon --config-file /etc/aerospike/aerospike-dev.conf &
+# We have to remove the .jinja part
+asd --fgdaemon --config-file ${AEROSPIKE_CONF_PATH%.*} &
 
 # We don't need to timeout here.
 # If the wait script runs forever, users running the container manually will know that
