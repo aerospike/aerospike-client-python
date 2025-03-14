@@ -1,8 +1,16 @@
+name: Update manylinux openssl image
+
 on:
   workflow_dispatch:
     inputs:
       openssl-version:
         required: true
+      # Set to true when we want to update our custom manylinux image used in production
+      # Set to false if we want to test changes to the image without affecting prod
+      set-latest-tag:
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   main:
@@ -23,6 +31,7 @@ jobs:
         sparse-checkout: |
           .github/workflows
 
+    # TODO: use same version as in pinned cibuildwheel version
     - run: docker pull quay.io/pypa/manylinux2014_${{ matrix.arch-and-runner-os[0] }}
 
     - uses: docker/login-action@v3
@@ -35,7 +44,7 @@ jobs:
       id: meta
       with:
         images: ${{ env.REGISTRY }}/aerospike/manylinux2014_${{ matrix.arch-and-runner-os[0] }}
-        flavor: latest=false
+        flavor: latest=${{ inputs.set-latest-tag }}
 
     - name: Set up Docker Buildx so we can cache our Docker image layers
       uses: docker/setup-buildx-action@v3
