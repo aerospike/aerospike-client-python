@@ -1,4 +1,5 @@
 name: Update manylinux openssl image
+run-name: 'Update manylinux openssl image (openssl-version=${{ inputs.openssl-version }}, set-latest-tag=${{ inputs.set-latest-tag }})'
 
 on:
   workflow_dispatch:
