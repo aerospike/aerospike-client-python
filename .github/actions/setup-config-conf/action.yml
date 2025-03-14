@@ -5,6 +5,10 @@ inputs:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
     default: 'docker-host'
+  server-container-name:
+    required: true
+    # Need description key or lint error will be thrown
+    description: ''
 
 runs:
   using: "composite"
@@ -37,9 +41,12 @@ runs:
     working-directory: test
     shell: bash
 
-  - name: Set IP address to localhost
-    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
-    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
+  - name: Set server IP address to connect to
+    # We want a single step to get an output from
+    # Don't save server ip to environment variable because it will persist outside of composite action
+    run: |
+      ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
+      echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
     working-directory: test
     shell: bash
 
@@ -53,7 +60,7 @@ runs:
 
   - name: Set IP address to Docker container for the server
     if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
-    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ env.SERVER_CONTAINER_NAME }}) >> $GITHUB_ENV
+    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ inputs.server-container-name }}) >> $GITHUB_ENV
     shell: bash
 
   - name: Invalid input
@@ -62,7 +69,7 @@ runs:
     shell: bash
 
   - name: Get cluster name
-    run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
+    run: echo CLUSTER_NAME=$(docker exec ${{ inputs.server-container-name }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
     shell: bash
 
   - name: Set EE server's IP address

@@ -12,6 +12,7 @@ inputs:
     required: true
     description: Specify Docker tag
     default: 'latest'
+  # TODO: what if it interferes with another docker login credential?
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
@@ -21,17 +22,25 @@ inputs:
     description: Required for using release candidates
     required: false
 
+# Outputs a running server Docker container
+outputs:
+  container-name:
+    description: Server container name
+    value: ${{ steps.get-container-name.outputs.container_name }}
+
 runs:
   using: "composite"
   steps:
-  # Start up server
-
+  # TODO: log out of current user?
+  # TODO: then switch back to current user after action completes?
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
-  - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
+  - name: Get base image name
+    id: get-base-image-name
+    run: echo "base_image_name=${{ format('aerospike/aerospike-server-enterprise{0}:{1}', ${{ inputs.use-server-rc == 'true' && '-rc' || '' }}, inputs.server-tag) }}" >> $GITHUB_OUTPUT
     shell: bash
 
   - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-python-client-testing >> $GITHUB_ENV
@@ -63,10 +72,11 @@ runs:
       # so we have to manually enable it
       load: true
 
-  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
+  - id: get-server-container-name
+    run: echo "container_name=aerospike" >> $GITHUB_OUTPUT
     shell: bash
 
-  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run -d --name ${{ steps.get-server-container-name.outputs.container_name }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
   - name: 'macOS: install timeout command'
@@ -76,9 +86,9 @@ runs:
 
   - name: Wait for container to be healthy
     run: |
-      timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }})" == "healthy" ]]; do sleep 0.1; done'
+      timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ steps.get-server-container-name.outputs.container_name }})" == "healthy" ]]; do sleep 0.1; done'
     shell: bash
 
   # For debugging
-  - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
+  - run: docker logs ${{ steps.get-server-container-name.outputs.container_name }}
     shell: bash
