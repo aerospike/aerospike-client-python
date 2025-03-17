@@ -12,7 +12,6 @@ inputs:
     required: true
     description: Specify Docker tag
     default: 'latest'
-  # TODO: what if it interferes with another docker login credential?
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
@@ -23,6 +22,9 @@ inputs:
     required: false
 
 # Outputs a running server Docker container
+# NOTE: side effects:
+# If docker-hub-username and password are passed as inputs,
+# a previous set of credentials used for docker will be overwritten
 outputs:
   container-name:
     description: Server container name
@@ -31,8 +33,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-  # TODO: log out of current user?
-  # TODO: then switch back to current user after action completes?
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
@@ -40,10 +40,7 @@ runs:
 
   - name: Get base image name
     id: get-base-image-name
-    run: echo "base_image_name=${{ format('aerospike/aerospike-server-enterprise{0}:{1}', ${{ inputs.use-server-rc == 'true' && '-rc' || '' }}, inputs.server-tag) }}" >> $GITHUB_OUTPUT
-    shell: bash
-
-  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-python-client-testing >> $GITHUB_ENV
+    run: echo "base_image_name=${{ format('aerospike/aerospike-server-enterprise{0}:{1}', inputs.use-server-rc == 'true' && '-rc' || '', inputs.server-tag) }}" >> $GITHUB_OUTPUT
     shell: bash
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
@@ -60,13 +57,13 @@ runs:
     # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
     # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
     uses: docker/build-push-action@v6
+    id: build-image
     with:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
       context: .github/workflows/docker-build-context
       build-args: |
-        SERVER_IMAGE=${{ env.IMAGE_NAME }}
+        SERVER_IMAGE=${{ steps.get-base-image-name.outputs.base_image_name }}
         TLS_PORT=${{ env.TLS_PORT }}
-      tags: ${{ env.NEW_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
@@ -76,7 +73,7 @@ runs:
     run: echo "container_name=aerospike" >> $GITHUB_OUTPUT
     shell: bash
 
-  - run: docker run -d --name ${{ steps.get-server-container-name.outputs.container_name }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run -d --name ${{ steps.get-server-container-name.outputs.container_name }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ steps.build-image.outputs.imageid }}
     shell: bash
 
   - name: 'macOS: install timeout command'
@@ -91,4 +88,8 @@ runs:
 
   # For debugging
   - run: docker logs ${{ steps.get-server-container-name.outputs.container_name }}
+    shell: bash
+
+  - name: Logout of Docker Hub
+    run: docker logout
     shell: bash
