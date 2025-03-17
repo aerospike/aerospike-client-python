@@ -69,6 +69,10 @@ on:
         required: false
         default: ''
         description: 'new_tests/<value>'
+      custom-manylinux-image-tag:
+        required: false
+        default: 'latest'
+        description: Allows us to test new openssl versions to bundle with client
 
   workflow_call:
     inputs:
@@ -162,7 +166,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
-      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}:latest
+      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}:{1}
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -229,10 +233,10 @@ jobs:
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', inputs.custom-manylinux-image-tag) }} >> $GITHUB_ENV
  
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', inputs.custom-manylinux-image-tag) }} >> $GITHUB_ENV
 
     - uses: docker/login-action@v3
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
