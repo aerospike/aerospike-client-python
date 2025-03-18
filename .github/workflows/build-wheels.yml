@@ -248,6 +248,8 @@ jobs:
         CIBW_ENVIRONMENT_MACOS: SSL_LIB_PATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/lib/" CPATH="$(brew --prefix openssl@${{ env.MACOS_OPENSSL_VERSION }})/include/" STATIC_SSL=1
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
+        CIBW_BEFORE_ALL_MACOS: >
+          brew install libyaml
         CIBW_BEFORE_ALL_LINUX: >
           yum install python-setuptools libyaml-devel -y
         # delvewheel is not enabled by default but we do need to repair the wheel
