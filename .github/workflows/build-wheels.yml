@@ -252,7 +252,7 @@ jobs:
     - if: ${{ inputs.platform-tag == 'macosx_arm64' }}
       name: Ensure that linker can find libyaml
       # On mac m1, libyaml installed via brew is not in the linker's default library path
-      run: echo CFLAGS="-L$(brew --prefix libyaml)/lib $CFLAGS" >> $GITHUB_ENV
+      run: echo LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix libyaml)/lib" >> $GITHUB_ENV
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
