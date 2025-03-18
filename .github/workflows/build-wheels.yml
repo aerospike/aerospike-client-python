@@ -69,10 +69,6 @@ on:
         required: false
         default: ''
         description: 'new_tests/<value>'
-      custom-manylinux-image-tag:
-        required: false
-        default: 'latest'
-        description: Allows us to test new openssl versions to bundle with client
 
   workflow_call:
     inputs:
@@ -232,11 +228,13 @@ jobs:
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
+    # OpenSSL locked version for this git revision: 3.0.15
+    # We lock the digest for security reasons.
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', inputs.custom-manylinux-image-tag) }} >> $GITHUB_ENV
- 
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', 'f876e33cb40d9d4313d3649f8dfa7a00f091a4ab1ac3b393f03ef8780d5e391d') }} >> $GITHUB_ENV
+
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', inputs.custom-manylinux-image-tag) }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'bebce2a41612954713aa46b67a6e2fe18945c63b01c3d22b3b81f27c276e31dd') }} >> $GITHUB_ENV
 
     - uses: docker/login-action@v3
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
