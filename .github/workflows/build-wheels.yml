@@ -241,6 +241,14 @@ jobs:
         username: ${{ github.actor }}
         password: ${{ secrets.GITHUB_TOKEN }}
 
+    - if: ${{ startsWith(inputs.platform-tag, 'macosx') }}
+      name: Set minimum macos version required to install wheel
+      # - By default, cibuildwheel will try to build the wheel to be compatible with macOS 11.0 / 10.9
+      # We are trying to make the wheel compatible with the lowest supported macOS version for the Python client
+      # Here, we are telling cibuildwheel to build against the latter, not 11.0.
+      # - Use single dash for backwards compatibility with older sw_vers
+      run: echo MACOSX_DEPLOYMENT_TARGET=$(sw_vers -productVersion | cut -d"." -f 1).0 >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
       env:
