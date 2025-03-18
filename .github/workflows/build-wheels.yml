@@ -162,7 +162,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
-      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}:{1}
+      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}@sha256:{1}
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
