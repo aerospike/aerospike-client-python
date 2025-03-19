@@ -47,6 +47,7 @@ DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
 WINDOWS = 'Windows' in PLATFORM
 
 CWD = os.path.abspath(os.path.dirname(__file__))
+STATIC_SSL = os.getenv('STATIC_SSL')
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 # COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
 # Not for developers to use, unless you know what the workflow is doing!
@@ -97,20 +98,13 @@ if SANITIZER:
     sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
     extra_link_args.extend(sanitizer_ldflags)
 
-library_dirs = ['/usr/local/lib']
-
-# On mac m1, if we build with CFLAGS=-Werror,
-# it may fail because /usr/local/opt/openssl/lib doesn't exist
-if not (DARWIN and machine == 'arm64'):
-    library_dirs.append("/usr/local/opt/openssl/lib")
-
+library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
     'ssl',
     'crypto',
     'pthread',
     'm',
-    'z',
-    'yaml'
+    'z'
 ]
 
 ##########################
@@ -124,6 +118,17 @@ if COVERAGE:
 
 if UNOPTIMIZED:
     extra_compile_args.append('-O0')
+
+################################################################################
+# STATIC SSL LINKING BUILD SETTINGS
+################################################################################
+
+if STATIC_SSL:
+    extra_objects.extend(
+        [SSL_LIB_PATH + 'libssl.a', SSL_LIB_PATH + 'libcrypto.a'])
+    libraries.remove('ssl')
+    libraries.remove('crypto')
+    library_dirs.remove('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
@@ -163,6 +168,10 @@ else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
+include_dirs = include_dirs + [
+    '/usr/local/opt/openssl/include',
+
+]
 if not WINDOWS:
     include_dirs.append(AEROSPIKE_C_TARGET + '/include')
     extra_objects = extra_objects + [
