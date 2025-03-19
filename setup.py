@@ -109,7 +109,8 @@ libraries = [
     'crypto',
     'pthread',
     'm',
-    'z'
+    'z',
+    'yaml'
 ]
 
 ##########################
