@@ -56,18 +56,6 @@ Base Class
 
         ``True`` if it is possible that the command succeeded. See :ref:`indoubt`.
 
-    .. py:attribute:: commit_status
-
-        Set to one of :ref:`mrt_commit_status_constants` when :meth:`~aerospike.Client.commit` raises an exception.
-
-        Otherwise, :py:obj:`None` if not set.
-
-    .. py:attribute:: abort_status
-
-        Set to one of :ref:`mrt_abort_status_constants` when :meth:`~aerospike.Client.abort` raises an exception.
-
-        Otherwise, :py:obj:`None` if not set.
-
     In addition to accessing these attributes by their names, \
     they can also be checked by calling ``exc.args[i]``, where ``exc`` is the exception object and \
     ``i`` is the index of the attribute in the order they appear above. \
@@ -450,7 +438,7 @@ Index Errors
 
     Error code: ``204``
 
-    .. py:attribute:: index_name
+    .. py:attribute:: name
 
         The name of the index associated with the error.
 

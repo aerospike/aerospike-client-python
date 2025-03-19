@@ -162,7 +162,7 @@ jobs:
     env:
       BUILD_IDENTIFIER: "${{ matrix.python-tag }}-${{ inputs.platform-tag }}"
       MACOS_OPENSSL_VERSION: 3
-      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}:latest
+      CUSTOM_IMAGE_NAME: ghcr.io/aerospike/manylinux2014_{0}@sha256:{1}
     steps:
     - name: Create status check message
       run: echo STATUS_CHECK_MESSAGE="cibuildwheel (${{ env.BUILD_IDENTIFIER }})" >> $GITHUB_ENV
@@ -228,11 +228,13 @@ jobs:
       if: ${{ inputs.include-debug-info-for-macos && startsWith(inputs.platform-tag, 'macosx') }}
       run: echo "INCLUDE_DSYM=1" >> $GITHUB_ENV
 
+    # OpenSSL locked version for this git revision: 3.0.15
+    # We lock the digest for security reasons.
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64') }} >> $GITHUB_ENV
- 
+      run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', 'f876e33cb40d9d4313d3649f8dfa7a00f091a4ab1ac3b393f03ef8780d5e391d') }} >> $GITHUB_ENV
+
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'bebce2a41612954713aa46b67a6e2fe18945c63b01c3d22b3b81f27c276e31dd') }} >> $GITHUB_ENV
 
     - uses: docker/login-action@v3
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
