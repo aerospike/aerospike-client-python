@@ -36,6 +36,12 @@ outputs:
   test-password:
     description: If security enabled, which password to use to log into server
     value: superuser
+  cluster-name:
+    description: Used to connect to server via TLS
+    value: ${{ steps.get-cluster-name.outputs.cluster_name }}
+  tls-port:
+    description: ''
+    value: ${{ steps.get-tls-port.outputs.tls_port }}
 
 runs:
   using: "composite"
@@ -57,7 +63,8 @@ runs:
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
     shell: bash
 
-  - run: echo TLS_PORT="4333" >> $GITHUB_ENV
+  - run: echo tls_port=4333 >> $GITHUB_OUTPUT
+    id: get-tls-port
     shell: bash
 
   - name: Build Aerospike server Docker image for testing
@@ -70,7 +77,7 @@ runs:
       context: .github/workflows/docker-build-context
       build-args: |
         SERVER_IMAGE=${{ steps.get-base-image-name.outputs.base_image_name }}
-        TLS_PORT=${{ env.TLS_PORT }}
+        TLS_PORT=${{ steps.get-tls-port.outputs.tls_port }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
@@ -91,6 +98,11 @@ runs:
   - name: Wait for container to be healthy
     run: |
       timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ steps.get-server-container-name.outputs.container_name }})" == "healthy" ]]; do sleep 0.1; done'
+    shell: bash
+
+  - name: Get cluster name
+    id: get-cluster-name
+    run: echo cluster_name=$(docker exec ${{ inputs.server-container-name }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_OUTPUT
     shell: bash
 
   # For debugging
