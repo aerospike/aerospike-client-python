@@ -141,6 +141,8 @@ jobs:
     steps:
     - id: get-runner-os
       # Single source of truth for which runner OS to use for each platform tag
+      # We use the larger runner for mac x86 because there is noise when using the regular runners
+      # I suspect it's from building the server Docker image
       run: |
         declare -A hashmap
         hashmap[manylinux_x86_64]="ubuntu-22.04"
