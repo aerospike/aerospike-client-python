@@ -268,8 +268,9 @@ jobs:
       run: |
         libraries=('libyaml' 'openssl')
         for library in "${libraries[@]}"; do
-          echo LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix $library)/lib" >> $GITHUB_ENV
+          LIBRARY_PATH="${LIBRARY_PATH}:$(brew --prefix $library)/lib"
         done
+        echo LIBRARY_PATH=$LIBRARY_PATH >> $GITHUB_ENV
       shell: bash
 
     - name: Build wheel
