@@ -54,6 +54,7 @@ class TestQueryPartition(TestBaseClass):
         self.partition_1003_count = 0
 
         as_connection.truncate(self.test_ns, None, 0)
+        self.test_digest = None
 
         for i in range(1, 100000):
             put = 0
@@ -80,6 +81,9 @@ class TestQueryPartition(TestBaseClass):
                     "m": {"partition": rec_partition, "b": 4, "c": 8, "d": 16},
                 }
                 as_connection.put(key, rec)
+                # Used in one of the test cases that requires a key digest
+                if self.test_digest is None:
+                    self.test_digest = aerospike.calc_digest(*key)
         # print(f"{self.partition_1000_count} records are put in partition 1000, \
         #         {self.partition_1001_count} records are put in partition 1001, \
         #         {self.partition_1002_count} records are put in partition 1002, \
@@ -639,3 +643,47 @@ class TestQueryPartition(TestBaseClass):
             query_obj.foreach(callback, policy)
 
         assert msg in exc.value.msg
+
+    @pytest.mark.parametrize("p_filter, err_msg", [
+        (1, "invalid partition_filter policy, partition_filter must be a dict"),
+        ({"partition_status": 1}, "invalid partition_filter policy, partition_status must be a dict"),
+        (
+            {"begin": "invalid"},
+            "invalid partition_filter policy begin, begin must be an int between 0 and 4095 inclusive"
+        ),
+        (
+            {"begin": 4096},
+            "invalid partition_filter policy begin, begin must be an int between 0 and 4095 inclusive",
+        ),
+        (
+            {"count": "invalid"},
+            "invalid partition_filter policy count, count must be an int between 1 and 4096 inclusive",
+        ),
+        ({"digest": 1}, "partition_filter[\"digest\"] must be a dict"),
+        ({"digest": {"init": 1}}, "partition_filter[\"digest\"][\"init\"] must be a bool"),
+        ({"digest": {"init": True, "value": 1}}, "partition_filter[\"digest\"][\"value\"] must be a bytearray")
+    ])
+    def test_partition_filter_invalid_values(self, p_filter: dict, err_msg: str):
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        policy = {"partition_filter": p_filter}
+        with pytest.raises(e.ParamError) as excinfo:
+            query_obj.results(policy)
+        assert excinfo.value.msg == err_msg
+
+    def test_partition_filter_digest_invalid_size(self):
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        policy = {"partition_filter": {"digest": {"init": True, "value": bytearray(b'1')}}}
+        with pytest.raises(e.ParamError) as excinfo:
+            query_obj.results(policy)
+        assert excinfo.value.msg == "partition_filter[\"digest\"][\"value\"] must be 20 bytes long"
+
+    def test_partition_filter_digest_value(self):
+        query_obj = self.as_connection.query(self.test_ns, self.test_set)
+        p_filter = {
+            "digest": {
+                "init": False,
+                "value": self.test_digest
+            }
+        }
+        policy = {"partition_filter": p_filter}
+        query_obj.results(policy)
