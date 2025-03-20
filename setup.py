@@ -129,6 +129,8 @@ if STATIC_SSL:
     libraries.remove('ssl')
     libraries.remove('crypto')
     library_dirs.remove('/usr/local/opt/openssl/lib')
+elif os.path.exists("/usr/local/opt/openssl/lib") is False:
+    library_dirs.remove('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
