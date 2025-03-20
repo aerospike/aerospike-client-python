@@ -47,9 +47,8 @@ runs:
   - name: Set server IP address to connect to
     # We want a single step to get an output from
     # Don't save server ip to environment variable because it will persist outside of composite action
-    run: |
-      ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
-      echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
+    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
+    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
     working-directory: test
     shell: bash
 
