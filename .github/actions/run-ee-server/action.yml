@@ -29,6 +29,13 @@ outputs:
   container-name:
     description: Server container name
     value: ${{ steps.get-container-name.outputs.container_name }}
+  # TODO: how to get this dynamically?
+  test-username:
+    description: If security enabled, which username to use to log into server
+    value: superuser
+  test-password:
+    description: If security enabled, which password to use to log into server
+    value: superuser
 
 runs:
   using: "composite"

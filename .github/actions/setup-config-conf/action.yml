@@ -9,6 +9,12 @@ inputs:
     required: true
     # Need description key or lint error will be thrown
     description: ''
+  username:
+    required: false
+    description: ''
+  password:
+    required: false
+    description: ''
 
 runs:
   using: "composite"
@@ -28,13 +34,10 @@ runs:
     working-directory: test
     shell: bash
 
-  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
-    shell: bash
-
   - name: Set credentials in config file
     run: |
-      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
+      crudini --existing=param --set config.conf enterprise-edition user ${{ inputs.username }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ inputs.password }}
       crudini --set config.conf tls enable true
       # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
       crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
