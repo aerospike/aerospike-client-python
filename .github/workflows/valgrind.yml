@@ -152,6 +152,10 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        where-is-client-connecting-from: 'docker-host'
+
     - run: sudo apt update
     - run: sudo apt install valgrind -y
 

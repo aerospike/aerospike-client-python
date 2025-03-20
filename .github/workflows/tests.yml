@@ -123,6 +123,10 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        where-is-client-connecting-from: 'docker-host'
+
     - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
 
@@ -297,6 +301,10 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        where-is-client-connecting-from: 'docker-host'
+
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by 
       # libasan during the test run
@@ -431,6 +439,10 @@ jobs:
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - uses: ./.github/actions/setup-config-conf
+      with:
+        where-is-client-connecting-from: 'docker-host'
 
     - name: Run tests
       run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*}.py
