@@ -66,6 +66,9 @@ runs:
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
       load: true
+      # Also cache so we don't have to rebuild every time we use this action
+      cache-from: type=gha
+      cache-to: type=gha,mode=max
 
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
