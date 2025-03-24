@@ -881,3 +881,7 @@ class TestGetPut:
         assert 0 == self.as_connection.put(key, null_bin)
         with pytest.raises(e.RecordNotFound):
             res = self.as_connection.get(key)
+
+    def test_put_int_greater_than_32_bits(self):
+        key = ("test", "demo", 123)
+        self.as_connection.put(key, {"a": 2**32})
