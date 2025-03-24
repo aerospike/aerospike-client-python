@@ -581,8 +581,17 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     // We create a new class for as_config_provider
     // because dictionaries are meant to have any kind of keys / values
     // Classes follow a well defined spec
+    PyObject *py_config_provider_option_name =
+        PyUnicode_FromString("config_provider");
+    if (py_config_provider_option_name == NULL) {
+        PyErr_Clear();
+        // TODO: need to refactor to use exception that was originally thrown...
+        error_code = INIT_CONFIG_TYPE_ERR;
+        goto CONSTRUCTOR_ERROR;
+    }
     PyObject *py_obj_config_provider =
-        PyDict_GetItemWithError(py_config, "config_provider");
+        PyDict_GetItemWithError(py_config, py_config_provider_option_name);
+    Py_DECREF(py_config_provider_option_name);
     if (py_obj_config_provider == NULL && PyErr_Occurred()) {
         // We raise our own exception, later
         PyErr_Clear();
