@@ -19,25 +19,12 @@ static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
     // But then we can't tell if they were set or not by the user
     // So we just use PyObjects for the optional args instead
     const char *path = NULL;
-    PyObject *py_interval = NULL;
+    // TODO: need default from c client
+    uint32_t interval = 60;
 
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "s|O", kwlist, &path,
-                                    &py_interval) == false) {
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "s|k", kwlist, &path,
+                                    &interval) == false) {
         goto error;
-    }
-
-    uint32_t interval;
-    if (py_interval) {
-        interval =
-            // TODO:
-            convert_pyobject_to_uint32_t(py_interval, kwlist[1]);
-        if (PyErr_Occurred()) {
-            goto error;
-        }
-    }
-    else {
-        // TODO: need default from c client
-        interval = 60;
     }
 
     as_config_provider *provider = malloc(sizeof(as_config_provider));
