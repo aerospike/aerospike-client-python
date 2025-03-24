@@ -578,6 +578,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     as_config config;
     as_config_init(&config);
 
+    PyObject *py_config_provider = ;
+    as_config_provider_set_path(config, "");
+
     bool lua_user_path = false;
 
     PyObject *py_lua = PyDict_GetItemString(py_config, "lua");

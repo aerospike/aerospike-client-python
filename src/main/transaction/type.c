@@ -22,6 +22,7 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
     return (PyObject *)self;
 }
 
+// TODO: move to conversions.c
 // Error indicator must always be checked after this call
 // Constructor parameter name needed for constructing error message
 static uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
