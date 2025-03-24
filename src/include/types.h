@@ -114,3 +114,5 @@ extern PyTypeObject AerospikeTransaction_Type;
 typedef struct {
     PyObject_HEAD as_config_provider *provider;
 } AerospikeConfigProvider;
+
+extern PyTypeObject AerospikeConfigProvider_Type;
