@@ -33,6 +33,7 @@
 #include "nullobject.h"
 #include "cdt_types.h"
 #include "transaction.h"
+#include "config_provider.h"
 
 #include <aerospike/as_operations.h>
 #include <aerospike/as_log_macros.h>
