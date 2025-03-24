@@ -378,7 +378,8 @@ setup(
                 'src/main/client/batch_read.c',
                 'src/main/client/metrics.c',
                 'src/main/transaction/type.c',
-                'src/main/client/mrt.c'
+                'src/main/client/mrt.c',
+                'src/main/config_provider/type.c',
             ],
 
             # Compile
