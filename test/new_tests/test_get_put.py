@@ -883,5 +883,10 @@ class TestGetPut:
             res = self.as_connection.get(key)
 
     def test_put_int_greater_than_32_bits(self):
+        # This tests the Python client implementation on Windows
+        # It makes sure that we can insert integers larger than 32 bits in Windows
         key = ("test", "demo", 123)
         self.as_connection.put(key, {"a": 2**32})
+
+        # Cleanup
+        self.as_connection.remove(key)
