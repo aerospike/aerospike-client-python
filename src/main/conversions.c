@@ -1681,7 +1681,7 @@ as_status do_val_to_pyobject(AerospikeClient *self, as_error *err,
     switch (as_val_type(val)) {
     case AS_INTEGER: {
         as_integer *i = as_integer_fromval(val);
-        *py_val = PyLong_FromLong((long)as_integer_get(i));
+        *py_val = PyLong_FromLongLong((long long)as_integer_get(i));
         if (!*py_val) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Failed to create integer or long.");
