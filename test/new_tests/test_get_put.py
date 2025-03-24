@@ -886,5 +886,5 @@ class TestGetPut:
         # Aerospike only supports 64-bit integers.
         out_of_bounds = 2**64
         key = ("test", "demo", 123)
-        with pytest.raises(e.ParamError):
+        with pytest.raises(OverflowError):
             self.as_connection.put(key, {"bin1": out_of_bounds})
