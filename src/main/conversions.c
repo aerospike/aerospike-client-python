@@ -1159,7 +1159,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         }
     }
     else if (PyLong_Check(py_obj)) {
-        int64_t i = (int64_t)PyLong_AsLong(py_obj);
+        int64_t i = (int64_t)PyLong_AsLongLong(py_obj);
         if (i == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
