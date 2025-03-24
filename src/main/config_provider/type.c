@@ -1,4 +1,5 @@
 #include "types.h"
+#include "config_provider.h"
 
 static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
                                              PyObject *kwds)
