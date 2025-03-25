@@ -324,6 +324,15 @@ class Transaction:
     state: int
     timeout: int
 
+# TODO: final necessary?
+# TODO: Reuse default from somewhere...
+# TODO: documentation
+@final
+class ConfigProvider:
+    def __init__(self, path: str, interval: int = 60) -> None: ...
+    path: str
+    interval: int
+
 class Client:
     def __init__(self, *args, **kwargs) -> None: ...
     def admin_change_password(self, username: str, password: str, policy: dict = ...) -> None: ...
