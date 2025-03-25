@@ -1,8 +1,18 @@
 import aerospike
+from aerospike import exception as e
 from .test_base_class import TestBaseClass
+import pytest
 
 
 class TestDynamicConfig:
+    def test_api_invalid_provider(self):
+        config = TestBaseClass.get_connection_config()
+        provider = aerospike.ConfigProvider("./dyn_config.yml")
+        config["config_provider"] = provider
+        # TODO: return a more useful error msg.
+        with pytest.raises(e.ParamError):
+            aerospike.client(config)
+
     def test_basic_functionality(self):
         config = TestBaseClass.get_connection_config()
         provider = aerospike.ConfigProvider("./dyn_config.yml")
