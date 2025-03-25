@@ -63,8 +63,6 @@ RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $C
 FROM enable-strong-consistency AS enable-tls
 
 ARG SSL_WORKING_DIR=/etc/ssl
-# Running WORKDIR on an existing directory causes WORKDIR instruction to not be cached
-RUN mkdir $SSL_WORKING_DIR
 WORKDIR $SSL_WORKING_DIR
 ARG SERVER_KEY_INSTALL_PATH=$SSL_WORKING_DIR/private/$SERVER_KEY_FILE_NAME
 ARG SERVER_CERT_INSTALL_PATH=$SSL_WORKING_DIR/certs/$SERVER_CERT_FILE_NAME
@@ -83,6 +81,7 @@ EXPOSE $TLS_PORT
 FROM ubuntu:24.04 AS dos2unix
 
 # Run our own set up steps after server finishes starting up
+# Running WORKDIR on an existing directory causes WORKDIR instruction to not be cached
 RUN mkdir /my-scripts
 WORKDIR /my-scripts
 COPY entrypoint-finalize-setup.bash wait-for-as-server-to-start.bash .
