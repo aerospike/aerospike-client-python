@@ -5,7 +5,6 @@ import pytest
 
 
 class TestDynamicConfig:
-    # TODO: create or reuse fixture to close connections.
     def test_basic_functionality(self):
         config = TestBaseClass.get_connection_config()
         provider = aerospike.ConfigProvider("./dyn_config.yml")
@@ -13,13 +12,14 @@ class TestDynamicConfig:
         client = aerospike.client(config)
 
         key = ("test", "demo", 1)
-        client.put(key)
+        client.put(key, {"a": 1})
 
         # "Send key" is enabled in dynamic config
         # The key should be returned here
         rec, _, _ = client.get(key)
         assert rec[2] is not None
 
+        # Cleanup
         client.remove(key)
         client.close()
 
