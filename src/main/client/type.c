@@ -592,25 +592,29 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_obj_config_provider =
         PyDict_GetItemWithError(py_config, py_config_provider_option_name);
     Py_DECREF(py_config_provider_option_name);
-    if (py_obj_config_provider == NULL && PyErr_Occurred()) {
-        // We raise our own exception, later
-        PyErr_Clear();
-        error_code = INIT_CONFIG_TYPE_ERR;
-        goto CONSTRUCTOR_ERROR;
+    if (py_obj_config_provider == NULL) {
+        if (PyErr_Occurred()) {
+            // We raise our own exception, later
+            PyErr_Clear();
+            error_code = INIT_CONFIG_TYPE_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
     }
-    PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
-    if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
-        error_code = INIT_CONFIG_TYPE_ERR;
-        goto CONSTRUCTOR_ERROR;
-    }
+    else {
+        PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
+        if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
+            error_code = INIT_CONFIG_TYPE_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
 
-    // In Python, users can have their own instance of aerospike.ConfigProvider
-    // But we need to copy over its values into the C client config provider
-    AerospikeConfigProvider *py_config_provider =
-        (AerospikeConfigProvider *)py_obj_config_provider;
-    config.config_provider.interval = py_config_provider->interval;
-    // This creates a new copy of the string at py_config_provider->provider->path
-    as_config_provider_set_path(&config, py_config_provider->path);
+        // In Python, users can have their own instance of aerospike.ConfigProvider
+        // But we need to copy over its values into the C client config provider
+        AerospikeConfigProvider *py_config_provider =
+            (AerospikeConfigProvider *)py_obj_config_provider;
+        config.config_provider.interval = py_config_provider->interval;
+        // This creates a new copy of the string at py_config_provider->provider->path
+        as_config_provider_set_path(&config, py_config_provider->path);
+    }
 
     bool lua_user_path = false;
 
