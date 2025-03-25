@@ -112,7 +112,7 @@ typedef struct {
 extern PyTypeObject AerospikeTransaction_Type;
 
 typedef struct {
-    PyObject_HEAD const char *path;
+    PyObject_HEAD char *path;
     uint32_t interval;
 } AerospikeConfigProvider;
 
