@@ -29,7 +29,8 @@ static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
     }
 
     as_config_provider *provider = malloc(sizeof(as_config_provider));
-    strcpy(provider->path, path);
+    // TODO: memory leak
+    provider->path = strdup(path);
     provider->interval = interval;
     return 0;
 
