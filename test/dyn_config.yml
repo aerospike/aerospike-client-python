@@ -3,24 +3,8 @@ metdata:
   generation: 2
   version: 0.0.1
 
-static:
-  client: 
-    min_connections_per_node: 5
-    max_connections_per_node: 50
 dynamic:
-  client: 
-    max_error_rate: 20
-    config_interval: 10
+  client:
+    config_interval: 1
   policy:
-    connect_timeout: 2000
     send_key: true
-    max_retries: 2
-    batch:
-      max_concurrent_thread: 10
-      allow_inline: true
-    scan:
-      concurrent_nodes: true
-      max_concurrent_node: 5
-      max_retries: 5
-    write:
-      durable_delete: true

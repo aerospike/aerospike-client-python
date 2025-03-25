@@ -9,4 +9,13 @@ class TestDynamicConfig:
         config["config_provider"] = provider
         client = aerospike.client(config)
 
+        key = ("test", "demo", 1)
+        client.put(key)
+
+        # "Send key" is enabled in dynamic config
+        # The key should be returned here
+        rec, _, _ = client.get(key)
+        assert rec[2] is not None
+
+        client.remove(key)
         client.close()
