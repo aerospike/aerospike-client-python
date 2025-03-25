@@ -608,9 +608,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     // But we need to copy over its values into the C client config provider
     AerospikeConfigProvider *py_config_provider =
         (AerospikeConfigProvider *)py_obj_config_provider;
-    config.config_provider.interval = py_config_provider->provider->interval;
+    config.config_provider.interval = py_config_provider->interval;
     // This creates a new copy of the string at py_config_provider->provider->path
-    as_config_provider_set_path(&config, py_config_provider->provider->path);
+    as_config_provider_set_path(&config, py_config_provider->path);
 
     bool lua_user_path = false;
 

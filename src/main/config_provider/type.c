@@ -16,9 +16,6 @@ static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
                                         PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {"path", "interval", NULL};
-    // We could use unsigned longs directly in the format string
-    // But then we can't tell if they were set or not by the user
-    // So we just use PyObjects for the optional args instead
     const char *path = NULL;
     // TODO: need default from c client
     uint32_t interval = 60;
@@ -28,11 +25,9 @@ static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
         goto error;
     }
 
-    as_config_provider *provider = malloc(sizeof(as_config_provider));
-    // TODO: memory leak
-    provider->path = strdup(path);
-    provider->interval = interval;
-    self->provider = provider;
+    self->path = strdup(path);
+    self->interval = interval;
+
     return 0;
 
 error:
@@ -41,10 +36,8 @@ error:
 
 static void AerospikeConfigProvider_dealloc(AerospikeConfigProvider *self)
 {
-    // TODO: db check
-    // object can be created but not initialized, so need to check
-    if (self->provider != NULL) {
-        free(self->provider);
+    if (self->path) {
+        free(self->path);
     }
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
