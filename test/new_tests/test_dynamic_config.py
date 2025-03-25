@@ -5,14 +5,7 @@ import pytest
 
 
 class TestDynamicConfig:
-    def test_api_invalid_provider(self):
-        config = TestBaseClass.get_connection_config()
-        provider = aerospike.ConfigProvider("./dyn_config.yml")
-        config["config_provider"] = provider
-        # TODO: return a more useful error msg.
-        with pytest.raises(e.ParamError):
-            aerospike.client(config)
-
+    # TODO: create or reuse fixture to close connections.
     def test_basic_functionality(self):
         config = TestBaseClass.get_connection_config()
         provider = aerospike.ConfigProvider("./dyn_config.yml")
@@ -29,3 +22,10 @@ class TestDynamicConfig:
 
         client.remove(key)
         client.close()
+
+    def test_api_invalid_provider(self):
+        config = TestBaseClass.get_connection_config()
+        config["config_provider"] = 0
+        # TODO: return a more useful error msg.
+        with pytest.raises(e.ParamError):
+            aerospike.client(config)
