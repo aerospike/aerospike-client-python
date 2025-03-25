@@ -32,6 +32,7 @@ static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
     // TODO: memory leak
     provider->path = strdup(path);
     provider->interval = interval;
+    self->provider = provider;
     return 0;
 
 error:
