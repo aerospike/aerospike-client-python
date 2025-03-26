@@ -10,6 +10,7 @@ class TestDynamicConfig:
         provider = aerospike.ConfigProvider("./dyn_config.yml")
         config["config_provider"] = provider
         client = aerospike.client(config)
+        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
 
         key = ("test", "demo", 1)
         client.put(key, {"a": 1})

@@ -51,8 +51,7 @@ PyTypeObject AerospikeConfigProvider_Type = {
     .tp_new = AerospikeConfigProvider_new,
     .tp_init = (initproc)AerospikeConfigProvider_init,
     .tp_dealloc = (destructor)AerospikeConfigProvider_dealloc,
-    // TODO
-    .tp_getset = NULL};
+};
 
 PyTypeObject *AerospikeConfigProvider_Ready()
 {
