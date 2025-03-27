@@ -5,11 +5,21 @@ import pytest
 
 
 class TestDynamicConfig:
+    def test_config_provider_class(self):
+        # Should be immutable
+        provider = aerospike.ConfigProvider(path="path", interval=20)
+
+        provider.path = "invalid"
+        provider.interval = 10
+        # Only the above attributes can be set
+        provider.config_path = "also invalid"
+
     def test_basic_functionality(self):
         config = TestBaseClass.get_connection_config()
         provider = aerospike.ConfigProvider("./dyn_config.yml")
         config["config_provider"] = provider
         # We want to check that the config file we pass in is valid
+        # TODO: does this affect the rest of the tests?
         aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         client = aerospike.client(config)
 
