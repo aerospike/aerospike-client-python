@@ -7,6 +7,5 @@ static:
   client:
     config_interval: 1
 dynamic:
-  policy:
-    write:
-      send_key: true
+  write:
+    send_key: true
