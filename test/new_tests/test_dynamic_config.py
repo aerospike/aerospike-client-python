@@ -9,6 +9,7 @@ class TestDynamicConfig:
         config = TestBaseClass.get_connection_config()
         provider = aerospike.ConfigProvider("./dyn_config.yml")
         config["config_provider"] = provider
+        # We want to check that the config file we pass in is valid
         aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         client = aerospike.client(config)
 
