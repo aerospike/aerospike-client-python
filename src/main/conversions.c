@@ -2251,9 +2251,11 @@ static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
         return false;
     }
 
-    PyDict_SetItemString(py_bins, name, py_val);
-
+    int retval = PyDict_SetItemString(py_bins, name, py_val);
     Py_DECREF(py_val);
+    if (retval == -1) {
+        return false;
+    }
 
     convd->count++;
     return true;
