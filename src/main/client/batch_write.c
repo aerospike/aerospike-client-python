@@ -488,7 +488,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             }
 
             if (result_rec) {
-                as_status retval = record_to_pyobject(self, err, result_rec, requested_key, &rec);
+                as_status retval = record_to_pyobject(self, err, result_rec,
+                                                      requested_key, &rec);
                 if (retval != AEROSPIKE_OK) {
                     goto CLEANUP3;
                 }
@@ -497,7 +498,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                 Py_DECREF(rec);
             }
             else {
-                Py_INCREF(Py_None);
                 PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
                                        Py_None);
             }
