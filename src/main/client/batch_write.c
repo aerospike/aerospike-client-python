@@ -543,7 +543,6 @@ CLEANUP4:
         return NULL;
     }
 
-    Py_IncRef(py_obj);
     return py_obj;
 }
 
