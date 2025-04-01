@@ -2062,8 +2062,9 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
     }
 
     py_rec = PyTuple_New(3);
+    PyObject *py_tuple_objs[] = {py_rec_key, py_rec_meta, py_rec_bins};
     for (int i = 0; i < PyTuple_Size(py_rec); i++) {
-        int retval = PyTuple_SetItem(py_rec, i, py_rec_key);
+        int retval = PyTuple_SetItem(py_rec, i, py_tuple_objs[i]);
         if (retval == -1) {
             // TODO: yes there is a mem leak
             PyErr_Clear();
