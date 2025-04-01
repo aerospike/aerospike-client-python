@@ -34,6 +34,27 @@ error:
     return -1;
 }
 
+static PyObject *AerospikeConfigProvider_get_path(AerospikeConfigProvider *self,
+                                                  void *closure)
+{
+    PyObject *py_path = PyUnicode_FromString(self->path);
+    if (py_path == NULL) {
+        return NULL;
+    }
+    return py_path;
+}
+
+static PyObject *
+AerospikeConfigProvider_get_interval(AerospikeConfigProvider *self,
+                                     void *closure)
+{
+    PyObject *py_interval = PyLong_FromLong((long)self->interval);
+    if (py_interval == NULL) {
+        return NULL;
+    }
+    return py_interval;
+}
+
 static void AerospikeConfigProvider_dealloc(AerospikeConfigProvider *self)
 {
     if (self->path) {
@@ -41,6 +62,12 @@ static void AerospikeConfigProvider_dealloc(AerospikeConfigProvider *self)
     }
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
+
+static PyGetSetDef AerospikeConfigProvider_getsetters[] = {
+    {.name = "path", .get = (getter)AerospikeConfigProvider_get_path},
+    {.name = "interval", .get = (getter)AerospikeConfigProvider_get_interval},
+    {NULL} /* Sentinel */
+};
 
 PyTypeObject AerospikeConfigProvider_Type = {
     .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name =

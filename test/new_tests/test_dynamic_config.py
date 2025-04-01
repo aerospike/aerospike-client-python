@@ -9,10 +9,12 @@ class TestDynamicConfig:
         # Should be immutable
         provider = aerospike.ConfigProvider(path="path", interval=20)
 
-        provider.path = "invalid"
-        provider.interval = 10
-        # Only the above attributes can be set
-        provider.config_path = "also invalid"
+        assert provider.path == "path"
+        assert provider.interval == 20
+        with pytest.raises(AttributeError):
+            provider.path = "invalid"
+        with pytest.raises(AttributeError):
+            provider.interval = 10
 
     def test_basic_functionality(self):
         config = TestBaseClass.get_connection_config()
