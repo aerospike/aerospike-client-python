@@ -2070,6 +2070,7 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+// TODO: dead code
 as_status record_to_resultpyobject(AerospikeClient *self, as_error *err,
                                    const as_record *rec, PyObject **obj)
 {
