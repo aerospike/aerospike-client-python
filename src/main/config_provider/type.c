@@ -18,7 +18,7 @@ static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
     static char *kwlist[] = {"path", "interval", NULL};
     const char *path = NULL;
     // TODO: need default from c client
-    uint32_t interval = 60;
+    unsigned long interval = 60;
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "s|k", kwlist, &path,
                                     &interval) == false) {
