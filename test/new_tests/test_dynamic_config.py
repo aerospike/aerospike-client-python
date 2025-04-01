@@ -23,13 +23,16 @@ class TestDynamicConfig:
         aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         client = aerospike.client(config)
 
+        # TODO: make sure pk doesn't exist in server
         key = ("test", "demo", 1)
         client.put(key, {"a": 1})
 
         # "Send key" is enabled in dynamic config
         # The key should be returned here
-        rec, _, _ = client.get(key)
-        assert rec[2] is not None
+        query = client.query("test", "demo")
+        recs = query.results()
+        assert len(recs) == 1
+        assert recs[0][2] is not None
 
         # Cleanup
         client.remove(key)
