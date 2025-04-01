@@ -2062,9 +2062,14 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
     }
 
     py_rec = PyTuple_New(3);
-    PyTuple_SetItem(py_rec, 0, py_rec_key);
-    PyTuple_SetItem(py_rec, 1, py_rec_meta);
-    PyTuple_SetItem(py_rec, 2, py_rec_bins);
+    for (int i = 0; i < PyTuple_Size(py_rec); i++) {
+        int retval = PyTuple_SetItem(py_rec, i, py_rec_key);
+        if (retval == -1) {
+            // TODO: yes there is a mem leak
+            PyErr_Clear();
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "tuple err");
+        }
+    }
 
     *obj = py_rec;
     return err->code;
