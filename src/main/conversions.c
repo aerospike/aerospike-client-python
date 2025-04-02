@@ -2034,17 +2034,17 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
-        Py_CLEAR(py_rec_key);
-        return err->code;
-    }
+    // if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
+    //     Py_CLEAR(py_rec_key);
+    //     return err->code;
+    // }
 
-    if (bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map) !=
-        AEROSPIKE_OK) {
-        Py_CLEAR(py_rec_key);
-        Py_CLEAR(py_rec_meta);
-        return err->code;
-    }
+    // if (bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map) !=
+    //     AEROSPIKE_OK) {
+    //     Py_CLEAR(py_rec_key);
+    //     Py_CLEAR(py_rec_meta);
+    //     return err->code;
+    // }
 
     if (!py_rec_key) {
         Py_INCREF(Py_None);
