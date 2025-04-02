@@ -493,8 +493,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                 if (retval != AEROSPIKE_OK) {
                     goto CLEANUP3;
                 }
-                PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
-                                       rec);
+                // PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
+                //                        rec);
                 Py_DECREF(rec);
             }
             else {
