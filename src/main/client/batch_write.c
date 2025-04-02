@@ -461,7 +461,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         as_batch_base_record *batch_record = as_vector_get(res_list, i);
 
         as_status *result_code = &(batch_record->result);
-        as_key *requested_key = &(batch_record->key);
+        // as_key *requested_key = &(batch_record->key);
         as_record *result_rec = &(batch_record->record);
         bool in_doubt = batch_record->in_doubt;
 
@@ -479,7 +479,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         Py_DECREF(py_in_doubt);
 
         if (*result_code == AEROSPIKE_OK) {
-            PyObject *rec = NULL;
+            // PyObject *rec = NULL;
 
             if (PyObject_HasAttrString(py_batch_record,
                                        FIELD_NAME_BATCH_RECORD)) {
@@ -488,14 +488,14 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             }
 
             if (result_rec) {
-                as_status retval = record_to_pyobject(self, err, result_rec,
-                                                      requested_key, &rec);
-                if (retval != AEROSPIKE_OK) {
-                    goto CLEANUP3;
-                }
+                // as_status retval = record_to_pyobject(self, err, result_rec,
+                //                                       requested_key, &rec);
+                // if (retval != AEROSPIKE_OK) {
+                //     goto CLEANUP3;
+                // }
                 // PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
                 //                        rec);
-                Py_DECREF(rec);
+                // Py_DECREF(rec);
             }
             else {
                 PyObject_SetAttrString(py_batch_record, FIELD_NAME_BATCH_RECORD,
