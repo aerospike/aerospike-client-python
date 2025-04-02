@@ -33,6 +33,7 @@
 #include "cdt_operation_utils.h"
 #include "geo.h"
 #include "cdt_types.h"
+#include "operate.h"
 
 #define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type,                \
                                        __conversion_func, __batch_type)        \
@@ -292,11 +293,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                         FIELD_NAME_BATCH_OPS);
                     goto CLEANUP0;
                 }
-                goto CLEANUP0;
-                // if (add_op(self, err, py_op, unicodeStrVector, &static_pool,
-                //            ops, &operation, &return_type) != AEROSPIKE_OK) {
-                //     goto CLEANUP0;
-                // }
+                if (add_op(self, err, py_op, unicodeStrVector, &static_pool,
+                           ops, &operation, &return_type) != AEROSPIKE_OK) {
+                    goto CLEANUP0;
+                }
             }
         }
         switch (batch_type) {
