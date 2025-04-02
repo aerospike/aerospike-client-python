@@ -24,6 +24,18 @@ static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
         goto error;
     }
 
+    if (interval > UINT32_MAX) {
+        PyErr_Format(PyExc_ValueError,
+                     "%s is too large for an unsigned 32-bit integer",
+                     kwlist[1]);
+        goto error;
+    }
+
+    // Object could've been initialized before
+    if (self->path) {
+        free(self->path);
+    }
+
     self->path = strdup(path);
     self->interval = interval;
 
@@ -47,7 +59,8 @@ static PyObject *
 AerospikeConfigProvider_get_interval(AerospikeConfigProvider *self,
                                      void *closure)
 {
-    PyObject *py_interval = PyLong_FromLong((long)self->interval);
+    PyObject *py_interval =
+        PyLong_FromUnsignedLong((unsigned long)self->interval);
     if (py_interval == NULL) {
         return NULL;
     }
