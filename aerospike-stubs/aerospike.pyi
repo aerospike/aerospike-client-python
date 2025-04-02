@@ -324,9 +324,6 @@ class Transaction:
     state: int
     timeout: int
 
-# TODO: final necessary?
-# TODO: Reuse default from somewhere...
-# TODO: documentation
 @final
 class ConfigProvider:
     def __init__(self, path: str, interval: int = 60) -> None: ...
