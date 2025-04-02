@@ -25,7 +25,8 @@ class TestDynamicConfig:
         config["config_provider"] = provider
         # We want to check that the config file we pass in is valid
         # The C client prints logs showing that it detects changes to the dynamic config file
-        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+        # aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
         client = aerospike.client(config)
 
         # TODO: make sure pk doesn't exist in server
