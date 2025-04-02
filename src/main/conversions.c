@@ -1285,7 +1285,6 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
         Py_ssize_t pos = 0;
         Py_ssize_t size = PyDict_Size(py_rec);
         const char *name;
-        long ret_val = 0;
 
         as_record_init(rec, size);
 
