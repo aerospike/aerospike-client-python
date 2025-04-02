@@ -60,6 +60,7 @@ Class                                Description
 :ref:`aerospike.geojson`             Handles GeoJSON type data.
 :ref:`aerospike.KeyOrderedDict`      Key ordered dictionary
 :ref:`aerospike.Transaction`         Transaction
+:ref:`aerospike.ConfigProvider`      Dynamic config provider
 =================================    ===========
 
 In addition, the :ref:`Data_Mapping` page explains how **Python** types map to **Aerospike Server** types.
@@ -81,6 +82,7 @@ Content
     geojson
     key_ordered_dict
     transaction
+    config_provider
     predicates
     exception
     aerospike_helpers
