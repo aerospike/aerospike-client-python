@@ -32,7 +32,7 @@ class TestDynamicConfig:
         key = ("test", "demo", 1)
         try:
             client.remove(key)
-        finally:
+        except e.RecordNotFound:
             pass
         client.put(key, {"a": 1})
 
