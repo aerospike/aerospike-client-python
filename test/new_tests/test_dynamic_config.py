@@ -30,6 +30,10 @@ class TestDynamicConfig:
 
         # TODO: make sure pk doesn't exist in server
         key = ("test", "demo", 1)
+        try:
+            client.remove(key)
+        finally:
+            pass
         client.put(key, {"a": 1})
 
         # "Send key" is enabled in dynamic config
