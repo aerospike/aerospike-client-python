@@ -46,6 +46,6 @@ class TestDynamicConfig:
     def test_api_invalid_provider(self):
         config = TestBaseClass.get_connection_config()
         config["config_provider"] = 0
-        # TODO: return a more useful error msg.
-        with pytest.raises(e.ParamError):
+        with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
+        assert excinfo.value.msg == "config_provider must be an aerospike.ConfigProvider class instance"
