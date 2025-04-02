@@ -293,10 +293,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                     goto CLEANUP0;
                 }
                 goto CLEANUP0;
-                // if (add_op(self, err, py_op, unicodeStrVector, &static_pool,
-                //            ops, &operation, &return_type) != AEROSPIKE_OK) {
-                //     goto CLEANUP0;
-                // }
+                if (add_op(self, err, py_op, unicodeStrVector, &static_pool,
+                           ops, &operation, &return_type) != AEROSPIKE_OK) {
+                    goto CLEANUP0;
+                }
             }
         }
         switch (batch_type) {
