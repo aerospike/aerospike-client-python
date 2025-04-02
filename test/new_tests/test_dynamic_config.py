@@ -34,7 +34,10 @@ class TestDynamicConfig:
         query = client.query("test", "demo")
         recs = query.results()
         assert len(recs) == 1
-        assert recs[0][2] is not None
+        # Check that record key tuple does not have a primary key
+        first_record = recs[0]
+        first_record_key = first_record[0]
+        assert first_record_key[2] is not None
 
         # Cleanup
         client.remove(key)
