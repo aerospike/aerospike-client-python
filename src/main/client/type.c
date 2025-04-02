@@ -584,27 +584,23 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_config_provider_option_name =
         PyUnicode_FromString("config_provider");
     if (py_config_provider_option_name == NULL) {
-        PyErr_Clear();
-        // TODO: need to refactor to use exception that was originally thrown...
-        error_code = INIT_CONFIG_TYPE_ERR;
-        goto CONSTRUCTOR_ERROR;
+        goto error;
     }
     PyObject *py_obj_config_provider =
         PyDict_GetItemWithError(py_config, py_config_provider_option_name);
     Py_DECREF(py_config_provider_option_name);
     if (py_obj_config_provider == NULL) {
         if (PyErr_Occurred()) {
-            // We raise our own exception, later
-            PyErr_Clear();
-            error_code = INIT_CONFIG_TYPE_ERR;
-            goto CONSTRUCTOR_ERROR;
+            goto error;
         }
     }
     else {
         PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
         if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
-            error_code = INIT_CONFIG_TYPE_ERR;
-            goto CONSTRUCTOR_ERROR;
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "config_provider must be an "
+                            "aerospike.ConfigProvider class instance");
+            goto error;
         }
 
         // In Python, users can have their own instance of aerospike.ConfigProvider
@@ -1182,6 +1178,7 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
+error:
     raise_exception(&constructor_err);
     return -1;
 }
