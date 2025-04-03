@@ -1123,6 +1123,8 @@ CLEANUP1:
     return retval;
 }
 
+// On success, heap allocates a new as_val object and assigns its address to val
+
 as_status pyobject_to_val(AerospikeClient *self, as_error *err,
                           PyObject *py_obj, as_val **val,
                           as_static_pool *static_pool, int serializer_type)
@@ -1270,25 +1272,25 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
 as_status pyobject_to_record(AerospikeClient *self, as_error *err,
-                             PyObject *py_rec, PyObject *py_meta,
+                             PyObject *py_bins_dict, PyObject *py_meta,
                              as_record *rec, int serializer_type,
                              as_static_pool *static_pool)
 {
     as_error_reset(err);
 
-    if (!py_rec) {
+    if (!py_bins_dict) {
         // this should never happen, but if it did...
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
     }
-    else if (PyDict_Check(py_rec)) {
-        PyObject *key = NULL, *value = NULL;
+    else if (PyDict_Check(py_bins_dict)) {
+        PyObject *key = NULL, *py_value = NULL;
         Py_ssize_t pos = 0;
-        Py_ssize_t size = PyDict_Size(py_rec);
+        Py_ssize_t size = PyDict_Size(py_bins_dict);
         const char *name;
 
         as_record_init(rec, size);
 
-        while (PyDict_Next(py_rec, &pos, &key, &value)) {
+        while (PyDict_Next(py_bins_dict, &pos, &key, &py_value)) {
 
             if (!PyUnicode_Check(key)) {
                 return as_error_update(
@@ -1311,14 +1313,14 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
             }
 
-            if (!value) {
+            if (!py_value) {
                 // this should never happen, but if it did...
                 return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                        "record is null");
             }
 
             as_val *val = NULL;
-            pyobject_to_val(self, err, value, &val, static_pool,
+            pyobject_to_val(self, err, py_value, &val, static_pool,
                             serializer_type);
             if (err->code != AEROSPIKE_OK) {
                 break;
