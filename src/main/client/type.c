@@ -565,6 +565,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->as = NULL;
     self->send_bool_as = SEND_BOOL_AS_AS_BOOL;
 
+    as_config config;
+    as_config_init(&config);
+
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist,
                                     &py_config) == false) {
         error_code = INIT_NO_CONFIG_ERR;
@@ -575,9 +578,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         error_code = INIT_CONFIG_TYPE_ERR;
         goto CONSTRUCTOR_ERROR;
     }
-
-    as_config config;
-    as_config_init(&config);
 
     // We create a new class for as_config_provider
     // because dictionaries are meant to have any kind of keys / values
@@ -1110,10 +1110,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     return 0;
 
 CONSTRUCTOR_ERROR:
+    if (config.config_provider.path) {
+        free(config.config_provider.path);
+    }
 
     switch (error_code) {
     // 0 Is success
     case 0: {
+        // TODO: is this dead code?
         // Initialize connection flag
         return 0;
     }
