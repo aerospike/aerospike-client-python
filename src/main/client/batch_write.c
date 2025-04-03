@@ -173,7 +173,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "%s must be a list of BatchRecord",
                         FIELD_NAME_BATCH_RECORDS);
-        // TODO: mem leak if py_batch_records is not the right class
+        if (py_batch_records) {
+            Py_DECREF(py_batch_records);
+        }
         goto CLEANUP4;
     }
 
@@ -246,8 +248,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                                 "py_ops_list is NULL or not a list, %s must be "
                                 "a list of aerospike operation dicts",
                                 FIELD_NAME_BATCH_OPS);
-
-                // TODO: mem leak if ops is not a list
+                // TODO: mem leak if ops is not a list?
+                // Fix later
                 goto CLEANUP1;
             }
 
