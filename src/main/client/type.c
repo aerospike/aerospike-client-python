@@ -936,6 +936,32 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto CONSTRUCTOR_ERROR;
         }
 
+        // TODO: check for mem leaks?
+        // TODO: reuse code in a helper function because this is commonly done elsewhere in this codebase
+        PyObject *py_metrics_policy_option_name =
+            PyUnicode_FromString("metrics_policy");
+        if (py_metrics_policy_option_name == NULL) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        PyObject *py_obj_metrics_policy =
+            PyDict_GetItemWithError(py_config, py_metrics_policy_option_name);
+        Py_DECREF(py_metrics_policy_option_name);
+
+        // TODO: wrong type
+        PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
+        if (py_obj_metrics_policy == NULL) {
+            if (PyErr_Occurred()) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            // User didn't provide default metrics policy.
+            // It is optional so just move on
+        }
+        else if (Py_TYPE(py_obj_metrics_policy) != py_expected_field_type) {
+            // TODO
+            error_code = INVALID_CONFIG_PROVIDER_TYPE_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+
         PyObject *py_login_timeout =
             PyDict_GetItemString(py_policies, "login_timeout_ms");
         if (py_login_timeout && PyLong_Check(py_login_timeout)) {
