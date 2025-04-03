@@ -1213,6 +1213,7 @@ CONSTRUCTOR_ERROR:
             "metrics must be an "
             "aerospike_helpers.metrics.MetricsPolicy class instance");
         break;
+    }
     default:
         // If a generic error was caught during init, use this message
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
@@ -1220,243 +1221,240 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
-        raise_exception(&constructor_err);
+    raise_exception(&constructor_err);
 
-    RAISE_EXCEPTION_WITHOUT_AS_ERROR:
-        if (config.config_provider.path) {
-            free(config.config_provider.path);
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
+    if (config.config_provider.path) {
+        free(config.config_provider.path);
+    }
+    return -1;
+}
+
+static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
+{
+    PyObject *py_config_value;
+    long rack_id;
+    py_config_value = PyDict_GetItemString(config_dict, "rack_aware");
+    if (py_config_value) {
+        if (PyBool_Check(py_config_value)) {
+            conf->rack_aware = PyObject_IsTrue(py_config_value);
         }
-        return -1;
+        else {
+            return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of rack_aware
+        }
     }
 
-    static int set_rack_aware_config(as_config * conf, PyObject * config_dict)
-    {
-        PyObject *py_config_value;
-        long rack_id;
-        py_config_value = PyDict_GetItemString(config_dict, "rack_aware");
-        if (py_config_value) {
-            if (PyBool_Check(py_config_value)) {
-                conf->rack_aware = PyObject_IsTrue(py_config_value);
-            }
-            else {
-                return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of rack_aware
-            }
+    py_config_value = PyDict_GetItemString(config_dict, "rack_id");
+    if (py_config_value) {
+        if (PyLong_Check(py_config_value)) {
+            rack_id = PyLong_AsLong(py_config_value);
+        }
+        else {
+            return INIT_POLICY_PARAM_ERR; // A non integer passed in.
+        }
+        if (rack_id == -1 && PyErr_Occurred()) {
+            return INIT_POLICY_PARAM_ERR; // We had overflow.
         }
 
-        py_config_value = PyDict_GetItemString(config_dict, "rack_id");
-        if (py_config_value) {
-            if (PyLong_Check(py_config_value)) {
-                rack_id = PyLong_AsLong(py_config_value);
-            }
-            else {
-                return INIT_POLICY_PARAM_ERR; // A non integer passed in.
-            }
-            if (rack_id == -1 && PyErr_Occurred()) {
-                return INIT_POLICY_PARAM_ERR; // We had overflow.
-            }
-
-            if (rack_id > INT_MAX || rack_id < INT_MIN) {
-                return INIT_POLICY_PARAM_ERR; // Magnitude too great for an integer in C.
-            }
-            conf->rack_id = (int)rack_id;
+        if (rack_id > INT_MAX || rack_id < INT_MIN) {
+            return INIT_POLICY_PARAM_ERR; // Magnitude too great for an integer in C.
         }
+        conf->rack_id = (int)rack_id;
+    }
 
-        PyObject *rack_ids_pylist =
-            PyDict_GetItemString(config_dict, "rack_ids");
-        if (rack_ids_pylist == NULL) {
-            return INIT_SUCCESS;
-        }
-        Py_INCREF(rack_ids_pylist);
+    PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
+    if (rack_ids_pylist == NULL) {
+        return INIT_SUCCESS;
+    }
+    Py_INCREF(rack_ids_pylist);
 
-        if (!PyList_Check(rack_ids_pylist)) {
+    if (!PyList_Check(rack_ids_pylist)) {
+        goto PARAM_ERROR;
+    }
+
+    size_t size = PyList_Size(rack_ids_pylist);
+
+    for (size_t i = 0; i < size; i++) {
+        PyObject *rack_id_pyobj = PyList_GetItem(rack_ids_pylist, i);
+        if (rack_id_pyobj == NULL) {
+            // This shouldn't happen, but just return an error if it does
             goto PARAM_ERROR;
         }
 
-        size_t size = PyList_Size(rack_ids_pylist);
-
-        for (size_t i = 0; i < size; i++) {
-            PyObject *rack_id_pyobj = PyList_GetItem(rack_ids_pylist, i);
-            if (rack_id_pyobj == NULL) {
-                // This shouldn't happen, but just return an error if it does
-                goto PARAM_ERROR;
-            }
-
-            Py_INCREF(rack_id_pyobj);
-            if (PyLong_Check(rack_id_pyobj) == false) {
-                Py_DECREF(rack_id_pyobj);
-                goto PARAM_ERROR;
-            }
-
-            long rack_id = PyLong_AsLong(rack_id_pyobj);
-            if (rack_id == -1) {
-                // Error occurred
-                Py_DECREF(rack_id_pyobj);
-                goto PARAM_ERROR;
-            }
-
-            as_config_add_rack_id(conf, (int)rack_id);
+        Py_INCREF(rack_id_pyobj);
+        if (PyLong_Check(rack_id_pyobj) == false) {
             Py_DECREF(rack_id_pyobj);
+            goto PARAM_ERROR;
         }
 
-        Py_DECREF(rack_ids_pylist);
-        return INIT_SUCCESS;
-
-    PARAM_ERROR:
-        // In any case param error is thrown
-        // rack ids is a PyObject that needs to be freed
-        Py_DECREF(rack_ids_pylist);
-        return INIT_POLICY_PARAM_ERR;
-    }
-
-    static int set_use_services_alternate(as_config * conf,
-                                          PyObject * config_dict)
-    {
-        PyObject *py_config_value;
-        py_config_value =
-            PyDict_GetItemString(config_dict, "use_services_alternate");
-        if (py_config_value) {
-            if (PyBool_Check(py_config_value)) {
-                conf->use_services_alternate = PyObject_IsTrue(py_config_value);
-            }
-            else {
-                return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of use_services_alternate
-            }
+        long rack_id = PyLong_AsLong(rack_id_pyobj);
+        if (rack_id == -1) {
+            // Error occurred
+            Py_DECREF(rack_id_pyobj);
+            goto PARAM_ERROR;
         }
-        return INIT_SUCCESS;
+
+        as_config_add_rack_id(conf, (int)rack_id);
+        Py_DECREF(rack_id_pyobj);
     }
 
-    static void AerospikeClient_Type_Dealloc(PyObject * self)
-    {
+    Py_DECREF(rack_ids_pylist);
+    return INIT_SUCCESS;
 
-        as_error err;
-        char *alias_to_search = NULL;
-        PyObject *py_persistent_item = NULL;
-        AerospikeGlobalHosts *global_host = NULL;
-        AerospikeClient *client = (AerospikeClient *)self;
+PARAM_ERROR:
+    // In any case param error is thrown
+    // rack ids is a PyObject that needs to be freed
+    Py_DECREF(rack_ids_pylist);
+    return INIT_POLICY_PARAM_ERR;
+}
 
-        // If the client has never connected
-        // It is safe to destroy the aerospike structure
-        if (client->as) {
-            if (!client->has_connected) {
-                aerospike_destroy(client->as);
-            }
-            else {
+static int set_use_services_alternate(as_config *conf, PyObject *config_dict)
+{
+    PyObject *py_config_value;
+    py_config_value =
+        PyDict_GetItemString(config_dict, "use_services_alternate");
+    if (py_config_value) {
+        if (PyBool_Check(py_config_value)) {
+            conf->use_services_alternate = PyObject_IsTrue(py_config_value);
+        }
+        else {
+            return INIT_POLICY_PARAM_ERR; // A non boolean was passed in as the value of use_services_alternate
+        }
+    }
+    return INIT_SUCCESS;
+}
 
-                // If the connection is possibly shared, use reference counted deletes
-                if (client->use_shared_connection) {
-                    // If this client was still connected, deal with the global host object
-                    if (client->is_conn_16) {
-                        alias_to_search = return_search_string(client->as);
-                        py_persistent_item = PyDict_GetItemString(
-                            py_global_hosts, alias_to_search);
-                        if (py_persistent_item) {
-                            global_host =
-                                (AerospikeGlobalHosts *)py_persistent_item;
-                            // Only modify the global as object if the client points to it
-                            if (client->as == global_host->as) {
-                                close_aerospike_object(
-                                    client->as, &err, alias_to_search,
-                                    py_persistent_item, false);
-                            }
+static void AerospikeClient_Type_Dealloc(PyObject *self)
+{
+
+    as_error err;
+    char *alias_to_search = NULL;
+    PyObject *py_persistent_item = NULL;
+    AerospikeGlobalHosts *global_host = NULL;
+    AerospikeClient *client = (AerospikeClient *)self;
+
+    // If the client has never connected
+    // It is safe to destroy the aerospike structure
+    if (client->as) {
+        if (!client->has_connected) {
+            aerospike_destroy(client->as);
+        }
+        else {
+
+            // If the connection is possibly shared, use reference counted deletes
+            if (client->use_shared_connection) {
+                // If this client was still connected, deal with the global host object
+                if (client->is_conn_16) {
+                    alias_to_search = return_search_string(client->as);
+                    py_persistent_item =
+                        PyDict_GetItemString(py_global_hosts, alias_to_search);
+                    if (py_persistent_item) {
+                        global_host =
+                            (AerospikeGlobalHosts *)py_persistent_item;
+                        // Only modify the global as object if the client points to it
+                        if (client->as == global_host->as) {
+                            close_aerospike_object(client->as, &err,
+                                                   alias_to_search,
+                                                   py_persistent_item, false);
                         }
                     }
-                    // Connection is not shared, so it is safe to destroy the as object
                 }
-                else {
-                    if (client->is_conn_16) {
-                        aerospike_close(client->as, &err);
-                    }
-                    aerospike_destroy(client->as);
+                // Connection is not shared, so it is safe to destroy the as object
+            }
+            else {
+                if (client->is_conn_16) {
+                    aerospike_close(client->as, &err);
                 }
+                aerospike_destroy(client->as);
             }
         }
-        self->ob_type->tp_free((PyObject *)self);
     }
+    self->ob_type->tp_free((PyObject *)self);
+}
 
-    /*******************************************************************************
+/*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-    static PyTypeObject AerospikeClient_Type = {
-        PyVarObject_HEAD_INIT(NULL, 0)
-            FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
-        sizeof(AerospikeClient),                  // tp_basicsize
-        0,                                        // tp_itemsize
-        (destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
-        0,                                        // tp_print
-        0,                                        // tp_getattr
-        0,                                        // tp_setattr
-        0,                                        // tp_compare
-        0,                                        // tp_repr
-        0,                                        // tp_as_number
-        0,                                        // tp_as_sequence
-        0,                                        // tp_as_mapping
-        0,                                        // tp_hash
-        0,                                        // tp_call
-        0,                                        // tp_str
-        0,                                        // tp_getattro
-        0,                                        // tp_setattro
-        0,                                        // tp_as_buffer
-        Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
-        // tp_flags
-        "The Client class manages the connections and trasactions against\n"
-        "an Aerospike cluster.\n",
-        // tp_doc
-        0,                            // tp_traverse
-        0,                            // tp_clear
-        0,                            // tp_richcompare
-        0,                            // tp_weaklistoffset
-        0,                            // tp_iter
-        0,                            // tp_iternext
-        AerospikeClient_Type_Methods, // tp_methods
-        0,                            // tp_members
-        0,                            // tp_getset
-        0,                            // tp_base
-        0,                            // tp_dict
-        0,                            // tp_descr_get
-        0,                            // tp_descr_set
-        0,                            // tp_dictoffset
-        (initproc)AerospikeClient_Type_Init,
-        // tp_init
-        0,                        // tp_alloc
-        AerospikeClient_Type_New, // tp_new
-        0,                        // tp_free
-        0,                        // tp_is_gc
-        0                         // tp_bases
-    };
+static PyTypeObject AerospikeClient_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
+    sizeof(AerospikeClient),                  // tp_basicsize
+    0,                                        // tp_itemsize
+    (destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
+    0,                                        // tp_print
+    0,                                        // tp_getattr
+    0,                                        // tp_setattr
+    0,                                        // tp_compare
+    0,                                        // tp_repr
+    0,                                        // tp_as_number
+    0,                                        // tp_as_sequence
+    0,                                        // tp_as_mapping
+    0,                                        // tp_hash
+    0,                                        // tp_call
+    0,                                        // tp_str
+    0,                                        // tp_getattro
+    0,                                        // tp_setattro
+    0,                                        // tp_as_buffer
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    // tp_flags
+    "The Client class manages the connections and trasactions against\n"
+    "an Aerospike cluster.\n",
+    // tp_doc
+    0,                            // tp_traverse
+    0,                            // tp_clear
+    0,                            // tp_richcompare
+    0,                            // tp_weaklistoffset
+    0,                            // tp_iter
+    0,                            // tp_iternext
+    AerospikeClient_Type_Methods, // tp_methods
+    0,                            // tp_members
+    0,                            // tp_getset
+    0,                            // tp_base
+    0,                            // tp_dict
+    0,                            // tp_descr_get
+    0,                            // tp_descr_set
+    0,                            // tp_dictoffset
+    (initproc)AerospikeClient_Type_Init,
+    // tp_init
+    0,                        // tp_alloc
+    AerospikeClient_Type_New, // tp_new
+    0,                        // tp_free
+    0,                        // tp_is_gc
+    0                         // tp_bases
+};
 
-    /*******************************************************************************
+/*******************************************************************************
  * PUBLIC FUNCTIONS
  ******************************************************************************/
 
-    PyTypeObject *AerospikeClient_Ready()
-    {
-        return PyType_Ready(&AerospikeClient_Type) == 0 ? &AerospikeClient_Type
-                                                        : NULL;
+PyTypeObject *AerospikeClient_Ready()
+{
+    return PyType_Ready(&AerospikeClient_Type) == 0 ? &AerospikeClient_Type
+                                                    : NULL;
+}
+
+AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
+                                     PyObject *kwds)
+{
+    AerospikeClient *self = (AerospikeClient *)AerospikeClient_Type.tp_new(
+        &AerospikeClient_Type, args, kwds);
+
+    int return_code =
+        AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
+    if (return_code == 0) {
+        return self;
+    }
+    if (PyErr_Occurred()) {
+        goto CLEANUP;
     }
 
-    AerospikeClient *AerospikeClient_New(PyObject * parent, PyObject * args,
-                                         PyObject * kwds)
-    {
-        AerospikeClient *self = (AerospikeClient *)AerospikeClient_Type.tp_new(
-            &AerospikeClient_Type, args, kwds);
+    as_error err;
+    as_error_init(&err);
+    as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
+    raise_exception(&err);
 
-        int return_code =
-            AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
-        if (return_code == 0) {
-            return self;
-        }
-        if (PyErr_Occurred()) {
-            goto CLEANUP;
-        }
-
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Failed to construct object");
-        raise_exception(&err);
-
-    CLEANUP:
-        AerospikeClient_Type.tp_dealloc((PyObject *)self);
-        return NULL;
-    }
+CLEANUP:
+    AerospikeClient_Type.tp_dealloc((PyObject *)self);
+    return NULL;
+}
