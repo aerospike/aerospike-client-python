@@ -960,6 +960,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             error_code = INVALID_CONFIG_PROVIDER_TYPE_ERR;
             goto CONSTRUCTOR_ERROR;
         }
+        else {
+            as_status status = init_and_set_as_metrics_policy_using_pyobject(
+                &constructor_err, py_obj_metrics_policy,
+                &(config.policies.metrics));
+            if (status != AEROSPIKE_OK) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+        }
 
         PyObject *py_login_timeout =
             PyDict_GetItemString(py_policies, "login_timeout_ms");
@@ -1221,6 +1229,7 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
+RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
 
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
