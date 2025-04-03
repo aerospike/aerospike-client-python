@@ -49,7 +49,8 @@ enum {
     INIT_DESERIALIZE_ERR,
     INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
-    INIT_INVALID_AUTHMODE_ERR
+    INIT_INVALID_AUTHMODE_ERR,
+    INVALID_CONFIG_PROVIDER_TYPE_ERR
 };
 
 /*******************************************************************************
@@ -584,31 +585,35 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_config_provider_option_name =
         PyUnicode_FromString("config_provider");
     if (py_config_provider_option_name == NULL) {
-        goto error;
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
     PyObject *py_obj_config_provider =
         PyDict_GetItemWithError(py_config, py_config_provider_option_name);
     Py_DECREF(py_config_provider_option_name);
+
+    PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
     if (py_obj_config_provider == NULL) {
         if (PyErr_Occurred()) {
-            goto error;
+            // TODO: need to test this codepath
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
+        // User didn't provide config provider.
+        // It is optional so just move on
+    }
+    else if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
+        error_code = INVALID_CONFIG_PROVIDER_TYPE_ERR;
+        goto CONSTRUCTOR_ERROR;
     }
     else {
-        PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
-        if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
-            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                            "config_provider must be an "
-                            "aerospike.ConfigProvider class instance");
-            goto error;
-        }
-
         // In Python, users can have their own instance of aerospike.ConfigProvider
-        // But we need to copy over its values into the C client config provider
+        // that lives independently from the client config dictionary.
+        // But here, we need to copy over its values into the C client config provider
+        // because the latter is embedded inside as_config
         AerospikeConfigProvider *py_config_provider =
             (AerospikeConfigProvider *)py_obj_config_provider;
         config.config_provider.interval = py_config_provider->interval;
-        // This creates a new copy of the string at py_config_provider->provider->path
+        // This method creates a new copy of the string at py_config_provider->provider->path
+        // so it doesn't depend on the lifetime of the aerospike.ConfigProvider object in Python
         as_config_provider_set_path(&config, py_config_provider->path);
     }
 
@@ -1171,6 +1176,12 @@ CONSTRUCTOR_ERROR:
                         "Specify valid auth_mode");
         break;
     }
+    case INVALID_CONFIG_PROVIDER_TYPE_ERR: {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "config_provider must be an "
+                        "aerospike.ConfigProvider class instance");
+        break;
+    }
     default:
         // If a generic error was caught during init, use this message
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
@@ -1178,7 +1189,7 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
-error:
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     raise_exception(&constructor_err);
     return -1;
 }
