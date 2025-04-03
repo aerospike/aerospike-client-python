@@ -6,6 +6,7 @@ import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
+from aerospike_helpers.metrics import MetricsPolicy
 from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
@@ -205,6 +206,22 @@ def test_setting_batch_policies():
     for policy in policies:
         config["policies"][policy] = {}
     aerospike.client(config)
+
+
+# TODO: Need to test e2e
+def test_setting_metrics_policy():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["metrics"] = MetricsPolicy()
+    aerospike.client(config)
+
+
+def test_setting_invalid_metrics_policy():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["metrics"] = 1
+    with pytest.raises(e.ParamError) as excinfo:
+        aerospike.client(config)
+    # TODO: need better err msg
+    assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy type"
 
 
 def test_query_invalid_expected_duration():
