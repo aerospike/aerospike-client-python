@@ -1110,10 +1110,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     return 0;
 
 CONSTRUCTOR_ERROR:
-    if (config.config_provider.path) {
-        free(config.config_provider.path);
-    }
-
     switch (error_code) {
     // 0 Is success
     case 0: {
@@ -1196,6 +1192,9 @@ CONSTRUCTOR_ERROR:
     raise_exception(&constructor_err);
 
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
+    if (config.config_provider.path) {
+        free(config.config_provider.path);
+    }
     return -1;
 }
 
