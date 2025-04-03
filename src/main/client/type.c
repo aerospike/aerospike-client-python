@@ -580,7 +580,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     // We create a new class for as_config_provider
     // because dictionaries are meant to have any kind of keys / values
-    // Classes follow a well defined spec
+    // whereas classes follow a well defined spec
     PyObject *py_config_provider_option_name =
         PyUnicode_FromString("config_provider");
     if (py_config_provider_option_name == NULL) {
