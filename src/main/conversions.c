@@ -1325,6 +1325,7 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
             if (err->code != AEROSPIKE_OK) {
                 break;
             }
+            as_record_set(rec, name, (as_bin_value *)val);
         }
 
         if (py_meta && py_meta != Py_None) {
