@@ -1189,8 +1189,8 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
-RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     raise_exception(&constructor_err);
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     return -1;
 }
 
