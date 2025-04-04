@@ -944,7 +944,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
         PyObject *py_obj_metrics_policy =
-            PyDict_GetItemWithError(py_config, py_metrics_policy_option_name);
+            PyDict_GetItemWithError(py_policies, py_metrics_policy_option_name);
         Py_DECREF(py_metrics_policy_option_name);
 
         if (py_obj_metrics_policy == NULL) {
