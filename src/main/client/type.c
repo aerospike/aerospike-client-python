@@ -956,8 +956,10 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
         else if (!is_pyobj_correct_as_helpers_type(
                      py_obj_metrics_policy, "metrics", "MetricsPolicy")) {
-            error_code = INVALID_CONFIG_PROVIDER_TYPE_ERR;
-            goto CONSTRUCTOR_ERROR;
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "metrics must be an "
+                            "aerospike_helpers.metrics.MetricsPolicy type");
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
             as_status status = init_and_set_as_metrics_policy_using_pyobject(
