@@ -939,7 +939,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
         // TODO: check for mem leaks?
         PyObject *py_metrics_policy_option_name =
-            PyUnicode_FromString("metrics_policy");
+            PyUnicode_FromString("metrics");
         if (py_metrics_policy_option_name == NULL) {
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
