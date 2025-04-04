@@ -17,7 +17,7 @@ class TestDynamicConfig:
             provider.interval = 10
 
         # We should be able to reinitialize with no issues
-        provider.__init__()
+        provider.__init__("path1")
 
     def test_basic_functionality(self):
         config = TestBaseClass.get_connection_config()
