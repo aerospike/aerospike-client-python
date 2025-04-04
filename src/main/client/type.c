@@ -938,7 +938,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
 
         // TODO: check for mem leaks?
-        // TODO: reuse code in a helper function because this is commonly done elsewhere in this codebase
         PyObject *py_metrics_policy_option_name =
             PyUnicode_FromString("metrics_policy");
         if (py_metrics_policy_option_name == NULL) {
@@ -955,8 +954,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             // User didn't provide default metrics policy.
             // It is optional so just move on
         }
-        else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
-                                                  "metrics", "MetricsPolicy")) {
+        else if (!is_pyobj_correct_as_helpers_type(
+                     py_obj_metrics_policy, "metrics", "MetricsPolicy")) {
             error_code = INVALID_CONFIG_PROVIDER_TYPE_ERR;
             goto CONSTRUCTOR_ERROR;
         }
