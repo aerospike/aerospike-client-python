@@ -32,6 +32,7 @@
 #include "module_functions.h"
 #include "nullobject.h"
 #include "cdt_types.h"
+#include "partitions_status.h"
 #include "transaction.h"
 
 #include <aerospike/as_operations.h>
@@ -555,6 +556,8 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"null", AerospikeNullObject_Ready},
     {"CDTWildcard", AerospikeWildcardObject_Ready},
     {"CDTInfinite", AerospikeInfiniteObject_Ready},
+    {"PartitionsStatus", AerospikePartitionsStatusObject_Ready},
+    {"PartitionStatus", AerospikePartitionStatusObject_Ready},
     {"Transaction", AerospikeTransaction_Ready},
 };
 

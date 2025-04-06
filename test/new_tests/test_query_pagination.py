@@ -174,6 +174,7 @@ class TestQueryPagination(TestBaseClass):
         all_recs = 0
 
         query_obj = self.as_connection.query(ns, st)
+        query_obj.paginate()
 
         max_records = self.partition_1001_count / 2
 
@@ -210,7 +211,7 @@ class TestQueryPagination(TestBaseClass):
     def test_query_pagination_with_multiple_results_call_on_same_query_object(self):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
-
+        query_obj.paginate()
         records = query_obj.results({"partition_filter": {"begin": 1002, "count": 1}})
         assert len(records) == self.partition_1002_count
 

@@ -102,6 +102,10 @@ typedef struct {
 } AerospikeKeyOrderedDict;
 
 typedef struct {
+    PyObject_HEAD as_partitions_status *parts_all;
+} AerospikePartitionsStatusObject;
+
+typedef struct {
     PyObject_HEAD
         /* Type-specific fields go here. */
         as_txn *txn;
