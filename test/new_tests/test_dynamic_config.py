@@ -19,7 +19,22 @@ class TestDynamicConfig:
         # We should be able to reinitialize with no issues
         provider.__init__("path1")
 
-    def test_basic_functionality(self):
+    @pytest.fixture
+    def functional_test_setup(self):
+        config = TestBaseClass.get_connection_config()
+        setup_client = aerospike.client(config)
+        self.key = ("test", "demo", 1)
+        try:
+            setup_client.remove(self.key)
+        except e.RecordNotFound:
+            pass
+
+        yield
+
+        setup_client.remove(self.key)
+        setup_client.close()
+
+    def test_basic_functionality(self, functional_test_setup):
         config = TestBaseClass.get_connection_config()
         provider = aerospike.ConfigProvider("./dyn_config.yml")
         config["config_provider"] = provider
@@ -29,13 +44,7 @@ class TestDynamicConfig:
 
         client = aerospike.client(config)
 
-        # TODO: make sure pk doesn't exist in server
-        key = ("test", "demo", 1)
-        try:
-            client.remove(key)
-        except e.RecordNotFound:
-            pass
-        client.put(key, {"a": 1})
+        client.put(self.key, {"a": 1})
 
         # "Send key" is enabled in dynamic config
         # The key should be returned here
@@ -48,7 +57,6 @@ class TestDynamicConfig:
         assert first_record_key[2] is not None
 
         # Cleanup
-        client.remove(key)
         client.close()
 
     def test_api_invalid_provider(self):
