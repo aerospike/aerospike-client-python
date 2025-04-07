@@ -227,11 +227,13 @@ def test_setting_metrics_policy():
 
 def test_setting_invalid_metrics_policy():
     config = copy.deepcopy(gconfig)
-    config["policies"]["metrics"] = 1
+    # Common error is to leave a comma at the end
+    config["policies"]["metrics"] = MetricsPolicy(),
     with pytest.raises(e.ParamError) as excinfo:
         aerospike.client(config)
     # TODO: need better err msg
-    assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy type"
+    assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy type. But "\
+        "an int was received instead"
 
 
 def test_query_invalid_expected_duration():

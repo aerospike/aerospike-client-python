@@ -959,7 +959,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                                   "MetricsPolicy") == false) {
             as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                             "metrics must be an "
-                            "aerospike_helpers.metrics.MetricsPolicy type");
+                            "aerospike_helpers.metrics.MetricsPolicy type. But "
+                            "a %s was received instead",
+                            py_obj_metrics_policy->ob_type->tp_name);
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
