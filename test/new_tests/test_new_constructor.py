@@ -233,7 +233,7 @@ def test_setting_invalid_metrics_policy():
         aerospike.client(config)
     # TODO: need better err msg
     assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy type. But "\
-        "an int was received instead"
+        "a tuple was received instead"
 
 
 def test_query_invalid_expected_duration():
