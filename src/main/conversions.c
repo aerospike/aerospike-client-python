@@ -66,10 +66,10 @@
 
 static bool requires_int(uint64_t op);
 
-static as_status py_bool_to_as_integer(as_error *err, PyObject *py_bool,
-                                       as_integer **target);
-static as_status py_bool_to_as_bool(as_error *err, PyObject *py_bool,
-                                    as_boolean **target);
+static as_status as_integer_new_from_py_bool(as_error *err, PyObject *py_bool,
+                                             as_integer **target);
+static as_status as_bool_new_from_py_bool(as_error *err, PyObject *py_bool,
+                                          as_boolean **target);
 
 as_status as_udf_file_to_pyobject(as_error *err, as_udf_file *entry,
                                   PyObject **py_file)
@@ -1141,7 +1141,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
         switch (self->send_bool_as) {
         case SEND_BOOL_AS_AS_BOOL:;
             as_boolean *converted_bool = NULL;
-            if (py_bool_to_as_bool(err, py_obj, &converted_bool) !=
+            if (as_bool_new_from_py_bool(err, py_obj, &converted_bool) !=
                 AEROSPIKE_OK) {
                 return err->code;
             }
@@ -1149,7 +1149,7 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
             break;
         case SEND_BOOL_AS_INTEGER:;
             as_integer *converted_integer = NULL;
-            if (py_bool_to_as_integer(err, py_obj, &converted_integer) !=
+            if (as_integer_new_from_py_bool(err, py_obj, &converted_integer) !=
                 AEROSPIKE_OK) {
                 return err->code;
             }
@@ -2770,8 +2770,8 @@ static bool requires_int(uint64_t op)
  * as_integer on the heap and set target to point to it.
  * The caller is responsible for freeing target.
  */
-static as_status py_bool_to_as_integer(as_error *err, PyObject *py_bool,
-                                       as_integer **target)
+static as_status as_integer_new_from_py_bool(as_error *err, PyObject *py_bool,
+                                             as_integer **target)
 {
     int py_bool_as_num = PyObject_IsTrue(py_bool);
     if (py_bool_as_num == -1) {
@@ -2795,8 +2795,8 @@ static as_status py_bool_to_as_integer(as_error *err, PyObject *py_bool,
  * as_boolean on the heap and set target to point to it.
  * The caller is responsible for freeing target.
  */
-static as_status py_bool_to_as_bool(as_error *err, PyObject *py_bool,
-                                    as_boolean **target)
+static as_status as_bool_new_from_py_bool(as_error *err, PyObject *py_bool,
+                                          as_boolean **target)
 {
     int py_bool_as_num = PyObject_IsTrue(py_bool);
     if (py_bool_as_num == -1) {
