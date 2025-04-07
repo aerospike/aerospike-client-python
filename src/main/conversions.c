@@ -1245,22 +1245,20 @@ as_status pyobject_to_val(AerospikeClient *self, as_error *err,
     else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
         *val = (as_val *)as_val_reserve(&as_cmp_inf);
     }
+    else if (PyFloat_Check(py_obj)) {
+        double d = PyFloat_AsDouble(py_obj);
+        *val = (as_val *)as_double_new(d);
+    }
     else {
-        if (PyFloat_Check(py_obj)) {
-            double d = PyFloat_AsDouble(py_obj);
-            *val = (as_val *)as_double_new(d);
-        }
-        else {
-            as_bytes *bytes;
-            GET_BYTES_POOL(bytes, static_pool, err);
-            if (err->code == AEROSPIKE_OK) {
-                if (serialize_based_on_serializer_policy(self, serializer_type,
-                                                         &bytes, py_obj,
-                                                         err) != AEROSPIKE_OK) {
-                    return err->code;
-                }
-                *val = (as_val *)bytes;
+        as_bytes *bytes;
+        GET_BYTES_POOL(bytes, static_pool, err);
+        if (err->code == AEROSPIKE_OK) {
+            if (serialize_based_on_serializer_policy(self, serializer_type,
+                                                     &bytes, py_obj,
+                                                     err) != AEROSPIKE_OK) {
+                return err->code;
             }
+            *val = (as_val *)bytes;
         }
     }
 
