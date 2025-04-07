@@ -1127,7 +1127,6 @@ CLEANUP1:
 }
 
 // On success, heap allocates a new as_val object and assigns its address to val
-
 as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                                    PyObject *py_obj, as_val **val,
                                    as_static_pool *static_pool,
@@ -1176,6 +1175,10 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
     }
     else if (PyUnicode_Check(py_obj)) {
         PyObject *py_ustr = PyUnicode_AsUTF8String(py_obj);
+        if (!py_ustr) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Unicode value not encoded in utf-8.");
+        }
         char *str = PyBytes_AsString(py_ustr);
         *val = (as_val *)as_string_new(strdup(str), true);
         Py_DECREF(py_ustr);
@@ -1273,10 +1276,11 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
  * Converts a PyObject into an as_record.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  */
-as_status pyobject_to_record(AerospikeClient *self, as_error *err,
-                             PyObject *py_bins_dict, PyObject *py_meta,
-                             as_record *rec, int serializer_type,
-                             as_static_pool *static_pool)
+as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
+                                       PyObject *py_bins_dict,
+                                       PyObject *py_meta, as_record *rec,
+                                       int serializer_type,
+                                       as_static_pool *static_pool)
 {
     as_error_reset(err);
 

@@ -103,10 +103,10 @@ as_status pyobject_to_key(as_error *err, PyObject *py_key, as_key *key);
 as_status pyobject_to_index(AerospikeClient *self, as_error *err,
                             PyObject *py_value, long *long_val);
 
-as_status pyobject_to_record(AerospikeClient *self, as_error *err,
-                             PyObject *py_rec, PyObject *py_meta,
-                             as_record *rec, int serializer_option,
-                             as_static_pool *static_pool);
+as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
+                                       PyObject *py_rec, PyObject *py_meta,
+                                       as_record *rec, int serializer_option,
+                                       as_static_pool *static_pool);
 
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_map);
