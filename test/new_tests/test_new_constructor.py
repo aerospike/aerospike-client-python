@@ -12,6 +12,7 @@ import copy
 from contextlib import nullcontext
 import time
 import os
+import shutil
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -212,7 +213,7 @@ def test_setting_batch_policies():
 
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)
-    CUSTOM_DIR = "metrics-logs"
+    CUSTOM_DIR = "./metrics-logs"
     config["policies"]["metrics"] = MetricsPolicy(report_dir=CUSTOM_DIR)
     client = aerospike.client(config)
     time.sleep(2)
@@ -221,7 +222,7 @@ def test_setting_metrics_policy():
     assert os.path.isdir(CUSTOM_DIR)
 
     # Cleanup
-    os.removedirs(CUSTOM_DIR)
+    shutil.rmtree(CUSTOM_DIR)
 
 
 def test_setting_invalid_metrics_policy():
