@@ -170,33 +170,6 @@ as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
     return err->code;
 }
 
-as_status as_user_array_to_pyobject(as_error *err, as_user **users,
-                                    PyObject **py_as_users, int users_size)
-{
-    as_error_reset(err);
-    int i;
-
-    PyObject *py_users = PyDict_New();
-    for (i = 0; i < users_size; i++) {
-
-        PyObject *py_user = PyUnicode_FromString(users[i]->name);
-        PyObject *py_roles = PyList_New(0);
-        str_array_of_roles_to_py_list(err, users[i]->roles_size,
-                                      users[i]->roles, py_roles);
-        if (err->code != AEROSPIKE_OK) {
-            break;
-        }
-
-        PyDict_SetItem(py_users, py_user, py_roles);
-
-        Py_DECREF(py_user);
-        Py_DECREF(py_roles);
-    }
-    *py_as_users = py_users;
-
-    return err->code;
-}
-
 as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
                                          PyObject **py_as_users, int users_size)
 {
