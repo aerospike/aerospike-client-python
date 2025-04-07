@@ -124,14 +124,13 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_no_roles(self):
 
-        user = "example-test"
         roles = ["sys-admin", "read", "read-write"]
 
-        status = self.client.admin_revoke_roles(user, roles)
+        status = self.client.admin_revoke_roles(self.user, roles)
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user_info(user)
+        user_details = self.client.admin_query_user_info(self.user)
 
         assert user_details.get("roles") == []
 
