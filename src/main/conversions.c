@@ -442,24 +442,6 @@ END:
     return err->code;
 }
 
-as_status as_user_to_pyobject(as_error *err, as_user *user,
-                              PyObject **py_as_user)
-{
-    as_error_reset(err);
-
-    PyObject *py_roles = PyList_New(0);
-
-    str_array_of_roles_to_py_list(err, user->roles_size, user->roles, py_roles);
-    if (err->code != AEROSPIKE_OK) {
-        goto END;
-    }
-
-    *py_as_user = py_roles;
-
-END:
-    return err->code;
-}
-
 as_status as_user_info_to_pyobject(as_error *err, as_user *user,
                                    PyObject **py_as_user)
 {
