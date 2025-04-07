@@ -50,8 +50,6 @@ enum {
     INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
     INIT_INVALID_AUTHMODE_ERR,
-    INVALID_CONFIG_PROVIDER_TYPE_ERR,
-    INVALID_METRICS_POLICY_TYPE_ERR
 };
 
 /*******************************************************************************
@@ -602,8 +600,10 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         // It is optional so just move on
     }
     else if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
-        error_code = INVALID_CONFIG_PROVIDER_TYPE_ERR;
-        goto CONSTRUCTOR_ERROR;
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "config_provider must be an "
+                        "aerospike.ConfigProvider class instance");
+        goto RAISE_EXCEPTION_WITH_AS_ERROR;
     }
     else {
         // In Python, users can have their own instance of aerospike.ConfigProvider
@@ -937,7 +937,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto CONSTRUCTOR_ERROR;
         }
 
-        // TODO: check for mem leaks?
+        // TODO: mem leak from as_config?
         PyObject *py_metrics_policy_option_name =
             PyUnicode_FromString("metrics");
         if (py_metrics_policy_option_name == NULL) {
@@ -954,8 +954,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             // User didn't provide default metrics policy.
             // It is optional so just move on
         }
-        else if (!is_pyobj_correct_as_helpers_type(
-                     py_obj_metrics_policy, "metrics", "MetricsPolicy")) {
+        else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
+                                                  "metrics",
+                                                  "MetricsPolicy") == false) {
             as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                             "metrics must be an "
                             "aerospike_helpers.metrics.MetricsPolicy type");
@@ -1208,19 +1209,6 @@ CONSTRUCTOR_ERROR:
     case INIT_INVALID_AUTHMODE_ERR: {
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                         "Specify valid auth_mode");
-        break;
-    }
-    case INVALID_CONFIG_PROVIDER_TYPE_ERR: {
-        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                        "config_provider must be an "
-                        "aerospike.ConfigProvider class instance");
-        break;
-    }
-    case INVALID_METRICS_POLICY_TYPE_ERR: {
-        as_error_update(
-            &constructor_err, AEROSPIKE_ERR_PARAM,
-            "metrics must be an "
-            "aerospike_helpers.metrics.MetricsPolicy class instance");
         break;
     }
     default:
