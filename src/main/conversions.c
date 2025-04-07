@@ -1285,22 +1285,22 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
     }
     else if (PyDict_Check(py_bins_dict)) {
-        PyObject *key = NULL, *py_value = NULL;
+        PyObject *py_bin_name = NULL, *py_bin_value = NULL;
         Py_ssize_t pos = 0;
         Py_ssize_t size = PyDict_Size(py_bins_dict);
         const char *name;
 
         as_record_init(rec, size);
 
-        while (PyDict_Next(py_bins_dict, &pos, &key, &py_value)) {
+        while (PyDict_Next(py_bins_dict, &pos, &py_bin_name, &py_bin_value)) {
 
-            if (!PyUnicode_Check(key)) {
+            if (!PyUnicode_Check(py_bin_name)) {
                 return as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
                     "A bin name must be a string or unicode string.");
             }
 
-            name = PyUnicode_AsUTF8(key);
+            name = PyUnicode_AsUTF8(py_bin_name);
             if (!name) {
                 return as_error_update(
                     err, AEROSPIKE_ERR_CLIENT,
@@ -1315,14 +1315,14 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
                 }
             }
 
-            if (!py_value) {
+            if (!py_bin_value) {
                 // this should never happen, but if it did...
                 return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                        "record is null");
             }
 
             as_val *val = NULL;
-            as_val_new_from_pyobject(self, err, py_value, &val, static_pool,
+            as_val_new_from_pyobject(self, err, py_bin_value, &val, static_pool,
                                      serializer_type);
             if (err->code != AEROSPIKE_OK) {
                 break;
