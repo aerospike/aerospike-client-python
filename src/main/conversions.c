@@ -1327,7 +1327,12 @@ as_status pyobject_to_record(AerospikeClient *self, as_error *err,
             if (err->code != AEROSPIKE_OK) {
                 break;
             }
-            as_record_set(rec, name, (as_bin_value *)val);
+            bool success = as_record_set(rec, name, (as_bin_value *)val);
+            if (success == false) {
+                as_val_destroy(val);
+                return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                       "Unable to set bin value pair");
+            }
         }
 
         if (py_meta && py_meta != Py_None) {
