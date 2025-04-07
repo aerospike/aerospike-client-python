@@ -208,7 +208,6 @@ def test_setting_batch_policies():
     aerospike.client(config)
 
 
-# TODO: Need to test e2e
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)
     config["policies"]["metrics"] = MetricsPolicy()
