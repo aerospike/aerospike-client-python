@@ -846,7 +846,7 @@ create_py_node_metrics_from_as_node_metrics(as_error *error_p,
         // Append each bucket to a list of buckets
         for (uint32_t j = 0; j < bucket_max; j++) {
             uint64_t bucket = as_latency_get_bucket(buckets, j);
-            PyObject *py_bucket = PyLong_FromLong(bucket);
+            PyObject *py_bucket = PyLong_FromUnsignedLongLong(bucket);
             if (!py_bucket) {
                 as_error_update(error_p, AEROSPIKE_ERR,
                                 "Failed to create bucket at index %d for %s", j,
@@ -926,11 +926,12 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject_SetAttrString(py_node, "conns", py_conn_stats);
     Py_DECREF(py_conn_stats);
 
-    PyObject *py_error_count = PyLong_FromLong(node->error_count);
+    PyObject *py_error_count = PyLong_FromUnsignedLongLong(node->error_count);
     PyObject_SetAttrString(py_node, "error_count", py_error_count);
     Py_DECREF(py_error_count);
 
-    PyObject *py_timeout_count = PyLong_FromLong(node->timeout_count);
+    PyObject *py_timeout_count =
+        PyLong_FromUnsignedLongLong(node->timeout_count);
     PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
     Py_DECREF(py_timeout_count);
 
@@ -972,16 +973,18 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
     }
 
     PyObject *py_invalid_node_count =
-        PyLong_FromLong(cluster->invalid_node_count);
+        PyLong_FromUnsignedLong(cluster->invalid_node_count);
     PyObject_SetAttrString(py_cluster, "invalid_node_count",
                            py_invalid_node_count);
     Py_DECREF(py_invalid_node_count);
 
-    PyObject *py_command_count = PyLong_FromLong(cluster->command_count);
+    PyObject *py_command_count =
+        PyLong_FromUnsignedLongLong(cluster->command_count);
     PyObject_SetAttrString(py_cluster, "command_count", py_command_count);
     Py_DECREF(py_command_count);
 
-    PyObject *py_retry_count = PyLong_FromLong(cluster->retry_count);
+    PyObject *py_retry_count =
+        PyLong_FromUnsignedLongLong(cluster->retry_count);
     PyObject_SetAttrString(py_cluster, "retry_count", py_retry_count);
     Py_DECREF(py_retry_count);
 
@@ -1350,7 +1353,7 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
 
                 if (py_ttl) {
                     if (PyLong_Check(py_ttl)) {
-                        rec->ttl = (uint32_t)PyLong_AsLong(py_ttl);
+                        rec->ttl = (uint32_t)PyLong_AsUnsignedLong(py_ttl);
                         if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
                             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                                 as_error_update(
@@ -1370,6 +1373,7 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
 
                 if (py_gen) {
                     if (PyLong_Check(py_gen)) {
+                        // TODO: need to check that this value does not exceed an unsigned 16 bit integer
                         rec->gen = (uint16_t)PyLong_AsLong(py_gen);
                         if (rec->gen == (uint16_t)-1 && PyErr_Occurred()) {
                             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -2031,7 +2035,7 @@ as_status key_to_pyobject(as_error *err, const as_key *key, PyObject **obj)
         switch (type) {
         case AS_INTEGER: {
             as_integer *ival = as_integer_fromval(val);
-            py_key = PyLong_FromLong((long)as_integer_get(ival));
+            py_key = PyLong_FromLongLong((long long)as_integer_get(ival));
             break;
         }
         case AS_STRING: {
@@ -2251,8 +2255,8 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
     }
 
-    PyObject *py_ttl = PyLong_FromLong(rec->ttl);
-    PyObject *py_gen = PyLong_FromLong(rec->gen);
+    PyObject *py_ttl = PyLong_FromUnsignedLong(rec->ttl);
+    PyObject *py_gen = PyLong_FromUnsignedLong(rec->gen);
 
     PyObject *py_meta = PyDict_New();
     PyDict_SetItemString(py_meta, "ttl", py_ttl);
@@ -2277,7 +2281,7 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     }
     PyObject *py_line = NULL;
     if (err->line > 0) {
-        py_line = PyLong_FromLong(err->line);
+        py_line = PyLong_FromUnsignedLong(err->line);
     }
     else {
         Py_INCREF(Py_None);
@@ -2306,7 +2310,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 
     as_bin *binop_bin = &binop->bin;
     if (PyLong_Check(py_value)) {
-        int val = PyLong_AsLong(py_value);
+        long val = PyLong_AsLong(py_value);
         as_integer_init((as_integer *)&binop_bin->value, val);
         binop_bin->valuep = &binop_bin->value;
     }
@@ -2433,7 +2437,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
         uint16_t gen = 0;
         if (py_ttl) {
             if (PyLong_Check(py_ttl)) {
-                ttl = (uint32_t)PyLong_AsLong(py_ttl);
+                ttl = (uint32_t)PyLong_AsUnsignedLong(py_ttl);
             }
             else {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2454,6 +2458,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
 
         if (py_gen) {
             if (PyLong_Check(py_gen)) {
+                // TODO: Needs to check value doesn't go past unsigned 16 bit limit
                 gen = (uint16_t)PyLong_AsLong(py_gen);
             }
             else {
@@ -2677,7 +2682,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                                        "Failed to convert %s", CTX_KEY);
             }
 
-            uint64_t item_type = PyLong_AsUnsignedLong(id_temp);
+            uint64_t item_type = PyLong_AsUnsignedLongLong(id_temp);
             if (PyErr_Occurred()) {
                 as_cdt_ctx_destroy(cdt_ctx);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2839,7 +2844,7 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                                "%s must be an integer.", py_object_name);
     }
 
-    int64_t int64_to_return = PyLong_AsLong(py_long);
+    int int_to_return = PyLong_AsLong(py_long);
     if (PyErr_Occurred()) {
         if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2850,12 +2855,12 @@ as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                                "Failed to convert %s.", py_object_name);
     }
 
-    if (int64_to_return > INT_MAX || int64_to_return < INT_MIN) {
+    if (int_to_return > INT_MAX || int_to_return < INT_MIN) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s too large for C int.", py_object_name);
     }
 
-    *int_pointer = int64_to_return;
+    *int_pointer = int_to_return;
 
     return AEROSPIKE_OK;
 }

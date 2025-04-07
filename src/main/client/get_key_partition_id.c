@@ -109,7 +109,7 @@ PyObject *AerospikeClient_Get_Key_PartitionID_Invoke(AerospikeClient *self,
 
     uint32_t id =
         as_partition_getid(key.digest.value, self->as->cluster->n_partitions);
-    py_value = PyLong_FromLong(id);
+    py_value = PyLong_FromUnsignedLong(id);
 
     if (key_initialised == true) {
         // Destroy key only if it is initialised.

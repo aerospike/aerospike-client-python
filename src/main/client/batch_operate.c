@@ -230,7 +230,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
     }
     else {
-        ops.ttl = (uint32_t)PyLong_AsLong(py_ttl);
+        ops.ttl = (uint32_t)PyLong_AsUnsignedLong(py_ttl);
     }
 
     // import batch_records helper
