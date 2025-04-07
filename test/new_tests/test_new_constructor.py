@@ -214,7 +214,7 @@ def test_setting_batch_policies():
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)
     CUSTOM_DIR = "./metrics-logs"
-    config["policies"]["metrics"] = MetricsPolicy(report_dir=CUSTOM_DIR)
+    config["policies"]["metrics"] = MetricsPolicy(report_dir=CUSTOM_DIR, interval=1),
     client = aerospike.client(config)
     time.sleep(2)
     client.disable_metrics()
