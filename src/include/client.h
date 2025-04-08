@@ -505,24 +505,6 @@ PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds);
 
 /**
- * Filter bins from records in a batch
- *
- *		client.select_many([keys], [bins], policies)
- *
- */
-PyObject *AerospikeClient_Select_Many(AerospikeClient *self, PyObject *args,
-                                      PyObject *kwds);
-
-/**
- * Check existence of given keys
- *
- *		client.exists_many([keys], policies)
- *
- */
-PyObject *AerospikeClient_Exists_Many(AerospikeClient *self, PyObject *args,
-                                      PyObject *kwds);
-
-/**
 * Perform xdr-set-filter info operation on the database.
 *
 * client.set_xdr_filter(data_center, namespace, expression_filter, policy)
