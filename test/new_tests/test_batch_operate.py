@@ -157,6 +157,17 @@ class TestBatchOperate(TestBaseClass):
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
+            (
+                "read-only-ops",
+                [("test", "demo", 0)],
+                [op.read("name"), op.read("count")],
+                None,
+                None,
+                None,
+                [AerospikeStatus.AEROSPIKE_OK],
+                [{"name": "name10", "count": 7}],
+
+            )
         ],
     )
     def test_batch_operate_pos(self, name, keys, ops, policy_batch, policy_batch_write, ttl, exp_res, exp_rec):
