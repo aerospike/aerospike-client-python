@@ -216,6 +216,7 @@ def test_setting_metrics_policy():
     CUSTOM_DIR = "./metrics-logs"
     config["policies"]["metrics"] = MetricsPolicy(report_dir=CUSTOM_DIR, interval=1)
     client = aerospike.client(config)
+    client.enable_metrics()
     time.sleep(2)
     client.disable_metrics()
     client.close()
