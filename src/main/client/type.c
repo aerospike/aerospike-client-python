@@ -1001,14 +1001,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_compression_threshold =
         PyDict_GetItemString(py_config, "compression_threshold");
     if (py_compression_threshold && PyLong_Check(py_compression_threshold)) {
-        uint32_t compression_value =
+        unsigned long compression_value =
             PyLong_AsUnsignedLong(py_compression_threshold);
-        if (compression_value >= 0) {
-            config.policies.write.compression_threshold = compression_value;
+        if (compression_value == (unsigned long)-1 && PyErr_Occurred()) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
         else {
-            error_code = INIT_COMPRESSION_ERR;
-            goto CONSTRUCTOR_ERROR;
+            config.policies.write.compression_threshold = compression_value;
         }
     }
 
@@ -1151,6 +1150,8 @@ CONSTRUCTOR_ERROR:
     }
 
     raise_exception(&constructor_err);
+
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     return -1;
 }
 

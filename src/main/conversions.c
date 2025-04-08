@@ -1129,7 +1129,6 @@ CLEANUP1:
     return retval;
 }
 
-// On success, heap allocates a new as_val object and assigns its address to val
 as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
                                    PyObject *py_obj, as_val **val,
                                    as_static_pool *static_pool,
