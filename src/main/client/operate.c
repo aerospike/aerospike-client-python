@@ -80,7 +80,7 @@ static inline bool isExprOp(int op);
         error_to_pyobject(&err, &py_err);                                      \
         PyObject *exception_type = raise_exception_old(&err);                  \
         set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);  \
-        if (PyObject_HasAttrStringWithError(exception_type, "key")) {          \
+        if (PyObject_HasAttrString(exception_type, "key")) {                   \
             PyObject_SetAttrString(exception_type, "key", py_key);             \
         }                                                                      \
         if (PyObject_HasAttrString(exception_type, "bin")) {                   \
