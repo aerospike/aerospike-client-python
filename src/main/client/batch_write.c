@@ -166,7 +166,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         }
     }
 
-    // TODO check that py_object is an instance of class
+    if (!is_pyobj_correct_as_helpers_type(py_obj, "batch.records",
+                                          "BatchRecords")) {
+        goto CLEANUP4;
+    }
 
     py_batch_records = PyObject_GetAttrString(py_obj, FIELD_NAME_BATCH_RECORDS);
     if (py_batch_records == NULL || !PyList_Check(py_batch_records)) {
