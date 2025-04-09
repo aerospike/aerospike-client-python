@@ -49,8 +49,12 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
     if (err.code != AEROSPIKE_OK) {
-        free_py_listener_data(
-            (PyListenerData *)metrics_policy.metrics_listeners.udata);
+        // as_metrics_policy_init() sets udata to NULL
+        // It is possible for aerospike_enable_metrics() to fail before it assigns a heap allocated value to udata
+        if (metrics_policy.metrics_listeners.udata) {
+            free_py_listener_data(
+                (PyListenerData *)metrics_policy.metrics_listeners.udata);
+        }
         goto error;
     }
 
