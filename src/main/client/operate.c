@@ -996,7 +996,7 @@ CLEANUP:
             PyObject_SetAttrString(exception_type, "key", py_key);
             // Exception should've been raised before we call this
         }
-        else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+        else {
             goto RAISE_NATIVE_EXCEPTION;
         }
 
@@ -1005,7 +1005,7 @@ CLEANUP:
             PyObject_SetAttrString(exception_type, "bin", py_bin);
             // Exception should've been raised before we call this
         }
-        else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+        else {
             goto RAISE_NATIVE_EXCEPTION;
         }
 
