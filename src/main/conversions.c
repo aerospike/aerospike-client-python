@@ -2499,6 +2499,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     strcpy(binop_bin->name, bin);
 }
 
+// TODO: dead code
 as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
                                    PyObject *py_bin, char **bin)
 {
