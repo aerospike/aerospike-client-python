@@ -558,6 +558,71 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"Transaction", AerospikeTransaction_Ready},
 };
 
+const char *const client_config_valid_keys[] = {"lua",
+                                                "tls",
+                                                "hosts",
+                                                "shm",
+                                                "serialization",
+                                                "policies",
+                                                "thread_pool_size",
+                                                "max_threads",
+                                                "min_conns_per_node",
+                                                "max_conns_per_node",
+                                                "max_error_rate",
+                                                "error_rate_window",
+                                                "connect_timeout",
+                                                "use_shared_connection",
+                                                "send_bool_as",
+                                                "compression_threshold",
+                                                "tend_interval",
+                                                "cluster_name",
+                                                "strict_types",
+                                                "max_socket_idle",
+                                                "fail_if_not_connected",
+                                                "user",
+                                                "password",
+                                                NULL};
+
+const char *const client_config_shm_valid_keys[] = {
+    "shm_max_nodes",
+    "max_nodes",
+    "shm_max_namespaces",
+    "max_namespaces",
+    "shm_takeover_threshold_sec",
+    "takeover_threshold_sec"
+    "shm_key",
+    NULL};
+
+// Return NULL on exception
+// Returns strong reference to new Python dictionary
+static PyObject *py_set_new_from_str_list(const char **valid_keys)
+{
+    PyObject *py_valid_keys = PySet_New(NULL);
+    if (py_valid_keys == NULL) {
+        goto error;
+    }
+
+    const char *curr_key = *valid_keys;
+    while (curr_key) {
+        PyObject *py_key = PyUnicode_FromString(curr_key);
+        if (py_key == NULL) {
+            goto CLEANUP_SET_ON_ERROR;
+        }
+
+        int result = PySet_Add(py_valid_keys, py_key);
+        Py_DECREF(py_key);
+        if (result == -1) {
+            goto CLEANUP_SET_ON_ERROR;
+        }
+        curr_key++;
+    }
+
+CLEANUP_SET_ON_ERROR:
+    Py_DECREF(py_valid_keys);
+error:
+    return NULL;
+}
+
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
     static struct PyModuleDef moduledef = {
@@ -575,13 +640,27 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     Aerospike_Enable_Default_Logging();
 
+    // just use a Python set so we don't need to implement a hashset in C
+    PyObject *py_client_config_valid_keys =
+        py_set_new_from_str_list(client_config_valid_keys);
+    if (py_client_config_valid_keys == NULL) {
+        goto MODULE_CLEANUP_ON_ERROR;
+    }
+    // TODO: add to C struct to make private?
+    int retval =
+        PyModule_AddObject(py_aerospike_module, "__client_config_valid_keys",
+                           py_client_config_valid_keys);
+    if (retval == -1) {
+        Py_DECREF(py_client_config_valid_keys);
+        goto MODULE_CLEANUP_ON_ERROR;
+    }
+
     py_global_hosts = PyDict_New();
     if (py_global_hosts == NULL) {
         goto MODULE_CLEANUP_ON_ERROR;
     }
 
     unsigned long i = 0;
-    int retval;
     for (i = 0; i < sizeof(py_module_types) / sizeof(py_module_types[0]); i++) {
         PyTypeObject *(*py_type_ready_func)(void) =
             py_module_types[i].pytype_ready_method;
@@ -672,6 +751,8 @@ SYS_CLEANUP:
     Py_DECREF(py_sys);
 GLOBAL_HOSTS_CLEANUP_ON_ERROR:
     Py_DECREF(py_global_hosts);
+DICT_VALID_KEYS_CLEANUP_ON_ERROR:
+    Py_DECREF(py_client_config_valid_keys);
 MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_aerospike_module);
     return NULL;
