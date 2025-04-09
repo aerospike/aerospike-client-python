@@ -17,7 +17,9 @@ done
 
 for i in "${ADDR[@]}"; do
     ${i}/pip install aerospike -f /work/wheels/
-    ${i}/python -c "import aerospike; from importlib.metadata import version; print('Installed aerospike version{}'.format(version('aerospike')))"
+    ${i}/python -c "import aerospike" || { echo "Import failed for ${i}/python"; exit 1; }
+    ${i}/python -c "from importlib.metadata import version; print('Installed aerospike version {}'.format(version('aerospike')))"
 done
 
 echo "Building wheel $PYTHONS are done"
+
