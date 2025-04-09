@@ -890,3 +890,11 @@ class TestGetPut:
 
         # Cleanup
         self.as_connection.remove(key)
+
+    def test_put_invalid_types(self):
+        key = ("test", "demo", 123)
+        self.as_connection.put(key, {"a": aerospike.CDTInfinite()})
+        self.as_connection.put(key, {"b": aerospike.null()})
+
+        # Cleanup
+        self.as_connection.remove(key)
