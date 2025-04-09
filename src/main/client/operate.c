@@ -1292,15 +1292,15 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_list = NULL;
+    // creates strong ref for list
     py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str);
     py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                py_meta, py_policy);
-
-    DECREF_LIST_AND_RESULT();
+    Py_DECREF(py_list);
+    // We don't use the return value of operate()'s invoke method
+    Py_XDECREF(py_result);
 
 CLEANUP:
-    EXCEPTION_ON_ERROR();
-
     return PyLong_FromLong(0);
 }
 
