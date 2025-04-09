@@ -1000,7 +1000,7 @@ CLEANUP:
             goto RAISE_NATIVE_EXCEPTION;
         }
 
-        PyObject *py_bin_attr = PyObject_HasAttrString(exception_type, "bin");
+        PyObject *py_bin_attr = PyObject_GetAttrString(exception_type, "bin");
         if (py_bin_attr) {
             PyObject_SetAttrString(exception_type, "bin", py_bin);
             // Exception should've been raised before we call this
