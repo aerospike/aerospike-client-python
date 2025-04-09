@@ -881,3 +881,8 @@ class TestGetPut:
         assert 0 == self.as_connection.put(key, null_bin)
         with pytest.raises(e.RecordNotFound):
             res = self.as_connection.get(key)
+
+    def test_put_invalid_type(self):
+        key = ("test", "demo", 123)
+        with pytest.raises(e.ClientError):
+            self.as_connection.put(key, {"a": aerospike.CDTInfinite()})
