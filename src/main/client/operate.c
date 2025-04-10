@@ -77,7 +77,7 @@ static inline bool isExprOp(int op);
 #define EXCEPTION_ON_ERROR()                                                   \
     if (err.code != AEROSPIKE_OK) {                                            \
         PyObject *py_err = NULL;                                               \
-        error_to_pyobject(&err, &py_err);                                      \
+        py_err_tuple_new_from_as_error(&err, &py_err);                         \
         PyObject *exception_type = raise_exception_old(&err);                  \
         set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);  \
         if (PyObject_HasAttrString(exception_type, "key")) {                   \
@@ -1212,7 +1212,7 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
+        py_err_tuple_new_from_as_error(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
         set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         if (PyObject_HasAttrString(exception_type, "key")) {

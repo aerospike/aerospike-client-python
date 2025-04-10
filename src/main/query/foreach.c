@@ -247,11 +247,11 @@ CLEANUP:
         PyObject *py_err = NULL;
         PyObject *exception_type = NULL;
         if (err.code != AEROSPIKE_OK) {
-            error_to_pyobject(&err, &py_err);
+            py_err_tuple_new_from_as_error(&err, &py_err);
             exception_type = raise_exception_old(&err);
         }
         if (data.error.code != AEROSPIKE_OK) {
-            error_to_pyobject(&data.error, &py_err);
+            py_err_tuple_new_from_as_error(&data.error, &py_err);
             exception_type = raise_exception_old(&data.error);
         }
         set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
