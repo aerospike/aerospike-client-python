@@ -580,6 +580,42 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     bool lua_user_path = false;
 
+    PyObject *py_config_key = NULL, *py_config_value = NULL;
+    Py_ssize_t pos = 0;
+
+    PyObject *py_aerospike_module = PyImport_GetModule("aerospike");
+    if (py_aerospike_module == NULL) {
+        if (PyErr_Occurred()) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        else {
+            as_error_update(
+                &constructor_err, AEROSPIKE_ERR_CLIENT,
+                "Unable to check if the client config keys are valid.");
+            goto RAISE_EXCEPTION_USING_AS_ERROR;
+        }
+    }
+
+    PyObject *py_valid_keys = PyObject_GetAttrString(
+        py_aerospike_module, "__client_config_valid_keys");
+    Py_DECREF(py_aerospike_module);
+    while (PyDict_Next(py_config, &pos, &py_config_key, &py_config_value)) {
+        const char *config_key = PyUnicode_AsUTF8(py_config_key);
+        int res = PySet_Contains(py_valid_keys, py_config_key);
+        if (res != -1) {
+            Py_DECREF(py_valid_keys);
+            if (res == 0) {
+                as_error_update(&constructor_err, AEROSPIKE_ERR_CLIENT,
+                                "Invalid config key %s", config_key);
+                goto RAISE_EXCEPTION_USING_AS_ERROR;
+            }
+            else {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+        }
+    }
+    Py_DECREF(py_valid_keys);
+
     PyObject *py_lua = PyDict_GetItemString(py_config, "lua");
     if (py_lua && PyDict_Check(py_lua)) {
 
@@ -1144,7 +1180,9 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
+RAISE_EXCEPTION_USING_AS_ERROR:
     raise_exception(&constructor_err);
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     return -1;
 }
 
