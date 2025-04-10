@@ -278,7 +278,8 @@ class TestMetrics:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
 
-    # TODO: comment
+    # Use default metrics writer implementation
+    # We are checking that enable_metrics() does not seg fault
     def test_enable_metrics_with_invalid_report_size_limit(self):
         policy = MetricsPolicy(report_size_limit=1)
         with pytest.raises(e.ClientError):
