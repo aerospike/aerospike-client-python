@@ -147,18 +147,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", py_module);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", py_function);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, NULL, NULL, py_module, py_function, NULL);
         return NULL;
     }
 

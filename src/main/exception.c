@@ -405,14 +405,14 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
                           PyObject *py_name)
 {
-    PyObject *py_key = NULL, *py_value = NULL;
+    PyObject *py_key = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_module);
     bool found = false;
 
-    while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
-        if (PyObject_HasAttrString(py_value, "code")) {
-            PyObject *py_code = PyObject_GetAttrString(py_value, "code");
+    while (PyDict_Next(py_module_dict, &pos, &py_key, &py_exc_class)) {
+        if (PyObject_HasAttrString(py_exc_class, "code")) {
+            PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
             if (py_code == Py_None) {
                 continue;
             }
@@ -427,42 +427,41 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         PyObject *base_exception =
             PyDict_GetItemString(py_module_dict, "AerospikeError");
         if (base_exception) {
-            py_value = base_exception;
+            py_exc_class = base_exception;
         }
     }
 
-    if (py_as_key && PyObject_HasAttrString(py_value, "key")) {
-        PyObject_SetAttrString(py_value, "key", py_as_key);
-    }
-
-    if (py_bin && PyObject_HasAttrString(py_value, "bin")) {
-        PyObject_SetAttrString(py_value, "bin", py_bin);
-    }
-
-    if (py_module && PyObject_HasAttrString(py_value, "module")) {
-        PyObject_SetAttrString(py_value, "module", py_module);
-    }
-
-    if (py_module && PyObject_HasAttrString(py_value, "func")) {
-        PyObject_SetAttrString(py_value, "func", py_func);
-    }
-
-    if (py_name && PyObject_HasAttrString(py_value, "name")) {
-        PyObject_SetAttrString(py_value, "name", py_name);
+    const char *extra_attrs = {"key", "bin", "module", "func", "name"};
+    PyObject *py_extra_attrs[] = {py_as_key, py_bin, py_module, py_func,
+                                  py_name};
+    for (unsigned long i = 0;
+         i < sizeof(py_extra_attrs) / sizeof(py_extra_attrs[0]); i++) {
+        PyObject *py_exc_extra_attr =
+            PyObject_GetAttrString(py_exc_class, extra_attrs[i]);
+        if (py_exc_extra_attr) {
+            PyObject_SetAttrString(py_exc_class, extra_attrs[i],
+                                   py_extra_attrs[i]);
+        }
+        else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+            PyErr_Clear();
+        }
+        else {
+            return NULL;
+        }
     }
 
     // Convert borrowed reference of exception class to strong reference
-    Py_INCREF(py_value);
+    Py_INCREF(py_exc_class);
 
     // Convert C error to Python exception
     PyObject *py_err = NULL;
     error_to_pyobject(err, &py_err);
-    set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
+    set_aerospike_exc_attrs_using_tuple_of_attrs(py_exc_class, py_err);
 
     // Raise exception
-    PyErr_SetObject(py_value, py_err);
+    PyErr_SetObject(py_exc_class, py_err);
 
-    Py_DECREF(py_value);
+    Py_DECREF(py_exc_class);
     Py_DECREF(py_err);
 }
 

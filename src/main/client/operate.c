@@ -76,18 +76,7 @@ static inline bool isExprOp(int op);
 
 #define EXCEPTION_ON_ERROR()                                                   \
     if (err.code != AEROSPIKE_OK) {                                            \
-        PyObject *py_err = NULL;                                               \
-        error_to_pyobject(&err, &py_err);                                      \
-        PyObject *exception_type = raise_exception_old(&err);                  \
-        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);  \
-        if (PyObject_HasAttrString(exception_type, "key")) {                   \
-            PyObject_SetAttrString(exception_type, "key", py_key);             \
-        }                                                                      \
-        if (PyObject_HasAttrString(exception_type, "bin")) {                   \
-            PyObject_SetAttrString(exception_type, "bin", py_bin);             \
-        }                                                                      \
-        PyErr_SetObject(exception_type, py_err);                               \
-        Py_DECREF(py_err);                                                     \
+        raise_exception_base(&err, py_key, py_bin, NULL, NULL, NULL);          \
         return NULL;                                                           \
     }
 
@@ -986,39 +975,7 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
     }
 
 CLEANUP:
-    if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
-        PyObject *py_key_attr = PyObject_GetAttrString(exception_type, "key");
-        if (py_key_attr) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-            PyErr_Clear();
-        }
-        else {
-            goto RAISE_NATIVE_EXCEPTION;
-        }
-
-        PyObject *py_bin_attr = PyObject_GetAttrString(exception_type, "bin");
-        if (py_bin_attr) {
-            PyObject_SetAttrString(exception_type, "bin", py_bin);
-        }
-        else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-            PyErr_Clear();
-        }
-        else {
-            goto RAISE_NATIVE_EXCEPTION;
-        }
-
-        PyErr_SetObject(exception_type, py_err);
-
-    RAISE_NATIVE_EXCEPTION:
-        Py_DECREF(py_err);
-        return NULL;
-    }
+    EXCEPTION_ON_ERROR();
 
     return py_result;
 }
@@ -1243,15 +1200,7 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, py_key, NULL, NULL, NULL, NULL);
         return NULL;
     }
     return py_result;
