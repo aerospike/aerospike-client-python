@@ -398,6 +398,13 @@ void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
 // TODO: idea. Use python dict to map error code to exception
 void raise_exception(as_error *err)
 {
+    raise_exception_base(err, NULL, NULL, NULL, NULL, NULL);
+}
+
+void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
+                          PyObject *py_module, PyObject *py_func,
+                          PyObject *py_name)
+{
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_module);
@@ -422,6 +429,26 @@ void raise_exception(as_error *err)
         if (base_exception) {
             py_value = base_exception;
         }
+    }
+
+    if (py_as_key && PyObject_HasAttrString(py_value, "key")) {
+        PyObject_SetAttrString(py_value, "key", py_as_key);
+    }
+
+    if (py_bin && PyObject_HasAttrString(py_value, "bin")) {
+        PyObject_SetAttrString(py_value, "bin", py_bin);
+    }
+
+    if (py_module && PyObject_HasAttrString(py_value, "module")) {
+        PyObject_SetAttrString(py_value, "module", py_module);
+    }
+
+    if (py_module && PyObject_HasAttrString(py_value, "func")) {
+        PyObject_SetAttrString(py_value, "func", py_func);
+    }
+
+    if (py_name && PyObject_HasAttrString(py_value, "name")) {
+        PyObject_SetAttrString(py_value, "name", py_name);
     }
 
     // Convert borrowed reference of exception class to strong reference
