@@ -46,7 +46,7 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
 
     // 2 scenarios:
     // 1. If the user does not pass their own MetricsListeners object to client.enable_metrics(), udata is NULL
-    // 2. Otherwise, udata is non-NULL
+    // 2. Otherwise, udata is non-NULL and set to heap-allocated PyListenerData
     bool free_udata_as_py_listener_data =
         metrics_policy.metrics_listeners.udata != NULL;
 
