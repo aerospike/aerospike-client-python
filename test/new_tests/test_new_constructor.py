@@ -10,9 +10,6 @@ from aerospike_helpers.metrics import MetricsPolicy
 from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
-import time
-import os
-import shutil
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -213,17 +210,11 @@ def test_setting_batch_policies():
 
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)
-    CUSTOM_DIR = "./metrics-logs"
-    config["policies"]["metrics"] = MetricsPolicy(report_dir=CUSTOM_DIR, interval=1)
+    config["policies"]["metrics"] = MetricsPolicy(report_size_limit=1)
     client = aerospike.client(config)
-    client.enable_metrics()
-    time.sleep(2)
-    client.disable_metrics()
+    with pytest.raises(e.ClientError):
+        client.enable_metrics()
     client.close()
-    assert os.path.isdir(CUSTOM_DIR)
-
-    # Cleanup
-    shutil.rmtree(CUSTOM_DIR)
 
 
 def test_setting_invalid_metrics_policy():
