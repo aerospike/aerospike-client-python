@@ -4,12 +4,17 @@ import pytest
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
+from aerospike import ConfigProvider
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
 from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
+import time
+import glob
+import re
+import os
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -210,11 +215,29 @@ def test_setting_batch_policies():
 
 def test_setting_metrics_policy():
     config = copy.deepcopy(gconfig)
-    config["policies"]["metrics"] = MetricsPolicy(report_size_limit=1)
+    BUCKET_COUNT = 3
+    config["policies"]["metrics"] = MetricsPolicy(latency_columns=BUCKET_COUNT)
+    # Enable dynamic config to apply config-level metrics policy
+    config["config_provider"] = ConfigProvider("./dyn_config.yml")
     client = aerospike.client(config)
-    with pytest.raises(e.ClientError):
-        client.enable_metrics()
+    client.enable_metrics()
+    time.sleep(2)
+    client.disable_metrics()
+
+    metrics_log_filenames = glob.glob("./metrics-*.log")
+    with open(metrics_log_filenames[0]) as f:
+        # Second line has data
+        f.readline()
+        data = f.readline()
+    regex = re.search(r'conn\[(([0-9]|,)+)\],', data)
+    buckets = regex.group(1)
+    # <bucket>,<bucket>,...
+    bucket_count = len(buckets.split(','))
+    assert bucket_count == BUCKET_COUNT
+
     client.close()
+    for item in metrics_log_filenames:
+        os.remove(item)
 
 
 def test_setting_invalid_metrics_policy():
