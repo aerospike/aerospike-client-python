@@ -278,6 +278,12 @@ class TestMetrics:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
 
+    # TODO: comment
+    def test_enable_metrics_with_invalid_report_size_limit(self):
+        policy = MetricsPolicy(report_size_limit=1)
+        with pytest.raises(e.ClientError):
+            self.as_connection.enable_metrics(policy=policy)
+
     def test_disable_metrics(self):
         retval = self.as_connection.disable_metrics()
         assert retval is None
