@@ -751,8 +751,6 @@ SYS_CLEANUP:
     Py_DECREF(py_sys);
 GLOBAL_HOSTS_CLEANUP_ON_ERROR:
     Py_DECREF(py_global_hosts);
-DICT_VALID_KEYS_CLEANUP_ON_ERROR:
-    Py_DECREF(py_client_config_valid_keys);
 MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_aerospike_module);
     return NULL;
