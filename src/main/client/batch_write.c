@@ -168,6 +168,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
     if (!is_pyobj_correct_as_helpers_type(py_obj, "batch.records",
                                           "BatchRecords")) {
+        as_error_update(
+            err, AEROSPIKE_ERR_PARAM,
+            "py_obj must be a aerospike_helpers.batch.records.BatchRecords "
+            "instance");
         goto CLEANUP4;
     }
 
