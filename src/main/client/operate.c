@@ -833,6 +833,16 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
                                                 PyObject *py_meta,
                                                 PyObject *py_policy)
 {
+    if (!self || !self->as) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto RAISE_EXCEPTION;
+    }
+    if (!self->is_conn_16) {
+        as_error_update(err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto RAISE_EXCEPTION;
+    }
+
     int i = 0;
     long operation;
     long return_type = -1;
@@ -863,7 +873,6 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
 
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
-    CHECK_CONNECTED(err);
 
     if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -918,6 +927,7 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
+RAISE_EXCEPTION:
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);
         return NULL;
@@ -958,8 +968,6 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
                                     &py_policy) == false) {
         return NULL;
     }
-
-    CHECK_CONNECTED(&err);
 
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -1234,8 +1242,6 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    CHECK_CONNECTED(&err);
-
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -1285,8 +1291,6 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    CHECK_CONNECTED(&err);
-
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -1333,8 +1337,6 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    CHECK_CONNECTED(&err);
-
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -1379,8 +1381,6 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
                                     &py_policy) == false) {
         return NULL;
     }
-
-    CHECK_CONNECTED(&err);
 
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
         goto CLEANUP;
