@@ -326,7 +326,7 @@ class Transaction:
 
 @final
 class ConfigProvider:
-    def __init__(self, path: str, interval: int = 60) -> None: ...
+    def __new__(cls, path: str, interval: int = 60) -> ConfigProvider: ...
     path: str
     interval: int
 
