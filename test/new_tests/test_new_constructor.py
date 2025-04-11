@@ -249,7 +249,7 @@ def test_setting_invalid_metrics_policy():
     config["policies"]["metrics"] = MetricsPolicy(),
     with pytest.raises(e.ParamError) as excinfo:
         aerospike.client(config)
-    assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy type. But "\
+    assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy class instance. But "\
         "a tuple was received instead"
 
 
