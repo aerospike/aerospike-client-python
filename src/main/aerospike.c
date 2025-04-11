@@ -617,6 +617,8 @@ static PyObject *py_set_new_from_str_list(const char *const *first_key_ref)
         curr_key_ref++;
     }
 
+    return py_valid_keys;
+
 CLEANUP_SET_ON_ERROR:
     Py_DECREF(py_valid_keys);
 error:
