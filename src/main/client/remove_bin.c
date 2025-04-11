@@ -104,13 +104,14 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
     }
 
+    // TODO: already have a helper function to parse this
     if (py_meta && PyDict_Check(py_meta)) {
         PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
         PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
 
         if (py_ttl) {
             if (PyLong_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyLong_AsLong(py_ttl);
+                rec.ttl = (uint32_t)PyLong_AsUnsignedLong(py_ttl);
                 if ((uint32_t)-1 == rec.ttl && PyErr_Occurred()) {
                     as_error_update(
                         err, AEROSPIKE_ERR_PARAM,

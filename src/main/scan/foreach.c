@@ -78,7 +78,7 @@ static bool each_result(const as_val *val, void *udata)
     if (data->partition_scan) {
         // Build Python Function Arguments
         py_arglist = PyTuple_New(2);
-        PyTuple_SetItem(py_arglist, 0, PyLong_FromLong(part_id));
+        PyTuple_SetItem(py_arglist, 0, PyLong_FromUnsignedLong(part_id));
         PyTuple_SetItem(py_arglist, 1, py_result);
     }
     else {

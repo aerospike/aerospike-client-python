@@ -688,11 +688,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_shm_max_nodes =
             PyDict_GetItemString(py_shm, "shm_max_nodes");
         if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
-            config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
+            config.shm_max_nodes = PyLong_AsUnsignedLong(py_shm_max_nodes);
         }
         py_shm_max_nodes = PyDict_GetItemString(py_shm, "max_nodes");
         if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
-            config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
+            config.shm_max_nodes = PyLong_AsUnsignedLong(py_shm_max_nodes);
         }
 
         // This does not match documentation (wrong name and location in dict),
@@ -700,11 +700,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_shm_max_namespaces =
             PyDict_GetItemString(py_shm, "shm_max_namespaces");
         if (py_shm_max_namespaces && PyLong_Check(py_shm_max_namespaces)) {
-            config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
+            config.shm_max_namespaces =
+                PyLong_AsUnsignedLong(py_shm_max_namespaces);
         }
         py_shm_max_namespaces = PyDict_GetItemString(py_shm, "max_namespaces");
         if (py_shm_max_namespaces && PyLong_Check(py_shm_max_namespaces)) {
-            config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
+            config.shm_max_namespaces =
+                PyLong_AsUnsignedLong(py_shm_max_namespaces);
         }
 
         // This does not match documentation (wrong name and location in dict),
@@ -714,14 +716,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (py_shm_takeover_threshold_sec &&
             PyLong_Check(py_shm_takeover_threshold_sec)) {
             config.shm_takeover_threshold_sec =
-                PyLong_AsLong(py_shm_takeover_threshold_sec);
+                PyLong_AsUnsignedLong(py_shm_takeover_threshold_sec);
         }
         py_shm_takeover_threshold_sec =
             PyDict_GetItemString(py_shm, "takeover_threshold_sec");
         if (py_shm_takeover_threshold_sec &&
             PyLong_Check(py_shm_takeover_threshold_sec)) {
             config.shm_takeover_threshold_sec =
-                PyLong_AsLong(py_shm_takeover_threshold_sec);
+                PyLong_AsUnsignedLong(py_shm_takeover_threshold_sec);
         }
 
         PyObject *py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
@@ -872,7 +874,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_max_threads =
             PyDict_GetItemString(py_policies, "max_threads");
         if (py_max_threads && PyLong_Check(py_max_threads)) {
-            config.max_conns_per_node = PyLong_AsLong(py_max_threads);
+            config.max_conns_per_node = PyLong_AsUnsignedLong(py_max_threads);
         }
 
         // This does not match documentation (should not be in policies),
@@ -880,7 +882,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_thread_pool_size =
             PyDict_GetItemString(py_policies, "thread_pool_size");
         if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
-            config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
+            config.thread_pool_size =
+                PyLong_AsUnsignedLong(py_thread_pool_size);
         }
 
         /*
@@ -900,7 +903,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_login_timeout =
             PyDict_GetItemString(py_policies, "login_timeout_ms");
         if (py_login_timeout && PyLong_Check(py_login_timeout)) {
-            config.login_timeout_ms = PyLong_AsLong(py_login_timeout);
+            config.login_timeout_ms = PyLong_AsUnsignedLong(py_login_timeout);
         }
 
         PyObject *py_auth_mode = PyDict_GetItemString(py_policies, "auth_mode");
@@ -930,26 +933,27 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_thread_pool_size =
         PyDict_GetItemString(py_config, "thread_pool_size");
     if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
-        config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
+        config.thread_pool_size = PyLong_AsUnsignedLong(py_thread_pool_size);
     }
 
     // max_threads (backward compatibility)
     PyObject *py_max_threads = PyDict_GetItemString(py_config, "max_threads");
     if (py_max_threads && PyLong_Check(py_max_threads)) {
-        config.max_conns_per_node = PyLong_AsLong(py_max_threads);
+        config.max_conns_per_node = PyLong_AsUnsignedLong(py_max_threads);
     }
 
     PyObject *py_min_conns_per_node =
         PyDict_GetItemString(py_config, "min_conns_per_node");
     if (py_min_conns_per_node && PyLong_Check(py_min_conns_per_node)) {
-        config.min_conns_per_node = PyLong_AsLong(py_min_conns_per_node);
+        config.min_conns_per_node =
+            PyLong_AsUnsignedLong(py_min_conns_per_node);
     }
 
     // max_conns_per_node
     PyObject *py_max_conns =
         PyDict_GetItemString(py_config, "max_conns_per_node");
     if (py_max_conns && PyLong_Check(py_max_conns)) {
-        config.max_conns_per_node = PyLong_AsLong(py_max_conns);
+        config.max_conns_per_node = PyLong_AsUnsignedLong(py_max_conns);
     }
 
     // max_error_rate
@@ -957,7 +961,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyDict_GetItemString(py_config, "max_error_rate");
     Py_XINCREF(py_max_error_rate);
     if (py_max_error_rate && PyLong_Check(py_max_error_rate)) {
-        config.max_error_rate = PyLong_AsLong(py_max_error_rate);
+        config.max_error_rate = PyLong_AsUnsignedLong(py_max_error_rate);
     }
     Py_XDECREF(py_max_error_rate);
 
@@ -966,7 +970,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyDict_GetItemString(py_config, "error_rate_window");
     Py_XINCREF(py_error_rate_window);
     if (py_error_rate_window && PyLong_Check(py_error_rate_window)) {
-        config.error_rate_window = PyLong_AsLong(py_error_rate_window);
+        config.error_rate_window = PyLong_AsUnsignedLong(py_error_rate_window);
     }
     Py_XDECREF(py_error_rate_window);
 
@@ -974,7 +978,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_connect_timeout =
         PyDict_GetItemString(py_config, "connect_timeout");
     if (py_connect_timeout && PyLong_Check(py_connect_timeout)) {
-        config.conn_timeout_ms = PyLong_AsLong(py_connect_timeout);
+        config.conn_timeout_ms = PyLong_AsUnsignedLong(py_connect_timeout);
     }
 
     //Whether to utilize shared connection
@@ -997,20 +1001,20 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_compression_threshold =
         PyDict_GetItemString(py_config, "compression_threshold");
     if (py_compression_threshold && PyLong_Check(py_compression_threshold)) {
-        int compression_value = PyLong_AsLong(py_compression_threshold);
-        if (compression_value >= 0) {
-            config.policies.write.compression_threshold = compression_value;
+        unsigned long compression_value =
+            PyLong_AsUnsignedLong(py_compression_threshold);
+        if (compression_value == (unsigned long)-1 && PyErr_Occurred()) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
         else {
-            error_code = INIT_COMPRESSION_ERR;
-            goto CONSTRUCTOR_ERROR;
+            config.policies.write.compression_threshold = compression_value;
         }
     }
 
     PyObject *py_tend_interval =
         PyDict_GetItemString(py_config, "tend_interval");
     if (py_tend_interval && PyLong_Check(py_tend_interval)) {
-        config.tender_interval = PyLong_AsLong(py_tend_interval);
+        config.tender_interval = PyLong_AsUnsignedLong(py_tend_interval);
     }
 
     PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
@@ -1040,7 +1044,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_max_socket_idle = NULL;
     py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
     if (py_max_socket_idle && PyLong_Check(py_max_socket_idle)) {
-        long max_socket_idle = PyLong_AsLong(py_max_socket_idle);
+        unsigned long max_socket_idle =
+            PyLong_AsUnsignedLong(py_max_socket_idle);
         if (max_socket_idle >= 0) {
             config.max_socket_idle = (uint32_t)max_socket_idle;
         }
@@ -1145,6 +1150,8 @@ CONSTRUCTOR_ERROR:
     }
 
     raise_exception(&constructor_err);
+
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     return -1;
 }
 
