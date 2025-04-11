@@ -221,25 +221,27 @@ def test_setting_metrics_policy():
     # Enable dynamic config to apply config-level metrics policy
     config["policies"]["metrics"] = MetricsPolicy(latency_columns=BUCKET_COUNT)
     config["config_provider"] = ConfigProvider("./dyn_config.yml")
+    client = aerospike.client(config)
     try:
-        client = aerospike.client(config)
         client.enable_metrics()
         time.sleep(2)
         client.disable_metrics()
 
         metrics_log_filenames = glob.glob(METRICS_LOG_FILES)
-        with open(metrics_log_filenames[0]) as f:
-            # Second line has data
-            f.readline()
-            data = f.readline()
-        regex = re.search(pattern=r"conn\[([0-9]|,)+\]", string=data)
-        buckets = regex.group(0)
-        # <bucket>,<bucket>,...
-        bucket_count = len(buckets.split(','))
-        assert bucket_count == BUCKET_COUNT
+        try:
+            with open(metrics_log_filenames[0]) as f:
+                # Second line has data
+                f.readline()
+                data = f.readline()
+            regex = re.search(pattern=r"conn\[([0-9]|,)+\]", string=data)
+            buckets = regex.group(0)
+            # <bucket>,<bucket>,...
+            bucket_count = len(buckets.split(','))
+            assert bucket_count == BUCKET_COUNT
+        finally:
+            for item in metrics_log_filenames:
+                os.remove(item)
     finally:
-        for item in metrics_log_filenames:
-            os.remove(item)
         client.close()
 
 
