@@ -595,7 +595,7 @@ const char *const client_config_shm_valid_keys[] = {
 
 // Return NULL on exception
 // Returns strong reference to new Python dictionary
-static PyObject *py_set_new_from_str_list(const char **first_key_ref)
+static PyObject *py_set_new_from_str_list(const char *const *first_key_ref)
 {
     PyObject *py_valid_keys = PySet_New(NULL);
     if (py_valid_keys == NULL) {
