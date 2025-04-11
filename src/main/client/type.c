@@ -608,7 +608,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     while (PyDict_Next(py_config, &pos, &py_config_key, &py_config_value)) {
         const char *config_key = PyUnicode_AsUTF8(py_config_key);
         int res = PySet_Contains(py_valid_keys, py_config_key);
-        if (res != -1) {
+        if (res != 1) {
             Py_DECREF(py_valid_keys);
             if (res == 0) {
                 as_error_update(&constructor_err, AEROSPIKE_ERR_CLIENT,
