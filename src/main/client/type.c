@@ -602,7 +602,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     else if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
         as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                         "config_provider must be an "
-                        "aerospike.ConfigProvider class instance");
+                        "aerospike.ConfigProvider class instance. But "
+                        "a %s was received instead",
+                        py_obj_config_provider->ob_type->tp_name);
         goto RAISE_EXCEPTION_WITH_AS_ERROR;
     }
     else {
@@ -612,9 +614,10 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         // because the latter is embedded inside as_config
         AerospikeConfigProvider *py_config_provider =
             (AerospikeConfigProvider *)py_obj_config_provider;
+
         config.config_provider.interval = py_config_provider->interval;
         // This method creates a new copy of the string at py_config_provider->provider->path
-        // so it doesn't depend on the lifetime of the aerospike.ConfigProvider object in Python
+        // so that the as_config object doesn't depend on the lifetime of the aerospike.ConfigProvider object in Python
         as_config_provider_set_path(&config, py_config_provider->path);
     }
 
@@ -937,7 +940,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto CONSTRUCTOR_ERROR;
         }
 
-        // TODO: mem leak from as_config?
+        // See comment at end of set_subpolicies() for why we process metrics policy here
         PyObject *py_metrics_policy_option_name =
             PyUnicode_FromString("metrics");
         if (py_metrics_policy_option_name == NULL) {
@@ -957,11 +960,12 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
                                                   "metrics",
                                                   "MetricsPolicy") == false) {
-            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                            "metrics must be an "
-                            "aerospike_helpers.metrics.MetricsPolicy type. But "
-                            "a %s was received instead",
-                            py_obj_metrics_policy->ob_type->tp_name);
+            as_error_update(
+                &constructor_err, AEROSPIKE_ERR_PARAM,
+                "metrics must be an "
+                "aerospike_helpers.metrics.MetricsPolicy class instance. But "
+                "a %s was received instead",
+                py_obj_metrics_policy->ob_type->tp_name);
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
@@ -1224,6 +1228,8 @@ RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
 
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
+    // as_config_destroy() isn't exposed, so we clean up this instead
+    // TODO: need to free all malloc'd fields of as_config
     if (config.config_provider.path) {
         free(config.config_provider.path);
     }
