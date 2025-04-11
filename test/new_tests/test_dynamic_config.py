@@ -16,9 +16,6 @@ class TestDynamicConfig:
         with pytest.raises(AttributeError):
             provider.interval = 10
 
-        # We should be able to reinitialize with no issues
-        provider.__init__("path1")
-
     @pytest.fixture
     def functional_test_setup(self):
         config = TestBaseClass.get_connection_config()

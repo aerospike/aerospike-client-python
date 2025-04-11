@@ -7,14 +7,9 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
     AerospikeConfigProvider *self =
         (AerospikeConfigProvider *)type->tp_alloc(type, 0);
     if (self == NULL) {
-        return NULL;
+        goto error;
     }
-    return (PyObject *)self;
-}
 
-static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
-                                        PyObject *args, PyObject *kwds)
-{
     static char *kwlist[] = {"path", "interval", NULL};
     const char *path = NULL;
     unsigned long interval = AS_CONFIG_PROVIDER_INTERVAL_DEFAULT;
@@ -31,18 +26,12 @@ static int AerospikeConfigProvider_init(AerospikeConfigProvider *self,
         goto error;
     }
 
-    // Object could've been initialized before
-    if (self->path) {
-        free(self->path);
-    }
-
     self->path = strdup(path);
     self->interval = interval;
 
-    return 0;
-
+    return (PyObject *)self;
 error:
-    return -1;
+    return NULL;
 }
 
 static PyObject *AerospikeConfigProvider_get_path(AerospikeConfigProvider *self,
@@ -88,7 +77,6 @@ PyTypeObject AerospikeConfigProvider_Type = {
     .tp_itemsize = 0,
     .tp_flags = Py_TPFLAGS_DEFAULT,
     .tp_new = AerospikeConfigProvider_new,
-    .tp_init = (initproc)AerospikeConfigProvider_init,
     .tp_dealloc = (destructor)AerospikeConfigProvider_dealloc,
     .tp_getset = AerospikeConfigProvider_getsetters};
 
