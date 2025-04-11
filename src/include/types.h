@@ -108,3 +108,4 @@ typedef struct {
 } AerospikeTransaction;
 
 extern PyTypeObject AerospikeTransaction_Type;
+extern PyTypeObject AerospikeClient_Type;

@@ -547,7 +547,7 @@ static struct type_name_to_creation_method py_module_types[] = {
     // 2. We don't want to deal with extracting an object's __name__ from a Unicode object.
     // We have to make sure the Unicode object lives as long as we need its internal buffer
     // It's easier to just use a C string directly
-    {"Client", AerospikeClient_Ready},
+    // {"Client", AerospikeClient_Type},
     {"Query", AerospikeQuery_Ready},
     {"Scan", AerospikeScan_Ready},
     {"KeyOrderedDict", AerospikeKeyOrderedDict_Ready},
@@ -597,6 +597,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             Py_DECREF(py_type);
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
+    }
+
+    int retval = PyModule_AddType(py_aerospike_module, &AerospikeClient_Type);
+    if (retval == -1) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
     /*
