@@ -583,7 +583,13 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_config_key = NULL, *py_config_value = NULL;
     Py_ssize_t pos = 0;
 
-    PyObject *py_aerospike_module = PyImport_GetModule("aerospike");
+    PyObject *py_aerospike_module_name = PyUnicode_FromString("aerospike");
+    if (!py_aerospike_module_name) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+    PyObject *py_aerospike_module =
+        PyImport_GetModule(py_aerospike_module_name);
+    Py_DECREF(py_aerospike_module_name);
     if (py_aerospike_module == NULL) {
         if (PyErr_Occurred()) {
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
