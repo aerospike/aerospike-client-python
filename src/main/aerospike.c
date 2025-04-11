@@ -602,7 +602,7 @@ static PyObject *py_set_new_from_str_list(const char *const *first_key_ref)
         goto error;
     }
 
-    const char **curr_key_ref = first_key_ref;
+    const char *const *curr_key_ref = first_key_ref;
     while (*curr_key_ref) {
         PyObject *py_key = PyUnicode_FromString(*curr_key_ref);
         if (py_key == NULL) {
