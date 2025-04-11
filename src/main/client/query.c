@@ -589,10 +589,10 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
 
     if (retObj) {
         PyObject *py_longobject = NULL;
-        py_longobject = PyLong_FromUnsignedLong(job_info.progress_pct);
+        py_longobject = PyLong_FromLong(job_info.progress_pct);
         PyDict_SetItemString(retObj, PROGRESS_PCT, py_longobject);
         Py_XDECREF(py_longobject);
-        py_longobject = PyLong_FromUnsignedLong(job_info.records_read);
+        py_longobject = PyLong_FromLong(job_info.records_read);
         PyDict_SetItemString(retObj, RECORDS_READ, py_longobject);
         Py_XDECREF(py_longobject);
         py_longobject = PyLong_FromLong(job_info.status);

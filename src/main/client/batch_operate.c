@@ -230,12 +230,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
     }
     else {
-        unsigned long ttl = PyLong_AsUnsignedLong(py_ttl);
-        if (ttl == (unsigned long)-1 && PyErr_Occurred()) {
-            // We assume br_instance = NULL
-            goto CLEANUP;
-        }
-        ops.ttl = (uint32_t)ttl;
+        ops.ttl = (uint32_t)PyLong_AsLong(py_ttl);
     }
 
     // import batch_records helper

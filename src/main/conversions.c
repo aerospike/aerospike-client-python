@@ -1254,20 +1254,22 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
     else if (AS_Matches_Classname(py_obj, AS_CDT_INFINITE_NAME)) {
         *val = (as_val *)as_val_reserve(&as_cmp_inf);
     }
-    else if (PyFloat_Check(py_obj)) {
-        double d = PyFloat_AsDouble(py_obj);
-        *val = (as_val *)as_double_new(d);
-    }
     else {
-        as_bytes *bytes;
-        GET_BYTES_POOL(bytes, static_pool, err);
-        if (err->code == AEROSPIKE_OK) {
-            if (serialize_based_on_serializer_policy(self, serializer_type,
-                                                     &bytes, py_obj,
-                                                     err) != AEROSPIKE_OK) {
-                return err->code;
+        if (PyFloat_Check(py_obj)) {
+            double d = PyFloat_AsDouble(py_obj);
+            *val = (as_val *)as_double_new(d);
+        }
+        else {
+            as_bytes *bytes;
+            GET_BYTES_POOL(bytes, static_pool, err);
+            if (err->code == AEROSPIKE_OK) {
+                if (serialize_based_on_serializer_policy(self, serializer_type,
+                                                         &bytes, py_obj,
+                                                         err) != AEROSPIKE_OK) {
+                    return err->code;
+                }
+                *val = (as_val *)bytes;
             }
-            *val = (as_val *)bytes;
         }
     }
 
@@ -1352,7 +1354,7 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
 
                 if (py_ttl) {
                     if (PyLong_Check(py_ttl)) {
-                        rec->ttl = (uint32_t)PyLong_AsUnsignedLong(py_ttl);
+                        rec->ttl = (uint32_t)PyLong_AsLong(py_ttl);
                         if (rec->ttl == (uint32_t)-1 && PyErr_Occurred()) {
                             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                                 as_error_update(
@@ -2254,8 +2256,8 @@ as_status metadata_to_pyobject(as_error *err, const as_record *rec,
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "record is null");
     }
 
-    PyObject *py_ttl = PyLong_FromUnsignedLong(rec->ttl);
-    PyObject *py_gen = PyLong_FromUnsignedLong(rec->gen);
+    PyObject *py_ttl = PyLong_FromLong(rec->ttl);
+    PyObject *py_gen = PyLong_FromLong(rec->gen);
 
     PyObject *py_meta = PyDict_New();
     PyDict_SetItemString(py_meta, "ttl", py_ttl);
@@ -2280,7 +2282,7 @@ void error_to_pyobject(const as_error *err, PyObject **obj)
     }
     PyObject *py_line = NULL;
     if (err->line > 0) {
-        py_line = PyLong_FromUnsignedLong(err->line);
+        py_line = PyLong_FromLong(err->line);
     }
     else {
         Py_INCREF(Py_None);
@@ -2309,7 +2311,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 
     as_bin *binop_bin = &binop->bin;
     if (PyLong_Check(py_value)) {
-        long val = PyLong_AsLong(py_value);
+        int val = PyLong_AsLong(py_value);
         as_integer_init((as_integer *)&binop_bin->value, val);
         binop_bin->valuep = &binop_bin->value;
     }
@@ -2436,7 +2438,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
         uint16_t gen = 0;
         if (py_ttl) {
             if (PyLong_Check(py_ttl)) {
-                ttl = (uint32_t)PyLong_AsUnsignedLong(py_ttl);
+                ttl = (uint32_t)PyLong_AsLong(py_ttl);
             }
             else {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
