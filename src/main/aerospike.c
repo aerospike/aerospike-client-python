@@ -599,7 +599,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
     }
 
-    int retval = PyModule_AddType(py_aerospike_module, &AerospikeClient_Type);
+    retval = PyModule_AddType(py_aerospike_module, &AerospikeClient_Type);
     if (retval == -1) {
         goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
