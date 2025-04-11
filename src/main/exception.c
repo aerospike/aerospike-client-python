@@ -431,7 +431,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         }
     }
 
-    const char *extra_attrs = {"key", "bin", "module", "func", "name"};
+    const char *extra_attrs[] = {"key", "bin", "module", "func", "name"};
     PyObject *py_extra_attrs[] = {py_as_key, py_bin, py_module, py_func,
                                   py_name};
     for (unsigned long i = 0;
