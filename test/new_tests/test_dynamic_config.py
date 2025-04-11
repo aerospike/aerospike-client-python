@@ -19,7 +19,7 @@ class TestDynamicConfig:
     def test_config_provider_class_invalid_args(self):
         with pytest.raises(ValueError) as excinfo:
             aerospike.ConfigProvider("path", interval=2**32)
-        assert excinfo.value.args[0] == f"{2**32} is too large for an unsigned 32-bit integer"
+        assert excinfo.value.args[0] == "interval is too large for an unsigned 32-bit integer"
 
     @pytest.fixture
     def functional_test_setup(self):
@@ -66,4 +66,5 @@ class TestDynamicConfig:
         config["config_provider"] = 0
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
-        assert excinfo.value.msg == "config_provider must be an aerospike.ConfigProvider class instance"
+        assert excinfo.value.msg == "config_provider must be an aerospike.ConfigProvider class instance. "\
+            "But a int was received instead"
