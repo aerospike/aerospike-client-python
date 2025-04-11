@@ -413,6 +413,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **txn_roll** (:class:`dict`)
                 Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
                 Contains :ref:`aerospike_batch_policies`.
+            * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
+                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override transaction-level metrics policies.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
