@@ -1248,7 +1248,13 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
     Py_DECREF(py_list);
 
 CLEANUP:
-    return py_result;
+    if (py_result) {
+        Py_DECREF(py_result);
+        return PyLong_FromLong(0);
+    }
+    else {
+        return NULL;
+    }
 }
 
 /**
