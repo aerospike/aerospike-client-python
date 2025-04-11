@@ -26,7 +26,7 @@
 #include "exception_types.h"
 #include "macros.h"
 
-static PyObject *py_module;
+static PyObject *py_exc_module;
 
 #define SUBMODULE_NAME "exception"
 
@@ -275,8 +275,8 @@ PyObject *AerospikeException_New(void)
                                            NULL,
                                            NULL,
                                            NULL};
-    py_module = PyModule_Create(&moduledef);
-    if (py_module == NULL) {
+    py_exc_module = PyModule_Create(&moduledef);
+    if (py_exc_module == NULL) {
         return NULL;
     }
 
@@ -291,7 +291,7 @@ PyObject *AerospikeException_New(void)
         PyObject *py_base_class = NULL;
         if (exception_def.base_class_name != NULL) {
             py_base_class = PyObject_GetAttrString(
-                py_module, exception_def.base_class_name);
+                py_exc_module, exception_def.base_class_name);
             if (py_base_class == NULL) {
                 goto MODULE_CLEANUP_ON_ERROR;
             }
@@ -346,7 +346,7 @@ PyObject *AerospikeException_New(void)
             goto EXC_CLASS_CLEANUP_ON_ERROR;
         }
 
-        retval = PyModule_AddObject(py_module, exception_def.class_name,
+        retval = PyModule_AddObject(py_exc_module, exception_def.class_name,
                                     py_exception_class);
         if (retval == -1) {
             goto EXC_CLASS_CLEANUP_ON_ERROR;
@@ -358,10 +358,10 @@ PyObject *AerospikeException_New(void)
         goto MODULE_CLEANUP_ON_ERROR;
     }
 
-    return py_module;
+    return py_exc_module;
 
 MODULE_CLEANUP_ON_ERROR:
-    Py_DECREF(py_module);
+    Py_DECREF(py_exc_module);
     return NULL;
 }
 
@@ -369,7 +369,7 @@ void remove_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
+    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         Py_DECREF(py_value);
@@ -407,7 +407,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
 {
     PyObject *py_key = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
+    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
     bool found = false;
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_exc_class)) {
@@ -470,7 +470,7 @@ PyObject *raise_exception_old(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
+    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
     bool found = false;
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
