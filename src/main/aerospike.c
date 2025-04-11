@@ -595,16 +595,16 @@ const char *const client_config_shm_valid_keys[] = {
 
 // Return NULL on exception
 // Returns strong reference to new Python dictionary
-static PyObject *py_set_new_from_str_list(const char *const first_key)
+static PyObject *py_set_new_from_str_list(const char **first_key_ref)
 {
     PyObject *py_valid_keys = PySet_New(NULL);
     if (py_valid_keys == NULL) {
         goto error;
     }
 
-    const char *curr_key = first_key;
-    while (curr_key) {
-        PyObject *py_key = PyUnicode_FromString(curr_key);
+    const char **curr_key_ref = first_key_ref;
+    while (*curr_key_ref) {
+        PyObject *py_key = PyUnicode_FromString(*curr_key_ref);
         if (py_key == NULL) {
             goto CLEANUP_SET_ON_ERROR;
         }
@@ -614,7 +614,7 @@ static PyObject *py_set_new_from_str_list(const char *const first_key)
         if (result == -1) {
             goto CLEANUP_SET_ON_ERROR;
         }
-        curr_key++;
+        curr_key_ref++;
     }
 
 CLEANUP_SET_ON_ERROR:
@@ -642,7 +642,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     // just use a Python set so we don't need to implement a hashset in C
     PyObject *py_client_config_valid_keys =
-        py_set_new_from_str_list(client_config_valid_keys[0]);
+        py_set_new_from_str_list(client_config_valid_keys);
     if (py_client_config_valid_keys == NULL) {
         goto MODULE_CLEANUP_ON_ERROR;
     }
