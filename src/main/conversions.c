@@ -1093,7 +1093,8 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
         retval = false;
         goto CLEANUP2;
     }
-    char *pyobj_submodule = strtok(NULL, delimiters);
+    // Get rest of submodule after parent aerospike_helpers package
+    char *pyobj_submodule = strchr(module_name, '.') + 1;
     if (pyobj_submodule) {
         // Python object belongs in a aerospike_helpers submodule
         if (!expected_submodule_name) {
