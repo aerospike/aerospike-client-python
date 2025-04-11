@@ -1246,8 +1246,6 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
     py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
                                                py_meta, py_policy);
     Py_DECREF(py_list);
-    // We don't use the return value of operate()'s invoke method
-    Py_XDECREF(py_result);
 
 CLEANUP:
     return py_result;
