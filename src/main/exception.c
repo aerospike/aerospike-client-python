@@ -470,7 +470,7 @@ PyObject *raise_exception_old(as_error *err)
                 }
                 // If the line is 0, set it as None
                 if (err->line > 0) {
-                    py_attr = PyLong_FromLong(err->line);
+                    py_attr = PyLong_FromUnsignedLong(err->line);
                     PyObject_SetAttrString(py_value, "line", py_attr);
                     Py_DECREF(py_attr);
                 }
