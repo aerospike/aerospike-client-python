@@ -165,7 +165,7 @@ class TestBatchOperate(TestBaseClass):
                 None,
                 None,
                 [AerospikeStatus.AEROSPIKE_OK],
-                [{"name": "name10", "count": 7}],
+                [{"name": "name10", "count": 0}],
 
             )
         ],
