@@ -887,6 +887,9 @@ class TestGetPut:
         # It makes sure that we can insert integers larger than 32 bits in Windows
         key = ("test", "demo", 123)
         self.as_connection.put(key, {"a": 2**32})
+        # and that we can also retrieve integers larger than 32 bits
+        _, _, bins = self.as_connection.get(key)
+        assert bins["a"] == 2**32
 
         # Cleanup
         self.as_connection.remove(key)
