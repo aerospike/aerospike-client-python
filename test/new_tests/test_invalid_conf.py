@@ -51,8 +51,9 @@ class TestInvalidClientConfig(object):
         assert "Deserializer must be callable" in err.value.msg
 
     def test_negative_threshold_value(self):
-        with pytest.raises(OverflowError):
+        with pytest.raises(e.ParamError) as err:
             aerospike.client({"hosts": [("localhost", 3000)], "compression_threshold": -1})
+        assert "Compression value must not be negative" in err.value.msg
 
     @pytest.mark.parametrize("policy", ["read", "write", "operate", "batch", "scan", "query", "apply", "remove"])
     @pytest.mark.parametrize(
