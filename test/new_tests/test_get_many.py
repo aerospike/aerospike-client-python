@@ -10,6 +10,7 @@ except ImportError:
 
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers.expressions.base import BinExists
 
 
 class TestGetMany:
@@ -261,3 +262,10 @@ class TestGetMany:
         key = ("test1", "demo", 1)
         with pytest.raises(e.NamespaceNotFound):
             key, _, _ = self.as_connection.get(key)
+
+    def test_filter(self):
+        key = ("test1", "demo", 1)
+        exp = BinExists("float_value").compile()
+        res = self.as_connection.get_many(self.keys, policy={"expressions": exp})
+        import pprint
+        pprint.pprint(res)

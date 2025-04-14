@@ -12,6 +12,7 @@ except ImportError:
 from .test_base_class import TestBaseClass
 
 import aerospike
+from aerospike_helpers.expressions.base import BinExists
 
 KEY_TYPE_ERROR_MSG = "Keys should be specified as a list or tuple."
 
@@ -352,3 +353,11 @@ class TestSelectMany(object):
         bins = ["name"]
         with pytest.raises(e.ParamError):
             self.as_connection.select_many(self.keys, bins, policy)
+
+    def test_filter(self):
+        key = ("test", "demo", 1)
+        exp = BinExists("float_value").compile()
+        policy = {"expressions": exp}
+        res = self.as_connection.select_many(self.keys, bins=["float_value"], policy=policy)
+        import pprint
+        pprint.pprint(res)

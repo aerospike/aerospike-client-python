@@ -12,6 +12,7 @@ from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
 
+from aerospike_helpers.expressions.base import BinExists
 
 @pytest.mark.usefixtures("as_connection")
 class TestExistsMany:
@@ -274,3 +275,14 @@ class TestExistsMany:
             self.as_connection.exists_many()
 
         assert "argument 'keys' (pos 1)" in str(typeError.value)
+
+    def test_filter(self, put_data):
+        self.keys = [("test", "demo", bytearray([1, 2, 3]))]
+        for key in self.keys:
+            put_data(self.as_connection, key, {"byte": "array"})
+
+        exp = BinExists("asdf").compile()
+        policy = {"expressions": exp}
+        res = self.as_connection.exists_many(self.keys, policy=policy)
+        import pprint
+        pprint.pprint(res)
