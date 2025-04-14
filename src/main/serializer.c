@@ -231,6 +231,13 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
         char *bytes_val_p = (char *)bytes_pointer->value;
         py_value =
             PyUnicode_FromStringAndSize(bytes_val_p, as_bytes_size(*bytes));
+        if (!py_value) {
+            PyErr_Clear();
+            as_error_update(error_p, AEROSPIKE_ERR_CLIENT,
+                            "Failed to convert bytes to Python unicode object");
+            Py_DECREF(py_arglist);
+            goto CLEANUP;
+        }
         if (PyTuple_SetItem(py_arglist, 0, py_value) != 0) {
             Py_DECREF(py_arglist);
             goto CLEANUP;

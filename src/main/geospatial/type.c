@@ -160,20 +160,24 @@ AerospikeGeospatial *self;
     snprintf(new_repr_str, strlen(initresult_str) + 3, "\'%s\'",
              initresult_str);
 
-CLEANUP:
+    py_return = PyUnicode_FromString(new_repr_str);
+    if (!py_return) {
+        PyErr_Clear();
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to parse GeoJSON string into a unicode object");
+    }
 
+CLEANUP:
+    Py_XDECREF(initresult);
+    if (new_repr_str) {
+        free(new_repr_str);
+    }
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
-        if (new_repr_str) {
-            free(new_repr_str);
-        }
         return NULL;
     }
 
-    py_return = PyUnicode_FromString(new_repr_str);
-    Py_XDECREF(initresult);
-    free(new_repr_str);
     return py_return;
 }
 
