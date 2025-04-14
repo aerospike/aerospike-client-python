@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_record.h>
 #include <aerospike/as_batch.h>
+#include <aerospike/as_log_macros.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -216,6 +217,8 @@ CLEANUP:
 PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
                                    PyObject *kwds)
 {
+    as_log_warn("get_many() is deprecated");
+
     // Python Function Arguments
     PyObject *py_keys = NULL;
     PyObject *py_policy = NULL;
