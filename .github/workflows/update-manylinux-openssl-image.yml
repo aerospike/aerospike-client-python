@@ -15,7 +15,7 @@ jobs:
       matrix:
         arch-and-runner-os: [
           [x86_64, ubuntu-24.04],
-          [aarch64, aerospike_arm_runners_2]
+          [aarch64, ubuntu-22.04-arm]
         ]
       fail-fast: false
 

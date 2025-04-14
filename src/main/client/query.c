@@ -469,7 +469,7 @@ CLEANUP:
         return NULL;
     }
 
-    return PyLong_FromLong(query_id);
+    return PyLong_FromUnsignedLongLong(query_id);
 }
 
 /**
