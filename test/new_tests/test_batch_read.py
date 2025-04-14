@@ -59,7 +59,6 @@ class TestBatchRead(TestBaseClass):
     def test_batch_read_with_policy(self, bins):
         # No record will satisfy this expression condition
         expr = exp.Eq(exp.IntBin("count"), 99).compile()
-        # TODO: type stub isn't correct
         res: BatchRecords = self.as_connection.batch_read(self.keys, bins=bins, policy={"expressions": expr})
         assert res.result == 0
         for i, batch_rec in enumerate(res.batch_records):
