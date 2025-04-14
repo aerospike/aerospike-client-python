@@ -893,5 +893,6 @@ class TestGetPut:
 
     def test_put_invalid_type(self):
         key = ("test", "demo", 123)
-        with pytest.raises(e.ClientError):
+        with pytest.raises(e.ClientError) as excinfo:
             self.as_connection.put(key, {"a": aerospike.CDTInfinite()})
+        assert excinfo.value.msg.startswith("Invalid value type")
