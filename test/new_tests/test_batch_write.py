@@ -380,6 +380,14 @@ class TestBatchWrite(TestBaseClass):
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]
 
+    def test_batch_write_no_policy(self):
+        batch_records = br.BatchRecords(
+            [
+                br.Remove(("test", "demo", 1)),
+            ]
+        )
+        self.as_connection.batch_write(batch_records)
+
     @pytest.mark.parametrize(
         "name, batch_records, policy, exp_res",
         [
