@@ -273,7 +273,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, NULL, NULL, Py_None, Py_None, NULL);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -359,7 +359,8 @@ CLEANUP:
         Py_DECREF(py_ustr);
     }
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, NULL, NULL, py_filename, Py_None, NULL);
+        raise_exception_base(&err, Py_None, Py_None, py_filename, Py_None,
+                             Py_None);
         return NULL;
     }
 
@@ -441,7 +442,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, NULL, NULL, Py_None, Py_None, NULL);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -546,7 +547,8 @@ CLEANUP:
         as_udf_file_destroy(&file);
     }
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, NULL, NULL, py_module, Py_None, NULL);
+        raise_exception_base(&err, Py_None, Py_None, py_module, Py_None,
+                             Py_None);
         return NULL;
     }
 

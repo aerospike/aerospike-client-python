@@ -229,7 +229,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
 CLEANUP:
     if (py_obj == NULL) {
-        raise_exception_base(&err, NULL, NULL, NULL, NULL, py_name);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
     }
 
@@ -323,7 +323,7 @@ CLEANUP:
         Py_DECREF(py_ustr_name);
     }
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, NULL, NULL, NULL, NULL, py_name);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
     }
 

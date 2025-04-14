@@ -147,7 +147,8 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, NULL, NULL, py_module, py_function, NULL);
+        raise_exception_base(&err, Py_None, Py_None, py_module, py_function,
+                             Py_None);
         return NULL;
     }
 

@@ -245,10 +245,12 @@ CLEANUP:
 
     if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
         if (err.code != AEROSPIKE_OK) {
-            raise_exception_base(&err, NULL, NULL, NULL, NULL, Py_None);
+            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None,
+                                 Py_None);
         }
         else if (data.error.code != AEROSPIKE_OK) {
-            raise_exception_base(&data.error, NULL, NULL, NULL, NULL, Py_None);
+            raise_exception_base(&data.error, Py_None, Py_None, Py_None,
+                                 Py_None, Py_None);
         }
 
         return NULL;
