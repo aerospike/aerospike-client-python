@@ -10,6 +10,7 @@ from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import operations
 
+from . import as_errors
 
 import aerospike
 
@@ -716,9 +717,9 @@ class TestPredEveryWhere(object):
         )
 
         matched_recs = []
-        records = self.as_connection.exists_many(self.keys, {"expressions": expr.compile()})
-        for rec in records:
-            if rec[1] is not None:
-                matched_recs.append(rec[1])
+        brs = self.as_connection.batch_read(self.keys, policy={"expressions": expr.compile()})
+        for br in brs.batch_records:
+            if br.result == as_errors.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+                matched_recs.append(br)
 
         assert len(matched_recs) == 3
