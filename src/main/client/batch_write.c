@@ -158,7 +158,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     }
 
     if (py_policy != NULL) {
-        if (as_policy_batch_init_from_pyobject(
+        if (as_policy_batch_init_and_set_from_pyobject(
                 self, err, py_policy, &batch_policy, &batch_policy_p,
                 &self->as->config.policies.batch, &exp_list,
                 &exp_list_p) != AEROSPIKE_OK) {
