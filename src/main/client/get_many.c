@@ -164,9 +164,9 @@ static PyObject *AerospikeClient_Get_Many_Invoke(AerospikeClient *self,
     }
 
     // Convert python policy object to as_policy_batch
-    pyobject_to_policy_batch(self, &err, py_policy, &policy, &batch_policy_p,
-                             &self->as->config.policies.batch, &exp_list,
-                             &exp_list_p);
+    as_policy_batch_init_from_pyobject(
+        self, &err, py_policy, &policy, &batch_policy_p,
+        &self->as->config.policies.batch, &exp_list, &exp_list_p);
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;

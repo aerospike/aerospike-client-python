@@ -136,10 +136,10 @@ static PyObject *AerospikeClient_Batch_GetOps_Invoke(AerospikeClient *self,
     as_operations_inita(&ops, ops_size);
 
     if (py_policy) {
-        if (pyobject_to_policy_batch(self, err, py_policy, &policy,
-                                     &batch_policy_p,
-                                     &self->as->config.policies.batch,
-                                     &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+        if (as_policy_batch_init_from_pyobject(
+                self, err, py_policy, &policy, &batch_policy_p,
+                &self->as->config.policies.batch, &exp_list,
+                &exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

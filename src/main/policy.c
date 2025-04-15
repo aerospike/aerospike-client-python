@@ -658,11 +658,10 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_batch *policy,
-                                   as_policy_batch **policy_p,
-                                   as_policy_batch *config_batch_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+as_status as_policy_batch_init_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_batch *policy, as_policy_batch **policy_p,
+    as_policy_batch *config_batch_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
