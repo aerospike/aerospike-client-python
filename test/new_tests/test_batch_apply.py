@@ -243,7 +243,8 @@ class TestBatchApply(TestBaseClass):
                 assert batch_rec.record[0][:3] == keys[i]  # checking key in record
 
             brs: BatchRecords = self.as_connection.batch_read(keys)
-            for br in brs.batch_records:
+            # TODO: guaranteed to be in the correct order?
+            for i, br in enumerate(brs.batch_records):
                 assert br.record[2]["name"] == ["name" + str(i), 10]
 
         except Exception as ex:
