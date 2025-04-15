@@ -76,7 +76,7 @@ def verify_multiple_expression_avenues(client, test_ns, test_set, expr, op_bin, 
 
     # batch get
     res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
-           if br.result == as_errors.AEROSPIKE_FILTERED_OUT]
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
