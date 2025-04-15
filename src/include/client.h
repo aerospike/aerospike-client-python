@@ -396,6 +396,16 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
  */
 PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
                                             PyObject *args, PyObject *kwds);
+
+/**
+ * Create secondary expression index
+ *
+ *		client.index_expression_create(ns, set, bin, index_datatype, index_type, name, expression, [, policy])
+ *
+ */
+PyObject *AerospikeClient_Index_Expression_Create(AerospikeClient *self,
+                                                  PyObject *args, PyObject *kwds);
+
 /**
  * Create secondary map keys index
  *

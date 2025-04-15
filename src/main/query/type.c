@@ -63,6 +63,18 @@ Set a where predicate for the query, without which the query will behave similar
 The predicate is produced by one of the aerospike.predicates methods equals() and between(). \
 The list cdt_ctx is produced by one of the aerospike_helpers.cdt_ctx methods");
 
+PyDoc_STRVAR(where_index_name_doc, "where_index_name(predicate, index_name)\n\
+\n\
+Set a where predicate for the query with index name. \
+The predicate is produced by one of the aerospike.predicates methods equals() and between(). \
+The index_name is the name of the index to use for the query.");
+
+PyDoc_STRVAR(where_exp_doc, "where_exp(expression, predicate)\n\
+\n\
+Set a where predicate for the query with expression. \
+The predicate is produced by one of the aerospike.predicates methods equals() and between(). \
+The expression is the expression to use for the query.");
+
 PyDoc_STRVAR(execute_background_doc,
              "execute_background([policy]) -> list of (key, meta, bins)\n\
 \n\
@@ -102,6 +114,12 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
      select_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
+
+    {"where_index_name", (PyCFunction)AerospikeQuery_Where_Index_Name, METH_VARARGS | METH_KEYWORDS, 
+     where_index_name_doc},
+
+    {"where_exp", (PyCFunction)AerospikeQuery_Where_Exp, METH_VARARGS | METH_KEYWORDS, 
+     where_exp_doc},
 
     {"execute_background", (PyCFunction)AerospikeQuery_ExecuteBackground,
      METH_VARARGS | METH_KEYWORDS, execute_background_doc},

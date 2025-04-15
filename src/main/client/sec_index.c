@@ -43,6 +43,11 @@ static PyObject *createIndexWithDataAndCollectionType(
     PyObject *py_set, PyObject *py_bin, PyObject *py_name,
     as_index_type index_type, as_index_datatype data_type, as_cdt_ctx *ctx);
 
+static PyObject *createIndexWithDataAndExpression(
+    AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
+    PyObject *py_set, PyObject *py_name,
+    PyObject *py_index_type, PyObject *py_data_type, as_exp *exp);
+
 /**
  *******************************************************************************************************
  * Creates an integer index for a bin in the Aerospike DB.
@@ -377,6 +382,47 @@ PyObject *AerospikeClient_Index_List_Create(AerospikeClient *self,
                                          AS_INDEX_TYPE_LIST, NULL);
 }
 
+PyObject *AerospikeClient_Index_Expression_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds)
+{
+    // Initialize error
+    as_error err;
+    as_error_init(&err);
+
+    // Python Function Arguments
+    PyObject *py_policy = NULL;
+    PyObject *py_ns = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_bin = NULL;
+    PyObject *py_name = NULL;
+    PyObject *py_datatype = NULL;
+    PyObject *py_index_type = NULL;
+    PyObject *py_expression = NULL;
+
+    as_exp *exp = NULL;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"ns",   "set",    "bin", "index_datatype",
+                             "index_type", "name", "expression", "policy",
+                              NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(
+            args, kwds, "OOOOOOO|O:index_expression_create", kwlist, &py_ns, &py_set,
+            &py_bin, &py_datatype, &py_index_type, &py_name, &py_expression, 
+            &py_policy) == false) {
+        return NULL;
+    }
+
+    if (convert_exp_list(self, py_expression, &exp, &err) != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+
+    return createIndexWithDataAndExpression(self, py_policy, py_ns, py_set,
+                                         py_name, py_index_type, py_datatype, exp);
+}
+
 PyObject *AerospikeClient_Index_Map_Keys_Create(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
@@ -616,9 +662,9 @@ static PyObject *createIndexWithDataAndCollectionType(
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
-    aerospike_index_create_ctx(self->as, &err, &task, info_policy_p, namespace,
+    aerospike_index_create_ctx_exp(self->as, &err, &task, info_policy_p, namespace,
                                set_ptr, bin_ptr, name, index_type, data_type,
-                               ctx);
+                               ctx, NULL);
     Py_END_ALLOW_THREADS
     if (err.code == AEROSPIKE_OK) {
         Py_BEGIN_ALLOW_THREADS
@@ -633,6 +679,119 @@ CLEANUP:
     if (py_ustr_bin) {
         Py_DECREF(py_ustr_bin);
     }
+    if (py_ustr_name) {
+        Py_DECREF(py_ustr_name);
+    }
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+
+    return PyLong_FromLong(0);
+}
+
+/*
+ * Create a complex index on the specified ns/set/exp with the given name and index type and data_type. Return PyObject(0) on success
+ * else return NULL with an error raised.
+ */
+
+static PyObject *createIndexWithDataAndExpression(
+    AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
+    PyObject *py_set, PyObject *py_name,
+    PyObject *py_index_type, PyObject *py_data_type, as_exp *exp)
+{
+
+    // Initialize error
+    as_error err;
+    as_error_init(&err);
+
+    PyObject *py_ustr_set = NULL;
+    PyObject *py_ustr_name = NULL;
+
+    as_index_type index_type = AS_INDEX_TYPE_DEFAULT;
+
+    if (!getTypeFromPyObject(py_index_type, (int *)&index_type, &err)) {
+        return NULL;
+    }
+
+    as_index_datatype data_type = AS_INDEX_STRING;
+
+    if (!getTypeFromPyObject(py_data_type, (int *)&data_type, &err)) {
+        return NULL;
+    }
+
+    as_policy_info info_policy;
+    as_policy_info *info_policy_p = NULL;
+    as_index_task task;
+
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        //raise_exception(&err, -2, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
+    if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
+    // Convert python object to policy_info
+    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+                            &self->as->config.policies.info);
+    if (err.code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
+
+    // Convert python object into namespace string
+    if (!PyUnicode_Check(py_ns)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Namespace should be a string");
+        goto CLEANUP;
+    }
+    char *namespace = (char *)PyUnicode_AsUTF8(py_ns);
+
+    // Convert python object into set string
+    char *set_ptr = NULL;
+    if (PyUnicode_Check(py_set)) {
+        py_ustr_set = PyUnicode_AsUTF8String(py_set);
+        set_ptr = PyBytes_AsString(py_ustr_set);
+    }
+    else if (py_set != Py_None) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Set should be string, unicode or None");
+        goto CLEANUP;
+    }
+
+    // Convert PyObject into the name of the index
+    char *name = NULL;
+    if (PyUnicode_Check(py_name)) {
+        py_ustr_name = PyUnicode_AsUTF8String(py_name);
+        name = PyBytes_AsString(py_ustr_name);
+    }
+    else {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Index name should be string or unicode");
+        goto CLEANUP;
+    }
+
+    // Invoke operation
+    Py_BEGIN_ALLOW_THREADS
+    aerospike_index_create_ctx_exp(self->as, &err, &task, info_policy_p, namespace,
+                               set_ptr, NULL, name, index_type, data_type,
+                               NULL, exp);
+    Py_END_ALLOW_THREADS
+    if (err.code == AEROSPIKE_OK) {
+        Py_BEGIN_ALLOW_THREADS
+        aerospike_index_create_wait(&err, &task, 2000);
+        Py_END_ALLOW_THREADS
+    }
+
+CLEANUP:
+    if (py_ustr_set) {
+        Py_DECREF(py_ustr_set);
+    }
+
     if (py_ustr_name) {
         Py_DECREF(py_ustr_name);
     }

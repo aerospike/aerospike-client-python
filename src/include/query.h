@@ -74,6 +74,18 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
 AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args);
 
 /**
+ * Add a where predicate to the query with expression.
+ *
+ */
+AerospikeQuery *AerospikeQuery_Where_Exp(AerospikeQuery *self, PyObject *args, PyObject *kwds);
+
+/**
+ * Add a where predicate to the query with index name.
+ *
+ */
+AerospikeQuery *AerospikeQuery_Where_Index_Name(AerospikeQuery *self, PyObject *args, PyObject *kwds);
+
+/**
  * Apply the specified udf on the results of the query.
  *
  *		query.apply(module, function, arglist)
@@ -144,5 +156,3 @@ PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self);
  *
  */
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj);
-
-int64_t pyobject_to_int64(PyObject *py_obj);
