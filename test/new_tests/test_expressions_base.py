@@ -382,12 +382,10 @@ class TestExpressions(TestBaseClass):
 
         # Check that record 0 has a server boolean bin named "t"
         expr = Eq(BinType("t"), aerospike.AS_BYTES_BOOL).compile()
-        records = test_client.get_many([key], {"expressions": expr})
+        brs = test_client.batch_read([key], {"expressions": expr})
 
         # bins would be None if the record was filtered out by the expression
-        record = records[0]
-        bins = record[2]
-        assert bins
+        assert brs.batch_records[0].result != as_errors.AEROSPIKE_FILTERED_OUT
 
         test_client.close()
 
