@@ -42,6 +42,7 @@ from aerospike_helpers.expressions import (
 )
 from aerospike_helpers.operations import expression_operations as expressions
 from aerospike_helpers.operations import operations
+from . import as_errors
 
 import aerospike
 
@@ -74,7 +75,8 @@ def verify_multiple_expression_avenues(client, test_ns, test_set, expr, op_bin, 
             pass
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result == as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
