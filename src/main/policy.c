@@ -663,10 +663,6 @@ as_status as_policy_batch_init_from_pyobject(
     as_policy_batch *policy, as_policy_batch **policy_p,
     as_policy_batch *config_batch_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
-        // Initialize Policy
-        POLICY_INIT(as_policy_batch);
-    }
     //Initialize policy with global defaults
     as_policy_batch_copy(config_batch_policy, policy);
 
