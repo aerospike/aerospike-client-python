@@ -124,7 +124,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     as_batch_records *batch_records_p = NULL;
 
     as_policy_batch batch_policy;
-    as_policy_batch *batch_policy_p = NULL;
     as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
@@ -157,13 +156,12 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         goto CLEANUP4;
     }
 
-    if (py_policy != NULL) {
-        if (as_policy_batch_init_and_set_from_pyobject(
-                self, err, py_policy, &batch_policy, &batch_policy_p,
-                &self->as->config.policies.batch, &exp_list,
-                &exp_list_p) != AEROSPIKE_OK) {
-            goto CLEANUP4;
-        }
+    as_policy_batch *batch_policy_p;
+    if (as_policy_batch_init_from_pyobject(
+            self, err, py_policy, &batch_policy, &batch_policy_p,
+            &self->as->config.policies.batch_parent_write, &exp_list,
+            &exp_list_p) != AEROSPIKE_OK) {
+        goto CLEANUP4;
     }
 
     // TODO check that py_object is an instance of class
@@ -563,7 +561,8 @@ CLEANUP4:
 PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
-    PyObject *py_policy = NULL;
+    // TODO: check ref count
+    PyObject *py_policy = Py_None;
     PyObject *py_batch_recs = NULL;
 
     as_error err;

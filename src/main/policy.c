@@ -47,8 +47,7 @@
     if (!PyDict_Check(py_policy)) {                                            \
         return as_error_update(err, AEROSPIKE_ERR_PARAM,                       \
                                "policy must be a dict");                       \
-    }                                                                          \
-    __policy##_init(policy);
+    }
 
 #define POLICY_UPDATE() *policy_p = policy;
 
@@ -653,7 +652,8 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 }
 
 /**
- * Converts a PyObject into an as_policy_batch object.
+ * 1. Takes in a non-NULL pyobject 
+ * and uses it to initialize an existing as_policy_batch instance.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
@@ -663,6 +663,15 @@ as_status as_policy_batch_init_and_set_from_pyobject(
     as_policy_batch *policy, as_policy_batch **policy_p,
     as_policy_batch *config_batch_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
+    as_error_reset(err);
+    if (py_policy == Py_None) {
+        return err->code;
+    }
+    if (!PyDict_Check(py_policy)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "policy must be a dict");
+    }
+
     //Initialize policy with global defaults
     as_policy_batch_copy(config_batch_policy, policy);
 
