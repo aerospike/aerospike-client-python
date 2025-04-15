@@ -67,7 +67,7 @@
                                    "Unable to create Python unicode object");  \
         }                                                                      \
         PyObject *py_field =                                                   \
-            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+            PyDict_GetItemWithError(py_policy_dict, py_field_name);            \
         if (py_field == NULL && PyErr_Occurred()) {                            \
             PyErr_Clear();                                                     \
             Py_DECREF(py_field_name);                                          \
@@ -299,9 +299,9 @@ static inline void check_and_set_txn_field(as_error *err,
 }
 
 static inline as_status
-pyobject_to_policy_base(AerospikeClient *self, as_error *err,
-                        PyObject *py_policy, as_policy_base *policy,
-                        as_exp *exp_list, as_exp **exp_list_p)
+as_policy_base_init_and_set_from_py_optional_policy_dict(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_base *policy, as_exp *exp_list, as_exp **exp_list_p)
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
@@ -341,8 +341,9 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval =
+            as_policy_base_init_and_set_from_py_optional_policy_dict(
+                self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -413,8 +414,9 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     as_policy_query_copy(config_query_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval =
+            as_policy_base_init_and_set_from_py_optional_policy_dict(
+                self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -455,8 +457,9 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval =
+            as_policy_base_init_and_set_from_py_optional_policy_dict(
+                self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -499,8 +502,9 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval =
+            as_policy_base_init_and_set_from_py_optional_policy_dict(
+                self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -541,8 +545,9 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval =
+            as_policy_base_init_and_set_from_py_optional_policy_dict(
+                self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -580,8 +585,9 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval =
+            as_policy_base_init_and_set_from_py_optional_policy_dict(
+                self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -624,8 +630,9 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval =
+            as_policy_base_init_and_set_from_py_optional_policy_dict(
+                self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -652,51 +659,51 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 }
 
 /**
- * 1. Takes in a non-NULL pyobject 
- * and uses it to initialize an existing as_policy_batch instance.
+ * 1. Takes in a non-NULL, optional Python dictionary (can be Py_None) and an uninitialized as_policy_batch instance
+ * and uses the pyobject to initialize the as_policy_batch instance.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status as_policy_batch_init_and_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
+as_status as_policy_batch_init_and_set_from_py_optional_policy_dict(
+    AerospikeClient *self, as_error *err, PyObject *py_optional_policy_dict,
     as_policy_batch *policy, as_policy_batch **policy_p,
     as_policy_batch *config_batch_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
     as_error_reset(err);
-    if (py_policy == Py_None) {
-        return err->code;
-    }
-    if (!PyDict_Check(py_policy)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "policy must be a dict");
-    }
 
     //Initialize policy with global defaults
     as_policy_batch_copy(config_batch_policy, policy);
 
-    if (py_policy && py_policy != Py_None) {
-        // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
-        if (retval != AEROSPIKE_OK) {
-            return retval;
-        }
-
-        POLICY_SET_FIELD(concurrent, bool);
-        POLICY_SET_FIELD(allow_inline, bool);
-        POLICY_SET_FIELD(deserialize, bool);
-        POLICY_SET_FIELD(replica, as_policy_replica);
-        POLICY_SET_FIELD(read_touch_ttl_percent, int);
-
-        // 4.0.0 new policies
-        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
-        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
-
-        // C client 6.0.0 (batch writes)
-        POLICY_SET_FIELD(allow_inline_ssd, bool);
-        POLICY_SET_FIELD(respond_all_keys, bool);
+    if (py_optional_policy_dict == Py_None) {
+        return err->code;
     }
+    else if (!PyDict_Check(py_optional_policy_dict)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "policy must be a dict");
+    }
+
+    // Set policy fields
+    as_status retval = as_policy_base_init_and_set_from_py_optional_policy_dict(
+        self, err, py_optional_policy_dict, &policy->base, exp_list,
+        exp_list_p);
+    if (retval != AEROSPIKE_OK) {
+        return retval;
+    }
+
+    POLICY_SET_FIELD(concurrent, bool);
+    POLICY_SET_FIELD(allow_inline, bool);
+    POLICY_SET_FIELD(deserialize, bool);
+    POLICY_SET_FIELD(replica, as_policy_replica);
+    POLICY_SET_FIELD(read_touch_ttl_percent, int);
+
+    // 4.0.0 new policies
+    POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+    POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+
+    // C client 6.0.0 (batch writes)
+    POLICY_SET_FIELD(allow_inline_ssd, bool);
+    POLICY_SET_FIELD(respond_all_keys, bool);
 
     // Update the policy
     POLICY_UPDATE();
