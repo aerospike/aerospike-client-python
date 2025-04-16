@@ -11,7 +11,6 @@ from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import operations
 
 from . import as_errors
-
 import aerospike
 
 geo_circle = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-132.0, 37.5], 1000]})
@@ -540,11 +539,11 @@ class TestPredEveryWhere(object):
         """
         Proper call to get_many with expressions in policy
         """
-        records = self.as_connection.get_many(self.keys, {"expressions": expressions.compile()})
+        brs = self.as_connection.batch_read(self.keys, policy={"expressions": expressions.compile()}).batch_records
 
         # assert isinstance(records, list)
         # assert records[2][2]['age'] == 2
-        assert records[rec_place][2][rec_bin] == expected
+        assert brs[rec_place].record[2][rec_bin] == expected
 
     def test_pos_get_many_with_large_expressions(self):
         """
@@ -557,10 +556,10 @@ class TestPredEveryWhere(object):
         )
 
         matched_recs = []
-        records = self.as_connection.get_many(self.keys, {"expressions": expr.compile()})
-        for rec in records:
-            if rec[2] is not None:
-                matched_recs.append(rec[2])
+        brs = self.as_connection.batch_read(self.keys, policy={"expressions": expr.compile()}).batch_records
+        for br in brs:
+            if br.result != as_errors.AEROSPIKE_FILTERED_OUT:
+                matched_recs.append(br.record[2])
 
         assert len(matched_recs) == 3
         for rec in matched_recs:
