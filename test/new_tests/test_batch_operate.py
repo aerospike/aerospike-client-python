@@ -166,7 +166,6 @@ class TestBatchOperate(TestBaseClass):
                 None,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"name": "name10", "count": 0}],
-
             )
         ],
     )
@@ -187,6 +186,10 @@ class TestBatchOperate(TestBaseClass):
             for key in keys:
                 _, meta = self.as_connection.exists(key)
                 assert meta["ttl"] in range(9000 - 50, 9000 + 50)
+
+    def test_record_not_found(self):
+        brs = self.as_connection.batch_operate(keys=[("test", "demo", 99)], ops=[op.read("name")])
+        assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_NOT_FOUND
 
     def test_batch_operate_many_pos(self):
         """
