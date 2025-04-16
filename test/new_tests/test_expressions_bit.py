@@ -47,7 +47,7 @@ GEO_POLY = aerospike.GeoJSON(
 
 
 def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
 
     # batch get
     res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
