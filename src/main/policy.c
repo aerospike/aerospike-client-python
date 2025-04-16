@@ -67,7 +67,7 @@
                                    "Unable to create Python unicode object");  \
         }                                                                      \
         PyObject *py_field =                                                   \
-            PyDict_GetItemWithError(py_policy_dict, py_field_name);            \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
         if (py_field == NULL && PyErr_Occurred()) {                            \
             PyErr_Clear();                                                     \
             Py_DECREF(py_field_name);                                          \
@@ -666,7 +666,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
  * and initialized (although, we do reset the error object here).
  */
 as_status as_policy_batch_init_and_set_from_py_optional_policy_dict(
-    AerospikeClient *self, as_error *err, PyObject *py_optional_policy_dict,
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
     as_policy_batch *policy, as_policy_batch **policy_p,
     as_policy_batch *config_batch_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
@@ -675,18 +675,17 @@ as_status as_policy_batch_init_and_set_from_py_optional_policy_dict(
     //Initialize policy with global defaults
     as_policy_batch_copy(config_batch_policy, policy);
 
-    if (py_optional_policy_dict == Py_None) {
+    if (py_policy == Py_None) {
         return err->code;
     }
-    else if (!PyDict_Check(py_optional_policy_dict)) {
+    else if (!PyDict_Check(py_policy)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "policy must be a dict");
     }
 
     // Set policy fields
     as_status retval = as_policy_base_init_and_set_from_py_optional_policy_dict(
-        self, err, py_optional_policy_dict, &policy->base, exp_list,
-        exp_list_p);
+        self, err, py_policy, &policy->base, exp_list, exp_list_p);
     if (retval != AEROSPIKE_OK) {
         return retval;
     }
