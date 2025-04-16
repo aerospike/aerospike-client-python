@@ -552,7 +552,7 @@ class TestPredEveryWhere(object):
             [["account_id"]]
         ]
     )
-    def test_pos_get_many_with_large_expressions(self):
+    def test_pos_get_many_with_large_expressions(self, args):
         """
         Proper call to get_many with expressions in policy.
         """
@@ -563,7 +563,7 @@ class TestPredEveryWhere(object):
         )
 
         matched_recs = []
-        brs = self.as_connection.batch_read(self.keys, policy={"expressions": expr.compile()}).batch_records
+        brs = self.as_connection.batch_read(self.keys, *args, policy={"expressions": expr.compile()}).batch_records
         for br in brs:
             if br.result != as_errors.AEROSPIKE_FILTERED_OUT:
                 matched_recs.append(br.record[2])
