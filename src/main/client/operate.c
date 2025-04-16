@@ -959,7 +959,6 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
 {
     BASE_VARIABLES
     PyObject *py_list = NULL;
-    PyObject *py_bin = NULL;
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"key", "list", "meta", "policy", NULL};
