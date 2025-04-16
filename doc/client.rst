@@ -271,27 +271,6 @@ Batched Commands
 .. class:: Client
     :noindex:
 
-    .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_operate` instead.
-
-        Batch-read multiple records, and return them as a :class:`list`.
-
-        Any record that does not exist will have a exception type value as metadata \
-        and :py:obj:`None` value as bins in the record tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param list ops: a list of operations to apply.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
-
-        .. include:: examples/batch_get_ops.py
-            :code: python
-
     .. note::
 
         The following batch methods will return a :class:`~aerospike_helpers.batch.records.BatchRecords` object with
