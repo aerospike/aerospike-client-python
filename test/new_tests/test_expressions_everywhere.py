@@ -705,7 +705,7 @@ class TestPredEveryWhere(object):
         matched_recs = []
         brs = self.as_connection.batch_read(self.keys, policy={"expressions": expr.compile()})
         for br in brs.batch_records:
-            if br.result != as_errors.AEROSPIKE_ERR_RECORD_NOT_FOUND:
+            if br.result != as_errors.AEROSPIKE_FILTERED_OUT:
                 matched_recs.append(br)
 
         assert len(matched_recs) == 3
