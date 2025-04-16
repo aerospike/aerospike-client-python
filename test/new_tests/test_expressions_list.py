@@ -44,6 +44,7 @@ from aerospike_helpers.expressions import (
 
 import aerospike
 from . import as_errors
+from contextlib import nullcontext
 
 # Constants
 _NUM_RECORDS = 9
@@ -337,11 +338,11 @@ class TestExpressions(TestBaseClass):
     @pytest.mark.parametrize(
         "ctx, begin, end, return_type, check, expected",
         [
-            ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], e.ParamError),
-            (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], e.InvalidRequest),
+            ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], pytest.raises(e.ParamError)),
+            (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], nullcontext()),
         ],
     )
-    def test_list_get_by_value_range_neg(self, ctx, begin, end, return_type, check, expected):
+    def test_list_get_by_value_range_neg(self, ctx, begin, end, return_type, check, expected_context):
         """
         Invoke ListGetByValue() with expected failures.
         """
@@ -352,10 +353,11 @@ class TestExpressions(TestBaseClass):
             Eq(ListGetByValueRange(ctx, return_type, begin, end, "list_bin"), check[2]),
         )
 
-        with pytest.raises(expected):
-            verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
-            )
+        keys = [(self.test_ns, self.test_set, i) for i in range(_NUM_RECORDS)]
+        with expected_context:
+            brs = self.as_connection.batch_read(keys, policy={"expressions": expr})
+            if expected_context == nullcontext():
+                assert brs.result == as_errors.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, return_type, check, expected",
