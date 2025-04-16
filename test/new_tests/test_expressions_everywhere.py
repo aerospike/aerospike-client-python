@@ -545,6 +545,13 @@ class TestPredEveryWhere(object):
         # assert records[2][2]['age'] == 2
         assert brs[rec_place].record[2][rec_bin] == expected
 
+    @pytest.mark.parametrize(
+        "args",
+        [
+            [],
+            [["account_id"]]
+        ]
+    )
     def test_pos_get_many_with_large_expressions(self):
         """
         Proper call to get_many with expressions in policy.
@@ -560,26 +567,6 @@ class TestPredEveryWhere(object):
         for br in brs:
             if br.result != as_errors.AEROSPIKE_FILTERED_OUT:
                 matched_recs.append(br.record[2])
-
-        assert len(matched_recs) == 3
-        for rec in matched_recs:
-            assert rec["account_id"] == 1 or rec["account_id"] == 3 or rec["account_id"] == 4
-
-    def test_pos_select_many_with_large_expressions(self):
-        """
-        Proper call to select_many with expressions in policy.
-        """
-        expr = exp.Or(
-            exp.Eq(exp.IntBin("account_id"), 4),
-            exp.Eq(exp.StrBin("user_name"), "user3"),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "charges"), 12),
-        )
-
-        matched_recs = []
-        records = self.as_connection.select_many(self.keys, ["account_id"], {"expressions": expr.compile()})
-        for rec in records:
-            if rec[2] is not None:
-                matched_recs.append(rec[2])
 
         assert len(matched_recs) == 3
         for rec in matched_recs:
