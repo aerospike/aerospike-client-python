@@ -659,29 +659,37 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 }
 
 /**
- * 1. Takes in a non-NULL, optional Python dictionary (can be Py_None) and an uninitialized as_policy_batch instance
- * and uses the pyobject to initialize the as_policy_batch instance.
- * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
- * We assume that the error object and the policy object are already allocated
- * and initialized (although, we do reset the error object here).
+ * Given a:
+ * - non-NULL, Optional[dict] called *py_policy*
+ * - pointer to an uninitialized as_policy_batch instance called *policy*. This is a transaction-level batch policy passed
+ * to the C client's API.
+ *
+ * - If py_policy is None, return NULL.
+ * - If py_policy is not None:
+ *  1. Initialize *policy* to *config_policy*'s fields.
+ *  2. Then use py_policy's fields to override *policy*'s fields.
+ *
+ * that can be passed to a C client API call that takes in a reference to a batch policy.
+ * On error, the err argument is populated.
+ * NOTE: we do reset the error object here.
  */
-as_status as_policy_batch_init_and_set_from_pyobject(
+as_policy_batch *as_policy_batch_init_and_set_from_pyobject(
     AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_batch *policy, as_policy_batch **policy_p,
-    as_policy_batch *config_batch_policy, as_exp *exp_list, as_exp **exp_list_p)
+    as_policy_batch *policy, as_policy_batch *config_policy, as_exp *exp_list,
+    as_exp **exp_list_p)
 {
     as_error_reset(err);
 
-    //Initialize policy with global defaults
-    as_policy_batch_copy(config_batch_policy, policy);
-
     if (py_policy == Py_None) {
-        return err->code;
+        // Tell C client to use the C client config's batch policy.
+        return NULL;
     }
     else if (!PyDict_Check(py_policy)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "policy must be a dict");
     }
+
+    as_policy_batch_copy(config_batch_policy, policy);
 
     // Set policy fields
     as_status retval = as_policy_base_init_and_set_from_py_optional_policy_dict(
@@ -704,10 +712,7 @@ as_status as_policy_batch_init_and_set_from_pyobject(
     POLICY_SET_FIELD(allow_inline_ssd, bool);
     POLICY_SET_FIELD(respond_all_keys, bool);
 
-    // Update the policy
-    POLICY_UPDATE();
-
-    return err->code;
+    return policy;
 }
 
 // New with server 6.0, C client 5.2.0 (batch writes)
