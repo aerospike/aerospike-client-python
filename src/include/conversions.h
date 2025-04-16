@@ -85,9 +85,11 @@ as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
 as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
                                uint32_t max_len);
 
-as_status pyobject_to_val(AerospikeClient *self, as_error *err,
-                          PyObject *py_obj, as_val **val,
-                          as_static_pool *static_pool, int serializer_type);
+// On success, heap allocates a new as_val object and assigns its address to val
+as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
+                                   PyObject *py_obj, as_val **val,
+                                   as_static_pool *static_pool,
+                                   int serializer_type);
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
@@ -102,10 +104,10 @@ as_status pyobject_to_key(as_error *err, PyObject *py_key, as_key *key);
 as_status pyobject_to_index(AerospikeClient *self, as_error *err,
                             PyObject *py_value, long *long_val);
 
-as_status pyobject_to_record(AerospikeClient *self, as_error *err,
-                             PyObject *py_rec, PyObject *py_meta,
-                             as_record *rec, int serializer_option,
-                             as_static_pool *static_pool);
+as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
+                                       PyObject *py_rec, PyObject *py_meta,
+                                       as_record *rec, int serializer_option,
+                                       as_static_pool *static_pool);
 
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_map);
