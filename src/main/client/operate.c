@@ -825,13 +825,13 @@ CLEANUP:
  * @param py_list               The list containing op, bin and value.
  * @param py_meta               The metadata for the operation.
  * @param py_policy      		Python dict used to populate the operate_policy or map_policy.
+ * @param py_key          		Only used for raising RecordErrors.
+ * @param py_bin          		Only used for raising RecordErrors.
  *******************************************************************************************************
  */
-static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
-                                                as_error *err, as_key *key,
-                                                PyObject *py_list,
-                                                PyObject *py_meta,
-                                                PyObject *py_policy)
+static PyObject *AerospikeClient_Operate_Invoke(
+    AerospikeClient *self, as_error *err, as_key *key, PyObject *py_list,
+    PyObject *py_meta, PyObject *py_policy, PyObject *py_key, PyObject *py_bin)
 {
     if (!self || !self->as) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -929,7 +929,7 @@ CLEANUP:
 
 RAISE_EXCEPTION:
     if (err->code != AEROSPIKE_OK) {
-        raise_exception(err);
+        raise_exception_base(err, py_key, py_bin, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -974,8 +974,8 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
     }
 
     if (py_list && PyList_Check(py_list)) {
-        py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-                                                   py_meta, py_policy);
+        py_result = AerospikeClient_Operate_Invoke(
+            self, &err, &key, py_list, py_meta, py_policy, Py_None, Py_None);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -1249,8 +1249,8 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
     PyObject *py_list = NULL;
     // creates strong ref for list
     py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str);
-    py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-                                               py_meta, py_policy);
+    py_result = AerospikeClient_Operate_Invoke(
+        self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
     Py_DECREF(py_list);
 
 CLEANUP:
@@ -1298,8 +1298,8 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
     PyObject *py_list = NULL;
     py_list =
         create_pylist(py_list, AS_OPERATOR_PREPEND, py_bin, py_prepend_str);
-    py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-                                               py_meta, py_policy);
+    py_result = AerospikeClient_Operate_Invoke(
+        self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
 
     DECREF_LIST_AND_RESULT();
 
@@ -1343,8 +1343,8 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
 
     PyObject *py_list = NULL;
     py_list = create_pylist(py_list, AS_OPERATOR_INCR, py_bin, py_offset_value);
-    py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-                                               py_meta, py_policy);
+    py_result = AerospikeClient_Operate_Invoke(
+        self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
 
     DECREF_LIST_AND_RESULT();
 
@@ -1392,8 +1392,8 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
 
     PyObject *py_list = NULL;
     py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue);
-    py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
-                                               py_meta, py_policy);
+    py_result = AerospikeClient_Operate_Invoke(
+        self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
 
     DECREF_LIST_AND_RESULT();
 
