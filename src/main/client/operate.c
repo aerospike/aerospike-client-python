@@ -983,8 +983,6 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
     }
 
 CLEANUP:
-    EXCEPTION_ON_ERROR();
-
     return py_result;
 }
 
@@ -1207,10 +1205,6 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
     }
 
 CLEANUP:
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
-        return NULL;
-    }
     return py_result;
 }
 
@@ -1302,12 +1296,14 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
     py_result = AerospikeClient_Operate_Invoke(
         self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
 
-    DECREF_LIST_AND_RESULT();
-
 CLEANUP:
-    EXCEPTION_ON_ERROR();
-
-    return PyLong_FromLong(0);
+    if (py_result) {
+        Py_DECREF(py_result);
+        return PyLong_FromLong(0);
+    }
+    else {
+        return NULL;
+    }
 }
 
 /**
@@ -1347,12 +1343,14 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
     py_result = AerospikeClient_Operate_Invoke(
         self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
 
-    DECREF_LIST_AND_RESULT();
-
 CLEANUP:
-    EXCEPTION_ON_ERROR();
-
-    return PyLong_FromLong(0);
+    if (py_result) {
+        Py_DECREF(py_result);
+        return PyLong_FromLong(0);
+    }
+    else {
+        return NULL;
+    }
 }
 
 /**
@@ -1396,12 +1394,14 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
     py_result = AerospikeClient_Operate_Invoke(
         self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
 
-    DECREF_LIST_AND_RESULT();
-
 CLEANUP:
-    EXCEPTION_ON_ERROR();
-
-    return PyLong_FromLong(0);
+    if (py_result) {
+        Py_DECREF(py_result);
+        return PyLong_FromLong(0);
+    }
+    else {
+        return NULL;
+    }
 }
 
 static as_status get_operation(as_error *err, PyObject *op_dict,
