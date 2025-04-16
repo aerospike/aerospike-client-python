@@ -271,62 +271,6 @@ Batched Commands
 .. class:: Client
     :noindex:
 
-    .. method:: get_many(keys[, policy: dict]) -> [(key, meta, bins)]
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
-        Batch-read multiple records, and return them as a :class:`list`.
-
-        Any record that does not exist will have a :py:obj:`None` value for metadata \
-        and bins in the record tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
-
-        .. include:: examples/get_many.py
-            :code: python
-
-    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
-        Batch-read metadata for multiple keys.
-
-        Any record that does not exist will have a :py:obj:`None` value for metadata in \
-        their tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of (key, metadata) :class:`tuple` for each record.
-
-        .. include:: examples/exists_many.py
-            :code: python
-
-    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
-        Batch-read specific bins from multiple records.
-
-        Any record that does not exist will have a :py:obj:`None` value for metadata and bins in its tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple` to read from.
-        :param list bins: a list of bin names to read from the records.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        .. include:: examples/select_many.py
-            :code: python
-
     .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
 
         .. deprecated:: 12.0.0
@@ -2077,7 +2021,7 @@ Batch Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch policies, which are applicable to :meth:`~aerospike.get_many`, :meth:`~aerospike.exists_many` and :meth:`~aerospike.select_many`.
+    A :class:`dict` of optional batch policies.
 
     .. hlist::
         :columns: 1

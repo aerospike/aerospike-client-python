@@ -56,13 +56,6 @@ For:
 An exception :exc:`~aerospike.exception.FilteredOut` is thrown.
 
 For:
-  * :meth:`~aerospike.Client.get_many`
-  * :meth:`~aerospike.Client.exists_many`
-  * :meth:`~aerospike.Client.select_many`
-
-The filtered out record's ``meta`` and ``bins`` are both set to :py:obj:`None` .
-
-For:
 
   * :meth:`~aerospike.Client.batch_write` (records filtered out by a batch or batch record policy)
   * :meth:`~aerospike.Client.batch_operate` (records filtered out by a batch or batch write policy)
