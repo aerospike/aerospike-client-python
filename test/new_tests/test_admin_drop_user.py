@@ -57,9 +57,9 @@ class TestDropUser(object):
         time.sleep(2)
 
         assert status == 0
-        user = self.client.admin_query_user_info(user, policy)
+        user_info = self.client.admin_query_user_info(user, policy)
 
-        assert user["roles"] == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
 
         status = self.client.admin_drop_user(user, policy)
 
@@ -96,9 +96,9 @@ class TestDropUser(object):
         time.sleep(1)
 
         assert status == 0
-        user = self.client.admin_query_user_info(user)
+        user_info = self.client.admin_query_user_info(user)
 
-        assert user["roles"] == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = self.client.admin_drop_user(user)
         assert status == 0
 
@@ -124,9 +124,9 @@ class TestDropUser(object):
         time.sleep(1)
 
         assert status == 0
-        user = self.client.admin_query_user_info(user)
+        user_info = self.client.admin_query_user_info(user)
 
-        assert user["roles"] == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = self.client.admin_drop_user(user)
         assert status == 0
 
