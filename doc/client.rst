@@ -1035,8 +1035,8 @@ user\'s roles. Users are assigned roles, which are collections of \
         client.admin_grant_privileges('dev_role', [{'code': aerospike.PRIV_READ_WRITE_UDF}])
         client.admin_create_user('dev', 'you young whatchacallit... idiot', ['dev_role'])
         time.sleep(1)
-        print(client.admin_query_user('dev'))
-        print(admin_query_users())
+        print(client.admin_query_user_info('dev'))
+        print(admin_query_users_info())
     except ex.AdminError as e:
         print("Error [{0}]: {1}".format(e.code, e.msg))
     client.close()
@@ -1231,29 +1231,6 @@ user\'s roles. Users are assigned roles, which are collections of \
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :return: a :class:`list` of users' data. See :ref:`admin_user_dict`.
-
-    .. method:: admin_query_user (username[, policy: dict]) -> []
-
-        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
-
-        Return the list of roles granted to the specified user.
-
-        :param str username: the username of the user.
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
-
-        :return: a :class:`list` of role names.
-
-        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-    .. method:: admin_query_users ([policy: dict]) -> {}
-
-        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
-
-        Get the roles of all users.
-
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
-        :return: a :class:`dict` of roles keyed by username.
-        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
 Metrics
 -------
