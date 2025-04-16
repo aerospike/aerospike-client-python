@@ -336,7 +336,7 @@ class TestExpressions(TestBaseClass):
         )
 
     @pytest.mark.parametrize(
-        "ctx, begin, end, return_type, check, expected",
+        "ctx, begin, end, return_type, check, expected_context",
         [
             ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], pytest.raises(e.ParamError)),
             (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], nullcontext()),
