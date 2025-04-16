@@ -1100,7 +1100,7 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
         goto CLEANUP2;
     }
     // Get rest of submodule after parent aerospike_helpers package
-    char *pyobj_submodule = strchr(module_name, '.') + 1;
+    char *pyobj_submodule = strchr(module_name, '.');
     if (pyobj_submodule) {
         // Python object belongs in a aerospike_helpers submodule
         if (!expected_submodule_name) {
@@ -1108,7 +1108,8 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
             retval = false;
             goto CLEANUP2;
         }
-        else if (strcmp(pyobj_submodule, expected_submodule_name)) {
+        // We want the string after the .
+        else if (strcmp(pyobj_submodule + 1, expected_submodule_name)) {
             // But it doesn't match the expected submodule
             retval = false;
             goto CLEANUP2;
