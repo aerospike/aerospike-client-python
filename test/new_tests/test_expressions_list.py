@@ -406,11 +406,11 @@ class TestExpressions(TestBaseClass):
         )
 
     @pytest.mark.parametrize(
-        "ctx_types, ctx_indexes, value, return_type, check, expected",
+        "ctx_types, ctx_indexes, value, return_type, check",
         # Compared values are not the same type
-        [(None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, "a", e.InvalidRequest)],
+        [(None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, "a")],
     )
-    def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check):
         """
         Invoke ListGetByValueList() with expected failures.
         """
@@ -423,10 +423,9 @@ class TestExpressions(TestBaseClass):
             ctx = None
 
         expr = Eq(ListGetByValueList(ctx, return_type, value, "list_bin"), check)
-        with pytest.raises(expected):
-            verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
-            )
+        keys = [(self.test_ns, self.test_set, i) for i in range(_NUM_RECORDS)]
+        brs = self.as_connection.batch_read(keys, policy={"expressions": expr.compile()})
+        assert brs.result == as_errors.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, rank, return_type, check, expected",

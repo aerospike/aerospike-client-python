@@ -200,7 +200,7 @@ class TestHLL(object):
         """
 
         hll_bins = [br.record[2][bin] for br in
-                    self.as_connection.batch_read(self.test_keys[:hll_bins - 1].batch_records)]
+                    self.as_connection.batch_read(self.test_keys[:hll_bins - 1]).batch_records]
 
         ops = [hll_operations.hll_get_intersect_count(bin, hll_bins)]
 
