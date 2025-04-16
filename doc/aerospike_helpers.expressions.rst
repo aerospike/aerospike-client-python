@@ -66,11 +66,6 @@ The filtered out record's:
     * ``BatchRecord.record`` is set to :py:obj:`None`
     * ``BatchRecord.result`` is set to ``27``
 
-For :meth:`~aerospike.Client.batch_get_ops`, the filtered out record's:
-
-  * ``meta`` is set to :py:exc:`~aerospike.exception.FilteredOut`.
-  * ``bins`` is set to :py:obj:`None`.
-
 Terminology
 -----------
 
