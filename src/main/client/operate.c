@@ -1243,6 +1243,7 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
     }
 
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
