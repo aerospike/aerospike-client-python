@@ -126,44 +126,19 @@ static PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
 static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
 {
-    PyObject *py_namespace = NULL;
-    PyObject *py_set = NULL;
+    const char *namespace = NULL;
+    const char *set = NULL;
 
     static char *kwlist[] = {"namespace", "set", NULL};
-
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:scan", kwlist,
-                                    &py_namespace, &py_set) == false) {
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "s|s:scan", kwlist, &namespace,
+                                    &set) == false) {
         return -1;
-    }
-
-    char *namespace = NULL;
-    char *set = NULL;
-    PyObject *py_ustr = NULL;
-
-    if (py_namespace && PyUnicode_Check(py_namespace)) {
-        namespace = (char *)PyUnicode_AsUTF8(py_namespace);
-    }
-    else {
-        return -1;
-    }
-
-    if (py_set) {
-        if (PyUnicode_Check(py_set)) {
-            py_ustr = PyUnicode_AsUTF8String(py_set);
-            set = PyBytes_AsString(py_ustr);
-        }
-        else if (Py_None == py_set) {
-            set = NULL;
-        }
     }
 
     self->unicodeStrVector = NULL;
     self->static_pool = NULL;
     as_scan_init(&self->scan, namespace, set);
 
-    if (py_ustr) {
-        Py_DECREF(py_ustr);
-    }
     return 0;
 }
 

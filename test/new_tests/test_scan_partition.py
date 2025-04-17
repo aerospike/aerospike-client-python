@@ -250,7 +250,7 @@ class TestScanPartition(TestBaseClass):
 
     def test_scan_partition_without_any_parameter(self):
 
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             self.as_connection.scan()
             assert True
 
