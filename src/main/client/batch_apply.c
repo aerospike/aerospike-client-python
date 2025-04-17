@@ -311,7 +311,7 @@ PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds)
 {
     as_error err;
-    PyObject *py_policy_batch = Py_None;
+    PyObject *py_policy_batch = NULL;
     PyObject *py_policy_batch_apply = NULL;
     PyObject *py_keys = NULL;
     PyObject *py_mod = NULL;
