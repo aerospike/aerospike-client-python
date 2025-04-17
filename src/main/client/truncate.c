@@ -66,7 +66,6 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
     PyObject *py_nanos = NULL;
     PyObject *py_policy = NULL;
     PyObject *ret_val = NULL;
-    long long temp_long;
     as_error err;
     uint64_t nanos = 1; // If assignment fails, this will cause an error
     char *namespace = NULL;
