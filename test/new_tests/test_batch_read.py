@@ -51,6 +51,7 @@ class TestBatchRead(TestBaseClass):
         request.addfinalizer(teardown)
 
     # Ensures that filtering out records behaves the same, regardless of which parameter we pass into bins
+    # Setting bins=None does not work, so we have to do this for now
     @pytest.mark.parametrize("args", [
         [],
         [[]],
