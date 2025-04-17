@@ -245,7 +245,9 @@ CLEANUP:
         raise_exception(&data.error);
         return NULL;
     }
-
+    else if (PyErr_Occurred()) {
+        return NULL;
+    }
     Py_INCREF(Py_None);
     return Py_None;
 }
