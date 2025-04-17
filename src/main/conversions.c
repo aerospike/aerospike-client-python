@@ -2460,6 +2460,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             }
 
             if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
+                PyErr_Clear();
                 return as_error_update(
                     err, AEROSPIKE_ERR_PARAM,
                     "integer value for ttl exceeds sys.maxsize");
@@ -2482,6 +2483,7 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             }
 
             if ((uint16_t)-1 == gen && PyErr_Occurred()) {
+                PyErr_Clear();
                 return as_error_update(
                     err, AEROSPIKE_ERR_PARAM,
                     "integer value for gen exceeds sys.maxsize");
