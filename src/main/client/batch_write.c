@@ -197,6 +197,8 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     }
     garbage_list_p = &garbage_list;
 
+    // TODO: already a helper for this?
+    // TODO: mem leak with CLEANUP4
     for (Py_ssize_t i = 0; i < py_batch_records_size; i++) {
         garbage *garb = as_vector_get(&garbage_list, i);
         PyObject *py_batch_record = PyList_GetItem(py_batch_records, i);
@@ -206,6 +208,14 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                 err, AEROSPIKE_ERR_PARAM,
                 "py_batch_record is NULL, %s must be a list of BatchRecord",
                 FIELD_NAME_BATCH_RECORDS);
+            goto CLEANUP4;
+        }
+
+        if (is_pyobj_correct_as_helpers_type(py_batch_record, "batch.records",
+                                             "BatchRecord") == false) {
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "batch_record must be a BatchRecord class instance");
             goto CLEANUP4;
         }
 
