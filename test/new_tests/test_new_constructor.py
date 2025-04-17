@@ -2,6 +2,7 @@
 
 import pytest
 from .test_base_class import TestBaseClass
+from . import as_errors
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
@@ -227,8 +228,8 @@ def test_batch_parent_write(args):
     client = aerospike.client(config)
     api_call = args[0]
     try:
-        with pytest.raises(e.TimeoutError):
-            api_call(client, *args[1:])
+        brs = api_call(*args[1:])
+        assert brs.batch_records[0].result == as_errors.AEROSPIKE_ERR_TIMEOUT
     finally:
         client.close()
 
