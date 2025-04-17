@@ -412,30 +412,25 @@ class TestScan(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
     def test_scan_with_callback_contains_error(self):
-        records = []
-
         def callback(input_tuple):
             _, _, bins = input_tuple
             raise Exception("callback error")
-            records.append(bins)
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(Exception) as excinfo:
             scan_obj.foreach(callback)
 
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        assert excinfo.value.args[0] == "callback error"
 
     def test_scan_with_callback_non_callable(self):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(TypeError):
             scan_obj.foreach(5)
-
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        # https://discuss.python.org/t/pep-387-including-exception-messages-in-the-backward-compatibility-policy/35850/20
+        # Didn't test for error message for backwards compatibility
 
     def test_scan_with_callback_wrong_number_of_args(self):
         def callback():
@@ -443,11 +438,8 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(TypeError):
             scan_obj.foreach(callback)
-
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_with_invalid_expressions_policy(self):
 
