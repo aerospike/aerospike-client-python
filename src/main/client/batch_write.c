@@ -563,7 +563,7 @@ CLEANUP4:
 PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
-    PyObject *py_policy = NULL;
+    PyObject *py_policy = Py_None;
     PyObject *py_batch_recs = NULL;
 
     as_error err;
