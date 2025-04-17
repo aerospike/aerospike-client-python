@@ -244,11 +244,8 @@ class TestBatchApply(TestBaseClass):
 
             brs: BatchRecords = self.as_connection.batch_read(keys)
             # The server can return the records in any order, and the C and Python client does not sort the results
-            # Sort by bin value;
-            # We're just confirming that we have the correct bin values
-            # i.e
-            # ["name0", 10], ["name1", 10], ...
-            batch_records = sorted(brs.batch_records, key=lambda br: br.record[2]["name"])
+            # Sort by primary key
+            batch_records = sorted(brs.batch_records, key=lambda br: br.key[2])
             for i, br in enumerate(batch_records):
                 assert br.record[2]["name"] == ["name" + str(i), 10]
 
