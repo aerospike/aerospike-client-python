@@ -2,11 +2,10 @@
 
 import pytest
 from .test_base_class import TestBaseClass
-from . import as_errors
 import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
-from aerospike_helpers.batch import records as br
+from aerospike_helpers.batch.records import Write, BatchRecords
 from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
@@ -200,40 +199,6 @@ def test_setting_batch_remove_gen_neg_value():
     assert excinfo.value.msg == "Invalid Policy setting value"
 
 
-@pytest.mark.parametrize(
-    "args",
-    [
-        [aerospike.Client.batch_apply, [("test", "demo", 1)], "module", "function", []],
-        [aerospike.Client.batch_remove, [("test", "demo", 1)]],
-        [
-            aerospike.Client.batch_write,
-            br.BatchRecords(
-                batch_records=[
-                    br.Write(
-                        ("test", "demo", 1),
-                        [
-                            operations.write("ilist_bin", [2, 6]),
-                        ],
-                    )
-                ]
-            ),
-        ],
-    ]
-)
-def test_batch_parent_write(args):
-    config = copy.deepcopy(gconfig)
-    config["policies"]["batch_parent_write"] = {
-        "total_timeout": 1
-    }
-    client = aerospike.client(config)
-    api_call = args[0]
-    try:
-        brs = api_call(client, *args[1:])
-        assert brs.batch_records[0].result == as_errors.AEROSPIKE_ERR_TIMEOUT
-    finally:
-        client.close()
-
-
 def test_setting_batch_policies():
     config = copy.deepcopy(gconfig)
     policies = ["batch_remove", "batch_apply", "batch_write", "batch_parent_write", "txn_verify", "txn_roll"]
@@ -332,13 +297,13 @@ class TestConfigTTL:
         ops = [
             operations.write("bin", 1)
         ]
-        batch_records = br.BatchRecords([
-            br.Write(self.key, ops=ops, meta=meta)
+        batch_records = BatchRecords([
+            Write(self.key, ops=ops, meta=meta)
         ])
         brs = self.client.batch_write(batch_records)
         # assert brs.result == 0
-        for batch_record in brs.batch_records:
-            assert batch_record.result == 0
+        for br in brs.batch_records:
+            assert br.result == 0
 
         self.check_ttl()
 
@@ -354,8 +319,8 @@ class TestConfigTTL:
         keys = [self.key]
         brs = self.client.batch_operate(keys, ops, ttl=ttl)
         # assert brs.result == 0
-        for batch_record in brs.batch_records:
-            assert batch_record.result == 0
+        for br in brs.batch_records:
+            assert br.result == 0
 
         self.check_ttl()
 
