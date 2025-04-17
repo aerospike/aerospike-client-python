@@ -313,22 +313,20 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(Exception) as excinfo:
             scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        assert excinfo.value.args[0] == "callback error"
 
     def test_scan_pagination_with_callback_non_callable(self):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(TypeError):
             scan_obj.foreach(5, {"partition_filter": {"begin": 1001, "count": 1}})
-
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        # https://discuss.python.org/t/pep-387-including-exception-messages-in-the-backward-compatibility-policy/35850/20
+        # Didn't test for error message for backwards compatibility
 
     def test_scan_pagination_with_callback_wrong_number_of_args(self):
         def callback():
@@ -337,8 +335,5 @@ class TestScanPagination(TestBaseClass):
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
         scan_obj.paginate()
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(TypeError):
             scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
-
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
