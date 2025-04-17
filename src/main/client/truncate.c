@@ -127,21 +127,8 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
 
     // Start conversion of the nanosecond parameter
     if (PyLong_Check(py_nanos)) {
-
-        temp_long = PyLong_AsLongLong(py_nanos);
-        // There was a negative number outside of the range of - 2 ^ 63
-        if (temp_long < 0 && !PyErr_Occurred()) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Nanoseconds must be a positive value");
-            goto CLEANUP;
-        }
-        // Its possible that this is a valid uint64 between 2 ^ 63 and 2^64 -1
-        PyErr_Clear();
         nanos = (uint64_t)PyLong_AsUnsignedLongLong(py_nanos);
-
         if (PyErr_Occurred()) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Nanoseconds value too large");
             goto CLEANUP;
         }
     }
