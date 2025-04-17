@@ -236,7 +236,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 &err, AEROSPIKE_ERR_PARAM,
                 "predicate 'equals' expects a string or integer value.");
             PyObject *py_err = NULL;
-            error_to_pyobject(&err, &py_err);
+            py_err_tuple_new_from_as_error(&err, &py_err);
             PyErr_SetObject(PyExc_Exception, py_err);
             rc = 1;
             break;
@@ -329,7 +329,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "range predicate type not supported");
             PyObject *py_err = NULL;
-            error_to_pyobject(&err, &py_err);
+            py_err_tuple_new_from_as_error(&err, &py_err);
             PyErr_SetObject(PyExc_Exception, py_err);
             rc = 1;
             break;
@@ -340,7 +340,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         // If it ain't supported, raise and error
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
         PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
+        py_err_tuple_new_from_as_error(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
         rc = 1;
         break;

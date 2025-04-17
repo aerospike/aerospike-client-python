@@ -428,15 +428,15 @@ void raise_exception(as_error *err)
     Py_INCREF(py_value);
 
     // Convert C error to Python exception
-    PyObject *py_err = NULL;
-    error_to_pyobject(err, &py_err);
-    set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err);
+    PyObject *py_err_tuple = NULL;
+    py_err_tuple_new_from_as_error(err, &py_err_tuple);
+    set_aerospike_exc_attrs_using_tuple_of_attrs(py_value, py_err_tuple);
 
     // Raise exception
-    PyErr_SetObject(py_value, py_err);
+    PyErr_SetObject(py_value, py_err_tuple);
 
     Py_DECREF(py_value);
-    Py_DECREF(py_err);
+    Py_DECREF(py_err_tuple);
 }
 
 PyObject *raise_exception_old(as_error *err)

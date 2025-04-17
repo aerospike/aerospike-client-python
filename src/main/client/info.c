@@ -97,7 +97,7 @@ static bool AerospikeClient_InfoAll_each(as_error *err, const as_node *node,
 CLEANUP:
     if (udata_ptr->error.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
-        error_to_pyobject(&udata_ptr->error, &py_err);
+        py_err_tuple_new_from_as_error(&udata_ptr->error, &py_err);
         PyObject *exception_type = raise_exception_old(&udata_ptr->error);
         set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         PyErr_SetObject(exception_type, py_err);
@@ -107,7 +107,7 @@ CLEANUP:
     }
     if (err->code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
+        py_err_tuple_new_from_as_error(err, &py_err);
         PyObject *exception_type = raise_exception_old(err);
         set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         PyErr_SetObject(exception_type, py_err);
@@ -212,7 +212,7 @@ CLEANUP:
     }
     if (info_callback_udata.error.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
-        error_to_pyobject(&info_callback_udata.error, &py_err);
+        py_err_tuple_new_from_as_error(&info_callback_udata.error, &py_err);
         PyObject *exception_type =
             raise_exception_old(&info_callback_udata.error);
         set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);

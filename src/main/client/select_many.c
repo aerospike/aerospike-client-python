@@ -238,7 +238,7 @@ CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
         PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
+        py_err_tuple_new_from_as_error(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
         if (PyObject_HasAttrString(exception_type, "key")) {
             PyObject_SetAttrString(exception_type, "key", py_keys);
