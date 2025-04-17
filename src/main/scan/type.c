@@ -252,15 +252,12 @@ AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
         &AerospikeScan_Type, args, kwds);
     self->client = client;
     Py_INCREF(client);
-    if (AerospikeScan_Type.tp_init((PyObject *)self, args, kwds) != -1) {
+    int retval = AerospikeScan_Type.tp_init((PyObject *)self, args, kwds);
+    if (retval) {
         return self;
     }
     else {
         Py_XDECREF(self);
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
-        raise_exception(&err);
         return NULL;
     }
 }
