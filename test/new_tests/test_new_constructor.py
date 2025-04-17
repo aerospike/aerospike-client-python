@@ -228,7 +228,7 @@ def test_batch_parent_write(args):
     client = aerospike.client(config)
     api_call = args[0]
     try:
-        brs = api_call(*args[1:])
+        brs = api_call(client, *args[1:])
         assert brs.batch_records[0].result == as_errors.AEROSPIKE_ERR_TIMEOUT
     finally:
         client.close()
