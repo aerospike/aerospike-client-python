@@ -94,10 +94,6 @@ static bool each_result(const as_val *val, void *udata)
 
     // handle return value
     if (!py_return) {
-        // an exception was raised, handle it (someday)
-        // for now, we bail from the loop
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                        "Callback function raised an exception");
         rval = false;
     }
     else if (PyBool_Check(py_return)) {
@@ -237,10 +233,6 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     }
     // We are done using multiple threads
     Py_END_ALLOW_THREADS
-
-    if (data.error.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
