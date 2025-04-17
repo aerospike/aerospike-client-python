@@ -312,7 +312,7 @@ Batched Commands
         .. seealso:: More information about the \
             batch helpers :ref:`aerospike_operation_helpers.batch`
 
-    .. method:: batch_read(keys: list, [bins: list], [policy_batch: dict]) -> BatchRecords
+    .. method:: batch_read(keys: list, [bins: list], [policy: dict]) -> BatchRecords
 
         Read multiple records.
 
@@ -325,7 +325,7 @@ Batched Commands
 
         :param list keys: The key tuples of the records to fetch.
         :param list[str] bins: List of bin names to fetch for each record.
-        :param dict policy_batch: See :ref:`aerospike_batch_policies`.
+        :param dict policy: See :ref:`aerospike_batch_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
