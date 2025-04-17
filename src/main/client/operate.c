@@ -969,6 +969,7 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
     }
 
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
@@ -1190,6 +1191,7 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
     CHECK_CONNECTED(&err);
 
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
@@ -1286,6 +1288,7 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
     }
 
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+        raise_exception_base(&err, py_key, py_bin, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
@@ -1334,6 +1337,7 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
     }
 
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+        raise_exception_base(&err, py_key, py_bin, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
@@ -1381,6 +1385,7 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
     }
 
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
+        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
