@@ -202,8 +202,8 @@ def test_setting_batch_remove_gen_neg_value():
 @pytest.mark.parametrize(
     "args",
     [
-        [aerospike.Client.batch_apply, ["key1"], "module", "function", []],
-        [aerospike.Client.batch_remove, ["key"]],
+        [aerospike.Client.batch_apply, [("test", "demo", 1)], "module", "function", []],
+        [aerospike.Client.batch_remove, [("test", "demo", 1)]],
         [
             aerospike.Client.batch_write,
             br.BatchRecords(
