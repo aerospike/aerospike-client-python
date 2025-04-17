@@ -535,9 +535,9 @@ class TestPredEveryWhere(object):
             ),
         ],
     )
-    def test_pos_get_many_with_expressions(self, expressions, rec_place, rec_bin, expected):
+    def test_pos_batch_read_with_expressions(self, expressions, rec_place, rec_bin, expected):
         """
-        Proper call to get_many with expressions in policy
+        Proper call to batch_read with expressions in policy
         """
         brs = self.as_connection.batch_read(self.keys, policy={"expressions": expressions.compile()}).batch_records
 
@@ -548,13 +548,14 @@ class TestPredEveryWhere(object):
     @pytest.mark.parametrize(
         "args",
         [
+            # all bins, some bins
             [],
             [["account_id"]]
         ]
     )
-    def test_pos_get_many_with_large_expressions(self, args):
+    def test_pos_batch_read_with_large_expressions(self, args):
         """
-        Proper call to get_many with expressions in policy.
+        Proper call to batch_read with expressions in policy.
         """
         expr = exp.Or(
             exp.Eq(exp.IntBin("account_id"), 4),
@@ -693,7 +694,7 @@ class TestPredEveryWhere(object):
 
     def test_exists_many_with_large_expressions(self):
         """
-        Proper call to exists_many with expressions in policy.
+        Proper call to batch_read (only test if record exists) with expressions in policy.
         """
 
         expr = exp.Or(
@@ -703,7 +704,7 @@ class TestPredEveryWhere(object):
         )
 
         matched_recs = []
-        brs = self.as_connection.batch_read(self.keys, policy={"expressions": expr.compile()})
+        brs = self.as_connection.batch_read(self.keys, bins=[], policy={"expressions": expr.compile()})
         for br in brs.batch_records:
             if br.result != as_errors.AEROSPIKE_FILTERED_OUT:
                 matched_recs.append(br)
