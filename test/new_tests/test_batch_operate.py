@@ -187,6 +187,7 @@ class TestBatchOperate(TestBaseClass):
                 _, meta = self.as_connection.exists(key)
                 assert meta["ttl"] in range(9000 - 50, 9000 + 50)
 
+    # Makes sure that we can check if a record is not found, similar to get_many() which is now removed
     def test_record_not_found(self):
         brs = self.as_connection.batch_operate(keys=[("test", "demo", 99)], ops=[op.read("name")])
         assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_NOT_FOUND
