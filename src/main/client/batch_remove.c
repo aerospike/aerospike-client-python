@@ -175,7 +175,7 @@ static PyObject *AerospikeClient_Batch_Remove_Invoke(
     if (py_policy_batch) {
         if (pyobject_to_policy_batch(
                 self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch_parent_write, &batch_exp_list,
+                &self->as->config.policies.batch, &batch_exp_list,
                 &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
