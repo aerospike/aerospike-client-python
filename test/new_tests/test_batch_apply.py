@@ -248,7 +248,7 @@ class TestBatchApply(TestBaseClass):
             # We're just confirming that we have the correct bin values
             # i.e
             # ["name0", 10], ["name1", 10], ...
-            batch_records = sorted(brs.batch_records, key=lambda br: br.record[2])
+            batch_records = sorted(brs.batch_records, key=lambda br: br.record[2]["name"])
             for i, br in enumerate(batch_records):
                 assert br.record[2]["name"] == ["name" + str(i), 10]
 
