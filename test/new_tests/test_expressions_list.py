@@ -339,6 +339,7 @@ class TestExpressions(TestBaseClass):
         "ctx, begin, end, return_type, check, expected_context",
         [
             ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], pytest.raises(e.ParamError)),
+            # Invalid request error is expected, but the Python client returns it via BatchRecords.result
             (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], nullcontext()),
         ],
     )
