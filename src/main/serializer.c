@@ -270,9 +270,6 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     }
 
 CLEANUP:
-    if (error_p->code != AEROSPIKE_OK) {
-        raise_exception(error_p);
-    }
 }
 
 /*
