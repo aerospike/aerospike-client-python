@@ -1188,8 +1188,6 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    CHECK_CONNECTED(&err);
-
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
         raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
