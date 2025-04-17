@@ -371,9 +371,8 @@ class TestScan(TestBaseClass):
 
     def test_scan_without_any_parameter(self):
 
-        with pytest.raises(e.ParamError):
+        with pytest.raises(TypeError):
             self.as_connection.scan()
-            assert True
 
     def test_scan_with_non_existent_ns_and_set(self):
 
@@ -397,11 +396,8 @@ class TestScan(TestBaseClass):
         ns = None
         st = None
 
-        with pytest.raises(e.ParamError) as err_info:
+        with pytest.raises(TypeError):
             self.as_connection.scan(ns, st)
-
-        err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
     def test_scan_with_select_bin_integer(self):
         """
