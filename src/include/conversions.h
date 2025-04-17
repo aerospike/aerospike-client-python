@@ -237,7 +237,8 @@ PyObject *create_py_node_from_as_node(as_error *error_p,
 
 bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
-                                      const char *expected_type_name);
+                                      const char *expected_type_name,
+                                      bool is_subclass_instance);
 PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *module_name,
                                             const char *class_name,

@@ -167,7 +167,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     }
 
     if (!is_pyobj_correct_as_helpers_type(py_obj, "batch.records",
-                                          "BatchRecords")) {
+                                          "BatchRecords", false)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "batch_records must be an "
                         "aerospike_helpers.batch.records.BatchRecords "
@@ -212,7 +212,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         }
 
         if (is_pyobj_correct_as_helpers_type(py_batch_record, "batch.records",
-                                             "BatchRecord") == false) {
+                                             "BatchRecord", true) == false) {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "batch_record must be a BatchRecord class instance");

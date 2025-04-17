@@ -1065,13 +1065,23 @@ CLEANUP1:
 
 // Checks if pyobject is a certain type defined in aerospike_helpers or one of its submodules
 // If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
+// If is_subtype is true, we expect pyobject to be an instance of a subclass that directly inherits from *expected_type_name*
 bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
-                                      const char *expected_type_name)
+                                      const char *expected_type_name,
+                                      bool is_subclass_instance)
 {
-    if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
-        // Expected class name does not match object's class name
-        return false;
+    if (!is_subclass_instance) {
+        if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
+            // Expected class name does not match object's class name
+            return false;
+        }
+    }
+    else {
+        if (strcmp(obj->ob_type->tp_base->tp_name, expected_type_name)) {
+            // Expected class name does not match object's parent class name
+            return false;
+        }
     }
 
     PyObject *py_module_name =
@@ -1202,7 +1212,8 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         }
         *val = (as_val *)bytes;
 
-        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog")) {
+        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog",
+                                             false)) {
             bytes->type = AS_BYTES_HLL;
         }
     }
