@@ -131,7 +131,7 @@ static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
 
     static char *kwlist[] = {"namespace", "set", NULL};
 
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:scan", kwlist,
                                     &py_namespace, &py_set) == false) {
         return -1;
     }
