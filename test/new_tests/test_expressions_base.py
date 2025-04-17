@@ -52,7 +52,7 @@ _NUM_RECORDS = 8
 
 
 def verify_multiple_expression_avenues(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
 
     # operate
     ops = [operations.read(op_bin)]
