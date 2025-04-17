@@ -253,7 +253,7 @@ AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
     self->client = client;
     Py_INCREF(client);
     int retval = AerospikeScan_Type.tp_init((PyObject *)self, args, kwds);
-    if (retval) {
+    if (retval == 0) {
         return self;
     }
     else {
