@@ -413,12 +413,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        python-version: "3.13"
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
       with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        name: wheel-3.13
 
     - name: Install client
       run: pip install *.whl
@@ -433,7 +433,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*}.py
+      run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
     - name: Show logs if failed
