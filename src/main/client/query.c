@@ -395,9 +395,16 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
             goto CLEANUP;
         }
 
-        as_predicate_type op = (as_predicate_type)PyLong_AsLong(py_op);
+        long op = PyLong_AsLong(py_op);
+        if (op == -1 && PyErr_Occurred()) {
+            PyErr_Clear();
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "unknown predicate type");
+            goto CLEANUP;
+        }
         as_index_datatype op_data =
             (as_index_datatype)PyLong_AsLong(py_op_data);
+        as_predicate_type op;
         rc = query_where_add(
             &query_ptr, op, op_data,
             size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
