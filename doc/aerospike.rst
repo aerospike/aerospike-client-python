@@ -397,7 +397,6 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
                 This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
-                    * :meth:`~aerospike.Client.batch_get_ops`
                     * :meth:`~aerospike.Client.batch_read`
                     * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
 
