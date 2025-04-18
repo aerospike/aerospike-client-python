@@ -941,7 +941,7 @@ class TestQuery(TestBaseClass):
         with pytest.raises(Exception) as err_info:
             query.foreach(callback)
 
-        assert err_info.value.msg == "error"
+        assert err_info.value.args[0] == "error"
 
     def test_query_with_incorrect_ns_set(self):
         """

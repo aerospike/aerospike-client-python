@@ -421,7 +421,7 @@ class TestQueryPartition(TestBaseClass):
         with pytest.raises(Exception) as err_info:
             query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
-        assert err_info.value.msg == "callback error"
+        assert err_info.value.args[0] == "callback error"
 
     def test_query_partition_with_callback_non_callable(self):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
