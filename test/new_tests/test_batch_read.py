@@ -50,10 +50,17 @@ class TestBatchRead(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    def test_batch_read_with_policy(self):
+    # Ensures that filtering out records behaves the same, regardless of which parameter we pass into bins
+    # Setting bins=None does not work, so we have to do this for now
+    @pytest.mark.parametrize("args", [
+        [],
+        [[]],
+        [["count"]]
+    ])
+    def test_batch_read_with_policy(self, args):
         # No record will satisfy this expression condition
         expr = exp.Eq(exp.IntBin("count"), 99).compile()
-        res: BatchRecords = self.as_connection.batch_read(self.keys, policy={"expressions": expr})
+        res: BatchRecords = self.as_connection.batch_read(self.keys, policy={"expressions": expr}, *args)
         assert res.result == 0
         for i, batch_rec in enumerate(res.batch_records):
             assert batch_rec.key[:3] == self.keys[i]  # checking key
