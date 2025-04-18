@@ -401,6 +401,14 @@ class TestBatchWrite(TestBaseClass):
                 e.ParamError,
             ),
             (
+                "bad-batch-record-batch_records-field",
+                br.BatchRecords(
+                    1
+                ),
+                {},
+                e.ParamError,
+            ),
+            (
                 "bad-batch-record-key",
                 br.BatchRecords(
                     [
