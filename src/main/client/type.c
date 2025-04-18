@@ -531,7 +531,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist,
                                     &py_config) == false) {
-        return NULL;
+        return -1;
     }
 
     if (!PyDict_Check(py_config)) {
