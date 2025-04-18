@@ -408,7 +408,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch_write** (:class:`dict`)
                 Default batch write policy when a transaction-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
 
-                    * Individual :class:`Write <aerospike_helpers.batch.records>` instances
+                    * Individual :class:`Write <aerospike_helpers.batch.records.Write>` instances
                     * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
 
                 Contains :ref:`aerospike_batch_write_policies`.
