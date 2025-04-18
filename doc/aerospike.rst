@@ -393,15 +393,37 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **scan** (:class:`dict`)
                 Contains :ref:`aerospike_scan_policies`.
             * **batch** (:class:`dict`)
+                Default parent policy used in batch read commands.
+
+                This applies to these methods when a transaction-level :ref:`aerospike_batch_policies` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_get_ops`
+                    * :meth:`~aerospike.Client.batch_read`
+                    * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
+
                 Contains :ref:`aerospike_batch_policies`.
             * **batch_remove** (:class:`dict`)
                 Default delete policy used in batch remove commands. Contains :ref:`aerospike_batch_remove_policies`.
             * **batch_apply** (:class:`dict`)
                 Default user defined function policy used in batch UDF apply commands. Contains :ref:`aerospike_batch_apply_policies`.
             * **batch_write** (:class:`dict`)
-                Default write policy used in batch operate commands. Contains :ref:`aerospike_batch_write_policies`.
+                Default batch write policy when a transaction-level :ref:`aerospike_batch_write_policies` is not provided:
+
+                    * Individual :class:`Write <aerospike_helpers.batch.records>` instances
+                    * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
+
+                Contains :ref:`aerospike_batch_write_policies`.
             * **batch_parent_write** (:class:`dict`)
-                Default parent policy used in batch write commands. Contains :ref:`aerospike_batch_policies`.
+                Default parent policy used in batch write commands.
+
+                This applies to these methods when a transaction-level :ref:`aerospike_batch_policies` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation.
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * :meth:`~aerospike.Client.batch_remove`
+
+                Contains :ref:`aerospike_batch_policies`.
             * **info** (:class:`dict`)
                 Contains :ref:`aerospike_info_policies`.
             * **admin** (:class:`dict`)
