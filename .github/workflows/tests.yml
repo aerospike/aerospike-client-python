@@ -90,6 +90,8 @@ jobs:
         path: ./dist/*.whl
 
   generate-coverage-report:
+    # here we also want to run both CE + EE tests and check for unraisable exception warnings, which are only
+    # reported in Python 3.13.
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
@@ -99,7 +101,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        python-version: '3.13'
         architecture: 'x64'
 
     - name: Build client
@@ -123,7 +125,7 @@ jobs:
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
+    - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
     - name: Copy over source files to build dir
@@ -362,7 +364,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python -m pytest ./new_tests -vv
       working-directory: test
 
   test-lowest-supported-server:
