@@ -1181,6 +1181,7 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         int64_t i = (int64_t)PyLong_AsLongLong(py_obj);
         if (i == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+                PyErr_Clear();
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "integer value exceeds sys.maxsize");
             }
