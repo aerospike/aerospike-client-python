@@ -234,7 +234,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p,
 
 // Checks if pyobject is an instance of a class type defined in aerospike_helpers or one of its submodules
 // If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
-// If is_subtype is true, we expect the instance's type to directly inherit from aerospike_helpers.<expected_submodule_name>.<expected_type_name>
+// If is_subclass_instance is true, we expect the instance's type to directly inherit from aerospike_helpers.<expected_submodule_name>.<expected_type_name>
 bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
                                       const char *expected_type_name,
