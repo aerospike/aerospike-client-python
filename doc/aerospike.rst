@@ -402,9 +402,23 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
                 Contains :ref:`aerospike_batch_policies`.
             * **batch_remove** (:class:`dict`)
-                Default delete policy used in batch remove commands. Contains :ref:`aerospike_batch_remove_policies`.
+                Default delete policy used in batch remove commands.
+
+                This policy applies to these when a transaction-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_remove`
+                    * Individual :class:`Remove <aerospike_helpers.batch.records.Remove>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_remove_policies`.
             * **batch_apply** (:class:`dict`)
-                Default user defined function policy used in batch UDF apply commands. Contains :ref:`aerospike_batch_apply_policies`.
+                Default user defined function policy used in batch UDF apply commands.
+
+                This policy applies to these when a transaction-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * Individual :class:`Apply <aerospike_helpers.batch.records.Apply>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_apply_policies`.
             * **batch_write** (:class:`dict`)
                 Default batch write policy when a transaction-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
 
@@ -415,7 +429,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **batch_parent_write** (:class:`dict`)
                 Default parent batch policy used in batch write commands.
 
-                This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+                This policy applies to these when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_write`
                     * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation.
