@@ -1445,6 +1445,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
     as_key *returnResult = key;
 
     if (py_key && py_key != Py_None) {
+        // TODO: refactor using as_val_new_from_pyobject
         if (PyUnicode_Check(py_key)) {
             PyObject *py_ustr = PyUnicode_AsUTF8String(py_key);
             char *k = PyBytes_AsString(py_ustr);
@@ -1457,6 +1458,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
         else if (PyLong_Check(py_key)) {
             int64_t k = (int64_t)PyLong_AsLongLong(py_key);
             if (-1 == k && PyErr_Occurred()) {
+                PyErr_Clear();
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "integer value for KEY exceeds sys.maxsize");
             }
