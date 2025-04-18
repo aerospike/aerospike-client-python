@@ -225,9 +225,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
 
-    if (err.code != AEROSPIKE_OK || !py_result) {
-        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
-        return NULL;
-    }
+    raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
     return NULL;
 }
