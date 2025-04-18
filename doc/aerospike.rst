@@ -393,7 +393,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **scan** (:class:`dict`)
                 Contains :ref:`aerospike_scan_policies`.
             * **batch** (:class:`dict`)
-                Default parent policy used in batch read commands.
+                Default parent batch policy used in batch read commands.
 
                 This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
@@ -413,7 +413,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
                 Contains :ref:`aerospike_batch_write_policies`.
             * **batch_parent_write** (:class:`dict`)
-                Default parent policy used in batch write commands.
+                Default parent batch policy used in batch write commands.
 
                 This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
