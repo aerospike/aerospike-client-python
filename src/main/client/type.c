@@ -566,8 +566,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist,
                                     &py_config) == false) {
-        error_code = INIT_NO_CONFIG_ERR;
-        goto CONSTRUCTOR_ERROR;
+        return NULL;
     }
 
     if (!PyDict_Check(py_config)) {
