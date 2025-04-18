@@ -50,6 +50,8 @@ PyObject *AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err)
         initresult = PyObject_CallMethodObjArgs(json_module, py_funcname,
                                                 py_geodata, NULL);
         if (!initresult) {
+            // TODO: need to append more info
+            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to load GeoJSON");
         }
