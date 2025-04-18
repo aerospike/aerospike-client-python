@@ -593,6 +593,11 @@ PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    if (py_policy == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy = NULL;
+    }
+
     return AerospikeClient_BatchWriteInvoke(self, &err, py_policy,
                                             py_batch_recs);
 }
