@@ -10,7 +10,7 @@ from aerospike_helpers.operations import list_operations
 from aerospike_helpers.operations import map_operations
 from aerospike_helpers.operations import operations
 
-
+from . import as_errors
 import aerospike
 
 geo_circle = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-132.0, 37.5], 1000]})
@@ -535,39 +535,27 @@ class TestPredEveryWhere(object):
             ),
         ],
     )
-    def test_pos_get_many_with_expressions(self, expressions, rec_place, rec_bin, expected):
+    def test_pos_batch_read_with_expressions(self, expressions, rec_place, rec_bin, expected):
         """
-        Proper call to get_many with expressions in policy
+        Proper call to batch_read with expressions in policy
         """
-        records = self.as_connection.get_many(self.keys, {"expressions": expressions.compile()})
+        brs = self.as_connection.batch_read(self.keys, policy={"expressions": expressions.compile()}).batch_records
 
         # assert isinstance(records, list)
         # assert records[2][2]['age'] == 2
-        assert records[rec_place][2][rec_bin] == expected
+        assert brs[rec_place].record[2][rec_bin] == expected
 
-    def test_pos_get_many_with_large_expressions(self):
+    @pytest.mark.parametrize(
+        "args",
+        [
+            # all bins, some bins
+            [],
+            [["account_id"]]
+        ]
+    )
+    def test_pos_batch_read_with_large_expressions(self, args):
         """
-        Proper call to get_many with expressions in policy.
-        """
-        expr = exp.Or(
-            exp.Eq(exp.IntBin("account_id"), 4),
-            exp.Eq(exp.StrBin("user_name"), "user3"),
-            exp.LT(exp.ListGetByRank(None, aerospike.LIST_RETURN_VALUE, exp.ResultType.INTEGER, -1, "charges"), 12),
-        )
-
-        matched_recs = []
-        records = self.as_connection.get_many(self.keys, {"expressions": expr.compile()})
-        for rec in records:
-            if rec[2] is not None:
-                matched_recs.append(rec[2])
-
-        assert len(matched_recs) == 3
-        for rec in matched_recs:
-            assert rec["account_id"] == 1 or rec["account_id"] == 3 or rec["account_id"] == 4
-
-    def test_pos_select_many_with_large_expressions(self):
-        """
-        Proper call to select_many with expressions in policy.
+        Proper call to batch_read with expressions in policy.
         """
         expr = exp.Or(
             exp.Eq(exp.IntBin("account_id"), 4),
@@ -576,10 +564,10 @@ class TestPredEveryWhere(object):
         )
 
         matched_recs = []
-        records = self.as_connection.select_many(self.keys, ["account_id"], {"expressions": expr.compile()})
-        for rec in records:
-            if rec[2] is not None:
-                matched_recs.append(rec[2])
+        brs = self.as_connection.batch_read(self.keys, *args, policy={"expressions": expr.compile()}).batch_records
+        for br in brs:
+            if br.result != as_errors.AEROSPIKE_FILTERED_OUT:
+                matched_recs.append(br.record[2])
 
         assert len(matched_recs) == 3
         for rec in matched_recs:
@@ -706,7 +694,7 @@ class TestPredEveryWhere(object):
 
     def test_exists_many_with_large_expressions(self):
         """
-        Proper call to exists_many with expressions in policy.
+        Proper call to batch_read (only test if record exists) with expressions in policy.
         """
 
         expr = exp.Or(
@@ -716,9 +704,9 @@ class TestPredEveryWhere(object):
         )
 
         matched_recs = []
-        records = self.as_connection.exists_many(self.keys, {"expressions": expr.compile()})
-        for rec in records:
-            if rec[1] is not None:
-                matched_recs.append(rec[1])
+        brs = self.as_connection.batch_read(self.keys, bins=[], policy={"expressions": expr.compile()})
+        for br in brs.batch_records:
+            if br.result != as_errors.AEROSPIKE_FILTERED_OUT:
+                matched_recs.append(br)
 
         assert len(matched_recs) == 3
