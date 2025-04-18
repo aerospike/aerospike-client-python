@@ -143,10 +143,8 @@ try:
         q = None
 
         if len(args) == 1:
-            print("###########args[0]:", args[0])
             w = re_w.match(args[0])
             if w is not None:
-                print("###########w:", w)
                 # If predicate is provided, then perform a query
                 q = client.query(namespace, set)
 
@@ -159,12 +157,10 @@ try:
                     v = w.group(3)
                     q.where_index_name(p.equals(b, v), w.group(1))
                 elif w.group(4):
-                    print("###########w.group(4):", w.group(4))
                     b = w.group(1)
                     v = int(w.group(4))
                     q.where_index_name(p.equals(b, v), w.group(1))
                 elif w.group(5) and w.group(6):
-                    print("###########w.group(5) and w.group(6):", w.group(5), w.group(6))
                     b = w.group(1)
                     l = int(w.group(5))
                     u = int(w.group(6))
