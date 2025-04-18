@@ -2701,6 +2701,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
 
             uint64_t item_type = PyLong_AsUnsignedLongLong(id_temp);
             if (PyErr_Occurred()) {
+                PyErr_Clear();
                 as_cdt_ctx_destroy(cdt_ctx);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert %s, id to uint64_t",
@@ -2711,6 +2712,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             if (requires_int(item_type)) {
                 int_val = PyLong_AsLong(value_temp);
                 if (PyErr_Occurred()) {
+                    PyErr_Clear();
                     as_cdt_ctx_destroy(cdt_ctx);
                     return as_error_update(
                         err, AEROSPIKE_ERR_PARAM,
