@@ -74,8 +74,13 @@ static inline bool isExprOp(int op);
         goto CLEANUP;                                                          \
     }
 
+// This macro is only called after AerospikeClient_Operate_Invoke()
+// If AerospikeClient_Operate_Invoke() raises an exception, clear it because we are raising a new one anyways
 #define EXCEPTION_ON_ERROR()                                                   \
     if (err.code != AEROSPIKE_OK) {                                            \
+        if (PyErr_Occurred()) {                                                \
+            PyErr_Clear();                                                     \
+        }                                                                      \
         raise_exception_base(&err, py_key, py_bin, Py_None, Py_None, Py_None); \
         return NULL;                                                           \
     }
@@ -825,24 +830,14 @@ CLEANUP:
  * @param py_list               The list containing op, bin and value.
  * @param py_meta               The metadata for the operation.
  * @param py_policy      		Python dict used to populate the operate_policy or map_policy.
- * @param py_key          		Only used for raising RecordErrors.
- * @param py_bin          		Only used for raising RecordErrors.
  *******************************************************************************************************
  */
-static PyObject *AerospikeClient_Operate_Invoke(
-    AerospikeClient *self, as_error *err, as_key *key, PyObject *py_list,
-    PyObject *py_meta, PyObject *py_policy, PyObject *py_key, PyObject *py_bin)
+static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
+                                                as_error *err, as_key *key,
+                                                PyObject *py_list,
+                                                PyObject *py_meta,
+                                                PyObject *py_policy)
 {
-    if (!self || !self->as) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto RAISE_EXCEPTION;
-    }
-    if (!self->is_conn_16) {
-        as_error_update(err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto RAISE_EXCEPTION;
-    }
-
     int i = 0;
     long operation;
     long return_type = -1;
@@ -873,6 +868,7 @@ static PyObject *AerospikeClient_Operate_Invoke(
 
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
+    CHECK_CONNECTED(err);
 
     if (check_and_set_meta(py_meta, &ops, err) != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -927,9 +923,8 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-RAISE_EXCEPTION:
     if (err->code != AEROSPIKE_OK) {
-        raise_exception_base(err, py_key, py_bin, Py_None, Py_None, Py_None);
+        raise_exception(err);
         return NULL;
     }
 
@@ -959,6 +954,7 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
 {
     BASE_VARIABLES
     PyObject *py_list = NULL;
+    PyObject *py_bin = NULL;
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"key", "list", "meta", "policy", NULL};
@@ -968,14 +964,15 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    CHECK_CONNECTED(&err);
+
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
     if (py_list && PyList_Check(py_list)) {
-        py_result = AerospikeClient_Operate_Invoke(
-            self, &err, &key, py_list, py_meta, py_policy, Py_None, Py_None);
+        py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+                                                   py_meta, py_policy);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -983,6 +980,8 @@ PyObject *AerospikeClient_Operate(AerospikeClient *self, PyObject *args,
     }
 
 CLEANUP:
+    EXCEPTION_ON_ERROR();
+
     return py_result;
 }
 
@@ -1188,8 +1187,9 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    CHECK_CONNECTED(&err);
+
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
@@ -1204,6 +1204,10 @@ PyObject *AerospikeClient_OperateOrdered(AerospikeClient *self, PyObject *args,
     }
 
 CLEANUP:
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
+        return NULL;
+    }
     return py_result;
 }
 
@@ -1235,26 +1239,23 @@ PyObject *AerospikeClient_Append(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    CHECK_CONNECTED(&err);
+
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
     PyObject *py_list = NULL;
-    // creates strong ref for list
     py_list = create_pylist(py_list, AS_OPERATOR_APPEND, py_bin, py_append_str);
-    py_result = AerospikeClient_Operate_Invoke(
-        self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
-    Py_DECREF(py_list);
+    py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+                                               py_meta, py_policy);
+
+    DECREF_LIST_AND_RESULT();
 
 CLEANUP:
-    if (py_result) {
-        Py_DECREF(py_result);
-        return PyLong_FromLong(0);
-    }
-    else {
-        return NULL;
-    }
+    EXCEPTION_ON_ERROR();
+
+    return PyLong_FromLong(0);
 }
 
 /**
@@ -1285,25 +1286,24 @@ PyObject *AerospikeClient_Prepend(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    CHECK_CONNECTED(&err);
+
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-        raise_exception_base(&err, py_key, py_bin, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
     PyObject *py_list = NULL;
     py_list =
         create_pylist(py_list, AS_OPERATOR_PREPEND, py_bin, py_prepend_str);
-    py_result = AerospikeClient_Operate_Invoke(
-        self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
+    py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+                                               py_meta, py_policy);
+
+    DECREF_LIST_AND_RESULT();
 
 CLEANUP:
-    if (py_result) {
-        Py_DECREF(py_result);
-        return PyLong_FromLong(0);
-    }
-    else {
-        return NULL;
-    }
+    EXCEPTION_ON_ERROR();
+
+    return PyLong_FromLong(0);
 }
 
 /**
@@ -1334,24 +1334,23 @@ PyObject *AerospikeClient_Increment(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    CHECK_CONNECTED(&err);
+
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-        raise_exception_base(&err, py_key, py_bin, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
     PyObject *py_list = NULL;
     py_list = create_pylist(py_list, AS_OPERATOR_INCR, py_bin, py_offset_value);
-    py_result = AerospikeClient_Operate_Invoke(
-        self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
+    py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+                                               py_meta, py_policy);
+
+    DECREF_LIST_AND_RESULT();
 
 CLEANUP:
-    if (py_result) {
-        Py_DECREF(py_result);
-        return PyLong_FromLong(0);
-    }
-    else {
-        return NULL;
-    }
+    EXCEPTION_ON_ERROR();
+
+    return PyLong_FromLong(0);
 }
 
 /**
@@ -1382,8 +1381,9 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    CHECK_CONNECTED(&err);
+
     if (pyobject_to_key(&err, py_key, &key) != AEROSPIKE_OK) {
-        raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
         goto CLEANUP;
     }
 
@@ -1393,17 +1393,15 @@ PyObject *AerospikeClient_Touch(AerospikeClient *self, PyObject *args,
 
     PyObject *py_list = NULL;
     py_list = create_pylist(py_list, AS_OPERATOR_TOUCH, NULL, py_touchvalue);
-    py_result = AerospikeClient_Operate_Invoke(
-        self, &err, &key, py_list, py_meta, py_policy, py_key, py_bin);
+    py_result = AerospikeClient_Operate_Invoke(self, &err, &key, py_list,
+                                               py_meta, py_policy);
+
+    DECREF_LIST_AND_RESULT();
 
 CLEANUP:
-    if (py_result) {
-        Py_DECREF(py_result);
-        return PyLong_FromLong(0);
-    }
-    else {
-        return NULL;
-    }
+    EXCEPTION_ON_ERROR();
+
+    return PyLong_FromLong(0);
 }
 
 static as_status get_operation(as_error *err, PyObject *op_dict,
