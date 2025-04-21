@@ -248,8 +248,6 @@ CLEANUP:
             raise_exception_base(&data.error, Py_None, Py_None, Py_None,
                                  Py_None, Py_None);
         }
-
-        return NULL;
     }
 
     if (PyErr_Occurred()) {
