@@ -457,10 +457,11 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         else {
             // This happens if the code that converts a C client error to a Python exception fails.
             // The caller of this function should be returning because of an exception anyways
-            if (py_prev_type) {
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+            if (py_prev_exc) {
                 _PyErr_ChainExceptions1(py_prev_exc);
 #else
+            if (py_prev_type) {
                 _PyErr_ChainExceptions(py_prev_type, py_prev_value,
                                        py_prev_traceback);
 #endif
