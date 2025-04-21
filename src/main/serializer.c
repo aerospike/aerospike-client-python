@@ -272,6 +272,9 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     }
 
 CLEANUP:
+    if (error_p->code != AEROSPIKE_OK) {
+        raise_exception(error_p);
+    }
 }
 
 /*
@@ -385,6 +388,10 @@ extern as_status serialize_based_on_serializer_policy(AerospikeClient *self,
 CLEANUP:
 
     Py_XDECREF(initresult);
+    if (error_p->code != AEROSPIKE_OK) {
+        raise_exception(error_p);
+    }
+
     return error_p->code;
 }
 
