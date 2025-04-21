@@ -19,7 +19,3 @@
 // pyval is a PyObject* classname is a string
 #define AS_Matches_Classname(pyval, classname)                                 \
     (strcmp((pyval)->ob_type->tp_name, (classname)) == 0)
-
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
-    #define _PyErr_ChainExceptions _PyErr_ChainExceptions1
-#endif
