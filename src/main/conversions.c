@@ -1025,6 +1025,9 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
 {
     if (obj->ob_type->tp_dict == NULL) {
         // Unable to get type's __module__ attribute.
+        // In Python 3.12+, this would happen if obj was a native Python type
+        // https://docs.python.org/3.12/c-api/typeobj.html#c.PyTypeObject.tp_dict
+        // so the object would not be the correct type, anyways
         return false;
     }
 
