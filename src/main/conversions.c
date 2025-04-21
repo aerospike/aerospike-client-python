@@ -1065,7 +1065,7 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
         }
     }
     else {
-        // Python object belongs in the aerospike_helpers parent submodule
+        // Python object belongs in the aerospike_helpers parent module
         if (expected_submodule_name) {
             // But it is expected to belong to an aerospike_helpers submodule
             retval = false;
