@@ -186,7 +186,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
     PyObject *py_key = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_binList = NULL;
-    PyObject *py_result = NULL;
     PyObject *py_meta = NULL;
 
     as_error err;
