@@ -1141,7 +1141,6 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         int64_t i = (int64_t)PyLong_AsLongLong(py_obj);
         if (i == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                PyErr_Clear();
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "integer value exceeds sys.maxsize");
             }
@@ -1463,7 +1462,6 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
         else if (PyLong_Check(py_key)) {
             int64_t k = (int64_t)PyLong_AsLongLong(py_key);
             if (-1 == k && PyErr_Occurred()) {
-                PyErr_Clear();
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "integer value for KEY exceeds sys.maxsize");
             }
@@ -2423,7 +2421,6 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             }
 
             if ((uint32_t)-1 == ttl && PyErr_Occurred()) {
-                PyErr_Clear();
                 return as_error_update(
                     err, AEROSPIKE_ERR_PARAM,
                     "integer value for ttl exceeds sys.maxsize");
@@ -2446,7 +2443,6 @@ as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
             }
 
             if ((uint16_t)-1 == gen && PyErr_Occurred()) {
-                PyErr_Clear();
                 return as_error_update(
                     err, AEROSPIKE_ERR_PARAM,
                     "integer value for gen exceeds sys.maxsize");
@@ -2664,7 +2660,6 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
 
             uint64_t item_type = PyLong_AsUnsignedLongLong(id_temp);
             if (PyErr_Occurred()) {
-                PyErr_Clear();
                 as_cdt_ctx_destroy(cdt_ctx);
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert %s, id to uint64_t",
@@ -2675,7 +2670,6 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             if (requires_int(item_type)) {
                 int_val = PyLong_AsLong(value_temp);
                 if (PyErr_Occurred()) {
-                    PyErr_Clear();
                     as_cdt_ctx_destroy(cdt_ctx);
                     return as_error_update(
                         err, AEROSPIKE_ERR_PARAM,

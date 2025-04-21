@@ -405,6 +405,10 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
                           PyObject *py_name)
 {
+    // If there was an exception already raised, we need to chain it to the one we're raising now
+    PyObject *py_prev_type, *py_prev_value, *py_prev_traceback;
+    PyErr_Fetch(&py_prev_type, &py_prev_value, &py_prev_traceback);
+
     PyObject *py_unused = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
@@ -443,11 +447,16 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                                    py_extra_attrs[i]);
         }
         else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+            // We are sure that we want to ignore this
             PyErr_Clear();
         }
         else {
             // This happens if the code that converts a C client error to a Python exception fails.
             // The caller of this function should be returning because of an exception anyways
+            if (py_prev_type) {
+                _PyErr_ChainExceptions(py_prev_type, py_prev_value,
+                                       py_prev_traceback);
+            }
             return;
         }
     }
@@ -462,6 +471,9 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
 
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err);
+    if (py_prev_type) {
+        _PyErr_ChainExceptions(py_prev_type, py_prev_value, py_prev_traceback);
+    }
 
     Py_DECREF(py_exc_class);
     Py_DECREF(py_err);

@@ -377,7 +377,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
 
         PyObject *py_op = PyTuple_GetItem(py_predicate, 0);
         if (!py_op) {
-            PyErr_Clear();
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "Failed to get predicate elements");
             goto CLEANUP;
@@ -385,7 +384,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
 
         PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
         if (!py_op_data) {
-            PyErr_Clear();
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "Failed to get predicate elements");
             goto CLEANUP;
@@ -397,7 +395,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
 
         long op = PyLong_AsLong(py_op);
         if (op == -1 && PyErr_Occurred()) {
-            PyErr_Clear();
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "unknown predicate type");
             goto CLEANUP;

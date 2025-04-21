@@ -78,9 +78,6 @@ static inline bool isExprOp(int op);
 // If AerospikeClient_Operate_Invoke() raises an exception, clear it because we are raising a new one anyways
 #define EXCEPTION_ON_ERROR()                                                   \
     if (err.code != AEROSPIKE_OK) {                                            \
-        if (PyErr_Occurred()) {                                                \
-            PyErr_Clear();                                                     \
-        }                                                                      \
         raise_exception_base(&err, py_key, py_bin, Py_None, Py_None, Py_None); \
         return NULL;                                                           \
     }

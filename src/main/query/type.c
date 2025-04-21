@@ -178,7 +178,6 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
                                     &py_namespace, &py_set) == false) {
-        PyErr_Clear();
         as_query_destroy(&self->query);
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "query() expects atleast 1 parameter");

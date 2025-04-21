@@ -255,8 +255,6 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
         }
     }
     else {
-        // TODO: append to current exception
-        PyErr_Clear();
         if (serialize_flag) {
             as_error_update(
                 error_p, AEROSPIKE_ERR,

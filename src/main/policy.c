@@ -1008,7 +1008,6 @@ as_status call_py_callback(as_error *err, unsigned int py_listener_data_index,
             Py_DECREF(py_exc_value);
 
             if (!py_exc_value_str) {
-                PyErr_Clear();
                 err_msg_details =
                     strdup("str() on exception value threw an error");
             }
