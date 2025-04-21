@@ -405,9 +405,13 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
                           PyObject *py_name)
 {
-    // If there was an exception already raised, we need to chain it to the one we're raising now
+// If there was an exception already raised, we need to chain it to the one we're raising now
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+    PyObject *py_prev_exc = PyErr_GetRaisedException();
+#else
     PyObject *py_prev_type, *py_prev_value, *py_prev_traceback;
     PyErr_Fetch(&py_prev_type, &py_prev_value, &py_prev_traceback);
+#endif
 
     PyObject *py_unused = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
@@ -454,8 +458,12 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
             // This happens if the code that converts a C client error to a Python exception fails.
             // The caller of this function should be returning because of an exception anyways
             if (py_prev_type) {
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+                _PyErr_ChainExceptions1(py_prev_exc);
+#else
                 _PyErr_ChainExceptions(py_prev_type, py_prev_value,
                                        py_prev_traceback);
+#endif
             }
             return;
         }
