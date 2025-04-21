@@ -1025,13 +1025,13 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
 {
     if (!is_subclass_instance) {
         if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
-            // Expected class name does not match object's class name
+            // object's parent class does not match expected class
             return false;
         }
     }
     else {
         if (strcmp(obj->ob_type->tp_base->tp_name, expected_type_name)) {
-            // Expected class name does not match object's parent class name
+            // object's class does not match expected class
             return false;
         }
     }
