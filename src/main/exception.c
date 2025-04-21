@@ -446,7 +446,8 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
             PyErr_Clear();
         }
         else {
-            // Caller of this function should be returning because of an exception anyways
+            // This happens if the code that converts a C client error to a Python exception fails.
+            // The caller of this function should be returning because of an exception anyways
             return;
         }
     }
