@@ -1023,19 +1023,6 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_type_name,
                                       bool is_subclass_instance)
 {
-    if (!is_subclass_instance) {
-        if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
-            // object's class does not match expected class
-            return false;
-        }
-    }
-    else {
-        if (strcmp(obj->ob_type->tp_base->tp_name, expected_type_name)) {
-            // object's parent class does not match expected class
-            return false;
-        }
-    }
-
     PyObject *py_module_name =
         PyDict_GetItemString(obj->ob_type->tp_dict, "__module__");
     if (!py_module_name) {
@@ -1083,6 +1070,19 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
             // But it is expected to belong to an aerospike_helpers submodule
             retval = false;
             goto CLEANUP2;
+        }
+    }
+
+    if (!is_subclass_instance) {
+        if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
+            // object's class does not match expected class
+            return false;
+        }
+    }
+    else {
+        if (strcmp(obj->ob_type->tp_base->tp_name, expected_type_name)) {
+            // object's parent class does not match expected class
+            return false;
         }
     }
 
