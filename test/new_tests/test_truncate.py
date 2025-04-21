@@ -160,7 +160,7 @@ class TestTruncate(object):
             self.as_connection.truncate("test", "truncate", 1)
 
     def test_nanos_argument_too_large(self):
-        with pytest.raises(OverflowError):
+        with pytest.raises(e.ParamError):
             self.as_connection.truncate("test", "truncate", 2**64)
 
     def test_nanos_argument_between_int64_and_uint64(self):
@@ -174,7 +174,7 @@ class TestTruncate(object):
             self.as_connection.truncate("test", "truncate", 2**31 + 1)
 
     def test_nanos_argument_negative(self):
-        with pytest.raises(OverflowError):
+        with pytest.raises(e.ParamError):
             self.as_connection.truncate("test", "truncate", -self.truncate_threshold)
 
     def test_nanos_argument_in_future(self):
