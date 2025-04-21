@@ -480,8 +480,13 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
 
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err);
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+    if (py_prev_exc) {
+        _PyErr_ChainExceptions1(py_prev_exc);
+#else
     if (py_prev_type) {
         _PyErr_ChainExceptions(py_prev_type, py_prev_value, py_prev_traceback);
+#endif
     }
 
     Py_DECREF(py_exc_class);
