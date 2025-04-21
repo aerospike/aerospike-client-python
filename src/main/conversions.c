@@ -1023,6 +1023,11 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_type_name,
                                       bool is_subclass_instance)
 {
+    if (obj->ob_type->tp_dict == NULL) {
+        // Unable to get type's __module__ attribute.
+        return false;
+    }
+
     PyObject *py_module_name =
         PyDict_GetItemString(obj->ob_type->tp_dict, "__module__");
     if (!py_module_name) {
