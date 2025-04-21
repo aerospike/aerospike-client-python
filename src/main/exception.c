@@ -405,12 +405,12 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
                           PyObject *py_module, PyObject *py_func,
                           PyObject *py_name)
 {
-    PyObject *py_key = NULL, *py_exc_class = NULL;
+    PyObject *py_unused = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
     bool found = false;
 
-    while (PyDict_Next(py_module_dict, &pos, &py_key, &py_exc_class)) {
+    while (PyDict_Next(py_module_dict, &pos, &py_unused, &py_exc_class)) {
         if (PyObject_HasAttrString(py_exc_class, "code")) {
             PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
             if (py_code == Py_None) {
