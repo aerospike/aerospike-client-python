@@ -324,7 +324,8 @@ Batched Commands
         Each ``BatchRecord.record`` in ``BatchRecords.batch_records`` will only be a 2-tuple ``(key, meta)``.
 
         :param list keys: The key tuples of the records to fetch.
-        :param list[str] bins: List of bin names to fetch for each record.
+        :param bins: List of bin names to fetch for each record.
+        :type bins: list[str] or None
         :param dict policy: See :ref:`aerospike_batch_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
