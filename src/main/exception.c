@@ -457,16 +457,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         else {
             // This happens if the code that converts a C client error to a Python exception fails.
             // The caller of this function should be returning because of an exception anyways
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
-            if (py_prev_exc) {
-                _PyErr_ChainExceptions1(py_prev_exc);
-#else
-            if (py_prev_type) {
-                _PyErr_ChainExceptions(py_prev_type, py_prev_value,
-                                       py_prev_traceback);
-#endif
-            }
-            return;
+            goto CHAIN_PREV_EXC_AND_RETURN;
         }
     }
 
@@ -480,15 +471,19 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
 
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err);
-#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
-    if (py_prev_exc) {
-        _PyErr_ChainExceptions1(py_prev_exc);
-#else
-    if (py_prev_type) {
-        _PyErr_ChainExceptions(py_prev_type, py_prev_value, py_prev_traceback);
-#endif
-    }
-
     Py_DECREF(py_exc_class);
     Py_DECREF(py_err);
+
+CHAIN_PREV_EXC_AND_RETURN:
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+    if (py_prev_exc) {
+        // Like PyErr_SetRaisedException, which steals a reference to the parameter
+        _PyErr_ChainExceptions1(py_prev_exc);
+    }
+#else
+    if (py_prev_type) {
+        // Like PyErr_Restore, which steals a reference to the parameter
+        _PyErr_ChainExceptions(py_prev_type, py_prev_value, py_prev_traceback);
+    }
+#endif
 }
