@@ -388,7 +388,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
                             "Failed to get predicate elements");
             goto CLEANUP;
         }
-        else if (!PyLong_Check(py_op_data)) {
+        if (!PyLong_Check(py_op_data)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Predicate");
             goto CLEANUP;
         }
