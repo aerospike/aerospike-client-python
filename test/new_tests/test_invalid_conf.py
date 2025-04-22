@@ -6,8 +6,9 @@ import aerospike
 
 class TestInvalidClientConfig(object):
     def test_no_config(self):
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ParamError) as err:
             aerospike.client()
+        assert "No config argument" in err.value.msg
 
     def test_config_not_dict(self):
         with pytest.raises(e.ParamError) as err:
