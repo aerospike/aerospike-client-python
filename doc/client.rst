@@ -1210,7 +1210,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
-        :return: a :class:`list` of users' data. See :ref:`admin_user_dict`.
+        :return: a :class:`dict` mapping usernames to user dictionaries. See :ref:`admin_user_dict`.
 
 Metrics
 -------
