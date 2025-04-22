@@ -248,7 +248,7 @@ CLEANUP:
             raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None,
                                  Py_None);
         }
-        else if (data.error.code != AEROSPIKE_OK) {
+        if (data.error.code != AEROSPIKE_OK) {
             raise_exception_base(&data.error, Py_None, Py_None, Py_None,
                                  Py_None, Py_None);
         }
