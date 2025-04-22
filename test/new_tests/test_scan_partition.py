@@ -250,7 +250,7 @@ class TestScanPartition(TestBaseClass):
 
     def test_scan_partition_without_any_parameter(self):
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ParamError):
             self.as_connection.scan()
             assert True
 
@@ -281,10 +281,11 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(Exception) as excinfo:
+        with pytest.raises(e.ClientError) as err_info:
             scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
-        assert excinfo.value.args[0] == "callback error"
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_partition_with_callback_non_callable(self):
         # TODO
@@ -292,8 +293,11 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ClientError) as err_info:
             scan_obj.foreach(5, {"partition_filter": {"begin": 1001, "count": 1}})
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_partition_with_callback_wrong_number_of_args(self):
         def callback():
@@ -301,8 +305,11 @@ class TestScanPartition(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ClientError) as err_info:
             scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_resume_part_scan(self):
         """

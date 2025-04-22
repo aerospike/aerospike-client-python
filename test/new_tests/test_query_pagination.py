@@ -253,18 +253,22 @@ class TestQueryPagination(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
         query_obj.paginate()
 
-        with pytest.raises(Exception) as err_info:
+        with pytest.raises(e.ClientError) as err_info:
             query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
-        assert err_info.value.args[0] == "callback error"
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_query_pagination_with_callback_non_callable(self):
 
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
         query_obj.paginate()
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ClientError) as err_info:
             query_obj.foreach(5, {"partition_filter": {"begin": 1001, "count": 1}})
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_query_pagination_with_callback_wrong_number_of_args(self):
         def callback():
@@ -273,5 +277,8 @@ class TestQueryPagination(TestBaseClass):
         query_obj = self.as_connection.query(self.test_ns, self.test_set)
         query_obj.paginate()
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ClientError) as err_info:
             query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT

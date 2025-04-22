@@ -371,8 +371,9 @@ class TestScan(TestBaseClass):
 
     def test_scan_without_any_parameter(self):
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ParamError):
             self.as_connection.scan()
+            assert True
 
     def test_scan_with_non_existent_ns_and_set(self):
 
@@ -396,8 +397,11 @@ class TestScan(TestBaseClass):
         ns = None
         st = None
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ParamError) as err_info:
             self.as_connection.scan(ns, st)
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
     def test_scan_with_select_bin_integer(self):
         """
@@ -412,25 +416,30 @@ class TestScan(TestBaseClass):
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
     def test_scan_with_callback_contains_error(self):
+        records = []
+
         def callback(input_tuple):
             _, _, bins = input_tuple
             raise Exception("callback error")
+            records.append(bins)
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(Exception) as excinfo:
+        with pytest.raises(e.ClientError) as err_info:
             scan_obj.foreach(callback)
 
-        assert excinfo.value.args[0] == "callback error"
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_with_callback_non_callable(self):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ClientError) as err_info:
             scan_obj.foreach(5)
-        # https://discuss.python.org/t/pep-387-including-exception-messages-in-the-backward-compatibility-policy/35850/20
-        # Didn't test for error message for backwards compatibility
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_with_callback_wrong_number_of_args(self):
         def callback():
@@ -438,8 +447,11 @@ class TestScan(TestBaseClass):
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
 
-        with pytest.raises(TypeError):
+        with pytest.raises(e.ClientError) as err_info:
             scan_obj.foreach(callback)
+
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_scan_with_invalid_expressions_policy(self):
 

@@ -938,10 +938,11 @@ class TestQuery(TestBaseClass):
         def callback(input_tuple):
             raise Exception("error")
 
-        with pytest.raises(Exception) as err_info:
+        with pytest.raises(e.ClientError) as err_info:
             query.foreach(callback)
 
-        assert err_info.value.args[0] == "error"
+        err_code = err_info.value.code
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
 
     def test_query_with_incorrect_ns_set(self):
         """

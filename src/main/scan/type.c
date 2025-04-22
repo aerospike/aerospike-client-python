@@ -126,19 +126,44 @@ static PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
 static int AerospikeScan_Type_Init(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
 {
-    const char *namespace = NULL;
-    const char *set = NULL;
+    PyObject *py_namespace = NULL;
+    PyObject *py_set = NULL;
 
     static char *kwlist[] = {"namespace", "set", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "s|z:scan", kwlist, &namespace,
-                                    &set) == false) {
+
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:key", kwlist,
+                                    &py_namespace, &py_set) == false) {
         return -1;
+    }
+
+    char *namespace = NULL;
+    char *set = NULL;
+    PyObject *py_ustr = NULL;
+
+    if (py_namespace && PyUnicode_Check(py_namespace)) {
+        namespace = (char *)PyUnicode_AsUTF8(py_namespace);
+    }
+    else {
+        return -1;
+    }
+
+    if (py_set) {
+        if (PyUnicode_Check(py_set)) {
+            py_ustr = PyUnicode_AsUTF8String(py_set);
+            set = PyBytes_AsString(py_ustr);
+        }
+        else if (Py_None == py_set) {
+            set = NULL;
+        }
     }
 
     self->unicodeStrVector = NULL;
     self->static_pool = NULL;
     as_scan_init(&self->scan, namespace, set);
 
+    if (py_ustr) {
+        Py_DECREF(py_ustr);
+    }
     return 0;
 }
 
@@ -227,12 +252,15 @@ AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
         &AerospikeScan_Type, args, kwds);
     self->client = client;
     Py_INCREF(client);
-    int retval = AerospikeScan_Type.tp_init((PyObject *)self, args, kwds);
-    if (retval == 0) {
+    if (AerospikeScan_Type.tp_init((PyObject *)self, args, kwds) != -1) {
         return self;
     }
     else {
         Py_XDECREF(self);
+        as_error err;
+        as_error_init(&err);
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
+        raise_exception(&err);
         return NULL;
     }
 }
