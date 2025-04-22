@@ -74,8 +74,6 @@ static inline bool isExprOp(int op);
         goto CLEANUP;                                                          \
     }
 
-// This macro is only called after AerospikeClient_Operate_Invoke()
-// If AerospikeClient_Operate_Invoke() raises an exception, clear it because we are raising a new one anyways
 #define EXCEPTION_ON_ERROR()                                                   \
     if (err.code != AEROSPIKE_OK) {                                            \
         raise_exception_base(&err, py_key, py_bin, Py_None, Py_None, Py_None); \
