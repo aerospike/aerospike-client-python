@@ -433,7 +433,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
                     * :meth:`~aerospike.Client.batch_write`
                     * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation. This will be applied instead of
-                        the client config's `"batch"` oplicy.
+                        the client config's `"batch"` policy.
                     * :meth:`~aerospike.Client.batch_apply`
                     * :meth:`~aerospike.Client.batch_remove`
 
