@@ -43,6 +43,8 @@ class TestBatchRead(TestBaseClass):
             self.keys.append(key)
             self.keys_to_expected_bins[key] = rec
 
+        self.nonexistent_key = (self.test_ns, self.test_set, 100)
+
         def teardown():
             for i in range(self.batch_size):
                 key = ("test", "demo", i)
@@ -64,6 +66,19 @@ class TestBatchRead(TestBaseClass):
             assert batch_rec.key[:3] == self.keys[i]  # checking key
             assert batch_rec.record is None
             assert batch_rec.result == as_errors.AEROSPIKE_FILTERED_OUT
+
+    @pytest.mark.parametrize("bins", [
+        None,
+        [],
+        ["count"]
+    ])
+    def test_batch_read_record_not_found(self, bins):
+        res: BatchRecords = self.as_connection.batch_read([self.nonexistent_key], bins=bins)
+        assert res.result == 0
+        for i, batch_rec in enumerate(res.batch_records):
+            assert batch_rec.key[:3] == self.nonexistent_key
+            assert batch_rec.record is None
+            assert batch_rec.result == as_errors.AEROSPIKE_ERR_RECORD_NOT_FOUND
 
     def test_batch_read_all_bins(self):
         res: BatchRecords = self.as_connection.batch_read(self.keys)
