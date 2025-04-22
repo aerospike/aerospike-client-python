@@ -1204,7 +1204,7 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :return: a :class:`dict` of user data. See :ref:`admin_user_dict`.
 
-    .. method:: admin_query_users_info ([policy: dict]) -> list
+    .. method:: admin_query_users_info ([policy: dict]) -> dict
 
         Retrieve roles and other info for all users.
 
