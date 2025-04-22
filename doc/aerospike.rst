@@ -432,7 +432,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 This policy applies to these when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
 
                     * :meth:`~aerospike.Client.batch_write`
-                    * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation.
+                    * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation. This will be applied instead of
+                        the client config's `"batch"` oplicy.
                     * :meth:`~aerospike.Client.batch_apply`
                     * :meth:`~aerospike.Client.batch_remove`
 
