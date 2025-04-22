@@ -397,7 +397,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
         as_index_datatype op_data =
             (as_index_datatype)PyLong_AsLong(py_op_data);
         rc = query_where_add(
-            &query_ptr, (as_predicate_type)op, op_data,
+            &query_ptr, op, op_data,
             size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
             size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
             size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
