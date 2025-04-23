@@ -107,4 +107,12 @@ typedef struct {
         as_txn *txn;
 } AerospikeTransaction;
 
+extern PyTypeObject AerospikeClient_Type;
+extern PyTypeObject AerospikeQuery_Type;
+extern PyTypeObject AerospikeScan_Type;
+extern PyTypeObject AerospikeKeyOrderedDict_Type;
+extern PyTypeObject AerospikeGeospatial_Type;
+extern PyTypeObject AerospikeNullObject_Type;
+extern PyTypeObject AerospikeWildcardObject_Type;
+extern PyTypeObject AerospikeInfiniteObject_Type;
 extern PyTypeObject AerospikeTransaction_Type;
