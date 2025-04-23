@@ -1018,14 +1018,16 @@ CLEANUP1:
     return py_instance;
 }
 
-// Checks if pyobject is a certain type defined in aerospike_helpers or one of its submodules
-// If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
 bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
-                                      const char *expected_type_name)
+                                      const char *expected_type_name,
+                                      bool is_subclass_instance)
 {
-    if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
-        // Expected class name does not match object's class name
+    if (obj->ob_type->tp_dict == NULL) {
+        // Unable to get type's __module__ attribute.
+        // In Python 3.12+, this would happen if obj was a native Python type
+        // https://docs.python.org/3.12/c-api/typeobj.html#c.PyTypeObject.tp_dict
+        // so the object would not be the correct type, anyways
         return false;
     }
 
@@ -1054,7 +1056,8 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
         retval = false;
         goto CLEANUP2;
     }
-    char *pyobj_submodule = strtok(NULL, delimiters);
+    // Get rest of submodule after parent aerospike_helpers package
+    char *pyobj_submodule = strchr(module_name, '.');
     if (pyobj_submodule) {
         // Python object belongs in a aerospike_helpers submodule
         if (!expected_submodule_name) {
@@ -1062,18 +1065,32 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
             retval = false;
             goto CLEANUP2;
         }
-        else if (strcmp(pyobj_submodule, expected_submodule_name)) {
+        // We want the string after the .
+        else if (strcmp(pyobj_submodule + 1, expected_submodule_name)) {
             // But it doesn't match the expected submodule
             retval = false;
             goto CLEANUP2;
         }
     }
     else {
-        // Python object belongs in the aerospike_helpers parent submodule
+        // Python object belongs in the aerospike_helpers parent module
         if (expected_submodule_name) {
             // But it is expected to belong to an aerospike_helpers submodule
             retval = false;
             goto CLEANUP2;
+        }
+    }
+
+    if (!is_subclass_instance) {
+        if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
+            // object's class does not match expected class
+            return false;
+        }
+    }
+    else {
+        if (strcmp(obj->ob_type->tp_base->tp_name, expected_type_name)) {
+            // object's parent class does not match expected class
+            return false;
         }
     }
 
@@ -1155,7 +1172,8 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         }
         *val = (as_val *)bytes;
 
-        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog")) {
+        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog",
+                                             false)) {
             bytes->type = AS_BYTES_HLL;
         }
     }
@@ -1431,6 +1449,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
     as_key *returnResult = key;
 
     if (py_key && py_key != Py_None) {
+        // TODO: refactor using as_val_new_from_pyobject
         if (PyUnicode_Check(py_key)) {
             PyObject *py_ustr = PyUnicode_AsUTF8String(py_key);
             char *k = PyBytes_AsString(py_ustr);
@@ -2335,6 +2354,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     strcpy(binop_bin->name, bin);
 }
 
+// TODO: dead code
 as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
                                    PyObject *py_bin, char **bin)
 {

@@ -232,9 +232,15 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
 PyObject *create_py_node_from_as_node(as_error *error_p,
                                       struct as_node_s *node);
 
+// Checks if pyobject is an instance of a class type defined in aerospike_helpers or one of its submodules
+// If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
+// If is_subclass_instance is true, we expect the instance's type to directly inherit from aerospike_helpers.<expected_submodule_name>.<expected_type_name>
+// We need this method because classes defined natively in Python are heap-allocated types:
+// https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_name
 bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
-                                      const char *expected_type_name);
+                                      const char *expected_type_name,
+                                      bool is_subclass_instance);
 PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *module_name,
                                             const char *class_name,
