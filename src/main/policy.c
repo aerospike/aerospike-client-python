@@ -1138,7 +1138,7 @@ set_as_metrics_listeners_using_pyobject(as_error *err,
     }
 
     if (!is_pyobj_correct_as_helpers_type(py_metricslisteners, "metrics",
-                                          "MetricsListeners")) {
+                                          "MetricsListeners", false)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         "metrics_listeners",
                         "aerospike_helpers.metrics.MetricsListeners");
@@ -1218,7 +1218,7 @@ init_and_set_as_metrics_policy_using_pyobject(as_error *err,
     }
 
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
-                                          "MetricsPolicy")) {
+                                          "MetricsPolicy", false)) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "policy parameter must be an aerospike_helpers.MetricsPolicy type");
