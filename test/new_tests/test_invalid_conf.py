@@ -163,3 +163,12 @@ class TestInvalidClientConfig(object):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
             aerospike.client({"hosts": [("localhost", 3000)], "policies": {"remove": subpolicy}})
+
+    def test_validate_keys(self):
+        config = {
+            "validate_keys": True,
+            "host": [("127.0.0.1", 3000)]
+        }
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+        assert excinfo.value.msg == 'Invalid config key host'
