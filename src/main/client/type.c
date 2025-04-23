@@ -545,9 +545,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     bool lua_user_path = false;
 
-    PyObject *py_config_key = NULL, *py_config_value = NULL;
-    Py_ssize_t pos = 0;
-
     PyObject *py_aerospike_module_name = PyUnicode_FromString("aerospike");
     if (!py_aerospike_module_name) {
         goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
@@ -567,24 +564,32 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
     }
 
+    // TODO: define constant in a header file
+    // TODO: user can delete attribute, breaking this code
     PyObject *py_valid_keys = PyObject_GetAttrString(
         py_aerospike_module, "__client_config_valid_keys");
     Py_DECREF(py_aerospike_module);
-    while (PyDict_Next(py_config, &pos, &py_config_key, &py_config_value)) {
-        const char *config_key = PyUnicode_AsUTF8(py_config_key);
-        int res = PySet_Contains(py_valid_keys, py_config_key);
-        if (res != 1) {
-            Py_DECREF(py_valid_keys);
-            if (res == 0) {
-                as_error_update(&constructor_err, AEROSPIKE_ERR_CLIENT,
-                                "Invalid config key %s", config_key);
-                goto RAISE_EXCEPTION_USING_AS_ERROR;
-            }
-            else {
-                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-            }
-        }
+    if (py_valid_keys == NULL) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
+
+    Py_ssize_t pos = 0;
+    PyObject *py_config_key = NULL;
+    while (PyDict_Next(py_config, &pos, &py_config_key, NULL)) {
+        int res = PySet_Contains(py_valid_keys, py_config_key);
+        const char *config_key = PyUnicode_AsUTF8(py_config_key);
+        if (res == -1) {
+            Py_DECREF(py_valid_keys);
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        else if (res == 0) {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_CLIENT,
+                            "Invalid config key %s", config_key);
+            goto RAISE_EXCEPTION_USING_AS_ERROR;
+        }
+        // Config key is valid
+    }
+
     Py_DECREF(py_valid_keys);
 
     PyObject *py_lua = PyDict_GetItemString(py_config, "lua");

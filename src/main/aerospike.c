@@ -648,6 +648,8 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     // just use a Python set so we don't need to implement a hashset in C
     // The C client does not have a public API for a hashset yet
+    // Time complexity of set should be constant on avg:
+    // https://wiki.python.org/moin/TimeComplexity
     PyObject *py_client_config_valid_keys =
         py_set_new_from_str_list(client_config_valid_keys);
     if (py_client_config_valid_keys == NULL) {
