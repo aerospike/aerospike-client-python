@@ -585,6 +585,7 @@ const char *const client_config_valid_keys[] = {"lua",
                                                 "fail_if_not_connected",
                                                 "user",
                                                 "password",
+                                                "validate_keys",
                                                 NULL};
 
 const char *const client_config_shm_valid_keys[] = {
