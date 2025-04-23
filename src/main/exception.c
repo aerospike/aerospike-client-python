@@ -520,8 +520,7 @@ error:
     return NULL;
 }
 
-int raise_exception_with_api_call_extra_info(as_error *err,
-                                             as_exc_extra_info *extra_info)
+void raise_exception(as_error *err)
 {
     raise_exception_base(err, NULL, NULL, NULL, NULL, NULL);
 }
