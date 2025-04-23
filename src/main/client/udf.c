@@ -273,9 +273,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        as_exc_extra_info extra_info[] = {
-            {"module", Py_None}, {"func", Py_None}, {0}};
-        raise_exception_with_api_call_extra_info(&err, extra_info);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -361,9 +359,8 @@ CLEANUP:
         Py_DECREF(py_ustr);
     }
     if (err.code != AEROSPIKE_OK) {
-        as_exc_extra_info extra_info[] = {
-            {"module", py_filename}, {"func", Py_None}, {0}};
-        raise_exception_with_api_call_extra_info(&err, extra_info);
+        raise_exception_base(&err, Py_None, Py_None, py_filename, Py_None,
+                             Py_None);
         return NULL;
     }
 
@@ -445,9 +442,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        as_exc_extra_info extra_info[] = {
-            {"module", Py_None}, {"func", Py_None}, {0}};
-        raise_exception_with_api_call_extra_info(&err, extra_info);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -552,9 +547,8 @@ CLEANUP:
         as_udf_file_destroy(&file);
     }
     if (err.code != AEROSPIKE_OK) {
-        as_exc_extra_info extra_info[] = {
-            {"module", py_module}, {"func", Py_None}, {0}};
-        raise_exception_with_api_call_extra_info(&err, extra_info);
+        raise_exception_base(&err, Py_None, Py_None, py_module, Py_None,
+                             Py_None);
         return NULL;
     }
 

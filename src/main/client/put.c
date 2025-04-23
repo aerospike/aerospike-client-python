@@ -92,8 +92,8 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     // Convert python bins and metadata objects to as_record
-    pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option,
-                       &static_pool);
+    as_record_init_from_pyobject(self, &err, py_bins, py_meta, &rec,
+                                 serializer_option, &static_pool);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -130,9 +130,7 @@ CLEANUP:
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
-        as_exc_extra_info extra_info[] = {
-            {"key", py_key}, {"bin", py_bins}, {0}};
-        raise_exception_with_api_call_extra_info(&err, extra_info);
+        raise_exception_base(&err, py_key, py_bins, Py_None, Py_None, Py_None);
         return NULL;
     }
 

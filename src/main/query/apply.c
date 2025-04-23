@@ -112,8 +112,8 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
             for (int i = 0; i < size; i++) {
                 PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
                 as_val *val = NULL;
-                pyobject_to_val(self->client, &err, py_val, &val, &static_pool,
-                                SERIALIZER_PYTHON);
+                as_val_new_from_pyobject(self->client, &err, py_val, &val,
+                                         &static_pool, SERIALIZER_PYTHON);
                 if (err.code != AEROSPIKE_OK) {
                     as_error_update(&err, err.code, NULL);
                     as_arraylist_destroy(arglist);
@@ -147,9 +147,8 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        as_exc_extra_info extra_info[] = {
-            {"module", py_module}, {"func", py_function}, {0}};
-        raise_exception_with_api_call_extra_info(&err, extra_info);
+        raise_exception_base(&err, Py_None, Py_None, py_module, py_function,
+                             Py_None);
         return NULL;
     }
 

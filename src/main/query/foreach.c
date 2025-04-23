@@ -83,7 +83,7 @@ static bool each_result(const as_val *val, void *udata)
 
         py_arglist = PyTuple_New(2);
 
-        PyTuple_SetItem(py_arglist, 0, PyLong_FromLong(part_id));
+        PyTuple_SetItem(py_arglist, 0, PyLong_FromUnsignedLong(part_id));
         PyTuple_SetItem(py_arglist, 1, py_result);
     }
     else {
@@ -244,12 +244,13 @@ CLEANUP:
     self->query.apply.arglist = NULL;
 
     if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
-        as_exc_extra_info extra_info[] = {{"name", Py_None}, {0}};
         if (err.code != AEROSPIKE_OK) {
-            raise_exception_with_api_call_extra_info(&err, extra_info);
+            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None,
+                                 Py_None);
         }
         if (data.error.code != AEROSPIKE_OK) {
-            raise_exception_with_api_call_extra_info(&data.error, extra_info);
+            raise_exception_base(&data.error, Py_None, Py_None, Py_None,
+                                 Py_None, Py_None);
         }
         return NULL;
     }

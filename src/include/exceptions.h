@@ -24,9 +24,11 @@ typedef struct {
 } as_exc_extra_info;
 
 PyObject *AerospikeException_New(void);
-int raise_exception(as_error *err);
-int raise_exception_with_api_call_extra_info(as_error *err,
-                                             as_exc_extra_info *extra_info);
+void raise_exception(as_error *err);
+void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
+                          PyObject *py_module, PyObject *py_func,
+                          PyObject *py_name);
+PyObject *raise_exception_old(as_error *err);
 void remove_exception(as_error *err);
 void set_aerospike_exc_attrs_using_tuple_of_attrs(PyObject *py_exc,
                                                   PyObject *py_tuple);

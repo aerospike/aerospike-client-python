@@ -26,7 +26,7 @@
 #include "exceptions.h"
 #include "macros.h"
 
-static PyObject *py_module;
+static PyObject *py_exc_module;
 
 #define SUBMODULE_NAME "exception"
 
@@ -111,6 +111,13 @@ struct exception_def exception_defs[] = {
                   AEROSPIKE_ERR_ASYNC_CONNECTION, NULL),
     EXCEPTION_DEF("ClientAbortError", CLIENT_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_CLIENT_ABORT, NULL),
+    EXCEPTION_DEF("TransactionFailed", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_TXN_FAILED, NULL),
+    EXCEPTION_DEF("TransactionAlreadyCommitted", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_TXN_ALREADY_COMMITTED, NULL),
+    EXCEPTION_DEF("TransactionAlreadyAborted", CLIENT_ERR_EXCEPTION_NAME,
+                  AEROSPIKE_TXN_ALREADY_ABORTED, NULL),
+
     // Server errors
     EXCEPTION_DEF("InvalidRequest", SERVER_ERR_EXCEPTION_NAME,
                   AEROSPIKE_ERR_REQUEST_INVALID, NULL),
@@ -269,9 +276,9 @@ PyObject *AerospikeException_New(void)
                                            NULL,
                                            NULL,
                                            NULL};
-    py_module = PyModule_Create(&moduledef);
-    if (py_module == NULL) {
-        goto error;
+    py_exc_module = PyModule_Create(&moduledef);
+    if (py_exc_module == NULL) {
+        return NULL;
     }
 
     PyObject *py_dict_errcode_to_exc_class = PyDict_New();
@@ -300,7 +307,7 @@ PyObject *AerospikeException_New(void)
         PyObject *py_base_class = NULL;
         if (exception_def.base_class_name != NULL) {
             py_base_class = PyObject_GetAttrString(
-                py_module, exception_def.base_class_name);
+                py_exc_module, exception_def.base_class_name);
             if (py_base_class == NULL) {
                 goto MODULE_CLEANUP_ON_ERROR;
             }
@@ -361,7 +368,7 @@ PyObject *AerospikeException_New(void)
             goto EXC_CLASS_CLEANUP_ON_ERROR;
         }
 
-        retval = PyModule_AddObject(py_module, exception_def.class_name,
+        retval = PyModule_AddObject(py_exc_module, exception_def.class_name,
                                     py_exception_class);
         if (retval == -1) {
             goto EXC_CLASS_CLEANUP_ON_ERROR;
@@ -373,11 +380,10 @@ PyObject *AerospikeException_New(void)
         goto MODULE_CLEANUP_ON_ERROR;
     }
 
-    return py_module;
+    return py_exc_module;
 
 MODULE_CLEANUP_ON_ERROR:
-    Py_DECREF(py_module);
-error:
+    Py_DECREF(py_exc_module);
     return NULL;
 }
 
@@ -385,7 +391,7 @@ void remove_exception(as_error *err)
 {
     PyObject *py_key = NULL, *py_value = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_module);
+    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
 
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         Py_DECREF(py_value);
@@ -517,68 +523,92 @@ error:
 int raise_exception_with_api_call_extra_info(as_error *err,
                                              as_exc_extra_info *extra_info)
 {
-    int retval = -1;
-    PyObject *py_exc_class = get_py_exc_class_from_err_code(err->code);
-    if (py_exc_class == NULL) {
-        goto finish;
-    }
-
-    PyObject *py_err_tuple = create_pytuple_using_as_error(err);
-    if (py_err_tuple == NULL) {
-        goto cleanup_exc_class;
-    }
-
-    // Set exception class attributes as well
-    for (int i = 0; i < ERROR_TUPLE_SIZE; i++) {
-        PyObject *py_tuple_item = PyTuple_GetItem(py_err_tuple, i);
-        if (py_tuple_item == NULL) {
-            goto cleanup_err_tuple;
-        }
-
-        retval = PyObject_SetAttrString(py_exc_class, aerospike_err_attrs[i],
-                                        py_tuple_item);
-        if (retval == -1) {
-            goto cleanup_err_tuple;
-        }
-    }
-
-    if (extra_info != NULL) {
-        as_exc_extra_info *curr_pair = extra_info;
-        while (curr_pair->attr_name != NULL) {
-            if (PyObject_HasAttrString(py_exc_class, curr_pair->attr_name)) {
-                // Some API methods that raise an exception will set an attribute value to be NULL
-                // i.e operate() sets bin to be NULL when raising an exception
-                // We don't want those API methods to remove the attribute from the exception class, so just change to None
-                // TODO: make sure those API methods aren't deleting the attributes
-                if (curr_pair->py_value == NULL) {
-                    Py_INCREF(Py_None);
-                    curr_pair->py_value = Py_None;
-                }
-                retval = PyObject_SetAttrString(
-                    py_exc_class, curr_pair->attr_name, curr_pair->py_value);
-                Py_DECREF(Py_None);
-                if (retval == -1) {
-                    goto cleanup_err_tuple;
-                }
-            }
-            curr_pair++;
-        }
-    }
-
-    // TODO: not sure how to check if this fails
-    PyErr_SetObject(py_exc_class, py_err_tuple);
-    retval = 0;
-
-cleanup_err_tuple:
-    Py_DECREF(py_err_tuple);
-cleanup_exc_class:
-    Py_DECREF(py_exc_class);
-finish:
-    return retval;
+    raise_exception_base(err, NULL, NULL, NULL, NULL, NULL);
 }
 
-// Return -1 on error
-int raise_exception(as_error *err)
+void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
+                          PyObject *py_module, PyObject *py_func,
+                          PyObject *py_name)
 {
-    return raise_exception_with_api_call_extra_info(err, NULL);
+// If there was an exception already raised, we need to chain it to the one we're raising now
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+    PyObject *py_prev_exc = PyErr_GetRaisedException();
+#else
+    PyObject *py_prev_type, *py_prev_value, *py_prev_traceback;
+    PyErr_Fetch(&py_prev_type, &py_prev_value, &py_prev_traceback);
+#endif
+
+    PyObject *py_unused = NULL, *py_exc_class = NULL;
+    Py_ssize_t pos = 0;
+    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
+    bool found = false;
+
+    while (PyDict_Next(py_module_dict, &pos, &py_unused, &py_exc_class)) {
+        if (PyObject_HasAttrString(py_exc_class, "code")) {
+            PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
+            if (py_code == Py_None) {
+                continue;
+            }
+            if (err->code == PyLong_AsLong(py_code)) {
+                found = true;
+                break;
+            }
+        }
+    }
+    // We haven't found the right exception, just use AerospikeError
+    if (!found) {
+        PyObject *base_exception =
+            PyDict_GetItemString(py_module_dict, "AerospikeError");
+        if (base_exception) {
+            py_exc_class = base_exception;
+        }
+    }
+
+    const char *extra_attrs[] = {"key", "bin", "module", "func", "name"};
+    PyObject *py_extra_attrs[] = {py_as_key, py_bin, py_module, py_func,
+                                  py_name};
+    for (unsigned long i = 0;
+         i < sizeof(py_extra_attrs) / sizeof(py_extra_attrs[0]); i++) {
+        PyObject *py_exc_extra_attr =
+            PyObject_GetAttrString(py_exc_class, extra_attrs[i]);
+        if (py_exc_extra_attr) {
+            PyObject_SetAttrString(py_exc_class, extra_attrs[i],
+                                   py_extra_attrs[i]);
+        }
+        else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+            // We are sure that we want to ignore this
+            PyErr_Clear();
+        }
+        else {
+            // This happens if the code that converts a C client error to a Python exception fails.
+            // The caller of this function should be returning because of an exception anyways
+            goto CHAIN_PREV_EXC_AND_RETURN;
+        }
+    }
+
+    // Convert borrowed reference of exception class to strong reference
+    Py_INCREF(py_exc_class);
+
+    // Convert C error to Python exception
+    PyObject *py_err = NULL;
+    error_to_pyobject(err, &py_err);
+    set_aerospike_exc_attrs_using_tuple_of_attrs(py_exc_class, py_err);
+
+    // Raise exception
+    PyErr_SetObject(py_exc_class, py_err);
+    Py_DECREF(py_exc_class);
+    Py_DECREF(py_err);
+
+CHAIN_PREV_EXC_AND_RETURN:
+#if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
+    if (py_prev_exc) {
+        // Like PyErr_SetRaisedException, which steals a reference to the parameter
+        _PyErr_ChainExceptions1(py_prev_exc);
+    }
+#else
+    if (py_prev_type) {
+        // Like PyErr_Restore, which steals a reference to the parameter
+        _PyErr_ChainExceptions(py_prev_type, py_prev_value, py_prev_traceback);
+    }
+#endif
 }

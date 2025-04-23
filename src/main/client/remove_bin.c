@@ -160,9 +160,7 @@ CLEANUP:
     }
 
     if (err->code != AEROSPIKE_OK) {
-        as_exc_extra_info extra_info[] = {
-            {"key", py_key}, {"bin", Py_None}, {0}};
-        raise_exception_with_api_call_extra_info(err, extra_info);
+        raise_exception_base(err, py_key, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -188,7 +186,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
     PyObject *py_key = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_binList = NULL;
-    PyObject *py_result = NULL;
     PyObject *py_meta = NULL;
 
     as_error err;
@@ -227,11 +224,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
 
-    if (err.code != AEROSPIKE_OK || !py_result) {
-        as_exc_extra_info extra_info[] = {
-            {"key", py_key}, {"bin", Py_None}, {0}};
-        raise_exception_with_api_call_extra_info(&err, extra_info);
-        return NULL;
-    }
+    raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
     return NULL;
 }
