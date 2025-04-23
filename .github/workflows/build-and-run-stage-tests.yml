@@ -1,0 +1,55 @@
+name: Build artifacts and run stage tests
+run-name: Build artifacts and run stage tests (use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      use-server-rc:
+        type: boolean
+        required: true
+        default: false
+        description: 'Test against server release candidate?'
+      server-tag:
+        type: string
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+      test-macos-x86:
+        required: true
+        type: boolean
+        default: true
+        description: 'Test macOS x86 wheels (unstable)'
+
+jobs:
+  build-select-wheels:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64"
+        ]
+      # Need all the artifacts to run all the stage tests, so fail fast
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      platform-tag: ${{ matrix.platform-tag }}
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
+
+  build-sdist:
+    uses: ./.github/workflows/build-sdist.yml
+    with:
+      sha_to_build: ${{ github.sha }}
+
+  run-stage-tests:
+    uses: ./.github/workflows/stage-tests.yml
+    needs: [
+      build-select-wheels,
+      build-sdist
+    ]
+    secrets: inherit
+    with:
+      use_jfrog_builds: false
+      use-server-rc: ${{ inputs.use-server-rc }}
+      server-tag: ${{ inputs.server-tag }}
+      test-macos-x86: ${{ inputs.test-macos-x86 }}

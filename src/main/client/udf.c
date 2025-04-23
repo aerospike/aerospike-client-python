@@ -33,6 +33,14 @@
 #include "exceptions.h"
 #include "policy.h"
 
+// Unistd isn't available on windows
+#ifdef _WIN32
+    #define F_OK 0
+    #define access _access
+#else
+    #include <unistd.h>
+#endif
+
 /**
  *******************************************************************************************************
  * Registers a UDF module with the Aerospike DB.
@@ -115,7 +123,8 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
 
     // Convert lua file to content
     as_bytes content;
-    file_p = fopen(filename, "r");
+    // Read in binary mode to avoid converting Windows newlines to UNIX newlines
+    file_p = fopen(filename, "rb");
 
     // Make this equal to twice the path size, so the path and the filename
     // may be 255 characters each. The max size should then be 255 + 255 + 1 + 1
@@ -264,17 +273,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", Py_None);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -360,17 +359,8 @@ CLEANUP:
         Py_DECREF(py_ustr);
     }
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", py_filename);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, py_filename, Py_None,
+                             Py_None);
         return NULL;
     }
 
@@ -452,17 +442,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", Py_None);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -567,17 +547,8 @@ CLEANUP:
         as_udf_file_destroy(&file);
     }
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", py_module);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, py_module, Py_None,
+                             Py_None);
         return NULL;
     }
 

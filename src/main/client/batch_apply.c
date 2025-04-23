@@ -337,23 +337,28 @@ PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
     if (!PyList_Check(py_keys)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "keys should be a list of aerospike key tuples");
-        goto ERROR;
+        goto error;
     }
 
     if (!PyUnicode_Check(py_mod)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "module must be a string");
-        goto ERROR;
+        goto error;
     }
 
     if (!PyUnicode_Check(py_func)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "function must be a string");
-        goto ERROR;
+        goto error;
     }
 
     if (!PyList_Check(py_args)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "args must be a list of arguments for the UDF");
-        goto ERROR;
+        goto error;
+    }
+
+    if (py_policy_batch == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy_batch = NULL;
     }
 
     py_results = AerospikeClient_Batch_Apply_Invoke(
@@ -362,7 +367,7 @@ PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
 
     return py_results;
 
-ERROR:
+error:
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

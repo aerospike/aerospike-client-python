@@ -64,9 +64,9 @@ class TestCreateUser(object):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user, policy)
+        user = self.client.admin_query_user_info(user, policy)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user["roles"] == ["read", "read-write", "sys-admin"]
 
         self.delete_users.append("user1-test")
 
@@ -88,9 +88,9 @@ class TestCreateUser(object):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user)
+        user = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user["roles"] == ["read", "read-write", "sys-admin"]
 
         self.delete_users.append("user1-test")
 
@@ -133,9 +133,9 @@ class TestCreateUser(object):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user)
+        user = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read-write", "sys-admin"]
+        assert user["roles"] == ["read-write", "sys-admin"]
 
         self.delete_users.append("user2-test")
 

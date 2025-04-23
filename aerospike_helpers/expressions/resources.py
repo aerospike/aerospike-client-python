@@ -74,6 +74,7 @@ class _ExprOp:  # TODO replace this with an enum
     META_SINCE_UPDATE_TIME = 71
     META_IS_TOMBSTONE = 72
     META_MEMORY_SIZE = 73
+    META_RECORD_SIZE = 74
 
     REC_KEY = 80
     BIN = 81
@@ -115,7 +116,7 @@ class ResultType:
     """
     Flags used to indicate expression value_type.
     """
-
+    NIL = 0
     BOOLEAN = 1
     INTEGER = 2
     STRING = 3

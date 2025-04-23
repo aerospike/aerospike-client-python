@@ -19,13 +19,33 @@ The scan is invoked using :meth:`foreach`, :meth:`results`, or :meth:`execute_ba
 bins returned can be filtered using :meth:`select`.
 
 .. seealso::
-    `Scans <http://www.aerospike.com/docs/guide/scan.html>`_ and \
-    `Managing Scans <http://www.aerospike.com/docs/operations/manage/scans/>`_.
+    `Scans <https://aerospike.com/docs/server/guide/scan.html>`_ and \
+    `Managing Scans <https://aerospike.com/docs/server/operations/manage/queries/>`_.
+
+Fields
+======
+
+.. class:: Scan
+
+    ttl (:class:`int`)
+        The time-to-live (expiration) of the record in seconds. Note that ttl
+        is only used on background scan writes.
+
+        If this is set to :data:`aerospike.TTL_CLIENT_DEFAULT`, the scan will use the
+        client's default scan policy ttl.
+
+        See :ref:`TTL_CONSTANTS` for special values that can be set in the record ttl.
+
+        Default: ``0`` (no limit)
+
+        .. note::
+            Requires server version >= 6.0.0
 
 Methods
 =======
 
 .. class:: Scan
+    :noindex:
 
     .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
 
@@ -39,15 +59,15 @@ Methods
     .. method:: apply(module, function[, arguments])
 
         Apply a record UDF to each record found by the scan \
-        `UDF <http://www.aerospike.com/docs/guide/udf.html>`_.
+        `UDF <https://aerospike.com/docs/server/guide/udf.html>`_.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
-        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://docs.aerospike.com/server/guide/data-types/overview>`_.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview/>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
         :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
-        .. seealso:: `Developing Record UDFs <https://developer.aerospike.com/udf/developing_record_udfs>`_
+        .. seealso:: `Developing Record UDFs <https://aerospike.com/developer/udf/developing_record_udfs>`_
 
 
     .. method:: add_ops(ops)
@@ -136,7 +156,7 @@ Methods
 
          .. code-block:: python
 
-            # This is an example of scaning partitions 1000 - 1003.
+            # This is an example of scanning partitions 1000 - 1003.
             import aerospike
 
 
@@ -238,7 +258,7 @@ Methods
 
          .. code-block:: python
 
-            # This is an example of scaning partitions 1000 - 1003.
+            # This is an example of scanning partitions 1000 - 1003.
             import aerospike
 
 
@@ -279,63 +299,11 @@ Methods
         .. note::
             Python client version 3.10.0 implemented scan execute_background.
 
-            .. code-block:: python
+            .. include:: examples/scan/top.py
+                :code: python
 
-                import aerospike
-                from aerospike import exception as ex
-                import sys
-                import time
-
-                config = {"hosts": [("127.0.0.1", 3000)]}
-                client = aerospike.client(config)
-
-                # register udf
-                try:
-                    client.udf_put("/path/to/my_udf.lua")
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    client.close()
-                    sys.exit(1)
-
-                # put records and apply udf
-                try:
-                    keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
-                    records = [{"number": 1}, {"number": 2}, {"number": 3}]
-                    for i in range(3):
-                        client.put(keys[i], records[i])
-
-                    scan = client.scan("test", "demo")
-                    scan.apply("my_udf", "my_udf", ["number", 10])
-                    job_id = scan.execute_background()
-
-                    # wait for job to finish
-                    while True:
-                        response = client.job_info(job_id, aerospike.JOB_SCAN)
-                        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-                            break
-                        time.sleep(0.25)
-
-                    records = client.get_many(keys)
-                    print(records)
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    sys.exit(1)
-                finally:
-                    client.close()
-                # EXPECTED OUTPUT:
-                # [
-                #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 11}),
-                #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 12}),
-                #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
-                # ]
-            .. code-block:: python
-
-                # contents of my_udf.lua
-                function my_udf(rec, bin, offset)
-                    info("my transform: %s", tostring(record.digest(rec)))
-                    rec[bin] = rec[bin] + offset
-                    aerospike:update(rec)
-                end
+            .. include:: examples/scan/my_udf.lua
+                :code: lua
 
     .. method:: paginate()
 
@@ -518,6 +486,8 @@ Policies
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
+            | This compression feature requires the Enterprise Edition Server.
+            |
             | Default: ``False``
         * **durable_delete** :class:`bool`
             | Perform durable delete (requires Enterprise server version >= 3.10)
@@ -545,8 +515,8 @@ Policies
             .. note:: Requires Aerospike server version >= 6.0
         * **partition_filter** :class:`dict`
             | A dictionary of partition information used by the client
-            | to perform partiton scans. Useful for resuming terminated scans and
-            | scaning particular partitons/records.
+            | to perform partition scans. Useful for resuming terminated scans and
+            | scanning particular partitions/records.
             |
             |   See :ref:`aerospike_partition_objects` for more information.
             |
@@ -556,6 +526,12 @@ Policies
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+        * **ttl** (:class:`int`)
+            The default time-to-live (expiration) of the record in seconds. This field will only be used on
+            background scan writes if :py:attr:`aerospike.Scan.ttl` is set to
+            :data:`aerospike.TTL_CLIENT_DEFAULT`.
+
+            There are also special values that can be set for this field. See :ref:`TTL_CONSTANTS`.
 
 .. _aerospike_scan_options:
 

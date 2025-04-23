@@ -17,7 +17,7 @@
 Helper functions to create bit operation dictionary arguments for:
 
 * :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
-* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 
     .. note:: Bitwise operations require server version >= 4.6.0
 
@@ -96,7 +96,7 @@ Example::
         client.remove(key)
 
     bit_policy = {
-        'map_write_mode': aerospike.BIT_WRITE_DEFAULT,
+        'bit_write_flags': aerospike.BIT_WRITE_DEFAULT,
     }
     client.put(key, {five_one_bin: five_one_blob})
 
