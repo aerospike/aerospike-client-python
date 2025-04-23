@@ -34,6 +34,10 @@ on:
         required: true
         default: 'latest'
         description: 'Server docker image tag (e.g to test a client backport version)'
+      test-file:
+        required: false
+        default: ''
+        description: 'new_tests/<value>'
 
   workflow_call:
     inputs:
@@ -72,6 +76,10 @@ on:
         type: string
         required: false
         default: 'latest'
+      test-file:
+        required: false
+        type: string
+        default: ''
     secrets:
       DOCKER_HUB_BOT_USERNAME:
         required: true
@@ -107,4 +115,5 @@ jobs:
       run_tests: ${{ inputs.run_tests }}
       use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
+      test-file: ${{ inputs.test-file }}
     secrets: inherit

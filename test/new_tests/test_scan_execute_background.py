@@ -243,12 +243,14 @@ class TestScanApply(object):
         job_id = scan.execute_background()
         wait_for_job_completion(self.as_connection, job_id)
 
-        records = self.as_connection.get_many(keys)
-        for i, rec in enumerate(records):
+        brs = self.as_connection.batch_read(keys)
+        # Sort batch records by user key
+        batch_records = sorted(brs.batch_records, key=lambda br: br.key[2])
+        for i, br in enumerate(batch_records):
             if i * 3 < 20:
-                assert rec[2]["numbers"] == {1: i, 2: i * 2, 3: i * 3}
+                assert br.record[2]["numbers"] == {1: i, 2: i * 2, 3: i * 3}
             else:
-                assert rec[2]["numbers"] == {1: i, 2: i * 2}
+                assert br.record[2]["numbers"] == {1: i, 2: i * 2}
 
     @pytest.mark.xfail(reason="Scan does not implement .where()")
     def test_background_execute_with_ops_and_preds(self):

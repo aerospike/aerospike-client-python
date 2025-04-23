@@ -83,7 +83,7 @@ static bool each_result(const as_val *val, void *udata)
 
         py_arglist = PyTuple_New(2);
 
-        PyTuple_SetItem(py_arglist, 0, PyLong_FromLong(part_id));
+        PyTuple_SetItem(py_arglist, 0, PyLong_FromUnsignedLong(part_id));
         PyTuple_SetItem(py_arglist, 1, py_result);
     }
     else {
@@ -244,22 +244,14 @@ CLEANUP:
     self->query.apply.arglist = NULL;
 
     if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        PyObject *exception_type = NULL;
         if (err.code != AEROSPIKE_OK) {
-            error_to_pyobject(&err, &py_err);
-            exception_type = raise_exception_old(&err);
+            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None,
+                                 Py_None);
         }
         if (data.error.code != AEROSPIKE_OK) {
-            error_to_pyobject(&data.error, &py_err);
-            exception_type = raise_exception_old(&data.error);
+            raise_exception_base(&data.error, Py_None, Py_None, Py_None,
+                                 Py_None, Py_None);
         }
-        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
-        if (PyObject_HasAttrString(exception_type, "name")) {
-            PyObject_SetAttrString(exception_type, "name", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
         return NULL;
     }
 

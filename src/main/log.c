@@ -128,7 +128,7 @@ static bool log_cb(as_log_level level, const char *func, const char *file,
     PyObject *log_level = PyLong_FromLong((long)level);
     PyObject *func_name = PyUnicode_FromString(func);
     PyObject *file_name = PyUnicode_FromString(file);
-    PyObject *line_no = PyLong_FromLong((long)line);
+    PyObject *line_no = PyLong_FromUnsignedLong(line);
     PyObject *message = PyUnicode_FromString(msg);
 
     // Set argument list
