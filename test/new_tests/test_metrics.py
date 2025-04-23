@@ -158,7 +158,7 @@ class TestMetrics:
             assert type(cluster) == Cluster
             assert cluster.cluster_name is None or type(cluster.cluster_name) == str
             assert type(cluster.invalid_node_count) == int
-            assert type(cluster.tran_count) == int
+            assert type(cluster.command_count) == int
             assert type(cluster.retry_count) == int
             assert type(cluster.nodes) == list
             # Also check the Node and ConnectionStats objects in the Cluster object were populated
@@ -277,6 +277,13 @@ class TestMetrics:
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
+
+    # Use default metrics writer implementation
+    # We are checking that enable_metrics() does not seg fault
+    def test_enable_metrics_with_invalid_report_size_limit(self):
+        policy = MetricsPolicy(report_size_limit=1)
+        with pytest.raises(e.ClientError):
+            self.as_connection.enable_metrics(policy=policy)
 
     def test_disable_metrics(self):
         retval = self.as_connection.disable_metrics()

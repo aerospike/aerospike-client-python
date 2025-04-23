@@ -65,9 +65,9 @@ class TestGrantRoles(TestBaseClass):
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user(user, policy)
+        user_details = self.client.admin_query_user_info(user, policy)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
 
     def test_grant_roles_with_proper_parameters_without_policy(self):
 
@@ -78,9 +78,9 @@ class TestGrantRoles(TestBaseClass):
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user(user)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
 
     def test_grant_roles_with_invalid_timeout_policy_value(self):
 
@@ -106,9 +106,9 @@ class TestGrantRoles(TestBaseClass):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read-write", "sys-admin"]
+        assert user_details["roles"] == ["read-write", "sys-admin"]
 
     def test_grant_roles_with_none_username(self):
 
@@ -153,9 +153,9 @@ class TestGrantRoles(TestBaseClass):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert set(user_details) == set(["read", "read-write"])
+        assert set(user_details["roles"]) == set(["read", "read-write"])
 
         self.client.admin_drop_user(user)
 

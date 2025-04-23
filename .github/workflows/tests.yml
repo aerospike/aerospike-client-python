@@ -1,7 +1,7 @@
 name: PR tests
 
 env:
-  LOWEST_SUPPORTED_PY_VERSION: '3.8'
+  LOWEST_SUPPORTED_PY_VERSION: '3.9'
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -29,22 +29,28 @@ on:
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        py-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+        # Make sure we can build and run tests on an instrumented build that uses libasan
+        # We aren't necessarily checking for memory errors / leaks in this test
+        sanitizer: [false]
+        include:
+        - py-version: 3.9
+          sanitizer: true
       fail-fast: false
 
     steps:
@@ -64,19 +70,27 @@ jobs:
     - name: Install build dependencies (pip packages)
       run: python3 -m pip install -r requirements.txt
 
+    - if: ${{ matrix.sanitizer }}
+      run: echo SANITIZER=1 >> $GITHUB_ENV
+
     - name: Build client
       run: python3 -m build
       env:
         CFLAGS: '-Werror'
 
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
+
+    - if: ${{ matrix.sanitizer }}
+      run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
+
     - name: Send wheel to test jobs
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: wheel-${{ matrix.py-version }}
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
         path: ./dist/*.whl
 
   generate-coverage-report:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -85,7 +99,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: "3.9"
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - name: Build client
@@ -127,6 +141,7 @@ jobs:
         mkdir -p nullobject/src/main/nullobject
         mkdir -p query/src/main/query
         mkdir -p scan/src/main/scan
+        mkdir -p transaction/src/main/transaction
 
         cd ../../../../
         cp src/main/*.c build/temp*/src/main/src/main
@@ -138,6 +153,7 @@ jobs:
         cp src/main/nullobject/*.c build/temp*/src/main/nullobject/src/main/nullobject/
         cp src/main/query/*.c build/temp*/src/main/query/src/main/query/
         cp src/main/scan/*.c build/temp*/src/main/scan/src/main/scan/
+        cp src/main/transaction/*.c build/temp*/src/main/transaction/src/main/transaction/
 
     - name: Generate coverage report for all object files
       if: ${{ !cancelled() }}
@@ -151,7 +167,7 @@ jobs:
 
     - name: Upload coverage report folder to Github
       if: ${{ !cancelled() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: coverage-report
         path: build/temp*/src/main/
@@ -159,13 +175,13 @@ jobs:
   coverage-upload:
     needs: generate-coverage-report
     if: ${{ !cancelled() }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: recursive
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: coverage-report
         path: ./coverage-report
@@ -180,7 +196,7 @@ jobs:
 
   stubtest:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
@@ -191,7 +207,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
@@ -205,7 +221,7 @@ jobs:
   # Run this when testing new server features on server release candidate
   # to make sure the tests don't regress on the last server release.
   test-ce-latest-release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
     needs: build
 
@@ -219,7 +235,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
@@ -230,13 +246,13 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
@@ -244,17 +260,60 @@ jobs:
       run: python -m pytest ./new_tests
       working-directory: test
 
+  test-sanitizer:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    # We can already detect leaks using valgrind
+    # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
+    - run: |
+        echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
+        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Run tests
+      # We need to disable capturing output or else we cannot see memory errors reported by 
+      # libasan during the test run
+      run: python -m pytest ./new_tests -vvs
+      working-directory: test
+
   test-ce:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     strategy:
       matrix:
         py-version: [
-          "3.8",
           "3.9",
           "3.10",
           "3.11",
-          "3.12"
+          "3.12",
+          "3.13"
         ]
       fail-fast: false
 
@@ -268,9 +327,11 @@ jobs:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
+
+    - uses: actions/download-artifact@v4
       with:
-        name: wheel-${{ matrix.py-version }}
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
       run: pip install *.whl
@@ -286,26 +347,26 @@ jobs:
 
     - name: Run Aerospike server release candidate with latest tag
       if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server-rc:latest
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv
+      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
   test-lowest-supported-server:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     steps:
     - uses: actions/checkout@v2
@@ -317,7 +378,7 @@ jobs:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
 
@@ -328,13 +389,13 @@ jobs:
       run: pip install -r test/requirements.txt
 
     - name: Run lowest supported server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ vars.LOWEST_SUPPORTED_SERVER_VERSION }}
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
@@ -343,7 +404,7 @@ jobs:
       working-directory: test
 
   test-ee:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: build
     steps:
     - uses: actions/checkout@v2
@@ -352,12 +413,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        python-version: "3.13"
         architecture: 'x64'
 
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        name: wheel-3.13
 
     - name: Install client
       run: pip install *.whl
@@ -372,7 +433,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_admin_*.py
+      run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
     - name: Show logs if failed
@@ -382,14 +443,14 @@ jobs:
         cat ./configs/aerospike.conf
 
   spellcheck-docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - name: Install dependencies for checking spelling in docs
       # TODO: find way to split up dependencies
@@ -399,12 +460,12 @@ jobs:
       working-directory: doc
 
   check-links-docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - name: Install documentation dependencies
       run: python -m pip install -r doc/requirements.txt
@@ -412,42 +473,26 @@ jobs:
       run: sphinx-build -b linkcheck . links
       working-directory: doc
 
-  test-metrics-node-close-listener:
+  test-metrics:
     needs: build
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        suffix:
+        - node_close_listener
+        - cluster_name
+      fail-fast: false
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
       with:
         python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
-    - name: Download aerolab
-      run: wget https://github.com/aerospike/aerolab/releases/download/7.5.2/aerolab-linux-amd64-7.5.2.deb
-    - name: Install aerolab
-      run: sudo dpkg -i *.deb
-    - name: Tell aerolab to use Docker
-      run: aerolab config backend -t docker
-    - uses: actions/download-artifact@v3
-      with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-    - run: python3 -m pip install *.whl
-    - run: python3 test_node_close_listener.py
-      working-directory: test/metrics
-
-  test-metrics-cluster-name:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - uses: actions/setup-python@v5
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-    - uses: actions/download-artifact@v3
+    - uses: actions/download-artifact@v4
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/metrics
-    - run: python3 test_cluster_name.py
+    - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/metrics
