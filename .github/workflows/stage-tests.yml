@@ -36,6 +36,41 @@ on:
         description: 'Test macOS x86 wheels (unstable)'
 
 jobs:
+  performance-test:
+    # TODO: Use bare metal self hosted
+    runs-on: "ubuntu-24.04"
+    steps:
+    - name: Get tests and Github action scripts
+      uses: actions/checkout@v4
+      with:
+        ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
+        sparse-checkout: |
+          test
+          .github
+
+    - uses: ./.github/actions/get-artifact-for-stage-tests
+      with:
+        get_from_jfrog: ${{ inputs.use_jfrog_builds }}
+        # This input is only used if above input is true
+        jfrog_build_version: ${{ inputs.jfrog-build-version-to-test }}
+        dist_type_to_get: 2
+        wheel_python_version: '3.9'
+        wheel_os: manylinux
+        wheel_cpu_arch: x86_64
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
+
+    - run: pip install *.whl
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ inputs.use-server-rc }}
+        server-tag: ${{ inputs.server-tag }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        where-is-client-connecting-from: 'docker-host'
+
   linux-distro-tests:
     strategy:
       matrix:
