@@ -186,6 +186,7 @@ class TestConnect(object):
         [
             (1, e.ParamError, -2, "Config must be a dict"),
             ({}, e.ParamError, -2, "Hosts must be a list"),
+            ({"": [("127.0.0.1", 3000)]}, e.ParamError, -2, "Hosts must be a list"),
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
             # Errors that throw -10 can also throw 9
             ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
@@ -194,7 +195,7 @@ class TestConnect(object):
         ids=[
             "config not dict",
             "config empty dict",
-            "config invalid key",
+            "config missing hosts key",
             "hosts missing address",
             "hosts port is incorrect",
             "hosts port is string",
