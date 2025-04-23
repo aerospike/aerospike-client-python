@@ -551,7 +551,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     int validate_keys = 0;
     PyObject *py_validate_keys =
-        PyDict_GetItemWithError(py_config, "validate_keys");
+        PyDict_GetItemWithError(py_config, py_validate_keys_str);
     Py_DECREF(py_validate_keys_str);
     if (py_validate_keys) {
         if (!PyBool_Check(py_validate_keys)) {
