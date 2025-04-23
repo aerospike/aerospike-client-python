@@ -599,26 +599,26 @@ const char *const client_config_shm_valid_keys[] = {
 
 // Return NULL if an exception is raised
 // Returns strong reference to new Python dictionary
-static PyObject *py_set_new_from_str_list(const char *const *first_key_ref)
+static PyObject *py_set_new_from_str_list(const char *const *str_list)
 {
     PyObject *py_valid_keys = PySet_New(NULL);
     if (py_valid_keys == NULL) {
         goto error;
     }
 
-    const char *const *curr_key_ref = first_key_ref;
-    while (*curr_key_ref) {
-        PyObject *py_key = PyUnicode_FromString(*curr_key_ref);
-        if (py_key == NULL) {
+    const char *const *curr_str_ref = str_list;
+    while (*curr_str_ref) {
+        PyObject *py_str = PyUnicode_FromString(*curr_str_ref);
+        if (py_str == NULL) {
             goto CLEANUP_SET_ON_ERROR;
         }
 
-        int result = PySet_Add(py_valid_keys, py_key);
-        Py_DECREF(py_key);
+        int result = PySet_Add(py_valid_keys, py_str);
+        Py_DECREF(py_str);
         if (result == -1) {
             goto CLEANUP_SET_ON_ERROR;
         }
-        curr_key_ref++;
+        curr_str_ref++;
     }
 
     return py_valid_keys;
