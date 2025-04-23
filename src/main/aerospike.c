@@ -647,6 +647,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     Aerospike_Enable_Default_Logging();
 
     // just use a Python set so we don't need to implement a hashset in C
+    // The C client does not have a public API for a hashset yet
     PyObject *py_client_config_valid_keys =
         py_set_new_from_str_list(client_config_valid_keys);
     if (py_client_config_valid_keys == NULL) {
