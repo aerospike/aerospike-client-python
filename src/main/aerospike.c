@@ -503,9 +503,6 @@ static struct module_constant_name_to_value module_constants[] = {
 
     {"COMMIT_OK", .value.integer = AS_COMMIT_OK},
     {"COMMIT_ALREADY_COMMITTED", .value.integer = AS_COMMIT_ALREADY_COMMITTED},
-    {"COMMIT_VERIFY_FAILED", .value.integer = AS_COMMIT_VERIFY_FAILED},
-    {"COMMIT_MARK_ROLL_FORWARD_ABANDONED",
-     .value.integer = AS_COMMIT_MARK_ROLL_FORWARD_ABANDONED},
     {"COMMIT_ROLL_FORWARD_ABANDONED",
      .value.integer = AS_COMMIT_ROLL_FORWARD_ABANDONED},
     {"COMMIT_CLOSE_ABANDONED", .value.integer = AS_COMMIT_CLOSE_ABANDONED},
@@ -526,14 +523,17 @@ static struct module_constant_name_to_value module_constants[] = {
 
 struct submodule_name_to_creation_method {
     const char *name;
+    const char *fully_qualified_name;
     PyObject *(*pyobject_creation_method)(void);
 };
+
+#define SHORT_AND_FULLY_QUALIFIED_NAME(s) #s, "aerospike." #s
 
 static struct submodule_name_to_creation_method py_submodules[] = {
     // We don't use module's __name__ attribute
     // because the modules' __name__ is the fully qualified name which includes the package name
-    {"exception", AerospikeException_New},
-    {"predicates", AerospikePredicates_New},
+    {SHORT_AND_FULLY_QUALIFIED_NAME(exception), AerospikeException_New},
+    {SHORT_AND_FULLY_QUALIFIED_NAME(predicates), AerospikePredicates_New},
 };
 
 struct type_name_to_creation_method {
@@ -582,22 +582,6 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     unsigned long i = 0;
     int retval;
-    for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
-        PyObject *(*create_py_submodule)(void) =
-            py_submodules[i].pyobject_creation_method;
-        PyObject *py_submodule = create_py_submodule();
-        if (py_submodule == NULL) {
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
-        }
-
-        retval = PyModule_AddObject(py_aerospike_module, py_submodules[i].name,
-                                    py_submodule);
-        if (retval == -1) {
-            Py_DECREF(py_submodule);
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
-        }
-    }
-
     for (i = 0; i < sizeof(py_module_types) / sizeof(py_module_types[0]); i++) {
         PyTypeObject *(*py_type_ready_func)(void) =
             py_module_types[i].pytype_ready_method;
@@ -636,8 +620,56 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
     }
 
+    // Allows submodules to be imported using "import aerospike.<submodule-name>"
+    // https://github.com/python/cpython/issues/87533#issuecomment-2373119452
+    PyObject *py_sys = PyImport_ImportModule("sys");
+    if (py_sys == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+    PyObject *py_sys_modules = PyObject_GetAttrString(py_sys, "modules");
+    if (py_sys_modules == NULL) {
+        goto SYS_CLEANUP;
+    }
+
+    for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
+        PyObject *(*create_py_submodule)(void) =
+            py_submodules[i].pyobject_creation_method;
+        PyObject *py_submodule = create_py_submodule();
+        if (py_submodule == NULL) {
+            goto SYS_MODULES_CLEANUP;
+        }
+
+        int retval = PyDict_SetItemString(py_sys_modules,
+                                          py_submodules[i].fully_qualified_name,
+                                          py_submodule);
+        if (retval == -1) {
+            goto SUBMODULE_CLEANUP_ON_ERROR;
+        }
+
+        retval = PyModule_AddObject(py_aerospike_module, py_submodules[i].name,
+                                    py_submodule);
+        if (retval == -1) {
+            goto SUBMODULE_CLEANUP_ON_ERROR;
+        }
+        continue;
+
+    SUBMODULE_CLEANUP_ON_ERROR:
+        Py_DECREF(py_submodule);
+        goto SYS_MODULES_CLEANUP;
+    }
+
+    // We don't need these anymore. Only for initializing module
+    Py_DECREF(py_sys_modules);
+    Py_DECREF(py_sys);
+
     return py_aerospike_module;
 
+SYS_MODULES_CLEANUP:
+    Py_DECREF(py_sys_modules);
+SYS_CLEANUP:
+    // TODO: Clean up any submodules that were manually added to sys.modules
+    // This isn't a big deal though, so just leave off for now
+    Py_DECREF(py_sys);
 GLOBAL_HOSTS_CLEANUP_ON_ERROR:
     Py_DECREF(py_global_hosts);
 MODULE_CLEANUP_ON_ERROR:

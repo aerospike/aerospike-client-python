@@ -15,7 +15,7 @@ nodes and establishes connections to them. It also gets the partition map of
 the cluster, which is how it knows where every record actually lives.
 
 The client handles the connections, including re-establishing them ahead of
-executing an operation. It keeps track of changes to the cluster through
+executing an command. It keeps track of changes to the cluster through
 a cluster-tending thread.
 
 .. seealso::
@@ -271,83 +271,6 @@ Batched Commands
 .. class:: Client
     :noindex:
 
-    .. method:: get_many(keys[, policy: dict]) -> [(key, meta, bins)]
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
-        Batch-read multiple records, and return them as a :class:`list`.
-
-        Any record that does not exist will have a :py:obj:`None` value for metadata \
-        and bins in the record tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
-
-        .. include:: examples/get_many.py
-            :code: python
-
-    .. method:: exists_many(keys[, policy: dict]) -> [ (key, meta)]
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
-        Batch-read metadata for multiple keys.
-
-        Any record that does not exist will have a :py:obj:`None` value for metadata in \
-        their tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of (key, metadata) :class:`tuple` for each record.
-
-        .. include:: examples/exists_many.py
-            :code: python
-
-    .. method:: select_many(keys, bins: list[, policy: dict]) -> [(key, meta, bins), ...]}
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_read` instead.
-
-        Batch-read specific bins from multiple records.
-
-        Any record that does not exist will have a :py:obj:`None` value for metadata and bins in its tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple` to read from.
-        :param list bins: a list of bin names to read from the records.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        .. include:: examples/select_many.py
-            :code: python
-
-    .. method:: batch_get_ops(keys, ops, policy: dict) -> [ (key, meta, bins)]
-
-        .. deprecated:: 12.0.0
-            Use :meth:`batch_operate` instead.
-
-        Batch-read multiple records, and return them as a :class:`list`.
-
-        Any record that does not exist will have a exception type value as metadata \
-        and :py:obj:`None` value as bins in the record tuple.
-
-        :param list keys: a list of :ref:`aerospike_key_tuple`.
-        :param list ops: a list of operations to apply.
-        :param dict policy: see :ref:`aerospike_batch_policies`.
-
-        :return: a :class:`list` of :ref:`aerospike_record_tuple`.
-
-        :raises: a :exc:`~aerospike.exception.ClientError` if the batch is too big.
-
-        .. include:: examples/batch_get_ops.py
-            :code: python
-
     .. note::
 
         The following batch methods will return a :class:`~aerospike_helpers.batch.records.BatchRecords` object with
@@ -389,7 +312,7 @@ Batched Commands
         .. seealso:: More information about the \
             batch helpers :ref:`aerospike_operation_helpers.batch`
 
-    .. method:: batch_read(keys: list, [bins: list], [policy_batch: dict]) -> BatchRecords
+    .. method:: batch_read(keys: list, [bins: list], [policy: dict]) -> BatchRecords
 
         Read multiple records.
 
@@ -401,8 +324,9 @@ Batched Commands
         Each ``BatchRecord.record`` in ``BatchRecords.batch_records`` will only be a 2-tuple ``(key, meta)``.
 
         :param list keys: The key tuples of the records to fetch.
-        :param list[str] bins: List of bin names to fetch for each record.
-        :param dict policy_batch: See :ref:`aerospike_batch_policies`.
+        :param bins: List of bin names to fetch for each record.
+        :type bins: list[str] or None
+        :param dict policy: See :ref:`aerospike_batch_policies`.
 
         :return: an instance of :class:`BatchRecords <aerospike_helpers.batch.records>`.
 
@@ -1091,8 +1015,8 @@ user\'s roles. Users are assigned roles, which are collections of \
         client.admin_grant_privileges('dev_role', [{'code': aerospike.PRIV_READ_WRITE_UDF}])
         client.admin_create_user('dev', 'you young whatchacallit... idiot', ['dev_role'])
         time.sleep(1)
-        print(client.admin_query_user('dev'))
-        print(admin_query_users())
+        print(client.admin_query_user_info('dev'))
+        print(admin_query_users_info())
     except ex.AdminError as e:
         print("Error [{0}]: {1}".format(e.code, e.msg))
     client.close()
@@ -1287,29 +1211,6 @@ user\'s roles. Users are assigned roles, which are collections of \
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :return: a :class:`list` of users' data. See :ref:`admin_user_dict`.
-
-    .. method:: admin_query_user (username[, policy: dict]) -> []
-
-        .. deprecated:: 12.0.0 :meth:`admin_query_user_info` should be used instead.
-
-        Return the list of roles granted to the specified user.
-
-        :param str username: the username of the user.
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
-
-        :return: a :class:`list` of role names.
-
-        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
-
-    .. method:: admin_query_users ([policy: dict]) -> {}
-
-        .. deprecated:: 12.0.0 :meth:`admin_query_users_info` should be used instead.
-
-        Get the roles of all users.
-
-        :param dict policy: optional :ref:`aerospike_admin_policies`.
-        :return: a :class:`dict` of roles keyed by username.
-        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
 Metrics
 -------
@@ -2077,7 +1978,7 @@ Batch Policies
 
 .. object:: policy
 
-    A :class:`dict` of optional batch policies, which are applicable to :meth:`~aerospike.get_many`, :meth:`~aerospike.exists_many` and :meth:`~aerospike.select_many`.
+    A :class:`dict` of optional batch policies.
 
     .. hlist::
         :columns: 1

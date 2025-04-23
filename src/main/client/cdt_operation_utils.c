@@ -87,8 +87,8 @@ as_status get_asval(AerospikeClient *self, as_error *err, char *key,
         *val = NULL;
         return AEROSPIKE_OK;
     }
-    return pyobject_to_val(self, err, py_val, val, static_pool,
-                           serializer_type);
+    return as_val_new_from_pyobject(self, err, py_val, val, static_pool,
+                                    serializer_type);
 }
 
 as_status get_val_list(AerospikeClient *self, as_error *err,
@@ -136,7 +136,7 @@ as_status get_optional_int64_t(as_error *err, const char *key,
     }
 
     if (PyLong_Check(py_val)) {
-        *i64_valptr = (int64_t)PyLong_AsLong(py_val);
+        *i64_valptr = (int64_t)PyLong_AsLongLong(py_val);
         if (PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",

@@ -262,29 +262,6 @@ PyDoc_STRVAR(index_geo2dsphere_create_doc,
 \n\
 Create a geospatial 2D spherical index with index_name on the bin in the specified ns, set.");
 
-PyDoc_STRVAR(get_many_doc, "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
-\n\
-Batch-read multiple records with applying list of operations and returns them as a list. \
-Any record that does not exist will have a None value for metadata and status in the record tuple.");
-
-PyDoc_STRVAR(batch_get_ops_doc,
-             "batch_get_ops(keys, ops, meta, policy) -> [ (key, meta, bins)]\n\
-\n\
-Batch-read multiple records, and return them as a list. \
-Any record that does not exist will have a exception type value as metadata and None value as bin in the record tuple.");
-
-PyDoc_STRVAR(select_many_doc,
-             "select_many(keys, bins[, policy]) -> [(key, meta, bins)]\n\
-\n\
-Batch-read multiple records, and return them as a list. \
-Any record that does not exist will have a None value for metadata and bins in the record tuple. \
-The bins will be filtered as specified.");
-
-PyDoc_STRVAR(exists_many_doc, "exists_many(keys[, policy]) -> [ (key, meta)]\n\
-\n\
-Batch-read metadata for multiple keys, and return it as a list. \
-Any record that does not exist will have a None value for metadata in the result tuple.");
-
 PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
 \n\
 Read/Write multiple records for specified batch keys in one batch call. \
@@ -367,14 +344,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Grant Roles."},
     {"admin_revoke_roles", (PyCFunction)AerospikeClient_Admin_Revoke_Roles,
      METH_VARARGS | METH_KEYWORDS, "Revoke roles"},
-    {"admin_query_user", (PyCFunction)AerospikeClient_Admin_Query_User,
-     METH_VARARGS | METH_KEYWORDS, "Query a user for roles."},
     {"admin_query_user_info",
      (PyCFunction)AerospikeClient_Admin_Query_User_Info,
      METH_VARARGS | METH_KEYWORDS,
      "Query a user for read/write info, connections-in-use and roles."},
-    {"admin_query_users", (PyCFunction)AerospikeClient_Admin_Query_Users,
-     METH_VARARGS | METH_KEYWORDS, "Query all users for roles."},
     {"admin_query_users_info",
      (PyCFunction)AerospikeClient_Admin_Query_Users_Info,
      METH_VARARGS | METH_KEYWORDS,
@@ -506,14 +479,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // BATCH OPERATIONS
 
-    {"get_many", (PyCFunction)AerospikeClient_Get_Many,
-     METH_VARARGS | METH_KEYWORDS, get_many_doc},
-    {"batch_get_ops", (PyCFunction)AerospikeClient_Batch_GetOps,
-     METH_VARARGS | METH_KEYWORDS, batch_get_ops_doc},
-    {"select_many", (PyCFunction)AerospikeClient_Select_Many,
-     METH_VARARGS | METH_KEYWORDS, select_many_doc},
-    {"exists_many", (PyCFunction)AerospikeClient_Exists_Many,
-     METH_VARARGS | METH_KEYWORDS, exists_many_doc},
     {"batch_write", (PyCFunction)AerospikeClient_BatchWrite,
      METH_VARARGS | METH_KEYWORDS, batch_write_doc},
     {"batch_operate", (PyCFunction)AerospikeClient_Batch_Operate,

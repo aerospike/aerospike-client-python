@@ -48,17 +48,6 @@ runs:
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
     shell: bash
 
-  - run: echo CA_KEY_FILE_NAME="ca.pem" >> $GITHUB_ENV
-    shell: bash
-
-  - name: Create a certificate authority
-    run: openssl req -x509 -newkey rsa:2048 -keyout ${{ env.CA_KEY_FILE_NAME }} -out ${{ env.CA_CERT_FILE_NAME }} -nodes -subj '/C=XX/ST=StateName/L=CityName/O=CompanyName/OU=CompanySectionName/CN=mydummyca'
-    working-directory: .github/workflows/docker-build-context
-    shell: bash
-    env:
-      # Makes sure that the subject isn't interpreted as a path
-      MSYS_NO_PATHCONV: 1
-
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
@@ -71,8 +60,6 @@ runs:
       context: .github/workflows/docker-build-context
       build-args: |
         SERVER_IMAGE=${{ env.IMAGE_NAME }}
-        CA_KEY_FILE_NAME=${{ env.CA_KEY_FILE_NAME }}
-        CA_CERT_FILE_NAME=${{ env.CA_CERT_FILE_NAME }}
         TLS_PORT=${{ env.TLS_PORT }}
       tags: ${{ env.NEW_IMAGE_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
@@ -83,27 +70,17 @@ runs:
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -e DEFAULT_TTL=2592000 -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
     shell: bash
 
-  - uses: ./.github/actions/wait-for-as-server-to-start
-    with:
-      container-name: ${{ env.SERVER_CONTAINER_NAME }}
-      is-security-enabled: true
-      is-strong-consistency-enabled: true
-
-  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
+  - name: 'macOS: install timeout command'
+    if: ${{ runner.os == 'macOS' }}
+    run: brew install coreutils
     shell: bash
 
-  - run: echo ASADM_AUTH_FLAGS="--user=${{ env.SUPERUSER_NAME_AND_PASSWORD }} --password=${{ env.SUPERUSER_NAME_AND_PASSWORD }}" >> $GITHUB_ENV
-    shell: bash
-
-  # All the partitions are assumed to be dead when reusing a roster file
-  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage revive ns test"
-    shell: bash
-
-  # Apply changes
-  - run: docker exec ${{ env.SERVER_CONTAINER_NAME }} asadm $ASADM_AUTH_FLAGS --enable --execute "manage recluster"
+  - name: Wait for container to be healthy
+    run: |
+      timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }})" == "healthy" ]]; do sleep 0.1; done'
     shell: bash
 
   # For debugging
@@ -127,11 +104,15 @@ runs:
     working-directory: test
     shell: bash
 
+  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
+    shell: bash
+
   - name: Set credentials in config file
     run: |
       crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
       crudini --set config.conf tls enable true
+      # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
       crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
     working-directory: test
     shell: bash
@@ -161,7 +142,7 @@ runs:
     shell: bash
 
   - name: Get cluster name
-    run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo $ASADM_AUTH_FLAGS -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
+    run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
     shell: bash
 
   - name: Set EE server's IP address

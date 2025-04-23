@@ -1,7 +1,7 @@
 name: PR tests
 
 env:
-  LOWEST_SUPPORTED_PY_VERSION: '3.8'
+  LOWEST_SUPPORTED_PY_VERSION: '3.9'
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -36,7 +36,7 @@ jobs:
         submodules: recursive
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
@@ -44,12 +44,12 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        py-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        py-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
         # Make sure we can build and run tests on an instrumented build that uses libasan
         # We aren't necessarily checking for memory errors / leaks in this test
         sanitizer: [false]
         include:
-        - py-version: 3.8
+        - py-version: 3.9
           sanitizer: true
       fail-fast: false
 
@@ -99,7 +99,7 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: "3.9"
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
 
     - name: Build client
@@ -252,12 +252,55 @@ jobs:
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
     - name: Run tests
       run: python -m pytest ./new_tests
+      working-directory: test
+
+  test-sanitizer:
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+
+    - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}-sanitizer >> $GITHUB_ENV
+
+    - uses: actions/download-artifact@v4
+      with:
+        name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
+
+    - name: Install client
+      run: pip install *.whl
+
+    - name: Install test dependencies
+      run: pip install -r test/requirements.txt
+
+    # We can already detect leaks using valgrind
+    # halt_on_error must be enabled, or else this job won't fail if a memory error occurs
+    - run: |
+        echo ASAN_OPTIONS='detect_stack_use_after_return=1:detect_leaks=0' >> $GITHUB_ENV
+        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
+
+    - uses: ./.github/actions/run-ee-server
+      with:
+        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
+        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+
+    - name: Run tests
+      # We need to disable capturing output or else we cannot see memory errors reported by 
+      # libasan during the test run
+      run: python -m pytest ./new_tests -vvs
       working-directory: test
 
   test-ce:
@@ -266,17 +309,12 @@ jobs:
     strategy:
       matrix:
         py-version: [
-          "3.8",
           "3.9",
           "3.10",
           "3.11",
           "3.12",
           "3.13"
         ]
-        sanitizer: [false]
-        include:
-          - py-version: 3.8
-            sanitizer: true
       fail-fast: false
 
     steps:
@@ -290,9 +328,6 @@ jobs:
         architecture: 'x64'
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
-
-    - if: ${{ matrix.sanitizer }}
-      run: echo WHEEL_GH_ARTIFACT_NAME=${{ env.WHEEL_GH_ARTIFACT_NAME }}-sanitizer >> $GITHUB_ENV
 
     - uses: actions/download-artifact@v4
       with:
@@ -322,17 +357,12 @@ jobs:
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
-    - if: ${{ matrix.sanitizer }}
-      run: |
-        echo ASAN_OPTIONS='halt_on_error=0' >> $GITHUB_ENV
-        echo LD_PRELOAD=$(gcc --print-file-name=libasan.so) >> $GITHUB_ENV
-
     - name: Run tests
-      run: python -m pytest ./new_tests -vv
+      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
   test-lowest-supported-server:
@@ -365,7 +395,7 @@ jobs:
       run: cp config.conf.template config.conf
       working-directory: test
 
-    - uses: ./.github/actions/wait-for-as-server-to-start
+    - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
 
@@ -383,12 +413,12 @@ jobs:
 
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        python-version: "3.13"
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
       with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        name: wheel-3.13
 
     - name: Install client
       run: pip install *.whl
@@ -403,7 +433,7 @@ jobs:
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*}.py
+      run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
     - name: Show logs if failed
@@ -420,7 +450,7 @@ jobs:
         submodules: recursive
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - name: Install dependencies for checking spelling in docs
       # TODO: find way to split up dependencies
@@ -435,7 +465,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
       with:
-        python-version: '3.9'
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
         architecture: 'x64'
     - name: Install documentation dependencies
       run: python -m pip install -r doc/requirements.txt
