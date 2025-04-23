@@ -166,17 +166,21 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
         }
     }
 
-    // TODO check that py_object is an instance of class
+    if (!is_pyobj_correct_as_helpers_type(py_obj, "batch.records",
+                                          "BatchRecords", false)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "batch_records must be an "
+                        "aerospike_helpers.batch.records.BatchRecords "
+                        "instance");
+        goto CLEANUP4;
+    }
 
     py_batch_records = PyObject_GetAttrString(py_obj, FIELD_NAME_BATCH_RECORDS);
     if (py_batch_records == NULL || !PyList_Check(py_batch_records)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "%s must be a list of BatchRecord",
                         FIELD_NAME_BATCH_RECORDS);
-        if (py_batch_records) {
-            Py_DECREF(py_batch_records);
-        }
-        goto CLEANUP4;
+        goto CLEANUP3;
     }
 
     py_batch_records_size = PyList_Size(py_batch_records);
@@ -193,13 +197,20 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     for (Py_ssize_t i = 0; i < py_batch_records_size; i++) {
         garbage *garb = as_vector_get(&garbage_list, i);
         PyObject *py_batch_record = PyList_GetItem(py_batch_records, i);
-        // TODO check that this is an instance/subclass on BatchRecord
         if (py_batch_record == NULL) {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
                 "py_batch_record is NULL, %s must be a list of BatchRecord",
                 FIELD_NAME_BATCH_RECORDS);
-            goto CLEANUP4;
+            goto CLEANUP3;
+        }
+
+        if (is_pyobj_correct_as_helpers_type(py_batch_record, "batch.records",
+                                             "BatchRecord", true) == false) {
+            as_error_update(
+                err, AEROSPIKE_ERR_PARAM,
+                "batch_record must be a BatchRecord class instance");
+            goto CLEANUP3;
         }
 
         // extract as_batch_base_record fields
@@ -574,6 +585,11 @@ PyObject *AerospikeClient_BatchWrite(AerospikeClient *self, PyObject *args,
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:batch_write", kwlist,
                                     &py_batch_recs, &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_policy == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy = NULL;
     }
 
     return AerospikeClient_BatchWriteInvoke(self, &err, py_policy,

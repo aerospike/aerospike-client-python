@@ -9,9 +9,10 @@ def updateElo(record):
 query.foreach(updateElo)
 
 # Player elos should be updated
-records = client.get_many(keyTuples)
-for _, _, bins in records:
-    print(bins)
+brs = client.batch_read(keyTuples)
+for br in brs.batch_records:
+    # Print record bin
+    print(br.record[2])
 # {'score': 100, 'elo': 1500}
 # {'score': 20, 'elo': 1520}
 # {'score': 10, 'elo': 1110}
