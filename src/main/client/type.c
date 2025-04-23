@@ -923,8 +923,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             // It is optional so just move on
         }
         else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
-                                                  "metrics",
-                                                  "MetricsPolicy") == false) {
+                                                  "metrics", "MetricsPolicy",
+                                                  false) == false) {
             as_error_update(
                 &constructor_err, AEROSPIKE_ERR_PARAM,
                 "metrics must be an "
