@@ -39,7 +39,7 @@ class TestMRTBasicFunctionality:
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
 
         retval = self.as_connection.commit(transaction=mrt)
-        assert retval == aerospike.MRT_COMMIT_OK
+        assert retval == aerospike.COMMIT_OK
 
         # Were the writes committed?
         for i in range(len(self.keys)):
@@ -74,7 +74,7 @@ class TestMRTBasicFunctionality:
         self.as_connection.put(self.keys[1], {self.bin_name: 2}, policy=policy)
 
         retval = self.as_connection.abort(transaction=mrt)
-        assert retval == aerospike.MRT_ABORT_OK
+        assert retval == aerospike.ABORT_OK
 
         # Test that MRT didn't go through
         # i.e write commands were rolled back

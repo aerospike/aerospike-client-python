@@ -69,9 +69,6 @@ as_status char_double_ptr_to_py_list(as_error *err, int num_elements,
                                      int element_size, char **str_array_ptr,
                                      PyObject *py_list);
 
-as_status as_user_to_pyobject(as_error *err, as_user *user,
-                              PyObject **py_as_user);
-
 as_status as_user_info_to_pyobject(as_error *err, as_user *user,
                                    PyObject **py_as_user);
 
@@ -85,9 +82,11 @@ as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
 as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
                                uint32_t max_len);
 
-as_status pyobject_to_val(AerospikeClient *self, as_error *err,
-                          PyObject *py_obj, as_val **val,
-                          as_static_pool *static_pool, int serializer_type);
+// On success, heap allocates a new as_val object and assigns its address to val
+as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
+                                   PyObject *py_obj, as_val **val,
+                                   as_static_pool *static_pool,
+                                   int serializer_type);
 
 as_status pyobject_to_map(AerospikeClient *self, as_error *err,
                           PyObject *py_dict, as_map **map,
@@ -102,10 +101,10 @@ as_status pyobject_to_key(as_error *err, PyObject *py_key, as_key *key);
 as_status pyobject_to_index(AerospikeClient *self, as_error *err,
                             PyObject *py_value, long *long_val);
 
-as_status pyobject_to_record(AerospikeClient *self, as_error *err,
-                             PyObject *py_rec, PyObject *py_meta,
-                             as_record *rec, int serializer_option,
-                             as_static_pool *static_pool);
+as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
+                                       PyObject *py_rec, PyObject *py_meta,
+                                       as_record *rec, int serializer_option,
+                                       as_static_pool *static_pool);
 
 as_status val_to_pyobject(AerospikeClient *self, as_error *err,
                           const as_val *val, PyObject **py_map);
@@ -233,9 +232,15 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
 PyObject *create_py_node_from_as_node(as_error *error_p,
                                       struct as_node_s *node);
 
+// Checks if pyobject is an instance of a class type defined in aerospike_helpers or one of its submodules
+// If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
+// If is_subclass_instance is true, we expect the instance's type to directly inherit from aerospike_helpers.<expected_submodule_name>.<expected_type_name>
+// We need this method because classes defined natively in Python are heap-allocated types:
+// https://docs.python.org/3/c-api/typeobj.html#c.PyTypeObject.tp_name
 bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
-                                      const char *expected_type_name);
+                                      const char *expected_type_name,
+                                      bool is_subclass_instance);
 PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *module_name,
                                             const char *class_name,
