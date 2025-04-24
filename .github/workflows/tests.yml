@@ -103,6 +103,7 @@ jobs:
       id: get-c-client
       with:
         name: c-client
+        merge-multiple: true
 
     - name: Build client
       run: python3 -m build
