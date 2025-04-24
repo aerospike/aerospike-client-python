@@ -171,4 +171,4 @@ class TestInvalidClientConfig(object):
         }
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
-        assert excinfo.value.msg == 'Invalid config key host'
+        assert excinfo.value.msg == '\"host\" is an invalid client config dictionary key'

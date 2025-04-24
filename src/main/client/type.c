@@ -604,8 +604,10 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
             else if (res == 0) {
-                as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                                "Invalid config key %s", config_key);
+                as_error_update(
+                    &constructor_err, AEROSPIKE_ERR_PARAM,
+                    "\"%s\" is an invalid client config dictionary key",
+                    config_key);
                 goto RAISE_EXCEPTION_USING_AS_ERROR;
             }
             // Config key is valid
