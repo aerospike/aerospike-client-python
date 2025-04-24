@@ -287,7 +287,7 @@ PyObject *AerospikeException_New(void)
     }
 
     int retval = PyModule_AddObject(
-        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS,
+        py_exc_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS,
         py_dict_errcode_to_exc_class);
     if (retval == -1) {
         Py_DECREF(py_dict_errcode_to_exc_class);
@@ -403,7 +403,7 @@ void remove_exception(as_error *err)
 PyObject *get_py_exc_class_from_err_code(as_status err_code)
 {
     PyObject *py_dict_err_code = PyObject_GetAttrString(
-        py_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS);
+        py_exc_module, NAME_OF_PY_DICT_MAPPING_ERR_CODE_TO_EXC_CLASS);
     if (py_dict_err_code == NULL) {
         goto error;
     }
@@ -428,7 +428,7 @@ PyObject *get_py_exc_class_from_err_code(as_status err_code)
         // Exception class could not be found with the error code
 
         py_exc_class =
-            PyObject_GetAttrString(py_module, AEROSPIKE_ERR_EXCEPTION_NAME);
+            PyObject_GetAttrString(py_exc_module, AEROSPIKE_ERR_EXCEPTION_NAME);
         if (py_exc_class == NULL) {
             goto error;
         }
