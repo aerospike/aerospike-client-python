@@ -66,6 +66,7 @@ jobs:
         path: ./aerospike-client-c/target/**/libaerospike.a
 
   build:
+    depends-on: build-c-client
     runs-on: ubuntu-22.04
     strategy:
       matrix:
