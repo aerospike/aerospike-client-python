@@ -107,7 +107,7 @@ CLEANUP:
     }
 
     PyGILState_Release(gil_state);
-    return result;
+    return true;
 }
 
 /**
