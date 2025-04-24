@@ -105,6 +105,8 @@ jobs:
         name: c-client
         merge-multiple: true
 
+    - run: ls -l
+
     - name: Build client
       run: python3 -m build
       env:
