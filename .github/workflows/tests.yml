@@ -63,7 +63,7 @@ jobs:
       with:
         name: c-client
         # TODO: not the precise folder
-        path: ./aerospike-client-c/target/**/libaerospike.a
+        path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
 
   build:
     needs: build-c-client
