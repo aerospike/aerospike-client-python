@@ -40,6 +40,31 @@ jobs:
         architecture: 'x64'
     - uses: pre-commit/action@v3.0.0
 
+  # TODO: check if C client was already built for current submodule revision
+  # TODO: define a var for the same OS used in the other build job
+  build-c-client:
+    runs-on: ubuntu-22.04
+    steps:
+    - run: sudo apt update
+    - name: Install C client build dependencies
+      run: sudo apt-get install -y libc6-dev libssl-dev autoconf automake libtool g++ zlib1g-dev ncurses-dev
+
+    - uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        sparse-checkout: |
+          aerospike-client-c
+
+    - run: make build
+      working-directory: aerospike-client-c
+
+    - name: Send C client static library to job that builds Python client
+      uses: actions/upload-artifact@v4
+      with:
+        name: c-client
+        # TODO: not the precise folder
+        path: ./aerospike-client-c/target/**/libaerospike.a
+
   build:
     runs-on: ubuntu-22.04
     strategy:
@@ -73,10 +98,16 @@ jobs:
     - if: ${{ matrix.sanitizer }}
       run: echo SANITIZER=1 >> $GITHUB_ENV
 
+    - uses: actions/download-artifact@v4
+      id: get-c-client
+      with:
+        name: c-client
+
     - name: Build client
       run: python3 -m build
       env:
         CFLAGS: '-Werror'
+        C_CLIENT_SHARED_PATH: ${{ steps.get-c-client.outputs.download-path }}
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
