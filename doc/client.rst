@@ -1447,7 +1447,7 @@ Record Tuple
             client.remove(keyTuple)
             client.close()
 
-    .. seealso:: `Data Model: Record <https://aerospike.com/docs/server/architecture/data-model.html#records>`_.
+    .. seealso:: `Data Model: Record <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#records>`_.
 
 .. _metadata_dict:
 
