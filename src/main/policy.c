@@ -678,6 +678,7 @@ as_policy_batch *as_policy_batch_init_and_set_from_pyobject(
     as_policy_batch *policy, as_policy_batch *config_policy, as_exp *exp_list,
     as_exp **exp_list_p)
 {
+    // TODO: not sure if this should be here
     as_error_reset(err);
 
     if (py_policy == Py_None) {
