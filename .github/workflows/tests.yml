@@ -64,6 +64,7 @@ jobs:
         name: c-client
         # TODO: not the precise folder
         path: ./aerospike-client-c/target/Linux-x86_64/lib/libaerospike.a
+        if-no-files-found: error
 
   build:
     needs: build-c-client
@@ -103,9 +104,8 @@ jobs:
       id: get-c-client
       with:
         name: c-client
-        merge-multiple: true
 
-    - run: ls -l
+    - run: ls -R
 
     - name: Build client
       run: python3 -m build
