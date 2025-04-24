@@ -686,7 +686,7 @@ as_policy_batch *as_policy_batch_init_and_set_from_pyobject(
                                "policy must be a dict");
     }
 
-    as_policy_batch_copy(config_batch_policy, policy);
+    as_policy_batch_copy(config_policy, policy);
 
     // Set policy fields
     as_status retval = as_policy_base_init_and_set_from_py_optional_policy_dict(
