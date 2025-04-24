@@ -681,11 +681,7 @@ as_policy_batch *as_policy_batch_init_and_set_from_pyobject(
     // TODO: not sure if this should be here
     as_error_reset(err);
 
-    if (py_policy == Py_None) {
-        // Tell C client to use the C client config's batch policy.
-        return NULL;
-    }
-    else if (!PyDict_Check(py_policy)) {
+    if (!PyDict_Check(py_policy)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "policy must be a dict");
     }
