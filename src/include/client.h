@@ -445,24 +445,6 @@ PyObject *AerospikeClient_Set_Log_Handler(AerospikeClient *self, PyObject *args,
                                           PyObject *kwds);
 
 /**
- * Get records in a batch
- *
- *		client.get_many([keys], policies)
- *
- */
-PyObject *AerospikeClient_Get_Many(AerospikeClient *self, PyObject *args,
-                                   PyObject *kwds);
-
-/**
- * Get records in a batch
- *
- *		client.batch_get_ops([keys], policies)
- *
- */
-PyObject *AerospikeClient_Batch_GetOps(AerospikeClient *self, PyObject *args,
-                                       PyObject *kwds);
-
-/**
  * Read/Write multiple records for specified batch keys in one batch call.
  * This method allows different sub-commands for each key in the batch.
  * The returned records are located in the same list.
@@ -511,24 +493,6 @@ PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
  *
  */
 PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
-                                      PyObject *kwds);
-
-/**
- * Filter bins from records in a batch
- *
- *		client.select_many([keys], [bins], policies)
- *
- */
-PyObject *AerospikeClient_Select_Many(AerospikeClient *self, PyObject *args,
-                                      PyObject *kwds);
-
-/**
- * Check existence of given keys
- *
- *		client.exists_many([keys], policies)
- *
- */
-PyObject *AerospikeClient_Exists_Many(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds);
 
 /**

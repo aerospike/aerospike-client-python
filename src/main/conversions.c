@@ -170,33 +170,6 @@ as_status str_array_of_roles_to_py_list(as_error *err, int num_elements,
     return err->code;
 }
 
-as_status as_user_array_to_pyobject(as_error *err, as_user **users,
-                                    PyObject **py_as_users, int users_size)
-{
-    as_error_reset(err);
-    int i;
-
-    PyObject *py_users = PyDict_New();
-    for (i = 0; i < users_size; i++) {
-
-        PyObject *py_user = PyUnicode_FromString(users[i]->name);
-        PyObject *py_roles = PyList_New(0);
-        str_array_of_roles_to_py_list(err, users[i]->roles_size,
-                                      users[i]->roles, py_roles);
-        if (err->code != AEROSPIKE_OK) {
-            break;
-        }
-
-        PyDict_SetItem(py_users, py_user, py_roles);
-
-        Py_DECREF(py_user);
-        Py_DECREF(py_roles);
-    }
-    *py_as_users = py_users;
-
-    return err->code;
-}
-
 as_status as_user_info_array_to_pyobject(as_error *err, as_user **users,
                                          PyObject **py_as_users, int users_size)
 {
@@ -437,24 +410,6 @@ as_status as_partitions_status_to_pyobject(
     }
 
     *py_dict = new_dict;
-
-END:
-    return err->code;
-}
-
-as_status as_user_to_pyobject(as_error *err, as_user *user,
-                              PyObject **py_as_user)
-{
-    as_error_reset(err);
-
-    PyObject *py_roles = PyList_New(0);
-
-    str_array_of_roles_to_py_list(err, user->roles_size, user->roles, py_roles);
-    if (err->code != AEROSPIKE_OK) {
-        goto END;
-    }
-
-    *py_as_user = py_roles;
 
 END:
     return err->code;
@@ -1063,14 +1018,16 @@ CLEANUP1:
     return py_instance;
 }
 
-// Checks if pyobject is a certain type defined in aerospike_helpers or one of its submodules
-// If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
 bool is_pyobj_correct_as_helpers_type(PyObject *obj,
                                       const char *expected_submodule_name,
-                                      const char *expected_type_name)
+                                      const char *expected_type_name,
+                                      bool is_subclass_instance)
 {
-    if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
-        // Expected class name does not match object's class name
+    if (obj->ob_type->tp_dict == NULL) {
+        // Unable to get type's __module__ attribute.
+        // In Python 3.12+, this would happen if obj was a native Python type
+        // https://docs.python.org/3.12/c-api/typeobj.html#c.PyTypeObject.tp_dict
+        // so the object would not be the correct type, anyways
         return false;
     }
 
@@ -1099,7 +1056,8 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
         retval = false;
         goto CLEANUP2;
     }
-    char *pyobj_submodule = strtok(NULL, delimiters);
+    // Get rest of submodule after parent aerospike_helpers package
+    char *pyobj_submodule = strchr(module_name, '.');
     if (pyobj_submodule) {
         // Python object belongs in a aerospike_helpers submodule
         if (!expected_submodule_name) {
@@ -1107,18 +1065,32 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
             retval = false;
             goto CLEANUP2;
         }
-        else if (strcmp(pyobj_submodule, expected_submodule_name)) {
+        // We want the string after the .
+        else if (strcmp(pyobj_submodule + 1, expected_submodule_name)) {
             // But it doesn't match the expected submodule
             retval = false;
             goto CLEANUP2;
         }
     }
     else {
-        // Python object belongs in the aerospike_helpers parent submodule
+        // Python object belongs in the aerospike_helpers parent module
         if (expected_submodule_name) {
             // But it is expected to belong to an aerospike_helpers submodule
             retval = false;
             goto CLEANUP2;
+        }
+    }
+
+    if (!is_subclass_instance) {
+        if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
+            // object's class does not match expected class
+            return false;
+        }
+    }
+    else {
+        if (strcmp(obj->ob_type->tp_base->tp_name, expected_type_name)) {
+            // object's parent class does not match expected class
+            return false;
         }
     }
 
@@ -1200,7 +1172,8 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
         }
         *val = (as_val *)bytes;
 
-        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog")) {
+        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog",
+                                             false)) {
             bytes->type = AS_BYTES_HLL;
         }
     }
@@ -1476,6 +1449,7 @@ as_status pyobject_to_key(as_error *err, PyObject *py_keytuple, as_key *key)
     as_key *returnResult = key;
 
     if (py_key && py_key != Py_None) {
+        // TODO: refactor using as_val_new_from_pyobject
         if (PyUnicode_Check(py_key)) {
             PyObject *py_ustr = PyUnicode_AsUTF8String(py_key);
             char *k = PyBytes_AsString(py_ustr);
@@ -2380,6 +2354,7 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
     strcpy(binop_bin->name, bin);
 }
 
+// TODO: dead code
 as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
                                    PyObject *py_bin, char **bin)
 {

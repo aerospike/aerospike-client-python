@@ -356,6 +356,11 @@ PyObject *AerospikeClient_Batch_Apply(AerospikeClient *self, PyObject *args,
         goto error;
     }
 
+    if (py_policy_batch == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy_batch = NULL;
+    }
+
     py_results = AerospikeClient_Batch_Apply_Invoke(
         self, &err, py_keys, py_mod, py_func, py_args, py_policy_batch,
         py_policy_batch_apply);

@@ -315,6 +315,11 @@ PyObject *AerospikeClient_Batch_Remove(AerospikeClient *self, PyObject *args,
         goto error;
     }
 
+    if (py_policy_batch == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy_batch = NULL;
+    }
+
     py_results = AerospikeClient_Batch_Remove_Invoke(
         self, &err, py_keys, py_policy_batch, py_policy_batch_remove);
 
