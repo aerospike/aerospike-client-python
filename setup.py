@@ -249,9 +249,6 @@ class CClientBuild(build):
         C_CLIENT_SHARED_PATH = os.getenv("C_CLIENT_SHARED_PATH")
         if not C_CLIENT_SHARED_PATH:
             self.execute(compile, [], 'Compiling core aerospike-client-c')
-        else:
-            import shutil
-            shutil.copyfile(C_CLIENT_SHARED_PATH, AEROSPIKE_C_TARGET + '/lib/libaerospike.a')
         # run original c-extension build code
         build.run(self)
 
