@@ -660,7 +660,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 
 /**
  * Given a:
- * - non-NULL, Optional[dict] called *py_policy*
+ * - non-NULL dict called *py_policy*
  * - pointer to an uninitialized as_policy_batch instance called *policy*. This is a transaction-level batch policy passed
  * to the C client's API.
  *
