@@ -108,7 +108,7 @@ jobs:
       run: python3 -m build
       env:
         CFLAGS: '-Werror'
-        C_CLIENT_SHARED_PATH: ${{ steps.get-c-client.outputs.download-path }}
+        C_CLIENT_SHARED_PATH: ${{ steps.get-c-client.outputs.download-path }}/libaerospike.a
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
