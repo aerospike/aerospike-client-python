@@ -108,3 +108,8 @@ typedef struct {
 } AerospikeTransaction;
 
 extern PyTypeObject AerospikeTransaction_Type;
+
+typedef struct {
+    PyDictObject py_dict;
+    PyObject *py_valid_keys;
+} FixedKeyDict;
