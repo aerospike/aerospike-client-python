@@ -540,27 +540,10 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     PyObject *py_unused = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
-    bool found = false;
 
-    while (PyDict_Next(py_module_dict, &pos, &py_unused, &py_exc_class)) {
-        if (PyObject_HasAttrString(py_exc_class, "code")) {
-            PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
-            if (py_code == Py_None) {
-                continue;
-            }
-            if (err->code == PyLong_AsLong(py_code)) {
-                found = true;
-                break;
-            }
-        }
-    }
-    // We haven't found the right exception, just use AerospikeError
-    if (!found) {
-        PyObject *base_exception =
-            PyDict_GetItemString(py_module_dict, "AerospikeError");
-        if (base_exception) {
-            py_exc_class = base_exception;
-        }
+    PyObject *py_exc_class = get_py_exc_class_from_err_code(err->code);
+    if (py_exc_class == NULL) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
     }
 
     const char *extra_attrs[] = {"key", "bin", "module", "func", "name"};
