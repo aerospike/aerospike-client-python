@@ -18,11 +18,6 @@
 
 #include <Python.h>
 
-typedef struct {
-    const char *attr_name;
-    PyObject *py_value;
-} as_exc_extra_info;
-
 PyObject *AerospikeException_New(void);
 void raise_exception(as_error *err);
 void raise_exception_base(as_error *err, PyObject *py_key, PyObject *py_bin,
