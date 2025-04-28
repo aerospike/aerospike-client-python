@@ -589,14 +589,17 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     Py_INCREF(py_exc_class);
 
     // Convert C error to Python exception
-    PyObject *py_err = NULL;
-    error_to_pyobject(err, &py_err);
+    PyObject *py_err = create_pytuple_using_as_error(err);
+    if (py_err == NULL) {
+        goto CLEANUP_AND_CHAIN_PREV_EXC;
+    }
     set_aerospike_exc_attrs_using_tuple_of_attrs(py_exc_class, py_err);
 
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err);
-    Py_DECREF(py_exc_class);
     Py_DECREF(py_err);
+CLEANUP_AND_CHAIN_PREV_EXC:
+    Py_DECREF(py_exc_class);
 
 CHAIN_PREV_EXC_AND_RETURN:
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
