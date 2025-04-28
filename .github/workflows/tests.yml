@@ -496,3 +496,20 @@ jobs:
       working-directory: test/metrics
     - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/metrics
+
+test-performance:
+  needs: build
+  runs-on: ubuntu-22.04
+  steps:
+  - uses: actions/checkout@v4
+  - uses: actions/setup-python@v5
+    with:
+      python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+  - uses: actions/download-artifact@v4
+    with:
+      name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+  - run: python3 -m pip install *.whl
+  - run: python3 -m pip install -r requirements.txt
+    working-directory: benchmarks
+  - run: python3 test_concurrent.py
+    working-directory: benchmarks
