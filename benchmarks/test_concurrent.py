@@ -14,7 +14,6 @@ try:
 
     policy = {"concurrent": True}
     runner = pyperf.Runner()
-    bench = runner.bench_func('batch_read', client.batch_read, keys, ["a"], policy)
-    bench.dump(file="./benchmark.json")
+    runner.bench_func('batch_read', client.batch_read, keys, ["a"], policy)
 finally:
     client.close()
