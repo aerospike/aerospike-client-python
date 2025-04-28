@@ -593,7 +593,6 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     if (py_err == NULL) {
         goto CLEANUP_AND_CHAIN_PREV_EXC;
     }
-    set_aerospike_exc_attrs_using_tuple_of_attrs(py_exc_class, py_err);
 
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err);
