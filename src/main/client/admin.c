@@ -758,7 +758,6 @@ CLEANUP:
  *                              list passed from Python to a C function
  * @param kwds                  Dictionary of keywords
  *
- * Returns an integer status. 0(Zero) is success value.
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
