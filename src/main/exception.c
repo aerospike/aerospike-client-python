@@ -565,21 +565,30 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     }
 
     // Convert borrowed reference of exception class to strong reference
-    Py_INCREF(py_exc_class);
+    // Py_INCREF(py_exc_class);
 
     // Convert C error to Python exception
-    PyObject *py_err = create_pytuple_using_as_error(err);
-    if (py_err == NULL) {
-        goto CLEANUP_AND_CHAIN_PREV_EXC;
+    PyObject *py_err_tuple = create_pytuple_using_as_error(err);
+    if (py_err_tuple == NULL) {
+        // Py_DECREF(py_exc_class);
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    for (unsigned long i = 0;
+         i < sizeof(aerospike_err_attrs) / sizeof(aerospike_err_attrs[0]) - 1;
+         i++) {
+        // Here, we are assuming the number of attrs is the same as the number of tuple members
+        PyObject *py_arg = PyTuple_GetItem(py_err_tuple, i);
+        if (py_arg == NULL) {
+            break;
+        }
+        PyObject_SetAttrString(py_exc_class, aerospike_err_attrs[i], py_arg);
     }
 
     // Raise exception
-    PyErr_SetObject(py_exc_class, py_err);
-    Py_DECREF(py_err);
+    PyErr_SetObject(py_exc_class, py_err_tuple);
+    Py_DECREF(py_err_tuple);
     return;
-
-CLEANUP_AND_CHAIN_PREV_EXC:
-    Py_DECREF(py_exc_class);
 
 CHAIN_PREV_EXC_AND_RETURN:
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
