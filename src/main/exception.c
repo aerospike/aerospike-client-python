@@ -588,7 +588,6 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err_tuple);
     Py_DECREF(py_err_tuple);
-    return;
 
 CHAIN_PREV_EXC_AND_RETURN:
 #if PY_MAJOR_VERSION == 3 && PY_MINOR_VERSION >= 12
