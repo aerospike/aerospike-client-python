@@ -576,6 +576,8 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     // Raise exception
     PyErr_SetObject(py_exc_class, py_err);
     Py_DECREF(py_err);
+    return;
+
 CLEANUP_AND_CHAIN_PREV_EXC:
     Py_DECREF(py_exc_class);
 
