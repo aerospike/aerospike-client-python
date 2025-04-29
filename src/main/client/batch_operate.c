@@ -207,6 +207,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
+        // TODO: need a way to check if one of the ops is a write
         if (pyobject_to_policy_batch(
                 self, err, py_policy_batch, &policy_batch, &policy_batch_p,
                 &self->as->config.policies.batch, &batch_exp_list,
