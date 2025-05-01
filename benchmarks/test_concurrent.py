@@ -1,8 +1,7 @@
 import pyperf
 import aerospike
 
-# TODO: must connect to a network attached server. not Docker container
-config = {"hosts": [("127.0.0.1", 3000)]}
+config = {"hosts": [("mydc", 3000)]}
 client = aerospike.client(config)
 
 keys = []
