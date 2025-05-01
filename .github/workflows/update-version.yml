@@ -22,6 +22,7 @@ on:
       # A hack to tell if workflow is triggered by workflow_call or not
       # Calling workflows should not set this input
       # If workflow is triggered by workflow_dispatch, this should be set to the default boolean value: false
+      # https://github.com/actions/runner/discussions/1884#discussioncomment-6377587
       is_workflow_call:
         type: boolean
         default: true

@@ -20,7 +20,7 @@ bins returned can be filtered using :meth:`select`.
 
 .. seealso::
     `Scans <https://aerospike.com/docs/server/guide/scan.html>`_ and \
-    `Managing Scans <https://aerospike.com/docs/server/operations/manage/scans/>`_.
+    `Managing Scans <https://aerospike.com/docs/server/operations/manage/queries/>`_.
 
 Fields
 ======
@@ -537,6 +537,8 @@ Policies
             | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
+            |
+            | This compression feature requires the Enterprise Edition Server.
             |
             | Default: ``False``
         * **durable_delete** :class:`bool`

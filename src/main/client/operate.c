@@ -79,6 +79,7 @@ static inline bool isExprOp(int op);
         PyObject *py_err = NULL;                                               \
         error_to_pyobject(&err, &py_err);                                      \
         PyObject *exception_type = raise_exception_old(&err);                  \
+        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);  \
         if (PyObject_HasAttrString(exception_type, "key")) {                   \
             PyObject_SetAttrString(exception_type, "key", py_key);             \
         }                                                                      \
@@ -485,13 +486,14 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
     }
     else if (opRequiresValue(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Value should be given");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Value should be given");
+        goto CLEANUP;
     }
 
     if (!py_key && opRequiresKey(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation requires key parameter");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation requires key parameter");
+        goto CLEANUP;
     }
 
     if (py_map_policy) {
@@ -501,19 +503,21 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         }
     }
     else if (opRequiresMapPolicy(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation requires map_policy parameter");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation requires map_policy parameter");
+        goto CLEANUP;
     }
 
     if (!py_range && opRequiresRange(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Range should be given");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "Range should be given");
+        goto CLEANUP;
     }
 
     if (py_return_type) {
         if (!PyLong_Check(py_return_type)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Return type should be an integer");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Return type should be an integer");
+            goto CLEANUP;
         }
         return_type = PyLong_AsLong(py_return_type);
     }
@@ -531,20 +535,23 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
 
     if (py_index) {
         if (self->strict_types && !opRequiresIndex(operation)) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Operation does not need an index value");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Operation does not need an index value");
+            goto CLEANUP;
         }
         if (PyLong_Check(py_index)) {
             index = PyLong_AsLong(py_index);
         }
         else {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Index should be an integer");
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "Index should be an integer");
+            goto CLEANUP;
         }
     }
     else if (opRequiresIndex(operation)) {
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                               "Operation needs an index value");
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Operation needs an index value");
+        goto CLEANUP;
     }
 
     switch (operation) {
@@ -617,8 +624,9 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             offset = PyLong_AsLong(py_value);
             if (offset == -1 && PyErr_Occurred() && self->strict_types) {
                 if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                    return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                           "integer value exceeds sys.maxsize");
+                    as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                    "integer value exceeds sys.maxsize");
+                    goto CLEANUP;
                 }
             }
             as_operations_add_incr(ops, bin, offset);
@@ -1213,6 +1221,7 @@ CLEANUP:
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
+        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         if (PyObject_HasAttrString(exception_type, "key")) {
             PyObject_SetAttrString(exception_type, "key", py_key);
         }

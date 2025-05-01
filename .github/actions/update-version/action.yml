@@ -8,10 +8,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-  - name: Update __version__ in aerospike module
-    run: sed -i "s/const char version\[] = \".*\";/const char version\[] = \"${{ inputs.new_version }}\";/" src/main/aerospike.c
-    shell: bash
-
   - name: Update VERSION metadata
     run: echo ${{ inputs.new_version }} > VERSION
     shell: bash

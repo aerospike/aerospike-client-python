@@ -1,11 +1,11 @@
-import subprocess
 import time
-import json
+import docker
 
 import aerospike
 from aerospike_helpers.metrics import MetricsListeners, MetricsPolicy, Cluster, Node, ConnectionStats, NodeMetrics
 
 
+# Copied from new_tests/test_metrics.py
 # Tests that the Node object returned from the node_close callback has these fields
 # and makes sure these fields have the correct types
 def test_node_is_populated(node: Node):
@@ -64,38 +64,22 @@ def snapshot(_: Cluster):
     pass
 
 
-NODE_COUNT = 3
-print(f"Creating {NODE_COUNT} node cluster...")
-subprocess.run(["aerolab", "cluster", "create", f"--count={NODE_COUNT}"], check=True)
+docker_client = docker.from_env()
+print("Running server container...")
+SERVER_PORT_NUMBER = 3000
+container = docker_client.containers.run("aerospike/aerospike-server", detach=True,
+                                         ports={"3000/tcp": SERVER_PORT_NUMBER})
+print("Waiting for server to initialize...")
+time.sleep(5)
 
 try:
-    print("Wait for server to fully start up...")
-    time.sleep(5)
-
-    # Connect to the first node
-    completed_process = subprocess.run(["aerolab", "cluster", "list", "--json"], check=True, capture_output=True)
-    list_of_nodes = json.loads(completed_process.stdout)
-
-    def get_first_node(node_info: dict):
-        return node_info["NodeNo"] == "1"
-
-    filtered_list_of_nodes = filter(get_first_node, list_of_nodes)
-    first_node = list(filtered_list_of_nodes)[0]
-    first_node_port = int(first_node["DockerExposePorts"])
-    HOST_NAME = "127.0.0.1"
-
+    print("Connecting to server...")
     config = {
         "hosts": [
-            (HOST_NAME, first_node_port)
+            ("127.0.0.1", SERVER_PORT_NUMBER)
         ],
-        # The nodes use internal Docker IP addresses as their access addresses
-        # But we cannot connect to those from the host
-        # But the nodes use localhost as the alternate address
-        # So we can connect to that instead
-        "use_services_alternate": True
     }
-    print(f"Connecting to {HOST_NAME}:{first_node_port} using Python client...")
-    c = aerospike.client(config)
+    as_client = aerospike.client(config)
     try:
         # Show logs to confirm that node is removed from the client's perspective
         aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
@@ -110,21 +94,28 @@ try:
         )
         policy = MetricsPolicy(metrics_listeners=listeners)
         print("Enabling metrics...")
-        c.enable_metrics(policy=policy)
+        as_client.enable_metrics(policy=policy)
 
-        NODE_TO_CLOSE = 2
-        print(f"Closing node {NODE_TO_CLOSE}...")
-        subprocess.run(["aerolab", "cluster", "stop", f"--nodes={NODE_TO_CLOSE}"], check=True)
-        # Run with --force or else it will ask to confirm
-        subprocess.run(["aerolab", "cluster", "destroy", f"--nodes={NODE_TO_CLOSE}", "--force"], check=True)
+        # Close the last node
+        print("Closing node...")
+        container.stop()
+        container.remove()
 
         print("Giving client time to run the node_close listener...")
-        time.sleep(10)
+        elapsed_secs = 0
+        while elapsed_secs < 10:
+            if node_close_called:
+                break
+            time.sleep(1)
+            elapsed_secs += 1
 
         assert node_close_called is True
+        # Need to print assert result somehow
+        print("node_close_called is true. Passed")
     finally:
-        c.close()
+        # Calling close() after we lose connection to the whole cluster is safe. It will be a no-op
+        # It is not explicitly documented for the Python client or C client, but this behavior was verified with C
+        # client developer
+        as_client.close()
 finally:
-    # Cleanup
-    subprocess.run(["aerolab", "cluster", "stop"], check=True)
-    subprocess.run(["aerolab", "cluster", "destroy", "--force"], check=True)
+    docker_client.close()

@@ -37,16 +37,14 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     PyObject *py_module = NULL;
     PyObject *py_function = NULL;
     PyObject *py_args = NULL;
-    PyObject *py_policy = NULL;
 
     PyObject *py_umodule = NULL;
     PyObject *py_ufunction = NULL;
     // Python function keyword arguments
-    static char *kwlist[] = {"module", "function", "arguments", "policy", NULL};
+    static char *kwlist[] = {"module", "function", "arguments", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:apply", kwlist,
-                                     &py_module, &py_function, &py_args,
-                                     &py_policy)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:apply", kwlist,
+                                     &py_module, &py_function, &py_args)) {
         return NULL;
     }
 
@@ -155,6 +153,7 @@ CLEANUP:
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyObject *exception_type = raise_exception_old(&err);
+        set_aerospike_exc_attrs_using_tuple_of_attrs(exception_type, py_err);
         if (PyObject_HasAttrString(exception_type, "module")) {
             PyObject_SetAttrString(exception_type, "module", py_module);
         }
