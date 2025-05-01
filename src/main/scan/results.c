@@ -72,9 +72,6 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     PyObject *py_results = NULL;
     PyObject *py_nodename = NULL;
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
     as_policy_scan scan_policy;
     as_policy_scan *scan_policy_p = NULL;
 

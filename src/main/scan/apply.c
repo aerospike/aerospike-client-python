@@ -50,11 +50,14 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
         return NULL;
     }
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
     as_error err;
     as_error_init(&err);
+
+    if (self->dynamic_pool == NULL) {
+        self->dynamic_pool =
+            (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
+        self->dynamic_pool->pool = NULL;
+    }
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid scan object.");
@@ -73,6 +76,7 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
     char *module = NULL;
     char *function = NULL;
     as_arraylist *arglist = NULL;
+    bool allocate_buffer = true;
 
     if (PyUnicode_Check(py_module)) {
         py_umodule = PyUnicode_AsUTF8String(py_module);
@@ -110,8 +114,9 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
         for (int i = 0; i < size; i++) {
             PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
             as_val *val = NULL;
-            pyobject_to_val(self->client, &err, py_val, &val, &static_pool,
-                            SERIALIZER_PYTHON);
+            pyobject_to_val(self->client, &err, py_val, &val,
+                            self->dynamic_pool, SERIALIZER_PYTHON,
+                            allocate_buffer);
             if (err.code != AEROSPIKE_OK) {
                 as_error_update(&err, err.code, NULL);
                 as_arraylist_destroy(arglist);
@@ -134,8 +139,6 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
 CLEANUP:
-    POOL_DESTROY(&static_pool);
-
     if (py_ufunction) {
         Py_DECREF(py_ufunction);
     }
