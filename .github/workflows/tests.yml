@@ -499,7 +499,7 @@ jobs:
 
   test-performance:
     needs: build
-    runs-on: [self-hosted, X64, Linux]
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
@@ -511,6 +511,9 @@ jobs:
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
       working-directory: benchmarks
+
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
 
     - run: python3 test_concurrent.py
       working-directory: benchmarks
