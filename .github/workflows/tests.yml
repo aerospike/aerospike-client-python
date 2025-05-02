@@ -512,5 +512,16 @@ jobs:
     - run: python3 -m pip install -r requirements.txt
       working-directory: benchmarks
 
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - uses: ./.github/actions/wait-for-ce-server-to-start
+      with:
+        container-name: aerospike
+
     - run: python3 test_concurrent.py
       working-directory: benchmarks
