@@ -12,9 +12,7 @@ try:
         keys.append(key)
 
     policy = {"concurrent": True}
-    def _add_cmdline_args(cmd: list, args):
-        cmd.append(("--copy-env"))
-    runner = pyperf.Runner(add_cmdline_args=_add_cmdline_args)
+    runner = pyperf.Runner()
     runner.bench_func('batch_read', client.batch_read, keys, ["a"], policy)
 finally:
     client.close()
