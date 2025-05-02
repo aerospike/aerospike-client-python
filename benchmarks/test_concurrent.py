@@ -1,7 +1,7 @@
 import pyperf
 import aerospike
 
-config = {"hosts": [("mydc", 3000)]}
+config = {"hosts": [("127.0.0.1", 3000)]}
 client = aerospike.client(config)
 
 keys = []
