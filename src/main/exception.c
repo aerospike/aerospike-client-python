@@ -424,6 +424,10 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     while (PyDict_Next(py_module_dict, &pos, &py_unused, &py_exc_class)) {
         PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
         if (py_code == NULL) {
+            if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+                PyErr_Clear();
+                continue;
+            }
             goto CHAIN_PREV_EXC_AND_RETURN;
         }
 
