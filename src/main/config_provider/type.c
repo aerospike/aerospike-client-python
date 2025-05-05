@@ -14,7 +14,7 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
     const char *path = NULL;
     unsigned long interval = AS_CONFIG_PROVIDER_INTERVAL_DEFAULT;
 
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "s|k", kwlist, &path,
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "|sk", kwlist, &path,
                                     &interval) == false) {
         goto error;
     }
@@ -26,7 +26,12 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
         goto error;
     }
 
-    self->path = strdup(path);
+    if (path) {
+        self->path = strdup(path);
+    }
+    else {
+        self->path = NULL;
+    }
     self->interval = interval;
 
     return (PyObject *)self;
@@ -37,6 +42,9 @@ error:
 static PyObject *AerospikeConfigProvider_get_path(AerospikeConfigProvider *self,
                                                   void *closure)
 {
+    if (self->path == NULL) {
+        Py_RETURN_NONE;
+    }
     PyObject *py_path = PyUnicode_FromString(self->path);
     if (py_path == NULL) {
         return NULL;
