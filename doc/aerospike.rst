@@ -343,6 +343,37 @@ Only the `hosts` key is required; the rest of the keys are optional.
     .. hlist::
         :columns: 1
 
+        * **validate_keys** (:class:`bool`)
+            (Optional) Validate keys passed into this config dictionary.
+
+            If a key that is undefined in this documentation gets passed to a config dictionary:
+
+            * If this option is set to :py:obj:`True`, :py:class:`~aerospike.exception.ParamError` will be raised.
+            * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
+              exception in response to the invalid key.
+
+            Default: :py:obj:`False`
+
+            Invalid client config example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                    # The correct key is "user", but "username" may be used by accident
+                    "username": "user",
+                    "password": "password"
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "username" is an invalid client config dictionary key
+                client = aerospike.client(config)
+
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
 
