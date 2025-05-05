@@ -304,47 +304,11 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
                         PyObject *py_policy, as_policy_base *policy,
                         as_exp *exp_list, as_exp **exp_list_p)
 {
-    const char *field_names[] = {"total_timeout", "socket_timeout",
-                                 "max_retries", "sleep_between_retries",
-                                 "compress"};
-    for (unsigned long i = 0; i < len(field_names) / len(field_names[0]); i++) {
-        const char *field_name = field_names[i];
-        PyObject *py_field_name = PyUnicode_FromString(field_name);
-        if (py_field_name == NULL) {
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                   "Unable to create Python unicode object");
-        }
-        PyObject *py_field_value =
-            PyDict_GetItemWithError(py_policy, py_field_name);
-        Py_DECREF(py_field_name);
-        if (py_field_value == NULL) {
-            if (PyErr_Occurred()) {
-                return as_error_update(
-                    err, AEROSPIKE_ERR_CLIENT,
-                    "Unable to fetch field from policy dictionary");
-            }
-        }
-        else if (PyLong_Check(py_field_value)) {
-            // Convert Python int to the correct C type
-            // We just check the field name to get the C type
-            long field_value = PyLong_AsLong(py_field_value);
-            if (field_value == -1 && PyErr_Occurred()) {
-                PyErr_Clear();
-                return as_error_update(
-                    err, AEROSPIKE_ERR_CLIENT,
-                    "Unable to fetch long value from policy field");
-            }
-            policy->__field = (__type)field_val;
-        }
-        else {
-        }
-
-        // POLICY_SET_FIELD(total_timeout, uint32_t);
-    }
-    // POLICY_SET_FIELD(socket_timeout, uint32_t);
-    // POLICY_SET_FIELD(max_retries, uint32_t);
-    // POLICY_SET_FIELD(sleep_between_retries, uint32_t);
-    // POLICY_SET_FIELD(compress, bool);
+    POLICY_SET_FIELD(total_timeout, uint32_t);
+    POLICY_SET_FIELD(socket_timeout, uint32_t);
+    POLICY_SET_FIELD(max_retries, uint32_t);
+    POLICY_SET_FIELD(sleep_between_retries, uint32_t);
+    POLICY_SET_FIELD(compress, bool);
 
     // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
     // so this is safe to call for a scan/query policy's base policy
