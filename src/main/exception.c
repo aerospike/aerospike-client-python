@@ -413,30 +413,50 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     PyErr_Fetch(&py_prev_type, &py_prev_value, &py_prev_traceback);
 #endif
 
+    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
+    if (py_module_dict == NULL) {
+        goto CHAIN_PREV_EXC_AND_RETURN;
+    }
+
+    bool found = false;
     PyObject *py_unused = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
-    PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
-    bool found = false;
-
     while (PyDict_Next(py_module_dict, &pos, &py_unused, &py_exc_class)) {
-        if (PyObject_HasAttrString(py_exc_class, "code")) {
-            PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
-            if (py_code == Py_None) {
-                continue;
-            }
-            if (err->code == PyLong_AsLong(py_code)) {
-                found = true;
-                break;
-            }
+        PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
+        if (py_code == NULL) {
+            goto CHAIN_PREV_EXC_AND_RETURN;
+        }
+
+        // Code will always exist as long as the exception class exists,
+        // so we don't need a strong reference here.
+        Py_DECREF(py_code);
+        if (py_code == Py_None) {
+            continue;
+        }
+        long code = PyLong_AsLong(py_code);
+        if (code == -1 && PyErr_Occurred()) {
+            goto CHAIN_PREV_EXC_AND_RETURN;
+        }
+        else if (err->code == code) {
+            found = true;
+            break;
         }
     }
+
     // We haven't found the right exception, just use AerospikeError
     if (!found) {
+        // TODO: store this in a global so we don't have to look it up
         PyObject *base_exception =
-            PyDict_GetItemString(py_module_dict, "AerospikeError");
-        if (base_exception) {
-            py_exc_class = base_exception;
+            PyDict_GetItemWithError(py_module_dict, "AerospikeError");
+        if (base_exception == NULL) {
+            if (!PyErr_Occurred()) {
+                PyErr_SetString(
+                    PyExc_Exception,
+                    "Unable to find AerospikeError in aerospike.exception");
+            }
+            goto CHAIN_PREV_EXC_AND_RETURN;
         }
+        py_exc_class = base_exception;
     }
 
     const char *extra_attrs[] = {"key", "bin", "module", "func", "name"};
