@@ -446,8 +446,14 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     // We haven't found the right exception, just use AerospikeError
     if (!found) {
         // TODO: store this in a global so we don't have to look it up
+        PyObject *py_aerospike_error_name =
+            PyUnicode_FromString(AEROSPIKE_ERR_EXCEPTION_NAME);
+        if (py_aerospike_error_name == NULL) {
+            goto CHAIN_PREV_EXC_AND_RETURN;
+        }
         PyObject *base_exception =
-            PyDict_GetItemWithError(py_module_dict, "AerospikeError");
+            PyDict_GetItemWithError(py_module_dict, py_aerospike_error_name);
+        Py_DECREF(py_aerospike_error_name);
         if (base_exception == NULL) {
             if (!PyErr_Occurred()) {
                 PyErr_SetString(
