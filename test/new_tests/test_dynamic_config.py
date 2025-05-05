@@ -6,11 +6,16 @@ import os
 
 
 class TestDynamicConfig:
+    def test_config_provider_defaults(self):
+        provider = aerospike.ConfigProvider()
+        assert provider.path == None
+        assert provider.interval == 60
+
     def test_config_provider_class(self):
-        provider = aerospike.ConfigProvider(path="path", interval=20)
+        provider = aerospike.ConfigProvider(path="path", interval=30)
 
         assert provider.path == "path"
-        assert provider.interval == 20
+        assert provider.interval == 30
         # Fields should be read only
         with pytest.raises(AttributeError):
             provider.path = "invalid"
