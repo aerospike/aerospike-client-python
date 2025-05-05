@@ -2,6 +2,7 @@ import aerospike
 from aerospike import exception as e
 from .test_base_class import TestBaseClass
 import pytest
+import os
 
 
 class TestDynamicConfig:
@@ -36,14 +37,19 @@ class TestDynamicConfig:
         setup_client.remove(self.key)
         setup_client.close()
 
-    def test_basic_functionality(self, functional_test_setup):
+    @pytest.mark.parametrize("use_env_var", [False, True])
+    def test_basic_functionality(self, functional_test_setup, use_env_var: bool):
         config = TestBaseClass.get_connection_config()
-        provider = aerospike.ConfigProvider("./dyn_config.yml")
-        config["config_provider"] = provider
         # We want to check that the config file we pass in is valid
         # The C client prints logs showing that it detects changes to the dynamic config file
         # aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
-
+        DYN_CONFIG_PATH = "./dyn_config.yml"
+        if use_env_var:
+            provider = aerospike.ConfigProvider()
+            os.environ["AEROSPIKE_CLIENT_CONFIG_URL"] = DYN_CONFIG_PATH
+        else:
+            provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
+        config["config_provider"] = provider
         client = aerospike.client(config)
 
         client.put(self.key, {"a": 1})
