@@ -14,7 +14,7 @@ class TestIndex(object):
     def setup(self, request, as_connection):
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i}
+            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i, "bytes": b'123'}
             as_connection.put(key, rec)
 
         def teardown():
@@ -210,6 +210,14 @@ class TestIndex(object):
         ensure_dropped_index(self.as_connection, "test", "age_index")
         assert retobj == AerospikeStatus.AEROSPIKE_OK
 
+    def test_create_blob_index(self):
+        if self.server_version < [7, 0]:
+            pytest.skip("Blob secondary indexes are only supported in server 7.0+")
+
+        self.as_connection.index_blob_create(ns="test", set="demo", bin="bytes", name="bytes_index", policy={})
+
+        ensure_dropped_index(self.as_connection, "test", "bytes_index")
+
     def test_create_string_index_positive(self):
         """
         Invoke create string index() with correct arguments
@@ -237,11 +245,14 @@ class TestIndex(object):
         ns_name = "a" * 50
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises((e.InvalidRequest, e.NamespaceNotFound)) as err_info:
             self.as_connection.index_string_create(ns_name, "demo", "name", "name_index", policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 2):
+            assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
+        else:
+            assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
 
     def test_create_string_index_with_incorrect_namespace(self):
         """

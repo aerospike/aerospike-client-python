@@ -3,6 +3,7 @@ lua
 namespace
 geospatial
 serialized
+serializers
 Serializers
 deserialized
 Aerospike
@@ -73,3 +74,16 @@ nd
 misconfiguration
 Preallocate
 subtransactions
+socketTimeout
+ttl
+inlined
+hashmaps
+config
+deserialize
+async
+retryable
+backoff
+msg
+func
+bcrypt
+namespaces

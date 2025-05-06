@@ -7,6 +7,26 @@
 #include "policy.h"
 #include "conversions.h"
 
+as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
+                               bool *boolean)
+{
+    PyObject *py_val = PyDict_GetItemString(op_dict, key);
+    if (!py_val) {
+        // op_dict does not contain key
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                               key);
+    }
+
+    if (!PyBool_Check(py_val)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "key %s does not point to a boolean in the dict",
+                               key);
+    }
+
+    *boolean = (bool)PyObject_IsTrue(py_val);
+    return AEROSPIKE_OK;
+}
+
 /*
 The caller of this does not own the pointer to binName, and should not free it. It is either
 held by Python, or is added to the list of chars to free later.
@@ -67,8 +87,8 @@ as_status get_asval(AerospikeClient *self, as_error *err, char *key,
         *val = NULL;
         return AEROSPIKE_OK;
     }
-    return pyobject_to_val(self, err, py_val, val, static_pool,
-                           serializer_type);
+    return as_val_new_from_pyobject(self, err, py_val, val, static_pool,
+                                    serializer_type);
 }
 
 as_status get_val_list(AerospikeClient *self, as_error *err,
@@ -116,7 +136,7 @@ as_status get_optional_int64_t(as_error *err, const char *key,
     }
 
     if (PyLong_Check(py_val)) {
-        *i64_valptr = (int64_t)PyLong_AsLong(py_val);
+        *i64_valptr = (int64_t)PyLong_AsLongLong(py_val);
         if (PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",

@@ -25,33 +25,11 @@
 #include "exceptions.h"
 #include "log.h"
 
+#ifdef _WIN32
+    #define __sync_fetch_and_add InterlockedExchangeAdd64
+#endif
+
 static AerospikeLogCallback user_callback;
-
-/*
- * Declare's log level constants.
- */
-as_status declare_log_constants(PyObject *aerospike)
-{
-
-    // Status to be returned.
-    as_status status = AEROSPIKE_OK;
-
-    // Check if aerospike object is present or no.
-    if (!aerospike) {
-        status = AEROSPIKE_ERR;
-        goto exit;
-    }
-
-    // Add incidividual constants to aerospike module.
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_OFF", LOG_LEVEL_OFF);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_ERROR", LOG_LEVEL_ERROR);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_WARN", LOG_LEVEL_WARN);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_INFO", LOG_LEVEL_INFO);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_DEBUG", LOG_LEVEL_DEBUG);
-    PyModule_AddIntConstant(aerospike, "LOG_LEVEL_TRACE", LOG_LEVEL_TRACE);
-exit:
-    return status;
-}
 
 PyObject *Aerospike_Set_Log_Level(PyObject *parent, PyObject *args,
                                   PyObject *kwds)
@@ -113,7 +91,7 @@ bool console_log_cb(as_log_level level, const char *func, const char *file,
     char msg[1024];
     va_list ap;
 
-    int counter = __sync_fetch_and_add(&log_counter, 1);
+    int counter = __sync_fetch_and_add((&log_counter), 1);
 
     va_start(ap, fmt);
     vsnprintf(msg, 1024, fmt, ap);
@@ -150,7 +128,7 @@ static bool log_cb(as_log_level level, const char *func, const char *file,
     PyObject *log_level = PyLong_FromLong((long)level);
     PyObject *func_name = PyUnicode_FromString(func);
     PyObject *file_name = PyUnicode_FromString(file);
-    PyObject *line_no = PyLong_FromLong((long)line);
+    PyObject *line_no = PyLong_FromUnsignedLong(line);
     PyObject *message = PyUnicode_FromString(msg);
 
     // Set argument list
@@ -204,7 +182,7 @@ PyObject *Aerospike_Set_Log_Handler(PyObject *parent, PyObject *args,
 void Aerospike_Enable_Default_Logging()
 {
     // Invoke C API to set log level
-    as_log_set_level((as_log_level)LOG_LEVEL_ERROR);
+    as_log_set_level((as_log_level)AS_LOG_LEVEL_ERROR);
     // Register callback to C-SDK
     as_log_set_callback((as_log_callback)console_log_cb);
 
