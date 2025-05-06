@@ -161,18 +161,41 @@ as_status convert_partition_filter(AerospikeClient *self,
     }
 
     filter->digest.init = 0;
-    if (digest && PyDict_Check(digest)) {
-
+    if (digest) {
+        if (!PyDict_Check(digest)) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "partition_filter[\"digest\"] must be a dict");
+            goto ERROR_CLEANUP;
+        }
         // TODO check these for overflow
         PyObject *init = PyDict_GetItemString(digest, "init");
-        if (init && PyLong_Check(init)) {
-            filter->digest.init = PyLong_AsLong(init);
+        if (init) {
+            if (!PyBool_Check(init)) {
+                as_error_update(
+                    err, AEROSPIKE_ERR_PARAM,
+                    "partition_filter[\"digest\"][\"init\"] must be a bool");
+                goto ERROR_CLEANUP;
+            }
+            filter->digest.init = (bool)PyObject_IsTrue(init);
         }
 
         PyObject *value = PyDict_GetItemString(digest, "value");
-        if (value && PyUnicode_Check(value)) {
+        if (value) {
+            if (!PyByteArray_Check(value)) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "partition_filter[\"digest\"][\"value\"] must "
+                                "be a bytearray");
+                goto ERROR_CLEANUP;
+            }
+            if (PyByteArray_Size(value) != AS_DIGEST_VALUE_SIZE) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                "partition_filter[\"digest\"][\"value\"] must "
+                                "be %d bytes long",
+                                AS_DIGEST_VALUE_SIZE);
+                goto ERROR_CLEANUP;
+            }
             strncpy((char *)filter->digest.value,
-                    (char *)PyUnicode_AsUTF8(value), AS_DIGEST_VALUE_SIZE);
+                    (char *)PyByteArray_AsString(value), AS_DIGEST_VALUE_SIZE);
         }
     }
 
