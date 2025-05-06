@@ -20,7 +20,7 @@ bins returned can be filtered using :meth:`select`.
 
 .. seealso::
     `Scans <https://aerospike.com/docs/server/guide/scan.html>`_ and \
-    `Managing Scans <https://aerospike.com/docs/server/operations/manage/scans/>`_.
+    `Managing Scans <https://aerospike.com/docs/server/operations/manage/queries/>`_.
 
 Fields
 ======
@@ -299,63 +299,11 @@ Methods
         .. note::
             Python client version 3.10.0 implemented scan execute_background.
 
-            .. code-block:: python
+            .. include:: examples/scan/top.py
+                :code: python
 
-                import aerospike
-                from aerospike import exception as ex
-                import sys
-                import time
-
-                config = {"hosts": [("127.0.0.1", 3000)]}
-                client = aerospike.client(config)
-
-                # register udf
-                try:
-                    client.udf_put("/path/to/my_udf.lua")
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    client.close()
-                    sys.exit(1)
-
-                # put records and apply udf
-                try:
-                    keys = [("test", "demo", 1), ("test", "demo", 2), ("test", "demo", 3)]
-                    records = [{"number": 1}, {"number": 2}, {"number": 3}]
-                    for i in range(3):
-                        client.put(keys[i], records[i])
-
-                    scan = client.scan("test", "demo")
-                    scan.apply("my_udf", "my_udf", ["number", 10])
-                    job_id = scan.execute_background()
-
-                    # wait for job to finish
-                    while True:
-                        response = client.job_info(job_id, aerospike.JOB_SCAN)
-                        if response["status"] != aerospike.JOB_STATUS_INPROGRESS:
-                            break
-                        time.sleep(0.25)
-
-                    records = client.get_many(keys)
-                    print(records)
-                except ex.AerospikeError as e:
-                    print("Error: {0} [{1}]".format(e.msg, e.code))
-                    sys.exit(1)
-                finally:
-                    client.close()
-                # EXPECTED OUTPUT:
-                # [
-                #   (('test', 'demo', 1, bytearray(b'\xb7\xf4\xb88\x89\xe2\xdag\xdeh>\x1d\xf6\x91\x9a\x1e\xac\xc4F\xc8')), {'gen': 2, 'ttl': 2591999}, {'number': 11}),
-                #   (('test', 'demo', 2, bytearray(b'\xaejQ_7\xdeJ\xda\xccD\x96\xe2\xda\x1f\xea\x84\x8c:\x92p')), {'gen': 12, 'ttl': 2591999}, {'number': 12}),
-                #   (('test', 'demo', 3, bytearray(b'\xb1\xa5`g\xf6\xd4\xa8\xa4D9\xd3\xafb\xbf\xf8ha\x01\x94\xcd')), {'gen': 13, 'ttl': 2591999}, {'number': 13})
-                # ]
-            .. code-block:: python
-
-                # contents of my_udf.lua
-                function my_udf(rec, bin, offset)
-                    info("my transform: %s", tostring(record.digest(rec)))
-                    rec[bin] = rec[bin] + offset
-                    aerospike:update(rec)
-                end
+            .. include:: examples/scan/my_udf.lua
+                :code: lua
 
     .. method:: paginate()
 
@@ -537,6 +485,8 @@ Policies
             | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
+            |
+            | This compression feature requires the Enterprise Edition Server.
             |
             | Default: ``False``
         * **durable_delete** :class:`bool`
