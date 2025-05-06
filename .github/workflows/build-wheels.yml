@@ -294,6 +294,10 @@ jobs:
           delocate-listdeps {dest_dir}/*.whl | grep libcrypto.3.dylib &&
           delocate-listdeps {dest_dir}/*.whl | grep libssl.3.dylib
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
+        CIBW_DEBUG_KEEP_CONTAINER: 1
+
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
 
     # For debugging
     - run: docker logs aerospike
