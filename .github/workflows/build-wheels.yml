@@ -236,7 +236,7 @@ jobs:
       run: echo CIBW_MANYLINUX_X86_64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'x86_64', '91d097e7dbb5fa4a21c725fdac218ef72cc168685d931e559854883ce4747dee') }} >> $GITHUB_ENV
 
     - if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
-      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', 'sha256:051650a1f07e173b026f6564ce53554db9b9aafa22d9cade3a93df59303bd4a5') }} >> $GITHUB_ENV
+      run: echo CIBW_MANYLINUX_AARCH64_IMAGE=${{ format(env.CUSTOM_IMAGE_NAME, 'aarch64', '051650a1f07e173b026f6564ce53554db9b9aafa22d9cade3a93df59303bd4a5') }} >> $GITHUB_ENV
 
     - uses: docker/login-action@v3
       if: ${{ startsWith(inputs.platform-tag, 'manylinux') }}
