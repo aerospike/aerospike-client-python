@@ -451,6 +451,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     }
 
     const char *extra_attrs[] = {"key", "bin", "module", "func", "name"};
+    // TODO: check for memory leaks
     PyObject *py_extra_attrs[] = {py_as_key, py_bin, py_module, py_func,
                                   py_name};
     for (unsigned long i = 0;
@@ -458,8 +459,12 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         PyObject *py_exc_extra_attr =
             PyObject_GetAttrString(py_exc_class, extra_attrs[i]);
         if (py_exc_extra_attr) {
-            PyObject_SetAttrString(py_exc_class, extra_attrs[i],
-                                   py_extra_attrs[i]);
+            Py_DECREF(py_exc_extra_attr);
+            int retval = PyObject_SetAttrString(py_exc_class, extra_attrs[i],
+                                                py_extra_attrs[i]);
+            if (retval == -1) {
+                goto CHAIN_PREV_EXC_AND_RETURN;
+            }
         }
         else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
             // We are sure that we want to ignore this
