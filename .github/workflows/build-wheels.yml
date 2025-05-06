@@ -271,6 +271,7 @@ jobs:
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
       env:
+        CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/usr/local/lib64
         CIBW_ENVIRONMENT_PASS_LINUX: ${{ inputs.unoptimized && 'UNOPTIMIZED' || '' }}
         CIBW_BUILD: ${{ env.BUILD_IDENTIFIER }}
         CIBW_BUILD_FRONTEND: build
