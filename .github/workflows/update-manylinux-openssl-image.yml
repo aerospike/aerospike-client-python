@@ -27,7 +27,7 @@ jobs:
           .github/workflows
 
     # TODO: use same version as in pinned cibuildwheel version
-    - run: docker pull quay.io/pypa/manylinux2014_${{ matrix.arch-and-runner-os[0] }}
+    - run: docker pull quay.io/pypa/manylinux_2_28_${{ matrix.arch-and-runner-os[0] }}
 
     - uses: docker/login-action@v3
       with:
