@@ -6,7 +6,10 @@ on:
     inputs:
       openssl-version:
         required: true
+        description: "Openssl version bundled with wheel"
 
+env:
+  MANYLINUX_TAG: manylinux_2_28
 jobs:
   main:
     env:
@@ -27,7 +30,7 @@ jobs:
           .github/workflows
 
     # TODO: use same version as in pinned cibuildwheel version
-    - run: docker pull quay.io/pypa/manylinux_2_28_${{ matrix.arch-and-runner-os[0] }}
+    - run: docker pull quay.io/pypa/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
 
     - uses: docker/login-action@v3
       with:
@@ -38,7 +41,7 @@ jobs:
     - uses: docker/metadata-action@v5
       id: meta
       with:
-        images: ${{ env.REGISTRY }}/aerospike/manylinux2014_${{ matrix.arch-and-runner-os[0] }}
+        images: ${{ env.REGISTRY }}/aerospike/${{ env.MANYLINUX_TAG }}_${{ matrix.arch-and-runner-os[0] }}
         # These images aren't used by customers, anyway.
         flavor: latest=false
 
@@ -50,7 +53,7 @@ jobs:
       with:
         # Don't want to use default Git context or else it will clone the whole Python client repo again
         context: .github/workflows
-        file: .github/workflows/manylinux2014-openssl.Dockerfile
+        file: .github/workflows/${{ env.MANYLINUX_TAG }}-openssl.Dockerfile
         build-args: |
           OPENSSL_VERSION=${{ inputs.openssl-version }}
           CPU_ARCH=${{ matrix.arch-and-runner-os[0] }}

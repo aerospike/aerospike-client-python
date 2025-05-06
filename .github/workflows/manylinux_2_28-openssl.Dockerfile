@@ -1,5 +1,5 @@
 ARG CPU_ARCH=x86_64
-FROM quay.io/pypa/manylinux2014_$CPU_ARCH
+FROM quay.io/pypa/manylinux_2_28_$CPU_ARCH
 ARG OPENSSL_VERSION
 LABEL com.aerospike.clients.openssl-version=$OPENSSL_VERSION
 
@@ -16,10 +16,5 @@ WORKDIR $OPENSSL_TAR_NAME
 # We aren't going to use this image in production, anyways
 RUN ./Configure
 RUN make
-# These tests are expected to fail because we are using a buggy version of nm
-# https://github.com/openssl/openssl/issues/18953
-# devtoolset-11 contains a newer version of binutils 2.36, which contains a bug fix for nm
-# We don't use it though because we want to make sure the compiled openssl 3 library is compatible with manylinux2014's
-# default env
-RUN make V=1 TESTS='-test_symbol_presence*' test
+RUN make V=1 test
 RUN make install
