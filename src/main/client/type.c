@@ -603,7 +603,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                     port = (uint16_t)PyLong_AsLong(py_port);
                 }
                 else {
-                    port = 0;
+                    error_code = INIT_INVALID_ADRR_ERR;
+                    goto CONSTRUCTOR_ERROR;
                 }
                 // Set TLS Name if provided
                 if (PyTuple_Size(py_host) == 3) {
@@ -1110,6 +1111,7 @@ CONSTRUCTOR_ERROR:
     }
 
     raise_exception(&constructor_err);
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     return -1;
 }
 
