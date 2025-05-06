@@ -413,6 +413,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     PyErr_Fetch(&py_prev_type, &py_prev_value, &py_prev_traceback);
 #endif
 
+    // Ensure exceptions aren't deleted
     PyObject *py_unused = NULL, *py_exc_class = NULL;
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
@@ -447,6 +448,9 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         PyObject *py_exc_extra_attr =
             PyObject_GetAttrString(py_exc_class, extra_attrs[i]);
         if (py_exc_extra_attr) {
+            if (py_extra_attrs[i] == NULL) {
+                py_extra_attrs[i] = Py_None;
+            }
             PyObject_SetAttrString(py_exc_class, extra_attrs[i],
                                    py_extra_attrs[i]);
         }
