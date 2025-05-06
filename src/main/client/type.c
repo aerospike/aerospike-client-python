@@ -1002,6 +1002,15 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         goto CONSTRUCTOR_ERROR;
     }
 
+    PyObject *py_max_socket_idle = NULL;
+    py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
+    if (py_max_socket_idle && PyLong_Check(py_max_socket_idle)) {
+        long max_socket_idle = PyLong_AsLong(py_max_socket_idle);
+        if (max_socket_idle >= 0) {
+            config.max_socket_idle = (uint32_t)max_socket_idle;
+        }
+    }
+
     bool *bool_config_refs[] = {&config.force_single_node,
                                 &config.fail_if_not_connected};
     const char *bool_config_name[] = {"force_single_node",
