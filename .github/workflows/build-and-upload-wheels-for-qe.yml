@@ -23,14 +23,9 @@ jobs:
           "manylinux_x86_64",
           "manylinux_aarch64"
         ]
-        manylinux-image: [
-          manylinux2014,
-          manylinux_2_28
-        ]
     uses: ./.github/workflows/build-wheels.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      manylinux-image: ${{ matrix.manylinux-image }}
       unoptimized: ${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }}
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit

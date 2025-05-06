@@ -16,10 +16,6 @@ inputs:
   wheel_os:
     description: 'If getting wheel, what os is it built for? Must be inside the wheel name / cibw build identifier (possible values: macosx, manylinux)'
     required: false
-  manylinux_image:
-    description: 'If getting manylinux wheel, which image was it built on?'
-    required: false
-    default: manylinux2014
   wheel_cpu_arch:
     description: 'If getting wheel, what CPU arch is it built for? Must be the same in wheel name / cibw build identifier used to build wheel (e.g possible value: x86_64)'
   # Secrets
@@ -50,7 +46,7 @@ runs:
     shell: bash
 
   - if: ${{ inputs.get_from_jfrog == 'false' && inputs.dist_type_to_get == 'wheel' }}
-    run: echo "GITHUB_ARTIFACT_NAME=${{ env.PYTHON_TAG }}-${{ inputs.wheel_os }}_${{ inputs.wheel_cpu_arch }}-${{ inputs.manylinux_image }}.build" >> $GITHUB_ENV
+    run: echo "GITHUB_ARTIFACT_NAME=${{ env.PYTHON_TAG }}-${{ inputs.wheel_os }}_${{ inputs.wheel_cpu_arch }}.build" >> $GITHUB_ENV
     shell: bash
 
   - uses: actions/download-artifact@v4

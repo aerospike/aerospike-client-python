@@ -33,7 +33,6 @@ jobs:
     uses: ./.github/workflows/build-wheels.yml
     with:
       platform-tag: ${{ matrix.platform-tag }}
-      manylinux-image: manylinux_2_28
       sha-to-build-and-test: ${{ github.sha }}
     secrets: inherit
 
