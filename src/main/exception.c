@@ -379,7 +379,7 @@ void remove_exception(as_error *err)
 // TODO: idea. Use python dict to map error code to exception
 void raise_exception(as_error *err)
 {
-    raise_exception_base(err, NULL, NULL, NULL, NULL, NULL);
+    raise_exception_base(err, Py_None, Py_None, Py_None, Py_None, Py_None);
 }
 
 void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
