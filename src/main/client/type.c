@@ -558,7 +558,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
     if (py_obj_config_provider == NULL) {
         if (PyErr_Occurred()) {
-            // TODO: need to test this codepath
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
         // User didn't provide config provider.
