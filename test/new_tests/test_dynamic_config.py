@@ -52,7 +52,8 @@ class TestDynamicConfig:
         DYN_CONFIG_PATH = "./dyn_config.yml"
         if use_env_var:
             provider = aerospike.ConfigProvider()
-            os.environ["AEROSPIKE_CLIENT_CONFIG_URL"] = DYN_CONFIG_PATH
+            AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
+            os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
         else:
             provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
         config["config_provider"] = provider
@@ -75,6 +76,8 @@ class TestDynamicConfig:
 
         # Cleanup
         client.close()
+        if use_env_var:
+            del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
 
     def test_api_invalid_provider(self):
         config = TestBaseClass.get_connection_config()
