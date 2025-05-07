@@ -7,8 +7,7 @@ import os
 
 class TestDynamicConfig:
     def test_config_provider_defaults(self):
-        provider = aerospike.ConfigProvider()
-        assert provider.path is None
+        provider = aerospike.ConfigProvider(path="path")
         assert provider.interval == 60
 
     def test_config_provider_class(self):
