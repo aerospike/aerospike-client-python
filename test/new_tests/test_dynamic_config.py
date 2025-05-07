@@ -58,7 +58,7 @@ class TestDynamicConfig:
         config["config_provider"] = provider
 
         write_policy = {"key": aerospike.POLICY_KEY_SEND}
-        config["policies"]["write"]["key"] = write_policy
+        config["policies"]["write"] = write_policy
         client = aerospike.client(config)
 
         client.put(self.key, bins={"a": 1}, policy=write_policy)
