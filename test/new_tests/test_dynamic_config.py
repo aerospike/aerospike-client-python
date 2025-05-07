@@ -8,7 +8,7 @@ import os
 class TestDynamicConfig:
     def test_config_provider_defaults(self):
         provider = aerospike.ConfigProvider()
-        assert provider.path == None
+        assert provider.path is None
         assert provider.interval == 60
 
     def test_config_provider_class(self):
@@ -43,9 +43,10 @@ class TestDynamicConfig:
         setup_client.close()
 
     @pytest.mark.parametrize("use_env_var", [False, True])
-    def test_basic_functionality(self, functional_test_setup, use_env_var: bool):
+    # Dynamic config file should take precedence over both client config defaults and programmatically set values
+    def test_dyn_config_file_has_highest_precedence(self, functional_test_setup, use_env_var: bool):
         config = TestBaseClass.get_connection_config()
-        # We want to check that the config file we pass in is valid
+        # Uncomment if we want to check that the config file we pass in is valid
         # The C client prints logs showing that it detects changes to the dynamic config file
         # aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         DYN_CONFIG_PATH = "./dyn_config.yml"
@@ -55,19 +56,22 @@ class TestDynamicConfig:
         else:
             provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
         config["config_provider"] = provider
+
+        write_policy = {"key": aerospike.POLICY_KEY_SEND}
+        config["policies"]["write"]["key"] = write_policy
         client = aerospike.client(config)
 
-        client.put(self.key, {"a": 1})
+        client.put(self.key, bins={"a": 1}, policy=write_policy)
 
-        # "Send key" is enabled in dynamic config
-        # The key should be returned here
+        # "Send key" is disabled in dynamic config
+        # The key should not be returned here
         query = client.query("test", "demo")
         recs = query.results()
         assert len(recs) == 1
         # Check that record key tuple has a primary key
         first_record = recs[0]
         first_record_key = first_record[0]
-        assert first_record_key[2] is not None
+        assert first_record_key[2] is None
 
         # Cleanup
         client.close()

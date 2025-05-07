@@ -8,4 +8,4 @@ static:
     config_interval: 1
 dynamic:
   write:
-    send_key: true
+    send_key: false
