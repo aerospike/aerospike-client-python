@@ -1192,8 +1192,9 @@ RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
 
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
-    // as_config_destroy() isn't exposed, so we clean up this instead
     // TODO: need to free all malloc'd fields of as_config
+    // as_config_destroy() isn't exposed yet
+    // as_config_init() sets .config_provider.path to NULL, by default
     if (config.config_provider.path) {
         free(config.config_provider.path);
     }
