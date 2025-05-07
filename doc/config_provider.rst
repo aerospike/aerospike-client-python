@@ -24,17 +24,11 @@ Methods
 
     .. py:attribute:: path
 
-        Dynamic configuration file path. If set, cluster policies will be read from the yaml file at cluster
-        initialization and whenever the file changes. The policies fields in the file
-        override all command policies.
-
         This attribute is read-only.
 
         :type: str
 
     .. py:attribute:: interval
-
-        Check dynamic configuration file for changes after this number of cluster tend iterations.
 
         This attribute is read-only.
 
