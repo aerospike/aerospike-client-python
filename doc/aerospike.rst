@@ -364,6 +364,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
             (Optional) The password will be hashed by the client using bcrypt.
         * **config_provider** (:class:`aerospike.ConfigProvider`)
             (Optional) Dynamic configuration provider.
+
+            An altenate way to set the path is to set environment variable ``AEROSPIKE_CLIENT_CONFIG_URL``
+            before running the application.
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
 
