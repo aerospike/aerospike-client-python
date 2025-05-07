@@ -42,6 +42,7 @@ class TestDynamicConfig:
         setup_client.remove(self.key)
         setup_client.close()
 
+    # If not using env var, use the config provider instead
     @pytest.mark.parametrize("use_env_var", [False, True])
     # Dynamic config file should take precedence over both client config defaults and programmatically set values
     def test_dyn_config_file_has_highest_precedence(self, functional_test_setup, use_env_var: bool):
@@ -51,12 +52,11 @@ class TestDynamicConfig:
         # aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         DYN_CONFIG_PATH = "./dyn_config.yml"
         if use_env_var:
-            provider = aerospike.ConfigProvider()
             AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
             os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
         else:
             provider = aerospike.ConfigProvider(DYN_CONFIG_PATH)
-        config["config_provider"] = provider
+            config["config_provider"] = provider
 
         write_policy = {"key": aerospike.POLICY_KEY_SEND}
         config["policies"]["write"] = write_policy
