@@ -246,14 +246,24 @@ def test_setting_metrics_policy():
         client.close()
 
 
-def test_setting_invalid_metrics_policy():
+@pytest.mark.parametrize(
+    "policy, expected_exc_class",
+    [
+        # Common error is to leave a comma at the end
+        # MetricsPolicy(),
+        (tuple(MetricsPolicy()), e.ParamError),
+        # There is a similar test in test_metrics but we have this test for code coverage
+        (MetricsPolicy(report_size_limit=1), e.ClientError)
+    ]
+)
+def test_setting_invalid_metrics_policy(policy, expected_exc_class):
     config = copy.deepcopy(gconfig)
-    # Common error is to leave a comma at the end
-    config["policies"]["metrics"] = MetricsPolicy(),
-    with pytest.raises(e.ParamError) as excinfo:
+    config["policies"]["metrics"] = policy
+    with pytest.raises(expected_exc_class) as excinfo:
         aerospike.client(config)
-    assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy class instance. But "\
-        "a tuple was received instead"
+    if expected_exc_class == e.ParamError:
+        assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy class instance. But "\
+            "a tuple was received instead"
 
 
 def test_query_invalid_expected_duration():
