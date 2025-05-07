@@ -114,7 +114,8 @@ def test_neg_setting_rack_ids(rack_ids):
     "setting",
     [
         "use_services_alternate",
-        "force_single_node"
+        "force_single_node",
+        "fail_if_not_connected"
      ]
 )
 def test_bool_settings(setting):
