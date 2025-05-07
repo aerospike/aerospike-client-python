@@ -1023,7 +1023,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_bool_value =
             PyDict_GetItemString(py_config, bool_config_name[i]);
         if (py_bool_value && PyBool_Check(py_bool_value)) {
-            *bool_config_refs[i] = PyObject_IsTrue(py_bool_value);
+            int retval = PyObject_IsTrue(py_bool_value);
+            if (retval == -1) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            *bool_config_refs[i] = (bool)retval;
         }
     }
 
@@ -1119,6 +1123,7 @@ CONSTRUCTOR_ERROR:
     }
 
     raise_exception(&constructor_err);
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     return -1;
 }
 
