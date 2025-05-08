@@ -298,10 +298,6 @@ jobs:
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
         CIBW_DEBUG_KEEP_CONTAINER: 1
 
-    - name: Setup tmate session
-      if: ${{ failure() }}
-      uses: mxschmitt/action-tmate@v3
-
     # For debugging
     - run: docker logs aerospike
       if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
