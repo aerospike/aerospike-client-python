@@ -796,7 +796,7 @@ create_py_node_metrics_from_as_node_metrics(as_error *error_p,
                             node_metrics_fields[i]);
             goto error;
         }
-        as_latency *buckets = &node_metrics->latency[i];
+        as_latency *buckets = node_metrics->latency[i];
         uint32_t bucket_max = buckets->size;
         // Append each bucket to a list of buckets
         for (uint32_t j = 0; j < bucket_max; j++) {
