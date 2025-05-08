@@ -54,7 +54,8 @@ class BitResize(_BaseExpr):
         """Args:
             policy (TypePolicy): Optional dictionary of :ref:`Bit policies <aerospike_bit_policies>`.
             byte_size (int): Number of bytes the resulting blob should occupy.
-            flags (int): One or a combination of bit resize flags.
+            flags (int): One or a combination of bit resize flags. See :ref:`aerospike_bitwise_resize_flag` for possible
+                values.
             bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: Blob value expression of resized blob bin.
@@ -439,7 +440,8 @@ class BitAdd(_BaseExpr):
             bit_offset (int): Bit index of where to start operation.
             bit_size (int): Number of bits to be operated on.
             value (int): Integer value or expression for value to add.
-            action (int): An aerospike bit overflow action.
+            action (int): An aerospike bit overflow action. See
+                :ref:`Bitwise overflow actions <aerospike_bitwise_overflow>`.
             bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: resulting blob with the bits operated on.
@@ -490,7 +492,8 @@ class BitSubtract(_BaseExpr):
             bit_offset (int): Bit index of where to start operation.
             bit_size (int): Number of bits to be operated on.
             value (int): Integer value or expression for value to add.
-            action (int): An aerospike bit overflow action.
+            action (int): An aerospike bit overflow action. See
+                :ref:`Bitwise overflow actions <aerospike_bitwise_overflow>`.
             bin (TypeBinName): A :class:`~aerospike_helpers.expressions.base.BlobBin` expression.
 
         :return: resulting blob with the bits operated on.
