@@ -772,11 +772,11 @@ error:
     return NULL;
 }
 
-// Creates and returns a Python client NodeMetrics object from a C client's as_node_metrics struct
+// Creates and returns a Python client NodeMetrics object from a C client's as_ns_metrics struct
 // If an error occurs here, return NULL
 PyObject *
 create_py_node_metrics_from_as_node_metrics(as_error *error_p,
-                                            as_node_metrics *node_metrics)
+                                            as_ns_metrics *node_metrics)
 {
     PyObject *py_node_metrics = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "NodeMetrics", NULL);
@@ -796,8 +796,8 @@ create_py_node_metrics_from_as_node_metrics(as_error *error_p,
                             node_metrics_fields[i]);
             goto error;
         }
-        as_latency_buckets *buckets = &node_metrics->latency[i];
-        uint32_t bucket_max = buckets->latency_columns;
+        as_latency *buckets = &node_metrics->latency[i];
+        uint32_t bucket_max = buckets->size;
         // Append each bucket to a list of buckets
         for (uint32_t j = 0; j < bucket_max; j++) {
             uint64_t bucket = as_latency_get_bucket(buckets, j);
@@ -881,16 +881,16 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject_SetAttrString(py_node, "conns", py_conn_stats);
     Py_DECREF(py_conn_stats);
 
-    PyObject *py_error_count = PyLong_FromUnsignedLongLong(node->error_count);
-    PyObject_SetAttrString(py_node, "error_count", py_error_count);
-    Py_DECREF(py_error_count);
+    // PyObject *py_error_count = PyLong_FromUnsignedLongLong(node->error_count);
+    // PyObject_SetAttrString(py_node, "error_count", py_error_count);
+    // Py_DECREF(py_error_count);
 
-    PyObject *py_timeout_count =
-        PyLong_FromUnsignedLongLong(node->timeout_count);
-    PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
-    Py_DECREF(py_timeout_count);
+    // PyObject *py_timeout_count =
+    //     PyLong_FromUnsignedLongLong(node->timeout_count);
+    // PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
+    // Py_DECREF(py_timeout_count);
 
-    as_node_metrics *node_metrics = node->metrics;
+    as_ns_metrics *node_metrics = node->metrics;
     PyObject *py_node_metrics =
         create_py_node_metrics_from_as_node_metrics(error_p, node_metrics);
     if (!py_node_metrics) {
