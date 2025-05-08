@@ -17,7 +17,7 @@
 Module with helper functions to create dictionaries used by:
 
 * :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
-* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 """
 import warnings
 
@@ -31,7 +31,7 @@ def read(bin_name):
     The read operation reads and returns the value in `bin_name`.
 
     Args:
-        bin (str): the name of the bin from which to read.
+        bin_name (str): the name of the bin from which to read.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
@@ -48,7 +48,7 @@ def write(bin_name, write_item):
     The write operation writes `write_item` into the bin specified by bin_name.
 
     Args:
-        bin (str): The name of the bin into which `write_item` will be stored.
+        bin_name (str): The name of the bin into which `write_item` will be stored.
         write_item: The value which will be written into the bin.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
@@ -77,7 +77,7 @@ def append(bin_name, append_item):
     The append operation appends `append_item` to the value in bin_name.
 
     Args:
-        bin (str): The name of the bin to be used.
+        bin_name (str): The name of the bin to be used.
         append_item: The value which will be appended to the item contained in the specified bin.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
@@ -91,7 +91,7 @@ def prepend(bin_name, prepend_item):
     The prepend operation prepends `prepend_item` to the value in bin_name.
 
     Args:
-        bin (str): The name of the bin to be used.
+        bin_name (str): The name of the bin to be used.
         prepend_item: The value which will be prepended to the item contained in the specified bin.
     Returns:
         A dictionary to be passed to operate or operate_ordered.
@@ -106,7 +106,7 @@ def increment(bin_name, amount):
     or creates a bin with the value of amount.
 
     Args:
-        bin (str): The name of the bin to be incremented.
+        bin_name (str): The name of the bin to be incremented.
         amount: The amount by which to increment the item in the specified bin.
     Returns:
         A dictionary to be passed to operate or operate_ordered.

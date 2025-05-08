@@ -67,6 +67,7 @@ https://github.com/aerospike/aerospike-server/blob/master/as/include/base/datamo
         ("-" * 10000, "b42e64afbfccb05912a609179228d9249ea1c1a0"),
         ("+" * 100000, "0a3e888c20bb8958537ddd4ba835e4070bd51740"),
     ),
+    ids=["empty", "s", "10 a's", "100 m's", "1000 t's", "10000 -'s", "100000 +'s"]
 )
 def test_validate_digest_str(pk, expected):
     digest = aerospike.calc_digest(NAMESPACE, SET, pk)
@@ -90,6 +91,7 @@ Python does not, so we omit it
         ("-" * 10000, "ed65c63f7a1f8c6697eb3894b6409a95461fd982"),
         ("+" * 100000, "fe19770c371774ba1a1532438d4851b8a773a9e6"),
     ),
+    ids=["s", "10 a's", "100 m's", "1000 t's", "10000 -'s", "100000 +'s"]
 )
 def test_validate_digest_bytes(pk, expected):
     # encode the primary key as bytes

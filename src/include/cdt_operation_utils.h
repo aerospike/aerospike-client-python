@@ -40,6 +40,11 @@
 #define AS_PY_MAP_POLICY "map_policy"
 #define AS_EXPR_KEY "expr"
 #define AS_EXPR_FLAGS_KEY "expr_flags"
+#define AS_PY_PAD "pad"
+#define AS_PY_PERSIST_INDEX "persist_index"
+
+as_status get_bool_from_pyargs(as_error *err, char *key, PyObject *op_dict,
+                               bool *boolean);
 
 as_status get_bin(as_error *err, PyObject *op_dict, as_vector *unicodeStrVector,
                   char **binName);

@@ -37,16 +37,14 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
     PyObject *py_module = NULL;
     PyObject *py_function = NULL;
     PyObject *py_args = NULL;
-    PyObject *py_policy = NULL;
 
     PyObject *py_umodule = NULL;
     PyObject *py_ufunction = NULL;
     // Python function keyword arguments
-    static char *kwlist[] = {"module", "function", "arguments", "policy", NULL};
+    static char *kwlist[] = {"module", "function", "arguments", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|OO:apply", kwlist,
-                                     &py_module, &py_function, &py_args,
-                                     &py_policy)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:apply", kwlist,
+                                     &py_module, &py_function, &py_args)) {
         return NULL;
     }
 
@@ -114,8 +112,8 @@ AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
             for (int i = 0; i < size; i++) {
                 PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
                 as_val *val = NULL;
-                pyobject_to_val(self->client, &err, py_val, &val, &static_pool,
-                                SERIALIZER_PYTHON);
+                as_val_new_from_pyobject(self->client, &err, py_val, &val,
+                                         &static_pool, SERIALIZER_PYTHON);
                 if (err.code != AEROSPIKE_OK) {
                     as_error_update(&err, err.code, NULL);
                     as_arraylist_destroy(arglist);
@@ -149,17 +147,8 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "module")) {
-            PyObject_SetAttrString(exception_type, "module", py_module);
-        }
-        if (PyObject_HasAttrString(exception_type, "func")) {
-            PyObject_SetAttrString(exception_type, "func", py_function);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, py_module, py_function,
+                             Py_None);
         return NULL;
     }
 

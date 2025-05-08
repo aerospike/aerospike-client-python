@@ -142,11 +142,6 @@ class TestOperate(object):
                 {"write_bin": {"no": 89}},
             ),
             (
-                ("test", "demo", 1),  # write_tuple_positive
-                [operations.write("write_bin", ("a", "b", "c")), operations.read("write_bin")],
-                {"write_bin": ("a", "b", "c")},
-            ),
-            (
                 ("test", "demo", 1),  # with_bin_bytearray
                 [operations.prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
@@ -588,6 +583,29 @@ class TestOperate(object):
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
+        "ops, expected_result",
+        [
+            (
+                [
+                    # Fetch the last item in the list
+                    list_operations.list_get(bin_name="int_bin", index=-1)
+                ],
+                4
+            ),
+            (
+                [
+                    list_operations.list_get_range(bin_name="int_bin", index=-2, count=2)
+                ],
+                [3, 4]
+            )
+        ]
+    )
+    def test_list_get_ops_with_negative_index(self, ops: list, expected_result: int):
+        key = ("test", "demo", "list_key")
+        _, _, bins = self.as_connection.operate(key, ops)
+        assert bins["int_bin"] == expected_result
+
+    @pytest.mark.parametrize(
         "list, result, bin, expected",
         [
             (
@@ -646,6 +664,91 @@ class TestOperate(object):
                 "int_bin",
                 [1, 2, 3, 4, None, None, 10],  # Inserting outside of the range adds nils in between
             ),
+            # Negative index tests
+            (
+                [
+                    list_operations.list_increment(bin_name="int_bin", index=-1, value=4),
+                    list_operations.list_get(bin_name="int_bin", index=3)
+                ],
+                {"int_bin": 8},
+                "int_bin",
+                [1, 2, 3, 8]
+            ),
+            (
+                [
+                    list_operations.list_insert_items(bin_name="int_bin", index=-1, values=[5, 6]),
+                ],
+                {"int_bin": 6},
+                "int_bin",
+                [1, 2, 3, 5, 6, 4]
+            ),
+            # We also include list removal operations here since they return something
+            # The test function below doesn't test for the return value of the operations
+            (
+                [
+                    list_operations.list_pop(bin_name="int_bin", index=-1),
+                ],
+                {"int_bin": 4},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_pop_range(bin_name="int_bin", index=-2, count=2),
+                ],
+                {"int_bin": [3, 4]},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_remove(bin_name="int_bin", index=-1),
+                ],
+                {"int_bin": 1},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_remove_by_index(
+                        bin_name="int_bin",
+                        index=-1,
+                        return_type=aerospike.LIST_RETURN_VALUE
+                    ),
+                ],
+                {"int_bin": 4},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_remove_by_index_range(
+                        bin_name="int_bin",
+                        index=-2,
+                        return_type=aerospike.LIST_RETURN_VALUE,
+                        count=2
+                    ),
+                ],
+                {"int_bin": [3, 4]},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_remove_range(bin_name="int_bin", index=-2, count=2)
+                ],
+                {"int_bin": 2},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_set(bin_name="int_bin", index=-1, value=44)
+                ],
+                {},
+                "int_bin",
+                [1, 2, 3, 44]
+            )
         ],
     )
     def test_pos_operate_with_list_addition_operations(self, list, result, bin, expected):
@@ -668,6 +771,14 @@ class TestOperate(object):
             ([list_operations.list_remove_range("int_bin", 2, 2)], "int_bin", [1, 2]),
             ([list_operations.list_trim("int_bin", 2, 2)], "int_bin", [3, 4]),
             ([list_operations.list_clear("int_bin")], "int_bin", []),
+            # Negative index tests
+            (
+                [
+                    list_operations.list_trim(bin_name="int_bin", index=-3, count=3)
+                ],
+                "int_bin",
+                [2, 3, 4]
+            )
         ],
     )
     def test_pos_operate_with_list_remove_operations(self, list, bin, expected):
@@ -767,12 +878,12 @@ class TestOperate(object):
             ),
             (
                 [
-                    list_operations.list_append_items("string_bin", [["z", "x"], ("y", "w")]),
+                    list_operations.list_append_items("string_bin", [["z", "x"], ["y", "w"]]),
                     list_operations.list_get_range("string_bin", 3, 3),
                 ],
-                {"string_bin": ["d", ["z", "x"], ("y", "w")]},
+                {"string_bin": ["d", ["z", "x"], ["y", "w"]]},
                 "string_bin",
-                ["a", "b", "c", "d", ["z", "x"], ("y", "w")],
+                ["a", "b", "c", "d", ["z", "x"], ["y", "w"]],
             ),
             (
                 [list_operations.list_insert("string_bin", 2, True), list_operations.list_pop("string_bin", 2)],

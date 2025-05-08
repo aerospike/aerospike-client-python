@@ -27,12 +27,6 @@ def open_as_connection(config):
 # adds cls.connection_config to this class
 @pytest.mark.usefixtures("connection_config")
 class TestConnect(object):
-    def test_version(self):
-        """
-        Check for aerospike vrsion
-        """
-        assert aerospike.__version__ is not None
-
     def test_connect_positive(self):
         """
         Invoke connect() with positive parameters.
@@ -194,7 +188,8 @@ class TestConnect(object):
             ({}, e.ParamError, -2, "Hosts must be a list"),
             ({"": [("127.0.0.1", 3000)]}, e.ParamError, -2, "Hosts must be a list"),
             ({"hosts": [3000]}, e.ParamError, -2, "Invalid host"),
-            ({"hosts": [("127.0.0.1", 2000)]}, e.ClientError, -10, "Failed to connect"),
+            # Errors that throw -10 can also throw 9
+            ({"hosts": [("127.0.0.1", 2000)]}, (e.ClientError, e.TimeoutError), (-10, 9), "Failed to connect"),
             ({"hosts": [("127.0.0.1", "3000")]}, e.ClientError, -10, "Failed to connect"),
         ],
         ids=[
@@ -210,5 +205,8 @@ class TestConnect(object):
         with pytest.raises(err) as err_info:
             self.client = aerospike.client(config).connect()
 
-        assert err_info.value.code == err_code
+        if type(err_code) == tuple:
+            assert err_info.value.code in err_code
+        else:
+            assert err_info.value.code == err_code
         assert err_info.value.msg == err_msg

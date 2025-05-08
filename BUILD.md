@@ -35,7 +35,7 @@ sudo yum install python-setuptools
 
 The following are dependencies for:
 
-- Debian 10 or newer
+- Debian 11 or newer
 - Ubuntu 20.04 or newer
 - Related distributions which use the `apt` package manager
 
@@ -87,8 +87,7 @@ By default macOS will be missing command line tools.
 
 The dependencies can be installed through the macOS package manager [Homebrew](http://brew.sh/).
 
-    brew install openssl@1
-    # brew uninstall openssl@3
+    brew install openssl@3
 
 ### All distros
 
@@ -109,21 +108,69 @@ using the wrong version of the C client. This can causes strange issues when bui
 Also, for macOS or any other operating system that doesn't have OpenSSL installed by default, you must install it and
 specify its location when building the wheel. In macOS, you would run these commands:
 ```
-export SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/"
-export CPATH="$(brew --prefix openssl@1.1)/include/"
+export SSL_LIB_PATH="$(brew --prefix openssl@3)/lib/"
+export CPATH="$(brew --prefix openssl@3)/include/"
 export STATIC_SSL=1
 ```
 
 Then build the source distribution and wheel.
 ```
-pip install build
+python3 -m pip install -r requirements.txt
 python3 -m build
 ```
 
-<!-- To build the client without any optimizations (usually for debugging), pass in the DEBUG environment variable:
+### Local version identifier
+
+If you are building on a non-tagged commit, or there are uncommitted changes to the repository, a local version
+identifier will be added to the version. The formatting of the local version identifier can be found [here](https://github.com/jwodder/versioningit/tree/v3.1.0?tab=readme-ov-file#example-configurations) under the versioneer
+section. 
+
+The local version identifier will appear in:
+- The package version in the wheel name
+- `python3 -m pip show aerospike` if you installed the wheel
+
+### Unoptimized builds (only Linux and macOS)
+
+By default, the Python client and the C client submodule are built with optimizations, which can make debugging
+difficult in gdb/lldb. You can build both the Python client and C client submodule without optimizations using an
+environment variable:
 ```
-DEBUG=1 python3 -m build
-``` -->
+UNOPTIMIZED=1 python3 -m build
+```
+
+In Linux and macOS builds, the package version will be labelled with `+unoptimized`.
+
+### Including debug symbols in macOS
+
+macOS builds do not include source files and line number information for debugging by default. You can include this info
+by using this environment variable:
+```
+INCLUDE_DSYM=1 python3 -m build
+```
+
+This way, when you debug the Python client using lldb, the source files and line numbers will appear in backtraces,
+breakpoints will actually work, etc. macOS builds with this option enabled do not have a labelled version yet, but this
+will be added in the future.
+
+In macOS builds, the package version will be labelled with `+dsym`.
+
+### Building with sanitizer enabled
+
+You can build the Python client with sanitizer to find memory errors and memory leaks. To do this, pass in an environment variable:
+```bash
+SANITIZER=1 python3 -m build
+```
+
+Then once you install the build with sanitizer, you may run a Python script using the Python client with this environment variable:
+
+```bash
+# Replace this file path with your actual libasan shared library path
+# You can find the path using this command:
+# ldconfig -p | grep libasan.so
+LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.6 python3 -c "import aerospike"
+```
+
+This is only supported for building with GCC.
 
 ### Troubleshooting macOS
 
@@ -173,23 +220,6 @@ Simply call `python` with the path to the example
 
 ## Contributing
 
-### Codestyle
-
-All code in `aerospike_helpers` must pass a lint test using `flake8`:
-```
-pip install flake8
-```
-
-The command is:
-```
-python3 -m flake8
-```
-
-All C source code must be formatted with `clang-format`:
-```
-clang-format -i <filename>
-```
-
 ### Precommit Hooks
 
 All commits must pass precommit hook tests. To install precommit hooks:
@@ -197,6 +227,8 @@ All commits must pass precommit hook tests. To install precommit hooks:
 pip install pre-commit
 pre-commit install
 ```
+
+This will run the lint tests for the C and Python code in this project.
 
 See pre-commit's documentation for more usage explanations.
 
