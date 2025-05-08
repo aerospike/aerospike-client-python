@@ -1289,9 +1289,12 @@ init_and_set_as_metrics_policy_using_pyobject(as_error *err,
 
     const char *uint32_fields[] = {"interval", "latency_columns",
                                    "latency_shift"};
-    uint32_t *uint32_ptrs[] = {&metrics_policy->interval,
-                               &metrics_policy->latency_columns,
-                               &metrics_policy->latency_shift};
+    uint32_t *uint32_ptrs[] = {
+        &metrics_policy->interval
+        // TODO: need to include these
+        //    &metrics_policy->latency_columns,
+        //    &metrics_policy->latency_shift
+    };
     for (unsigned long i = 0;
          i < sizeof(uint32_fields) / sizeof(uint32_fields[0]); i++) {
         PyObject *py_field_value =
