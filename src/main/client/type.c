@@ -1118,7 +1118,7 @@ CONSTRUCTOR_ERROR:
     switch (error_code) {
     // 0 Is success
     case 0: {
-        // TODO: is this dead code?
+        // TODO: this is dead code
         // Initialize connection flag
         return 0;
     }
