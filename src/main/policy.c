@@ -1335,7 +1335,9 @@ as_status init_and_set_as_metrics_policy_using_pyobject(
         *uint32_ptrs[i] = (uint32_t)field_value;
     }
 
-    *metrics_policy_ref = metrics_policy;
+    if (metrics_policy_ref) {
+        *metrics_policy_ref = metrics_policy;
+    }
     return AEROSPIKE_OK;
 
 error:
