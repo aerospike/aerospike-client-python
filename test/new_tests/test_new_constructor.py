@@ -251,7 +251,7 @@ def test_setting_metrics_policy():
     [
         # Common error is to leave a comma at the end
         # MetricsPolicy(),
-        ((MetricsPolicy()), e.ParamError),
+        (tuple([MetricsPolicy()]), e.ParamError),
         # There is a similar test in test_metrics but we have this test for code coverage
         (MetricsPolicy(report_size_limit=1), e.ClientError)
     ]
