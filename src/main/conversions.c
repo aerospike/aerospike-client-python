@@ -890,9 +890,10 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     // PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
     // Py_DECREF(py_timeout_count);
 
-    as_ns_metrics *node_metrics = node->metrics;
+    // TODO: this is wrong. more than one namespace
+    as_ns_metrics **node_metrics = node->metrics;
     PyObject *py_node_metrics =
-        create_py_node_metrics_from_as_node_metrics(error_p, node_metrics);
+        create_py_node_metrics_from_as_node_metrics(error_p, node_metrics[0]);
     if (!py_node_metrics) {
         goto error;
     }
