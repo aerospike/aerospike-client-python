@@ -652,104 +652,6 @@ CLEANUP:
 
 /**
  *******************************************************************************************************
- * Queries a user in the Aerospike DB.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject *AerospikeClient_Admin_Query_User(AerospikeClient *self,
-                                           PyObject *args, PyObject *kwds)
-{
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_user_name = NULL;
-
-    // Python Function Result
-    PyObject *py_user = NULL;
-
-    as_policy_admin admin_policy;
-    as_policy_admin *admin_policy_p = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"user", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:admin_query_user", kwlist,
-                                    &py_user_name, &py_policy) == false) {
-        return NULL;
-    }
-
-    // Aerospike Operation Arguments
-    const char *user_name;
-    as_user *user = NULL;
-
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
-
-    // Convert python object to policy_admin
-    pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
-                             &admin_policy_p, &self->as->config.policies.admin);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    // Convert python object to username string
-    if (!PyUnicode_Check(py_user_name)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
-        goto CLEANUP;
-    }
-
-    user_name = PyUnicode_AsUTF8(py_user_name);
-
-    // Invoke operation
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_query_user(self->as, &err, admin_policy_p, user_name, &user);
-    Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    // Convert returned as_user struct to python object
-    as_user_to_pyobject(&err, user, &py_user);
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
-CLEANUP:
-    if (user) {
-        as_user_destroy(user);
-    }
-
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception(&err);
-        return NULL;
-    }
-
-    return py_user;
-}
-
-/**
- *******************************************************************************************************
  * Queries a user's info in the Aerospike DB.
  *
  * @param self                  AerospikeClient object
@@ -849,94 +751,6 @@ CLEANUP:
 
 /**
  *******************************************************************************************************
- * Queries all users in the Aerospike DB.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject *AerospikeClient_Admin_Query_Users(AerospikeClient *self,
-                                            PyObject *args, PyObject *kwds)
-{
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-
-    // Python Function Result
-    PyObject *py_users = NULL;
-
-    as_policy_admin admin_policy;
-    as_policy_admin *admin_policy_p = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "|O:admin_query_users", kwlist,
-                                    &py_policy) == false) {
-        return NULL;
-    }
-
-    // Aerospike Operation Arguments
-    int users_size = 0;
-    as_user **users = NULL;
-
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
-
-    // Convert python object to policy_admin
-    pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
-                             &admin_policy_p, &self->as->config.policies.admin);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    // Invoke operation
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_query_users(self->as, &err, admin_policy_p, &users, &users_size);
-    Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    // Convert returned array of as_user structs into python object;
-    as_user_array_to_pyobject(&err, users, &py_users, users_size);
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
-
-CLEANUP:
-    if (users) {
-        as_users_destroy(users, users_size);
-    }
-
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception(&err);
-        return NULL;
-    }
-
-    return py_users;
-}
-
-/**
- *******************************************************************************************************
  * Queries all users info in the Aerospike DB.
  *
  * @param self                  AerospikeClient object
@@ -944,7 +758,6 @@ CLEANUP:
  *                              list passed from Python to a C function
  * @param kwds                  Dictionary of keywords
  *
- * Returns an integer status. 0(Zero) is success value.
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */

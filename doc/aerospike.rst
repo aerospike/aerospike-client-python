@@ -15,7 +15,7 @@ Overview
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
-cluster and handles the transactions performed against it.
+cluster and handles the commands performed against it.
 
 Methods
 =======
@@ -51,7 +51,7 @@ Client
 
         # Configure the client to first connect to a cluster node at 127.0.0.1
         # The client will learn about the other nodes in the cluster from the seed node.
-        # Also sets a top level policy for read operations
+        # Also sets a top level policy for read commands
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
             'policies': {'read': {'total_timeout': 1000}},
@@ -393,19 +393,59 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **scan** (:class:`dict`)
                 Contains :ref:`aerospike_scan_policies`.
             * **batch** (:class:`dict`)
+                Default parent batch policy used in batch read commands.
+
+                This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_read`
+                    * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
+
                 Contains :ref:`aerospike_batch_policies`.
             * **batch_remove** (:class:`dict`)
-                Default delete policy used in batch remove commands. Contains :ref:`aerospike_batch_remove_policies`.
+                Default delete policy used in batch remove commands.
+
+                This policy applies to these when a transaction-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_remove`
+                    * Individual :class:`Remove <aerospike_helpers.batch.records.Remove>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_remove_policies`.
             * **batch_apply** (:class:`dict`)
-                Default user defined function policy used in batch UDF apply commands. Contains :ref:`aerospike_batch_apply_policies`.
+                Default user defined function policy used in batch UDF apply commands.
+
+                This policy applies to these when a transaction-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * Individual :class:`Apply <aerospike_helpers.batch.records.Apply>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_apply_policies`.
             * **batch_write** (:class:`dict`)
-                Default write policy used in batch operate commands. Contains :ref:`aerospike_batch_write_policies`.
+                Default batch write policy when a transaction-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
+
+                    * Individual :class:`Write <aerospike_helpers.batch.records.Write>` instances passed to :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
+
+                Contains :ref:`aerospike_batch_write_policies`.
             * **batch_parent_write** (:class:`dict`)
-                Default parent policy used in batch write commands. Contains :ref:`aerospike_batch_policies`.
+                Default parent batch policy used in batch write commands.
+
+                This policy applies to these when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation. This will be applied instead of the client config's `"batch"` policy.
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * :meth:`~aerospike.Client.batch_remove`
+
+                Contains :ref:`aerospike_batch_policies`.
             * **info** (:class:`dict`)
                 Contains :ref:`aerospike_info_policies`.
             * **admin** (:class:`dict`)
                 Contains :ref:`aerospike_admin_policies`.
+            * **txn_verify** (:class:`dict`)
+                Default transaction policy when verifying record versions in a batch. Contains :ref:`aerospike_batch_policies`.
+            * **txn_roll** (:class:`dict`)
+                Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
+                Contains :ref:`aerospike_batch_policies`.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
@@ -436,7 +476,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **max_retries** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
-                Representing the number of times to retry a transaction
+                Representing the number of times to retry a command
             * **replica**
                 **Deprecated**: set this in one or all of the following policy dictionaries:
 
@@ -599,7 +639,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             so the client does not attempt to use a socket that has already been reaped by the server.
 
             If server's ``proto-fd-idle-ms`` is zero (no reap), then ``max_socket_idle`` should also be zero.
-            Connections retrieved from a pool in transactions will not be checked for ``max_socket_idle`` when ``max_socket_idle`` is zero.
+            Connections retrieved from a pool in commands will not be checked for ``max_socket_idle`` when ``max_socket_idle`` is zero.
             Idle connections will still be trimmed down from peak connections to min connections \
             (``min_conns_per_node`` and ``async_min_conns_per_node``) using a hard-coded 55 second limit in the cluster tend thread.
 
@@ -624,7 +664,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             The counted error types are any error that causes the connection to close (socket errors and client timeouts), server device overload and server timeouts.
 
-            The application should backoff or reduce the transaction load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
+            The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
 
             Default: ``100``
         * **error_rate_window** (:class:`int`)
@@ -660,7 +700,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             This is useful for:
 
-                - Directing read operations to run on the same rack as the client.
+                - Directing read commands to run on the same rack as the client.
                 - Lowering cloud provider costs when nodes are distributed across different availability zones (represented as racks).
 
             In order to enable this functionality:
@@ -807,7 +847,10 @@ Specifies the behavior for whether keys or digests should be sent to the cluster
 
 .. data:: POLICY_KEY_SEND
 
-    Send the key in addition to the digest. This policy causes a write operation to store the key on the server
+    Send the key in addition to the digest. This policy causes a write operation to store the key on the server.
+
+    .. note:: This option instructs the server to validate the digest by calculating it again from the key sent by the
+        client. Unless this is the explicit intent of the developer, this should be avoided.
 
 .. _POLICY_REPLICA:
 
@@ -863,7 +906,7 @@ Specifies the TTL constants.
     NOTE: only applies to the policies mentioned below.
 
     Use the applicable policy ttl in write, operate, batch write, and scan policies.
-    If the policy is not defined for the transaction, use the default client-level policy's ttl.
+    If the policy is not defined for the command, use the default client-level policy's ttl.
 
 .. _auth_mode:
 
@@ -1044,6 +1087,9 @@ Flags used by list order.
 .. data:: LIST_ORDERED
 
     Ordered list.
+
+.. note::
+    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
 
 .. _aerospike_list_sort_flag:
 
@@ -1406,12 +1452,6 @@ Bin Types
 Miscellaneous
 -------------
 
-.. data:: __version__
-
-    A :class:`str` containing the module's version.
-
-    .. versionadded:: 1.0.54
-
 .. data:: UDF_TYPE_LUA
 
     UDF type is LUA (which is the only UDF type).
@@ -1542,3 +1582,93 @@ See :ref:`aerospike_operation_helpers.expressions` for more information.
 .. data:: REGEX_NEWLINE
 
     Match-any-character operators don't match a newline.
+
+.. _query_duration_constants:
+
+Query Duration
+--------------
+
+.. data:: QUERY_DURATION_LONG
+
+     The query is expected to return more than 100 records per node. The server optimizes for a
+     large record set in the following ways:
+
+     * Allow query to be run in multiple threads using the server's query threading configuration.
+     * Do not relax read consistency for AP namespaces.
+     * Add the query to the server's query monitor.
+     * Do not add the overall latency to the server's latency histogram.
+     * Do not allow server timeouts.
+
+.. data:: QUERY_DURATION_SHORT
+
+     The query is expected to return less than 100 records per node. The server optimizes for a
+     small record set in the following ways:
+
+     * Always run the query in one thread and ignore the server's query threading configuration.
+     * Allow query to be inlined directly on the server's service thread.
+     * Relax read consistency for AP namespaces.
+     * Do not add the query to the server's query monitor.
+     * Add the overall latency to the server's latency histogram.
+     * Allow server timeouts. The default server timeout for a short query is 1 second.
+
+.. data:: QUERY_DURATION_LONG_RELAX_AP
+
+     Treat query as a LONG query, but relax read consistency for AP namespaces.
+     This value is treated exactly like :data:`aerospike.QUERY_DURATION_LONG` for server versions < 7.1.
+
+.. _mrt_commit_status_constants:
+
+Transaction Commit Status
+-------------------------
+
+.. data:: COMMIT_OK
+
+    Commit succeeded.
+
+.. data:: COMMIT_ALREADY_COMMITTED
+
+    Transaction has already been committed.
+
+.. data:: COMMIT_ROLL_FORWARD_ABANDONED
+
+    Client roll forward abandoned. Server will eventually commit the transaction.
+
+.. data:: COMMIT_CLOSE_ABANDONED
+
+    Transaction has been rolled forward, but client transaction close was abandoned.
+    Server will eventually close the transaction.
+
+.. _mrt_abort_status_constants:
+
+Transaction Abort Status
+------------------------
+
+.. data:: ABORT_OK
+
+    Abort succeeded.
+
+.. data:: ABORT_ALREADY_ABORTED
+
+    Transaction has already been aborted.
+
+.. data:: ABORT_ROLL_BACK_ABANDONED
+
+    Client roll back abandoned. Server will eventually abort the transaction.
+
+.. data:: ABORT_CLOSE_ABANDONED
+
+    Transaction has been rolled back, but client transaction close was abandoned.
+    Server will eventually close the transaction.
+
+.. _mrt_state:
+
+Transaction State
+------------------------------
+
+.. data:: TXN_STATE_OPEN
+
+.. data:: TXN_STATE_VERIFIED
+
+.. data:: TXN_STATE_COMMITTED
+
+.. data:: TXN_STATE_ABORTED

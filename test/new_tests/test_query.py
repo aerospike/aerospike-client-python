@@ -1138,3 +1138,29 @@ class TestQuery(TestBaseClass):
         query.foreach(callback)
 
         assert len(records) == 1
+
+    @pytest.mark.parametrize(
+        "duration",
+        [
+            aerospike.QUERY_DURATION_LONG,
+            aerospike.QUERY_DURATION_SHORT,
+            aerospike.QUERY_DURATION_LONG_RELAX_AP
+        ]
+    )
+    def test_query_expected_duration(self, duration: int):
+        if duration == aerospike.QUERY_DURATION_LONG_RELAX_AP and TestBaseClass.strong_consistency_enabled:
+            pytest.skip("Using aerospike.QUERY_DURATION_LONG_RELAX_AP will fail if server is in SC mode")
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        policy = {
+            "expected_duration": duration
+        }
+        query.results(policy=policy)
+
+    def test_query_invalid_expected_duration(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        policy = {
+            "expected_duration": "t"
+        }
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results(policy=policy)
+        assert excinfo.value.msg == "expected_duration is invalid"

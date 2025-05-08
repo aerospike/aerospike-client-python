@@ -121,7 +121,7 @@ class TestExists:
     @pytest.mark.parametrize(
         "key, record, meta, policy",
         [
-            (("test", "demo", 20), {"name": "John"}, {"gen": 3, "ttl": 1}, {"total_timeout": 2}),
+            (("test", "demo", 20), {"name": "John"}, None, {"total_timeout": 2}),
         ],
     )
     def test_neg_exists_with_low_timeout(self, key, record, meta, policy, put_data):

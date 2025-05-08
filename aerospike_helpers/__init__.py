@@ -25,3 +25,13 @@ class HyperLogLog(bytes):
     """
     def __new__(cls, o) -> "HyperLogLog":
         return super().__new__(cls, o)
+
+    # We need to implement repr() and str() ourselves
+    # Otherwise, this class will inherit these methods from bytes
+    # making it indistinguishable from bytes objects when printed
+    def __repr__(self) -> str:
+        bytes_str = super().__repr__()
+        return f"{self.__class__.__name__}({bytes_str})"
+
+    def __str__(self) -> str:
+        return self.__repr__()

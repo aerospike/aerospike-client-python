@@ -7,3 +7,4 @@ recursive-include src *
 include modules/aerospike-lua-core/src/*.lua
 global-include *.pyi
 global-include *.typed
+include custom-versionit-format.py
