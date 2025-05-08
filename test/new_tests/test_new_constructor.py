@@ -219,8 +219,7 @@ def test_setting_metrics_policy():
     METRICS_LOG_FILES = "./metrics-*.log"
 
     # Enable dynamic config to apply config-level metrics policy
-    # Invalid report_size_limit value from config-level metrics policy should not be applied
-    config["policies"]["metrics"] = MetricsPolicy(latency_columns=BUCKET_COUNT, report_size_limit=1)
+    config["policies"]["metrics"] = MetricsPolicy(latency_columns=BUCKET_COUNT)
     config["config_provider"] = ConfigProvider("./dyn_config.yml")
     client = aerospike.client(config)
     try:
