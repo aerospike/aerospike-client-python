@@ -142,6 +142,7 @@ jobs:
         mkdir -p query/src/main/query
         mkdir -p scan/src/main/scan
         mkdir -p transaction/src/main/transaction
+        mkdir -p config_provider/src/main/config_provider
 
         cd ../../../../
         cp src/main/*.c build/temp*/src/main/src/main
@@ -154,6 +155,7 @@ jobs:
         cp src/main/query/*.c build/temp*/src/main/query/src/main/query/
         cp src/main/scan/*.c build/temp*/src/main/scan/src/main/scan/
         cp src/main/transaction/*.c build/temp*/src/main/transaction/src/main/transaction/
+        cp src/main/config_provider/*.c build/temp*/src/main/config_provider/src/main/config_provider/
 
     - name: Generate coverage report for all object files
       if: ${{ !cancelled() }}
