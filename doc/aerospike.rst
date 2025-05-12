@@ -365,8 +365,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **config_provider** (:class:`aerospike.ConfigProvider`)
             (Optional) Dynamic configuration provider.
 
-            An alternate way to set the path is to set environment variable ``AEROSPIKE_CLIENT_CONFIG_URL``
-            before running the application.
+            An alternate way to enable dynamic config is to set environment variable ``AEROSPIKE_CLIENT_CONFIG_URL``
+            to the path of the config file before running the application.
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
 
