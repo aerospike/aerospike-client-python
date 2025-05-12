@@ -39,7 +39,7 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     }
 
     as_metrics_policy *metrics_policy_ref;
-    if (py_metrics_policy && py_metrics_policy == Py_None) {
+    if (py_metrics_policy == NULL || py_metrics_policy == Py_None) {
         // Use C client's config metrics policy
         metrics_policy_ref = NULL;
     }
