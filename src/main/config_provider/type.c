@@ -40,6 +40,7 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
 
     return (PyObject *)self;
 error:
+    Py_TYPE(self)->tp_free((PyObject *)self);
     return NULL;
 }
 
