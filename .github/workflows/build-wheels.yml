@@ -273,6 +273,9 @@ jobs:
         echo LIBRARY_PATH=$LIBRARY_PATH >> $GITHUB_ENV
       shell: bash
 
+    - if: ${{ inputs.platform-tag == 'macosx_x86_64' && matrix.python-tag == 'cp313' }}
+      run: echo CIBW_ENVIRONMENT_MACOS="LDFLAGS='-headerpad_max_install_names'" >> $GITHUB_ENV
+
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
       env:
