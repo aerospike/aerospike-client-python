@@ -924,6 +924,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
                                                   "metrics", "MetricsPolicy",
                                                   false) == false) {
+            // init_and_set_as_metrics_policy_using_pyobject also checks the type of the pyobject
+            // But we want to set a different error message here
             as_error_update(
                 &constructor_err, AEROSPIKE_ERR_PARAM,
                 "metrics must be an "
@@ -933,9 +935,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         else {
-            as_status status = init_and_set_as_metrics_policy_using_pyobject(
+            as_status status = set_as_metrics_policy_using_pyobject(
                 &constructor_err, py_obj_metrics_policy,
-                &(config.policies.metrics), NULL);
+                &(config.policies.metrics));
             if (status != AEROSPIKE_OK) {
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }

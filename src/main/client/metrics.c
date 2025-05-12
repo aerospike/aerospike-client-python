@@ -28,7 +28,6 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
 
     PyObject *py_metrics_policy = NULL;
     as_metrics_policy metrics_policy;
-    as_metrics_policy *metrics_policy_ref = NULL;
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"policy", NULL};
@@ -39,10 +38,19 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
         goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
 
-    as_status status = init_and_set_as_metrics_policy_using_pyobject(
-        &err, py_metrics_policy, &metrics_policy, &metrics_policy_ref);
-    if (status != AEROSPIKE_OK) {
-        goto RAISE_EXCEPTION_USING_AS_ERROR;
+    as_metrics_policy *metrics_policy_ref;
+    if (py_metrics_policy && py_metrics_policy == Py_None) {
+        // Use C client's config metrics policy
+        metrics_policy_ref = NULL;
+    }
+    else {
+        as_metrics_policy_init(&metrics_policy);
+        as_status status = set_as_metrics_policy_using_pyobject(
+            &err, py_metrics_policy, &metrics_policy);
+        if (status != AEROSPIKE_OK) {
+            goto RAISE_EXCEPTION_USING_AS_ERROR;
+        }
+        metrics_policy_ref = &metrics_policy;
     }
 
     // 2 scenarios:

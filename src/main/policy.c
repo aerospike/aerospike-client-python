@@ -1204,19 +1204,10 @@ error:
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
-// metrics_policy must be declared already
-// TODO: check for memory leaks
-as_status init_and_set_as_metrics_policy_using_pyobject(
-    as_error *err, PyObject *py_metrics_policy,
-    as_metrics_policy *metrics_policy, as_metrics_policy **metrics_policy_ref)
+as_status
+set_as_metrics_policy_using_pyobject(as_error *err, PyObject *py_metrics_policy,
+                                     as_metrics_policy *metrics_policy)
 {
-    if (!py_metrics_policy || py_metrics_policy == Py_None) {
-        // *metrics_policy_ref should point to NULL
-        return AEROSPIKE_OK;
-    }
-
-    as_metrics_policy_init(metrics_policy);
-
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
                                           "MetricsPolicy", false)) {
         return as_error_update(
@@ -1335,9 +1326,6 @@ as_status init_and_set_as_metrics_policy_using_pyobject(
         *uint32_ptrs[i] = (uint32_t)field_value;
     }
 
-    if (metrics_policy_ref) {
-        *metrics_policy_ref = metrics_policy;
-    }
     return AEROSPIKE_OK;
 
 error:
