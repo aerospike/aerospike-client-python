@@ -307,9 +307,9 @@ jobs:
           delocate-listdeps {dest_dir}/*.whl | grep libssl.3.dylib
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
 
-    - name: Setup tmate session
-      if: ${{ !cancelled() }}
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   if: ${{ !cancelled() }}
+    #   uses: mxschmitt/action-tmate@v3
 
     # For debugging
     - run: |
