@@ -22,7 +22,9 @@ class TestDynamicConfig:
             provider.interval = 10
 
     def test_config_provider_class_invalid_args(self):
-        with pytest.raises(ValueError) as excinfo:
+        # See comment in test_mrt_api.py's test_transaction_class test case
+        # for why Windows throws OverflowError instead of ValueError
+        with pytest.raises((ValueError, OverflowError)) as excinfo:
             aerospike.ConfigProvider("path", interval=2**32)
         assert excinfo.value.args[0] == "interval is too large for an unsigned 32-bit integer"
 

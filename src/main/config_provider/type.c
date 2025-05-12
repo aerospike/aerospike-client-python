@@ -1,5 +1,6 @@
 #include "types.h"
 #include "config_provider.h"
+#include "conversions.h"
 
 static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
                                              PyObject *kwds)
@@ -12,17 +13,19 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
 
     static char *kwlist[] = {"path", "interval", NULL};
     const char *path = NULL;
-    unsigned long interval = AS_CONFIG_PROVIDER_INTERVAL_DEFAULT;
+    // We take in a python object and do our own input validation
+    // because PyArg_ParseTupleAndKeywords() doesn't check for overflow errors when taking in a C unsigned long
+    // i.e when we pass in a larger value than UINT32_MAX, it will be truncated when assigned to an unsigned long var
+    // in Windows
+    PyObject *py_interval = NULL;
 
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "s|k", kwlist, &path,
-                                    &interval) == false) {
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "s|O", kwlist, &path,
+                                    &py_interval) == false) {
         goto error;
     }
 
-    if (interval > UINT32_MAX) {
-        PyErr_Format(PyExc_ValueError,
-                     "%s is too large for an unsigned 32-bit integer",
-                     kwlist[1]);
+    uint32_t interval = convert_pyobject_to_uint32_t(py_interval, "interval");
+    if (PyErr_Occurred()) {
         goto error;
     }
 
