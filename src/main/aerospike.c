@@ -538,7 +538,7 @@ static struct submodule_name_to_creation_method py_submodules[] = {
 
 struct type_name_to_creation_method {
     const char *name;
-    PyTypeObject *(*pytype_ready_method)(void);
+    PyTypeObject *type;
 };
 
 static struct type_name_to_creation_method py_module_types[] = {
@@ -547,15 +547,15 @@ static struct type_name_to_creation_method py_module_types[] = {
     // 2. We don't want to deal with extracting an object's __name__ from a Unicode object.
     // We have to make sure the Unicode object lives as long as we need its internal buffer
     // It's easier to just use a C string directly
-    {"Client", AerospikeClient_Ready},
-    {"Query", AerospikeQuery_Ready},
-    {"Scan", AerospikeScan_Ready},
-    {"KeyOrderedDict", AerospikeKeyOrderedDict_Ready},
-    {"GeoJSON", AerospikeGeospatial_Ready},
-    {"null", AerospikeNullObject_Ready},
-    {"CDTWildcard", AerospikeWildcardObject_Ready},
-    {"CDTInfinite", AerospikeInfiniteObject_Ready},
-    {"Transaction", AerospikeTransaction_Ready},
+    {"Client", &AerospikeClient_Type},
+    {"Query", &AerospikeQuery_Type},
+    {"Scan", &AerospikeScan_Type},
+    {"KeyOrderedDict", &AerospikeKeyOrderedDict_Type},
+    {"GeoJSON", &AerospikeGeospatial_Type},
+    {"null", &AerospikeNullObject_Type},
+    {"CDTWildcard", &AerospikeWildcardObject_Type},
+    {"CDTInfinite", &AerospikeInfiniteObject_Type},
+    {"Transaction", &AerospikeTransaction_Type},
 };
 
 PyMODINIT_FUNC PyInit_aerospike(void)
@@ -583,18 +583,9 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     unsigned long i = 0;
     int retval;
     for (i = 0; i < sizeof(py_module_types) / sizeof(py_module_types[0]); i++) {
-        PyTypeObject *(*py_type_ready_func)(void) =
-            py_module_types[i].pytype_ready_method;
-        PyTypeObject *py_type = py_type_ready_func();
-        if (py_type == NULL) {
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
-        }
-
-        Py_INCREF(py_type);
-        retval = PyModule_AddObject(
-            py_aerospike_module, py_module_types[i].name, (PyObject *)py_type);
+        // TODO: names don't match?
+        retval = PyModule_AddType(py_aerospike_module, py_module_types[i].type);
         if (retval == -1) {
-            Py_DECREF(py_type);
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
     }
