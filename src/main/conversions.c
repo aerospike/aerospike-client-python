@@ -2956,14 +2956,11 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-unsigned long long
-convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
-                                             const char *param_name_of_pyobj,
-                                             unsigned long long max_bound)
+unsigned long long convert_pyobject_to_fixed_width_integer_type(
+    PyObject *pyobject, const char *pyobject_name, unsigned long long max_bound)
 {
     if (!PyLong_Check(pyobject)) {
-        PyErr_Format(PyExc_TypeError, "%s must be an integer",
-                     param_name_of_pyobj);
+        PyErr_Format(PyExc_TypeError, "%s must be an integer", pyobject_name);
         goto error;
     }
     unsigned long long value = PyLong_AsUnsignedLongLong(pyobject);
@@ -2974,7 +2971,7 @@ convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
     if (value > max_bound) {
         PyErr_Format(PyExc_ValueError,
                      "%s is too large for an unsigned 32-bit integer",
-                     param_name_of_pyobj);
+                     pyobject_name);
         goto error;
     }
 
