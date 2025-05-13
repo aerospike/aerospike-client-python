@@ -139,7 +139,8 @@ class TestMetrics:
             report_size_limit=1000,
             interval=2,
             latency_columns=bucket_count,
-            latency_shift=2
+            latency_shift=2,
+            labels={"a": "b"}
         )
 
         self.as_connection.enable_metrics(policy=policy)
