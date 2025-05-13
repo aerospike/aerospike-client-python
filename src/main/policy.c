@@ -1302,7 +1302,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         if (PyErr_Occurred()) {
             goto error;
         }
-        field_refs[i] = (uint8_t)attr_value;
+        *field_refs[i] = (uint8_t)attr_value;
     }
 
     return AEROSPIKE_OK;
