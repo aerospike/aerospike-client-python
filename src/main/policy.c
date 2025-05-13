@@ -1280,54 +1280,26 @@ set_as_metrics_policy_using_pyobject(as_error *err, PyObject *py_metrics_policy,
 
     const char *uint32_fields[] = {"interval", "latency_columns",
                                    "latency_shift"};
-    uint32_t *uint32_ptrs[] = {
-        &metrics_policy->interval
-        // TODO: need to include these
-        //    &metrics_policy->latency_columns,
-        //    &metrics_policy->latency_shift
-    };
-    for (unsigned long i = 0;
-         i < sizeof(uint32_fields) / sizeof(uint32_fields[0]); i++) {
-        PyObject *py_field_value =
-            PyObject_GetAttrString(py_metrics_policy, uint32_fields[i]);
-        if (!py_field_value) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                            uint32_fields[i]);
-            goto error;
-        }
-
-        // There's a helper function in the Python client wrapper code called
-        // get_uint32_value
-        // But we don't use it because it doesn't set which exact line
-        // an error occurs. It only returns an error code when it happens
-        if (!PyLong_CheckExact(py_field_value)) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
-            goto error;
-        }
-
-        unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
-        if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
-            PyErr_Clear();
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
-            goto error;
-        }
-
-        if (field_value > UINT32_MAX) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
-            goto error;
-        }
-
-        *uint32_ptrs[i] = (uint32_t)field_value;
+    // TODO: need to include these
+    //    &metrics_policy->latency_columns,
+    //    &metrics_policy->latency_shift
+    const char *interval_field_name = "interval";
+    PyObject *py_interval =
+        PyObject_GetAttrString(py_metrics_policy, interval_field_name);
+    if (!py_interval) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        interval_field_name);
+        goto error;
     }
+
+    uint32_t interval =
+        convert_pyobject_to_uint32_t(py_interval, interval_field_name);
+    if (PyErr_Occurred()) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        interval_field_name, "unsigned 32-bit integer");
+        goto error;
+    }
+    metrics_policy->interval = interval;
 
     return AEROSPIKE_OK;
 
