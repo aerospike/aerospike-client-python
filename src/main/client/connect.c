@@ -36,7 +36,7 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-int AerospikeClientConnect(AerospikeClient *self)
+int _AerospikeClient_Connect(AerospikeClient *self)
 {
     as_error err;
     as_error_init(&err);
@@ -183,7 +183,7 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         as_config_set_user(&self->as->config, username, password);
     }
 
-    if (AerospikeClientConnect(self) == -1) {
+    if (_AerospikeClient_Connect(self) == -1) {
         return NULL;
     }
 

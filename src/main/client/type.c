@@ -1110,7 +1110,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     self->as = aerospike_new(&config);
 
-    if (AerospikeClientConnect(self) == -1) {
+    if (_AerospikeClient_Connect(self) == -1) {
         return -1;
     }
 
