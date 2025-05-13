@@ -881,14 +881,22 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject_SetAttrString(py_node, "conns", py_conn_stats);
     Py_DECREF(py_conn_stats);
 
-    // PyObject *py_error_count = PyLong_FromUnsignedLongLong(node->error_count);
-    // PyObject_SetAttrString(py_node, "error_count", py_error_count);
-    // Py_DECREF(py_error_count);
-
-    // PyObject *py_timeout_count =
-    //     PyLong_FromUnsignedLongLong(node->timeout_count);
-    // PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
-    // Py_DECREF(py_timeout_count);
+    const char *const as_node_stats_attr_names[] = {
+        "error_count", "timeout_count", "key_busy_count"};
+    uint64_t *as_node_stats_attr_values[] = {
+        &node_stats.error_count,
+        &node_stats.timeout_count,
+        &node_stats.key_busy_count,
+    };
+    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
+                                      sizeof(as_node_stats_attr_values[0]);
+         i++) {
+        PyObject *py_attr_value =
+            PyLong_FromUnsignedLongLong(*as_node_stats_attr_values[i]);
+        PyObject_SetAttrString(py_node, as_node_stats_attr_values[i],
+                               py_attr_value);
+        Py_DECREF(py_attr_value);
+    }
 
     // TODO: this is wrong. more than one namespace
     as_ns_metrics **node_metrics = node->metrics;
