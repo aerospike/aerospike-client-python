@@ -865,7 +865,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
             goto error;
         }
         int retval =
-            PyObject_SetAttrString(py_node, str_attr_names, py_attr_value);
+            PyObject_SetAttrString(py_node, str_attr_names[i], py_attr_value);
         Py_DECREF(py_attr_value);
         if (retval == -1) {
             goto error;
