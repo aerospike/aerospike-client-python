@@ -45,9 +45,9 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     }
     else {
         as_metrics_policy_init(&metrics_policy);
-        as_status status = set_as_metrics_policy_using_pyobject(
+        int retval = set_as_metrics_policy_using_pyobject(
             &err, py_metrics_policy, &metrics_policy);
-        if (status == -1) {
+        if (retval == -1) {
             if (err.code != AEROSPIKE_OK) {
                 goto RAISE_EXCEPTION_USING_AS_ERROR;
             }
