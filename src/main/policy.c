@@ -1321,24 +1321,26 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     Py_ssize_t pos = 0;
     while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
         if (!PyUnicode_Check(py_label_name)) {
-            // TODO: set as_error
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "%s contains a non-str label name",
+                            labels_attr_name);
             goto while_error;
         }
 
         const char *label_name = PyUnicode_AsUTF8(py_label_name);
         if (!label_name) {
-            // TODO: set as_error
             goto while_error;
         }
 
         if (!PyUnicode_Check(py_label_value)) {
-            // TODO: set as_error
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "%s contains a non-str label value",
+                            labels_attr_name);
             goto while_error;
         }
 
         const char *label_value = PyUnicode_AsUTF8(py_label_value);
         if (!label_value) {
-            // TODO: set as_error
             goto while_error;
         }
 
