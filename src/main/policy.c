@@ -1321,32 +1321,32 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     Py_ssize_t pos = 0;
     while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
         if (!PyUnicode_Check(py_label_name)) {
-            Py_DECREF(py_labels);
             // TODO: set as_error
-            goto error;
+            goto while_error;
         }
 
         const char *label_name = PyUnicode_AsUTF8(py_label_name);
         if (!label_name) {
-            Py_DECREF(py_labels);
             // TODO: set as_error
-            goto error;
+            goto while_error;
         }
 
         if (!PyUnicode_Check(py_label_value)) {
-            Py_DECREF(py_labels);
             // TODO: set as_error
-            goto error;
+            goto while_error;
         }
 
         const char *label_value = PyUnicode_AsUTF8(py_label_value);
         if (!label_value) {
-            Py_DECREF(py_labels);
             // TODO: set as_error
-            goto error;
+            goto while_error;
         }
 
         as_metrics_policy_add_label(metrics_policy, label_name, label_value);
+        continue;
+    while_error:
+        Py_DECREF(py_labels);
+        goto error;
     }
     Py_DECREF(py_labels);
 
