@@ -785,7 +785,7 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
     const char *node_metrics_fields[] = {"conn_latency", "write_latency",
                                          "read_latency", "batch_latency",
                                          "query_latency"};
-    uint32_t max = AS_LATENCY_TYPE_NONE;
+    uint32_t max = AS_LATENCY_TYPE_MAX;
     // For each latency type, get list of buckets
     for (uint32_t i = 0; i < max; i++) {
         PyObject *py_buckets = PyList_New(0);
