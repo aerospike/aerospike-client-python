@@ -774,9 +774,8 @@ error:
 
 // Creates and returns a Python client NodeMetrics object from a C client's as_ns_metrics struct
 // If an error occurs here, return NULL
-PyObject *
-create_py_node_metrics_from_as_node_metrics(as_error *error_p,
-                                            as_ns_metrics *node_metrics)
+PyObject *create_py_node_metrics_from_as_ns_metrics(as_error *error_p,
+                                                    as_ns_metrics *node_metrics)
 {
     PyObject *py_node_metrics = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "NodeMetrics", NULL);
@@ -893,20 +892,29 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
          i++) {
         PyObject *py_attr_value =
             PyLong_FromUnsignedLongLong(*as_node_stats_attr_values[i]);
-        PyObject_SetAttrString(py_node, as_node_stats_attr_names[i],
-                               py_attr_value);
+        if (!py_attr_value) {
+            goto error;
+        }
+        int retval = PyObject_SetAttrString(
+            py_node, as_node_stats_attr_names[i], py_attr_value);
+        if (retval == -1) {
+            goto error;
+        }
         Py_DECREF(py_attr_value);
     }
 
     // TODO: this is wrong. more than one namespace
     as_ns_metrics **node_metrics = node->metrics;
     PyObject *py_node_metrics =
-        create_py_node_metrics_from_as_node_metrics(error_p, node_metrics[0]);
+        create_py_node_metrics_from_as_ns_metrics(error_p, node_metrics[0]);
     if (!py_node_metrics) {
         goto error;
     }
-    PyObject_SetAttrString(py_node, "metrics", py_node_metrics);
+    int retval = PyObject_SetAttrString(py_node, "metrics", py_node_metrics);
     Py_DECREF(py_node_metrics);
+    if (retval == -1) {
+        goto error;
+    }
 
     return py_node;
 
