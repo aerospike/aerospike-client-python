@@ -1305,7 +1305,52 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         *field_refs[i] = (uint8_t)attr_value;
     }
 
-    return AEROSPIKE_OK;
+    const char *labels_attr_name = "labels";
+    PyObject *py_labels =
+        PyObject_GetAttrString(py_metrics_policy, labels_attr_name);
+    if (!py_labels) {
+        goto error;
+    }
+    if (!PyDict_Check(py_labels)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        labels_attr_name, "str");
+        goto error;
+    }
+
+    PyObject *py_label_name, *py_label_value;
+    Py_ssize_t pos = 0;
+    while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
+        if (!PyUnicode_Check(py_label_name)) {
+            Py_DECREF(py_labels);
+            // TODO: set as_error
+            goto error;
+        }
+
+        const char *label_name = PyUnicode_AsUTF8(py_label_name);
+        if (!label_name) {
+            Py_DECREF(py_labels);
+            // TODO: set as_error
+            goto error;
+        }
+
+        if (!PyUnicode_Check(py_label_value)) {
+            Py_DECREF(py_labels);
+            // TODO: set as_error
+            goto error;
+        }
+
+        const char *label_value = PyUnicode_AsUTF8(py_label_value);
+        if (!label_value) {
+            Py_DECREF(py_labels);
+            // TODO: set as_error
+            goto error;
+        }
+
+        as_metrics_policy_add_label(metrics_policy, label_name, label_value);
+    }
+    Py_DECREF(py_labels);
+
+    return 0;
 
 error:
     // udata would've been allocated if MetricsListener was successfully converted to C code

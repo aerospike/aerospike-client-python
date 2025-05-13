@@ -151,7 +151,8 @@ class MetricsPolicy:
             report_size_limit: int = 0,
             interval: int = 30,
             latency_columns: int = 7,
-            latency_shift: int = 1
+            latency_shift: int = 1,
+            labels: dict[str, str] = {}
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
@@ -159,3 +160,4 @@ class MetricsPolicy:
         self.interval = interval
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
+        self.labels = labels
