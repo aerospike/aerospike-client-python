@@ -16,7 +16,7 @@
 
 """Classes used for metrics.
 
-:class:`ConnectionStats`, :class:`NodeMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
+:class:`ConnectionStats`, :class:`NamespaceMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
 because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
 callbacks for reading data about the server and client.
 """
@@ -38,7 +38,7 @@ class ConnectionStats:
     pass
 
 
-class NodeMetrics:
+class NamespaceMetrics:
     """
     Each type of latency has a list of latency buckets.
 
@@ -66,7 +66,7 @@ class Node:
             multiple errors per command may occur.
         timeout_count (int): Command timeout count since node was initialized.
             If the timeout is retryable (i.e socketTimeout), multiple timeouts per command may occur.
-        metrics (:py:class:`NodeMetrics`): Node metrics
+        metrics (list[:py:class:`NamespaceMetrics`]): Node metrics
     """
     pass
 

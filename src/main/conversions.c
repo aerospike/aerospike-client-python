@@ -772,13 +772,13 @@ error:
     return NULL;
 }
 
-// Creates and returns a Python client NodeMetrics object from a C client's as_ns_metrics struct
+// Creates and returns a Python client NamespaceMetrics object from a C client's as_ns_metrics struct
 // If an error occurs here, return NULL
-PyObject *create_py_node_metrics_from_as_ns_metrics(as_error *error_p,
-                                                    as_ns_metrics *node_metrics)
+PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
+                                                  as_ns_metrics *node_metrics)
 {
     PyObject *py_node_metrics = create_class_instance_from_module(
-        error_p, "aerospike_helpers.metrics", "NodeMetrics", NULL);
+        error_p, "aerospike_helpers.metrics", "NamespaceMetrics", NULL);
     if (!py_node_metrics) {
         return NULL;
     }
@@ -918,7 +918,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     }
     for (uint8_t i = 0; i < node->metrics_size; i++) {
         PyObject *py_ns_metrics =
-            create_py_node_metrics_from_as_ns_metrics(error_p, ns_metrics[0]);
+            create_py_ns_metrics_from_as_ns_metrics(error_p, ns_metrics[0]);
         if (!py_ns_metrics) {
             Py_DECREF(py_metrics);
             goto error;

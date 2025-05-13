@@ -1,5 +1,5 @@
 from aerospike import exception as e
-from aerospike_helpers.metrics import MetricsPolicy, MetricsListeners, Cluster, Node, ConnectionStats, NodeMetrics
+from aerospike_helpers.metrics import MetricsPolicy, MetricsListeners, Cluster, Node, ConnectionStats, NamespaceMetrics
 import pytest
 import shutil
 import glob
@@ -175,7 +175,7 @@ class TestMetrics:
                 assert type(node.error_count) == int
                 assert type(node.timeout_count) == int
                 # Check NodeMetrics
-                assert type(node.metrics) == NodeMetrics
+                assert type(node.metrics) == NamespaceMetrics
                 metrics = node.metrics
                 latency_buckets = [
                     metrics.conn_latency,
