@@ -857,7 +857,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     as_address_short_name(addr, address_name, sizeof(address_name));
 
     const char *str_attr_names[] = {"name", "address"};
-    const char *str_attr_values[] = {&node->name, address_name};
+    const char *str_attr_values[] = {node->name, address_name};
     for (unsigned long i = 0;
          i < sizeof(str_attr_names) / sizeof(str_attr_names[0]); i++) {
         PyObject *py_attr_value = PyUnicode_FromString(str_attr_values[i]);
