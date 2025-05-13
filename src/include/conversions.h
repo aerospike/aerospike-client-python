@@ -253,3 +253,5 @@ unsigned long long
 convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
                                              const char *param_name_of_pyobj,
                                              unsigned long long max_bound);
+const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj,
+                                    const char *pyobj_name);
