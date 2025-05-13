@@ -1237,12 +1237,11 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         // Need to deallocate metrics listeners' udata
         goto error;
     }
-    if (!PyUnicode_Check(py_report_dir)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_dir", "str");
+    const char *report_dir =
+        convert_pyobject_to_str(err, py_report_dir, "report_dir");
+    if (!report_dir) {
         goto error;
     }
-    const char *report_dir = PyUnicode_AsUTF8(py_report_dir);
     if (strlen(report_dir) >= sizeof(metrics_policy->report_dir)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "MetricsPolicy.report_dir must be less than 256 chars");
