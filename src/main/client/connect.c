@@ -36,13 +36,14 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
-int AerospikeClientConnect(AerospikeClient *self)
+int _AerospikeClient_Connect(AerospikeClient *self)
 {
     as_error err;
     as_error_init(&err);
     char *alias_to_search = NULL;
     bool free_alias_to_search = false;
 
+    // TODO: cleanup?...
     if (!self || !self->as || !self->as->config.hosts ||
         !self->as->config.hosts->size) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -183,7 +184,7 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         as_config_set_user(&self->as->config, username, password);
     }
 
-    if (AerospikeClientConnect(self) == -1) {
+    if (_AerospikeClient_Connect(self) == -1) {
         return NULL;
     }
 
