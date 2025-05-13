@@ -2884,3 +2884,30 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
 
     return err->code;
 }
+
+uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
+                                      const char *param_name_of_pyobj)
+{
+    if (!PyLong_Check(pyobject)) {
+        PyErr_Format(PyExc_TypeError, "%s must be an integer",
+                     param_name_of_pyobj);
+        goto error;
+    }
+    unsigned long long_value = PyLong_AsUnsignedLong(pyobject);
+    if (PyErr_Occurred()) {
+        goto error;
+    }
+
+    if (long_value > UINT32_MAX) {
+        PyErr_Format(PyExc_ValueError,
+                     "%s is too large for an unsigned 32-bit integer",
+                     param_name_of_pyobj);
+        goto error;
+    }
+
+    uint32_t value = (uint32_t)long_value;
+    return value;
+
+error:
+    return 0;
+}
