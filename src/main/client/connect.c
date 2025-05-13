@@ -43,6 +43,7 @@ int _AerospikeClient_Connect(AerospikeClient *self)
     char *alias_to_search = NULL;
     bool free_alias_to_search = false;
 
+    // TODO: cleanup?...
     if (!self || !self->as || !self->as->config.hosts ||
         !self->as->config.hosts->size) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
