@@ -1204,9 +1204,9 @@ error:
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
-as_status
-set_as_metrics_policy_using_pyobject(as_error *err, PyObject *py_metrics_policy,
-                                     as_metrics_policy *metrics_policy)
+int set_as_metrics_policy_using_pyobject(as_error *err,
+                                         PyObject *py_metrics_policy,
+                                         as_metrics_policy *metrics_policy)
 {
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
                                           "MetricsPolicy", false)) {
@@ -1250,39 +1250,22 @@ set_as_metrics_policy_using_pyobject(as_error *err, PyObject *py_metrics_policy,
     }
     strcpy(metrics_policy->report_dir, report_dir);
 
+    const char *report_size_limit_attr_name = "report_size_limit";
     PyObject *py_report_size_limit =
-        PyObject_GetAttrString(py_metrics_policy, "report_size_limit");
+        PyObject_GetAttrString(py_metrics_policy, report_size_limit_attr_name);
     if (!py_report_size_limit) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                        "report_size_limit");
-        goto error;
-    }
-    if (!PyLong_CheckExact(py_report_size_limit)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
-        goto error;
-    }
-    unsigned long long report_size_limit =
-        PyLong_AsUnsignedLongLong(py_report_size_limit);
-    if (report_size_limit == (unsigned long long)-1 && PyErr_Occurred()) {
-        PyErr_Clear();
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
-        goto error;
-    }
-    if (report_size_limit > UINT64_MAX) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
+                        report_size_limit_attr_name);
         goto error;
     }
 
-    metrics_policy->report_size_limit = (uint64_t)report_size_limit;
+    uint64_t report_size_limit = convert_pyobject_to_uint64_t(
+        py_report_size_limit, report_size_limit_attr_name);
+    if (PyErr_Occurred()) {
+        goto error;
+    }
+    metrics_policy->report_size_limit = report_size_limit;
 
-    const char *uint32_fields[] = {"interval", "latency_columns",
-                                   "latency_shift"};
-    // TODO: need to include these
-    //    &metrics_policy->latency_columns,
-    //    &metrics_policy->latency_shift
     const char *interval_field_name = "interval";
     PyObject *py_interval =
         PyObject_GetAttrString(py_metrics_policy, interval_field_name);
@@ -1301,6 +1284,16 @@ set_as_metrics_policy_using_pyobject(as_error *err, PyObject *py_metrics_policy,
     }
     metrics_policy->interval = interval;
 
+    const char *uint8_field_names[] = {"latency_columns", "latency_shift"};
+    for (unsigned long i = 0;
+         i < sizeof(uint8_field_names) / sizeof(uint8_field_names[0]); i++) {
+        PyObject *py_attr_value =
+            PyObject_GetAttrString(py_metrics_policy, uint8_field_names[i]);
+        if (!py_attr_value) {
+            goto error;
+        }
+    }
+
     return AEROSPIKE_OK;
 
 error:
@@ -1309,5 +1302,5 @@ error:
         free_py_listener_data(
             (PyListenerData *)metrics_policy->metrics_listeners.udata);
     }
-    return err->code;
+    return -1;
 }

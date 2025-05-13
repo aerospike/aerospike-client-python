@@ -251,3 +251,5 @@ PyObject *create_class_instance_from_module(as_error *error_p,
 // Constructor parameter name needed for constructing error message
 uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
                                       const char *param_name_of_pyobj);
+uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject,
+                                      const char *param_name_of_pyobj);

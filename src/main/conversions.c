@@ -2936,3 +2936,30 @@ uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
 error:
     return 0;
 }
+
+uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject,
+                                      const char *param_name_of_pyobj)
+{
+    if (!PyLong_Check(pyobject)) {
+        PyErr_Format(PyExc_TypeError, "%s must be an integer",
+                     param_name_of_pyobj);
+        goto error;
+    }
+    unsigned long long long_value = PyLong_AsUnsignedLongLong(pyobject);
+    if (PyErr_Occurred()) {
+        goto error;
+    }
+
+    if (long_value > UINT64_MAX) {
+        PyErr_Format(PyExc_ValueError,
+                     "%s is too large for an unsigned 64-bit integer",
+                     param_name_of_pyobj);
+        goto error;
+    }
+
+    uint64_t value = (uint64_t)long_value;
+    return value;
+
+error:
+    return 0;
+}
