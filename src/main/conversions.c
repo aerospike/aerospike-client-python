@@ -893,7 +893,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
          i++) {
         PyObject *py_attr_value =
             PyLong_FromUnsignedLongLong(*as_node_stats_attr_values[i]);
-        PyObject_SetAttrString(py_node, as_node_stats_attr_values[i],
+        PyObject_SetAttrString(py_node, as_node_stats_attr_names[i],
                                py_attr_value);
         Py_DECREF(py_attr_value);
     }
