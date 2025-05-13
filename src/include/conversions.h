@@ -248,8 +248,8 @@ PyObject *create_class_instance_from_module(as_error *error_p,
                                             PyObject *py_arg);
 
 // Error indicator must always be checked after this call
-// Constructor parameter name needed for constructing error message
-uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
-                                      const char *param_name_of_pyobj);
-uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject,
-                                      const char *param_name_of_pyobj);
+// Parameter name needed for constructing error message
+uint32_t
+convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
+                                             const char *param_name_of_pyobj,
+                                             unsigned long long max_bound);

@@ -1259,12 +1259,13 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
 
-    uint64_t report_size_limit = convert_pyobject_to_uint64_t(
-        py_report_size_limit, report_size_limit_attr_name);
+    unsigned long long report_size_limit =
+        convert_pyobject_to_fixed_width_integer_type(
+            py_report_size_limit, report_size_limit_attr_name, UINT64_MAX);
     if (PyErr_Occurred()) {
         goto error;
     }
-    metrics_policy->report_size_limit = report_size_limit;
+    metrics_policy->report_size_limit = (uint64_t)report_size_limit;
 
     const char *interval_field_name = "interval";
     PyObject *py_interval =
@@ -1275,16 +1276,18 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
 
-    uint32_t interval =
-        convert_pyobject_to_uint32_t(py_interval, interval_field_name);
+    unsigned long long interval = convert_pyobject_to_fixed_width_integer_type(
+        py_interval, interval_field_name, UINT32_MAX);
     if (PyErr_Occurred()) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         interval_field_name, "unsigned 32-bit integer");
         goto error;
     }
-    metrics_policy->interval = interval;
+    metrics_policy->interval = (uint32_t)interval;
 
     const char *uint8_field_names[] = {"latency_columns", "latency_shift"};
+    uint8_t *field_refs[] = {&metrics_policy->latency_columns,
+                             &metrics_policy->latency_shift};
     for (unsigned long i = 0;
          i < sizeof(uint8_field_names) / sizeof(uint8_field_names[0]); i++) {
         PyObject *py_attr_value =
@@ -1292,6 +1295,14 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         if (!py_attr_value) {
             goto error;
         }
+
+        unsigned long long attr_value =
+            convert_pyobject_to_fixed_width_integer_type(
+                py_attr_value, uint8_field_names[i], UINT8_MAX);
+        if (PyErr_Occurred()) {
+            goto error;
+        }
+        field_refs[i] = (uint8_t)attr_value;
     }
 
     return AEROSPIKE_OK;
