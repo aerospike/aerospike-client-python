@@ -911,15 +911,28 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
         }
     }
 
-    // TODO: this is wrong. more than one namespace
-    as_ns_metrics **node_metrics = node->metrics;
-    PyObject *py_node_metrics =
-        create_py_node_metrics_from_as_ns_metrics(error_p, node_metrics[0]);
-    if (!py_node_metrics) {
+    as_ns_metrics **ns_metrics = node->metrics;
+    PyObject *py_metrics = PyList_New(node->metrics_size);
+    if (py_metrics == NULL) {
         goto error;
     }
-    int retval = PyObject_SetAttrString(py_node, "metrics", py_node_metrics);
-    Py_DECREF(py_node_metrics);
+    for (uint8_t i = 0; i < node->metrics_size; i++) {
+        PyObject *py_ns_metrics =
+            create_py_node_metrics_from_as_ns_metrics(error_p, ns_metrics[0]);
+        if (!py_ns_metrics) {
+            Py_DECREF(py_metrics);
+            goto error;
+        }
+
+        int retval = PyList_SetItem(py_metrics, i, py_ns_metrics);
+        if (retval == -1) {
+            Py_DECREF(py_metrics);
+            goto error;
+        }
+    }
+
+    int retval = PyObject_SetAttrString(py_node, "metrics", py_metrics);
+    Py_DECREF(py_metrics);
     if (retval == -1) {
         goto error;
     }
