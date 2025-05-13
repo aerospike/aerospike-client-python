@@ -850,19 +850,27 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
         return NULL;
     }
 
-    PyObject *py_name = PyUnicode_FromString(node->name);
-    PyObject_SetAttrString(py_node, "name", py_name);
-    Py_DECREF(py_name);
-
     // Get address short name (reused code from C client's metrics writer code)
     as_address *address = as_node_get_address(node);
     struct sockaddr *addr = (struct sockaddr *)&address->addr;
     char address_name[AS_IP_ADDRESS_SIZE];
     as_address_short_name(addr, address_name, sizeof(address_name));
 
-    PyObject *py_address = PyUnicode_FromString(address_name);
-    PyObject_SetAttrString(py_node, "address", py_address);
-    Py_DECREF(py_address);
+    const char *str_attr_names[] = {"name", "address"};
+    const char *str_attr_values[] = {&node->name, address_name};
+    for (unsigned long i = 0;
+         i < sizeof(str_attr_names) / sizeof(str_attr_names[0]); i++) {
+        PyObject *py_attr_value = PyUnicode_FromString(str_attr_values[i]);
+        if (py_attr_value == NULL) {
+            goto error;
+        }
+        int retval =
+            PyObject_SetAttrString(py_node, str_attr_names, py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (retval == -1) {
+            goto error;
+        }
+    }
 
     uint16_t port = as_address_port(addr);
     PyObject *py_port = PyLong_FromLong(port);
@@ -897,10 +905,10 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
         }
         int retval = PyObject_SetAttrString(
             py_node, as_node_stats_attr_names[i], py_attr_value);
+        Py_DECREF(py_attr_value);
         if (retval == -1) {
             goto error;
         }
-        Py_DECREF(py_attr_value);
     }
 
     // TODO: this is wrong. more than one namespace
