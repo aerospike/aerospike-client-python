@@ -782,6 +782,38 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
     if (!py_node_metrics) {
         return NULL;
     }
+
+    PyObject *py_ns = PyUnicode_FromString(node_metrics->ns);
+    if (py_ns == NULL) {
+        goto error;
+    }
+    int retval = PyObject_SetAttrString(py_node_metrics, "ns", py_ns);
+    Py_DECREF(py_ns);
+    if (retval == -1) {
+        goto error;
+    }
+
+    const char *uint64_fields[] = {"bytes_in", "bytes_out", "error_count",
+                                   "timeout_count", "key_busy_count"};
+    uint64_t field_vals[] = {node_metrics->bytes_in, node_metrics->bytes_out,
+                             node_metrics->error_count,
+                             node_metrics->timeout_count,
+                             node_metrics->key_busy_count};
+    for (unsigned long i = 0;
+         i < sizeof(uint64_fields) / sizeof(uint64_fields[0]); i++) {
+        PyObject *py_field_val = PyLong_FromUnsignedLongLong(field_vals[i]);
+        if (!py_field_val) {
+            goto error;
+        }
+
+        int retval = PyObject_SetAttrString(py_node_metrics, uint64_fields[i],
+                                            py_field_val);
+        Py_DECREF(py_field_val);
+        if (retval == -1) {
+            goto error;
+        }
+    }
+
     const char *node_metrics_fields[] = {"conn_latency", "write_latency",
                                          "read_latency", "batch_latency",
                                          "query_latency"};
@@ -890,16 +922,16 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
 
     const char *const as_node_stats_attr_names[] = {
         "error_count", "timeout_count", "key_busy_count"};
-    uint64_t *as_node_stats_attr_values[] = {
-        &node_stats.error_count,
-        &node_stats.timeout_count,
-        &node_stats.key_busy_count,
+    uint64_t as_node_stats_attr_values[] = {
+        node_stats.error_count,
+        node_stats.timeout_count,
+        node_stats.key_busy_count,
     };
     for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
                                       sizeof(as_node_stats_attr_values[0]);
          i++) {
         PyObject *py_attr_value =
-            PyLong_FromUnsignedLongLong(*as_node_stats_attr_values[i]);
+            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
         if (!py_attr_value) {
             goto error;
         }
