@@ -26,7 +26,8 @@ static PyObject *AerospikeConfigProvider_new(PyTypeObject *type, PyObject *args,
 
     uint32_t interval;
     if (py_interval) {
-        interval = convert_pyobject_to_uint32_t(py_interval, "interval");
+        interval = (uint32_t)convert_pyobject_to_fixed_width_integer_type(
+            py_interval, "interval", UINT32_MAX);
         if (PyErr_Occurred()) {
             goto error;
         }
