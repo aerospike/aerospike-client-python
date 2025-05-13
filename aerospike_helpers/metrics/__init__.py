@@ -40,11 +40,20 @@ class ConnectionStats:
 
 class NamespaceMetrics:
     """
-    Each type of latency has a list of latency buckets.
+    Namespace metrics.
 
-    Latency bucket counts are cumulative and not reset on each metrics snapshot interval.
+    Each command group has its own histogram (i.e list of latency buckets).
+    Latency histogram counts are cumulative and not reset on each metrics snapshot interval.
 
     Attributes:
+        ns (str): namespace
+        bytes_in (int): Bytes received from the server.
+        bytes_out (int): Bytes sent to the server.
+        error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
+            per command may occur.
+        timeout_count (int): Command timeout count since node was initialized. If the timeout is retryable
+            (ie socket_timeout), multiple timeouts per command may occur.
+        key_busy_count (int): Command key busy error count since node was initialized.
         conn_latency (list[int])
         write_latency (list[int])
         read_latency (list[int])
@@ -62,11 +71,7 @@ class Node:
         address (str): The IP address / host name of the node (not including the port number).
         port (int): Port number of the node's address.
         conns (:py:class:`ConnectionStats`): Synchronous connection stats on this node.
-        error_count (int): Command error count since node was initialized. If the error is retryable,
-            multiple errors per command may occur.
-        timeout_count (int): Command timeout count since node was initialized.
-            If the timeout is retryable (i.e socketTimeout), multiple timeouts per command may occur.
-        metrics (list[:py:class:`NamespaceMetrics`]): Node metrics
+        metrics (list[:py:class:`NamespaceMetrics`]): Node/namespace metrics
     """
     pass
 
