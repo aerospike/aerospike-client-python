@@ -1308,50 +1308,64 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     PyObject *py_labels =
         PyObject_GetAttrString(py_metrics_policy, labels_attr_name);
     if (!py_labels) {
-        goto error;
-    }
-    if (!PyDict_Check(py_labels)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        labels_attr_name, "str");
-        goto error;
-    }
-
-    PyObject *py_label_name, *py_label_value;
-    Py_ssize_t pos = 0;
-    while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
-        const char *label_name =
-            convert_pyobject_to_str(err, py_label_name, "Label name");
-        if (label_name == NULL) {
-            goto while_error;
+        if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+            PyErr_Clear();
         }
-        const char *label_value =
-            convert_pyobject_to_str(err, py_label_value, "Label value");
-        if (label_value == NULL) {
-            goto while_error;
+        else {
+            goto error;
         }
+    }
+    else if (PyDict_Check(py_labels)) {
+        PyObject *py_label_name, *py_label_value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
+            const char *label_name =
+                convert_pyobject_to_str(err, py_label_name, "Label name");
+            if (label_name == NULL) {
+                goto while_error;
+            }
+            const char *label_value =
+                convert_pyobject_to_str(err, py_label_value, "Label value");
+            if (label_value == NULL) {
+                goto while_error;
+            }
 
-        as_metrics_policy_add_label(metrics_policy, label_name, label_value);
-        continue;
+            as_metrics_policy_add_label(metrics_policy, label_name,
+                                        label_value);
+            continue;
 
-    while_error:
+        while_error:
+            Py_DECREF(py_labels);
+            goto error;
+        }
         Py_DECREF(py_labels);
+    }
+    else if (py_labels != Py_None) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        labels_attr_name, "Optional[str]");
         goto error;
     }
-    Py_DECREF(py_labels);
 
     const char *app_id_attr_name = "app_id";
     PyObject *py_app_id =
         PyObject_GetAttrString(py_metrics_policy, app_id_attr_name);
     if (!py_app_id) {
-        goto error;
+        if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+            PyErr_Clear();
+        }
+        else {
+            goto error;
+        }
     }
-    const char *app_id =
-        convert_pyobject_to_str(err, py_app_id, app_id_attr_name);
-    Py_DECREF(py_app_id);
-    if (app_id == NULL) {
-        goto error;
+    else if (py_app_id != Py_None) {
+        const char *app_id =
+            convert_pyobject_to_str(err, py_app_id, app_id_attr_name);
+        Py_DECREF(py_app_id);
+        if (app_id == NULL) {
+            goto error;
+        }
+        as_metrics_policy_set_app_id(metrics_policy, app_id);
     }
-    as_metrics_policy_set_app_id(metrics_policy, app_id);
 
     return 0;
 
