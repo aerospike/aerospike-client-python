@@ -1237,8 +1237,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         // Need to deallocate metrics listeners' udata
         goto error;
     }
-    const char *report_dir =
-        convert_pyobject_to_str(err, py_report_dir, "report_dir");
+    const char *report_dir = convert_pyobject_to_str(err, py_report_dir);
     if (!report_dir) {
         goto error;
     }
@@ -1320,12 +1319,12 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         Py_ssize_t pos = 0;
         while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
             const char *label_name =
-                convert_pyobject_to_str(err, py_label_name, "Label name");
+                convert_pyobject_to_str(err, py_label_name);
             if (label_name == NULL) {
                 goto while_error;
             }
             const char *label_value =
-                convert_pyobject_to_str(err, py_label_value, "Label value");
+                convert_pyobject_to_str(err, py_label_value);
             if (label_value == NULL) {
                 goto while_error;
             }
@@ -1358,8 +1357,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         }
     }
     else if (py_app_id != Py_None) {
-        const char *app_id =
-            convert_pyobject_to_str(err, py_app_id, app_id_attr_name);
+        const char *app_id = convert_pyobject_to_str(err, py_app_id);
         Py_DECREF(py_app_id);
         if (app_id == NULL) {
             goto error;
