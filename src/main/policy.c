@@ -1351,9 +1351,9 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         }
         Py_DECREF(py_labels);
     }
-    else if (py_labels != Py_None) {
+    else {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        labels_attr_name, "Optional[str]");
+                        labels_attr_name, "dict[str, str]");
         goto error;
     }
 
