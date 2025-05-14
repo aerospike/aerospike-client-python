@@ -2958,6 +2958,8 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
+// TODO: There's a helper function in the Python client wrapper code called
+// get_uint32_value, but this can replace it.
 unsigned long long
 convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
                                              unsigned long long max_bound)
