@@ -263,18 +263,18 @@ class TestMetrics:
             (
                 MetricsPolicy(latency_columns=True),
                 "latency_columns",
-                "unsigned 32-bit integer"
+                "unsigned 8-bit integer"
             ),
             (
                 MetricsPolicy(latency_shift=True),
                 "latency_shift",
-                "unsigned 32-bit integer"
+                "unsigned 8-bit integer"
             ),
-            # Pass in an integer larger than allowed for an unsigned 32-bit integer
+            # Pass in an integer larger than allowed for an unsigned 8-bit integer
             (
-                MetricsPolicy(latency_shift=2**32),
+                MetricsPolicy(latency_shift=2**8),
                 "latency_shift",
-                "unsigned 32-bit integer"
+                "unsigned 8-bit integer"
             )
         ]
     )

@@ -1263,6 +1263,8 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         convert_pyobject_to_fixed_width_integer_type(py_report_size_limit,
                                                      UINT64_MAX);
     if (PyErr_Occurred()) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        report_size_limit_attr_name, "unsigned 64-bit integer");
         goto error;
     }
     metrics_policy->report_size_limit = (uint64_t)report_size_limit;
@@ -1300,6 +1302,9 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
             convert_pyobject_to_fixed_width_integer_type(py_attr_value,
                                                          UINT8_MAX);
         if (PyErr_Occurred()) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint8_field_names[i],
+                            "unsigned 8-bit integer");
             goto error;
         }
         *field_refs[i] = (uint8_t)attr_value;
