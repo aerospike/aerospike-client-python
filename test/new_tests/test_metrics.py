@@ -148,7 +148,6 @@ class TestMetrics:
             latency_columns=bucket_count,
             latency_shift=2,
             labels={"a": "b"},
-            # TODO: test code path where app_id is None
             app_id=app_id
         )
 
