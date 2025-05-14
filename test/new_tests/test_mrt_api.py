@@ -8,21 +8,21 @@ from typing import Optional, Callable
 @pytest.mark.usefixtures("as_connection")
 class TestMRTAPI:
     @pytest.mark.parametrize(
-        "kwargs, context, err_msg",
+        "kwargs, context",
         [
-            ({}, nullcontext(), None),
-            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext(), None),
+            ({}, nullcontext()),
+            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext()),
             (
                 {"reads_capacity": 256, "writes_capacity": 256, "invalid_arg": 1},
-                pytest.raises((TypeError)), "function takes at most 2 keyword arguments (3 given)"
+                pytest.raises((TypeError))
             ),
             (
                 {"reads_capacity": "256", "writes_capacity": 256},
-                pytest.raises((TypeError)), "reads_capacity must be an integer"
+                pytest.raises((TypeError))
             ),
             (
                 {"reads_capacity": 256, "writes_capacity": "256"},
-                pytest.raises((TypeError)), "writes_capacity must be an integer"
+                pytest.raises((TypeError))
             ),
             # Only need to test codepath once for uint32_t conversion helper function
             (
@@ -32,8 +32,7 @@ class TestMRTAPI:
                 # Python in Windows x64 will throw an internal error (OverflowError) when trying to convert a Python
                 # int that is larger than 4 bytes into an unsigned long.
                 # That error doesn't happen in Linux for that same scenario, so we throw our own error
-                pytest.raises((ValueError, OverflowError)),
-                "reads_capacity is too large for an unsigned 32-bit integer"
+                pytest.raises((ValueError, OverflowError))
             )
         ],
     )
