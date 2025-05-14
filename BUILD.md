@@ -14,19 +14,19 @@ The client depends on:
 
 - The Python devel package
 - OpenSSL 1.1 >= 1.1.1
+- Libyaml
 - The Aerospike C client
 
-### RedHat, CentOS, Amazon Linux 2023
+### RedHat, Amazon Linux 2023
 
 The following are dependencies for:
 
 - RedHat Enterprise (RHEL) 8 or newer
-- CentOS 7 Linux
 - Related distributions which use the `yum` package manager
 
 ```sh
 sudo yum install openssl-devel
-sudo yum install python-devel # on CentOS 7
+sudo yum install libyaml-devel
 # Possibly needed
 sudo yum install python-setuptools
 ```
@@ -40,7 +40,7 @@ The following are dependencies for:
 - Related distributions which use the `apt` package manager
 
 ```sh
-sudo apt-get install libssl-dev
+sudo apt-get install libssl-dev libyaml-dev
 sudo apt-get install build-essential python-dev
 ```
 
@@ -88,6 +88,7 @@ By default macOS will be missing command line tools.
 The dependencies can be installed through the macOS package manager [Homebrew](http://brew.sh/).
 
     brew install openssl@3
+    brew install libyaml
 
 ### All distros
 
