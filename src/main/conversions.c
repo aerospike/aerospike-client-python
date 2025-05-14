@@ -943,8 +943,8 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     }
 
     as_ns_metrics **ns_metrics = node->metrics;
-    PyObject *py_metrics = PyList_New(node->metrics_size);
-    if (py_metrics == NULL) {
+    PyObject *py_ns_metrics = PyList_New(node->metrics_size);
+    if (py_ns_metrics == NULL) {
         goto error;
     }
     for (uint8_t i = 0; i < node->metrics_size; i++) {
@@ -954,19 +954,19 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
             goto loop_error;
         }
 
-        int retval = PyList_SetItem(py_metrics, i, py_ns_metrics);
+        int retval = PyList_SetItem(py_ns_metrics, i, py_ns_metrics);
         if (retval == -1) {
             goto loop_error;
         }
         continue;
 
     loop_error:
-        Py_DECREF(py_metrics);
+        Py_DECREF(py_ns_metrics);
         goto error;
     }
 
-    int retval = PyObject_SetAttrString(py_node, "metrics", py_metrics);
-    Py_DECREF(py_metrics);
+    int retval = PyObject_SetAttrString(py_node, "metrics", py_ns_metrics);
+    Py_DECREF(py_ns_metrics);
     if (retval == -1) {
         goto error;
     }
