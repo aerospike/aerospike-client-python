@@ -2964,7 +2964,7 @@ convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
                                              unsigned long long max_bound)
 {
     if (!PyLong_Check(pyobject)) {
-        PyErr_Format(PyExc_TypeError, "%o must be an integer", pyobject);
+        PyErr_Format(PyExc_TypeError, "%S must be an integer", pyobject);
         goto error;
     }
     unsigned long long value = PyLong_AsUnsignedLongLong(pyobject);
@@ -2973,7 +2973,7 @@ convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
     }
 
     if (value > max_bound) {
-        PyErr_Format(PyExc_ValueError, "%o exceeds %llu", pyobject, max_bound);
+        PyErr_Format(PyExc_ValueError, "%S exceeds %llu", pyobject, max_bound);
         goto error;
     }
 
@@ -2986,7 +2986,7 @@ error:
 const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj)
 {
     if (!PyUnicode_Check(py_obj)) {
-        PyErr_Format(PyExc_TypeError, "%o is not a Python unicode object",
+        PyErr_Format(PyExc_TypeError, "%S is not a Python unicode object",
                      py_obj);
         goto error;
     }
