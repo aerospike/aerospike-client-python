@@ -140,7 +140,8 @@ class TestMetrics:
             interval=2,
             latency_columns=bucket_count,
             latency_shift=2,
-            labels={"a": "b"}
+            labels={"a": "b"},
+            app_id="application"
         )
 
         self.as_connection.enable_metrics(policy=policy)
