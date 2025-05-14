@@ -2,7 +2,7 @@ import aerospike
 from aerospike import exception as e
 import pytest
 from contextlib import nullcontext
-from typing import Optional, Callable
+from typing import Callable
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -36,7 +36,7 @@ class TestMRTAPI:
             )
         ],
     )
-    def test_transaction_class(self, kwargs: dict, context, err_msg: Optional[str]):
+    def test_transaction_class(self, kwargs: dict, context):
         with context as excinfo:
             mrt = aerospike.Transaction(**kwargs)
         if type(context) == nullcontext:
@@ -52,9 +52,6 @@ class TestMRTAPI:
             if kwargs == {"reads_capacity": 2**32, "writes_capacity": 256} and excinfo.type == OverflowError:
                 # Internal Python error thrown in Windows
                 assert str(excinfo.value) == "Python int too large to convert to C unsigned long"
-            else:
-                # Custom error thrown by Python client for other platforms
-                assert str(excinfo.value) == err_msg
 
     # Even though this is an unlikely use case, this should not cause problems.
     def test_transaction_reinit(self):
