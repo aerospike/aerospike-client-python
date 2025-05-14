@@ -938,7 +938,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             int retval = set_as_metrics_policy_using_pyobject(
                 &constructor_err, py_obj_metrics_policy,
                 &(config.policies.metrics));
-            if (retval == -1) {
+            if (retval != AEROSPIKE_OK) {
                 if (constructor_err.code != AEROSPIKE_OK) {
                     goto RAISE_EXCEPTION_WITH_AS_ERROR;
                 }
