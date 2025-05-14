@@ -254,4 +254,6 @@ PyObject *create_class_instance_from_module(as_error *error_p,
 unsigned long long
 convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
                                              unsigned long long max_bound);
+
+// Returns NULL on error.
 const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj);
