@@ -1259,8 +1259,8 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     }
 
     unsigned long long report_size_limit =
-        convert_pyobject_to_fixed_width_integer_type(
-            py_report_size_limit, report_size_limit_attr_name, UINT64_MAX);
+        convert_pyobject_to_fixed_width_integer_type(py_report_size_limit,
+                                                     UINT64_MAX);
     if (PyErr_Occurred()) {
         goto error;
     }
@@ -1275,8 +1275,8 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
 
-    unsigned long long interval = convert_pyobject_to_fixed_width_integer_type(
-        py_interval, interval_field_name, UINT32_MAX);
+    unsigned long long interval =
+        convert_pyobject_to_fixed_width_integer_type(py_interval, UINT32_MAX);
     if (PyErr_Occurred()) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         interval_field_name, "unsigned 32-bit integer");
@@ -1296,8 +1296,8 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         }
 
         unsigned long long attr_value =
-            convert_pyobject_to_fixed_width_integer_type(
-                py_attr_value, uint8_field_names[i], UINT8_MAX);
+            convert_pyobject_to_fixed_width_integer_type(py_attr_value,
+                                                         UINT8_MAX);
         if (PyErr_Occurred()) {
             goto error;
         }
