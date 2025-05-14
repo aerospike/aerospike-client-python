@@ -176,28 +176,30 @@ class TestMetrics:
                 assert type(node.conns.opened) == int
                 assert type(node.conns.closed) == int
                 # Check NodeMetrics
-                assert type(node.metrics) == NamespaceMetrics
+                assert type(node.metrics) == list
                 ns_metrics = node.metrics
-                # TODO: possible to be NULL?
-                # TODO: need read only type stubs for these attrs
-                assert type(ns_metrics.ns) == str
-                assert type(ns_metrics.bytes_in) == int
-                assert type(ns_metrics.bytes_out) == int
-                assert type(ns_metrics.error_count) == int
-                assert type(ns_metrics.timeout_count) == int
-                assert type(ns_metrics.key_busy_count) == int
-                latency_buckets = [
-                    ns_metrics.conn_latency,
-                    ns_metrics.write_latency,
-                    ns_metrics.read_latency,
-                    ns_metrics.batch_latency,
-                    ns_metrics.query_latency
-                ]
-                for buckets in latency_buckets:
-                    assert type(buckets) == list
-                    assert len(buckets) == bucket_count
-                    for bucket in buckets:
-                        assert type(bucket) == int
+                for ns_metric in ns_metrics:
+                    assert type(ns_metric) == NamespaceMetrics
+                    # TODO: possible to be NULL?
+                    # TODO: need read only type stubs for these attrs
+                    assert type(ns_metric.ns) == str
+                    assert type(ns_metric.bytes_in) == int
+                    assert type(ns_metric.bytes_out) == int
+                    assert type(ns_metric.error_count) == int
+                    assert type(ns_metric.timeout_count) == int
+                    assert type(ns_metric.key_busy_count) == int
+                    latency_buckets = [
+                        ns_metric.conn_latency,
+                        ns_metric.write_latency,
+                        ns_metric.read_latency,
+                        ns_metric.batch_latency,
+                        ns_metric.query_latency
+                    ]
+                    for buckets in latency_buckets:
+                        assert type(buckets) == list
+                        assert len(buckets) == bucket_count
+                        for bucket in buckets:
+                            assert type(bucket) == int
 
     # Unable to test the case where an exception value could not be retrieved
     # Having the callback raise an Exception without a value does not trigger this
