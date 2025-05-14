@@ -141,6 +141,7 @@ class TestMetrics:
             latency_columns=bucket_count,
             latency_shift=2,
             labels={"a": "b"},
+            # TODO: test code path where app_id is None
             app_id="application"
         )
 
@@ -174,17 +175,23 @@ class TestMetrics:
                 assert type(node.conns.in_pool) == int
                 assert type(node.conns.opened) == int
                 assert type(node.conns.closed) == int
-                assert type(node.error_count) == int
-                assert type(node.timeout_count) == int
                 # Check NodeMetrics
                 assert type(node.metrics) == NamespaceMetrics
-                metrics = node.metrics
+                ns_metrics = node.metrics
+                # TODO: possible to be NULL?
+                # TODO: need read only type stubs for these attrs
+                assert type(ns_metrics.ns) == str
+                assert type(ns_metrics.bytes_in) == int
+                assert type(ns_metrics.bytes_out) == int
+                assert type(ns_metrics.error_count) == int
+                assert type(ns_metrics.timeout_count) == int
+                assert type(ns_metrics.key_busy_count) == int
                 latency_buckets = [
-                    metrics.conn_latency,
-                    metrics.write_latency,
-                    metrics.read_latency,
-                    metrics.batch_latency,
-                    metrics.query_latency
+                    ns_metrics.conn_latency,
+                    ns_metrics.write_latency,
+                    ns_metrics.read_latency,
+                    ns_metrics.batch_latency,
+                    ns_metrics.query_latency
                 ]
                 for buckets in latency_buckets:
                     assert type(buckets) == list
