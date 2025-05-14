@@ -775,7 +775,7 @@ error:
 // Creates and returns a Python client NamespaceMetrics object from a C client's as_ns_metrics struct
 // If an error occurs here, return NULL
 PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
-                                                  as_ns_metrics *node_metrics)
+                                                  as_ns_metrics *ns_metrics)
 {
     PyObject *py_node_metrics = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "NamespaceMetrics", NULL);
@@ -783,7 +783,7 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
         return NULL;
     }
 
-    PyObject *py_ns = PyUnicode_FromString(node_metrics->ns);
+    PyObject *py_ns = PyUnicode_FromString(ns_metrics->ns);
     if (py_ns == NULL) {
         goto error;
     }
@@ -795,10 +795,9 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
 
     const char *uint64_fields[] = {"bytes_in", "bytes_out", "error_count",
                                    "timeout_count", "key_busy_count"};
-    uint64_t field_vals[] = {node_metrics->bytes_in, node_metrics->bytes_out,
-                             node_metrics->error_count,
-                             node_metrics->timeout_count,
-                             node_metrics->key_busy_count};
+    uint64_t field_vals[] = {ns_metrics->bytes_in, ns_metrics->bytes_out,
+                             ns_metrics->error_count, ns_metrics->timeout_count,
+                             ns_metrics->key_busy_count};
     for (unsigned long i = 0;
          i < sizeof(uint64_fields) / sizeof(uint64_fields[0]); i++) {
         PyObject *py_field_val = PyLong_FromUnsignedLongLong(field_vals[i]);
@@ -827,7 +826,7 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
                             node_metrics_fields[i]);
             goto error;
         }
-        as_latency *buckets = node_metrics->latency[i];
+        as_latency *buckets = ns_metrics->latency[i];
         uint32_t bucket_max = buckets->size;
         // Append each bucket to a list of buckets
         for (uint32_t j = 0; j < bucket_max; j++) {
