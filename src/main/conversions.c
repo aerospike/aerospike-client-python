@@ -952,15 +952,18 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
         PyObject *py_ns_metrics =
             create_py_ns_metrics_from_as_ns_metrics(error_p, ns_metrics[0]);
         if (!py_ns_metrics) {
-            Py_DECREF(py_metrics);
-            goto error;
+            goto loop_error;
         }
 
         int retval = PyList_SetItem(py_metrics, i, py_ns_metrics);
         if (retval == -1) {
-            Py_DECREF(py_metrics);
-            goto error;
+            goto loop_error;
         }
+        continue;
+
+    loop_error:
+        Py_DECREF(py_metrics);
+        goto error;
     }
 
     int retval = PyObject_SetAttrString(py_node, "metrics", py_metrics);
