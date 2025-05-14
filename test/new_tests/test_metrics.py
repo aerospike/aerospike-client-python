@@ -122,7 +122,14 @@ class TestMetrics:
         metrics_log_filenames = glob.glob("./metrics-*.log")
         assert len(metrics_log_filenames) > 0
 
-    def test_setting_metrics_policy_custom_settings(self):
+    @pytest.mark.parametrize(
+        "app_id",
+        [
+            "application",
+            None
+        ]
+    )
+    def test_setting_metrics_policy_custom_settings(self, app_id):
         self.metrics_log_folder = "./metrics-logs"
 
         listeners = MetricsListeners(
@@ -142,7 +149,7 @@ class TestMetrics:
             latency_shift=2,
             labels={"a": "b"},
             # TODO: test code path where app_id is None
-            app_id="application"
+            app_id=app_id
         )
 
         self.as_connection.enable_metrics(policy=policy)
@@ -275,7 +282,23 @@ class TestMetrics:
                 MetricsPolicy(latency_shift=2**8),
                 "latency_shift",
                 "unsigned 8-bit integer"
-            )
+            ),
+            # Invalid labels
+            (
+                MetricsPolicy(labels={1: "a"}),
+                "labels",
+                "dict[str, str]"
+            ),
+            (
+                MetricsPolicy(labels={"a": 1}),
+                "labels",
+                "dict[str, str]"
+            ),
+            (
+                MetricsPolicy(labels=[]),
+                "labels",
+                "dict[str, str]"
+            ),
         ]
     )
     def test_metrics_policy_invalid_args(self, policy, field_name, expected_field_type):
