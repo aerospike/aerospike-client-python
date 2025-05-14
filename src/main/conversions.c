@@ -954,14 +954,14 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
             goto loop_error;
         }
 
-        int retval = PyList_SetItem(py_ns_metrics, i, py_ns_metrics);
+        int retval = PyList_SetItem(py_ns_metrics_list, i, py_ns_metrics);
         if (retval == -1) {
             goto loop_error;
         }
         continue;
 
     loop_error:
-        Py_DECREF(py_ns_metrics);
+        Py_DECREF(py_ns_metrics_list);
         goto error;
     }
 
