@@ -52,7 +52,7 @@ class NamespaceMetrics:
         error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
             per command may occur.
         timeout_count (int): Command timeout count since node was initialized. If the timeout is retryable
-            (ie socket_timeout), multiple timeouts per command may occur.
+            (i.e socket_timeout), multiple timeouts per command may occur.
         key_busy_count (int): Command key busy error count since node was initialized.
         conn_latency (list[int])
         write_latency (list[int])
