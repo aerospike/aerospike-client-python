@@ -17,18 +17,16 @@ The client depends on:
 - Libyaml
 - The Aerospike C client
 
-### RedHat, CentOS, Amazon Linux 2023
+### RedHat, Amazon Linux 2023
 
 The following are dependencies for:
 
 - RedHat Enterprise (RHEL) 8 or newer
-- CentOS 7 Linux
 - Related distributions which use the `yum` package manager
 
 ```sh
 sudo yum install openssl-devel
 sudo yum install libyaml-devel
-sudo yum install python-devel # on CentOS 7
 # Possibly needed
 sudo yum install python-setuptools
 ```
