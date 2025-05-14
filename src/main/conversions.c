@@ -777,9 +777,9 @@ error:
 PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
                                                   as_ns_metrics *ns_metrics)
 {
-    PyObject *py_node_metrics = create_class_instance_from_module(
+    PyObject *py_ns_metrics = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "NamespaceMetrics", NULL);
-    if (!py_node_metrics) {
+    if (!py_ns_metrics) {
         return NULL;
     }
 
@@ -787,7 +787,7 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
     if (py_ns == NULL) {
         goto error;
     }
-    int retval = PyObject_SetAttrString(py_node_metrics, "ns", py_ns);
+    int retval = PyObject_SetAttrString(py_ns_metrics, "ns", py_ns);
     Py_DECREF(py_ns);
     if (retval == -1) {
         goto error;
@@ -805,7 +805,7 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
             goto error;
         }
 
-        int retval = PyObject_SetAttrString(py_node_metrics, uint64_fields[i],
+        int retval = PyObject_SetAttrString(py_ns_metrics, uint64_fields[i],
                                             py_field_val);
         Py_DECREF(py_field_val);
         if (retval == -1) {
@@ -852,7 +852,7 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
             }
         }
 
-        int result = PyObject_SetAttrString(py_node_metrics,
+        int result = PyObject_SetAttrString(py_ns_metrics,
                                             node_metrics_fields[i], py_buckets);
         Py_DECREF(py_buckets);
         if (result == -1) {
@@ -864,10 +864,10 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
         }
     }
 
-    return py_node_metrics;
+    return py_ns_metrics;
 
 error:
-    Py_DECREF(py_node_metrics);
+    Py_DECREF(py_ns_metrics);
     return NULL;
 }
 
