@@ -2672,7 +2672,7 @@ as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err,
 This fetches a string from a Python String like. If it is a unicode in Python27, we need to convert it
 to a bytes like object first, and keep track of the intermediate object for later deletion.
 */
-// TODO: replace
+// TODO: replace with convert_pyobject_to_str
 as_status string_and_pyuni_from_pystring(PyObject *py_string,
                                          PyObject **pyuni_r, char **c_str_ptr,
                                          as_error *err)
@@ -2983,12 +2983,11 @@ error:
     return -1;
 }
 
-const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj,
-                                    const char *pyobj_name)
+const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj)
 {
     if (!PyUnicode_Check(py_obj)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM,
-                        "%s is not a Python unicode object", pyobj_name);
+        PyErr_Format(PyExc_TypeError, "%o is not a Python unicode object",
+                     py_obj);
         goto error;
     }
 
