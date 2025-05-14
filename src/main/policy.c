@@ -1327,11 +1327,17 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
             const char *label_name =
                 convert_pyobject_to_str(err, py_label_name);
             if (label_name == NULL) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_ATTR_TYPE_ERROR_MSG, labels_attr_name,
+                                "dict[str, str]");
                 goto while_error;
             }
             const char *label_value =
                 convert_pyobject_to_str(err, py_label_value);
             if (label_value == NULL) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_ATTR_TYPE_ERROR_MSG, labels_attr_name,
+                                "dict[str, str]");
                 goto while_error;
             }
 
