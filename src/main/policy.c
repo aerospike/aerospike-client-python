@@ -1295,6 +1295,8 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         PyObject *py_attr_value =
             PyObject_GetAttrString(py_metrics_policy, uint8_field_names[i]);
         if (!py_attr_value) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                            uint8_field_names[i]);
             goto error;
         }
 
@@ -1314,6 +1316,8 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     PyObject *py_labels =
         PyObject_GetAttrString(py_metrics_policy, labels_attr_name);
     if (!py_labels) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        labels_attr_name);
         goto error;
     }
     else if (PyDict_Check(py_labels)) {
@@ -1355,6 +1359,8 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
             PyErr_Clear();
         }
         else {
+            as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                            app_id_attr_name);
             goto error;
         }
     }
@@ -1362,6 +1368,9 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         const char *app_id = convert_pyobject_to_str(err, py_app_id);
         Py_DECREF(py_app_id);
         if (app_id == NULL) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            INVALID_ATTR_TYPE_ERROR_MSG, app_id_attr_name,
+                            "str");
             goto error;
         }
         as_metrics_policy_set_app_id(metrics_policy, app_id);
