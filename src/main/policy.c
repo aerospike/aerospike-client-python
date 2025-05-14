@@ -1307,12 +1307,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     PyObject *py_labels =
         PyObject_GetAttrString(py_metrics_policy, labels_attr_name);
     if (!py_labels) {
-        if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-            PyErr_Clear();
-        }
-        else {
-            goto error;
-        }
+        goto error;
     }
     else if (PyDict_Check(py_labels)) {
         PyObject *py_label_name, *py_label_value;
