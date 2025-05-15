@@ -55,6 +55,7 @@ class MyMetricsListeners:
 
 
 class TestMetrics:
+    # Shared between some test cases
     listeners = MetricsListeners(
         enable_listener=MyMetricsListeners.enable,
         disable_listener=MyMetricsListeners.disable,
@@ -117,7 +118,6 @@ class TestMetrics:
             self.as_connection.enable_metrics(1)
         assert excinfo.value.msg == "policy parameter must be an aerospike_helpers.MetricsPolicy type"
 
-# Shared between some test cases
     def test_metrics_writer(self):
         policy = MetricsPolicy(
             interval=1
