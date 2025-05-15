@@ -55,6 +55,13 @@ class MyMetricsListeners:
 
 
 class TestMetrics:
+    listeners = MetricsListeners(
+        enable_listener=MyMetricsListeners.enable,
+        disable_listener=MyMetricsListeners.disable,
+        node_close_listener=MyMetricsListeners.node_close,
+        snapshot_listener=MyMetricsListeners.snapshot
+    )
+
     @pytest.fixture(autouse=True)
     def setup(self, as_connection, request):
         # Clear results from previous tests
@@ -110,6 +117,7 @@ class TestMetrics:
             self.as_connection.enable_metrics(1)
         assert excinfo.value.msg == "policy parameter must be an aerospike_helpers.MetricsPolicy type"
 
+# Shared between some test cases
     def test_metrics_writer(self):
         policy = MetricsPolicy(
             interval=1
@@ -132,16 +140,10 @@ class TestMetrics:
     def test_setting_metrics_policy_custom_settings(self, app_id):
         self.metrics_log_folder = "./metrics-logs"
 
-        listeners = MetricsListeners(
-            enable_listener=MyMetricsListeners.enable,
-            disable_listener=MyMetricsListeners.disable,
-            node_close_listener=MyMetricsListeners.node_close,
-            snapshot_listener=MyMetricsListeners.snapshot
-        )
         # Save bucket count for testing later
         bucket_count = 5
         policy = MetricsPolicy(
-            metrics_listeners=listeners,
+            metrics_listeners=self.listeners,
             report_dir=self.metrics_log_folder,
             report_size_limit=1000,
             interval=2,
@@ -311,7 +313,12 @@ class TestMetrics:
         assert excinfo.value.msg == f"MetricsPolicy.{field_name} must be a {expected_field_type} type"
 
     def test_metrics_policy_report_dir_too_long(self):
-        policy = MetricsPolicy(report_dir=str('.' * 257))
+        policy = MetricsPolicy(
+            # We are testing that listeners is freed properly on error
+            # This is for code coverage purposes
+            metrics_listeners=self.listeners,
+            report_dir=str('.' * 257),
+        )
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.enable_metrics(policy=policy)
         assert excinfo.value.msg == "MetricsPolicy.report_dir must be less than 256 chars"
