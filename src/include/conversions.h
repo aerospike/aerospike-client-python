@@ -232,6 +232,7 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
 PyObject *create_py_node_from_as_node(as_error *error_p,
                                       struct as_node_s *node);
 
+// obj must be non-NULL
 // Checks if pyobject is an instance of a class type defined in aerospike_helpers or one of its submodules
 // If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
 // If is_subclass_instance is true, we expect the instance's type to directly inherit from aerospike_helpers.<expected_submodule_name>.<expected_type_name>
@@ -245,3 +246,8 @@ PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *module_name,
                                             const char *class_name,
                                             PyObject *py_arg);
+
+// Error indicator must always be checked after this call
+// Constructor parameter name needed for constructing error message
+uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
+                                      const char *param_name_of_pyobj);

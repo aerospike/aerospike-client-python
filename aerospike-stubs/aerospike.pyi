@@ -324,6 +324,12 @@ class Transaction:
     state: int
     timeout: int
 
+@final
+class ConfigProvider:
+    def __new__(cls, path: str, interval: int = 60) -> ConfigProvider: ...
+    path: str
+    interval: int
+
 class Client:
     def __init__(self, *args, **kwargs) -> None: ...
     def admin_change_password(self, username: str, password: str, policy: dict = ...) -> None: ...
