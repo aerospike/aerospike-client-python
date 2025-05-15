@@ -1365,16 +1365,19 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
                         app_id_attr_name);
         goto error;
     }
-    else if (py_app_id != Py_None) {
-        const char *app_id = convert_pyobject_to_str(err, py_app_id);
-        Py_DECREF(py_app_id);
-        if (app_id == NULL) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, app_id_attr_name,
-                            "Optional[str]");
-            goto error;
+    else {
+        if (py_app_id != Py_None) {
+            const char *app_id = convert_pyobject_to_str(err, py_app_id);
+            if (app_id == NULL) {
+                Py_DECREF(py_app_id);
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_ATTR_TYPE_ERROR_MSG, app_id_attr_name,
+                                "Optional[str]");
+                goto error;
+            }
+            as_metrics_policy_set_app_id(metrics_policy, app_id);
         }
-        as_metrics_policy_set_app_id(metrics_policy, app_id);
+        Py_DECREF(py_app_id);
     }
 
     return 0;
