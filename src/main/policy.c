@@ -1371,7 +1371,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         if (app_id == NULL) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             INVALID_ATTR_TYPE_ERROR_MSG, app_id_attr_name,
-                            "str");
+                            "Optional[str]");
             goto error;
         }
         as_metrics_policy_set_app_id(metrics_policy, app_id);
