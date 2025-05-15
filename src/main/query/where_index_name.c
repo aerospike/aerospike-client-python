@@ -308,19 +308,25 @@ CLEANUP:
     return self;
 }
 
-AerospikeQuery *AerospikeQuery_Where_Index_Name(AerospikeQuery *self, PyObject *args, PyObject *kwds)
+AerospikeQuery *AerospikeQuery_Where_Index_Name(AerospikeQuery *self, PyObject *args)
 {
     as_error err;
 
     PyObject *py_pred = NULL;
     PyObject *py_index_name = NULL;
 
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"predicate", "index_name", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(
-            args, kwds, "OO:where_index_name", kwlist, &py_pred, &py_index_name) == false) {
+    if (PyArg_ParseTuple(
+            args, "OO:where_index_name", &py_pred, &py_index_name) == false) {
+        return NULL;
+    }
+
+
+    // Handle the case where index_name is not provided
+    if (py_index_name == NULL) {
+        // Set a default value or handle the absence of index_name
+        PyErr_SetString(PyExc_ValueError, "index_name is required");
         return NULL;
     }
 

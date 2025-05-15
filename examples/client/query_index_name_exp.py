@@ -140,6 +140,9 @@ try:
         namespace = options.namespace if options.namespace and options.namespace != 'None' else None
         set = options.set if options.set and options.set != 'None' else None
 
+        # example command: python examples/client/query_index_name_exp.py -h <> -p <> -n test -s demo "idx_exp_int = 1"
+        # TODO: p.equals, p.between would not need bin name any more
+
         q = None
 
         if len(args) == 1:

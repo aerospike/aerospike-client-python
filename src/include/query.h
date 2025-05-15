@@ -24,6 +24,20 @@
 #include "types.h"
 #include "client.h"
 
+/**************************************************************
+ * Helper functions
+ **************************************************************         */
+
+static int64_t pyobject_to_int64(PyObject *py_obj)
+{
+    if (PyLong_Check(py_obj)) {
+        return PyLong_AsLong(py_obj);
+    }
+    else {
+        return 0;
+    }
+}
+
 /*******************************************************************************
  * FUNCTIONS
  ******************************************************************************/
@@ -83,7 +97,7 @@ AerospikeQuery *AerospikeQuery_Where_Exp(AerospikeQuery *self, PyObject *args, P
  * Add a where predicate to the query with index name.
  *
  */
-AerospikeQuery *AerospikeQuery_Where_Index_Name(AerospikeQuery *self, PyObject *args, PyObject *kwds);
+AerospikeQuery *AerospikeQuery_Where_Index_Name(AerospikeQuery *self, PyObject *args);
 
 /**
  * Apply the specified udf on the results of the query.

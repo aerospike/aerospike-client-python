@@ -31,16 +31,6 @@
 #undef TRACE
 #define TRACE()
 
-int64_t pyobject_to_int64(PyObject *py_obj)
-{
-    if (PyLong_Check(py_obj)) {
-        return PyLong_AsLong(py_obj);
-    }
-    else {
-        return 0;
-    }
-}
-
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,

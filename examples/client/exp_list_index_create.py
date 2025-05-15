@@ -21,6 +21,7 @@ from __future__ import print_function
 import aerospike
 import sys
 
+from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
 
 from optparse import OptionParser
@@ -123,8 +124,27 @@ try:
         client.put(key, bins)
 
         expr = exp.ListBin("mylist").compile()
-        
+
         client.index_expression_create(namespace, set, bin, aerospike.INDEX_NUMERIC, aerospike.INDEX_TYPE_LIST, index_name, expr, policy)
+
+        q = client.query(namespace, set)
+        q.where_exp(expr, p.contains(bin, aerospike.INDEX_TYPE_LIST, 1), client)
+
+        results = []
+
+        # callback to be called for each record read
+        def callback(input_tuple):
+            (key, meta, rec) = input_tuple
+            results.append((key, meta, rec))
+            print(rec)
+
+        q.foreach(callback)
+
+        print("---")
+        if len(results) == 1:
+            print("OK, 1 result found.")
+        else:
+            print("OK, %d results found." % len(results))
 
     except Exception as e:
         print("error: {0}".format(e), file=sys.stderr)

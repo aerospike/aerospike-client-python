@@ -154,14 +154,6 @@ try:
                 # If predicate is provided, then perform a query
                 q = client.query(namespace, set)
 
-
-                print("####### w.group(1)", w.group(1))
-                print("####### w.group(2)", w.group(2))                
-                print("####### w.group(3)", w.group(3))
-                print("####### w.group(4)", w.group(4))
-                print("####### w.group(5)", w.group(5))
-                print("####### w.group(6)", w.group(6))
-
                 if w.group(2):
                     b = w.group(1)
                     v = w.group(2)
