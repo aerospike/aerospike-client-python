@@ -46,12 +46,12 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     else {
         // Set a transaction-level metrics policy
         as_metrics_policy_init(&metrics_policy);
+        metrics_policy_ref = &metrics_policy;
         int retval = set_as_metrics_policy_using_pyobject(
             &err, py_metrics_policy, &metrics_policy);
         if (retval != 0) {
             goto CLEANUP_ON_ERROR;
         }
-        metrics_policy_ref = &metrics_policy;
     }
 
     // 2 scenarios:
