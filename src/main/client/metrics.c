@@ -80,7 +80,6 @@ CLEANUP_ON_ERROR:
         // This means we initialized metrics_policy earlier
         as_metrics_policy_destroy(metrics_policy_ref);
     }
-RAISE_EXCEPTION_USING_AS_ERROR:
     raise_exception(&err);
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     return NULL;
