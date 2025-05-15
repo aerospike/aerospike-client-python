@@ -1190,6 +1190,23 @@ class TestCTXOperations(object):
         assert res[self.nested_list_bin] == expected
 
     @pytest.mark.parametrize(
+        "values, return_type, inverted",
+        [
+            ([[1, 2, 3], "numbers"], aerospike.LIST_RETURN_RANK, False),
+        ],
+    )
+    def test_list_get_by_value_invalid_ctx(self, values, return_type, inverted):
+        """
+        Invoke list_get_by_value_list() with invalid ctx.
+        """
+        ctx = ()
+
+        ops = [list_operations.list_get_by_value_list(self.nested_list_bin, values, return_type, inverted, ctx)]
+
+        with pytest.raises(e.ClientError):
+            self.as_connection.operate(self.test_key, ops)
+
+    @pytest.mark.parametrize(
         "values, return_type, inverted, list_indexes, expected",
         [
             ([1], aerospike.LIST_RETURN_VALUE, False, [2], e.OpNotApplicable),
