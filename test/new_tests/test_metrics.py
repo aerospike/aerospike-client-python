@@ -312,7 +312,8 @@ class TestMetrics:
 
     def test_metrics_policy_report_dir_too_long(self):
         policy = MetricsPolicy(
-            # We are testing that listeners is freed properly on error
+            # We are testing that the Python client's udata for aerospike_enable_metrics() is freed properly on error
+            # because we never end up calling aerospike_enable_metrics()
             # This is for code coverage purposes
             metrics_listeners=self.listeners,
             report_dir=str('.' * 257),
