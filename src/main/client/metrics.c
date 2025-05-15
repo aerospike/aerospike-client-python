@@ -44,18 +44,19 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
         metrics_policy_ref = NULL;
     }
     else {
+        // Set a transaction-level metrics policy
         as_metrics_policy_init(&metrics_policy);
         int retval = set_as_metrics_policy_using_pyobject(
             &err, py_metrics_policy, &metrics_policy);
         if (retval != 0) {
-            goto RAISE_EXCEPTION_USING_AS_ERROR;
+            goto CLEANUP_ON_ERROR;
         }
         metrics_policy_ref = &metrics_policy;
     }
 
     // 2 scenarios:
-    // 1. If the user does not pass their own MetricsListeners object to client.enable_metrics(), udata is NULL
-    // 2. Otherwise, udata is non-NULL and set to heap-allocated PyListenerData
+    // 1. If the user passes their own MetricsPolicy and MetricsListeners object to client.enable_metrics(), udata is NOT NULL and set to heap-allocated PyListenerData
+    // 2. Otherwise, udata is NULL.
     bool free_udata_as_py_listener_data =
         metrics_policy_ref && metrics_policy.metrics_listeners.udata != NULL;
 
@@ -64,21 +65,21 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
     if (err.code != AEROSPIKE_OK) {
-        // In the above scenario #1, when udata is NULL before aerospike_enable_metrics() is called:
-        // It is possible for aerospike_enable_metrics() -> as_cluster_enable_metrics() -> as_metrics_writer_create()
-        // to fail before it assigns a heap allocated value to metrics_policy.metrics_listeners.udata while setting up
-        // the metrics writer.
-        // In that case, we don't want to free udata where udata is NULL
         if (free_udata_as_py_listener_data) {
             free_py_listener_data(
                 (PyListenerData *)metrics_policy.metrics_listeners.udata);
         }
-        goto RAISE_EXCEPTION_USING_AS_ERROR;
+        goto CLEANUP_ON_ERROR;
     }
 
     Py_INCREF(Py_None);
     return Py_None;
 
+CLEANUP_ON_ERROR:
+    if (metrics_policy_ref) {
+        // This means we initialized metrics_policy earlier
+        as_metrics_policy_destroy(metrics_policy_ref);
+    }
 RAISE_EXCEPTION_USING_AS_ERROR:
     raise_exception(&err);
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
