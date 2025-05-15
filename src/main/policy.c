@@ -1361,14 +1361,9 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     PyObject *py_app_id =
         PyObject_GetAttrString(py_metrics_policy, app_id_attr_name);
     if (!py_app_id) {
-        if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
-            PyErr_Clear();
-        }
-        else {
-            as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                            app_id_attr_name);
-            goto error;
-        }
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        app_id_attr_name);
+        goto error;
     }
     else if (py_app_id != Py_None) {
         const char *app_id = convert_pyobject_to_str(err, py_app_id);
