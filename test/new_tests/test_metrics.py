@@ -188,8 +188,6 @@ class TestMetrics:
                 ns_metrics = node.metrics
                 for ns_metric in ns_metrics:
                     assert type(ns_metric) == NamespaceMetrics
-                    # TODO: possible to be NULL?
-                    # TODO: need read only type stubs for these attrs
                     assert type(ns_metric.ns) == str
                     assert type(ns_metric.bytes_in) == int
                     assert type(ns_metric.bytes_out) == int
