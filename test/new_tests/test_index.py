@@ -245,11 +245,14 @@ class TestIndex(object):
         ns_name = "a" * 50
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises((e.InvalidRequest, e.NamespaceNotFound)) as err_info:
             self.as_connection.index_string_create(ns_name, "demo", "name", "name_index", policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 2):
+            assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
+        else:
+            assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
 
     def test_create_string_index_with_incorrect_namespace(self):
         """

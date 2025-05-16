@@ -64,7 +64,6 @@ class Unknown(_BaseExpr):
     :class:`~aerospike.exception.OpNotApplicable`. These failures can be ignored with the policy flags
     :class:`aerospike.EXP_READ_EVAL_NO_FAIL` for read expressions and
     :class:`aerospike.EXP_WRITE_EVAL_NO_FAIL` for write expressions.
-    This would then allow subsequent operations in the transaction to proceed.
 
     This expression is only useful from a
     :class:`~aerospike_helpers.expressions.base.Cond` conditional expression within
@@ -301,8 +300,8 @@ class BlobBin(_BaseExpr):
 
 
 class GeoBin(_BaseExpr):
-    """Create an expression that returns a bin as a geojson. Returns the unknown-value
-    if the bin is not a geojson.
+    """Create an expression that returns a bin as a GeoJSON. Returns the unknown-value
+    if the bin is not a GeoJSON.
     """
 
     _op = _ExprOp.BIN
@@ -312,7 +311,7 @@ class GeoBin(_BaseExpr):
         """Args:
             bin (str): Bin name.
 
-        :return: (geojson bin)
+        :return: (GeoJSON bin)
 
         Example::
 

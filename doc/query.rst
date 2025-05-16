@@ -467,20 +467,38 @@ Policies
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
+            | This compression feature requires the Enterprise Edition Server.
+            |
             | Default: ``False``
         * **deserialize** :class:`bool`
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
             |
             | Default: ``True``
-        * **short_query** :class:`bool`
-            | Is query expected to return less than 100 records.
-            | If True, the server will optimize the query for a small record set.
-            | This field is ignored for aggregation queries, background queries
-            | and server versions less than 6.0.0.
+        * **expected_duration**
+            | Expected query duration. The server treats the query in different ways depending on the expected duration.
+            | This field is ignored for aggregation queries, background queries and server versions < 6.0.
             |
-            | Mututally exclusive with records_per_second
-            | Default: ``False``
+            | See :ref:`query_duration_constants` for possible values.
+            |
+            | Default: :data:`aerospike.QUERY_DURATION_LONG`
+        * **short_query** :class:`bool`
+            **Deprecated**: Use ``"expected_duration"`` instead.
+
+            For backwards compatibility: If ``"short_query"`` is true, the query is treated as a short query and
+            ``"expected_duration"`` is ignored. If ``"short_query"`` is false, ``"expected_duration"`` is used
+            and defaults to :data:`aerospike.QUERY_DURATION_LONG`.
+
+            Is query expected to return less than 100 records.
+
+            If True, the server will optimize the query for a small record set.
+
+            This field is ignored for aggregation queries, background queries
+            and server versions less than 6.0.0.
+
+            Mutually exclusive with records_per_second
+
+            Default: ``False``
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
