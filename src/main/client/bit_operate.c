@@ -68,12 +68,6 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
                                 as_static_pool *static_pool,
                                 int serializer_type, long operation_code);
 
-static as_status add_op_bit_set_int(AerospikeClient *self, as_error *err,
-                                    char *bin, PyObject *op_dict,
-                                    as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type);
-
 static as_status add_op_bit_remove(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
                                    as_operations *ops,
@@ -272,7 +266,7 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
                                 int serializer_type, long operation_code)
 {
     as_bit_policy bit_policy;
-    int bit_offset = 0;
+    int64_t bit_offset = 0;
     uint32_t bit_size = 0;
     uint32_t value_byte_size = 0;
     uint8_t *value = NULL;
