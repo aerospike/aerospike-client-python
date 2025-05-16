@@ -917,7 +917,7 @@ class TestBitwiseOperations(object):
         being modified.
         """
         value = bytearray([3] * 6)
-        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, 2, value, None)]
+        ops = [bitwise_operations.bit_insert(self.five_255_bin, 0, len(value) + 10, value, None)]
 
         self.as_connection.operate(self.test_key, ops)
 
