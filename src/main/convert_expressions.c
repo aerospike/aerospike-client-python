@@ -1700,13 +1700,8 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         }
 
         PyObject *rt_tmp = PyTuple_GetItem(py_expr_tuple, 1);
-<<<<<<< HEAD
         if (!Py_IsNone(rt_tmp)) {
-            temp_expr.result_type = PyLong_AsLong(rt_tmp);
-=======
-        if (rt_tmp != Py_None) {
             temp_expr.result_type = PyLong_AsLongLong(rt_tmp);
->>>>>>> origin/dev
             if (temp_expr.result_type == -1 && PyErr_Occurred()) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "Failed to get result_type from expression "
