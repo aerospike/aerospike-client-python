@@ -212,7 +212,7 @@ def bit_set(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
 
     Set the value on a bitmap at bit_offset for bit_size in a record on the Aerospike Server.
 
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
+    `value_byte_size` parameter is deprecated. The value's number of bytes is calculated automatically
     now.
 
     Args:
@@ -293,7 +293,7 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     Creates a bit and operation. Server performs an and op with value and bitmap in bin
     at bit_offset for bit_size. Server returns nothing.
 
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
+    `value_byte_size` parameter is deprecated. The value's number of bytes is calculated automatically
     now.
 
     Args:
@@ -366,7 +366,7 @@ def bit_insert(bin_name: str, byte_offset, value_byte_size, value, policy=None):
     Server inserts the bytes from value into the bitmap at byte_offset.
     No value is returned.
 
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
+    `value_byte_size` parameter is deprecated. The value's number of bytes is calculated automatically
     now.
 
     Args:
@@ -477,7 +477,7 @@ def bit_or(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=N
 
     Server returns nothing.
 
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
+    `value_byte_size` parameter is deprecated. The value's number of bytes is calculated automatically
     now.
 
     Args:
@@ -596,7 +596,7 @@ def bit_xor(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
     Creates a bit and operation. Server performs bitwise xor with value and bitmap in bin
     at bit_offset for bit_size. Server returns nothing.
 
-    `value_byte_size` parameter is deprecated since 15.0.0. The value's number of bytes is calculated automatically
+    `value_byte_size` parameter is deprecated. The value's number of bytes is calculated automatically
     now.
 
     Args:
