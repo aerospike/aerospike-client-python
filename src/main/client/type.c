@@ -527,16 +527,17 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
         int res = PySet_Contains(py_set, py_key);
         const char *key = PyUnicode_AsUTF8(py_key);
         if (res == -1) {
-            return false;
+            return -1;
         }
         else if (res == 0) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "\"%s\" is an invalid client config dictionary key",
                             key);
-            return false;
+            return 0;
         }
         // Config key is valid
     }
+    return 1;
 }
 
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
