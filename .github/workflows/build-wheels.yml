@@ -362,11 +362,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: ${{ env.COMMIT_SHA_TO_BUILD_AND_TEST }}
-          sparse-checkout-cone-mode: false
-          sparse-checkout: |
-            !pyproject.toml
-            test/**
-            .github/**
 
       # Need to be able to save Docker Hub credentials to keychain
       # Unable to do this via the ansible script for self hosted mac m1 runners
@@ -387,7 +382,6 @@ jobs:
           name: ${{ env.BUILD_IDENTIFIER }}.build
 
       - name: Convert Python tag to Python version
-        if: ${{ matrix.python-tag != 'cp313t' }}
         # Don't use sed because we want this command to work on both mac and windows
         # The command used in GNU sed is different than in macOS sed
         run: |
@@ -397,36 +391,18 @@ jobs:
         shell: bash
 
       - uses: actions/setup-python@v5
-        if: ${{ matrix.python-tag != 'cp313t' }}
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - if: ${{ matrix.python-tag == 'cp313t' }}
-        uses: astral-sh/setup-uv@v3
-        with:
-          version: "0.4.x"
-
-      - if: ${{ matrix.python-tag == 'cp313t' }}
-        # Will automatically install Python 3.13t if not present
-        run: uv venv --python 3.13t
-        shell: bash
-
-      # TODO: check if uv is installed, instead
-      - run: echo PIP_COMMAND="${{ matrix.python-tag == 'cp313t' && 'uv' || '' }} pip" >> $GITHUB_ENV
-        shell: bash
-
       - name: Install wheel
-        run: ${{ env.PIP_COMMAND }} install aerospike --force-reinstall --no-index --find-links=./
+        run: python3 -m pip install aerospike --force-reinstall --no-index --find-links=./
         shell: bash
 
-      - run: ${{ env.PIP_COMMAND }} install pytest -c requirements.txt
+      - run: python3 -m pip install pytest -c requirements.txt
         working-directory: test
         shell: bash
 
-      - run: echo PYTHON_M_COMMAND=${{ matrix.python-tag == 'cp313t' && 'uv run --module' || 'python3 -m' }} >> $GITHUB_ENV
-        shell: bash
-
-      - run: ${{ env.PYTHON_M_COMMAND }} pytest -vv new_tests/${{ inputs.test-file }}
+      - run: python3 -m pytest -vv new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 
