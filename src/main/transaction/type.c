@@ -22,35 +22,6 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
     return (PyObject *)self;
 }
 
-// Error indicator must always be checked after this call
-// Constructor parameter name needed for constructing error message
-static uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
-                                             const char *param_name_of_pyobj)
-{
-    if (!PyLong_Check(pyobject)) {
-        PyErr_Format(PyExc_TypeError, "%s must be an integer",
-                     param_name_of_pyobj);
-        goto error;
-    }
-    unsigned long long_value = PyLong_AsUnsignedLong(pyobject);
-    if (PyErr_Occurred()) {
-        goto error;
-    }
-
-    if (long_value > UINT32_MAX) {
-        PyErr_Format(PyExc_ValueError,
-                     "%s is too large for an unsigned 32-bit integer",
-                     param_name_of_pyobj);
-        goto error;
-    }
-
-    uint32_t value = (uint32_t)long_value;
-    return value;
-
-error:
-    return 0;
-}
-
 // We don't initialize in __new__ because it's not documented how to raise
 // exceptions in __new__
 // We can raise an exception and fail out in __init__ though

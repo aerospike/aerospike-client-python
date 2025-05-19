@@ -1204,13 +1204,13 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :return: a :class:`dict` of user data. See :ref:`admin_user_dict`.
 
-    .. method:: admin_query_users_info ([policy: dict]) -> list
+    .. method:: admin_query_users_info ([policy: dict]) -> dict
 
         Retrieve roles and other info for all users.
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
-        :return: a :class:`list` of users' data. See :ref:`admin_user_dict`.
+        :return: a :class:`dict` mapping usernames to user dictionaries. See :ref:`admin_user_dict`.
 
 Metrics
 -------
@@ -1447,7 +1447,7 @@ Record Tuple
             client.remove(keyTuple)
             client.close()
 
-    .. seealso:: `Data Model: Record <https://aerospike.com/docs/server/architecture/data-model.html#records>`_.
+    .. seealso:: `Data Model: Record <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#records>`_.
 
 .. _metadata_dict:
 

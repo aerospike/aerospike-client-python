@@ -289,9 +289,11 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           as_exp *exp_list,
                                           as_exp **exp_list_p);
 
-as_status init_and_set_as_metrics_policy_using_pyobject(
-    as_error *err, PyObject *py_metrics_policy,
-    as_metrics_policy *metrics_policy);
+// metrics_policy must be declared already
+// py_metrics_policy must be non-NULL
+as_status
+set_as_metrics_policy_using_pyobject(as_error *err, PyObject *py_metrics_policy,
+                                     as_metrics_policy *metrics_policy);
 
 typedef struct {
     // Use listener name for error messages
