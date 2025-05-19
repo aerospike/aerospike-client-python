@@ -560,6 +560,212 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"ConfigProvider", AerospikeConfigProvider_Ready},
 };
 
+// We use a macro to avoid repetition
+#define DEFINE_SET_OF_VALID_KEYS(array_name_prefix, ...)                       \
+    const char *array_name_prefix##_valid_keys[] = {__VA_ARGS__};              \
+    PyObject *py_##array_name_prefix##_valid_keys;
+
+DEFINE_SET_OF_VALID_KEYS(client_config, "lua", "tls", "hosts", "shm",
+                         "serialization", "policies", "thread_pool_size",
+                         "max_threads", "min_conns_per_node",
+                         "max_conns_per_node", "max_error_rate",
+                         "error_rate_window", "connect_timeout",
+                         "use_shared_connection", "send_bool_as",
+                         "compression_threshold", "tend_interval",
+                         "cluster_name", "strict_types", "rack_aware",
+                         "rack_id", "rack_ids", "use_services_alternate",
+                         "max_socket_idle", "fail_if_not_connected", "user",
+                         "password", "validate_keys", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_shm, "shm_max_nodes", "max_nodes",
+                         "shm_max_namespaces", "max_namespaces",
+                         "shm_takeover_threshold_sec",
+                         "takeover_threshold_sec"
+                         "shm_key",
+                         NULL)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_lua, "system_path", "user_path", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_policies, "read", "write", "apply",
+                         "operate", "remove", "query", "scan", "batch",
+                         "batch_remove", "batch_apply", "batch_write",
+                         "batch_parent_write", "info", "admin", "txn_verify",
+                         "txn_roll", "total_timeout", "auth_mode",
+                         "login_timeout_ms", "key", "exists", "max_retries",
+                         "replica", "commit_level", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
+                         "protocols", "cipher_suite", "keyfile", "keyfile_pw",
+                         "cert_blacklist", "certfile", "crl_check",
+                         "crl_check_all", "log_session_info", "for_login_only",
+                         NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(base_policy, "total_timeout", "socket_timeout",
+                         "max_retries", "sleep_between_retries", "compress",
+                         "txn", "expressions", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(apply_policy, "key", "replica", "commit_level",
+                         "durable_delete", "ttl", "on_locking_only", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(info_policy, "timeout", "send_as_is", "check_bounds",
+                         NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(query_policy, "deserialize", "replica", "short_query",
+                         "expected_duration", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(read_policy, "key", "replica", "deserialize",
+                         "read_touch_ttl_percent", "read_mode_ap",
+                         "read_mode_sc", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(remove_policy, "generation", "key", "gen",
+                         "commit_level", "replica", "durable_delete", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(scan_policy, "durable_delete", "records_per_second",
+                         "max_records", "replica", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(write_policy, "key", "gen", "exists", "commit_level",
+                         "durable_delete", "replica", "compression_threshold",
+                         "on_locking_only", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(operate_policy, "key", "gen", "commit_level",
+                         "replica", "durable_delete", "deserialize", "exists",
+                         "read_touch_ttl_percent", "on_locking_only",
+                         "read_mode_ap", "read_mode_sc", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_policy, "concurrent", "allow_inline",
+                         "deserialize", "replica", "read_touch_ttl_percent",
+                         "read_mode_ap", "read_mode_sc", "allow_inline_ssd",
+                         "respond_all_keys", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_write_policy, "key", "gen", "commit_level",
+                         "durable_delete", "exists", "on_locking_only",
+                         "expressions", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_read_policy, "read_touch_ttl_percent",
+                         "read_mode_ap", "read_mode_sc", "expressions", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_apply_policy, "key", "commit_level", "ttl",
+                         "durable_delete", "on_locking_only", "expressions",
+                         NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_remove_policy, "key", "commit_level", "gen",
+                         "durable_delete", "generation", "expressions", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(bit_policy, "bit_write_flags", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(map_policy, "map_order", "map_write_flags",
+                         "persist_index", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(list_policy, "list_order", "write_flags", NULL)
+
+DEFINE_SET_OF_VALID_KEYS(hll_policy, "flags", NULL)
+
+struct py_set_name_to_str_list {
+    PyObject **py_set_of_keys;
+    const char **valid_keys;
+};
+
+#define PY_SET_NAME_TO_STR_LIST(array_name)                                    \
+    {                                                                          \
+        &py_##array_name, array_name                                           \
+    }
+
+static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
+    PY_SET_NAME_TO_STR_LIST(client_config_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_shm_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_lua_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_policies_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(client_config_tls_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(base_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(apply_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(info_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(query_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(read_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(remove_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(scan_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(write_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(operate_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_write_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_read_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_apply_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(batch_remove_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(bit_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(map_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(list_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(hll_policy_valid_keys),
+};
+
+// Return NULL if an exception is raised
+// Returns strong reference to new Python dictionary
+static PyObject *py_set_new_from_str_list(const char *const *str_list)
+{
+    PyObject *py_valid_keys = PySet_New(NULL);
+    if (py_valid_keys == NULL) {
+        goto error;
+    }
+
+    const char *const *curr_str_ref = str_list;
+    while (*curr_str_ref) {
+        PyObject *py_str = PyUnicode_FromString(*curr_str_ref);
+        if (py_str == NULL) {
+            goto CLEANUP_SET_ON_ERROR;
+        }
+
+        int result = PySet_Add(py_valid_keys, py_str);
+        Py_DECREF(py_str);
+        if (result == -1) {
+            goto CLEANUP_SET_ON_ERROR;
+        }
+        curr_str_ref++;
+    }
+
+    return py_valid_keys;
+
+CLEANUP_SET_ON_ERROR:
+    Py_DECREF(py_valid_keys);
+error:
+    return NULL;
+}
+
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
     static struct PyModuleDef moduledef = {
@@ -577,13 +783,29 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     Aerospike_Enable_Default_Logging();
 
+    int retval;
+    for (unsigned long i = 0; i < sizeof(py_set_name_to_str_lists) /
+                                      sizeof(py_set_name_to_str_lists[0]);
+         i++) {
+        // just use a Python set so we don't need to implement a hashset in C
+        // The C client does not have a public API for a hashset yet
+        // Time complexity of set should be constant on avg:
+        // https://wiki.python.org/moin/TimeComplexity
+        PyObject *py_valid_keys =
+            py_set_new_from_str_list(py_set_name_to_str_lists[i].valid_keys);
+        if (py_valid_keys == NULL) {
+            goto MODULE_CLEANUP_ON_ERROR;
+        }
+
+        *(py_set_name_to_str_lists[i].py_set_of_keys) = py_valid_keys;
+    }
+
     py_global_hosts = PyDict_New();
     if (py_global_hosts == NULL) {
         goto MODULE_CLEANUP_ON_ERROR;
     }
 
     unsigned long i = 0;
-    int retval;
     for (i = 0; i < sizeof(py_module_types) / sizeof(py_module_types[0]); i++) {
         PyTypeObject *(*py_type_ready_func)(void) =
             py_module_types[i].pytype_ready_method;
