@@ -314,6 +314,7 @@ def bit_and(bin_name: str, bit_offset, bit_size, value_byte_size, value, policy=
         POLICY_KEY: policy,
         BIT_OFFSET_KEY: bit_offset,
         BIT_SIZE_KEY: bit_size,
+        VALUE_BYTE_SIZE_KEY: value_byte_size,
         VALUE_KEY: value,
     }
 
