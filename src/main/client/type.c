@@ -515,6 +515,30 @@ static PyObject *AerospikeClient_Type_New(PyTypeObject *type, PyObject *args,
     return (PyObject *)self;
 }
 
+// Return -1 if we failed to validate dictionary
+// Return 0 if dictionary has invalid keys
+// Return 1 if dictionary's keys are all valid
+int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
+                                    PyObject *py_set)
+{
+    Py_ssize_t pos = 0;
+    PyObject *py_key = NULL;
+    while (PyDict_Next(py_dict, &pos, &py_key, NULL)) {
+        int res = PySet_Contains(py_set, py_key);
+        const char *key = PyUnicode_AsUTF8(py_key);
+        if (res == -1) {
+            return false;
+        }
+        else if (res == 0) {
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "\"%s\" is an invalid client config dictionary key",
+                            key);
+            return false;
+        }
+        // Config key is valid
+    }
+}
+
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
@@ -599,7 +623,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (!PyBool_Check(py_validate_keys)) {
             as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                             "config[\"validate_keys\"] must be a boolean");
-            goto RAISE_EXCEPTION_USING_AS_ERROR;
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
         validate_keys = PyObject_IsTrue(py_validate_keys);
         if (validate_keys == -1) {
@@ -608,54 +632,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     if (validate_keys) {
-        PyObject *py_aerospike_module_name = PyUnicode_FromString("aerospike");
-        if (!py_aerospike_module_name) {
+        int retval = does_py_dict_contain_valid_keys(
+            &constructor_err, py_config, py_client_config_valid_keys);
+        if (retval == -1) {
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
-        PyObject *py_aerospike_module =
-            PyImport_GetModule(py_aerospike_module_name);
-        Py_DECREF(py_aerospike_module_name);
-        if (py_aerospike_module == NULL) {
-            if (PyErr_Occurred()) {
-                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-            }
-            else {
-                as_error_update(
-                    &constructor_err, AEROSPIKE_ERR_CLIENT,
-                    "Unable to check if the client config keys are valid.");
-                goto RAISE_EXCEPTION_USING_AS_ERROR;
-            }
+        else if (retval == 0) {
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
-
-        // TODO: define constant in a header file
-        // TODO: user can delete attribute, breaking this code
-        PyObject *py_valid_keys = PyObject_GetAttrString(
-            py_aerospike_module, "__client_config_valid_keys");
-        Py_DECREF(py_aerospike_module);
-        if (py_valid_keys == NULL) {
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-        }
-
-        Py_ssize_t pos = 0;
-        PyObject *py_config_key = NULL;
-        while (PyDict_Next(py_config, &pos, &py_config_key, NULL)) {
-            int res = PySet_Contains(py_valid_keys, py_config_key);
-            const char *config_key = PyUnicode_AsUTF8(py_config_key);
-            if (res == -1) {
-                Py_DECREF(py_valid_keys);
-                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-            }
-            else if (res == 0) {
-                as_error_update(
-                    &constructor_err, AEROSPIKE_ERR_PARAM,
-                    "\"%s\" is an invalid client config dictionary key",
-                    config_key);
-                goto RAISE_EXCEPTION_USING_AS_ERROR;
-            }
-            // Config key is valid
-        }
-
-        Py_DECREF(py_valid_keys);
     }
 
     bool lua_user_path = false;

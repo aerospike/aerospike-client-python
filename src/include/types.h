@@ -117,3 +117,27 @@ typedef struct {
 } AerospikeConfigProvider;
 
 extern PyTypeObject AerospikeConfigProvider_Type;
+
+extern PyObject *py_client_config_valid_keys;
+extern PyObject *py_client_config_shm_valid_keys;
+extern PyObject *py_client_config_lua_valid_keys;
+extern PyObject *py_client_config_policies_valid_keys;
+extern PyObject *py_client_config_tls_valid_keys;
+extern PyObject *py_base_policy_valid_keys;
+extern PyObject *py_apply_policy_valid_keys;
+extern PyObject *py_info_policy_valid_keys;
+extern PyObject *py_query_policy_valid_keys;
+extern PyObject *py_read_policy_valid_keys;
+extern PyObject *py_remove_policy_valid_keys;
+extern PyObject *py_scan_policy_valid_keys;
+extern PyObject *py_write_policy_valid_keys;
+extern PyObject *py_operate_policy_valid_keys;
+extern PyObject *py_batch_policy_valid_keys;
+extern PyObject *py_batch_write_policy_valid_keys;
+extern PyObject *py_batch_read_policy_valid_keys;
+extern PyObject *py_batch_apply_policy_valid_keys;
+extern PyObject *py_batch_remove_policy_valid_keys;
+extern PyObject *py_bit_policy_valid_keys;
+extern PyObject *py_map_policy_valid_keys;
+extern PyObject *py_list_policy_valid_keys;
+extern PyObject *py_hll_policy_valid_keys;
