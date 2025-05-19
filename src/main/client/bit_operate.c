@@ -51,8 +51,10 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
 static as_status get_bit_resize_flags(as_error *err, PyObject *op_dict,
                                       as_bit_resize_flags *resize_flags);
 
-static as_status get_uint8t_from_pyargs(as_error *err, char *key,
-                                        PyObject *op_dict, uint8_t **value);
+static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
+                                              PyObject *op_dict,
+                                              uint8_t **value,
+                                              Py_ssize_t *byte_count);
 
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
                                          PyObject *op_dict, uint32_t *value);
@@ -267,7 +269,7 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
-    uint32_t value_byte_size = 0;
+    Py_ssize_t value_byte_size = 0;
     uint8_t *value = NULL;
 
     if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
@@ -284,13 +286,8 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_uint32t_from_pyargs(err, VALUE_BYTE_SIZE_KEY, op_dict,
-                                &value_byte_size) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
-        AEROSPIKE_OK) {
+    if (get_uint8t_array_from_pyargs(err, VALUE_KEY, op_dict, &value,
+                                     &value_byte_size) != AEROSPIKE_OK) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "unable to parse value from add_op_bit_set");
     }
@@ -421,7 +418,7 @@ static as_status add_op_bit_and(AerospikeClient *self, as_error *err, char *bin,
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
-    uint32_t value_byte_size = 0;
+    Py_ssize_t value_byte_size = 0;
     uint8_t *value = NULL;
 
     if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
@@ -438,13 +435,8 @@ static as_status add_op_bit_and(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_uint32t_from_pyargs(err, VALUE_BYTE_SIZE_KEY, op_dict,
-                                &value_byte_size) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
-        AEROSPIKE_OK) {
+    if (get_uint8t_array_from_pyargs(err, VALUE_KEY, op_dict, &value,
+                                     &value_byte_size) != AEROSPIKE_OK) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "unable to parse value from add_op_bit_and");
     }
@@ -525,7 +517,7 @@ static as_status add_op_bit_insert(AerospikeClient *self, as_error *err,
 {
     as_bit_policy bit_policy;
     int64_t byte_offset = 0;
-    uint32_t value_byte_size = 0;
+    Py_ssize_t value_byte_size = 0;
     uint8_t *value = NULL;
 
     if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
@@ -537,13 +529,8 @@ static as_status add_op_bit_insert(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_uint32t_from_pyargs(err, VALUE_BYTE_SIZE_KEY, op_dict,
-                                &value_byte_size) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
-        AEROSPIKE_OK) {
+    if (get_uint8t_array_from_pyargs(err, VALUE_KEY, op_dict, &value,
+                                     &value_byte_size) != AEROSPIKE_OK) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "unable to parse value from add_op_bit_insert");
     }
@@ -667,7 +654,7 @@ static as_status add_op_bit_or(AerospikeClient *self, as_error *err, char *bin,
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
-    uint32_t value_byte_size = 0;
+    Py_ssize_t value_byte_size = 0;
     uint8_t *value = NULL;
 
     if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
@@ -684,13 +671,8 @@ static as_status add_op_bit_or(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_uint32t_from_pyargs(err, VALUE_BYTE_SIZE_KEY, op_dict,
-                                &value_byte_size) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
-        AEROSPIKE_OK) {
+    if (get_uint8t_array_from_pyargs(err, VALUE_KEY, op_dict, &value,
+                                     &value_byte_size) != AEROSPIKE_OK) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "unable to parse value from add_op_bit_or");
     }
@@ -833,7 +815,7 @@ static as_status add_op_bit_xor(AerospikeClient *self, as_error *err, char *bin,
     as_bit_policy bit_policy;
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
-    uint32_t value_byte_size = 0;
+    Py_ssize_t value_byte_size = 0;
     uint8_t *value = NULL;
 
     if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
@@ -850,13 +832,8 @@ static as_status add_op_bit_xor(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_uint32t_from_pyargs(err, VALUE_BYTE_SIZE_KEY, op_dict,
-                                &value_byte_size) != AEROSPIKE_OK) {
-        return err->code;
-    }
-
-    if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
-        AEROSPIKE_OK) {
+    if (get_uint8t_array_from_pyargs(err, VALUE_KEY, op_dict, &value,
+                                     &value_byte_size) != AEROSPIKE_OK) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "unable to parse value from add_op_bit_xor");
     }
@@ -901,8 +878,10 @@ static as_status get_bit_policy(as_error *err, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-static as_status get_uint8t_from_pyargs(as_error *err, char *key,
-                                        PyObject *op_dict, uint8_t **value)
+static as_status get_uint8t_array_from_pyargs(as_error *err, char *key,
+                                              PyObject *op_dict,
+                                              uint8_t **value,
+                                              Py_ssize_t *byte_count)
 {
     PyObject *py_val = PyDict_GetItemString(op_dict, key);
     if (!py_val) {
@@ -920,9 +899,13 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
     else if (PyByteArray_Check(py_val)) {
         *value = (uint8_t *)PyByteArray_AsString(py_val);
         if (PyErr_Occurred()) {
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to convert %s", key);
+            goto error;
         }
+        Py_ssize_t value_size = PyByteArray_Size(py_val);
+        if (value_size == -1 && PyErr_Occurred()) {
+            goto error;
+        }
+        *byte_count = value_size;
     }
     else {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -930,6 +913,9 @@ static as_status get_uint8t_from_pyargs(as_error *err, char *key,
     }
 
     return AEROSPIKE_OK;
+error:
+    return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                           key);
 }
 
 static as_status get_uint32t_from_pyargs(as_error *err, char *key,
