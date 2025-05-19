@@ -387,7 +387,12 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
         goto error;
     }
 
-    if (py_ttl && !Py_IsNone(py_ttl) && !PyLong_Check(py_ttl)) {
+    if (Py_IsNone(py_policy_batch)) {
+        // Let C client choose the client config policy to use
+        py_policy_batch = NULL;
+    }
+
+    if (py_ttl && py_ttl != Py_None && !PyLong_Check(py_ttl)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "ttl should be an integer");
         goto error;
     }

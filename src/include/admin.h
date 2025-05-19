@@ -82,15 +82,6 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
                                              PyObject *args, PyObject *kwds);
 
 /**
- * Retrieve the roles of an existing user.
- *
- *		client.admin_query_user(policy, user)
- *
- */
-PyObject *AerospikeClient_Admin_Query_User(AerospikeClient *self,
-                                           PyObject *args, PyObject *kwds);
-
-/**
  * Retrieve the info of an existing user.
  *
  *		client.admin_query_user_info(policy, user)
@@ -98,15 +89,6 @@ PyObject *AerospikeClient_Admin_Query_User(AerospikeClient *self,
  */
 PyObject *AerospikeClient_Admin_Query_User_Info(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds);
-
-/**
- * Retrieve the roles for all existing users in the database.
- *
- *		client.admin_query_users(policy)
- *
- */
-PyObject *AerospikeClient_Admin_Query_Users(AerospikeClient *self,
-                                            PyObject *args, PyObject *kwds);
 
 /**
  * Retrieve the info for all existing users in the database.

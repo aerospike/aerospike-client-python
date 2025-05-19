@@ -362,6 +362,11 @@ Only the `hosts` key is required; the rest of the keys are optional.
             (Optional) A defined user with roles in the cluster. See :meth:`admin_create_user`.
         * **password** (:class:`str`)
             (Optional) The password will be hashed by the client using bcrypt.
+        * **config_provider** (:class:`aerospike.ConfigProvider`)
+            (Optional) Dynamic configuration provider.
+
+            An alternate way to enable dynamic config is to set environment variable ``AEROSPIKE_CLIENT_CONFIG_URL``
+            to the path of the config file before running the application.
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
 
@@ -393,15 +398,50 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **scan** (:class:`dict`)
                 Contains :ref:`aerospike_scan_policies`.
             * **batch** (:class:`dict`)
+                Default parent batch policy used in batch read commands.
+
+                This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_read`
+                    * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
+
                 Contains :ref:`aerospike_batch_policies`.
             * **batch_remove** (:class:`dict`)
-                Default delete policy used in batch remove commands. Contains :ref:`aerospike_batch_remove_policies`.
+                Default delete policy used in batch remove commands.
+
+                This policy applies to these when a transaction-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_remove`
+                    * Individual :class:`Remove <aerospike_helpers.batch.records.Remove>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_remove_policies`.
             * **batch_apply** (:class:`dict`)
-                Default user defined function policy used in batch UDF apply commands. Contains :ref:`aerospike_batch_apply_policies`.
+                Default user defined function policy used in batch UDF apply commands.
+
+                This policy applies to these when a transaction-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * Individual :class:`Apply <aerospike_helpers.batch.records.Apply>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_apply_policies`.
             * **batch_write** (:class:`dict`)
-                Default write policy used in batch operate commands. Contains :ref:`aerospike_batch_write_policies`.
+                Default batch write policy when a transaction-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
+
+                    * Individual :class:`Write <aerospike_helpers.batch.records.Write>` instances passed to :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
+
+                Contains :ref:`aerospike_batch_write_policies`.
             * **batch_parent_write** (:class:`dict`)
-                Default parent policy used in batch write commands. Contains :ref:`aerospike_batch_policies`.
+                Default parent batch policy used in batch write commands.
+
+                This policy applies to these when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation. This will be applied instead of the client config's `"batch"` policy.
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * :meth:`~aerospike.Client.batch_remove`
+
+                Contains :ref:`aerospike_batch_policies`.
             * **info** (:class:`dict`)
                 Contains :ref:`aerospike_info_policies`.
             * **admin** (:class:`dict`)
@@ -411,6 +451,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **txn_roll** (:class:`dict`)
                 Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
                 Contains :ref:`aerospike_batch_policies`.
+            * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
+                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override transaction-level metrics policies.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
@@ -1593,15 +1635,6 @@ Transaction Commit Status
 .. data:: COMMIT_ALREADY_COMMITTED
 
     Transaction has already been committed.
-
-.. data:: COMMIT_VERIFY_FAILED
-
-    Transaction verify failed. Transaction will be aborted.
-
-.. data:: COMMIT_MARK_ROLL_FORWARD_ABANDONED
-
-    Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
-    If the error is in doubt (usually timeout), the commit is in doubt.
 
 .. data:: COMMIT_ROLL_FORWARD_ABANDONED
 
