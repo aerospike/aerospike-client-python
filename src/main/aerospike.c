@@ -33,6 +33,7 @@
 #include "nullobject.h"
 #include "cdt_types.h"
 #include "transaction.h"
+#include "config_provider.h"
 
 #include <aerospike/as_operations.h>
 #include <aerospike/as_log_macros.h>
@@ -556,6 +557,7 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"CDTWildcard", AerospikeWildcardObject_Ready},
     {"CDTInfinite", AerospikeInfiniteObject_Ready},
     {"Transaction", AerospikeTransaction_Ready},
+    {"ConfigProvider", AerospikeConfigProvider_Ready},
 };
 
 const char *const client_config_valid_keys[] = {"lua",
