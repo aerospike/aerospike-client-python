@@ -38,13 +38,15 @@ as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
 /*
  * py_policies must exist, and be a dictionary
  */
-as_status set_subpolicies(as_config *config, PyObject *py_policies)
+as_status set_subpolicies(as_config *config, PyObject *py_policies,
+                          int validate_keys)
 {
 
     as_status set_policy_status = AEROSPIKE_OK;
 
     PyObject *read_policy = PyDict_GetItemString(py_policies, "read");
-    set_policy_status = set_read_policy(&config->policies.read, read_policy);
+    set_policy_status =
+        set_read_policy(&config->policies.read, read_policy, validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
@@ -157,7 +159,8 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
     return AEROSPIKE_OK;
 }
 
-as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy)
+as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy,
+                          int validate_keys)
 {
 
     as_status status = AEROSPIKE_OK;
@@ -167,6 +170,18 @@ as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy)
 
     if (!PyDict_Check(py_policy)) {
         return AEROSPIKE_ERR_PARAM;
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            &constructor_err, py_policies,
+            py_client_config_policies_valid_keys);
+        if (retval == -1) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        else if (retval == 0) {
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
     }
 
     status = set_base_policy(&read_policy->base, py_policy);
