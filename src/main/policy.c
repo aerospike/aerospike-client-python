@@ -302,7 +302,8 @@ static inline void check_and_set_txn_field(as_error *err,
 static inline as_status
 pyobject_to_policy_base(AerospikeClient *self, as_error *err,
                         PyObject *py_policy, as_policy_base *policy,
-                        as_exp *exp_list, as_exp **exp_list_p)
+                        as_exp *exp_list, as_exp **exp_list_p,
+                        bool is_config_policy)
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
@@ -310,14 +311,16 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
     POLICY_SET_FIELD(sleep_between_retries, uint32_t);
     POLICY_SET_FIELD(compress, bool);
 
-    // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
-    // so this is safe to call for a scan/query policy's base policy
-    check_and_set_txn_field(err, policy, py_policy);
-    if (err->code != AEROSPIKE_OK) {
-        return err->code;
-    }
+    if (is_config_policy == false) {
+        // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
+        // so this is safe to call for a scan/query policy's base policy
+        check_and_set_txn_field(err, policy, py_policy);
+        if (err->code != AEROSPIKE_OK) {
+            return err->code;
+        }
 
-    POLICY_SET_EXPRESSIONS_FIELD();
+        POLICY_SET_EXPRESSIONS_FIELD();
+    }
     return AEROSPIKE_OK;
 }
 
@@ -459,8 +462,9 @@ as_status as_policy_read_set_from_pyobject(
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        as_status retval =
+            pyobject_to_policy_base(self, err, py_policy, &policy->base,
+                                    exp_list, exp_list_p, policy_init == NULL);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
