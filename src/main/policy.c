@@ -591,9 +591,11 @@ as_status as_policy_write_set_from_pyobject(
         POLICY_INIT(as_policy_write);
     }
     //Initialize policy with global defaults
-    as_policy_write_copy(config_write_policy, policy);
-
     bool is_this_txn_policy = config_write_policy != NULL;
+
+    if (is_this_txn_policy) {
+        as_policy_write_copy(config_write_policy, policy);
+    }
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
