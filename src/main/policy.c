@@ -300,10 +300,10 @@ static inline void check_and_set_txn_field(as_error *err,
 }
 
 static inline as_status
-pyobject_to_policy_base(AerospikeClient *self, as_error *err,
-                        PyObject *py_policy, as_policy_base *policy,
-                        as_exp *exp_list, as_exp **exp_list_p,
-                        bool is_this_txn_policy)
+as_policy_base_set_from_pyobject(AerospikeClient *self, as_error *err,
+                                 PyObject *py_policy, as_policy_base *policy,
+                                 as_exp *exp_list, as_exp **exp_list_p,
+                                 bool is_this_txn_policy)
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
@@ -345,7 +345,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
+        as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, exp_list, exp_list_p, );
         if (retval != AEROSPIKE_OK) {
             return retval;
@@ -417,7 +417,7 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     as_policy_query_copy(config_query_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
-        as_status retval = pyobject_to_policy_base(
+        as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
@@ -464,9 +464,9 @@ as_status as_policy_read_set_from_pyobject(
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval =
-            pyobject_to_policy_base(self, err, py_policy, &policy->base,
-                                    exp_list, exp_list_p, is_this_txn_policy);
+        as_status retval = as_policy_base_set_from_pyobject(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p,
+            is_this_txn_policy);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -511,7 +511,7 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
+        as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
@@ -553,7 +553,7 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
+        as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
@@ -592,7 +592,7 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
+        as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
@@ -636,7 +636,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
+        as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
@@ -684,7 +684,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
+        as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
