@@ -303,7 +303,7 @@ static inline as_status
 pyobject_to_policy_base(AerospikeClient *self, as_error *err,
                         PyObject *py_policy, as_policy_base *policy,
                         as_exp *exp_list, as_exp **exp_list_p,
-                        bool is_config_policy)
+                        bool is_this_txn_policy)
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
@@ -311,7 +311,7 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
     POLICY_SET_FIELD(sleep_between_retries, uint32_t);
     POLICY_SET_FIELD(compress, bool);
 
-    if (is_config_policy == false) {
+    if (is_this_txn_policy) {
         // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
         // so this is safe to call for a scan/query policy's base policy
         check_and_set_txn_field(err, policy, py_policy);
@@ -346,7 +346,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+            self, err, py_policy, &policy->base, exp_list, exp_list_p, );
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -455,8 +455,10 @@ as_status as_policy_read_set_from_pyobject(
         POLICY_INIT(as_policy_read);
     }
 
+    bool is_this_txn_policy = policy_init != NULL;
+
     //Initialize policy with global defaults
-    if (policy_init) {
+    if (is_this_txn_policy) {
         as_policy_read_copy(policy_init, policy);
     }
 
@@ -464,7 +466,7 @@ as_status as_policy_read_set_from_pyobject(
         // Set policy fields
         as_status retval =
             pyobject_to_policy_base(self, err, py_policy, &policy->base,
-                                    exp_list, exp_list_p, policy_init == NULL);
+                                    exp_list, exp_list_p, is_this_txn_policy);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
