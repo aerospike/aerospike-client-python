@@ -65,8 +65,11 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
         return set_policy_status;
     }
 
-    PyObject *apply_policy = PyDict_GetItemString(py_policies, "apply");
-    set_policy_status = set_apply_policy(&config->policies.apply, apply_policy);
+    PyObject *py_apply_policy = PyDict_GetItemString(py_policies, "apply");
+    set_policy_status = as_policy_apply_set_from_pyobject(
+        NULL, &err, py_apply_policy, &config->policies.apply, NULL, NULL, NULL,
+        NULL);
+    as_error_reset(&err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
@@ -164,54 +167,6 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
     // Default metrics policy is processed right after this call in the client constructor code
     // If this function fails, the calling function always sets as_error with our own error code and message
     // But when reading the config-level metrics policy, we want to propagate native Python exceptions up to the user
-    return AEROSPIKE_OK;
-}
-
-as_status set_apply_policy(as_policy_apply *apply_policy, PyObject *py_policy)
-{
-
-    as_status status = AEROSPIKE_OK;
-
-    if (!py_policy) {
-        return AEROSPIKE_OK;
-    }
-
-    if (!PyDict_Check(py_policy)) {
-        return AEROSPIKE_ERR_PARAM;
-    }
-
-    status = set_base_policy(&apply_policy->base, py_policy);
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_key(&apply_policy->key, py_policy, "key");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_replica(&apply_policy->replica, py_policy, "replica");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_uint32_property(&apply_policy->ttl, py_policy, "ttl");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_commit_level(&apply_policy->commit_level, py_policy,
-                                       "commit_level");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
-    status = set_optional_bool_property(&apply_policy->durable_delete,
-                                        py_policy, "durable_delete");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
-
     return AEROSPIKE_OK;
 }
 

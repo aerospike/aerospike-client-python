@@ -330,23 +330,27 @@ as_policy_base_set_from_pyobject(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_apply *policy,
-                                   as_policy_apply **policy_p,
-                                   as_policy_apply *config_apply_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+as_status as_policy_apply_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_apply *policy, as_policy_apply **policy_p,
+    as_policy_apply *config_apply_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
         POLICY_INIT(as_policy_apply);
     }
-    //Initialize policy with global defaults
-    as_policy_apply_copy(config_apply_policy, policy);
+
+    bool is_this_txn_policy = config_apply_policy != NULL;
+    if (is_this_txn_policy) {
+        //Initialize policy with global defaults
+        as_policy_apply_copy(config_apply_policy, policy);
+    }
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         as_status retval = as_policy_base_set_from_pyobject(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p, true);
+            self, err, py_policy, &policy->base, exp_list, exp_list_p,
+            is_this_txn_policy);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
