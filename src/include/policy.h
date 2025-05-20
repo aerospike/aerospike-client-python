@@ -210,10 +210,10 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    as_policy_query *config_query_policy,
                                    as_exp *exp_list, as_exp **exp_list_p);
 
-as_status as_policy_read_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_read *policy, as_policy_read **policy_p,
-    as_policy_read *config_read_policy, as_exp *exp_list, as_exp **exp_list_p);
+as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
+                                           PyObject *py_policy,
+                                           as_policy_read *policy,
+                                           as_policy_read *config_read_policy);
 
 as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
                                     PyObject *py_policy,

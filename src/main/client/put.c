@@ -102,7 +102,7 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     if (py_policy) {
         as_policy_write_set_from_pyobject(self, &err, py_policy, &write_policy,
                                           &self->as->config.policies.write,
-                                          &exp_list, &exp_list_p);
+                                          true);
         write_policy_p = &write_policy;
     }
 
@@ -118,8 +118,8 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
 CLEANUP:
     POOL_DESTROY(&static_pool);
 
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (write_policy_p && write_policy_p->base.filter_exp) {
+        as_exp_destroy(write_policy_p->base.filter_exp);
     }
 
     if (key_initialised == true) {
