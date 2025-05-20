@@ -82,9 +82,9 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
     key_initialised = true;
 
     // Convert python policy object to as_policy_exists
-    pyobject_to_policy_read(self, &err, py_policy, &read_policy, &read_policy_p,
-                            &self->as->config.policies.read, &exp_list,
-                            &exp_list_p);
+    as_policy_read_set_from_pyobject(
+        self, &err, py_policy, &read_policy, &read_policy_p,
+        &self->as->config.policies.read, &exp_list, &exp_list_p);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

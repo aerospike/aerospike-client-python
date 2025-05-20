@@ -435,16 +435,17 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 }
 
 /**
- * Converts a PyObject into an as_policy_read object.
+ * Sets an as_policy_read *policy* from a Python object.
+ * If *policy_init* is non-NULL, we first initialize *policy* to *policy_init*'s values.
+ * 
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
-                                  PyObject *py_policy, as_policy_read *policy,
-                                  as_policy_read **policy_p,
-                                  as_policy_read *config_read_policy,
-                                  as_exp *exp_list, as_exp **exp_list_p)
+as_status as_policy_read_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_read *policy, as_policy_read **policy_p,
+    as_policy_read *policy_init, as_exp *exp_list, as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -452,8 +453,8 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     }
 
     //Initialize policy with global defaults
-    if (config_read_policy) {
-        as_policy_read_copy(config_read_policy, policy);
+    if (policy_init) {
+        as_policy_read_copy(policy_init, policy);
     }
 
     if (py_policy && py_policy != Py_None) {
