@@ -454,18 +454,18 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
 as_status as_policy_read_set_from_pyobject(
     AerospikeClient *self, as_error *err, PyObject *py_policy,
     as_policy_read *policy, as_policy_read **policy_p,
-    as_policy_read *policy_init, as_exp *exp_list, as_exp **exp_list_p)
+    as_policy_read *config_read_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
         POLICY_INIT(as_policy_read);
     }
 
-    bool is_this_txn_policy = policy_init != NULL;
+    bool is_this_txn_policy = config_read_policy != NULL;
 
     //Initialize policy with global defaults
     if (is_this_txn_policy) {
-        as_policy_read_copy(policy_init, policy);
+        as_policy_read_copy(config_read_policy, policy);
     }
 
     if (py_policy && py_policy != Py_None) {
@@ -578,7 +578,9 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 }
 
 /**
- * Converts a PyObject into an as_policy_write object.
+ * Sets an as_policy_write *policy* from a Python object *py_policy*.
+ * If *config_write_policy* is non-NULL, we first initialize *policy* to *config_write_policy*'s values.
+ *
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
@@ -588,10 +590,6 @@ as_status as_policy_write_set_from_pyobject(
     as_policy_write *policy, as_policy_write **policy_p,
     as_policy_write *config_write_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
-        // Initialize Policy
-        POLICY_INIT(as_policy_write);
-    }
     //Initialize policy with global defaults
     bool is_this_txn_policy = config_write_policy != NULL;
 
@@ -599,7 +597,7 @@ as_status as_policy_write_set_from_pyobject(
         as_policy_write_copy(config_write_policy, policy);
     }
 
-    if (py_policy && py_policy != Py_None) {
+    if (py_policy) {
         // Set policy fields
         as_status retval = as_policy_base_set_from_pyobject(
             self, err, py_policy, &policy->base, exp_list, exp_list_p,
@@ -620,11 +618,6 @@ as_status as_policy_write_set_from_pyobject(
             // Only for config level policy
             POLICY_SET_FIELD(ttl, uint32_t);
         }
-    }
-
-    if (policy_p) {
-        // Update the policy
-        POLICY_UPDATE();
     }
 
     return err->code;

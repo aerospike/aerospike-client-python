@@ -49,8 +49,6 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
 {
     // Aerospike Client Arguments
     as_error err;
-    as_policy_write write_policy;
-    as_policy_write *write_policy_p = NULL;
     as_key key;
     as_record rec;
 
@@ -99,9 +97,14 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
     // Convert python policy object to as_policy_write
-    as_policy_write_set_from_pyobject(
-        self, &err, py_policy, &write_policy, &write_policy_p,
-        &self->as->config.policies.write, &exp_list, &exp_list_p);
+    as_policy_write write_policy;
+    as_policy_write *write_policy_p = NULL;
+    if (py_policy) {
+        as_policy_write_set_from_pyobject(self, &err, py_policy, &write_policy,
+                                          &self->as->config.policies.write,
+                                          &exp_list, &exp_list_p);
+        write_policy_p = &write_policy;
+    }
 
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -170,6 +173,10 @@ PyObject *AerospikeClient_Put(AerospikeClient *self, PyObject *args,
                                     &py_bins, &py_meta, &py_policy,
                                     &py_serializer_option) == false) {
         return NULL;
+    }
+
+    if (py_policy == Py_None) {
+        py_policy = NULL;
     }
 
     if (py_serializer_option) {
