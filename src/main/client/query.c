@@ -329,7 +329,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     is_query_init = true;
 
     if (py_policy) {
-        pyobject_to_policy_write(
+        as_policy_write_set_from_pyobject(
             self, &err, py_policy, &write_policy, &write_policy_p,
             &self->as->config.policies.write, &exp_list, &exp_list_p);
 

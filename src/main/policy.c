@@ -577,11 +577,10 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_write *policy,
-                                   as_policy_write **policy_p,
-                                   as_policy_write *config_write_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+as_status as_policy_write_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_write *policy, as_policy_write **policy_p,
+    as_policy_write *config_write_policy, as_exp *exp_list, as_exp **exp_list_p)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -590,10 +589,13 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
     //Initialize policy with global defaults
     as_policy_write_copy(config_write_policy, policy);
 
+    bool is_this_txn_policy = config_write_policy != NULL;
+
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         as_status retval = as_policy_base_set_from_pyobject(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p, true);
+            self, err, py_policy, &policy->base, exp_list, exp_list_p,
+            is_this_txn_policy);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
@@ -606,6 +608,10 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
         POLICY_SET_FIELD(replica, as_policy_replica);
         POLICY_SET_FIELD(compression_threshold, uint32_t);
         POLICY_SET_FIELD(on_locking_only, bool);
+        if (is_this_txn_policy == false) {
+            // Only for config level policy
+            POLICY_SET_FIELD(ttl, uint32_t);
+        }
     }
 
     // Update the policy

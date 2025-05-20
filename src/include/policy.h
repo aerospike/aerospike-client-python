@@ -227,11 +227,12 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
                                   as_policy_scan *config_scan_policy,
                                   as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_write *policy,
-                                   as_policy_write **policy_p,
-                                   as_policy_write *config_write_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p);
+as_status
+as_policy_write_set_from_pyobject(AerospikeClient *self, as_error *err,
+                                  PyObject *py_policy, as_policy_write *policy,
+                                  as_policy_write **policy_p,
+                                  as_policy_write *config_write_policy,
+                                  as_exp *exp_list, as_exp **exp_list_p);
 
 as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
                                      PyObject *py_policy,
