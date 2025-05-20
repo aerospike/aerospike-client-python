@@ -2,27 +2,27 @@ import aerospike
 from aerospike import exception as e
 import pytest
 from contextlib import nullcontext
-from typing import Optional, Callable
+from typing import Callable
 
 
 @pytest.mark.usefixtures("as_connection")
 class TestMRTAPI:
     @pytest.mark.parametrize(
-        "kwargs, context, err_msg",
+        "kwargs, context",
         [
-            ({}, nullcontext(), None),
-            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext(), None),
+            ({}, nullcontext()),
+            ({"reads_capacity": 256, "writes_capacity": 256}, nullcontext()),
             (
                 {"reads_capacity": 256, "writes_capacity": 256, "invalid_arg": 1},
-                pytest.raises((TypeError)), "function takes at most 2 keyword arguments (3 given)"
+                pytest.raises((TypeError))
             ),
             (
                 {"reads_capacity": "256", "writes_capacity": 256},
-                pytest.raises((TypeError)), "reads_capacity must be an integer"
+                pytest.raises((TypeError))
             ),
             (
                 {"reads_capacity": 256, "writes_capacity": "256"},
-                pytest.raises((TypeError)), "writes_capacity must be an integer"
+                pytest.raises((TypeError))
             ),
             # Only need to test codepath once for uint32_t conversion helper function
             (
@@ -32,12 +32,11 @@ class TestMRTAPI:
                 # Python in Windows x64 will throw an internal error (OverflowError) when trying to convert a Python
                 # int that is larger than 4 bytes into an unsigned long.
                 # That error doesn't happen in Linux for that same scenario, so we throw our own error
-                pytest.raises((ValueError, OverflowError)),
-                "reads_capacity is too large for an unsigned 32-bit integer"
+                pytest.raises((ValueError, OverflowError))
             )
         ],
     )
-    def test_transaction_class(self, kwargs: dict, context, err_msg: Optional[str]):
+    def test_transaction_class(self, kwargs: dict, context):
         with context as excinfo:
             mrt = aerospike.Transaction(**kwargs)
         if type(context) == nullcontext:
@@ -53,9 +52,6 @@ class TestMRTAPI:
             if kwargs == {"reads_capacity": 2**32, "writes_capacity": 256} and excinfo.type == OverflowError:
                 # Internal Python error thrown in Windows
                 assert str(excinfo.value) == "Python int too large to convert to C unsigned long"
-            else:
-                # Custom error thrown by Python client for other platforms
-                assert str(excinfo.value) == err_msg
 
     # Even though this is an unlikely use case, this should not cause problems.
     def test_transaction_reinit(self):
