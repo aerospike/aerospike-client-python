@@ -364,8 +364,10 @@ as_status as_policy_apply_set_from_pyobject(
         POLICY_SET_FIELD(on_locking_only, bool);
     }
 
-    // Update the policy
-    POLICY_UPDATE();
+    if (policy_p) {
+        // Update the policy
+        POLICY_UPDATE();
+    }
 
     return err->code;
 }
@@ -620,8 +622,10 @@ as_status as_policy_write_set_from_pyobject(
         }
     }
 
-    // Update the policy
-    POLICY_UPDATE();
+    if (policy_p) {
+        // Update the policy
+        POLICY_UPDATE();
+    }
 
     return err->code;
 }
