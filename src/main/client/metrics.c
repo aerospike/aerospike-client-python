@@ -15,6 +15,7 @@
  ******************************************************************************/
 
 #include <aerospike/as_metrics.h>
+#include <aerospike/as_log_macros.h>
 
 #include "metrics.h"
 #include "conversions.h"
@@ -35,10 +36,13 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     // Python Function Argument Parsing
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O:enable_metrics", kwlist,
                                      &py_metrics_policy)) {
-        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        return NULL;
     }
 
+    // To be passed into C client
     as_metrics_policy *metrics_policy_ref;
+    bool free_udata_as_py_listener_data = false;
+
     if (py_metrics_policy == NULL || py_metrics_policy == Py_None) {
         // Use C client's config metrics policy
         metrics_policy_ref = NULL;
@@ -57,32 +61,41 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     // 2 scenarios:
     // 1. If the user passes their own MetricsPolicy and MetricsListeners object to client.enable_metrics(), udata is NOT NULL and set to heap-allocated PyListenerData
     // 2. Otherwise, udata is NULL.
-    bool free_udata_as_py_listener_data =
+    free_udata_as_py_listener_data =
         metrics_policy_ref && metrics_policy.metrics_listeners.udata != NULL;
 
     Py_BEGIN_ALLOW_THREADS
     aerospike_enable_metrics(self->as, &err, metrics_policy_ref);
     Py_END_ALLOW_THREADS
 
+CLEANUP_ON_ERROR:
     if (err.code != AEROSPIKE_OK) {
+        if (err.code == AEROSPIKE_METRICS_CONFLICT) {
+            as_log_warn(err.message);
+            as_error_reset(&err);
+            // Even though we aren't raising an exception, the C client's enable_metrics() failed
+            // so we still have to clean up
+        }
+
         if (free_udata_as_py_listener_data) {
             free_py_listener_data(
                 (PyListenerData *)metrics_policy.metrics_listeners.udata);
         }
-        goto CLEANUP_ON_ERROR;
+
+        if (metrics_policy_ref) {
+            // This means we initialized metrics_policy earlier
+            as_metrics_policy_destroy(metrics_policy_ref);
+        }
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
-
-CLEANUP_ON_ERROR:
-    if (metrics_policy_ref) {
-        // This means we initialized metrics_policy earlier
-        as_metrics_policy_destroy(metrics_policy_ref);
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
     }
-    raise_exception(&err);
-RAISE_EXCEPTION_WITHOUT_AS_ERROR:
-    return NULL;
+    else {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
 }
 
 PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
