@@ -1,12 +1,12 @@
+metadata:
+  app_name: configurationExample
+  generation: 2
+  version: 0.0.1
 dynamic:
   metrics:
     enable: true
   write:
     send_key: false
-metadata:
-  app_name: configurationExample
-  generation: 2
-  version: 0.0.1
 static:
   client:
     config_interval: 1
