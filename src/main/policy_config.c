@@ -48,6 +48,7 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies_dict)
     as_error err;
     as_error_init(&err);
 
+    // Validate policy dictionaries before using them to set the C client's config policies
     const char *dict_keys[] = {"read",        "write",
                                "apply",       "remove",
                                "query",       "scan",
@@ -59,29 +60,26 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies_dict)
     PyObject *py_policy_dicts[sizeof(dict_keys)] = {0};
 
     for (unsigned long i = 0; i < sizeof(py_policies_dict); i++) {
-        PyObject *py_policy =
-            PyDict_GetItemString(py_policies_dict, dict_keys[i]);
-        if (py_policy == Py_None) {
-            py_policy = NULL;
+        PyObject *py_key = PyUnicode_FromString(dict_keys[i]);
+        if (py_key == NULL) {
+            return AEROSPIKE_ERR_CLIENT;
         }
 
-        if (py_policy) {
-            if (PyDict_Check(py_policy)) {
-                py_policy_dicts[i] = py_policy;
-            }
-            else {
-                return AEROSPIKE_ERR_PARAM;
-            }
+        PyObject *py_policy =
+            PyDict_GetItemWithError(py_policies_dict, dict_keys[i]);
+        Py_DECREF(py_key);
+        if (py_policy == NULL && PyErr_Occurred()) {
+            return AEROSPIKE_ERR_CLIENT;
         }
+
+        py_policy_dicts[i] = py_policy;
     }
 
-    if (py_policy) {
-        set_policy_status = as_policy_read_set_from_py_dict(
-            NULL, &err, py_read_policy, &config->policies.read, false);
-        as_error_reset(&err);
-        if (set_policy_status != AEROSPIKE_OK) {
-            return set_policy_status;
-        }
+    set_policy_status = as_policy_read_set_from_pyobject(
+        NULL, &err, py_policy_dicts[0], &config->policies.read, false);
+    as_error_reset(&err);
+    if (set_policy_status != AEROSPIKE_OK) {
+        return set_policy_status;
     }
 
     PyObject *py_write_policy = PyDict_GetItemString(py_policies_dict, "write");
