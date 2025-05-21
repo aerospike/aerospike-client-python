@@ -637,14 +637,13 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
  */
 as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_batch *policy,
-                                   as_policy_batch **policy_p,
-                                   as_policy_batch *config_batch_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+                                   as_policy_batch **policy_p, as_exp *exp_list,
+                                   as_exp **exp_list_p)
 {
     VALIDATE_POLICY()
 
     //Initialize policy with global defaults
-    as_policy_batch_copy(config_batch_policy, policy);
+    as_policy_batch_init(policy);
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
@@ -683,6 +682,7 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          as_exp *exp_list, as_exp **exp_list_p)
 {
     VALIDATE_POLICY()
+    as_policy_batch_write_init(policy);
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
@@ -709,6 +709,7 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         as_exp *exp_list, as_exp **exp_list_p)
 {
     VALIDATE_POLICY()
+    as_policy_batch_read_init(policy);
 
     // Set policy fields
     POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
@@ -729,9 +730,11 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
                                          as_policy_batch_apply *policy,
                                          as_policy_batch_apply **policy_p,
+                                         as_policy_batch_apply *src,
                                          as_exp *exp_list, as_exp **exp_list_p)
 {
     VALIDATE_POLICY()
+    as_policy_batch_apply_init(policy);
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
@@ -757,6 +760,7 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           as_exp *exp_list, as_exp **exp_list_p)
 {
     VALIDATE_POLICY()
+    as_policy_batch_remove_init(policy);
 
     // Set policy fields
     POLICY_SET_FIELD(key, as_policy_key);
@@ -803,6 +807,7 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
 {
     // Initialize Policy
     VALIDATE_POLICY()
+    as_map_policy_init(policy);
 
     // Defaults
     long map_order = AS_MAP_UNORDERED;
