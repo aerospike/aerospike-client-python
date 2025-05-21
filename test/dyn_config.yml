@@ -1,6 +1,6 @@
 dynamic:
   metrics:
-    enable: false
+    enable: true
   write:
     send_key: false
 metadata:

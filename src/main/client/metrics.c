@@ -112,13 +112,14 @@ PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
             as_log_warn(err.message);
             as_error_reset(&err);
         }
-        goto error;
     }
 
-    Py_INCREF(Py_None);
-    return Py_None;
-
-error:
-    raise_exception(&err);
-    return NULL;
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+    else {
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
 }

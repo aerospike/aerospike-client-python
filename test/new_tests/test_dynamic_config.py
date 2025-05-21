@@ -110,6 +110,7 @@ class TestDynamicConfig:
 
         # Cleanup
         client.close()
+        print(orig_dyn_config)
         with open(DYN_CONFIG_PATH, 'w') as f:
             yaml.dump(orig_dyn_config, f)
 
