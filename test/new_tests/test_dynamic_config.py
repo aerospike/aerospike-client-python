@@ -3,6 +3,9 @@ from aerospike import exception as e
 from .test_base_class import TestBaseClass
 import pytest
 import os
+import yaml
+
+DYN_CONFIG_PATH = "./dyn_config.yml"
 
 
 class TestDynamicConfig:
@@ -50,7 +53,6 @@ class TestDynamicConfig:
         # Uncomment if we want to check that the config file we pass in is valid
         # The C client prints logs showing that it detects changes to the dynamic config file
         aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
-        DYN_CONFIG_PATH = "./dyn_config.yml"
         if use_env_var:
             AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
             os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
@@ -74,10 +76,6 @@ class TestDynamicConfig:
         first_record_key = first_record[0]
         assert first_record_key[2] is None
 
-        # Attempting to toggle metrics while dynamic config is enabled should only log a warning and not fail
-        client.enable_metrics()
-        client.disable_metrics()
-
         # Cleanup
         # TODO: currently there is no way to restore the log handler and level before running this test
         # These are the defaults in the implementation
@@ -87,6 +85,36 @@ class TestDynamicConfig:
         client.close()
         if use_env_var:
             del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
+
+    def test_enable_metrics_cannot_override_dyn_config(self):
+        with open(DYN_CONFIG_PATH, 'r+') as f:
+            dyn_config = yaml.safe_load(f)
+            orig_dyn_config = dyn_config.copy()
+            # import pprint
+            # pprint.pprint(dyn_config)
+            dyn_config["dynamic"]["metrics"]["enable"] = False
+            # pprint.pprint(dyn_config)
+            yaml.dump(dyn_config, f)
+
+        config = TestBaseClass.get_connection_config()
+        config["config_provider"] = aerospike.ConfigProvider(DYN_CONFIG_PATH)
+        client = aerospike.client(config)
+
+        client.enable_metrics()
+
+        # Cleanup
+        client.close()
+        with open(DYN_CONFIG_PATH, 'w') as f:
+            yaml.dump(orig_dyn_config, f)
+
+    def test_disable_metrics_cannot_override_dyn_config(self):
+        config = TestBaseClass.get_connection_config()
+        config["config_provider"] = aerospike.ConfigProvider(DYN_CONFIG_PATH)
+        client = aerospike.client(config)
+
+        client.disable_metrics()
+
+        client.close()
 
     def test_api_invalid_provider(self):
         config = TestBaseClass.get_connection_config()
