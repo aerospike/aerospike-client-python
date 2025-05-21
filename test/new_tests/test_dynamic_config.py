@@ -3,8 +3,6 @@ from aerospike import exception as e
 from .test_base_class import TestBaseClass
 import pytest
 import os
-import yaml
-import copy
 
 DYN_CONFIG_PATH = "./dyn_config.yml"
 
@@ -93,26 +91,14 @@ class TestDynamicConfig:
             del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
 
     def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
-        with open(DYN_CONFIG_PATH, 'r+') as f:
-            dyn_config = yaml.safe_load(f)
-            orig_dyn_config = copy.deepcopy(dyn_config)
-            # import pprint
-            # pprint.pprint(dyn_config)
-            dyn_config["dynamic"]["metrics"]["enable"] = False
-            # pprint.pprint(dyn_config)
-            yaml.dump(dyn_config, f)
-
         config = TestBaseClass.get_connection_config()
-        config["config_provider"] = aerospike.ConfigProvider(DYN_CONFIG_PATH)
+        config["config_provider"] = aerospike.ConfigProvider("./dyn_config_metrics_disabled.yml")
         client = aerospike.client(config)
 
         client.enable_metrics()
 
         # Cleanup
         client.close()
-        print(orig_dyn_config)
-        with open(DYN_CONFIG_PATH, 'w') as f:
-            yaml.dump(orig_dyn_config, f)
 
     def test_disable_metrics_cannot_override_dyn_config(self, show_more_logs):
         config = TestBaseClass.get_connection_config()
