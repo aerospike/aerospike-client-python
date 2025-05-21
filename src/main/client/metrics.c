@@ -83,6 +83,7 @@ CLEANUP_ON_ERROR:
         }
 
         if (free_udata_as_py_listener_data) {
+            // This will be free'd later when metrics is disabled (like when client.close() is called)
             free_py_listener_data(
                 (PyListenerData *)metrics_policy.metrics_listeners.udata);
         }
