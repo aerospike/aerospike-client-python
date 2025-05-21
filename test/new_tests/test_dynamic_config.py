@@ -74,6 +74,10 @@ class TestDynamicConfig:
         first_record_key = first_record[0]
         assert first_record_key[2] is None
 
+        # Attempting to toggle metrics while dynamic config is enabled should only log a warning and not fail
+        client.enable_metrics()
+        client.disable_metrics()
+
         # Cleanup
         client.close()
         if use_env_var:
