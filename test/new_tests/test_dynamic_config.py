@@ -49,7 +49,7 @@ class TestDynamicConfig:
         config = TestBaseClass.get_connection_config()
         # Uncomment if we want to check that the config file we pass in is valid
         # The C client prints logs showing that it detects changes to the dynamic config file
-        # aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         DYN_CONFIG_PATH = "./dyn_config.yml"
         if use_env_var:
             AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
@@ -79,6 +79,11 @@ class TestDynamicConfig:
         client.disable_metrics()
 
         # Cleanup
+        # TODO: currently there is no way to restore the log handler and level before running this test
+        # These are the defaults in the implementation
+        aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+        aerospike.set_log_handler()
+
         client.close()
         if use_env_var:
             del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
