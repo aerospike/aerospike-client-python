@@ -69,22 +69,22 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
 CLEANUP_ON_ERROR:
+    if (metrics_policy_ref) {
+        // This means we initialized metrics_policy earlier
+        as_metrics_policy_destroy(metrics_policy_ref);
+    }
+
     if (err.code != AEROSPIKE_OK) {
         if (err.code == AEROSPIKE_METRICS_CONFLICT) {
             as_log_warn(err.message);
             as_error_reset(&err);
             // Even though we aren't raising an exception, the C client's enable_metrics() failed
-            // so we still have to clean up
+            // so we still have to clean up udata now (see below)
         }
 
         if (free_udata_as_py_listener_data) {
             free_py_listener_data(
                 (PyListenerData *)metrics_policy.metrics_listeners.udata);
-        }
-
-        if (metrics_policy_ref) {
-            // This means we initialized metrics_policy earlier
-            as_metrics_policy_destroy(metrics_policy_ref);
         }
     }
 
