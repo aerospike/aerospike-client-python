@@ -4,6 +4,7 @@ from .test_base_class import TestBaseClass
 import pytest
 import os
 import yaml
+import copy
 
 DYN_CONFIG_PATH = "./dyn_config.yml"
 
@@ -94,7 +95,7 @@ class TestDynamicConfig:
     def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
         with open(DYN_CONFIG_PATH, 'r+') as f:
             dyn_config = yaml.safe_load(f)
-            orig_dyn_config = dyn_config.copy()
+            orig_dyn_config = copy.deepcopy(dyn_config)
             # import pprint
             # pprint.pprint(dyn_config)
             dyn_config["dynamic"]["metrics"]["enable"] = False
