@@ -48,43 +48,17 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies_dict)
     as_error err;
     as_error_init(&err);
 
-    // Validate policy dictionaries before using them to set the C client's config policies
-    const char *dict_keys[] = {"read",        "write",
-                               "apply",       "remove",
-                               "query",       "scan",
-                               "operate",     "batch",
-                               "info",        "admin",
-                               "batch_apply", "batch_remove",
-                               "batch_write", "batch_parent_write",
-                               "txn_verify",  "txn_roll"};
-    PyObject *py_policy_dicts[sizeof(dict_keys)] = {0};
-
-    for (unsigned long i = 0; i < sizeof(py_policies_dict); i++) {
-        PyObject *py_key = PyUnicode_FromString(dict_keys[i]);
-        if (py_key == NULL) {
-            return AEROSPIKE_ERR_CLIENT;
-        }
-
-        PyObject *py_policy =
-            PyDict_GetItemWithError(py_policies_dict, dict_keys[i]);
-        Py_DECREF(py_key);
-        if (py_policy == NULL && PyErr_Occurred()) {
-            return AEROSPIKE_ERR_CLIENT;
-        }
-
-        py_policy_dicts[i] = py_policy;
-    }
-
+    PyObject *read_policy = PyDict_GetItemString(py_policies_dict, "read");
     set_policy_status = as_policy_read_set_from_pyobject(
-        NULL, &err, py_policy_dicts[0], &config->policies.read, false);
+        NULL, &err, read_policy, &config->policies.read, false);
     as_error_reset(&err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
 
-    PyObject *py_write_policy = PyDict_GetItemString(py_policies_dict, "write");
+    PyObject *write_policy = PyDict_GetItemString(py_policies_dict, "write");
     set_policy_status = as_policy_write_set_from_pyobject(
-        NULL, &err, py_write_policy, &config->policies.write, false);
+        NULL, &err, write_policy, &config->policies.write, false);
     as_error_reset(&err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;

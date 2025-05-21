@@ -43,7 +43,7 @@
 
 // For transaction level policies, before calling this, we convert policy = None to NULL and this never gets called.
 // But for config-level policies, we do not check whether py_policy is NULL or None.
-// So we want as_policy_*_set_from_pyobject to be a no-op.
+// Either way, we want as_policy_*_set_from_pyobject to be a no-op.
 #define VALIDATE_POLICY()                                                      \
     if (py_policy == NULL || py_policy == Py_None) {                           \
         return AEROSPIKE_OK;                                                   \
