@@ -108,11 +108,9 @@ PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
     aerospike_disable_metrics(self->as, &err);
     Py_END_ALLOW_THREADS
 
-    if (err.code != AEROSPIKE_OK) {
-        if (err.code == AEROSPIKE_METRICS_CONFLICT) {
-            as_log_warn(err.message);
-            as_error_reset(&err);
-        }
+    if (err.code == AEROSPIKE_METRICS_CONFLICT) {
+        as_log_warn(err.message);
+        as_error_reset(&err);
     }
 
     if (err.code != AEROSPIKE_OK) {
