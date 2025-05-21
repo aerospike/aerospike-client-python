@@ -637,9 +637,9 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
  */
 as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_batch *policy,
+                                   as_policy_batch **policy_p,
                                    as_policy_batch *config_batch_policy,
-                                   as_policy_batch **policy_p, as_exp *exp_list,
-                                   as_exp **exp_list_p)
+                                   as_exp *exp_list, as_exp **exp_list_p)
 {
     VALIDATE_POLICY()
 
