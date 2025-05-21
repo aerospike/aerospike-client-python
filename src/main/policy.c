@@ -637,13 +637,14 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
  */
 as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_batch *policy,
+                                   as_policy_batch *config_batch_policy,
                                    as_policy_batch **policy_p, as_exp *exp_list,
                                    as_exp **exp_list_p)
 {
     VALIDATE_POLICY()
 
     //Initialize policy with global defaults
-    as_policy_batch_init(policy);
+    as_policy_batch_copy(config_batch_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
