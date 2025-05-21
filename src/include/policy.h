@@ -229,17 +229,23 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
 // 1. Copies an as_policy_write *policy_defaults* to a txn-level *policy*
 // 2. Sets an as_policy_write *policy* from a Python object *py_policy*.
 // * *py_policy* must be a Python dictionary, and *policy* and *as_policy_write* must point to a valid as_policy_write instance.
-as_status as_policy_write_copy_and_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_write *policy, as_policy_write *policy_defaults);
+as_status as_policy_write_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_policy,
+                                                     as_policy_write *dst,
+                                                     as_policy_write *src);
 
-as_status as_policy_read_copy_and_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_read *policy, as_policy_read *policy_defaults);
+as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                    as_error *err,
+                                                    PyObject *py_policy,
+                                                    as_policy_read *dst,
+                                                    as_policy_read *src);
 
-as_status as_policy_apply_copy_and_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_apply *policy, as_policy_apply *policy_defaults);
+as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_policy,
+                                                     as_policy_apply *dst,
+                                                     as_policy_apply *src);
 
 /**
  * Sets an as_policy_write *policy* from a Python object *py_policy*.
