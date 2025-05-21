@@ -300,16 +300,18 @@ as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
                                             bool is_policy_txn_level);
 
 // Sets an as_policy_* *policy* from a Python object *py_policy*.
-// *py_policy* must be a Python dictionary, and *policy* must point to a valid as_policy_* instance.
+// *py_policy* must be a non-NULL Python object. If it is not a Python dictionary, an error will be raised.
+// (We check if it's a dictionary here because *py_policy*'s type is not validated when parsing API arguments)
+// *policy* must point to a valid as_policy_* instance.
 // Client instance *self* can be NULL if is_policy_txn_level is false. We only need *self* for parsing Python client
 // expressions.
 //
 // Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
 
-as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
-                                           PyObject *py_policy,
-                                           as_policy_read *policy,
-                                           bool is_policy_txn_level);
+as_status as_policy_read_set_from_py_dict(AerospikeClient *self, as_error *err,
+                                          PyObject *py_policy,
+                                          as_policy_read *policy,
+                                          bool is_policy_txn_level);
 
 as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             as_error *err, PyObject *py_policy,

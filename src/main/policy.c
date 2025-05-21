@@ -301,6 +301,11 @@ as_policy_base_set_from_pyobject(AerospikeClient *self, as_error *err,
                                  PyObject *py_policy, as_policy_base *policy,
                                  bool is_this_txn_policy)
 {
+    if (!PyDict_Check(py_policy)) {
+        return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                               "policy must be a dict");
+    }
+
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
     POLICY_SET_FIELD(max_retries, uint32_t);
@@ -437,17 +442,17 @@ as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
                                                     as_policy_read *src)
 {
     as_policy_read_copy(src, dst);
-    return as_policy_read_set_from_pyobject(self, err, py_policy, dst, true);
+    return as_policy_read_set_from_py_dict(self, err, py_policy, dst, true);
 }
 
-as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
-                                           PyObject *py_policy,
-                                           as_policy_read *policy,
-                                           bool is_policy_txn_level)
+as_status as_policy_read_set_from_py_dict(AerospikeClient *self, as_error *err,
+                                          PyObject *py_policy_dict,
+                                          as_policy_read *policy,
+                                          bool is_policy_txn_level)
 {
     // Set policy fields
     as_status retval = as_policy_base_set_from_pyobject(
-        self, err, py_policy, &policy->base, is_policy_txn_level);
+        self, err, py_policy_dict, &policy->base, is_policy_txn_level);
     if (retval != AEROSPIKE_OK) {
         return retval;
     }

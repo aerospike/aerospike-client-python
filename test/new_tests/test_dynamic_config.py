@@ -51,7 +51,7 @@ class TestDynamicConfig:
         config = TestBaseClass.get_connection_config()
         # Uncomment if we want to check that the config file we pass in is valid
         # The C client prints logs showing that it detects changes to the dynamic config file
-        # aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         DYN_CONFIG_PATH = "./dyn_config.yml"
         if use_env_var:
             AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
