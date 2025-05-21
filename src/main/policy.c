@@ -517,10 +517,8 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
                                   as_policy_scan *config_scan_policy,
                                   as_exp *exp_list, as_exp **exp_list_p)
 {
-    if (py_policy && py_policy != Py_None) {
-        // Initialize Policy
-        ;
-    }
+    VALIDATE_POLICY();
+
     //Initialize policy with global defaults
     as_policy_scan_copy(config_scan_policy, policy);
 
@@ -559,6 +557,8 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             as_policy_write *policy,
                                             bool is_policy_txn_level)
 {
+    VALIDATE_POLICY();
+
     as_status retval = as_policy_base_set_from_pyobject(
         self, err, py_policy, &policy->base, is_policy_txn_level);
     if (retval != AEROSPIKE_OK) {
