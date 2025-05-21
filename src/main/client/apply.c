@@ -105,7 +105,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
     // Convert python policy object to as_policy_apply
-    if (py_policy == Py_None) {
+    if (py_policy == NULL) {
         as_policy_apply_copy_and_set_from_pyobject(
             self, &err, py_policy, &apply_policy,
             &self->as->config.policies.apply);
