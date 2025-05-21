@@ -30,8 +30,21 @@ class TestDynamicConfig:
         with pytest.raises((ValueError, OverflowError)):
             aerospike.ConfigProvider("path", interval=2**32)
 
+    # We want to check that the config file we pass in is valid
+    # The C client prints logs showing that it detects changes to the dynamic config file
+    # We also want to check that enable/disable metrics prints out warning logs when dyn config is enabled
     @pytest.fixture
-    def functional_test_setup(self):
+    def show_more_logs(self):
+        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
+
+        yield
+
+        # TODO: currently there is no way to restore the log handler and level before running this test
+        # These are the defaults in the implementation
+        aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+
+    @pytest.fixture
+    def functional_test_setup(self, show_more_logs):
         config = TestBaseClass.get_connection_config()
         setup_client = aerospike.client(config)
         self.key = ("test", "demo", 1)
@@ -50,9 +63,6 @@ class TestDynamicConfig:
     # Dynamic config file should take precedence over both client config defaults and programmatically set values
     def test_dyn_config_file_has_highest_precedence(self, functional_test_setup, use_env_var: bool):
         config = TestBaseClass.get_connection_config()
-        # Uncomment if we want to check that the config file we pass in is valid
-        # The C client prints logs showing that it detects changes to the dynamic config file
-        aerospike.set_log_level(aerospike.LOG_LEVEL_TRACE)
         if use_env_var:
             AEROSPIKE_CLIENT_CONFIG_URL = "AEROSPIKE_CLIENT_CONFIG_URL"
             os.environ[AEROSPIKE_CLIENT_CONFIG_URL] = DYN_CONFIG_PATH
@@ -77,16 +87,11 @@ class TestDynamicConfig:
         assert first_record_key[2] is None
 
         # Cleanup
-        # TODO: currently there is no way to restore the log handler and level before running this test
-        # These are the defaults in the implementation
-        aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
-        aerospike.set_log_handler()
-
         client.close()
         if use_env_var:
             del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
 
-    def test_enable_metrics_cannot_override_dyn_config(self):
+    def test_enable_metrics_cannot_override_dyn_config(self, show_more_logs):
         with open(DYN_CONFIG_PATH, 'r+') as f:
             dyn_config = yaml.safe_load(f)
             orig_dyn_config = dyn_config.copy()
@@ -107,7 +112,7 @@ class TestDynamicConfig:
         with open(DYN_CONFIG_PATH, 'w') as f:
             yaml.dump(orig_dyn_config, f)
 
-    def test_disable_metrics_cannot_override_dyn_config(self):
+    def test_disable_metrics_cannot_override_dyn_config(self, show_more_logs):
         config = TestBaseClass.get_connection_config()
         config["config_provider"] = aerospike.ConfigProvider(DYN_CONFIG_PATH)
         client = aerospike.client(config)
