@@ -63,10 +63,6 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     PyObject *py_umodule = NULL;
     PyObject *py_ufunction = NULL;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
     // Initialisation flags
@@ -109,11 +105,14 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
     // Convert python policy object to as_policy_apply
-    as_policy_apply_set_from_pyobject(
-        self, &err, py_policy, &apply_policy, &apply_policy_p,
-        &self->as->config.policies.apply, &exp_list, &exp_list_p);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
+    if (py_policy == Py_None) {
+        as_policy_apply_copy_and_set_from_pyobject(
+            self, &err, py_policy, &apply_policy,
+            &self->as->config.policies.apply);
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
+        apply_policy_p = &apply_policy;
     }
 
     if (PyUnicode_Check(py_module)) {
@@ -148,8 +147,8 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
 CLEANUP:
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
+    if (apply_policy_p && apply_policy_p->base.filter_exp) {
+        as_exp_destroy(apply_policy_p->base.filter_exp);
     }
 
     if (py_umodule) {
@@ -208,6 +207,10 @@ PyObject *AerospikeClient_Apply(AerospikeClient *self, PyObject *args,
                                     &py_module, &py_function, &py_arglist,
                                     &py_policy) == false) {
         return NULL;
+    }
+
+    if (py_policy == Py_None) {
+        py_policy = NULL;
     }
 
     // Invoke Operation

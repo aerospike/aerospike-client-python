@@ -52,10 +52,6 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_key key;
     as_record rec;
 
-    // For converting expressions.
-    as_exp exp_list;
-    as_exp *exp_list_p = NULL;
-
     // Initialisation flags
     bool key_initialised = false;
     bool record_initialised = false;
@@ -100,14 +96,14 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_policy_write write_policy;
     as_policy_write *write_policy_p = NULL;
     if (py_policy) {
-        as_policy_write_set_from_pyobject(self, &err, py_policy, &write_policy,
-                                          &self->as->config.policies.write,
-                                          true);
+        as_policy_write_copy_and_set_from_pyobject(
+            self, &err, py_policy, &write_policy,
+            &self->as->config.policies.write);
         write_policy_p = &write_policy;
-    }
 
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
+        if (err.code != AEROSPIKE_OK) {
+            goto CLEANUP;
+        }
     }
 
     // Invoke operation

@@ -49,8 +49,7 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
 
     PyObject *py_read_policy = PyDict_GetItemString(py_policies, "read");
     set_policy_status = as_policy_read_set_from_pyobject(
-        NULL, &err, py_read_policy, &config->policies.read, NULL, NULL, NULL,
-        NULL);
+        NULL, &err, py_read_policy, &config->policies.read, false);
     as_error_reset(&err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
@@ -58,8 +57,7 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
 
     PyObject *py_write_policy = PyDict_GetItemString(py_policies, "write");
     set_policy_status = as_policy_write_set_from_pyobject(
-        NULL, &err, py_write_policy, &config->policies.write, NULL, NULL, NULL,
-        NULL);
+        NULL, &err, py_write_policy, &config->policies.write, false);
     as_error_reset(&err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
@@ -67,8 +65,7 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
 
     PyObject *py_apply_policy = PyDict_GetItemString(py_policies, "apply");
     set_policy_status = as_policy_apply_set_from_pyobject(
-        NULL, &err, py_apply_policy, &config->policies.apply, NULL, NULL, NULL,
-        NULL);
+        NULL, &err, py_apply_policy, &config->policies.apply, false);
     as_error_reset(&err);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
