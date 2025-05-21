@@ -162,7 +162,7 @@ PyObject *AerospikeClient_Select_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
 CLEANUP:
-    if (read_policy_p && read_policy_p->base.filter_exp) {
+    if (read_policy_p) {
         as_exp_destroy(read_policy_p->base.filter_exp);
     }
 

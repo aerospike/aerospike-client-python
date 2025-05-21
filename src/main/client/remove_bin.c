@@ -74,12 +74,12 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         as_policy_write_copy_and_set_from_pyobject(
             self, err, py_policy, &write_policy,
             &self->as->config.policies.write);
-        write_policy_p = &write_policy;
 
         if (err->code != AEROSPIKE_OK) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect policy");
             goto CLEANUP;
         }
+        write_policy_p = &write_policy;
     }
 
     // Invoke operation

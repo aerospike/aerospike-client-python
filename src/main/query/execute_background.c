@@ -79,7 +79,7 @@ PyObject *AerospikeQuery_ExecuteBackground(AerospikeQuery *self, PyObject *args,
 
 CLEANUP:
 
-    if (write_policy_p && write_policy_p->base.filter_exp) {
+    if (write_policy_p) {
         as_exp_destroy(write_policy_p->base.filter_exp);
         ;
     }

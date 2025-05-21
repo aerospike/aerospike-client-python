@@ -77,7 +77,6 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
     // key is initialised successfully
     key_initialised = true;
 
-    // Convert python policy object to as_policy_exists
     if (py_policy) {
         as_policy_read_copy_and_set_from_pyobject(
             self, &err, py_policy, &read_policy,
@@ -121,7 +120,7 @@ extern PyObject *AerospikeClient_Exists_Invoke(AerospikeClient *self,
 
 CLEANUP:
 
-    if (read_policy_p && read_policy_p->base.filter_exp) {
+    if (read_policy_p) {
         as_exp_destroy(read_policy_p->base.filter_exp);
     }
 

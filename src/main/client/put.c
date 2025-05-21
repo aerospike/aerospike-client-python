@@ -114,7 +114,7 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
 CLEANUP:
     POOL_DESTROY(&static_pool);
 
-    if (write_policy_p && write_policy_p->base.filter_exp) {
+    if (write_policy_p) {
         as_exp_destroy(write_policy_p->base.filter_exp);
     }
 

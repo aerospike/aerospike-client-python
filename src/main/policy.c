@@ -420,13 +420,14 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status as_policy_apply_copy_and_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_apply *policy, as_policy_apply *policy_defaults)
+as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_policy,
+                                                     as_policy_apply *dst,
+                                                     as_policy_apply *src)
 {
-    as_policy_apply_copy(policy_defaults, policy);
-    return as_policy_apply_set_from_pyobject(self, err, py_policy, policy,
-                                             true);
+    as_policy_apply_copy(src, dst);
+    return as_policy_apply_set_from_pyobject(self, err, py_policy, dst, true);
 }
 
 as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
@@ -439,13 +440,6 @@ as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
     return as_policy_read_set_from_pyobject(self, err, py_policy, dst, true);
 }
 
-/**
- * Sets an as_policy_read *policy* from a Python object *py_policy*.
- *
- * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
- * We assume that the error object and the policy object are already allocated
- * and initialized (although, we do reset the error object here).
- */
 as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
                                            PyObject *py_policy,
                                            as_policy_read *policy,
