@@ -3,11 +3,21 @@ from aerospike import exception as e
 from .test_base_class import TestBaseClass
 import pytest
 import os
+import glob
 
 DYN_CONFIG_PATH = "./dyn_config.yml"
+METRICS_LOG_FILES = "./metrics-*.log"
 
 
 class TestDynamicConfig:
+    @pytest.fixture
+    def cleanup_metrics_logs(self):
+        yield
+
+        metrics_log_filenames = glob.glob(METRICS_LOG_FILES)
+        for item in metrics_log_filenames:
+            os.remove(item)
+
     def test_config_provider_defaults(self):
         provider = aerospike.ConfigProvider(path="path")
         assert provider.interval == 60
@@ -43,7 +53,7 @@ class TestDynamicConfig:
         aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
 
     @pytest.fixture
-    def functional_test_setup(self, show_more_logs):
+    def functional_test_setup(self, show_more_logs, cleanup_metrics_logs):
         config = TestBaseClass.get_connection_config()
         setup_client = aerospike.client(config)
         self.key = ("test", "demo", 1)
@@ -100,7 +110,7 @@ class TestDynamicConfig:
         # Cleanup
         client.close()
 
-    def test_disable_metrics_cannot_override_dyn_config(self, show_more_logs):
+    def test_disable_metrics_cannot_override_dyn_config(self, show_more_logs, cleanup_metrics_logs):
         config = TestBaseClass.get_connection_config()
         config["config_provider"] = aerospike.ConfigProvider(DYN_CONFIG_PATH)
         client = aerospike.client(config)
