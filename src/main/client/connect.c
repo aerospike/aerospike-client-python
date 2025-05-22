@@ -19,6 +19,7 @@
 #include <aerospike/aerospike.h>
 #include <aerospike/as_error.h>
 
+#include "pythoncapi_compat.h"
 #include "client.h"
 #include "conversions.h"
 #include "global_hosts.h"

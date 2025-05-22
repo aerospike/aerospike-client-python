@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2020 Aerospike, Inc.
  *
@@ -500,7 +502,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         as_exp_entry tmp_entry = as_exp_bytes(b, b_len);
         *new_entry = tmp_entry;
     }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.Geospatial")) {
+    else if (!strcmp(Py_TYPE(py_obj)->tp_name, "aerospike.Geospatial")) {
         PyObject *py_parameter = PyUnicode_FromString("geo_data");
         PyObject *py_data = PyObject_GenericGetAttr(py_obj, py_parameter);
         Py_DECREF(py_parameter);
@@ -550,7 +552,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
         as_exp_entry tmp_entry = as_exp_nil();
         *new_entry = tmp_entry;
     }
-    else if (!strcmp(py_obj->ob_type->tp_name, "aerospike.null")) {
+    else if (!strcmp(Py_TYPE(py_obj)->tp_name, "aerospike.null")) {
         as_exp_entry tmp_entry = as_exp_nil();
         *new_entry = tmp_entry;
     }
@@ -1673,7 +1675,13 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         // Reset flag for next temp expr being built
         is_ctx_initialized = false;
 
-        py_expr_tuple = PyList_GetItem(py_exp_list, (Py_ssize_t)i);
+        py_expr_tuple = PyList_GetItemRef(py_exp_list, (Py_ssize_t)i);
+        if (!py_expr_tuple) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get expression at index %d", i);
+            goto CLEANUP;
+        }
         if (!PyTuple_Check(py_expr_tuple) || PyTuple_Size(py_expr_tuple) != 4) {
             as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
@@ -1692,7 +1700,7 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         }
 
         PyObject *rt_tmp = PyTuple_GetItem(py_expr_tuple, 1);
-        if (rt_tmp != Py_None) {
+        if (!Py_IsNone(rt_tmp)) {
             temp_expr.result_type = PyLong_AsLongLong(rt_tmp);
             if (temp_expr.result_type == -1 && PyErr_Occurred()) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -1703,7 +1711,7 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
         }
 
         temp_expr.pydict = PyTuple_GetItem(py_expr_tuple, 2);
-        if (temp_expr.pydict != Py_None) {
+        if (!Py_IsNone(temp_expr.pydict)) {
             if (!PyDict_Check(temp_expr.pydict)) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "Failed to get fixed dictionary from "

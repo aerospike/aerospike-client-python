@@ -133,8 +133,7 @@ CLEANUP:
     return 0;
 }
 
-PyObject *AerospikeGeospatial_Type_Repr(self)
-AerospikeGeospatial *self;
+PyObject *AerospikeGeospatial_Type_Repr(PyObject *self)
 {
     PyObject *initresult = NULL, *py_return = NULL;
     char *new_repr_str = NULL;
@@ -148,7 +147,8 @@ AerospikeGeospatial *self;
         goto CLEANUP;
     }
 
-    initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
+    initresult = AerospikeGeospatial_DoDumps(
+        ((AerospikeGeospatial *)self)->geo_data, &err);
     if (!initresult) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                         "Unable to call get data in str format");
@@ -177,8 +177,7 @@ CLEANUP:
     return py_return;
 }
 
-PyObject *AerospikeGeospatial_Type_Str(self)
-AerospikeGeospatial *self;
+PyObject *AerospikeGeospatial_Type_Str(PyObject *self)
 {
     PyObject *initresult = NULL;
     // Aerospike error object
@@ -191,7 +190,8 @@ AerospikeGeospatial *self;
         goto CLEANUP;
     }
 
-    initresult = AerospikeGeospatial_DoDumps(self->geo_data, &err);
+    initresult = AerospikeGeospatial_DoDumps(
+        ((AerospikeGeospatial *)self)->geo_data, &err);
     if (!initresult) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                         "Unable to call get data in str format");

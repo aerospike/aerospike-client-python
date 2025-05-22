@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -91,7 +93,7 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
     }
 
     //convert filter to base64
-    if (py_expression_filter == Py_None) {
+    if (Py_IsNone(py_expression_filter)) {
         base64_filter = (char *)DELETE_CURRENT_XDR_FILTER;
     }
     else {

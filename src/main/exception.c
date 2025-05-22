@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2021 Aerospike, Inc.
  *
@@ -371,9 +373,11 @@ void remove_exception(as_error *err)
     Py_ssize_t pos = 0;
     PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
 
+    Py_BEGIN_CRITICAL_SECTION(py_module_dict);
     while (PyDict_Next(py_module_dict, &pos, &py_key, &py_value)) {
         Py_DECREF(py_value);
     }
+    Py_END_CRITICAL_SECTION();
 }
 
 // We have this as a separate method because both raise_exception and raise_exception_old need to use it
@@ -418,10 +422,12 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
     PyObject *py_module_dict = PyModule_GetDict(py_exc_module);
     bool found = false;
 
+    // TODO: this is not atomic enough
+    Py_BEGIN_CRITICAL_SECTION(py_module_dict);
     while (PyDict_Next(py_module_dict, &pos, &py_unused, &py_exc_class)) {
         if (PyObject_HasAttrString(py_exc_class, "code")) {
             PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
-            if (py_code == Py_None) {
+            if (Py_IsNone(py_code)) {
                 continue;
             }
             if (err->code == PyLong_AsLong(py_code)) {
@@ -430,6 +436,8 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
             }
         }
     }
+    Py_END_CRITICAL_SECTION();
+
     // We haven't found the right exception, just use AerospikeError
     if (!found) {
         PyObject *base_exception =

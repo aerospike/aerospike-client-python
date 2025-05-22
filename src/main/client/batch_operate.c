@@ -1,3 +1,5 @@
+#include "pythoncapi_compat.h"
+
 /*******************************************************************************
  * Copyright 2013-2022 Aerospike, Inc.
  *
@@ -161,7 +163,13 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     }
 
     for (int i = 0; i < ops_size; i++) {
-        PyObject *py_val = PyList_GetItem(py_ops, i);
+        PyObject *py_val = PyList_GetItemRef(py_ops, i);
+        if (!py_val) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get operation at index %d", i);
+            goto CLEANUP;
+        }
 
         if (!PyDict_Check(py_val)) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -183,7 +191,13 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     uint64_t processed_key_count = 0;
 
     for (int i = 0; i < keys_size; i++) {
-        PyObject *py_key = PyList_GetItem(py_keys, i);
+        PyObject *py_key = PyList_GetItemRef(py_keys, i);
+        if (!py_key) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "Unable to get key at index %d", i);
+            goto CLEANUP;
+        }
         as_key *tmp_key = (as_key *)as_vector_get(&tmp_keys, i);
 
         if (!PyTuple_Check(py_key)) {
@@ -224,7 +238,7 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
         }
     }
 
-    if (py_ttl == NULL || py_ttl == Py_None) {
+    if (py_ttl == NULL || Py_IsNone(py_ttl)) {
         // If ttl in this transaction's batch write policy isn't set, use the client config's default batch write
         // policy ttl
         ops.ttl = AS_RECORD_CLIENT_DEFAULT_TTL;
@@ -373,7 +387,7 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
         goto error;
     }
 
-    if (py_policy_batch == Py_None) {
+    if (Py_IsNone(py_policy_batch)) {
         // Let C client choose the client config policy to use
         py_policy_batch = NULL;
     }

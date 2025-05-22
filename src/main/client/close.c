@@ -60,6 +60,7 @@ PyObject *AerospikeClient_Close(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
+    // This should always be disabled in no-GIL mode
     if (self->use_shared_connection) {
         alias_to_search = return_search_string(self->as);
         py_persistent_item =

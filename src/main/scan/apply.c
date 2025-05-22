@@ -179,9 +179,9 @@ bool Scan_Illegal_UDF_Args_Check(PyObject *py_args)
         }
         else if (!(PyLong_Check(py_val) || PyFloat_Check(py_val) ||
                    PyUnicode_Check(py_val) || PyBool_Check(py_val) ||
-                   !strcmp(py_val->ob_type->tp_name, "aerospike.Geospatial") ||
+                   !strcmp(Py_TYPE(py_val)->tp_name, "aerospike.Geospatial") ||
                    PyByteArray_Check(py_val) || (Py_None == py_val) ||
-                   (!strcmp(py_val->ob_type->tp_name, "aerospike.null")) ||
+                   (!strcmp(Py_TYPE(py_val)->tp_name, "aerospike.null")) ||
                    AS_Matches_Classname(py_val, AS_CDT_WILDCARD_NAME) ||
                    AS_Matches_Classname(py_val, AS_CDT_INFINITE_NAME) ||
                    PyBytes_Check(py_val))) {
