@@ -300,6 +300,7 @@ CLEANUP2:
 CLEANUP1:
 
     if (err.code != AEROSPIKE_OK) {
+        Py_XDECREF(br_instance);
         raise_exception(&err);
         return NULL;
     }
