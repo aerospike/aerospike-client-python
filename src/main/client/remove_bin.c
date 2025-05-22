@@ -151,7 +151,7 @@ CLEANUP:
 
     as_record_destroy(&rec);
 
-    if (write_policy_p->base.filter_exp) {
+    if (write_policy_p) {
         as_exp_destroy(write_policy_p->base.filter_exp);
     }
 
