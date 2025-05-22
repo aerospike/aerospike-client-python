@@ -60,6 +60,10 @@ jobs:
           ["python:3.12-bookworm", 2, "linux/arm64", "3.12"],
           ["python:3.13-bookworm", 2, "linux/amd64", "3.13"],
           ["python:3.13-bookworm", 2, "linux/arm64", "3.13"],
+          ["redhat/ubi8", 2, "linux/amd64", "3.9"],
+          ["redhat/ubi8", 2, "linux/arm64", "3.9"],
+          ["redhat/ubi9", 2, "linux/amd64", "3.9"],
+          ["redhat/ubi9", 2, "linux/arm64", "3.9"],
           ["amazonlinux:2023", 1, "linux/amd64", "3.9"],
           ["redhat/ubi9", 1, "linux/amd64", "3.9"],
         ]
@@ -126,8 +130,12 @@ jobs:
       if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'ubuntu') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} apt install python3 python3-pip -y
 
+    - name: 'RHEL 9: Install python 3 that comes by default (step 2)'
+      if: ${{ startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'redhat/ubi8') }}
+      run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} dnf install -y python311
+
     - name: Make sure pip is installed
-      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || env.DISTRO_DOCKER_IMAGE_AND_TAG == 'redhat/ubi9' || startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'python') }}
+      if: ${{ env.DISTRO_DOCKER_IMAGE_AND_TAG == 'amazonlinux:2023' || startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'redhat/ubi') || startsWith(env.DISTRO_DOCKER_IMAGE_AND_TAG, 'python') }}
       run: docker exec ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ensurepip
 
     - name: 'Cat 1: Install build dependencies using yum'
