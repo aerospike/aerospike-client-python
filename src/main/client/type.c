@@ -769,61 +769,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     //Set default value of use_batch_direct
 
     PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
-
     if (py_policies && PyDict_Check(py_policies)) {
-        /*
-		 * Generation policy is removed from constructor.
-		 */
-
-        /*
-		 * Set individual policy groups, and base policies for each
-		 * Set the individual policy groups new in 3.0
-		 * */
-
-        if (set_subpolicies(&config, py_policies) != AEROSPIKE_OK) {
-            error_code = INIT_POLICY_PARAM_ERR;
-            goto CONSTRUCTOR_ERROR;
-        }
-
-        // See comment at end of set_subpolicies() for why we process metrics policy here
-        PyObject *py_metrics_policy_option_name =
-            PyUnicode_FromString("metrics");
-        if (py_metrics_policy_option_name == NULL) {
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-        }
-        PyObject *py_obj_metrics_policy =
-            PyDict_GetItemWithError(py_policies, py_metrics_policy_option_name);
-        Py_DECREF(py_metrics_policy_option_name);
-
-        if (py_obj_metrics_policy == NULL) {
-            if (PyErr_Occurred()) {
-                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-            }
-            // User didn't provide default metrics policy.
-            // It is optional so just move on
-        }
-        else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
-                                                  "metrics", "MetricsPolicy",
-                                                  false) == false) {
-            // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
-            // But we want to set a different error message here
-            as_error_update(
-                &constructor_err, AEROSPIKE_ERR_PARAM,
-                "metrics must be an "
-                "aerospike_helpers.metrics.MetricsPolicy class instance. But "
-                "a %s was received instead",
-                py_obj_metrics_policy->ob_type->tp_name);
-            goto RAISE_EXCEPTION_WITH_AS_ERROR;
-        }
-        else {
-            as_status status = set_as_metrics_policy_using_pyobject(
-                &constructor_err, py_obj_metrics_policy,
-                &(config.policies.metrics));
-            if (status != AEROSPIKE_OK) {
-                goto RAISE_EXCEPTION_WITH_AS_ERROR;
-            }
-        }
-
         //global defaults setting
         PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
         if (py_key_policy && PyLong_Check(py_key_policy)) {
@@ -942,6 +888,59 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             PyDict_GetItemString(py_policies, "thread_pool_size");
         if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
             config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
+        }
+
+        /*
+		 * Generation policy is removed from constructor.
+		 */
+
+        /*
+		 * Set individual policy groups, and base policies for each
+		 * Set the individual policy groups new in 3.0
+		 * */
+
+        if (set_subpolicies(&config, py_policies) != AEROSPIKE_OK) {
+            error_code = INIT_POLICY_PARAM_ERR;
+            goto CONSTRUCTOR_ERROR;
+        }
+
+        // See comment at end of set_subpolicies() for why we process metrics policy here
+        PyObject *py_metrics_policy_option_name =
+            PyUnicode_FromString("metrics");
+        if (py_metrics_policy_option_name == NULL) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        PyObject *py_obj_metrics_policy =
+            PyDict_GetItemWithError(py_policies, py_metrics_policy_option_name);
+        Py_DECREF(py_metrics_policy_option_name);
+
+        if (py_obj_metrics_policy == NULL) {
+            if (PyErr_Occurred()) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            // User didn't provide default metrics policy.
+            // It is optional so just move on
+        }
+        else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
+                                                  "metrics", "MetricsPolicy",
+                                                  false) == false) {
+            // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
+            // But we want to set a different error message here
+            as_error_update(
+                &constructor_err, AEROSPIKE_ERR_PARAM,
+                "metrics must be an "
+                "aerospike_helpers.metrics.MetricsPolicy class instance. But "
+                "a %s was received instead",
+                py_obj_metrics_policy->ob_type->tp_name);
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+        else {
+            as_status status = set_as_metrics_policy_using_pyobject(
+                &constructor_err, py_obj_metrics_policy,
+                &(config.policies.metrics));
+            if (status != AEROSPIKE_OK) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
         }
 
         PyObject *py_login_timeout =
