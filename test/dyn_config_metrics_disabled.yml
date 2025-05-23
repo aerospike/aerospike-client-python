@@ -4,9 +4,7 @@ metadata:
   version: 0.0.1
 dynamic:
   metrics:
-    enable: true
-  write:
-    send_key: false
+    enable: false
 static:
   client:
     config_interval: 1
