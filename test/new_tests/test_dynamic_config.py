@@ -64,7 +64,7 @@ class TestDynamicConfig:
 
         yield
 
-        # Close file descriptors for metrics log files
+        # Close file descriptors for metrics log files before removing the files
         self.client.close()
 
         setup_client.remove(self.key)
