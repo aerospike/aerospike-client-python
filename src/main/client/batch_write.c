@@ -135,8 +135,9 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
 
     // setup for op conversion
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
+    as_dynamic_pool dynamic_pool;
+    dynamic_pool.pool = NULL;
+
 
     as_vector garbage_list;
     as_vector *garbage_list_p = NULL;
@@ -293,7 +294,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                     goto CLEANUP0;
                 }
 
-                if (add_op(self, err, py_op, unicodeStrVector, &static_pool,
+                if (add_op(self, err, py_op, unicodeStrVector, &dynamic_pool,
                            ops, &operation, &return_type) != AEROSPIKE_OK) {
                     goto CLEANUP0;
                 }
@@ -385,8 +386,10 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
             }
 
             as_list *arglist = NULL;
-            pyobject_to_list(self, err, py_args, &arglist, &static_pool,
-                             SERIALIZER_PYTHON);
+            
+            bool allocate_buffer = false;
+            pyobject_to_list(self, err, py_args, &arglist, &dynamic_pool,
+                             SERIALIZER_PYTHON, allocate_buffer);
             if (err->code != AEROSPIKE_OK) {
                 Py_DECREF(py_args);
                 goto CLEANUP0;
@@ -531,6 +534,9 @@ CLEANUP4:
 
     as_vector_destroy(unicodeStrVector);
 
+    if (dynamic_pool.pool != NULL) {
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    }
     if (exp_list_p != NULL) {
         as_exp_destroy(exp_list_p);
     }

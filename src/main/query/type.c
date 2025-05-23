@@ -208,7 +208,7 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
     }
 
     self->unicodeStrVector = NULL;
-    self->static_pool = NULL;
+    self->dynamic_pool = NULL;
     as_query_init(&self->query, namespace, set);
 
 CLEANUP:
@@ -235,6 +235,13 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
         }
 
         as_vector_destroy(self->unicodeStrVector);
+    }
+
+    if (self->dynamic_pool != NULL) {
+        if (self->dynamic_pool->pool != NULL) {
+            DESTROY_DYNAMIC_POOL(self->dynamic_pool, true);
+        }
+        cf_free(self->dynamic_pool);
     }
 
     Py_CLEAR(self->client);
