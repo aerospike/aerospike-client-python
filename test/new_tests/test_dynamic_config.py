@@ -64,6 +64,9 @@ class TestDynamicConfig:
 
         yield
 
+        # Close file descriptors for metrics log files
+        self.client.close()
+
         setup_client.remove(self.key)
         setup_client.close()
 
@@ -81,13 +84,13 @@ class TestDynamicConfig:
 
         write_policy = {"key": aerospike.POLICY_KEY_SEND}
         config["policies"]["write"] = write_policy
-        client = aerospike.client(config)
+        self.client = aerospike.client(config)
 
-        client.put(self.key, bins={"a": 1}, policy=write_policy)
+        self.client.put(self.key, bins={"a": 1}, policy=write_policy)
 
         # "Send key" is disabled in dynamic config
         # The key should not be returned here
-        query = client.query("test", "demo")
+        query = self.client.query("test", "demo")
         recs = query.results()
         assert len(recs) == 1
         # Check that record key tuple has a primary key
@@ -96,7 +99,6 @@ class TestDynamicConfig:
         assert first_record_key[2] is None
 
         # Cleanup
-        client.close()
         if use_env_var:
             del os.environ[AEROSPIKE_CLIENT_CONFIG_URL]
 
