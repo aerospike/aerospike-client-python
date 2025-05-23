@@ -10,14 +10,6 @@ METRICS_LOG_FILES = "./metrics-*.log"
 
 
 class TestDynamicConfig:
-    @pytest.fixture
-    def cleanup_metrics_logs(self):
-        yield
-
-        metrics_log_filenames = glob.glob(METRICS_LOG_FILES)
-        for item in metrics_log_filenames:
-            os.remove(item)
-
     def test_config_provider_defaults(self):
         provider = aerospike.ConfigProvider(path="path")
         assert provider.interval == 60
@@ -51,6 +43,14 @@ class TestDynamicConfig:
         # TODO: currently there is no way to restore the log handler and level before running this test
         # These are the defaults in the implementation
         aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
+
+    @pytest.fixture
+    def cleanup_metrics_logs(self):
+        yield
+
+        metrics_log_filenames = glob.glob(METRICS_LOG_FILES)
+        for item in metrics_log_filenames:
+            os.remove(item)
 
     @pytest.fixture
     def functional_test_setup(self, show_more_logs, cleanup_metrics_logs):
