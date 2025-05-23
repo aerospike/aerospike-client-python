@@ -875,6 +875,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     as_conn_stats *sync = &node_stats.sync;
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(error_p, sync);
+    aerospike_node_stats_destroy(&node_stats);
     if (py_conn_stats == NULL) {
         goto error;
     }
