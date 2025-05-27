@@ -29,8 +29,6 @@
 #include <aerospike/as_txn.h>
 #include <aerospike/as_config.h>
 
-#include "pool.h"
-
 #define AEROSPIKE_MODULE_NAME "aerospike"
 #define FULLY_QUALIFIED_TYPE_NAME(name) AEROSPIKE_MODULE_NAME "." name
 
