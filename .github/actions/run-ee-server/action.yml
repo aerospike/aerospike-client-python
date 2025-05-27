@@ -11,7 +11,6 @@ inputs:
   server-tag:
     required: true
     description: Specify Docker tag
-    default: 'latest'
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
   docker-hub-username:
@@ -38,8 +37,21 @@ runs:
   - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
+  - run: docker pull $IMAGE_NAME
+    shell: bash
+
   - run: echo NEW_IMAGE_NAME=aerospike/aerospike-server-enterprise-python-client-testing:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
+
+  - run: echo REGISTRY=ghcr.io >> $GITHUB_ENV
+    shell: bash
+
+  - uses: docker/metadata-action@v5
+    id: meta
+    with:
+      images: ${{ env.REGISTRY }}/$NEW_IMAGE_NAME
+      # These images aren't used by customers, anyway.
+      flavor: latest=false
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
   # Also we want to use the docker-container driver so we can cache our custom server image
@@ -50,6 +62,12 @@ runs:
 
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
+
+  - uses: docker/login-action@v3
+    with:
+      registry: ${{ env.REGISTRY }}
+      username: ${{ github.actor }}
+      password: ${{ secrets.GITHUB_TOKEN }}
 
   - name: Build Aerospike server Docker image for testing
     # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
