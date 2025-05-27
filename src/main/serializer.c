@@ -219,8 +219,12 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     PyObject *py_value = NULL;
     PyObject *py_arglist = PyTuple_New(1);
     bool allocate_buffer = true;
-
-    if (dynamic_pool) {
+    bool serializer = false;
+    if(dynamic_pool){
+        serializer = true;
+    }
+    
+    if (serializer) {
         Py_XINCREF(*value);
         if (PyTuple_SetItem(py_arglist, 0, *value) != 0) {
             Py_DECREF(py_arglist);
@@ -244,7 +248,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
     Py_DECREF(py_arglist);
 
     if (py_return) {
-        if (dynamic_pool) {
+        if (serializer) {
             char *py_val;
             Py_ssize_t len;
 
@@ -262,7 +266,7 @@ void execute_user_callback(user_serializer_callback *user_callback_info,
         }
     }
     else {
-        if (dynamic_pool) {
+        if (serializer) {
             as_error_update(
                 error_p, AEROSPIKE_ERR,
                 "Unable to call user's registered serializer callback");

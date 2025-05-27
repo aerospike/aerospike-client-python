@@ -121,7 +121,7 @@ static inline void dynamic_pool_expand_table_if_needed(as_dynamic_pool *dynamic_
 static inline void dynamic_pool_destroy_bytes_in_group(as_dynamic_pool *dynamic_pool, uint16_t group_index, uint16_t num_bytes)
 {
     as_bytes* group = dynamic_pool->byte_group_table[group_index];
-    for (uint16_t i = 0; i < bytes_index; i++) {
+    for (uint16_t i = 0; i < num_bytes; i++) {
         as_bytes_destroy(&(group[i]));
     }
 }
@@ -141,7 +141,7 @@ static inline void dynamic_pool_free_group(as_dynamic_pool *dynamic_pool, bool f
 {
     // Destroy bytes if buffer value is allocated on the heap
     if (free_buffer) {
-        dynamic_pool_destroy_bytes_in_group(dynamic_pool, group_index, bytes_index);
+        dynamic_pool_destroy_bytes_in_group(dynamic_pool, group_index, num_bytes);
     }
     as_bytes* group = dynamic_pool->byte_group_table[group_index];
     cf_free((as_dynamic_pool *)group);
