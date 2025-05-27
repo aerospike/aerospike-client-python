@@ -136,7 +136,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
     // setup for op conversion
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
     as_dynamic_pool dynamic_pool;
-    dynamic_pool.pool = NULL;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
 
     as_vector garbage_list;
@@ -534,9 +534,8 @@ CLEANUP4:
 
     as_vector_destroy(unicodeStrVector);
 
-    if (dynamic_pool.pool != NULL) {
-        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
-    }
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+
     if (exp_list_p != NULL) {
         as_exp_destroy(exp_list_p);
     }

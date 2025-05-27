@@ -70,7 +70,7 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_error_init(&err);
 
     as_dynamic_pool dynamic_pool;
-    dynamic_pool.pool = NULL;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
 
     if (!self || !self->as) {
@@ -128,9 +128,8 @@ CLEANUP:
         as_record_destroy(&rec);
     }
 
-    if (dynamic_pool.pool != NULL) {
-        DESTROY_DYNAMIC_POOL(&dynamic_pool, true);
-    }
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, true);
+    
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {

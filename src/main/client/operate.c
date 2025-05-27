@@ -863,7 +863,7 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_operations_inita(&ops, size);
 
     as_dynamic_pool dynamic_pool;
-    dynamic_pool.pool = NULL;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
     CHECK_CONNECTED(err);
 
@@ -928,9 +928,8 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    if (dynamic_pool.pool != NULL) {
-        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
-    }
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);
         return NULL;
@@ -1023,7 +1022,7 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     as_vector *unicodeStrVector = as_vector_create(sizeof(char *), 128);
 
     as_dynamic_pool dynamic_pool;
-    dynamic_pool.pool = NULL;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
 
     as_operations ops;
@@ -1144,9 +1143,8 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    if (dynamic_pool.pool != NULL) {
-        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
-    }
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);
         return NULL;

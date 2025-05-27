@@ -1654,7 +1654,7 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
     as_vector_inita(&intermediate_expr_queue, sizeof(intermediate_expr), size);
 
     as_dynamic_pool dynamic_pool;
-    dynamic_pool.pool = NULL;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
     // Flags in case we need to deallocate temp expr while it is being built
     bool is_building_temp_expr = true;
@@ -1827,9 +1827,8 @@ CLEANUP:
     }
 
     as_vector_destroy(unicodeStrVector);
-    if (dynamic_pool.pool != NULL) {
-        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
-    }
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+
 
     return err->code;
 }

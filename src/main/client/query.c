@@ -286,7 +286,7 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     as_error_init(&err);
 
     as_dynamic_pool dynamic_pool;
-    dynamic_pool.pool = NULL;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
 
     if (!self || !self->as) {
@@ -465,9 +465,8 @@ CLEANUP:
     if (is_query_init) {
         as_query_destroy(&query);
     }
-    if (dynamic_pool.pool != NULL) {
-        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
-    }
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;

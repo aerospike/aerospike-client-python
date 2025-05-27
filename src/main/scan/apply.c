@@ -56,7 +56,7 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
     if (self->dynamic_pool == NULL) {
         self->dynamic_pool =
             (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
-        self->dynamic_pool->pool = NULL;
+        BYTE_POOL_INIT_NULL(self->dynamic_pool);
     }
 
     if (!self || !self->client->as) {

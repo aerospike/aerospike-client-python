@@ -55,7 +55,7 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     as_error_init(&err);
 
     as_dynamic_pool dynamic_pool;
-    dynamic_pool.pool = NULL;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
     static char *kwlist[] = {"ctx", NULL};
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:get_cdtctx_base64", kwlist,
@@ -124,9 +124,8 @@ CLEANUP:
     if (base64 != NULL) {
         cf_free(base64);
     }
-    if (dynamic_pool.pool != NULL) {
-        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
-    }
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;
