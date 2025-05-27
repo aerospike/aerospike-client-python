@@ -242,7 +242,8 @@ CLEANUP:
         return NULL;
     }
 
-    return PyLong_FromLong(scan_id);
+    // TODO: Doesn't match api
+    return PyLong_FromUnsignedLongLong(scan_id);
 }
 
 /**

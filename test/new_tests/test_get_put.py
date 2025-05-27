@@ -907,3 +907,21 @@ class TestGetPut:
         assert 0 == self.as_connection.put(key, null_bin)
         with pytest.raises(e.RecordNotFound):
             res = self.as_connection.get(key)
+
+    def test_put_int_greater_than_32_bits(self):
+        # This tests the Python client implementation on Windows
+        # It makes sure that we can insert integers larger than 32 bits in Windows
+        key = ("test", "demo", 123)
+        self.as_connection.put(key, {"a": 2**32})
+        # and that we can also retrieve integers larger than 32 bits
+        _, _, bins = self.as_connection.get(key)
+        assert bins["a"] == 2**32
+
+        # Cleanup
+        self.as_connection.remove(key)
+
+    def test_put_invalid_type(self):
+        key = ("test", "demo", 123)
+        with pytest.raises(e.ClientError) as excinfo:
+            self.as_connection.put(key, {"a": aerospike.CDTInfinite()})
+        assert excinfo.value.msg == "Invalid value type: 14"

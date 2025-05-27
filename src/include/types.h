@@ -27,6 +27,9 @@
 #include <aerospike/as_operations.h>
 #include "dynamic_pool.hpp"
 #include <aerospike/as_txn.h>
+#include <aerospike/as_config.h>
+
+#include "pool.h"
 
 #define AEROSPIKE_MODULE_NAME "aerospike"
 #define FULLY_QUALIFIED_TYPE_NAME(name) AEROSPIKE_MODULE_NAME "." name
@@ -108,3 +111,10 @@ typedef struct {
 } AerospikeTransaction;
 
 extern PyTypeObject AerospikeTransaction_Type;
+
+typedef struct {
+    PyObject_HEAD char *path;
+    uint32_t interval;
+} AerospikeConfigProvider;
+
+extern PyTypeObject AerospikeConfigProvider_Type;
