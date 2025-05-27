@@ -23,6 +23,9 @@ inputs:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
     default: 'docker-host'
+  GITHUB_TOKEN:
+    required: true
+    description: GITHUB_TOKEN
 
 runs:
   using: "composite"
@@ -67,7 +70,7 @@ runs:
     with:
       registry: ${{ env.REGISTRY }}
       username: ${{ github.actor }}
-      password: ${{ secrets.GITHUB_TOKEN }}
+      password: ${{ inputs.GITHUB_TOKEN }}
 
   - name: Build Aerospike server Docker image for testing
     # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
