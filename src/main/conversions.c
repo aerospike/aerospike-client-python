@@ -1265,6 +1265,7 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
         Py_ssize_t pos = 0;
         bool allocate_buffer = false;
         Py_ssize_t size = PyDict_Size(py_bins_dict);
+
         const char *name;
 
         as_record_init(rec, size);
@@ -1299,88 +1300,11 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
             }
 
             as_val *val = NULL;
-            as_val_new_from_pyobject(self, err, py_bin_value, &val, dynamic_pool,
-                                     serializer_type, allocate_buffer);
+            as_val_new_from_pyobject(self, err, py_bin_value, &val, static_pool,
+                                     serializer_type);
             if (err->code != AEROSPIKE_OK) {
                 break;
             }
-            else if (PyUnicode_Check(value)) {
-                PyObject *py_ustr = PyUnicode_AsUTF8String(value);
-                if (!py_ustr) {
-                    return as_error_update(
-                        err, AEROSPIKE_ERR_CLIENT,
-                        "Unicode value not encoded in utf-8.");
-                }
-                char *val = PyBytes_AsString(py_ustr);
-                ret_val = as_record_set_strp(rec, name, strdup(val), true);
-                Py_DECREF(py_ustr);
-            }
-            else if (PyBytes_Check(value)) {
-                uint8_t *b = (uint8_t *)PyBytes_AsString(value);
-                uint32_t b_len = (uint32_t)PyBytes_Size(value);
-                as_bytes *bytes;
-                GET_BYTES_POOL(bytes, dynamic_pool, err);
-                as_bytes_init_wrap(bytes, b, b_len, false);
-                if (is_pyobj_correct_as_helpers_type(value, NULL,
-                                                     "HyperLogLog")) {
-                    bytes->type = AS_BYTES_HLL;
-                }
-                ret_val = as_record_set_bytes(rec, name, bytes);
-            }
-            else if (PyByteArray_Check(value)) {
-                uint8_t *str = (uint8_t *)PyByteArray_AsString(value);
-                uint32_t str_len = (uint32_t)PyByteArray_Size(value);
-                as_bytes *bytes;
-                GET_BYTES_POOL(bytes, dynamic_pool, err);
-                as_bytes_init_wrap(bytes, str, str_len, false);
-                ret_val = as_record_set_bytes(rec, name, bytes);
-            }
-            else if (PyList_Check(value)) {
-                // as_list
-                as_list *list = NULL;
-                pyobject_to_list(self, err, value, &list, dynamic_pool,
-                                 serializer_type, allocate_buffer);
-                if (err->code != AEROSPIKE_OK) {
-                    break;
-                }
-                ret_val = as_record_set_list(rec, name, list);
-            }
-            else if (PyDict_Check(value)) {
-                // as_map
-                as_map *map = NULL;
-                pyobject_to_map(self, err, value, &map, dynamic_pool,
-                                serializer_type, allocate_buffer);
-                if (err->code != AEROSPIKE_OK) {
-                    break;
-                }
-                ret_val = as_record_set_map(rec, name, map);
-            }
-            else if (!strcmp(value->ob_type->tp_name, "aerospike.null")) {
-                ret_val = as_record_set_nil(rec, name);
-            }
-            else {
-                if (PyFloat_Check(value)) {
-                    double val = PyFloat_AsDouble(value);
-                    ret_val = as_record_set_double(rec, name, val);
-                }
-                else {
-                    as_bytes *bytes;
-                    if (err->code == AEROSPIKE_OK) {
-                        if (serialize_based_on_serializer_policy(
-                                self, serializer_type, &bytes, dynamic_pool, value, err) !=
-                            AEROSPIKE_OK) {
-                            return err->code;
-                        }
-                        ret_val = as_record_set_bytes(rec, name, bytes);
-                    }
-                }
-            }
-
-            if (self->strict_types) {
-                if (!ret_val) {
-                    return as_error_update(err, AEROSPIKE_ERR_BIN_NAME,
-                                           "Unable to set key-value pair");
-                }
             bool success = as_record_set(rec, name, (as_bin_value *)val);
             if (success == false) {
                 as_val_destroy(val);
