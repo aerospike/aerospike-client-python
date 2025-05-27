@@ -38,7 +38,7 @@ runs:
   - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-python-client-testing >> $GITHUB_ENV
+  - run: echo NEW_IMAGE_NAME=aerospike/aerospike-server-enterprise-python-client-testing:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
@@ -65,9 +65,10 @@ runs:
       # the docker-container driver doesn't publish an image locally by default
       # so we have to manually enable it
       load: true
+      push: true
       # Also cache so we don't have to rebuild every time we use this action
-      cache-from: type=gha
-      cache-to: type=gha,mode=max
+      cache-from: type=registry,ref=${{ env.NEW_IMAGE_NAME }}
+      cache-to: type=registry,ref=${{ env.NEW_IMAGE_NAME }},mode=max
 
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
