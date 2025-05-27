@@ -1168,7 +1168,7 @@ as_status as_val_new_from_pyobject(AerospikeClient *self, as_error *err,
             as_bytes_init_wrap(bytes, b, b_len, false);
         }
 
-        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog")) {
+        if (is_pyobj_correct_as_helpers_type(py_obj, NULL, "HyperLogLog", false)) {
             bytes->type = AS_BYTES_HLL;
         }
         *val = (as_val *)bytes;
