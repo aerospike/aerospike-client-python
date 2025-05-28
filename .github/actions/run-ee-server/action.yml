@@ -55,7 +55,7 @@ runs:
     with:
       images: ${{ env.NEW_IMAGE_NAME }}
       tags: |
-        type=,enable=false
+        value=,enable=false
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
   # Also we want to use the docker-container driver so we can cache our custom server image
   - uses: docker/setup-buildx-action@v3
