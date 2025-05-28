@@ -47,7 +47,7 @@ runs:
   - run: echo REGISTRY=ghcr.io >> $GITHUB_ENV
     shell: bash
 
-  - run: echo NEW_IMAGE_NAME=${{ env.REGISTRY }}/aerospike/aerospike-server-enterprise-python-client-testing:${{ inputs.server-tag }} >> $GITHUB_ENV
+  - run: echo NEW_IMAGE_NAME=${{ env.REGISTRY }}/aerospike/aerospike-server-enterprise-python-client-testing >> $GITHUB_ENV
     shell: bash
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
@@ -76,7 +76,7 @@ runs:
       build-args: |
         SERVER_IMAGE=${{ env.IMAGE_NAME }}
         TLS_PORT=${{ env.TLS_PORT }}
-      tags: ${{ env.NEW_IMAGE_NAME }}
+      tags: ${{ env.NEW_IMAGE_NAME }}:${{ inputs.server-tag }}
       # the docker-container driver doesn't publish an image locally by default
       # so we have to manually enable it
       push: true
