@@ -44,18 +44,16 @@ runs:
   - run: docker pull $IMAGE_NAME
     shell: bash
 
-  - run: echo NEW_IMAGE_NAME=aerospike/aerospike-server-enterprise-python-client-testing:${{ inputs.server-tag }} >> $GITHUB_ENV
+  - run: echo REGISTRY=ghcr.io >> $GITHUB_ENV
     shell: bash
 
-  - run: echo REGISTRY=ghcr.io >> $GITHUB_ENV
+  - run: echo NEW_IMAGE_NAME=${{ env.REGISTRY }}/aerospike/aerospike-server-enterprise-python-client-testing:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
   - uses: docker/metadata-action@v5
     id: meta
     with:
-      images: ${{ env.REGISTRY }}/$NEW_IMAGE_NAME
-      # These images aren't used by customers, anyway.
-      flavor: latest=false
+      images: $NEW_IMAGE_NAME
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
   # Also we want to use the docker-container driver so we can cache our custom server image
@@ -83,12 +81,11 @@ runs:
       build-args: |
         SERVER_IMAGE=${{ env.IMAGE_NAME }}
         TLS_PORT=${{ env.TLS_PORT }}
-      tags: ${{ env.NEW_IMAGE_NAME }}
+      tags: ${{ steps.meta.outputs.tags }}
       # the docker-container driver doesn't publish an image locally by default
       # so we have to manually enable it
-      load: true
       push: true
-      # Also cache so we don't have to rebuild every time we use this action
+      # Also cache image so we don't have to rebuild it every time we use this action
       cache-from: type=registry,ref=${{ env.NEW_IMAGE_NAME }}
       cache-to: type=registry,ref=${{ env.NEW_IMAGE_NAME }},mode=max
 
