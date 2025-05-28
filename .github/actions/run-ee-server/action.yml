@@ -88,7 +88,7 @@ runs:
       push: true
       # Also cache image so we don't have to rebuild it every time we use this action
       cache-from: type=registry,ref=${{ env.NEW_IMAGE_NAME }}
-      cache-to: type=registry,ref=${{ env.NEW_IMAGE_NAME }},mode=max
+      cache-to: type=inline
 
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
