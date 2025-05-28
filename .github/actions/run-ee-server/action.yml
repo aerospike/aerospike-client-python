@@ -53,7 +53,7 @@ runs:
   - uses: docker/metadata-action@v5
     id: meta
     with:
-      images: $NEW_IMAGE_NAME
+      images: ${{ env.NEW_IMAGE_NAME }}
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
   # Also we want to use the docker-container driver so we can cache our custom server image
