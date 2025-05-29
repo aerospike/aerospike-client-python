@@ -182,8 +182,7 @@ class TestInvalidClientConfig(object):
     def test_validate_keys(self, config):
         config["validate_keys"] = True
 
-        {"hosts": [("127.0.0.1", 3000)]}
-
+        if "host" not in config:
 
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)

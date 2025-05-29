@@ -565,17 +565,15 @@ static struct type_name_to_creation_method py_module_types[] = {
     const char *array_name_prefix##_valid_keys[] = {__VA_ARGS__};              \
     PyObject *py_##array_name_prefix##_valid_keys;
 
-DEFINE_SET_OF_VALID_KEYS(client_config, "lua", "tls", "hosts", "shm",
-                         "serialization", "policies", "thread_pool_size",
-                         "max_threads", "min_conns_per_node",
-                         "max_conns_per_node", "max_error_rate",
-                         "error_rate_window", "connect_timeout",
-                         "use_shared_connection", "send_bool_as",
-                         "compression_threshold", "tend_interval",
-                         "cluster_name", "strict_types", "rack_aware",
-                         "rack_id", "rack_ids", "use_services_alternate",
-                         "max_socket_idle", "fail_if_not_connected", "user",
-                         "password", "validate_keys", NULL)
+DEFINE_SET_OF_VALID_KEYS(
+    client_config, "lua", "config_provider", "tls", "hosts", "shm",
+    "serialization", "policies", "thread_pool_size", "max_threads",
+    "min_conns_per_node", "max_conns_per_node", "max_error_rate",
+    "error_rate_window", "connect_timeout", "use_shared_connection",
+    "send_bool_as", "compression_threshold", "tend_interval", "cluster_name",
+    "strict_types", "rack_aware", "rack_id", "rack_ids",
+    "use_services_alternate", "max_socket_idle", "fail_if_not_connected",
+    "user", "password", "validate_keys", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_shm, "shm_max_nodes", "max_nodes",
                          "shm_max_namespaces", "max_namespaces",
