@@ -577,10 +577,8 @@ DEFINE_SET_OF_VALID_KEYS(
 
 DEFINE_SET_OF_VALID_KEYS(client_config_shm, "shm_max_nodes", "max_nodes",
                          "shm_max_namespaces", "max_namespaces",
-                         "shm_takeover_threshold_sec",
-                         "takeover_threshold_sec"
-                         "shm_key",
-                         NULL)
+                         "shm_takeover_threshold_sec", "takeover_threshold_sec",
+                         "shm_key", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(client_config_lua, "system_path", "user_path", NULL
 
