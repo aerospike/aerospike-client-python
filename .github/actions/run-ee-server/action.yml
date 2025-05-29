@@ -20,25 +20,40 @@ inputs:
   docker-hub-password:
     description: Required for using release candidates
     required: false
-  where-is-client-connecting-from:
-    required: false
-    description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
-    default: 'docker-host'
+
+# Outputs a running server Docker container
+# NOTE: side effects:
+# If docker-hub-username and password are passed as inputs,
+# a previous set of credentials used for docker will be overwritten
+outputs:
+  container-name:
+    description: Server container name
+    value: ${{ steps.get-container-name.outputs.container_name }}
+  # TODO: how to get this dynamically?
+  test-username:
+    description: If security enabled, which username to use to log into server
+    value: superuser
+  test-password:
+    description: If security enabled, which password to use to log into server
+    value: superuser
+  cluster-name:
+    description: Used to connect to server via TLS
+    value: ${{ steps.get-cluster-name.outputs.cluster_name }}
+  tls-port:
+    description: ''
+    value: ${{ steps.get-tls-port.outputs.tls_port }}
 
 runs:
   using: "composite"
   steps:
-  # Start up server
-
   - name: Log into Docker Hub to get server RC
     if: ${{ inputs.use-server-rc == 'true' }}
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
     shell: bash
 
-  - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
-    shell: bash
-
-  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-python-client-testing >> $GITHUB_ENV
+  - name: Get base image name
+    id: get-base-image-name
+    run: echo "base_image_name=${{ format('aerospike/aerospike-server-enterprise{0}:{1}', inputs.use-server-rc == 'true' && '-rc' || '', inputs.server-tag) }}" >> $GITHUB_OUTPUT
     shell: bash
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
@@ -48,29 +63,31 @@ runs:
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
     shell: bash
 
-  - run: echo TLS_PORT="4333" >> $GITHUB_ENV
+  - run: echo tls_port=4333 >> $GITHUB_OUTPUT
+    id: get-tls-port
     shell: bash
 
   - name: Build Aerospike server Docker image for testing
     # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
     # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
     uses: docker/build-push-action@v6
+    id: build-image
     with:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
       context: .github/workflows/docker-build-context
       build-args: |
-        SERVER_IMAGE=${{ env.IMAGE_NAME }}
-        TLS_PORT=${{ env.TLS_PORT }}
-      tags: ${{ env.NEW_IMAGE_NAME }}
+        SERVER_IMAGE=${{ steps.get-base-image-name.outputs.base_image_name }}
+        TLS_PORT=${{ steps.get-tls-port.outputs.tls_port }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
       load: true
 
-  - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
+  - id: get-server-container-name
+    run: echo "container_name=aerospike" >> $GITHUB_OUTPUT
     shell: bash
 
-  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  - run: docker run -d --name ${{ steps.get-server-container-name.outputs.container_name }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ steps.build-image.outputs.imageid }}
     shell: bash
 
   - name: 'macOS: install timeout command'
@@ -80,72 +97,18 @@ runs:
 
   - name: Wait for container to be healthy
     run: |
-      timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ env.SERVER_CONTAINER_NAME }})" == "healthy" ]]; do sleep 0.1; done'
-    shell: bash
-
-  # For debugging
-  - run: docker logs ${{ env.SERVER_CONTAINER_NAME }}
-    shell: bash
-
-  # Configure tests
-
-  - name: Install crudini to manipulate config.conf
-    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
-    working-directory: .github/workflows
-    shell: bash
-
-  - name: Create config.conf
-    run: cp config.conf.template config.conf
-    working-directory: test
-    shell: bash
-
-  - name: Disable community edition connection
-    run: crudini --existing=param --set config.conf community-edition hosts ''
-    working-directory: test
-    shell: bash
-
-  - run: echo SUPERUSER_NAME_AND_PASSWORD="superuser" >> $GITHUB_ENV
-    shell: bash
-
-  - name: Set credentials in config file
-    run: |
-      crudini --existing=param --set config.conf enterprise-edition user ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --existing=param --set config.conf enterprise-edition password ${{ env.SUPERUSER_NAME_AND_PASSWORD }}
-      crudini --set config.conf tls enable true
-      # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
-      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
-    working-directory: test
-    shell: bash
-
-  - name: Set IP address to localhost
-    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
-    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
-    working-directory: test
-    shell: bash
-
-  - name: Set IP address to remote machine running the Docker daemon
-    if: ${{ inputs.where-is-client-connecting-from == 'remote-connection' }}
-    run: |
-      SERVER_IP=${DOCKER_HOST/tcp:\/\//}
-      echo SERVER_IP=${SERVER_IP/:2375/} >> $GITHUB_ENV
-    working-directory: test
-    shell: bash
-
-  - name: Set IP address to Docker container for the server
-    if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
-    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ env.SERVER_CONTAINER_NAME }}) >> $GITHUB_ENV
-    shell: bash
-
-  - name: Invalid input
-    if: ${{ env.SERVER_IP == '' }}
-    run: exit 1
+      timeout 30s bash -c 'until [[ "$(docker inspect -f {{.State.Health.Status}} ${{ steps.get-server-container-name.outputs.container_name }})" == "healthy" ]]; do sleep 0.1; done'
     shell: bash
 
   - name: Get cluster name
-    run: echo CLUSTER_NAME=$(docker exec ${{ env.SERVER_CONTAINER_NAME }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_ENV
+    id: get-cluster-name
+    run: echo cluster_name=$(docker exec ${{ inputs.server-container-name }} asinfo -v "get-config:context=service" -l | grep -i cluster-name | cut -d = -f 2) >> $GITHUB_OUTPUT
     shell: bash
 
-  - name: Set EE server's IP address
-    run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ env.TLS_PORT }}|${{ env.CLUSTER_NAME }}"
-    working-directory: test
+  # For debugging
+  - run: docker logs ${{ steps.get-server-container-name.outputs.container_name }}
+    shell: bash
+
+  - name: Logout of Docker Hub
+    run: docker logout
     shell: bash
