@@ -635,7 +635,8 @@ DEFINE_SET_OF_VALID_KEYS(remove_policy, BASE_POLICY_KEYS, "generation", "key",
 )
 
 DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, "durable_delete",
-                         "records_per_second", "max_records", "replica", NULL
+                         "records_per_second", "max_records", "replica", "ttl",
+                         NULL
 
 )
 
