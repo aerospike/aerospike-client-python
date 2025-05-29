@@ -142,5 +142,9 @@ extern PyObject *py_map_policy_valid_keys;
 extern PyObject *py_list_policy_valid_keys;
 extern PyObject *py_hll_policy_valid_keys;
 
+// py_set contains the valid keys
+// Return -1 if we failed to validate dictionary
+// Return 0 if dictionary has invalid keys
+// Return 1 if dictionary's keys are all valid
 extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                                            PyObject *py_set);
