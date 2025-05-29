@@ -39,7 +39,8 @@ as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
 
 as_status set_subpolicies(as_config *config, PyObject *py_policies,
                           int validate_keys);
-as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy);
+as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy,
+                          int validate_keys);
 as_status set_write_policy(as_policy_write *write_policy, PyObject *py_policy);
 as_status set_apply_policy(as_policy_apply *apply_policy, PyObject *py_policy);
 as_status set_remove_policy(as_policy_remove *remove_policy,
