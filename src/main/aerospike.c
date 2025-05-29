@@ -641,14 +641,15 @@ DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, "durable_delete",
 
 DEFINE_SET_OF_VALID_KEYS(write_policy, BASE_POLICY_KEYS, "key", "gen", "exists",
                          "commit_level", "durable_delete", "replica",
-                         "compression_threshold", "on_locking_only", NULL
+                         "compression_threshold", "on_locking_only", "ttl", NULL
 
 )
 
 DEFINE_SET_OF_VALID_KEYS(operate_policy, BASE_POLICY_KEYS, "key", "gen",
                          "commit_level", "replica", "durable_delete",
                          "deserialize", "exists", "read_touch_ttl_percent",
-                         "on_locking_only", "read_mode_ap", "read_mode_sc", NULL
+                         "on_locking_only", "read_mode_ap", "read_mode_sc",
+                         "ttl", NULL
 
 )
 
@@ -662,7 +663,7 @@ DEFINE_SET_OF_VALID_KEYS(batch_policy, BASE_POLICY_KEYS, "concurrent",
 
 DEFINE_SET_OF_VALID_KEYS(batch_write_policy, "key", "gen", "commit_level",
                          "durable_delete", "exists", "on_locking_only",
-                         "expressions", NULL
+                         "expressions", "ttl", NULL
 
 )
 
