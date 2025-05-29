@@ -39,15 +39,15 @@ as_status set_optional_int_property(int *property_ptr, PyObject *py_policy,
 /*
  * py_policies must exist, and be a dictionary
  */
-as_status set_subpolicies(as_config *config, PyObject *py_policies,
-                          int validate_keys)
+as_status set_subpolicies(as_error *err, as_config *config,
+                          PyObject *py_policies, int validate_keys)
 {
 
     as_status set_policy_status = AEROSPIKE_OK;
 
     PyObject *read_policy = PyDict_GetItemString(py_policies, "read");
-    set_policy_status =
-        set_read_policy(&config->policies.read, read_policy, validate_keys);
+    set_policy_status = set_read_policy(err, &config->policies.read,
+                                        read_policy, validate_keys);
     if (set_policy_status != AEROSPIKE_OK) {
         return set_policy_status;
     }
@@ -160,8 +160,8 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies,
     return AEROSPIKE_OK;
 }
 
-as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy,
-                          int validate_keys)
+as_status set_read_policy(as_error *err, as_policy_read *read_policy,
+                          PyObject *py_policy, int validate_keys)
 {
 
     as_status status = AEROSPIKE_OK;
@@ -174,8 +174,7 @@ as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy,
     }
 
     if (validate_keys) {
-        as_error err;
-        int retval = does_py_dict_contain_valid_keys(&err, py_policy,
+        int retval = does_py_dict_contain_valid_keys(err, py_policy,
                                                      py_read_policy_valid_keys);
         if (retval != 1) {
             return AEROSPIKE_ERR_PARAM;

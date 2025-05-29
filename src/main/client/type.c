@@ -997,10 +997,16 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		 * Set the individual policy groups new in 3.0
 		 * */
 
-        if (set_subpolicies(&config, py_policies, validate_keys) !=
-            AEROSPIKE_OK) {
-            error_code = INIT_POLICY_PARAM_ERR;
-            goto CONSTRUCTOR_ERROR;
+        if (set_subpolicies(&constructor_err, &config, py_policies,
+                            validate_keys) != AEROSPIKE_OK) {
+            if (constructor_err.code != AEROSPIKE_OK) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+            else {
+                // Return error without using as_error object
+                error_code = INIT_POLICY_PARAM_ERR;
+                goto CONSTRUCTOR_ERROR;
+            }
         }
 
         // See comment at end of set_subpolicies() for why we process metrics policy here
