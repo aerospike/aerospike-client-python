@@ -699,6 +699,8 @@ DEFINE_SET_OF_VALID_KEYS(list_policy, "list_order", "write_flags", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(hll_policy, "flags", NULL)
 
+DEFINE_SET_OF_VALID_KEYS(admin_policy, "timeout", NULL)
+
 // Take the pyobjects and string lists above and connect them using a struct
 // When we initialize the module, we create sets for the valid keys that the client can use later
 
