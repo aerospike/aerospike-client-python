@@ -17,6 +17,9 @@
 
 #include "policy_config.h"
 
+extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
+                                           PyObject *py_set);
+
 as_status set_optional_key(as_policy_key *target_ptr, PyObject *py_policy,
                            const char *name);
 as_status set_optional_replica(as_policy_replica *target_ptr,
