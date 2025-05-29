@@ -16,9 +16,7 @@
 #include <stdint.h>
 
 #include "policy_config.h"
-
-extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
-                                           PyObject *py_set);
+#include "types.h"
 
 as_status set_optional_key(as_policy_key *target_ptr, PyObject *py_policy,
                            const char *name);
@@ -176,14 +174,11 @@ as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy,
     }
 
     if (validate_keys) {
-        int retval = does_py_dict_contain_valid_keys(
-            &constructor_err, py_policies,
-            py_client_config_policies_valid_keys);
-        if (retval == -1) {
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-        }
-        else if (retval == 0) {
-            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        as_error err;
+        int retval = does_py_dict_contain_valid_keys(&err, py_policy,
+                                                     py_read_policy_valid_keys);
+        if (retval != 1) {
+            return AEROSPIKE_ERR_PARAM;
         }
     }
 
