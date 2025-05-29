@@ -118,6 +118,7 @@ typedef struct {
 
 extern PyTypeObject AerospikeConfigProvider_Type;
 
+// These are defined in aerospike.c
 extern PyObject *py_client_config_valid_keys;
 extern PyObject *py_client_config_shm_valid_keys;
 extern PyObject *py_client_config_lua_valid_keys;
