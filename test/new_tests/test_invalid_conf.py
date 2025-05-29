@@ -173,11 +173,18 @@ class TestInvalidClientConfig(object):
             aerospike.client(config)
         assert excinfo.value.msg == 'config[\"validate_keys\"] must be a boolean'
 
-    def test_validate_keys(self):
-        config = {
-            "validate_keys": True,
-            "host": [("127.0.0.1", 3000)]
-        }
+    @pytest.mark.parametrize(
+        "config",
+        [
+            {"host": [("127.0.0.1", 3000)]},
+        ]
+    )
+    def test_validate_keys(self, config):
+        config["validate_keys"] = True
+
+        {"hosts": [("127.0.0.1", 3000)]}
+
+
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
         assert excinfo.value.msg == '\"host\" is an invalid client config dictionary key'

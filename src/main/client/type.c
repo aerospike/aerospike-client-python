@@ -568,6 +568,39 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         goto CONSTRUCTOR_ERROR;
     }
 
+    // Very first thing to check before validating config keys
+    PyObject *py_validate_keys_str = PyUnicode_FromString("validate_keys");
+    if (py_validate_keys_str == NULL) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+
+    int validate_keys = 0;
+    PyObject *py_validate_keys =
+        PyDict_GetItemWithError(py_config, py_validate_keys_str);
+    Py_DECREF(py_validate_keys_str);
+    if (py_validate_keys) {
+        if (!PyBool_Check(py_validate_keys)) {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "config[\"validate_keys\"] must be a boolean");
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+        validate_keys = PyObject_IsTrue(py_validate_keys);
+        if (validate_keys == -1) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            &constructor_err, py_config, py_client_config_valid_keys);
+        if (retval == -1) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        else if (retval == 0) {
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+    }
+
     // We create a new class for as_config_provider
     // because dictionaries are meant to have any kind of keys / values
     // whereas classes follow a well defined spec
@@ -608,39 +641,6 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         // This method creates a new copy of the string at py_config_provider->provider->path
         // so that the as_config object doesn't depend on the lifetime of the aerospike.ConfigProvider object in Python
         as_config_provider_set_path(&config, py_config_provider->path);
-    }
-
-    // Very first thing to check before validating config keys
-    PyObject *py_validate_keys_str = PyUnicode_FromString("validate_keys");
-    if (py_validate_keys_str == NULL) {
-        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-    }
-
-    int validate_keys = 0;
-    PyObject *py_validate_keys =
-        PyDict_GetItemWithError(py_config, py_validate_keys_str);
-    Py_DECREF(py_validate_keys_str);
-    if (py_validate_keys) {
-        if (!PyBool_Check(py_validate_keys)) {
-            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
-                            "config[\"validate_keys\"] must be a boolean");
-            goto RAISE_EXCEPTION_WITH_AS_ERROR;
-        }
-        validate_keys = PyObject_IsTrue(py_validate_keys);
-        if (validate_keys == -1) {
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-        }
-    }
-
-    if (validate_keys) {
-        int retval = does_py_dict_contain_valid_keys(
-            &constructor_err, py_config, py_client_config_valid_keys);
-        if (retval == -1) {
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-        }
-        else if (retval == 0) {
-            goto RAISE_EXCEPTION_WITH_AS_ERROR;
-        }
     }
 
     bool lua_user_path = false;
