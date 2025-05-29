@@ -133,7 +133,6 @@ as_status set_subpolicies(as_error *err, as_config *config,
         return set_policy_status;
     }
 
-    // TODO: combine with other batch policies
     const char *batch_policy_names[] = {"batch", "batch_parent_write",
                                         "txn_verify", "txn_roll"};
     as_policy_batch *batch_policies[] = {
