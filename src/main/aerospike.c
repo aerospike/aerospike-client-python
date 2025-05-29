@@ -606,14 +606,13 @@ DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
 
 )
 
-DEFINE_SET_OF_VALID_KEYS(base_policy, "total_timeout", "socket_timeout",
-                         "max_retries", "sleep_between_retries", "compress",
-                         "txn", "expressions", NULL
+#define BASE_POLICY_KEYS                                                       \
+    "total_timeout", "socket_timeout", "max_retries", "sleep_between_retries", \
+        "compress", "txn", "expressions"
 
-)
-
-DEFINE_SET_OF_VALID_KEYS(apply_policy, "key", "replica", "commit_level",
-                         "durable_delete", "ttl", "on_locking_only", NULL
+DEFINE_SET_OF_VALID_KEYS(apply_policy, BASE_POLICY_KEYS, "key", "replica",
+                         "commit_level", "durable_delete", "ttl",
+                         "on_locking_only", NULL
 
 )
 
@@ -622,44 +621,46 @@ DEFINE_SET_OF_VALID_KEYS(info_policy, "timeout", "send_as_is", "check_bounds",
 
 )
 
-DEFINE_SET_OF_VALID_KEYS(query_policy, "deserialize", "replica", "short_query",
-                         "expected_duration", NULL
+DEFINE_SET_OF_VALID_KEYS(query_policy, BASE_POLICY_KEYS, "deserialize",
+                         "replica", "short_query", "expected_duration", NULL
 
 )
 
-DEFINE_SET_OF_VALID_KEYS(read_policy, "key", "replica", "deserialize",
-                         "read_touch_ttl_percent", "read_mode_ap",
-                         "read_mode_sc", NULL
-
-)
-
-DEFINE_SET_OF_VALID_KEYS(remove_policy, "generation", "key", "gen",
-                         "commit_level", "replica", "durable_delete", NULL
-
-)
-
-DEFINE_SET_OF_VALID_KEYS(scan_policy, "durable_delete", "records_per_second",
-                         "max_records", "replica", NULL
-
-)
-
-DEFINE_SET_OF_VALID_KEYS(write_policy, "key", "gen", "exists", "commit_level",
-                         "durable_delete", "replica", "compression_threshold",
-                         "on_locking_only", NULL
-
-)
-
-DEFINE_SET_OF_VALID_KEYS(operate_policy, "key", "gen", "commit_level",
-                         "replica", "durable_delete", "deserialize", "exists",
-                         "read_touch_ttl_percent", "on_locking_only",
+DEFINE_SET_OF_VALID_KEYS(read_policy, BASE_POLICY_KEYS, "key", "replica",
+                         "deserialize", "read_touch_ttl_percent",
                          "read_mode_ap", "read_mode_sc", NULL
 
 )
 
-DEFINE_SET_OF_VALID_KEYS(batch_policy, "concurrent", "allow_inline",
-                         "deserialize", "replica", "read_touch_ttl_percent",
-                         "read_mode_ap", "read_mode_sc", "allow_inline_ssd",
-                         "respond_all_keys", NULL
+DEFINE_SET_OF_VALID_KEYS(remove_policy, BASE_POLICY_KEYS, "generation", "key",
+                         "gen", "commit_level", "replica", "durable_delete",
+                         NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, "durable_delete",
+                         "records_per_second", "max_records", "replica", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(write_policy, BASE_POLICY_KEYS, "key", "gen", "exists",
+                         "commit_level", "durable_delete", "replica",
+                         "compression_threshold", "on_locking_only", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(operate_policy, BASE_POLICY_KEYS, "key", "gen",
+                         "commit_level", "replica", "durable_delete",
+                         "deserialize", "exists", "read_touch_ttl_percent",
+                         "on_locking_only", "read_mode_ap", "read_mode_sc", NULL
+
+)
+
+DEFINE_SET_OF_VALID_KEYS(batch_policy, BASE_POLICY_KEYS, "concurrent",
+                         "allow_inline", "deserialize", "replica",
+                         "read_touch_ttl_percent", "read_mode_ap",
+                         "read_mode_sc", "allow_inline_ssd", "respond_all_keys",
+                         NULL
 
 )
 
