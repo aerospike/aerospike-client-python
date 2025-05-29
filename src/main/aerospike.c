@@ -715,7 +715,6 @@ static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(client_config_lua_valid_keys),
     PY_SET_NAME_TO_STR_LIST(client_config_policies_valid_keys),
     PY_SET_NAME_TO_STR_LIST(client_config_tls_valid_keys),
-    PY_SET_NAME_TO_STR_LIST(base_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(apply_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(info_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(query_policy_valid_keys),

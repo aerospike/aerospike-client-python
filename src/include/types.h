@@ -124,7 +124,6 @@ extern PyObject *py_client_config_shm_valid_keys;
 extern PyObject *py_client_config_lua_valid_keys;
 extern PyObject *py_client_config_policies_valid_keys;
 extern PyObject *py_client_config_tls_valid_keys;
-extern PyObject *py_base_policy_valid_keys;
 extern PyObject *py_apply_policy_valid_keys;
 extern PyObject *py_info_policy_valid_keys;
 extern PyObject *py_query_policy_valid_keys;
