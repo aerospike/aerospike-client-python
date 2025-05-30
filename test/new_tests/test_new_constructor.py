@@ -4,7 +4,6 @@ import pytest
 from .test_base_class import TestBaseClass
 import aerospike
 from aerospike import exception as e
-from aerospike import ConfigProvider
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
 from aerospike_helpers.metrics import MetricsPolicy
@@ -218,9 +217,7 @@ def test_setting_metrics_policy():
     BUCKET_COUNT = 3
     METRICS_LOG_FILES = "./metrics-*.log"
 
-    # Enable dynamic config to apply config-level metrics policy
     config["policies"]["metrics"] = MetricsPolicy(latency_columns=BUCKET_COUNT)
-    config["config_provider"] = ConfigProvider("./dyn_config.yml")
     client = aerospike.client(config)
     try:
         client.enable_metrics()
