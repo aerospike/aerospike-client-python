@@ -163,3 +163,50 @@ class TestInvalidClientConfig(object):
         subpolicy = {key: value}
         with pytest.raises(e.ParamError):
             aerospike.client({"hosts": [("localhost", 3000)], "policies": {"remove": subpolicy}})
+
+    def test_validate_keys_invalid_value(self):
+        config = {
+            "validate_keys": "True",
+            "host": [("127.0.0.1", 3000)]
+        }
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+        assert excinfo.value.msg == 'config[\"validate_keys\"] must be a boolean'
+
+    EXPECTED_INVALID_KEY_ERR_MSG = '\"a\" is an invalid client config dictionary key'
+
+    @pytest.mark.parametrize(
+        "config",
+        [
+            {"a": 1},
+            {"lua": {"a": 1}},
+            {"tls": {"a": 1}},
+            {"shm": {"a": 1}},
+            {"policies": {"a": 1}},
+            # Generate client configs for all types of policies
+            *[{"policies": {policy_name: {"a": 1}}} for policy_name in ["read",
+            "write",
+            "apply",
+            "remove",
+            "query",
+            "scan",
+            "operate",
+            "info",
+            "admin",
+            "batch_apply",
+            "batch_remove",
+            "batch_write",
+            "batch",
+            "batch_parent_write",
+            "txn_verify",
+            "txn_roll"]]
+        ]
+    )
+    def test_validate_keys(self, config):
+        config["validate_keys"] = True
+        # Host doesn't matter since client should fail before we connect
+        config["hosts"] = [("127.0.0.1", 3000)]
+
+        with pytest.raises(e.ParamError) as excinfo:
+            aerospike.client(config)
+        assert excinfo.value.msg == self.EXPECTED_INVALID_KEY_ERR_MSG

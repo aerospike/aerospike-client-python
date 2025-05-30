@@ -117,3 +117,35 @@ typedef struct {
 } AerospikeConfigProvider;
 
 extern PyTypeObject AerospikeConfigProvider_Type;
+
+// These are defined in aerospike.c
+extern PyObject *py_client_config_valid_keys;
+extern PyObject *py_client_config_shm_valid_keys;
+extern PyObject *py_client_config_lua_valid_keys;
+extern PyObject *py_client_config_policies_valid_keys;
+extern PyObject *py_client_config_tls_valid_keys;
+extern PyObject *py_apply_policy_valid_keys;
+extern PyObject *py_admin_policy_valid_keys;
+extern PyObject *py_info_policy_valid_keys;
+extern PyObject *py_query_policy_valid_keys;
+extern PyObject *py_read_policy_valid_keys;
+extern PyObject *py_remove_policy_valid_keys;
+extern PyObject *py_scan_policy_valid_keys;
+extern PyObject *py_write_policy_valid_keys;
+extern PyObject *py_operate_policy_valid_keys;
+extern PyObject *py_batch_policy_valid_keys;
+extern PyObject *py_batch_write_policy_valid_keys;
+extern PyObject *py_batch_read_policy_valid_keys;
+extern PyObject *py_batch_apply_policy_valid_keys;
+extern PyObject *py_batch_remove_policy_valid_keys;
+extern PyObject *py_bit_policy_valid_keys;
+extern PyObject *py_map_policy_valid_keys;
+extern PyObject *py_list_policy_valid_keys;
+extern PyObject *py_hll_policy_valid_keys;
+
+// py_set contains the valid keys
+// Return -1 if we failed to validate dictionary
+// Return 0 if dictionary has invalid keys
+// Return 1 if dictionary's keys are all valid
+extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
+                                           PyObject *py_set);
