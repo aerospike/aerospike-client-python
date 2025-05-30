@@ -183,6 +183,7 @@ class TestInvalidClientConfig(object):
             {"tls": {"a": 1}},
             {"shm": {"a": 1}},
             {"policies": {"a": 1}},
+            # Generate client configs for all types of policies
             *[{"policies": {policy_name: {"a": 1}}} for policy_name in ["read",
             "write",
             "apply",
