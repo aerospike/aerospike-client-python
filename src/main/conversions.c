@@ -2964,7 +2964,7 @@ unsigned long long
 convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
                                              unsigned long long max_bound)
 {
-    if (!PyLong_CheckExact(pyobject)) {
+    if (!PyLong_Check(pyobject)) {
         PyErr_Format(PyExc_TypeError, "%S must be an integer", pyobject);
         goto error;
     }
