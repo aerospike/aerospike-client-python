@@ -257,22 +257,22 @@ class TestMetrics:
                 "str"
             ),
             (
-                MetricsPolicy(report_size_limit=True),
+                MetricsPolicy(report_size_limit="1"),
                 "report_size_limit",
                 "unsigned 64-bit integer"
             ),
             (
-                MetricsPolicy(interval=True),
+                MetricsPolicy(interval="1"),
                 "interval",
                 "unsigned 32-bit integer"
             ),
             (
-                MetricsPolicy(latency_columns=True),
+                MetricsPolicy(latency_columns="1"),
                 "latency_columns",
                 "unsigned 8-bit integer"
             ),
             (
-                MetricsPolicy(latency_shift=True),
+                MetricsPolicy(latency_shift="1"),
                 "latency_shift",
                 "unsigned 8-bit integer"
             ),
