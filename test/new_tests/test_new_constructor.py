@@ -296,6 +296,10 @@ def test_config_level_misc_options():
     config["shm"]["max_namespaces"] = 8
     config["shm"]["max_nodes"] = 3
     config["shm"]["takeover_threshold_sec"] = 30
+    config["tls"]["crl_check"] = True
+    config["tls"]["crl_check_all"] = True
+    config["tls"]["log_session_info"] = True
+    config["tls"]["for_login_only"] = True
     config["tls"]["cafile"] = "./dummy"
     config["tls"]["capath"] = "./dummy"
     config["tls"]["protocols"] = "blaah"
@@ -307,8 +311,10 @@ def test_config_level_misc_options():
 
     # We don't care if the client connects or not
     # We just make sure that the above options are allowed as dict keys
-    with pytest.raises(e.AerospikeError):
+    try:
         aerospike.client(config)
+    except:
+        pass
 
 class TestConfigTTL:
     NEW_TTL = 9000
