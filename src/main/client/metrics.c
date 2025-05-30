@@ -41,6 +41,7 @@ PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
 
     // To be passed into C client
     as_metrics_policy *metrics_policy_ref;
+    // If enable_metrics() succeeds, our heap-allocated udata will be free'd later when metrics is disabled (like when client.close() is called)
     bool free_udata_as_py_listener_data = false;
 
     if (py_metrics_policy == NULL || py_metrics_policy == Py_None) {
@@ -83,7 +84,6 @@ CLEANUP_ON_ERROR:
         }
 
         if (free_udata_as_py_listener_data) {
-            // This will be free'd later when metrics is disabled (like when client.close() is called)
             free_py_listener_data(
                 (PyListenerData *)metrics_policy.metrics_listeners.udata);
         }
