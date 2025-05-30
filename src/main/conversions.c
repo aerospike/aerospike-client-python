@@ -949,7 +949,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     }
     for (uint8_t i = 0; i < node->metrics_size; i++) {
         PyObject *py_ns_metrics =
-            create_py_ns_metrics_from_as_ns_metrics(error_p, ns_metrics[0]);
+            create_py_ns_metrics_from_as_ns_metrics(error_p, ns_metrics[i]);
         if (!py_ns_metrics) {
             goto loop_error;
         }
