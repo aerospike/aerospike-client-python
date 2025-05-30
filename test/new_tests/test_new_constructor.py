@@ -272,6 +272,7 @@ def test_query_invalid_expected_duration():
     assert excinfo.value.msg == "Invalid Policy setting value"
 
 # We want to make sure that these options are allowed when config["validate_keys"] is True
+# Some of these options may not be documented, but they are allowed in the code and customers may be using them
 def test_config_level_misc_options():
     config = copy.deepcopy(gconfig)
     config["policies"]["socket_timeout"] = 1
@@ -283,6 +284,15 @@ def test_config_level_misc_options():
     config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
     config["policies"]["max_threads"] = 16
     config["policies"]["thread_pool_size"] = 16
+    config["thread_pool_size"] = 16
+    config["max_threads"] = 16
+    config["max_conns_per_node"] = 16
+    config["connect_timeout"] = 16
+    config["use_shared_connection"] = True
+    config["compression_threshold"] = 50
+    config["cluster_name"] = "test"
+    config["max_socket_idle"] = 20
+    config["fail_if_not_connected"] = True
     aerospike.client(config)
 
 
