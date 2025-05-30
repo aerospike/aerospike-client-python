@@ -112,12 +112,12 @@ class TestConnect(object):
             assert client is not None
             assert client.is_connected()
 
-    def test_connect_positive_shm_key_default(self, param_name):
+    def test_connect_positive_shm_key_default(self):
         """
         Invoke connect() with shm enabled but shm_key not specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {param_name: 5}
+        config["shm"] = {"shm_max_nodes": 5}
 
         with open_as_connection(config) as client:
             assert client is not None
