@@ -914,6 +914,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(error_p, sync);
     if (py_conn_stats == NULL) {
+        aerospike_node_stats_destroy(&node_stats);
         goto error;
     }
     PyObject_SetAttrString(py_node, "conns", py_conn_stats);
