@@ -83,14 +83,12 @@ class TestConnect(object):
         with open_as_connection(config) as client:
             assert client.is_connected()
 
-    # Also test the rest of the shm config keys
-    @pytest.mark.parametrize("param_name", ["shm_max_nodes", "max_nodes"])
-    def test_connect_positive_shm_key(self, param_name):
+    def test_connect_positive_shm_key(self):
         """
         Invoke connect() with shm_key specified
         """
         config = self.connection_config.copy()
-        config["shm"] = {param_name: 3}
+        config["shm"] =  {"shm_key": 3}
 
         with open_as_connection(config) as client:
             assert client is not None

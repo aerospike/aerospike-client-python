@@ -297,6 +297,7 @@ def test_config_level_misc_options():
         config["shm"] = {}
     config["shm"] = {}
     config["shm"]["max_namespaces"] = 8
+    config["shm"]["max_nodes"] = 3
     config["shm"]["takeover_threshold_sec"] = 30
     config["tls"]["cafile"] = "./dummy"
     config["tls"]["capath"] = "./dummy"
