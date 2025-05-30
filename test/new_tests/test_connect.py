@@ -91,8 +91,6 @@ class TestConnect(object):
         """
         config = self.connection_config.copy()
         config["shm"] = {param_name: 3}
-        config["shm"]["max_namespaces"] = 8
-        config["shm"]["takeover_threshold_sec"] = 30
 
         with open_as_connection(config) as client:
             assert client is not None

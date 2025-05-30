@@ -288,13 +288,29 @@ def test_config_level_misc_options():
     config["max_threads"] = 16
     config["max_conns_per_node"] = 16
     config["connect_timeout"] = 16
-    config["use_shared_connection"] = True
+    config["use_shared_connection"] = False
     config["compression_threshold"] = 50
     config["cluster_name"] = "test"
     config["max_socket_idle"] = 20
     config["fail_if_not_connected"] = True
-    aerospike.client(config)
+    if "shm" not in config:
+        config["shm"] = {}
+    config["shm"] = {}
+    config["shm"]["max_namespaces"] = 8
+    config["shm"]["takeover_threshold_sec"] = 30
+    config["tls"]["cafile"] = "./dummy"
+    config["tls"]["capath"] = "./dummy"
+    config["tls"]["protocols"] = "blaah"
+    config["tls"]["cipher_suite"] = "aes_256"
+    config["tls"]["cert_blacklist"] = "aes_256"
+    config["tls"]["keyfile"] = "aes_256"
+    config["tls"]["certfile"] = "aes_256"
+    config["tls"]["keyfile_pw"] = "aes_256"
 
+    # We don't care if the client connects or not
+    # We just make sure that the above options are allowed as dict keys
+    with pytest.raises(e.AerospikeError):
+        aerospike.client(config)
 
 class TestConfigTTL:
     NEW_TTL = 9000
