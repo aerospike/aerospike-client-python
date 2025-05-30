@@ -44,8 +44,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     as_txn *txn;
     uint32_t reads_capacity, writes_capacity;
     if (py_reads_capacity) {
-        reads_capacity = convert_pyobject_to_fixed_width_integer_type(
-            py_reads_capacity, UINT32_MAX);
+        reads_capacity = convert_pyobject_to_uint32_t(py_reads_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }
@@ -55,8 +54,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     }
 
     if (py_writes_capacity) {
-        writes_capacity = convert_pyobject_to_fixed_width_integer_type(
-            py_writes_capacity, UINT32_MAX);
+        writes_capacity = convert_pyobject_to_uint32_t(py_writes_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }

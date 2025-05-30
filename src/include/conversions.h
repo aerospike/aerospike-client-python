@@ -254,6 +254,13 @@ PyObject *create_class_instance_from_module(as_error *error_p,
 unsigned long long
 convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
                                              unsigned long long max_bound);
+uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject);
+
+uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject);
+
+uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject);
+
+uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
 
 // Returns NULL on error.
 const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj);

@@ -2984,6 +2984,30 @@ error:
     return -1;
 }
 
+uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject)
+{
+    return (uint8_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
+                                                                 UINT8_MAX);
+}
+
+uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject)
+{
+    return (uint16_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
+                                                                  UINT16_MAX);
+}
+
+uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject)
+{
+    return (uint32_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
+                                                                  UINT32_MAX);
+}
+
+uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject)
+{
+    return (uint64_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
+                                                                  UINT64_MAX);
+}
+
 const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj)
 {
     if (!PyUnicode_Check(py_obj)) {

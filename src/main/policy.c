@@ -1259,15 +1259,14 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
 
-    unsigned long long report_size_limit =
-        convert_pyobject_to_fixed_width_integer_type(py_report_size_limit,
-                                                     UINT64_MAX);
+    uint64_t report_size_limit =
+        convert_pyobject_to_uint64_t(py_report_size_limit);
     if (PyErr_Occurred()) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         report_size_limit_attr_name, "unsigned 64-bit integer");
         goto error;
     }
-    metrics_policy->report_size_limit = (uint64_t)report_size_limit;
+    metrics_policy->report_size_limit = report_size_limit;
 
     const char *interval_field_name = "interval";
     PyObject *py_interval =
@@ -1278,14 +1277,13 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
 
-    unsigned long long interval =
-        convert_pyobject_to_fixed_width_integer_type(py_interval, UINT32_MAX);
+    uint32_t interval = convert_pyobject_to_uint32_t(py_interval);
     if (PyErr_Occurred()) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         interval_field_name, "unsigned 32-bit integer");
         goto error;
     }
-    metrics_policy->interval = (uint32_t)interval;
+    metrics_policy->interval = interval;
 
     const char *uint8_field_names[] = {"latency_columns", "latency_shift"};
     uint8_t *field_refs[] = {&metrics_policy->latency_columns,
@@ -1300,16 +1298,14 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
             goto error;
         }
 
-        unsigned long long attr_value =
-            convert_pyobject_to_fixed_width_integer_type(py_attr_value,
-                                                         UINT8_MAX);
+        uint8_t attr_value = convert_pyobject_to_uint8_t(py_attr_value);
         if (PyErr_Occurred()) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             INVALID_ATTR_TYPE_ERROR_MSG, uint8_field_names[i],
                             "unsigned 8-bit integer");
             goto error;
         }
-        *field_refs[i] = (uint8_t)attr_value;
+        *field_refs[i] = attr_value;
     }
 
     const char *labels_attr_name = "labels";
