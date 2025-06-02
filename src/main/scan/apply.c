@@ -27,7 +27,7 @@
 #include "scan.h"
 #include "policy.h"
 
-bool Scan_Illegal_UDF_Args_Check(PyObject *py_args);
+extern bool Illegal_UDF_Args_Check(PyObject *py_args);
 
 AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
                                    PyObject *kwds)
