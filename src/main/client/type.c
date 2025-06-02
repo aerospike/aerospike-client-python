@@ -531,7 +531,7 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                 return -1;
             }
             const char *adjective =
-                validating_policy ? "client config" : "policy";
+                validating_policy ? "policy" : "client config";
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "\"%s\" is an invalid %s dictionary key", key,
                             adjective);
