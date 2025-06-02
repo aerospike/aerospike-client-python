@@ -173,7 +173,7 @@ class TestInvalidClientConfig(object):
             aerospike.client(config)
         assert excinfo.value.msg == 'config[\"validate_keys\"] must be a boolean'
 
-    EXPECTED_INVALID_KEY_ERR_MSG = '\"a\" is an invalid %s dictionary key'
+    EXPECTED_INVALID_KEY_ERR_MSG = '\"a\" is an invalid {} dictionary key'
 
     @pytest.mark.parametrize(
         "config, is_policy",
