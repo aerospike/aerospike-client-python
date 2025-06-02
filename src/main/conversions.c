@@ -914,6 +914,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(error_p, sync);
     if (py_conn_stats == NULL) {
+        aerospike_node_stats_destroy(&node_stats);
         goto error;
     }
     PyObject_SetAttrString(py_node, "conns", py_conn_stats);
@@ -932,15 +933,18 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
         PyObject *py_attr_value =
             PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
         if (!py_attr_value) {
+            aerospike_node_stats_destroy(&node_stats);
             goto error;
         }
         int retval = PyObject_SetAttrString(
             py_node, as_node_stats_attr_names[i], py_attr_value);
         Py_DECREF(py_attr_value);
         if (retval == -1) {
+            aerospike_node_stats_destroy(&node_stats);
             goto error;
         }
     }
+    aerospike_node_stats_destroy(&node_stats);
 
     as_ns_metrics **ns_metrics = node->metrics;
     PyObject *py_ns_metrics_list = PyList_New(node->metrics_size);
