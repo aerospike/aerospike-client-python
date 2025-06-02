@@ -187,6 +187,7 @@ bool Illegal_UDF_Args_Check(PyObject *py_args)
                    AS_Matches_Classname(py_val, AS_CDT_WILDCARD_NAME) ||
                    AS_Matches_Classname(py_val, AS_CDT_INFINITE_NAME) ||
                    PyBytes_Check(py_val))) {
+            Py_DECREF(py_args_copy);
             return true;
         }
     }
