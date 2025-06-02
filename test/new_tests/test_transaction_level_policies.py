@@ -99,3 +99,8 @@ class TestReadTouchTTLPercent:
         self.as_connection.batch_write(batch_records)
         time.sleep(self.delay)
         self.as_connection.get(self.key)
+
+    def test_invalid_policy_keys(self):
+        with pytest.raises(e.ParamError) as excinfo:
+            self.as_connection.get(self.key, policy={"invalid": "key"})
+        assert excinfo.value.msg == ""

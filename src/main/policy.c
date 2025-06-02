@@ -451,6 +451,18 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
         POLICY_INIT(as_policy_read);
     }
 
+    int retval = does_py_dict_contain_valid_keys(
+        err, py_policy, py_read_policy_valid_keys, true);
+    if (retval == -1) {
+        // This shouldn't happen, but if it did...
+        return as_error_update(
+            err, AEROSPIKE_ERR,
+            "Failed to validate keys for read policy dictionary.");
+    }
+    else if (retval == 0) {
+        return AEROSPIKE_ERR;
+    }
+
     //Initialize policy with global defaults
     as_policy_read_copy(config_read_policy, policy);
 

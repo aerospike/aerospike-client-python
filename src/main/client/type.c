@@ -516,7 +516,7 @@ static PyObject *AerospikeClient_Type_New(PyTypeObject *type, PyObject *args,
 }
 
 int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
-                                    PyObject *py_set)
+                                    PyObject *py_set, bool validating_policy)
 {
     Py_ssize_t pos = 0;
     PyObject *py_key = NULL;
@@ -530,9 +530,11 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
             if (key == NULL) {
                 return -1;
             }
+            const char *adjective =
+                validating_policy ? "client config" : "policy";
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "\"%s\" is an invalid client config dictionary key",
-                            key);
+                            "\"%s\" is an invalid %s dictionary key", key,
+                            adjective);
             return 0;
         }
         // Config key is valid
@@ -592,7 +594,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     if (validate_keys) {
         int retval = does_py_dict_contain_valid_keys(
-            &constructor_err, py_config, py_client_config_valid_keys);
+            &constructor_err, py_config, py_client_config_valid_keys, false);
         if (retval == -1) {
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
@@ -648,7 +650,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     if (py_lua && PyDict_Check(py_lua)) {
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
-                &constructor_err, py_lua, py_client_config_lua_valid_keys);
+                &constructor_err, py_lua, py_client_config_lua_valid_keys,
+                false);
             if (retval == -1) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
@@ -685,7 +688,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     if (py_tls && PyDict_Check(py_tls)) {
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
-                &constructor_err, py_tls, py_client_config_tls_valid_keys);
+                &constructor_err, py_tls, py_client_config_tls_valid_keys,
+                false);
             if (retval == -1) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
@@ -766,7 +770,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     if (py_shm && PyDict_Check(py_shm)) {
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
-                &constructor_err, py_shm, py_client_config_shm_valid_keys);
+                &constructor_err, py_shm, py_client_config_shm_valid_keys,
+                false);
             if (retval == -1) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
@@ -860,7 +865,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (validate_keys) {
             int retval = does_py_dict_contain_valid_keys(
                 &constructor_err, py_policies,
-                py_client_config_policies_valid_keys);
+                py_client_config_policies_valid_keys, false);
             if (retval == -1) {
                 goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
             }
