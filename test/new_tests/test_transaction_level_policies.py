@@ -102,5 +102,5 @@ class TestReadTouchTTLPercent:
 
     def test_invalid_policy_keys(self):
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.get(self.key, policy={"invalid": "key"})
-        assert excinfo.value.msg == ""
+            self.as_connection.get(self.key, policy={"a": "key"})
+        assert excinfo.value.msg == '\"a\" is an invalid policy dictionary key'
