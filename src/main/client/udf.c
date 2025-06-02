@@ -114,7 +114,7 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     }
 
     // Convert python object to policy_info
-    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+    pyobject_to_policy_info(self, &err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -345,7 +345,7 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
     }
 
     // Convert python object to policy_info
-    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+    pyobject_to_policy_info(self, &err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info);
 
     // Invoke operation
@@ -413,7 +413,7 @@ PyObject *AerospikeClient_UDF_List(AerospikeClient *self, PyObject *args,
     }
 
     // Convert python object to policy_info
-    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+    pyobject_to_policy_info(self, &err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
@@ -518,7 +518,7 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
     // Convert python object to policy_info
     as_policy_info *info_policy_p = NULL, info_policy;
 
-    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+    pyobject_to_policy_info(self, &err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;

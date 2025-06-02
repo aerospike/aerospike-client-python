@@ -192,7 +192,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (err.code == AEROSPIKE_OK) {
         if (block) {
             if (py_policy) {
-                pyobject_to_policy_info(&err, py_policy, &info_policy,
+                pyobject_to_policy_info(self, &err, py_policy, &info_policy,
                                         &info_policy_p,
                                         &self->as->config.policies.info);
                 if (err.code != AEROSPIKE_OK) {

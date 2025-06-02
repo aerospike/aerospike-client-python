@@ -78,6 +78,7 @@ typedef struct {
     bool has_connected;
     bool use_shared_connection;
     uint8_t send_bool_as;
+    bool validate_keys;
 } AerospikeClient;
 
 typedef struct {

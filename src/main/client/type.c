@@ -590,6 +590,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (validate_keys == -1) {
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
+        self->validate_keys = (bool)validate_keys;
     }
 
     if (validate_keys) {

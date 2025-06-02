@@ -233,6 +233,9 @@ as_status set_query_options(as_error *err, PyObject *query_options,
     return AEROSPIKE_OK;
 }
 
+#define ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS                                 \
+    "Failed to validate keys for policy dictionary"
+
 /**
  * Converts a PyObject into an as_policy_admin object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
@@ -253,6 +256,19 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
     as_policy_admin_copy(config_admin_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_admin_policy_valid_keys, true);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return AEROSPIKE_ERR;
+            }
+        }
+
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
     }
@@ -341,6 +357,19 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
     as_policy_apply_copy(config_apply_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_apply_policy_valid_keys, true);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return AEROSPIKE_ERR;
+            }
+        }
+
         // Set policy fields
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
@@ -369,8 +398,8 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
-                                  as_policy_info *policy,
+as_status pyobject_to_policy_info(AerospikeClient *self, as_error *err,
+                                  PyObject *py_policy, as_policy_info *policy,
                                   as_policy_info **policy_p,
                                   as_policy_info *config_info_policy)
 {
@@ -382,6 +411,19 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
     as_policy_info_copy(config_info_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_info_policy_valid_keys, true);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return AEROSPIKE_ERR;
+            }
+        }
+
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
         POLICY_SET_FIELD(send_as_is, bool);
@@ -414,6 +456,19 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
     as_policy_query_copy(config_query_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_query_policy_valid_keys, true);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+            }
+            else if (retval == 0) {
+                return AEROSPIKE_ERR;
+            }
+        }
+
         as_status retval = pyobject_to_policy_base(
             self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
@@ -455,21 +510,23 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     as_policy_read_copy(config_read_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
-        as_status retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_read_policy_valid_keys, true);
-        if (retval == -1) {
-            // This shouldn't happen, but if it did...
-            return as_error_update(
-                err, AEROSPIKE_ERR,
-                "Failed to validate keys for read policy dictionary.");
-        }
-        else if (retval == 0) {
-            return AEROSPIKE_ERR;
+        if (self->validate_keys) {
+            as_status retval = does_py_dict_contain_valid_keys(
+                err, py_policy, py_read_policy_valid_keys, true);
+            if (retval == -1) {
+                // This shouldn't happen, but if it did...
+                return as_error_update(
+                    err, AEROSPIKE_ERR,
+                    "Failed to validate keys for read policy dictionary.");
+            }
+            else if (retval == 0) {
+                return AEROSPIKE_ERR;
+            }
         }
 
         // Set policy fields
-        retval = pyobject_to_policy_base(self, err, py_policy, &policy->base,
-                                         exp_list, exp_list_p);
+        as_status retval = pyobject_to_policy_base(
+            self, err, py_policy, &policy->base, exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
