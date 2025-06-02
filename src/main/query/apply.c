@@ -27,7 +27,7 @@
 #include "query.h"
 #include "policy.h"
 
-bool Illegal_UDF_Args_Check(PyObject *py_args);
+extern bool Illegal_UDF_Args_Check(PyObject *py_args);
 
 AerospikeQuery *AerospikeQuery_Apply(AerospikeQuery *self, PyObject *args,
                                      PyObject *kwds)
