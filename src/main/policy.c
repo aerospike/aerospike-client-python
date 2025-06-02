@@ -455,7 +455,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
     as_policy_read_copy(config_read_policy, policy);
 
     if (py_policy && py_policy != Py_None) {
-        int retval = does_py_dict_contain_valid_keys(
+        as_status retval = does_py_dict_contain_valid_keys(
             err, py_policy, py_read_policy_valid_keys, true);
         if (retval == -1) {
             // This shouldn't happen, but if it did...
@@ -468,8 +468,8 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
         }
 
         // Set policy fields
-        as_status retval = pyobject_to_policy_base(
-            self, err, py_policy, &policy->base, exp_list, exp_list_p);
+        retval = pyobject_to_policy_base(self, err, py_policy, &policy->base,
+                                         exp_list, exp_list_p);
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
