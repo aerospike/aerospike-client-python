@@ -81,6 +81,8 @@ EXPOSE $TLS_PORT
 FROM ubuntu:24.04 AS dos2unix
 
 # Run our own set up steps after server finishes starting up
+# Running WORKDIR on an existing directory causes WORKDIR instruction to not be cached
+RUN mkdir /my-scripts
 WORKDIR /my-scripts
 COPY entrypoint-finalize-setup.bash wait-for-as-server-to-start.bash .
 # Both Github Actions and the entrypoint script can reuse this wait script
