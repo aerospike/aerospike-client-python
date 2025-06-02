@@ -35,6 +35,7 @@
 #include "policy.h"
 #include "macros.h"
 #include "policy_config.h"
+#include "types.h"
 
 #define MAP_WRITE_FLAGS_KEY "map_write_flags"
 #define BIT_WRITE_FLAGS_KEY "bit_write_flags"
