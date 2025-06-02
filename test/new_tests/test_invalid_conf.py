@@ -216,4 +216,4 @@ class TestInvalidClientConfig(object):
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
         adjective = "policy" if is_policy else "client config"
-        assert excinfo.value.msg == str.format(self.EXPECTED_INVALID_KEY_ERR_MSG, adjective)
+        assert excinfo.value.msg == self.EXPECTED_INVALID_KEY_ERR_MSG.format(adjective)
