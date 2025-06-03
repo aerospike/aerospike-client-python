@@ -1,11 +1,11 @@
 [build-system]
 requires = [
-    "meson-python",
+    "setuptools",
     "versioningit==3.1.0",
     # Used by our versioningit script that modifies the version
     "parver==0.5"
 ]
-build-backend = 'mesonpy'
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "aerospike"
