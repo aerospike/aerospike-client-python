@@ -128,7 +128,6 @@ class TestQueryPagination(TestBaseClass):
 
         query_obj = self.as_connection.query(self.test_ns, None)
         query_obj.paginate()
-        query_obj.max_records = all_records / num_populated_partitions
 
         num_populated_partitions = 4
         all_records = (
@@ -138,6 +137,7 @@ class TestQueryPagination(TestBaseClass):
             + self.partition_1003_count
         )
         self.partition_1000_count / num_populated_partitions
+        query_obj.max_records = all_records // num_populated_partitions
 
         for i in range(num_populated_partitions):
             query_obj.foreach(
@@ -175,7 +175,7 @@ class TestQueryPagination(TestBaseClass):
 
         query_obj = self.as_connection.query(ns, st)
 
-        query_obj.max_records = self.partition_1001_count / 2
+        query_obj.max_records = self.partition_1001_count // 2
 
         for i in range(2):
             records = query_obj.results({"partition_filter": {"begin": 1001, "count": 1}})
