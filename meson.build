@@ -1,6 +1,6 @@
 project('aerospike', 'c')
 
-incdir = include_directories('src')
+incdir = include_directories('src/include')
 
 py = import('python').find_installation(pure: false)
 
