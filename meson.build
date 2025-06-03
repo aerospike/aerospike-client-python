@@ -1,5 +1,11 @@
 project('aerospike', 'c')
 
+c_client_lib = shared_library(
+    'c_client',
+    'examplelib.c',
+    install: false,
+)
+
 incdir = include_directories('src/include')
 
 py = import('python').find_installation(pure: false)
