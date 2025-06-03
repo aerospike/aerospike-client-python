@@ -618,7 +618,8 @@ DEFINE_SET_OF_VALID_KEYS(info_policy, "timeout", "send_as_is", "check_bounds",
 )
 
 DEFINE_SET_OF_VALID_KEYS(query_policy, BASE_POLICY_KEYS, "deserialize",
-                         "replica", "short_query", "expected_duration", NULL
+                         "replica", "short_query", "expected_duration",
+                         "partition_filter", NULL
 
 )
 
@@ -636,7 +637,7 @@ DEFINE_SET_OF_VALID_KEYS(remove_policy, BASE_POLICY_KEYS, "generation", "key",
 
 DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, "durable_delete",
                          "records_per_second", "max_records", "replica", "ttl",
-                         NULL
+                         "partition_filter", NULL
 
 )
 
