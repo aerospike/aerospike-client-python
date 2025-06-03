@@ -266,8 +266,6 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     as_list *arglist = NULL;
     as_policy_write write_policy;
     as_policy_write *write_policy_p = NULL;
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
     as_error err;
     as_query query;
     uint64_t query_id = 0;
@@ -438,17 +436,8 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
     arglist = NULL;
     if (err.code == AEROSPIKE_OK) {
         if (block) {
-            if (py_policy) {
-                pyobject_to_policy_info(self, &err, py_policy, &info_policy,
-                                        &info_policy_p,
-                                        &self->as->config.policies.info);
-                if (err.code != AEROSPIKE_OK) {
-                    goto CLEANUP;
-                }
-            }
             Py_BEGIN_ALLOW_THREADS
-            aerospike_query_wait(self->as, &err, info_policy_p, &query,
-                                 query_id, 0);
+            aerospike_query_wait(self->as, &err, NULL, &query, query_id, 0);
             Py_END_ALLOW_THREADS
         }
     }
