@@ -1297,9 +1297,7 @@ Scan and Query Constructors
         See :ref:`aerospike.Query` for more details.
 
         :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the records \
-            which are not part of any *set* will be queried (**Note**: this is \
-            different from not providing the *set* in :meth:`scan`).
+        :param str set: optional specified set name. Otherwise, all records in the namespace will be queried.
         :return: an :py:class:`aerospike.Query` class.
 
 .. index::
