@@ -72,7 +72,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     as_exp *exp_list = NULL;
     if (py_expr) {
-        as_status status = convert_exp_list(self, py_expr, &exp_list, &err);
+        as_status status =
+            convert_exp_list(self->client, py_expr, &exp_list, &err);
         if (status != AEROSPIKE_OK) {
             return err.code;
         }
