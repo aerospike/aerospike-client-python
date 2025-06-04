@@ -75,7 +75,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
     }
 
-    char *bin = NULL;
+    const char *bin = NULL;
     if (py_bin) {
         if (PyUnicode_Check(py_bin)) {
             bin = PyUnicode_AsUTF8(py_bin);
@@ -93,7 +93,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     int64_t val1 = 0;
     int64_t val2 = 0;
-    char *val1_str = NULL;
+    const char *val1_str = NULL;
     Py_ssize_t bytes_size = 0;
     if (in_datatype == AS_INDEX_STRING) {
         if (PyUnicode_Check(py_val1)) {
