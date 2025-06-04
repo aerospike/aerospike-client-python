@@ -213,19 +213,21 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
 
         Py_ssize_t size = PyTuple_Size(py_predicate);
 
-        PyObject *py_op = PyTuple_GetItem(py_predicate, 0);
-        PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
-        if (!py_op || !py_op_data) {
+        PyObject *py_predicate_type = PyTuple_GetItem(py_predicate, 0);
+        PyObject *py_index_datatype = PyTuple_GetItem(py_predicate, 1);
+        if (!py_predicate_type || !py_index_datatype) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "Failed to fetch predicate information");
             goto CLEANUP;
         }
-        if (PyLong_Check(py_op) && PyLong_Check(py_op_data)) {
-            as_predicate_type op = (as_predicate_type)PyLong_AsLong(py_op);
-            as_index_datatype op_data =
-                (as_index_datatype)PyLong_AsLong(py_op_data);
+        if (PyLong_Check(py_predicate_type) &&
+            PyLong_Check(py_index_datatype)) {
+            as_predicate_type predicate_type =
+                (as_predicate_type)PyLong_AsLong(py_predicate_type);
+            as_index_datatype index_datatype =
+                (as_index_datatype)PyLong_AsLong(py_index_datatype);
             rc = AerospikeQuery_Where_Add(
-                self, py_ctx, py_exp, op, op_data,
+                self, py_ctx, py_exp, predicate_type, index_datatype,
                 size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
                 size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
                 size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
