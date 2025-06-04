@@ -1,10 +1,8 @@
 project('aerospike', 'c')
 
-c_client_lib = shared_library(
-    'c_client',
-    'examplelib.c',
-    install: false,
-)
+run_command('cd aerospike-client-c/', check: true)
+run_command('make', check: true)
+run_command('cd ..', check: true)
 
 incdir = include_directories('src/include')
 
@@ -93,5 +91,7 @@ py.extension_module(
     'src/main/convert_partition_filter.c',
     'src/main/aerospike.c',
     install: true,
-    include_directories: incdir
+    link_with: 'aerospike-client-c/libaerospike.a',
+    include_directories: incdir,
+    install_rpath: '$ORIGIN'
 )
