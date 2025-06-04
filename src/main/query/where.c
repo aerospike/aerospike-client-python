@@ -363,21 +363,21 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 }
 
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
-                                            PyObject *py_arg1,
-                                            PyObject *py_arg2)
+                                            PyObject *py_ctx,
+                                            PyObject *py_predicate)
 {
     as_error err;
     int rc = 0;
 
     as_error_init(&err);
 
-    if (PyTuple_Check(py_arg2) && PyTuple_Size(py_arg2) > 1 &&
-        PyTuple_Size(py_arg2) <= 6) {
+    if (PyTuple_Check(py_predicate) && PyTuple_Size(py_predicate) > 1 &&
+        PyTuple_Size(py_predicate) <= 6) {
 
-        Py_ssize_t size = PyTuple_Size(py_arg2);
+        Py_ssize_t size = PyTuple_Size(py_predicate);
 
-        PyObject *py_op = PyTuple_GetItem(py_arg2, 0);
-        PyObject *py_op_data = PyTuple_GetItem(py_arg2, 1);
+        PyObject *py_op = PyTuple_GetItem(py_predicate, 0);
+        PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
         if (!py_op || !py_op_data) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "Failed to fetch predicate information");
@@ -388,11 +388,11 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
             as_index_datatype op_data =
                 (as_index_datatype)PyLong_AsLong(py_op_data);
             rc = AerospikeQuery_Where_Add(
-                self, py_arg1, op, op_data,
-                size > 2 ? PyTuple_GetItem(py_arg2, 2) : Py_None,
-                size > 3 ? PyTuple_GetItem(py_arg2, 3) : Py_None,
-                size > 4 ? PyTuple_GetItem(py_arg2, 4) : Py_None,
-                size > 5 ? PyLong_AsLong(PyTuple_GetItem(py_arg2, 5)) : 0);
+                self, py_ctx, op, op_data,
+                size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
+                size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
+                size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
+                size > 5 ? PyLong_AsLong(PyTuple_GetItem(py_predicate, 5)) : 0);
             /* Failed to add the predicate for some reason */
             if (rc != 0) {
                 as_error_update(&err, AEROSPIKE_ERR_PARAM,
