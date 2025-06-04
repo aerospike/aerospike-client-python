@@ -143,8 +143,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     index_type, in_datatype, val1_str,
                                     bytes_size, true);
         }
-        // Cleanup
-        free(bin);
     }
     else if (in_datatype == AS_INDEX_BLOB ||
              in_datatype == AS_INDEX_GEO2DSPHERE ||
