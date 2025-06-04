@@ -15,7 +15,7 @@ Overview
 
 The Aerospike client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
-cluster and handles the transactions performed against it.
+cluster and handles the commands performed against it.
 
 Methods
 =======
@@ -51,7 +51,7 @@ Client
 
         # Configure the client to first connect to a cluster node at 127.0.0.1
         # The client will learn about the other nodes in the cluster from the seed node.
-        # Also sets a top level policy for read operations
+        # Also sets a top level policy for read commands
         config = {
             'hosts':    [ ('127.0.0.1', 3000) ],
             'policies': {'read': {'total_timeout': 1000}},
@@ -362,6 +362,11 @@ Only the `hosts` key is required; the rest of the keys are optional.
             (Optional) A defined user with roles in the cluster. See :meth:`admin_create_user`.
         * **password** (:class:`str`)
             (Optional) The password will be hashed by the client using bcrypt.
+        * **config_provider** (:class:`aerospike.ConfigProvider`)
+            (Optional) Dynamic configuration provider.
+
+            An alternate way to enable dynamic config is to set environment variable ``AEROSPIKE_CLIENT_CONFIG_URL``
+            to the path of the config file before running the application.
         * **lua** (:class:`dict`)
             (Optional) Contains the paths to two types of Lua modules
 
@@ -393,19 +398,61 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **scan** (:class:`dict`)
                 Contains :ref:`aerospike_scan_policies`.
             * **batch** (:class:`dict`)
+                Default parent batch policy used in batch read commands.
+
+                This applies to these methods when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_read`
+                    * :meth:`~aerospike.Client.batch_operate` if there are only read-type operations.
+
                 Contains :ref:`aerospike_batch_policies`.
             * **batch_remove** (:class:`dict`)
-                Default delete policy used in batch remove commands. Contains :ref:`aerospike_batch_remove_policies`.
+                Default delete policy used in batch remove commands.
+
+                This policy applies to these when a transaction-level :ref:`batch remove policy <aerospike_batch_remove_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_remove`
+                    * Individual :class:`Remove <aerospike_helpers.batch.records.Remove>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_remove_policies`.
             * **batch_apply** (:class:`dict`)
-                Default user defined function policy used in batch UDF apply commands. Contains :ref:`aerospike_batch_apply_policies`.
+                Default user defined function policy used in batch UDF apply commands.
+
+                This policy applies to these when a transaction-level :ref:`batch apply policy <aerospike_batch_apply_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * Individual :class:`Apply <aerospike_helpers.batch.records.Apply>` instances passed to :meth:`~aerospike.Client.batch_write`
+
+                Contains :ref:`aerospike_batch_apply_policies`.
             * **batch_write** (:class:`dict`)
-                Default write policy used in batch operate commands. Contains :ref:`aerospike_batch_write_policies`.
+                Default batch write policy when a transaction-level :ref:`batch write policy <aerospike_batch_write_policies>` is not provided:
+
+                    * Individual :class:`Write <aerospike_helpers.batch.records.Write>` instances passed to :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` when there is at least one write-type operation.
+
+                Contains :ref:`aerospike_batch_write_policies`.
             * **batch_parent_write** (:class:`dict`)
-                Default parent policy used in batch write commands. Contains :ref:`aerospike_batch_policies`.
+                Default parent batch policy used in batch write commands.
+
+                This policy applies to these when a transaction-level :ref:`batch policy <aerospike_batch_policies>` is not provided:
+
+                    * :meth:`~aerospike.Client.batch_write`
+                    * :meth:`~aerospike.Client.batch_operate` if there is at least one write-type operation. This will be applied instead of the client config's `"batch"` policy.
+                    * :meth:`~aerospike.Client.batch_apply`
+                    * :meth:`~aerospike.Client.batch_remove`
+
+                Contains :ref:`aerospike_batch_policies`.
             * **info** (:class:`dict`)
                 Contains :ref:`aerospike_info_policies`.
             * **admin** (:class:`dict`)
                 Contains :ref:`aerospike_admin_policies`.
+            * **txn_verify** (:class:`dict`)
+                Default transaction policy when verifying record versions in a batch. Contains :ref:`aerospike_batch_policies`.
+            * **txn_roll** (:class:`dict`)
+                Default transaction policy when rolling the transaction records forward (commit) or back (abort) in a batch.
+                Contains :ref:`aerospike_batch_policies`.
+            * **metrics** (:class:`~aerospike_helpers.metrics.MetricsPolicy`)
+                Default metrics policy. Only :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_columns` and :py:attr:`~aerospike_helpers.metrics.MetricsPolicy.latency_shift` will override transaction-level metrics policies.
             * **total_timeout** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
@@ -436,7 +483,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             * **max_retries** (:class:`int`)
                 **Deprecated**: set this individually in the :ref:`aerospike_policies` dictionaries.
 
-                Representing the number of times to retry a transaction
+                Representing the number of times to retry a command
             * **replica**
                 **Deprecated**: set this in one or all of the following policy dictionaries:
 
@@ -599,7 +646,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
             so the client does not attempt to use a socket that has already been reaped by the server.
 
             If server's ``proto-fd-idle-ms`` is zero (no reap), then ``max_socket_idle`` should also be zero.
-            Connections retrieved from a pool in transactions will not be checked for ``max_socket_idle`` when ``max_socket_idle`` is zero.
+            Connections retrieved from a pool in commands will not be checked for ``max_socket_idle`` when ``max_socket_idle`` is zero.
             Idle connections will still be trimmed down from peak connections to min connections \
             (``min_conns_per_node`` and ``async_min_conns_per_node``) using a hard-coded 55 second limit in the cluster tend thread.
 
@@ -624,7 +671,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             The counted error types are any error that causes the connection to close (socket errors and client timeouts), server device overload and server timeouts.
 
-            The application should backoff or reduce the transaction load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
+            The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
 
             Default: ``100``
         * **error_rate_window** (:class:`int`)
@@ -660,7 +707,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             This is useful for:
 
-                - Directing read operations to run on the same rack as the client.
+                - Directing read commands to run on the same rack as the client.
                 - Lowering cloud provider costs when nodes are distributed across different availability zones (represented as racks).
 
             In order to enable this functionality:
@@ -866,7 +913,7 @@ Specifies the TTL constants.
     NOTE: only applies to the policies mentioned below.
 
     Use the applicable policy ttl in write, operate, batch write, and scan policies.
-    If the policy is not defined for the transaction, use the default client-level policy's ttl.
+    If the policy is not defined for the command, use the default client-level policy's ttl.
 
 .. _auth_mode:
 
@@ -1578,74 +1625,57 @@ Query Duration
 
 .. _mrt_commit_status_constants:
 
-MRT Commit Status
------------------
+Transaction Commit Status
+-------------------------
 
-.. data:: MRT_COMMIT_OK
+.. data:: COMMIT_OK
 
     Commit succeeded.
 
-.. data:: MRT_COMMIT_ALREADY_COMMITTED
+.. data:: COMMIT_ALREADY_COMMITTED
 
     Transaction has already been committed.
 
-.. data:: MRT_COMMIT_ALREADY_ABORTED
-
-    Transaction has already been aborted.
-
-.. data:: MRT_COMMIT_VERIFY_FAILED
-
-    Transaction verify failed. Transaction will be aborted.
-
-.. data:: MRT_COMMIT_MARK_ROLL_FORWARD_ABANDONED
-
-    Transaction mark roll forward abandoned. Transaction will be aborted when error is not in doubt.
-    If the error is in doubt (usually timeout), the commit is in doubt.
-
-.. data:: MRT_COMMIT_ROLL_FORWARD_ABANDONED
+.. data:: COMMIT_ROLL_FORWARD_ABANDONED
 
     Client roll forward abandoned. Server will eventually commit the transaction.
 
-.. data:: MRT_COMMIT_CLOSE_ABANDONED
+.. data:: COMMIT_CLOSE_ABANDONED
 
     Transaction has been rolled forward, but client transaction close was abandoned.
     Server will eventually close the transaction.
 
 .. _mrt_abort_status_constants:
 
-MRT Abort Status
-----------------
+Transaction Abort Status
+------------------------
 
-.. data:: MRT_ABORT_OK
+.. data:: ABORT_OK
 
     Abort succeeded.
 
-.. data:: MRT_ABORT_ALREADY_COMMITTED
-
-    Transaction has already been committed.
-
-.. data:: MRT_ABORT_ALREADY_ABORTED
+.. data:: ABORT_ALREADY_ABORTED
 
     Transaction has already been aborted.
 
-.. data:: MRT_ABORT_ROLL_BACK_ABANDONED
+.. data:: ABORT_ROLL_BACK_ABANDONED
 
     Client roll back abandoned. Server will eventually abort the transaction.
 
-.. data:: MRT_ABORT_CLOSE_ABANDONED
+.. data:: ABORT_CLOSE_ABANDONED
 
     Transaction has been rolled back, but client transaction close was abandoned.
     Server will eventually close the transaction.
 
 .. _mrt_state:
 
-Multi-record Transaction State
+Transaction State
 ------------------------------
 
-.. data:: MRT_STATE_OPEN
+.. data:: TXN_STATE_OPEN
 
-.. data:: MRT_STATE_VERIFIED
+.. data:: TXN_STATE_VERIFIED
 
-.. data:: MRT_STATE_COMMITTED
+.. data:: TXN_STATE_COMMITTED
 
-.. data:: MRT_STATE_ABORTED
+.. data:: TXN_STATE_ABORTED
