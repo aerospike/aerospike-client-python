@@ -591,7 +591,8 @@ CLEANUP:
     return NULL;
 }
 
-PyObject *AerospikeQuery_WhereWithExpr(AerospikeQuery *self, PyObject *args)
+AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
+                                             PyObject *args)
 {
     as_error err;
 
