@@ -41,6 +41,7 @@ struct exception_def {
     // If NULL, there is no base class
     const char *base_class_name;
     enum as_status_e code;
+    const char *err_code_constant_name;
     // Only applies to base exception classes that need their own fields
     // NULL if this doesn't apply
     const char *const *list_of_attrs;
@@ -50,7 +51,7 @@ struct exception_def {
 #define EXCEPTION_DEF(class_name, base_class_name, err_code, attrs)            \
     {                                                                          \
         class_name, SUBMODULE_NAME "." class_name, base_class_name, err_code,  \
-            attrs                                                              \
+            #err_code, attrs                                                   \
     }
 
 // Base exception names
@@ -346,11 +347,20 @@ PyObject *AerospikeException_New(void)
             goto EXC_CLASS_CLEANUP_ON_ERROR;
         }
 
+        // Used for checking batch result codes
+        retval = PyModule_AddIntConstant(py_exc_module,
+                                         exception_def.err_code_constant_name,
+                                         exception_def.code);
+        if (retval == -1) {
+            goto EXC_CLASS_CLEANUP_ON_ERROR;
+        }
+
         retval = PyModule_AddObject(py_exc_module, exception_def.class_name,
                                     py_exception_class);
         if (retval == -1) {
             goto EXC_CLASS_CLEANUP_ON_ERROR;
         }
+
         continue;
 
     EXC_CLASS_CLEANUP_ON_ERROR:
