@@ -42,6 +42,7 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 }
 
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
+                                    PyObject *py_expr,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,
                                     PyObject *py_bin, PyObject *py_val1,
@@ -66,6 +67,14 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (!ctx_in_use) {
             cf_free(pctx);
             pctx = NULL;
+        }
+    }
+
+    as_exp *exp_list = NULL;
+    if (py_expr) {
+        as_status status = convert_exp_list(self, py_expr, &exp_list, &err);
+        if (status != AEROSPIKE_OK) {
+            return err.code;
         }
     }
 
@@ -95,25 +104,53 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
 
             as_query_where_init(&self->query, 1);
-            if (index_type == AS_INDEX_TYPE_DEFAULT) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_equals(STRING, val));
-            }
-            else if (index_type == AS_INDEX_TYPE_LIST) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(LIST, STRING, val));
-            }
-            else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(MAPKEYS, STRING, val));
-            }
-            else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(MAPVALUES, STRING, val));
+            if (py_expr) {
+                // TODO: should index name be NULL?
+                switch (index_type) {
+                case AS_INDEX_TYPE_DEFAULT:
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
+                                            as_equals(STRING, val));
+                    break;
+                case AS_INDEX_TYPE_LIST:
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
+                                            as_contains(LIST, STRING, val));
+                    break;
+                case AS_INDEX_TYPE_MAPKEYS:
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
+                                            as_contains(MAPKEYS, STRING, val));
+                    break;
+                case AS_INDEX_TYPE_MAPVALUES:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_contains(MAPVALUES, STRING, val));
+                    break;
+                default:
+                    rc = 1;
+                    break;
+                }
             }
             else {
-                rc = 1;
-                break;
+                if (index_type == AS_INDEX_TYPE_DEFAULT) {
+                    as_query_where_with_ctx(&self->query, bin, pctx,
+                                            as_equals(STRING, val));
+                }
+                else if (index_type == AS_INDEX_TYPE_LIST) {
+                    as_query_where_with_ctx(&self->query, bin, pctx,
+                                            as_contains(LIST, STRING, val));
+                }
+                else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
+                    as_query_where_with_ctx(&self->query, bin, pctx,
+                                            as_contains(MAPKEYS, STRING, val));
+                }
+                else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_contains(MAPVALUES, STRING, val));
+                }
+                else {
+                    rc = 1;
+                    break;
+                }
             }
             if (py_ubin) {
                 Py_DECREF(py_ubin);
@@ -136,25 +173,53 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             int64_t val = pyobject_to_int64(py_val1);
 
             as_query_where_init(&self->query, 1);
-            if (index_type == AS_INDEX_TYPE_DEFAULT) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_equals(NUMERIC, val));
-            }
-            else if (index_type == AS_INDEX_TYPE_LIST) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(LIST, NUMERIC, val));
-            }
-            else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(MAPKEYS, NUMERIC, val));
-            }
-            else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_contains(MAPVALUES, NUMERIC, val));
+            if (py_expr) {
+                // TODO: should index name be NULL?
+                switch (index_type) {
+                case AS_INDEX_TYPE_DEFAULT:
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
+                                            as_equals(NUMERIC, val));
+                    break;
+                case AS_INDEX_TYPE_LIST:
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
+                                            as_contains(LIST, NUMERIC, val));
+                    break;
+                case AS_INDEX_TYPE_MAPKEYS:
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
+                                            as_contains(MAPKEYS, NUMERIC, val));
+                    break;
+                case AS_INDEX_TYPE_MAPVALUES:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_contains(MAPVALUES, NUMERIC, val));
+                    break;
+                default:
+                    rc = 1;
+                    break;
+                }
             }
             else {
-                rc = 1;
-                break;
+                if (index_type == AS_INDEX_TYPE_DEFAULT) {
+                    as_query_where_with_ctx(&self->query, bin, pctx,
+                                            as_equals(NUMERIC, val));
+                }
+                else if (index_type == AS_INDEX_TYPE_LIST) {
+                    as_query_where_with_ctx(&self->query, bin, pctx,
+                                            as_contains(LIST, NUMERIC, val));
+                }
+                else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
+                    as_query_where_with_ctx(&self->query, bin, pctx,
+                                            as_contains(MAPKEYS, NUMERIC, val));
+                }
+                else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_contains(MAPVALUES, NUMERIC, val));
+                }
+                else {
+                    rc = 1;
+                    break;
+                }
             }
             if (py_ubin) {
                 Py_DECREF(py_ubin);
@@ -196,30 +261,62 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             val = bytes_buffer;
 
             as_query_where_init(&self->query, 1);
-            if (index_type == AS_INDEX_TYPE_DEFAULT) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_blob_equals(val, bytes_size, true));
-            }
-            else if (index_type == AS_INDEX_TYPE_LIST) {
-                as_query_where_with_ctx(
-                    &self->query, bin, pctx,
-                    as_blob_contains(LIST, val, bytes_size, true));
-            }
-            else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-                as_query_where_with_ctx(
-                    &self->query, bin, pctx,
-                    as_blob_contains(MAPKEYS, val, bytes_size, true));
-            }
-            else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-                as_query_where_with_ctx(
-                    &self->query, bin, pctx,
-                    as_blob_contains(MAPVALUES, val, bytes_size, true));
+            if (py_expr) {
+                // TODO: should index name be NULL?
+                switch (index_type) {
+                case AS_INDEX_TYPE_DEFAULT:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_blob_equals(val, bytes_size, true));
+                    break;
+                case AS_INDEX_TYPE_LIST:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_blob_contains(LIST, val, bytes_size, true));
+                    break;
+                case AS_INDEX_TYPE_MAPKEYS:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_blob_contains(MAPKEYS, val, bytes_size, true));
+                    break;
+                case AS_INDEX_TYPE_MAPVALUES:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_blob_contains(MAPVALUES, val, bytes_size, true));
+                    break;
+                default:
+                    rc = 1;
+                    break;
+                }
             }
             else {
-                rc = 1;
-                free(bin);
-                break;
+                if (index_type == AS_INDEX_TYPE_DEFAULT) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_blob_equals(val, bytes_size, true));
+                }
+                else if (index_type == AS_INDEX_TYPE_LIST) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_blob_contains(LIST, val, bytes_size, true));
+                }
+                else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_blob_contains(MAPKEYS, val, bytes_size, true));
+                }
+                else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_blob_contains(MAPVALUES, val, bytes_size, true));
+                }
+                else {
+                    rc = 1;
+                    free(bin);
+                    break;
+                }
             }
+
             if (py_ubin) {
                 Py_DECREF(py_ubin);
                 py_ubin = NULL;
@@ -261,25 +358,57 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             int64_t max = pyobject_to_int64(py_val2);
 
             as_query_where_init(&self->query, 1);
-            if (index_type == 0) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_range(DEFAULT, NUMERIC, min, max));
-            }
-            else if (index_type == 1) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_range(LIST, NUMERIC, min, max));
-            }
-            else if (index_type == 2) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_range(MAPKEYS, NUMERIC, min, max));
-            }
-            else if (index_type == 3) {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        as_range(MAPVALUES, NUMERIC, min, max));
+            if (py_expr) {
+                // TODO: should index name be NULL?
+                switch (index_type) {
+                case AS_INDEX_TYPE_DEFAULT:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_range(DEFAULT, NUMERIC, min, max));
+                    break;
+                case AS_INDEX_TYPE_LIST:
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
+                                            as_range(LIST, NUMERIC, min, max));
+                    break;
+                case AS_INDEX_TYPE_MAPKEYS:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_range(MAPKEYS, NUMERIC, min, max));
+                    break;
+                case AS_INDEX_TYPE_MAPVALUES:
+                    as_query_where_with_exp(
+                        &self->query, NULL, exp_list,
+                        as_range(MAPVALUES, NUMERIC, min, max));
+                    break;
+                default:
+                    rc = 1;
+                    break;
+                }
             }
             else {
-                rc = 1;
-                break;
+                if (index_type == 0) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_range(DEFAULT, NUMERIC, min, max));
+                }
+                else if (index_type == 1) {
+                    as_query_where_with_ctx(&self->query, bin, pctx,
+                                            as_range(LIST, NUMERIC, min, max));
+                }
+                else if (index_type == 2) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_range(MAPKEYS, NUMERIC, min, max));
+                }
+                else if (index_type == 3) {
+                    as_query_where_with_ctx(
+                        &self->query, bin, pctx,
+                        as_range(MAPVALUES, NUMERIC, min, max));
+                }
+                else {
+                    rc = 1;
+                    break;
+                }
             }
 
             if (py_ubin) {
@@ -315,8 +444,16 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
 
             as_query_where_init(&self->query, 1);
-            as_query_where_with_ctx(&self->query, bin, pctx, AS_PREDICATE_RANGE,
-                                    index_type, in_datatype, val);
+            if (py_expr) {
+                as_query_where_with_exp(&self->query, NULL, exp_list,
+                                        AS_PREDICATE_RANGE, index_type,
+                                        in_datatype, val);
+            }
+            else {
+                as_query_where_with_ctx(&self->query, bin, pctx,
+                                        AS_PREDICATE_RANGE, index_type,
+                                        in_datatype, val);
+            }
 
             if (py_ubin) {
                 Py_DECREF(py_ubin);
@@ -364,7 +501,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                             PyObject *py_ctx,
-                                            PyObject *py_predicate)
+                                            PyObject *py_predicate,
+                                            PyObject *py_exp)
 {
     as_error err;
     int rc = 0;
@@ -388,7 +526,7 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
             as_index_datatype op_data =
                 (as_index_datatype)PyLong_AsLong(py_op_data);
             rc = AerospikeQuery_Where_Add(
-                self, py_ctx, op, op_data,
+                self, py_ctx, py_exp, op, op_data,
                 size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
                 size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
                 size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
@@ -445,7 +583,39 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
         goto CLEANUP;
     }
 
-    return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred);
+    return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred, NULL);
+
+CLEANUP:
+    raise_exception(&err);
+    return NULL;
+}
+
+PyObject *AerospikeQuery_WhereWithExpr(AerospikeQuery *self, PyObject *args)
+{
+    as_error err;
+
+    PyObject *py_pred = NULL;
+    PyObject *py_expr = NULL;
+
+    if (PyArg_ParseTuple(args, "O|O:where", &py_pred, &py_expr) == false) {
+        return NULL;
+    }
+
+    as_error_init(&err);
+
+    // TODO: Not sure if we need this?
+    if (!self || !self->client->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
+    if (!self->client->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
+    return AerospikeQuery_Where_Invoke(self, NULL, py_pred, py_expr);
 
 CLEANUP:
     raise_exception(&err);
