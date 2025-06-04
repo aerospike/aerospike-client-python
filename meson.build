@@ -1,8 +1,8 @@
 project('aerospike', 'c')
 
-run_command('cd aerospike-client-c/', check: true)
+run_command('cd', 'aerospike-client-c/', check: true)
 run_command('make', check: true)
-run_command('cd ..', check: true)
+run_command('cd', '..', check: true)
 
 incdir = include_directories('src/include')
 
