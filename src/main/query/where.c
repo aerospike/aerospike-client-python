@@ -31,6 +31,7 @@
 #undef TRACE
 #define TRACE()
 
+// TODO: replace with helper function from conversions.c
 int64_t pyobject_to_int64(PyObject *py_obj)
 {
     if (PyLong_Check(py_obj)) {
@@ -48,8 +49,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     PyObject *py_val2, int index_type)
 {
     as_error err;
-    char *val = NULL, *bin = NULL;
-    PyObject *py_ubin = NULL;
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
     int rc = 0;
@@ -64,10 +63,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             return err.code;
         }
-        if (!ctx_in_use) {
-            cf_free(pctx);
-            pctx = NULL;
-        }
     }
 
     as_exp *exp_list = NULL;
@@ -79,10 +74,10 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
     }
 
+    char *bin = NULL;
     if (py_bin) {
         if (PyUnicode_Check(py_bin)) {
-            py_ubin = PyUnicode_AsUTF8String(py_bin);
-            bin = PyBytes_AsString(py_ubin);
+            bin = PyUnicode_AsUTF8(py_bin);
         }
         else if (PyByteArray_Check(py_bin)) {
             bin = PyByteArray_AsString(py_bin);
@@ -95,25 +90,27 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         py_bin = NULL;
     }
 
+    int64_t val1 = 0;
+    int64_t val2 = 0;
+    char *val1_str = NULL;
+    Py_ssize_t bytes_size = 0;
     if (in_datatype == AS_INDEX_STRING) {
         if (PyUnicode_Check(py_val1)) {
-            PyObject *py_uval = PyUnicode_AsUTF8String(py_val1);
-            val = strdup(PyBytes_AsString(py_uval));
-            Py_DECREF(py_uval);
+            val1_str = PyUnicode_AsUTF8(py_val1);
         }
         else {
             rc = 1;
         }
     }
     else if (in_datatype == AS_INDEX_NUMERIC) {
-        int64_t val = pyobject_to_int64(py_val1);
+        val1 = pyobject_to_int64(py_val1);
         if (py_val2) {
-            int64_t max = pyobject_to_int64(py_val2);
+            val2 = pyobject_to_int64(py_val2);
         }
     }
     else if (in_datatype == AS_INDEX_BLOB) {
         uint8_t *val = NULL;
-        Py_ssize_t bytes_size;
+        ;
 
         if (PyBytes_Check(py_val1)) {
             val = (uint8_t *)PyBytes_AsString(py_val1);
@@ -125,7 +122,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
         else {
             rc = 1;
-            free(bin);
         }
 
         uint8_t *bytes_buffer = (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
@@ -138,13 +134,13 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     if (in_datatype == AS_INDEX_BLOB) {
         if (exp_list) {
             as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
-                                    index_type, in_datatype, val, bytes_size,
-                                    true);
+                                    index_type, in_datatype, val1_str,
+                                    bytes_size, true);
         }
         else {
             as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                    index_type, in_datatype, val, bytes_size,
-                                    true);
+                                    index_type, in_datatype, val1_str,
+                                    bytes_size, true);
         }
         // Cleanup
         free(bin);
@@ -156,11 +152,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (predicate == AS_PREDICATE_RANGE) {
             if (exp_list) {
                 as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
-                                        index_type, in_datatype, val, val2);
+                                        index_type, in_datatype, val1, val2);
             }
             else {
                 as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                        index_type, in_datatype, val, val2);
+                                        index_type, in_datatype, val1, val2);
             }
             if (in_datatype == AS_INDEX_GEO2DSPHERE) {
                 self->query.where.entries[0].value.string_val._free = true;
@@ -169,11 +165,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         else if (predicate == AS_PREDICATE_EQUAL) {
             if (exp_list) {
                 as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
-                                        index_type, in_datatype, val);
+                                        index_type, in_datatype, val1);
             }
             else {
                 as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                        index_type, in_datatype, val);
+                                        index_type, in_datatype, val1);
             }
         }
     }
