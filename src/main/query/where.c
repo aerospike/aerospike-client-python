@@ -93,6 +93,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     int64_t val1 = 0;
     int64_t val2 = 0;
     const char *val1_str = NULL;
+    uint8_t *val1_bytes = NULL;
     Py_ssize_t bytes_size = 0;
     if (in_datatype == AS_INDEX_STRING) {
         if (PyUnicode_Check(py_val1)) {
@@ -109,24 +110,22 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
     }
     else if (in_datatype == AS_INDEX_BLOB) {
-        uint8_t *val = NULL;
-        ;
-
         if (PyBytes_Check(py_val1)) {
-            val = (uint8_t *)PyBytes_AsString(py_val1);
+            val1_bytes = (uint8_t *)PyBytes_AsString(py_val1);
             bytes_size = PyBytes_Size(py_val1);
         }
         else if (PyByteArray_Check(py_val1)) {
-            val = (uint8_t *)PyByteArray_AsString(py_val1);
+            val1_bytes = (uint8_t *)PyByteArray_AsString(py_val1);
             bytes_size = PyByteArray_Size(py_val1);
         }
         else {
             rc = 1;
         }
 
-        uint8_t *bytes_buffer = (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
-        memcpy(bytes_buffer, val, sizeof(uint8_t) * bytes_size);
-        val = bytes_buffer;
+        uint8_t *val1_bytes_cpy =
+            (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
+        memcpy(val1_bytes_cpy, val1_bytes, sizeof(uint8_t) * bytes_size);
+        val1_bytes = val1_bytes_cpy;
     }
 
     as_query_where_init(&self->query, 1);
