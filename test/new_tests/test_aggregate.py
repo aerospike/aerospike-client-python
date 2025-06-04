@@ -394,3 +394,8 @@ class TestAggregate(object):
         query: aerospike.Query = self.as_connection.query("test", "demo")
         with pytest.raises(TypeError):
             query.apply("stream_example", "count", policy=None)
+
+    def test_query_with_invalid_expr(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            query.where_with_exp(p.equals("test_age", 165), 4)
