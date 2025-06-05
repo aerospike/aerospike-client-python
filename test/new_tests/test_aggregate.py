@@ -402,8 +402,10 @@ class TestAggregate(object):
         with pytest.raises(e.ParamError):
             query.where_with_expr(p.equals("test_age", 165), 4)
 
-    # TODO: need e2e test
     def test_query_with_expr(self):
         query: aerospike.Query = self.as_connection.query("test", "demo")
-        expr = Add(IntBin("test_age")).compile()
-        query.where_with_expr(p.equals("test_age", 165), expr)
+        expr = Add(IntBin("no"), IntBin("test_age")).compile()
+        query.where_with_expr(p.equals(bin=None, val=2), expr)
+        recs = query.results()
+        assert len(recs) == 1
+        assert recs[0][2]['no'] == 1
