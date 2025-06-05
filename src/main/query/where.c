@@ -83,16 +83,18 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     switch (predicate) {
     case AS_PREDICATE_EQUAL: {
         if (in_datatype == AS_INDEX_STRING) {
-            if (PyUnicode_Check(py_bin)) {
-                py_ubin = PyUnicode_AsUTF8String(py_bin);
-                bin = PyBytes_AsString(py_ubin);
-            }
-            else if (PyByteArray_Check(py_bin)) {
-                bin = PyByteArray_AsString(py_bin);
-            }
-            else {
-                rc = 1;
-                break;
+            if (!exp_list) {
+                if (PyUnicode_Check(py_bin)) {
+                    py_ubin = PyUnicode_AsUTF8String(py_bin);
+                    bin = PyBytes_AsString(py_ubin);
+                }
+                else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                }
+                else {
+                    rc = 1;
+                    break;
+                }
             }
 
             if (PyUnicode_Check(py_val1)) {
@@ -161,16 +163,18 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             self->query.where.entries[0].value.string_val._free = true;
         }
         else if (in_datatype == AS_INDEX_NUMERIC) {
-            if (PyUnicode_Check(py_bin)) {
-                py_ubin = PyUnicode_AsUTF8String(py_bin);
-                bin = PyBytes_AsString(py_ubin);
-            }
-            else if (PyByteArray_Check(py_bin)) {
-                bin = PyByteArray_AsString(py_bin);
-            }
-            else {
-                rc = 1;
-                break;
+            if (!exp_list) {
+                if (PyUnicode_Check(py_bin)) {
+                    py_ubin = PyUnicode_AsUTF8String(py_bin);
+                    bin = PyBytes_AsString(py_ubin);
+                }
+                else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                }
+                else {
+                    rc = 1;
+                    break;
+                }
             }
             int64_t val = pyobject_to_int64(py_val1);
 
@@ -230,15 +234,17 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
         else if (in_datatype == AS_INDEX_BLOB) {
             // TODO: Some of this code can be shared by all the other index data types
-            if (PyUnicode_Check(py_bin)) {
-                const char *py_bin_buffer = PyUnicode_AsUTF8(py_bin);
-                // bin points to the internal buffer of the Python string
-                // so we need to make a copy of the bin string in case the Python string gets garbage collected
-                bin = strdup(py_bin_buffer);
-            }
-            else {
-                rc = 1;
-                break;
+            if (!exp_list) {
+                if (PyUnicode_Check(py_bin)) {
+                    const char *py_bin_buffer = PyUnicode_AsUTF8(py_bin);
+                    // bin points to the internal buffer of the Python string
+                    // so we need to make a copy of the bin string in case the Python string gets garbage collected
+                    bin = strdup(py_bin_buffer);
+                }
+                else {
+                    rc = 1;
+                    break;
+                }
             }
             uint8_t *val = NULL;
             Py_ssize_t bytes_size;
@@ -345,16 +351,18 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     }
     case AS_PREDICATE_RANGE: {
         if (in_datatype == AS_INDEX_NUMERIC) {
-            if (PyUnicode_Check(py_bin)) {
-                py_ubin = PyUnicode_AsUTF8String(py_bin);
-                bin = PyBytes_AsString(py_ubin);
-            }
-            else if (PyByteArray_Check(py_bin)) {
-                bin = PyByteArray_AsString(py_bin);
-            }
-            else {
-                rc = 1;
-                break;
+            if (!exp_list) {
+                if (PyUnicode_Check(py_bin)) {
+                    py_ubin = PyUnicode_AsUTF8String(py_bin);
+                    bin = PyBytes_AsString(py_ubin);
+                }
+                else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                }
+                else {
+                    rc = 1;
+                    break;
+                }
             }
             int64_t min = pyobject_to_int64(py_val1);
             int64_t max = pyobject_to_int64(py_val2);
@@ -422,17 +430,18 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             // NOT IMPLEMENTED
         }
         else if (in_datatype == AS_INDEX_GEO2DSPHERE) {
-
-            if (PyUnicode_Check(py_bin)) {
-                py_ubin = PyUnicode_AsUTF8String(py_bin);
-                bin = PyBytes_AsString(py_ubin);
-            }
-            else if (PyByteArray_Check(py_bin)) {
-                bin = PyByteArray_AsString(py_bin);
-            }
-            else {
-                rc = 1;
-                break;
+            if (!exp_list) {
+                if (PyUnicode_Check(py_bin)) {
+                    py_ubin = PyUnicode_AsUTF8String(py_bin);
+                    bin = PyBytes_AsString(py_ubin);
+                }
+                else if (PyByteArray_Check(py_bin)) {
+                    bin = PyByteArray_AsString(py_bin);
+                }
+                else {
+                    rc = 1;
+                    break;
+                }
             }
 
             if (PyUnicode_Check(py_val1)) {
