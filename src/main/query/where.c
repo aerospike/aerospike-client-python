@@ -49,6 +49,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     PyObject *py_val2, int index_type)
 {
     as_error err;
+    as_error_init(&err);
     char *val = NULL, *bin = NULL;
     PyObject *py_ubin = NULL;
     as_cdt_ctx *pctx = NULL;
