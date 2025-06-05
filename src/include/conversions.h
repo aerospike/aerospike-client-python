@@ -209,15 +209,10 @@ as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
                                    as_partition_filter *partition_filter,
-                                   as_partitions_status **ps, as_error *err);
+                                   as_error *err);
 
 as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                               int *int_pointer, const char *py_object_name);
-
-as_status
-as_partitions_status_to_pyobject(as_error *err,
-                                 const as_partitions_status *parts_status,
-                                 PyObject **py_dict);
 
 as_status as_partition_status_to_pyobject(
     as_error *err, const as_partition_status *part_status, PyObject **py_tuple);
