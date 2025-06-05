@@ -178,10 +178,12 @@ class TestQueryPagination(TestBaseClass):
 
         query_obj.max_records = math.ceil(self.partition_1001_count / 2)
 
-        for i in range(2):
-            records = query_obj.results({"partition_filter": {"begin": 1001, "count": 1}})
+        part_filter = {"begin": 1001, "count": 1}
 
+        for i in range(2):
+            records = query_obj.results({"partition_filter": part_filter})
             all_recs += len(records)
+            part_filter = {"partition_status": query_obj.get_partitions_status()}
 
         assert all_recs == self.partition_1001_count
         assert query_obj.is_done()
