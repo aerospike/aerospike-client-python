@@ -319,38 +319,41 @@ as_status as_role_array_to_pyobject(as_error *err, as_role **roles,
 
 // creates a python tuple from an as_partition_status
 // EX: (id, init, done, digest, bval)
-PyObject *
-as_partition_status_to_pyobject(as_error *err,
-                                const as_partition_status *part_status)
+as_status as_partition_status_to_pyobject(
+    as_error *err, const as_partition_status *part_status, PyObject **py_tuple)
 {
     as_error_reset(err);
 
     int PARTITION_TUPLE_STATUS_SIZE = 5;
-    PyObject *py_tuple = PyTuple_New((Py_ssize_t)PARTITION_TUPLE_STATUS_SIZE);
-    if (py_tuple == NULL) {
-        return NULL;
+    PyObject *new_tuple = PyTuple_New((Py_ssize_t)PARTITION_TUPLE_STATUS_SIZE);
+    if (new_tuple == NULL) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create py_tuple");
+        goto END;
     }
 
     PyObject *py_id =
         PyLong_FromUnsignedLong((unsigned long)part_status->part_id);
-    PyTuple_SetItem(py_tuple, 0, py_id);
+    PyTuple_SetItem(new_tuple, 0, py_id);
 
     PyObject *py_init = PyBool_FromLong((long)part_status->digest.init);
-    PyTuple_SetItem(py_tuple, 1, py_init);
+    PyTuple_SetItem(new_tuple, 1, py_init);
 
     PyObject *py_retry = PyBool_FromLong((long)part_status->retry);
-    PyTuple_SetItem(py_tuple, 2, py_retry);
+    PyTuple_SetItem(new_tuple, 2, py_retry);
 
     PyObject *py_digest =
         PyByteArray_FromStringAndSize((const char *)&part_status->digest.value,
                                       (Py_ssize_t)AS_DIGEST_VALUE_SIZE);
-    PyTuple_SetItem(py_tuple, 3, py_digest);
+    PyTuple_SetItem(new_tuple, 3, py_digest);
 
     PyObject *py_bval =
         PyLong_FromUnsignedLongLong((unsigned long long)part_status->bval);
-    PyTuple_SetItem(py_tuple, 4, py_bval);
+    PyTuple_SetItem(new_tuple, 4, py_bval);
 
-    return py_tuple;
+    *py_tuple = new_tuple;
+
+END:
+    return err->code;
 }
 
 as_status as_user_info_to_pyobject(as_error *err, as_user *user,

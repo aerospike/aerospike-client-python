@@ -20,7 +20,114 @@
 // TODO: Don't need to include all types
 #include "types.h"
 #include "partitions_status.h"
-#include "conversions.h"
+
+// Partition status object
+
+PyObject *AerospikePartitionStatusObject_Type_New(PyTypeObject *type,
+                                                  PyObject *args,
+                                                  PyObject *kwds)
+{
+    AerospikePartitionStatusObject *self =
+        (AerospikePartitionStatusObject *)type->tp_alloc(type, 0);
+    if (self == NULL) {
+        return NULL;
+    }
+    return (PyObject *)self;
+}
+
+// TODO: make sure memory garbage collection works as intended
+static void AerospikePartitionStatusObject_Type_Dealloc(
+    AerospikePartitionStatusObject *self)
+{
+    if (self->part_status) {
+        free(self->part_status);
+    }
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+static PyObject *AerospikePartitionStatus__getitem__(PyObject *self,
+                                                     PyObject *py_key)
+{
+    AerospikePartitionStatusObject *py_partition_status =
+        (AerospikePartitionStatusObject *)self;
+    bool get_bval = false;
+    if (PyUnicode_Check(py_key)) {
+        const char *key = PyUnicode_AsUTF8(py_key);
+        if (!key) {
+            return NULL;
+        }
+        if (!strcmp(key, "bval")) {
+            get_bval = true;
+        }
+    }
+    else if (PyLong_Check(py_key)) {
+        unsigned long long index = PyLong_AsUnsignedLongLong(py_key);
+        if (index == (unsigned long long)-1 && PyErr_Occurred()) {
+            return NULL;
+        }
+        switch (index) {
+        case 4:
+            get_bval = true;
+            break;
+        }
+    }
+
+    if (get_bval) {
+        uint64_t bval = py_partition_status->part_status->bval;
+        PyObject *py_bval =
+            PyLong_FromUnsignedLongLong((unsigned long long)bval);
+        if (!py_bval) {
+            return NULL;
+        }
+        return py_bval;
+    }
+
+    PyErr_SetNone(PyExc_KeyError);
+    return NULL;
+}
+
+static PyMethodDef AerospikePartitionStatus_Type_Methods[] = {
+    // {.ml_name = "__getitem__",
+    //  .ml_meth = AerospikePartitionStatus__getitem__,
+    //  .ml_flags = METH_O},
+    {NULL}};
+
+static PyMappingMethods AerospikePartitionStatus_Type_AsMapping = {
+    .mp_subscript = AerospikePartitionStatus__getitem__};
+
+PyTypeObject AerospikePartitionStatusObject_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0).tp_name =
+        FULLY_QUALIFIED_TYPE_NAME("PartitionStatus"),
+    .tp_basicsize = sizeof(AerospikePartitionStatusObject),
+    .tp_dealloc = (destructor)AerospikePartitionStatusObject_Type_Dealloc,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+    .tp_new = AerospikePartitionStatusObject_Type_New,
+    .tp_methods = AerospikePartitionStatus_Type_Methods,
+    .tp_as_mapping = &AerospikePartitionStatus_Type_AsMapping};
+
+PyTypeObject *AerospikePartitionStatusObject_Ready()
+{
+    return PyType_Ready(&AerospikePartitionStatusObject_Type) == 0
+               ? &AerospikePartitionStatusObject_Type
+               : NULL;
+}
+
+static PyObject *
+create_py_partition_status_object(as_partition_status *part_status)
+{
+    AerospikePartitionStatusObject *py_part_status =
+        (AerospikePartitionStatusObject *)PyObject_CallObject(
+            (PyObject *)&AerospikePartitionStatusObject_Type, NULL);
+    if (py_part_status == NULL) {
+        return NULL;
+    }
+
+    as_partition_status *part_status_copy = malloc(sizeof(as_partition_status));
+    memcpy(part_status_copy, part_status, sizeof(as_partition_status));
+    py_part_status->part_status = part_status_copy;
+
+    return (PyObject *)py_part_status;
+}
 
 // Partitions status object
 
@@ -116,7 +223,7 @@ static PyObject *AerospikePartitionsStatus__getitem__(PyObject *self,
         as_partition_status *part_status =
             &py_partitions_status->parts_all->parts[partition_idx];
         PyObject *py_partition_status =
-            as_partition_status_to_pyobject(part_status, py_partition_status);
+            create_py_partition_status_object(part_status);
         if (py_partition_status == NULL) {
             return NULL;
         }
