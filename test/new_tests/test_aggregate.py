@@ -405,7 +405,7 @@ class TestAggregate(object):
     def test_query_with_expr(self):
         query: aerospike.Query = self.as_connection.query("test", "demo")
         expr = Add(IntBin("no"), IntBin("test_age")).compile()
-        query.where_with_expr(p.equals(bin=None, val=2), expr)
+        query.where_with_expr(p.equals(None, 2), expr)
         recs = query.results()
         assert len(recs) == 1
         assert recs[0][2]['no'] == 1
