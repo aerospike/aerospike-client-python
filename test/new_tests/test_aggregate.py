@@ -403,6 +403,8 @@ class TestAggregate(object):
             query.where_with_expr(p.equals("test_age", 165), 4)
 
     def test_query_with_expr(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            pytest.skip("Querying with expressions isn't supported yet.")
         query: aerospike.Query = self.as_connection.query("test", "demo")
         expr = Add(IntBin("no"), IntBin("test_age")).compile()
         query.where_with_expr(p.equals(None, 2), expr)
