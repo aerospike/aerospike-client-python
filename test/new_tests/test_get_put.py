@@ -122,7 +122,7 @@ class TestGetPut:
         put_data(self.as_connection, ("test", "demo", 13), rec)
 
         (_, _, bins) = self.as_connection.get(("test", "demo", 13))
-        assert len(bins) == 2200
+        assert len(bins) == 8000
 
     def test_pos_get_initkey_with_policy_send(self, put_data):
         """
