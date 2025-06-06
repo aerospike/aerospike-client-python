@@ -17,7 +17,7 @@ Bin Predicates
 
     Represent a *bin* **BETWEEN** *min* **AND** *max* predicate.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param int min: the minimum value to be matched with the between operator.
     :param int max: the maximum value to be matched with the between operator.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
@@ -40,7 +40,7 @@ Bin Predicates
 
     Represent a *bin* **=** *val* predicate.
 
-    :param str bin: the bin name.
+    :param str Optional[bin]: the bin name.
     :param val: the value to be matched with an equals operator.
     :type val: :py:class:`str` or :py:class:`int`
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
