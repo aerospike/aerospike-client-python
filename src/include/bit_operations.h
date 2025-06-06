@@ -25,4 +25,4 @@
 as_status add_new_bit_op(AerospikeClient *self, as_error *err,
                          PyObject *op_dict, as_vector *unicodeStrVector,
                          as_operations *ops, long operation_code,
-                         long *ret_type, int serializer_type);
+                         long *ret_type);

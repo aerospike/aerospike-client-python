@@ -116,7 +116,7 @@ class TestGetPut:
         Invoke get() for a record with POLICY_KEY_DIGEST
         """
         rec = {}
-        for x in range(2200):
+        for x in range(8000):
             rec[str(x)] = [bytearray([0])]
 
         put_data(self.as_connection, ("test", "demo", 13), rec)

@@ -76,7 +76,7 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
     char *module = NULL;
     char *function = NULL;
     as_arraylist *arglist = NULL;
-    bool allocate_buffer = true;
+    bool destroy_buffers = true;
 
     if (PyUnicode_Check(py_module)) {
         py_umodule = PyUnicode_AsUTF8String(py_module);
@@ -115,8 +115,8 @@ AerospikeScan *AerospikeScan_Apply(AerospikeScan *self, PyObject *args,
             PyObject *py_val = PyList_GetItem(py_args, (Py_ssize_t)i);
             as_val *val = NULL;
             as_val_new_from_pyobject(self->client, &err, py_val, &val,
-                                     self->dynamic_pool, SERIALIZER_PYTHON,
-                                     allocate_buffer);
+                                     self->dynamic_pool, SERIALIZER_NONE,
+                                     destroy_buffers);
             if (err.code != AEROSPIKE_OK) {
                 as_error_update(&err, err.code, NULL);
                 as_arraylist_destroy(arglist);

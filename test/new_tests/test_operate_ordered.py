@@ -40,6 +40,12 @@ class TestOperateOrdered(object):
 
         keys.append(key)
 
+        key = ("test", "demo", "byte_key")
+        rec = {"byte_bin": b"asd;as[d'as;d"}  # bytes literal
+        as_connection.put(key, rec)
+
+        keys.append(key)
+
         key = ("test", "demo", "byteincr_key")
         rec = {"byteincr_bin": bytearray([0])}
         as_connection.put(key, rec)
@@ -121,6 +127,14 @@ class TestOperateOrdered(object):
                 [("bytearray_bin", bytearray("asd;as[d'as;dabc", "utf-8"))],
             ),
             (
+                ("test", "demo", "byte_key"),  # append_val byte
+                [
+                    {"op": aerospike.OPERATOR_APPEND, "bin": "byte_bin", "val": b"abc"},
+                    {"op": aerospike.OPERATOR_READ, "bin": "byte_bin"},
+                ],
+                [("byte_bin", b"asd;as[d'as;dabc")],
+            ),
+            (
                 ("test", "demo", "bytearray_new"),  # append bytearray_newrecord
                 [
                     {
@@ -139,6 +153,14 @@ class TestOperateOrdered(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "bytearray_bin"},
                 ],
                 [("bytearray_bin", bytearray("abcasd;as[d'as;d", "utf-8"))],
+            ),
+            (
+                ("test", "demo", "byte_key"),  # prepend_valbyte
+                [
+                    {"op": aerospike.OPERATOR_PREPEND, "bin": "byte_bin", "val": b"abc"},
+                    {"op": aerospike.OPERATOR_READ, "bin": "byte_bin"},
+                ],
+                [("byte_bin", b"abcasd;as[d'as;d")],
             ),
             (
                 ("test", "demo", "bytearray_new"),  # prepend_valbytearray_newrecord

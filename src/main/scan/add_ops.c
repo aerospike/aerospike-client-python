@@ -48,6 +48,8 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
     as_error err;
     as_error_init(&err);
 
+    bool destroy_buffers = true;
+
     if (self->dynamic_pool == NULL) {
         self->dynamic_pool =
             (as_dynamic_pool *)cf_malloc(sizeof(as_dynamic_pool));
@@ -74,7 +76,7 @@ AerospikeScan *AerospikeScan_Add_Ops(AerospikeScan *self, PyObject *args,
 
             if (PyDict_Check(py_val)) {
                 if (add_op(self->client, &err, py_val, self->unicodeStrVector,
-                           self->dynamic_pool, self->scan.ops, &operation,
+                           self->dynamic_pool, destroy_buffers, self->scan.ops, &operation,
                            &return_type) != AEROSPIKE_OK) {
                     as_error_update(&err, AEROSPIKE_ERR_PARAM,
                                     "Failed to convert ops.");

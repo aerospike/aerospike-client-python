@@ -26,6 +26,8 @@
 #include "exceptions.h"
 #include "policy.h"
 
+#define DESTROY_BUFFERS false
+
 /**
  *******************************************************************************************************
  * Return the base64 representation of the passed in CDT ctx.
@@ -50,6 +52,8 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
     PyObject *op_dict = NULL;
     char *base64 = NULL;
     PyObject *py_response = NULL;
+
+
 
     as_error err;
     as_error_init(&err);
@@ -92,9 +96,7 @@ PyObject *AerospikeClient_GetCDTCTXBase64(AerospikeClient *self, PyObject *args,
         goto CLEANUP;
     }
 
-    bool allocate_buffer = false;
-    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &dynamic_pool,
-                    SERIALIZER_PYTHON, allocate_buffer) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, &err, &ctx, op_dict, &ctx_in_use, &dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         goto CLEANUP;
     }
     if (!ctx_in_use) {
@@ -124,7 +126,7 @@ CLEANUP:
     if (base64 != NULL) {
         cf_free(base64);
     }
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, DESTROY_BUFFERS);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

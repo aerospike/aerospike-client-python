@@ -40,62 +40,56 @@ static as_status get_hll_policy(as_error *err, PyObject *op_dict,
 
 static as_status add_op_hll_add(AerospikeClient *self, as_error *err, char *bin,
                                 PyObject *op_dict, as_operations *ops,
-                                as_dynamic_pool *dynamic_pool,
-                                int serializer_type);
+                                as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_hll_init(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
-                                 as_operations *ops, int serializer_type);
+                                 as_operations *ops);
 
 static as_status add_op_hll_get_count(AerospikeClient *self, as_error *err,
                                       char *bin, PyObject *op_dict,
-                                      as_operations *ops, int serializer_type);
+                                      as_operations *ops);
 
 static as_status add_op_hll_describe(AerospikeClient *self, as_error *err,
                                      char *bin, PyObject *op_dict,
-                                     as_operations *ops, int serializer_type);
+                                     as_operations *ops);
 
 static as_status add_op_hll_fold(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
-                                 as_operations *ops, int serializer_type);
+                                 as_operations *ops);
 
 static as_status add_op_hll_get_intersect_count(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type);
+    as_operations *ops, as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_hll_get_similarity(AerospikeClient *self, as_error *err,
                                            char *bin, PyObject *op_dict,
                                            as_operations *ops,
-                                           as_dynamic_pool *dynamic_pool,
-                                           int serializer_type);
+                                           as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_hll_get_union(AerospikeClient *self, as_error *err,
                                       char *bin, PyObject *op_dict,
                                       as_operations *ops,
-                                      as_dynamic_pool *dynamic_pool,
-                                      int serializer_type);
+                                      as_dynamic_pool *dynamic_pool);
 
 static as_status
 add_op_hll_get_union_count(AerospikeClient *self, as_error *err, char *bin,
                            PyObject *op_dict, as_operations *ops,
-                           as_dynamic_pool *dynamic_pool, int serializer_type);
+                           as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_hll_refresh_count(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
-                                          as_operations *ops,
-                                          int serializer_type);
+                                          as_operations *ops);
 
 static as_status add_op_hll_set_union(AerospikeClient *self, as_error *err,
                                       char *bin, PyObject *op_dict,
                                       as_operations *ops,
-                                      as_dynamic_pool *dynamic_pool,
-                                      int serializer_type);
+                                      as_dynamic_pool *dynamic_pool);
 
 as_status add_new_hll_op(AerospikeClient *self, as_error *err,
                          PyObject *op_dict, as_vector *unicodeStrVector,
                          as_dynamic_pool *dynamic_pool, as_operations *ops,
-                         long operation_code, long *ret_type,
-                         int serializer_type)
+                         long operation_code, long *ret_type)
 
 {
     char *bin = NULL;
@@ -106,46 +100,40 @@ as_status add_new_hll_op(AerospikeClient *self, as_error *err,
 
     switch (operation_code) {
     case OP_HLL_ADD:
-        return add_op_hll_add(self, err, bin, op_dict, ops, dynamic_pool,
-                              serializer_type);
+        return add_op_hll_add(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_HLL_INIT:
-        return add_op_hll_init(self, err, bin, op_dict, ops, serializer_type);
+        return add_op_hll_init(self, err, bin, op_dict, ops);
 
     case OP_HLL_GET_COUNT:
-        return add_op_hll_get_count(self, err, bin, op_dict, ops,
-                                    serializer_type);
+        return add_op_hll_get_count(self, err, bin, op_dict, ops);
 
     case OP_HLL_DESCRIBE:
-        return add_op_hll_describe(self, err, bin, op_dict, ops,
-                                   serializer_type);
+        return add_op_hll_describe(self, err, bin, op_dict, ops);
 
     case OP_HLL_FOLD:
-        return add_op_hll_fold(self, err, bin, op_dict, ops, serializer_type);
+        return add_op_hll_fold(self, err, bin, op_dict, ops);
 
     case OP_HLL_GET_INTERSECT_COUNT:
         return add_op_hll_get_intersect_count(self, err, bin, op_dict, ops,
-                                              dynamic_pool, serializer_type);
+                                              dynamic_pool);
 
     case OP_HLL_GET_SIMILARITY:
         return add_op_hll_get_similarity(self, err, bin, op_dict, ops,
-                                         dynamic_pool, serializer_type);
+                                         dynamic_pool);
 
     case OP_HLL_GET_UNION:
-        return add_op_hll_get_union(self, err, bin, op_dict, ops, dynamic_pool,
-                                    serializer_type);
+        return add_op_hll_get_union(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_HLL_GET_UNION_COUNT:
         return add_op_hll_get_union_count(self, err, bin, op_dict, ops,
-                                          dynamic_pool, serializer_type);
+                                          dynamic_pool);
 
     case OP_HLL_REFRESH_COUNT:
-        return add_op_hll_refresh_count(self, err, bin, op_dict, ops,
-                                        serializer_type);
+        return add_op_hll_refresh_count(self, err, bin, op_dict, ops);
 
     case OP_HLL_SET_UNION:
-        return add_op_hll_set_union(self, err, bin, op_dict, ops, dynamic_pool,
-                                    serializer_type);
+        return add_op_hll_set_union(self, err, bin, op_dict, ops, dynamic_pool);
 
     default:
         // This should never be possible since we only get here if we know that the operation is valid.
@@ -157,8 +145,7 @@ as_status add_new_hll_op(AerospikeClient *self, as_error *err,
 
 static as_status add_op_hll_add(AerospikeClient *self, as_error *err, char *bin,
                                 PyObject *op_dict, as_operations *ops,
-                                as_dynamic_pool *dynamic_pool,
-                                int serializer_type)
+                                as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
     as_hll_policy hll_policy;
@@ -182,7 +169,7 @@ static as_status add_op_hll_add(AerospikeClient *self, as_error *err, char *bin,
     }
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
-                     dynamic_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -221,7 +208,7 @@ cleanup:
 
 static as_status add_op_hll_init(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
-                                 as_operations *ops, int serializer_type)
+                                 as_operations *ops)
 {
     as_hll_policy hll_policy;
     int index_bit_count;
@@ -266,7 +253,7 @@ cleanup:
 
 static as_status add_op_hll_get_count(AerospikeClient *self, as_error *err,
                                       char *bin, PyObject *op_dict,
-                                      as_operations *ops, int serializer_type)
+                                      as_operations *ops)
 {
     if (!as_operations_hll_get_count(ops, bin, NULL)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -280,7 +267,7 @@ cleanup:
 
 static as_status add_op_hll_describe(AerospikeClient *self, as_error *err,
                                      char *bin, PyObject *op_dict,
-                                     as_operations *ops, int serializer_type)
+                                     as_operations *ops)
 {
     if (!as_operations_hll_describe(ops, bin, NULL)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -294,7 +281,7 @@ cleanup:
 
 static as_status add_op_hll_fold(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
-                                 as_operations *ops, int serializer_type)
+                                 as_operations *ops)
 {
     int index_bit_count;
 
@@ -315,12 +302,12 @@ cleanup:
 
 static as_status add_op_hll_get_intersect_count(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_dynamic_pool *dynamic_pool, int serializer_type)
+    as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
-                     dynamic_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -341,13 +328,12 @@ cleanup:
 static as_status add_op_hll_get_similarity(AerospikeClient *self, as_error *err,
                                            char *bin, PyObject *op_dict,
                                            as_operations *ops,
-                                           as_dynamic_pool *dynamic_pool,
-                                           int serializer_type)
+                                           as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
-                     dynamic_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -368,13 +354,12 @@ cleanup:
 static as_status add_op_hll_get_union(AerospikeClient *self, as_error *err,
                                       char *bin, PyObject *op_dict,
                                       as_operations *ops,
-                                      as_dynamic_pool *dynamic_pool,
-                                      int serializer_type)
+                                      as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
-                     dynamic_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -395,12 +380,12 @@ cleanup:
 static as_status
 add_op_hll_get_union_count(AerospikeClient *self, as_error *err, char *bin,
                            PyObject *op_dict, as_operations *ops,
-                           as_dynamic_pool *dynamic_pool, int serializer_type)
+                           as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
-                     dynamic_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -420,8 +405,7 @@ cleanup:
 
 static as_status add_op_hll_refresh_count(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
-                                          as_operations *ops,
-                                          int serializer_type)
+                                          as_operations *ops)
 {
     if (!as_operations_hll_refresh_count(ops, bin, NULL)) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
@@ -436,8 +420,7 @@ cleanup:
 static as_status add_op_hll_set_union(AerospikeClient *self, as_error *err,
                                       char *bin, PyObject *op_dict,
                                       as_operations *ops,
-                                      as_dynamic_pool *dynamic_pool,
-                                      int serializer_type)
+                                      as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
     as_hll_policy hll_policy;
@@ -449,7 +432,7 @@ static as_status add_op_hll_set_union(AerospikeClient *self, as_error *err,
     }
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
-                     dynamic_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         goto cleanup;
     }
 

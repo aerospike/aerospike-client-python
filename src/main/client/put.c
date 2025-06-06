@@ -129,7 +129,14 @@ CLEANUP:
         as_record_destroy(&rec);
     }
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, true);
+    if(self->is_client_put_serializer || self->user_serializer_call_info.callback){
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, true);
+    }
+    else{
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    }
+
+    self->is_client_put_serializer = false;
     
 
     // If an error occurred, tell Python.

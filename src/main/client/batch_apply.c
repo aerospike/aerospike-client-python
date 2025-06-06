@@ -134,7 +134,8 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     as_dynamic_pool dynamic_pool;
     BYTE_POOL_INIT_NULL(&dynamic_pool);
 
-
+    bool destroy_buffers = false;
+    
     Py_ssize_t keys_size = PyList_Size(py_keys);
 
     as_list *arglist = NULL;
@@ -200,10 +201,9 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     const char *mod = PyUnicode_AsUTF8(py_mod);
     const char *func = PyUnicode_AsUTF8(py_func);
 
-    bool allocate_buffer = false;
 
     pyobject_to_list(self, err, py_args, &arglist, &dynamic_pool,
-                     SERIALIZER_PYTHON, allocate_buffer);
+                     SERIALIZER_NONE, destroy_buffers);
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -290,7 +290,7 @@ CLEANUP:
         as_vector_destroy(tmp_keys_p);
     }
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, destroy_buffers);
 
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);

@@ -31,30 +31,27 @@
 static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
                                   PyObject *op_dict,
                                   as_vector *unicodeStrVector,
-                                  as_operations *ops, int serializer_type);
+                                  as_operations *ops);
 
 static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
                                    PyObject *op_dict,
                                    as_vector *unicodeStrVector,
-                                   as_operations *ops, int serializer_type);
+                                   as_operations *ops);
 
 /* End forwards*/
 as_status add_new_expr_op(AerospikeClient *self, as_error *err,
                           PyObject *op_dict, as_vector *unicodeStrVector,
-                          as_operations *ops, long operation_code,
-                          int serializer_type)
+                          as_operations *ops, long operation_code)
 
 {
     switch (operation_code) {
 
     case OP_EXPR_READ: {
-        return add_op_expr_read(self, err, op_dict, unicodeStrVector, ops,
-                                serializer_type);
+        return add_op_expr_read(self, err, op_dict, unicodeStrVector, ops);
     }
 
     case OP_EXPR_WRITE: {
-        return add_op_expr_write(self, err, op_dict, unicodeStrVector, ops,
-                                 serializer_type);
+        return add_op_expr_write(self, err, op_dict, unicodeStrVector, ops);
     }
 
     default:
@@ -69,7 +66,7 @@ as_status add_new_expr_op(AerospikeClient *self, as_error *err,
 static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
                                    PyObject *op_dict,
                                    as_vector *unicodeStrVector,
-                                   as_operations *ops, int serializer_type)
+                                   as_operations *ops)
 {
     as_exp *exp_list_p = NULL;
     PyObject *py_exp_list = NULL;
@@ -106,7 +103,7 @@ static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
 static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
                                   PyObject *op_dict,
                                   as_vector *unicodeStrVector,
-                                  as_operations *ops, int serializer_type)
+                                  as_operations *ops)
 {
     as_exp *exp_list_p = NULL;
     PyObject *py_exp_list = NULL;

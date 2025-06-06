@@ -42,6 +42,8 @@
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_nil.h>
 
+#define DESTROY_BUFFERS false  // Don't destroy buffers when destroying the pool
+
 static as_status get_operation(as_error *err, PyObject *op_dict,
                                long *operation_ptr);
 
@@ -95,25 +97,25 @@ static inline bool isExprOp(int op);
 
 #define CONVERT_VAL_TO_AS_VAL()                                                       \
     if (as_val_new_from_pyobject(self, err, py_value, &put_val, dynamic_pool,         \
-                        SERIALIZER_PYTHON, allocate_buffer) != AEROSPIKE_OK) {        \
+                        SERIALIZER_NONE, destroy_buffers) != AEROSPIKE_OK) {        \
         return err->code;                                                             \
     }
 
 #define CONVERT_KEY_TO_AS_VAL()                                                       \
     if (as_val_new_from_pyobject(self, err, py_key, &put_key, dynamic_pool,           \
-                        SERIALIZER_PYTHON, allocate_buffer) != AEROSPIKE_OK) {        \
+                        SERIALIZER_NONE, destroy_buffers) != AEROSPIKE_OK) {        \
         return err->code;                                                             \
     }
 
 #define CONVERT_PY_CTX_TO_AS_CTX()                                                    \
     if (get_cdt_ctx(self, err, &ctx, py_val, &ctx_in_use, dynamic_pool,               \
-                        SERIALIZER_PYTHON, allocate_buffer) != AEROSPIKE_OK) {        \
+                        destroy_buffers) != AEROSPIKE_OK) {        \
         return err->code;                                                             \
     }
 
 #define CONVERT_RANGE_TO_AS_VAL()                                                     \
     if (as_val_new_from_pyobject(self, err, py_range, &put_range, dynamic_pool,       \
-                        SERIALIZER_PYTHON, allocate_buffer) != AEROSPIKE_OK) {        \
+                        SERIALIZER_NONE, destroy_buffers) != AEROSPIKE_OK) {        \
         return err->code;                                                             \
     }
 
@@ -307,7 +309,7 @@ bool opRequiresKey(int op)
 }
 
 as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
-                 as_vector *unicodeStrVector, as_dynamic_pool *dynamic_pool,
+                 as_vector *unicodeStrVector, as_dynamic_pool *dynamic_pool, bool destroy_buffers,
                  as_operations *ops, long *op, long *ret_type)
 {
     as_val *put_val = NULL;
@@ -315,7 +317,6 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     as_val *put_range = NULL;
     as_cdt_ctx ctx;
     as_cdt_ctx *ctx_ref = NULL;
-    bool allocate_buffer = false;
     bool ctx_in_use = false;
     char *bin = NULL;
     char *val = NULL;
@@ -353,28 +354,27 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     if (isListOp(operation)) {
         return add_new_list_op(
             self, err, py_val, unicodeStrVector, dynamic_pool, ops, operation,
-            ret_type,
-            SERIALIZER_PYTHON); //This hardcoding matches current behavior
+            ret_type); //This hardcoding matches current behavior
     }
 
     if (isNewMapOp(operation)) {
         return add_new_map_op(self, err, py_val, unicodeStrVector, dynamic_pool,
-                              ops, operation, ret_type, SERIALIZER_PYTHON);
+                              ops, operation, ret_type);
     }
 
     if (isBitOp(operation)) {
         return add_new_bit_op(self, err, py_val, unicodeStrVector, ops,
-                              operation, ret_type, SERIALIZER_PYTHON);
+                              operation, ret_type);
     }
 
     if (isHllOp(operation)) {
         return add_new_hll_op(self, err, py_val, unicodeStrVector, dynamic_pool,
-                              ops, operation, ret_type, SERIALIZER_PYTHON);
+                              ops, operation, ret_type);
     }
 
     if (isExprOp(operation)) {
         return add_new_expr_op(self, err, py_val, unicodeStrVector, ops,
-                               operation, SERIALIZER_PYTHON);
+                               operation);
     }
 
     while (PyDict_Next(py_val, &pos, &key_op, &value)) {
@@ -552,16 +552,43 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             as_vector_append(unicodeStrVector, &val);
             Py_DECREF(py_ustr1);
         }
-        else if (PyByteArray_Check(py_value) || PyBytes_Check(py_value)) {
+        else if (PyByteArray_Check(py_value)) {
             as_bytes *bytes;
-            if (err->code == AEROSPIKE_OK) {
+            if (self->user_serializer_call_info.callback) {
                 if (serialize_based_on_serializer_policy(
-                        self, SERIALIZER_PYTHON, &bytes, dynamic_pool, py_value, err) !=
+                        self, SERIALIZER_NONE, &bytes, dynamic_pool, py_value, err) !=
                     AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
                 as_operations_add_append_rawp(ops, bin, bytes->value,
-                                              bytes->size, false);
+                                              bytes->size, true);
+            }
+            else{
+                uint8_t *str = (uint8_t *)PyByteArray_AsString(py_value);
+                uint32_t str_len = (uint32_t)PyByteArray_Size(py_value);
+                uint8_t* heap_b = (uint8_t *)malloc(str_len);
+                memcpy(heap_b, str, str_len); 
+                as_operations_add_append_rawp(ops, bin, heap_b, str_len, true);
+            }
+        }
+        else if (PyBytes_Check(py_value)) {
+            as_bytes *bytes;
+            if (self->user_serializer_call_info.callback) {
+                if (serialize_based_on_serializer_policy(
+                        self, SERIALIZER_NONE, &bytes, dynamic_pool, py_value, err) !=
+                    AEROSPIKE_OK) {
+                    goto CLEANUP;
+                }
+                as_operations_add_append_rawp(ops, bin, bytes->value,
+                                              bytes->size, true);
+            }
+            else{
+
+                uint8_t *b = (uint8_t *)PyBytes_AsString(py_value);
+                uint32_t b_len = (uint32_t)PyBytes_Size(py_value);
+                uint8_t* heap_b = (uint8_t *)malloc(b_len);
+                memcpy(heap_b, b, b_len);
+                as_operations_add_append_rawp(ops, bin, heap_b, b_len, true);
             }
         }
         else {
@@ -571,8 +598,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
                 binop->op = AS_OPERATOR_APPEND;
-                initialize_bin_for_strictypes(self, err, py_value, binop, bin,
-                                              dynamic_pool);
+                initialize_bin_for_strictypes(self, err, py_value, binop, bin, dynamic_pool);
             }
         }
         break;
@@ -584,17 +610,47 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             as_vector_append(unicodeStrVector, &val);
             Py_DECREF(py_ustr1);
         }
-        else if (PyByteArray_Check(py_value) || PyBytes_Check(py_value)) {
-            as_bytes *bytes;
-            if (err->code == AEROSPIKE_OK) {
+        else if (PyByteArray_Check(py_value)) {
+            
+            if (self->user_serializer_call_info.callback) {
+                as_bytes *bytes;
+                
                 if (serialize_based_on_serializer_policy(
-                        self, SERIALIZER_PYTHON, &bytes, dynamic_pool, py_value, err) !=
+                        self, SERIALIZER_NONE, &bytes, dynamic_pool, py_value, err) !=
                     AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
                 as_operations_add_prepend_rawp(ops, bin, bytes->value,
-                                               bytes->size, false);
+                                              bytes->size, true);
             }
+            else {
+                uint8_t *str = (uint8_t *)PyByteArray_AsString(py_value);
+                uint32_t str_len = (uint32_t)PyByteArray_Size(py_value);
+                uint8_t* heap_b = (uint8_t *)malloc(str_len);
+                memcpy(heap_b, str, str_len);
+                as_operations_add_prepend_rawp(ops, bin, heap_b, str_len, true);
+            }
+        }
+        else if (PyBytes_Check(py_value)) {
+            if (self->user_serializer_call_info.callback) {
+                as_bytes *bytes;
+
+                if (serialize_based_on_serializer_policy(
+                        self, SERIALIZER_NONE, &bytes, dynamic_pool, py_value, err) !=
+                    AEROSPIKE_OK) {
+                    goto CLEANUP;
+                }
+                as_operations_add_prepend_rawp(ops, bin, bytes->value,
+                                              bytes->size, true);
+            }
+            else{
+                uint8_t *b = (uint8_t *)PyBytes_AsString(py_value);
+                uint32_t b_len = (uint32_t)PyBytes_Size(py_value);
+                uint8_t* heap_b = (uint8_t *)malloc(b_len);
+                memcpy(heap_b, b, b_len);
+                as_operations_add_prepend_rawp(ops, bin, heap_b, b_len, true);
+            }
+            
         }
         else {
             if (!self->strict_types ||
@@ -603,8 +659,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
                 binop->op = AS_OPERATOR_PREPEND;
-                initialize_bin_for_strictypes(self, err, py_value, binop, bin,
-                                              dynamic_pool);
+                initialize_bin_for_strictypes(self, err, py_value, binop, bin, dynamic_pool);
             }
         }
         break;
@@ -631,8 +686,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                 as_binop *binop =
                     &pointer_ops->binops.entries[pointer_ops->binops.size++];
                 binop->op = AS_OPERATOR_INCR;
-                initialize_bin_for_strictypes(self, err, py_value, binop, bin,
-                                              dynamic_pool);
+                initialize_bin_for_strictypes(self, err, py_value, binop, bin, dynamic_pool);
             }
         }
         break;
@@ -841,6 +895,7 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
     as_policy_operate operate_policy;
     as_policy_operate *operate_policy_p = NULL;
 
+
     // For expressions conversion.
     as_exp exp_list;
     as_exp *exp_list_p = NULL;
@@ -872,7 +927,7 @@ static PyObject *AerospikeClient_Operate_Invoke(AerospikeClient *self,
         PyObject *py_val = PyList_GetItem(py_list, i);
 
         if (PyDict_Check(py_val)) {
-            if (add_op(self, err, py_val, unicodeStrVector, &dynamic_pool, &ops,
+            if (add_op(self, err, py_val, unicodeStrVector, &dynamic_pool, DESTROY_BUFFERS, &ops,
                        &operation, &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
@@ -917,7 +972,7 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, DESTROY_BUFFERS);
 
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);
@@ -1002,7 +1057,6 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
     long operation;
     long return_type = -1;
     bool operation_succeeded = false;
-
     PyObject *py_rec = NULL;
     as_record *rec = NULL;
     as_policy_operate operate_policy;
@@ -1049,7 +1103,7 @@ AerospikeClient_OperateOrdered_Invoke(AerospikeClient *self, as_error *err,
 
         if (PyDict_Check(py_current_op)) {
             if (add_op(self, err, py_current_op, unicodeStrVector,
-                       &dynamic_pool, &ops, &operation,
+                       &dynamic_pool, DESTROY_BUFFERS, &ops, &operation,
                        &return_type) != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
@@ -1132,7 +1186,7 @@ CLEANUP:
 
     as_operations_destroy(&ops);
 
-    DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, DESTROY_BUFFERS);
     
     if (err->code != AEROSPIKE_OK) {
         raise_exception(err);

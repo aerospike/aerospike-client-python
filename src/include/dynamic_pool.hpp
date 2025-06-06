@@ -1,8 +1,13 @@
 /*
  *******************************************************************************************************
- * Dynamic pool maintained to avoid excessive runtime mallocs.
- * It is comprised of a Pool of pointers to pools of
- * as_bytes containing AS_DYNAMIC_POOL_BLOCK_SIZE as_bytes.
+ * Dynamic pool maintained to avoid excessive runtime mallocs and efficiently use memory.
+ * 
+ * The dynamic pool maintains a table composed of several groups of as_bytes buffers.
+ * New groups are allocated dynamically after the current group is exhausted.
+ * As more as_bytes are used, group sizes will grow to reduce malloc calls.
+
+ * The dynamic pool does not allocate any memory unless bytes are used in a command.
+ * 
  *******************************************************************************************************
  */
 #define AS_DYNAMIC_POOL_BYTES_PER_GROUP_MIN 128
@@ -41,8 +46,7 @@ static inline void dynamic_pool_malloc_group(as_dynamic_pool *dynamic_pool,
     // bytes number to allocate in the next group.
     uint16_t num_bytes_to_allocate = dynamic_pool->bytes_per_group;
 
-    // Allocate a group of bytes determined by bytes_per_group.
-    table[group_num_to_allocate] = (as_bytes *)cf_malloc(sizeof(as_bytes) * num_bytes_to_allocate);
+    table[group_num_to_allocate] = (as_bytes *)cf_malloc(num_bytes_to_allocate * sizeof(as_bytes));
 
     // If allocation fails, throw an error.
     if (table[group_num_to_allocate] == NULL) {
@@ -144,7 +148,7 @@ static inline void dynamic_pool_free_group(as_dynamic_pool *dynamic_pool, bool f
         dynamic_pool_destroy_bytes_in_group(dynamic_pool, group_index, num_bytes);
     }
     as_bytes* group = dynamic_pool->byte_group_table[group_index];
-    cf_free((as_dynamic_pool *)group);
+    cf_free(group);
 }
 
 /**
@@ -166,7 +170,7 @@ static inline void dynamic_pool_free_table(as_dynamic_pool *dynamic_pool, bool f
     // Free the current byte group.
     dynamic_pool_free_group(dynamic_pool, free_buffer, dynamic_pool->group_iterator, dynamic_pool->byte_iterator);
     // Free the table.
-    cf_free(((as_dynamic_pool *)dynamic_pool)->byte_group_table);
+    cf_free(dynamic_pool->byte_group_table);
 }
 
 
@@ -176,7 +180,7 @@ static inline void dynamic_pool_free_table(as_dynamic_pool *dynamic_pool, bool f
  * If the group table is full, the table is also expanded.
  *
  * @param dynamic_pool Pointer to a dynamic pool.
- * @param error Pointer to an as_error
+ * @param err Pointer to an as_error
  *
  */
 static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
@@ -197,7 +201,7 @@ static inline void dynamic_pool_init(as_dynamic_pool *dynamic_pool,
  * If the group table is full, the table is also expanded.
  *
  * @param dynamic_pool Pointer to a dynamic pool.
- * @param error Pointer to an as_error
+ * @param err Pointer to an as_error
  *
  */
 static inline void dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
@@ -220,26 +224,30 @@ static inline void dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
  */
 #define BYTE_POOL_INIT_NULL(dynamic_pool)                                                           \
     (dynamic_pool)->byte_group_table = NULL;
+
 /**
  * Fetches the address of the next as_byte in the pool.
  * 
  * @param map_bytes Pointer to an as_bytes.
  * @param dynamic_pool Pointer to a dynamic pool.
- * @param error Pointer to an as_error
+ * @param err Pointer to an as_error
  */
-#define GET_BYTES_POOL(map_bytes, dynamic_pool, err)                                                \
-    as_bytes **table = (dynamic_pool)->byte_group_table;                                              \
-    if (table == NULL) {                                                                            \
-        dynamic_pool_init(dynamic_pool, err);                                                       \
-    }                                                                                               \
-    else if ((dynamic_pool)->bytes_per_group <= (dynamic_pool)->byte_iterator) {                        \
-        dynamic_pool_add_group(dynamic_pool, err);                                                     \
-    }                                                                                               \
-    table = (dynamic_pool)->byte_group_table;                                                         \
-    uint16_t group_iterator = (dynamic_pool)->group_iterator;                                         \
-    as_bytes *group = table[group_iterator];                                                        \
-    uint16_t byte_iterator = (dynamic_pool)->byte_iterator++;                                         \
-    map_bytes = &group[byte_iterator];
+static inline as_bytes* GET_BYTES_POOL(as_dynamic_pool *dynamic_pool, as_error *err) {
+    as_bytes **table = dynamic_pool->byte_group_table;
+
+    if (table == NULL) {
+        dynamic_pool_init(dynamic_pool, err);
+    } else if (dynamic_pool->byte_iterator >= dynamic_pool->bytes_per_group) {
+        dynamic_pool_add_group(dynamic_pool, err);
+    }
+
+    table = dynamic_pool->byte_group_table;
+    uint16_t group_iterator = dynamic_pool->group_iterator;
+    as_bytes *group = table[group_iterator];
+    uint16_t byte_iterator = dynamic_pool->byte_iterator++;
+
+    return &group[byte_iterator];
+}
 
 /**
  * Destroy the dynamic pool. Must be called before the dynamic_pool loses scope.
@@ -248,7 +256,9 @@ static inline void dynamic_pool_add_group(as_dynamic_pool *dynamic_pool,
  * @param free_buffer boolean value determining if as_bytes_destroyed should be called.
  *        If the raw bytes array is heap allocated, free_buffer should be true.
  */
-#define DESTROY_DYNAMIC_POOL(dynamic_pool, free_buffer)                                             \
-    if ((dynamic_pool)->byte_group_table != NULL) {                                                   \
-        dynamic_pool_free_table(dynamic_pool, free_buffer);                                         \
+static inline void DESTROY_DYNAMIC_POOL(as_dynamic_pool *dynamic_pool, bool free_buffer) {
+    if (dynamic_pool->byte_group_table != NULL) {
+        dynamic_pool_free_table(dynamic_pool, free_buffer);
     }
+}
+
