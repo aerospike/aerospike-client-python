@@ -5,6 +5,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 import aerospike
 from .as_status_codes import AerospikeStatus
+import math
 
 
 class TestQueryPagination(TestBaseClass):
@@ -137,13 +138,13 @@ class TestQueryPagination(TestBaseClass):
             + self.partition_1003_count
         )
         self.partition_1000_count / num_populated_partitions
+        query_obj.max_records = math.ceil(all_records / num_populated_partitions)
 
         for i in range(num_populated_partitions):
             query_obj.foreach(
                 callback,
                 {
                     "partition_filter": {"begin": 1000, "count": num_populated_partitions},
-                    "max_records": all_records / num_populated_partitions,
                 },
             )
 
@@ -175,12 +176,14 @@ class TestQueryPagination(TestBaseClass):
 
         query_obj = self.as_connection.query(ns, st)
 
-        max_records = self.partition_1001_count / 2
+        query_obj.max_records = math.ceil(self.partition_1001_count / 2)
+
+        part_filter = {"begin": 1001, "count": 1}
 
         for i in range(2):
-            records = query_obj.results({"partition_filter": {"begin": 1001, "count": 1}, "max_records": max_records})
-
+            records = query_obj.results({"partition_filter": part_filter})
             all_recs += len(records)
+            part_filter = {"partition_status": query_obj.get_partitions_status()}
 
         assert all_recs == self.partition_1001_count
         assert query_obj.is_done()
