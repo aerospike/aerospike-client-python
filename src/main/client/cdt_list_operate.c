@@ -30,101 +30,87 @@
 #include "cdt_list_operations.h"
 #include "cdt_operation_utils.h"
 
+#define DESTROY_BUFFERS false
+
 static as_status add_op_list_create(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type);
+                                    as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_append(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type);
+                                    as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type);
+                                          as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type);
+                                    as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type);
+                                          as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
                                        char *bin, PyObject *op_dict,
                                        as_operations *ops,
-                                       as_static_pool *static_pool,
-                                       int serializer_type);
+                                       as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_size(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
                                   as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type);
+                                  as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_pop(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
                                  as_operations *ops,
-                                 as_static_pool *static_pool,
-                                 int serializer_type);
+                                 as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_pop_range(AerospikeClient *self, as_error *err,
                                        char *bin, PyObject *op_dict,
                                        as_operations *ops,
-                                       as_static_pool *static_pool,
-                                       int serializer_type);
+                                       as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_remove(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type);
+                                    as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_remove_range(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type);
+                                          as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_clear(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
                                    as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type);
+                                   as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_get(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
                                  as_operations *ops,
-                                 as_static_pool *static_pool,
-                                 int serializer_type);
+                                 as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_get_range(AerospikeClient *self, as_error *err,
                                        char *bin, PyObject *op_dict,
                                        as_operations *ops,
-                                       as_static_pool *static_pool,
-                                       int serializer_type);
+                                       as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_trim(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
                                   as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type);
+                                  as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_set(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
                                  as_operations *ops,
-                                 as_static_pool *static_pool,
-                                 int serializer_type);
+                                 as_dynamic_pool *dynamic_pool);
 
 /* NEW CDT LIST OPERATIONS Post 3.16.0.1*/
 /* GET BY*/
@@ -132,114 +118,101 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_vector *unicodeStrVector,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type);
+                                          as_dynamic_pool *dynamic_pool);
 
-static as_status
-add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_vector *unicodeStrVector,
-                               as_operations *ops, as_static_pool *static_pool,
-                               int serializer_type);
+static as_status add_op_list_get_by_index_range(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_vector *unicodeStrVector, as_operations *ops,
+    as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
                                          char *bin, PyObject *op_dict,
                                          as_vector *unicodeStrVector,
                                          as_operations *ops,
-                                         as_static_pool *static_pool,
-                                         int serializer_type);
+                                         as_dynamic_pool *dynamic_pool);
 
 static as_status
 add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
                               PyObject *op_dict, as_vector *unicodeStrVector,
-                              as_operations *ops, as_static_pool *static_pool,
-                              int serializer_type);
+                              as_operations *ops, as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_get_by_value(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type);
+                                          as_dynamic_pool *dynamic_pool);
 
 static as_status
 add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
                               PyObject *op_dict, as_vector *unicodeStrVector,
-                              as_operations *ops, as_static_pool *static_pool,
-                              int serializer_type);
+                              as_operations *ops, as_dynamic_pool *dynamic_pool);
 
-static as_status
-add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_vector *unicodeStrVector,
-                               as_operations *ops, as_static_pool *static_pool,
-                               int serializer_type);
+static as_status add_op_list_get_by_value_range(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_vector *unicodeStrVector, as_operations *ops,
+    as_dynamic_pool *dynamic_pool);
 
 /* remove by*/
 
 static as_status
 add_op_list_remove_by_index(AerospikeClient *self, as_error *err, char *bin,
                             PyObject *op_dict, as_vector *unicodeStrVector,
-                            as_operations *ops, as_static_pool *static_pool,
-                            int serializer_type);
+                            as_operations *ops, as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_remove_by_index_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
     as_vector *unicodeStrVector, as_operations *ops,
-    as_static_pool *static_pool, int serializer_type);
+    as_dynamic_pool *dynamic_pool);
 
 static as_status
 add_op_list_remove_by_rank(AerospikeClient *self, as_error *err, char *bin,
                            PyObject *op_dict, as_vector *unicodeStrVector,
-                           as_operations *ops, as_static_pool *static_pool,
-                           int serializer_type);
+                           as_operations *ops, as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_remove_by_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
     as_vector *unicodeStrVector, as_operations *ops,
-    as_static_pool *static_pool, int serializer_type);
+    as_dynamic_pool *dynamic_pool);
 
 static as_status
 add_op_list_remove_by_value(AerospikeClient *self, as_error *err, char *bin,
                             PyObject *op_dict, as_vector *unicodeStrVector,
-                            as_operations *ops, as_static_pool *static_pool,
-                            int serializer_type);
+                            as_operations *ops, as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_remove_by_value_list(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
     as_vector *unicodeStrVector, as_operations *ops,
-    as_static_pool *static_pool, int serializer_type);
+    as_dynamic_pool *dynamic_pool);
 
 static as_status add_op_list_remove_by_value_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type);
+    as_operations *ops, as_dynamic_pool *dynamic_pool);
 
 /* Set Order*/
 static as_status add_op_list_set_order(AerospikeClient *self, as_error *err,
                                        char *bin, PyObject *op_dict,
                                        as_operations *ops,
-                                       as_static_pool *static_pool,
-                                       int serializer_type);
+                                       as_dynamic_pool *dynamic_pool);
 
 /* List sort*/
 static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
                                   as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type);
+                                  as_dynamic_pool *dynamic_pool);
 
 /* Server 4.3.0 relative operations*/
 
 static as_status add_add_op_list_remove_by_value_rel_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type);
+    as_operations *ops, as_dynamic_pool *dynamic_pool);
 
 static as_status add_add_op_list_get_by_value_rel_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type);
+    as_operations *ops, as_dynamic_pool *dynamic_pool);
 /* End forwards*/
 as_status add_new_list_op(AerospikeClient *self, as_error *err,
                           PyObject *op_dict, as_vector *unicodeStrVector,
-                          as_static_pool *static_pool, as_operations *ops,
-                          long operation_code, long *ret_type,
-                          int serializer_type)
+                          as_dynamic_pool *dynamic_pool, as_operations *ops,
+                          long operation_code, long *ret_type)
 
 {
     char *bin = NULL;
@@ -250,171 +223,128 @@ as_status add_new_list_op(AerospikeClient *self, as_error *err,
 
     switch (operation_code) {
     case OP_LIST_APPEND:
-        return add_op_list_append(self, err, bin, op_dict, ops, static_pool,
-                                  serializer_type);
+        return add_op_list_append(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_APPEND_ITEMS:
-        return add_op_list_append_items(self, err, bin, op_dict, ops,
-                                        static_pool, serializer_type);
+        return add_op_list_append_items(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_SIZE:
-        return add_op_list_size(self, err, bin, op_dict, ops, static_pool,
-                                serializer_type);
+        return add_op_list_size(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_INSERT:
-        return add_op_list_insert(self, err, bin, op_dict, ops, static_pool,
-                                  serializer_type);
+        return add_op_list_insert(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_INSERT_ITEMS:
         return add_op_list_insert_items(self, err, bin, op_dict, ops,
-                                        static_pool, serializer_type);
+                                        dynamic_pool);
 
     case OP_LIST_INCREMENT:
-        return add_op_list_increment(self, err, bin, op_dict, ops, static_pool,
-                                     serializer_type);
+        return add_op_list_increment(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_POP:
-        return add_op_list_pop(self, err, bin, op_dict, ops, static_pool,
-                               serializer_type);
+        return add_op_list_pop(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_POP_RANGE:
-        return add_op_list_pop_range(self, err, bin, op_dict, ops, static_pool,
-                                     serializer_type);
+        return add_op_list_pop_range(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_REMOVE:
-        return add_op_list_remove(self, err, bin, op_dict, ops, static_pool,
-                                  serializer_type);
+        return add_op_list_remove(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_REMOVE_RANGE:
-        return add_op_list_remove_range(self, err, bin, op_dict, ops,
-                                        static_pool, serializer_type);
+        return add_op_list_remove_range(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_CLEAR:
-        return add_op_list_clear(self, err, bin, op_dict, ops, static_pool,
-                                 serializer_type);
+        return add_op_list_clear(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_SET:
-        return add_op_list_set(self, err, bin, op_dict, ops, static_pool,
-                               serializer_type);
+        return add_op_list_set(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_GET:
-        return add_op_list_get(self, err, bin, op_dict, ops, static_pool,
-                               serializer_type);
+        return add_op_list_get(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_GET_RANGE:
-        return add_op_list_get_range(self, err, bin, op_dict, ops, static_pool,
-                                     serializer_type);
+        return add_op_list_get_range(self, err, bin, op_dict, ops, dynamic_pool);
 
     case OP_LIST_TRIM:
-        return add_op_list_trim(self, err, bin, op_dict, ops, static_pool,
-                                serializer_type);
+        return add_op_list_trim(self, err, bin, op_dict, ops, dynamic_pool);
         /***** New List ops****/
 
     case OP_LIST_GET_BY_INDEX: {
-        return add_op_list_get_by_index(self, err, bin, op_dict,
-                                        unicodeStrVector, ops, static_pool,
-                                        serializer_type);
+        return add_op_list_get_by_index(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_GET_BY_INDEX_RANGE: {
-        return add_op_list_get_by_index_range(self, err, bin, op_dict,
-                                              unicodeStrVector, ops,
-                                              static_pool, serializer_type);
+        return add_op_list_get_by_index_range(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_GET_BY_RANK: {
-        return add_op_list_get_by_rank(self, err, bin, op_dict,
-                                       unicodeStrVector, ops, static_pool,
-                                       serializer_type);
+        return add_op_list_get_by_rank(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_GET_BY_RANK_RANGE: {
-        return add_op_list_get_by_rank_range(self, err, bin, op_dict,
-                                             unicodeStrVector, ops, static_pool,
-                                             serializer_type);
+        return add_op_list_get_by_rank_range(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_GET_BY_VALUE: {
-        return add_op_list_get_by_value(self, err, bin, op_dict, ops,
-                                        static_pool, serializer_type);
+        return add_op_list_get_by_value(self, err, bin, op_dict, ops, dynamic_pool);
     }
 
     case OP_LIST_GET_BY_VALUE_LIST: {
-        return add_op_list_get_by_value_list(self, err, bin, op_dict,
-                                             unicodeStrVector, ops, static_pool,
-                                             serializer_type);
+        return add_op_list_get_by_value_list(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_GET_BY_VALUE_RANGE: {
-        return add_op_list_get_by_value_range(self, err, bin, op_dict,
-                                              unicodeStrVector, ops,
-                                              static_pool, serializer_type);
+        return add_op_list_get_by_value_range(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_REMOVE_BY_INDEX: {
-        return add_op_list_remove_by_index(self, err, bin, op_dict,
-                                           unicodeStrVector, ops, static_pool,
-                                           serializer_type);
+        return add_op_list_remove_by_index(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_REMOVE_BY_INDEX_RANGE: {
-        return add_op_list_remove_by_index_range(self, err, bin, op_dict,
-                                                 unicodeStrVector, ops,
-                                                 static_pool, serializer_type);
+        return add_op_list_remove_by_index_range(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_REMOVE_BY_RANK: {
-        return add_op_list_remove_by_rank(self, err, bin, op_dict,
-                                          unicodeStrVector, ops, static_pool,
-                                          serializer_type);
+        return add_op_list_remove_by_rank(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_REMOVE_BY_RANK_RANGE: {
-        return add_op_list_remove_by_rank_range(self, err, bin, op_dict,
-                                                unicodeStrVector, ops,
-                                                static_pool, serializer_type);
+        return add_op_list_remove_by_rank_range(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_REMOVE_BY_VALUE: {
-        return add_op_list_remove_by_value(self, err, bin, op_dict,
-                                           unicodeStrVector, ops, static_pool,
-                                           serializer_type);
+        return add_op_list_remove_by_value(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_REMOVE_BY_VALUE_LIST: {
-        return add_op_list_remove_by_value_list(self, err, bin, op_dict,
-                                                unicodeStrVector, ops,
-                                                static_pool, serializer_type);
+        return add_op_list_remove_by_value_list(self, err, bin, op_dict, unicodeStrVector, ops, dynamic_pool);
     }
 
     case OP_LIST_REMOVE_BY_VALUE_RANGE: {
-        return add_op_list_remove_by_value_range(self, err, bin, op_dict, ops,
-                                                 static_pool, serializer_type);
+        return add_op_list_remove_by_value_range(self, err, bin, op_dict, ops, dynamic_pool);
     }
 
     case OP_LIST_SET_ORDER: {
-        return add_op_list_set_order(self, err, bin, op_dict, ops, static_pool,
-                                     serializer_type);
+        return add_op_list_set_order(self, err, bin, op_dict, ops, dynamic_pool);
     }
 
     case OP_LIST_SORT: {
-        return add_op_list_sort(self, err, bin, op_dict, ops, static_pool,
-                                serializer_type);
+        return add_op_list_sort(self, err, bin, op_dict, ops, dynamic_pool);
     }
 
     case OP_LIST_REMOVE_BY_VALUE_RANK_RANGE_REL: {
         return add_add_op_list_remove_by_value_rel_rank_range(
-            self, err, bin, op_dict, ops, static_pool, serializer_type);
+            self, err, bin, op_dict, ops, dynamic_pool);
     }
 
     case OP_LIST_GET_BY_VALUE_RANK_RANGE_REL: {
         return add_add_op_list_get_by_value_rel_rank_range(
-            self, err, bin, op_dict, ops, static_pool, serializer_type);
+            self, err, bin, op_dict, ops, dynamic_pool);
     }
 
     case OP_LIST_CREATE: {
-        return add_op_list_create(self, err, bin, op_dict, ops, static_pool,
-                                  serializer_type);
+        return add_op_list_create(self, err, bin, op_dict, ops, dynamic_pool);
     }
 
     default:
@@ -429,8 +359,7 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_vector *unicodeStrVector,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type)
+                                          as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     int return_type = AS_LIST_RETURN_VALUE;
@@ -446,8 +375,7 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -464,11 +392,10 @@ static as_status add_op_list_get_by_index(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-static as_status
-add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_vector *unicodeStrVector,
-                               as_operations *ops, as_static_pool *static_pool,
-                               int serializer_type)
+static as_status add_op_list_get_by_index_range(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_vector *unicodeStrVector, as_operations *ops,
+    as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     int64_t count;
@@ -493,8 +420,8 @@ add_op_list_get_by_index_range(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -524,8 +451,7 @@ static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
                                          char *bin, PyObject *op_dict,
                                          as_vector *unicodeStrVector,
                                          as_operations *ops,
-                                         as_static_pool *static_pool,
-                                         int serializer_type)
+                                         as_dynamic_pool *dynamic_pool)
 {
     int64_t rank;
     int return_type = AS_LIST_RETURN_VALUE;
@@ -541,8 +467,8 @@ static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -562,8 +488,7 @@ static as_status add_op_list_get_by_rank(AerospikeClient *self, as_error *err,
 static as_status
 add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
                               PyObject *op_dict, as_vector *unicodeStrVector,
-                              as_operations *ops, as_static_pool *static_pool,
-                              int serializer_type)
+                              as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
     int64_t rank;
     int64_t count;
@@ -587,8 +512,8 @@ add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -617,25 +542,23 @@ add_op_list_get_by_rank_range(AerospikeClient *self, as_error *err, char *bin,
 static as_status add_op_list_get_by_value(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type)
+                                          as_dynamic_pool *dynamic_pool)
 {
     as_val *val = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
+
     if (get_list_return_type(err, op_dict, &return_type) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
-                  serializer_type, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, dynamic_pool, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Failed to convert ctx list");
     }
@@ -656,8 +579,7 @@ static as_status add_op_list_get_by_value(AerospikeClient *self, as_error *err,
 static as_status
 add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
                               PyObject *op_dict, as_vector *unicodeStrVector,
-                              as_operations *ops, as_static_pool *static_pool,
-                              int serializer_type)
+                              as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
@@ -669,12 +591,12 @@ add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
     }
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
-                     static_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         /* Failed to add the operation, we need to destroy the list of values*/
         as_val_destroy(value_list);
         return err->code;
@@ -695,16 +617,16 @@ add_op_list_get_by_value_list(AerospikeClient *self, as_error *err, char *bin,
     return err->code;
 }
 
-static as_status
-add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
-                               PyObject *op_dict, as_vector *unicodeStrVector,
-                               as_operations *ops, as_static_pool *static_pool,
-                               int serializer_type)
+static as_status add_op_list_get_by_value_range(
+    AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
+    as_vector *unicodeStrVector, as_operations *ops,
+    as_dynamic_pool *dynamic_pool)
 {
     as_val *val_begin = NULL;
     as_val *val_end = NULL;
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
+
 
     int return_type = AS_LIST_RETURN_VALUE;
 
@@ -713,17 +635,15 @@ add_op_list_get_by_value_range(AerospikeClient *self, as_error *err, char *bin,
     }
 
     if (get_asval(self, err, AS_PY_VAL_BEGIN_KEY, op_dict, &val_begin,
-                  static_pool, serializer_type, false) != AEROSPIKE_OK) {
+                  dynamic_pool, false) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end, static_pool,
-                  serializer_type, false) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end, dynamic_pool, false) != AEROSPIKE_OK) {
         goto error;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         goto error;
     }
 
@@ -761,8 +681,7 @@ error:
 static as_status
 add_op_list_remove_by_index(AerospikeClient *self, as_error *err, char *bin,
                             PyObject *op_dict, as_vector *unicodeStrVector,
-                            as_operations *ops, as_static_pool *static_pool,
-                            int serializer_type)
+                            as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     int return_type = AS_LIST_RETURN_VALUE;
@@ -778,8 +697,8 @@ add_op_list_remove_by_index(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -799,7 +718,7 @@ add_op_list_remove_by_index(AerospikeClient *self, as_error *err, char *bin,
 static as_status add_op_list_remove_by_index_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
     as_vector *unicodeStrVector, as_operations *ops,
-    as_static_pool *static_pool, int serializer_type)
+    as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     int64_t count;
@@ -824,8 +743,8 @@ static as_status add_op_list_remove_by_index_range(
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -854,8 +773,7 @@ static as_status add_op_list_remove_by_index_range(
 static as_status
 add_op_list_remove_by_rank(AerospikeClient *self, as_error *err, char *bin,
                            PyObject *op_dict, as_vector *unicodeStrVector,
-                           as_operations *ops, as_static_pool *static_pool,
-                           int serializer_type)
+                           as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
     int64_t rank;
     int return_type = AS_LIST_RETURN_VALUE;
@@ -871,8 +789,8 @@ add_op_list_remove_by_rank(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -892,7 +810,7 @@ add_op_list_remove_by_rank(AerospikeClient *self, as_error *err, char *bin,
 static as_status add_op_list_remove_by_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
     as_vector *unicodeStrVector, as_operations *ops,
-    as_static_pool *static_pool, int serializer_type)
+    as_dynamic_pool *dynamic_pool)
 {
     int64_t rank;
     int64_t count;
@@ -916,8 +834,8 @@ static as_status add_op_list_remove_by_rank_range(
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -946,8 +864,7 @@ static as_status add_op_list_remove_by_rank_range(
 static as_status
 add_op_list_remove_by_value(AerospikeClient *self, as_error *err, char *bin,
                             PyObject *op_dict, as_vector *unicodeStrVector,
-                            as_operations *ops, as_static_pool *static_pool,
-                            int serializer_type)
+                            as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
     as_val *val = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
@@ -958,13 +875,12 @@ add_op_list_remove_by_value(AerospikeClient *self, as_error *err, char *bin,
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
-                  serializer_type, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, dynamic_pool, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
@@ -985,7 +901,7 @@ add_op_list_remove_by_value(AerospikeClient *self, as_error *err, char *bin,
 static as_status add_op_list_remove_by_value_list(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
     as_vector *unicodeStrVector, as_operations *ops,
-    as_static_pool *static_pool, int serializer_type)
+    as_dynamic_pool *dynamic_pool)
 {
     as_list *value_list = NULL;
     int return_type = AS_LIST_RETURN_VALUE;
@@ -997,12 +913,12 @@ static as_status add_op_list_remove_by_value_list(
     }
 
     if (get_val_list(self, err, AS_PY_VALUES_KEY, op_dict, &value_list,
-                     static_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         /* Failed to convert ctx, we need to destroy the list of values*/
         as_val_destroy(value_list);
         return err->code;
@@ -1025,7 +941,7 @@ static as_status add_op_list_remove_by_value_list(
 
 static as_status add_op_list_remove_by_value_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type)
+    as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
     as_val *val_begin = NULL;
     as_val *val_end = NULL;
@@ -1038,17 +954,16 @@ static as_status add_op_list_remove_by_value_range(
     }
 
     if (get_asval(self, err, AS_PY_VAL_BEGIN_KEY, op_dict, &val_begin,
-                  static_pool, serializer_type, false) != AEROSPIKE_OK) {
+                  dynamic_pool, false) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end, static_pool,
-                  serializer_type, false) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_END_KEY, op_dict, &val_end, dynamic_pool, false) != AEROSPIKE_OK) {
         goto error;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         goto error;
     }
 
@@ -1086,8 +1001,7 @@ error:
 static as_status add_op_list_set_order(AerospikeClient *self, as_error *err,
                                        char *bin, PyObject *op_dict,
                                        as_operations *ops,
-                                       as_static_pool *static_pool,
-                                       int serializer_type)
+                                       as_dynamic_pool *dynamic_pool)
 {
     int64_t order_type_int;
     bool ctx_in_use = false;
@@ -1098,8 +1012,8 @@ static as_status add_op_list_set_order(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1120,8 +1034,7 @@ static as_status add_op_list_set_order(AerospikeClient *self, as_error *err,
 static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
                                   as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type)
+                                  as_dynamic_pool *dynamic_pool)
 {
     int64_t sort_flags;
     bool ctx_in_use = false;
@@ -1132,8 +1045,8 @@ static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1154,8 +1067,7 @@ static as_status add_op_list_sort(AerospikeClient *self, as_error *err,
 static as_status add_op_list_create(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type)
+                                    as_dynamic_pool *dynamic_pool)
 {
     int64_t order_type_int;
     as_cdt_ctx ctx;
@@ -1176,8 +1088,8 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1201,8 +1113,7 @@ static as_status add_op_list_create(AerospikeClient *self, as_error *err,
 static as_status add_op_list_append(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type)
+                                    as_dynamic_pool *dynamic_pool)
 {
     as_val *val = NULL;
     as_list_policy list_policy;
@@ -1215,13 +1126,12 @@ static as_status add_op_list_append(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
-                  serializer_type, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, dynamic_pool, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
@@ -1245,8 +1155,7 @@ static as_status add_op_list_append(AerospikeClient *self, as_error *err,
 static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type)
+                                          as_dynamic_pool *dynamic_pool)
 {
     as_list *items_list = NULL;
     as_list_policy list_policy;
@@ -1260,12 +1169,12 @@ static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
     }
 
     if (get_val_list(self, err, AS_PY_VAL_KEY, op_dict, &items_list,
-                     static_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         as_val_destroy(items_list);
         return err->code;
     }
@@ -1289,8 +1198,7 @@ static as_status add_op_list_append_items(AerospikeClient *self, as_error *err,
 static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type)
+                                    as_dynamic_pool *dynamic_pool)
 {
     as_val *val = NULL;
     int64_t index;
@@ -1308,13 +1216,12 @@ static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
-                  serializer_type, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, dynamic_pool, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
@@ -1338,8 +1245,7 @@ static as_status add_op_list_insert(AerospikeClient *self, as_error *err,
 static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type)
+                                          as_dynamic_pool *dynamic_pool)
 {
     as_list *items_list = NULL;
     int64_t index;
@@ -1358,12 +1264,12 @@ static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
     }
 
     if (get_val_list(self, err, AS_PY_VAL_KEY, op_dict, &items_list,
-                     static_pool, serializer_type) != AEROSPIKE_OK) {
+                     dynamic_pool) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         as_val_destroy(items_list);
         return err->code;
     }
@@ -1387,8 +1293,7 @@ static as_status add_op_list_insert_items(AerospikeClient *self, as_error *err,
 static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
                                        char *bin, PyObject *op_dict,
                                        as_operations *ops,
-                                       as_static_pool *static_pool,
-                                       int serializer_type)
+                                       as_dynamic_pool *dynamic_pool)
 {
     as_val *incr = NULL;
     int64_t index;
@@ -1406,13 +1311,12 @@ static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &incr, static_pool,
-                  serializer_type, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &incr, dynamic_pool, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         as_val_destroy(incr);
         return err->code;
     }
@@ -1436,8 +1340,7 @@ static as_status add_op_list_increment(AerospikeClient *self, as_error *err,
 static as_status add_op_list_pop(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
                                  as_operations *ops,
-                                 as_static_pool *static_pool,
-                                 int serializer_type)
+                                 as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     bool ctx_in_use = false;
@@ -1448,8 +1351,8 @@ static as_status add_op_list_pop(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1468,8 +1371,7 @@ static as_status add_op_list_pop(AerospikeClient *self, as_error *err,
 static as_status add_op_list_pop_range(AerospikeClient *self, as_error *err,
                                        char *bin, PyObject *op_dict,
                                        as_operations *ops,
-                                       as_static_pool *static_pool,
-                                       int serializer_type)
+                                       as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     int64_t count;
@@ -1486,8 +1388,8 @@ static as_status add_op_list_pop_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1507,8 +1409,7 @@ static as_status add_op_list_pop_range(AerospikeClient *self, as_error *err,
 static as_status add_op_list_remove(AerospikeClient *self, as_error *err,
                                     char *bin, PyObject *op_dict,
                                     as_operations *ops,
-                                    as_static_pool *static_pool,
-                                    int serializer_type)
+                                    as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     bool ctx_in_use = false;
@@ -1518,8 +1419,8 @@ static as_status add_op_list_remove(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         ;
         return err->code;
     }
@@ -1541,8 +1442,7 @@ static as_status add_op_list_remove(AerospikeClient *self, as_error *err,
 static as_status add_op_list_remove_range(AerospikeClient *self, as_error *err,
                                           char *bin, PyObject *op_dict,
                                           as_operations *ops,
-                                          as_static_pool *static_pool,
-                                          int serializer_type)
+                                          as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     int64_t count;
@@ -1559,8 +1459,8 @@ static as_status add_op_list_remove_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1580,14 +1480,13 @@ static as_status add_op_list_remove_range(AerospikeClient *self, as_error *err,
 static as_status add_op_list_clear(AerospikeClient *self, as_error *err,
                                    char *bin, PyObject *op_dict,
                                    as_operations *ops,
-                                   as_static_pool *static_pool,
-                                   int serializer_type)
+                                   as_dynamic_pool *dynamic_pool)
 {
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1607,8 +1506,7 @@ static as_status add_op_list_clear(AerospikeClient *self, as_error *err,
 static as_status add_op_list_set(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
                                  as_operations *ops,
-                                 as_static_pool *static_pool,
-                                 int serializer_type)
+                                 as_dynamic_pool *dynamic_pool)
 {
     as_val *val = NULL;
     int64_t index;
@@ -1626,13 +1524,12 @@ static as_status add_op_list_set(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, static_pool,
-                  serializer_type, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &val, dynamic_pool, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         as_val_destroy(val);
         return err->code;
     }
@@ -1656,8 +1553,7 @@ static as_status add_op_list_set(AerospikeClient *self, as_error *err,
 static as_status add_op_list_get(AerospikeClient *self, as_error *err,
                                  char *bin, PyObject *op_dict,
                                  as_operations *ops,
-                                 as_static_pool *static_pool,
-                                 int serializer_type)
+                                 as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     bool ctx_in_use = false;
@@ -1667,8 +1563,8 @@ static as_status add_op_list_get(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1688,8 +1584,7 @@ static as_status add_op_list_get(AerospikeClient *self, as_error *err,
 static as_status add_op_list_get_range(AerospikeClient *self, as_error *err,
                                        char *bin, PyObject *op_dict,
                                        as_operations *ops,
-                                       as_static_pool *static_pool,
-                                       int serializer_type)
+                                       as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     int64_t count;
@@ -1706,8 +1601,8 @@ static as_status add_op_list_get_range(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1727,8 +1622,7 @@ static as_status add_op_list_get_range(AerospikeClient *self, as_error *err,
 static as_status add_op_list_trim(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
                                   as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type)
+                                  as_dynamic_pool *dynamic_pool)
 {
     int64_t index;
     int64_t count;
@@ -1745,8 +1639,8 @@ static as_status add_op_list_trim(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1766,14 +1660,13 @@ static as_status add_op_list_trim(AerospikeClient *self, as_error *err,
 static as_status add_op_list_size(AerospikeClient *self, as_error *err,
                                   char *bin, PyObject *op_dict,
                                   as_operations *ops,
-                                  as_static_pool *static_pool,
-                                  int serializer_type)
+                                  as_dynamic_pool *dynamic_pool)
 {
     bool ctx_in_use = false;
     as_cdt_ctx ctx;
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1792,7 +1685,7 @@ static as_status add_op_list_size(AerospikeClient *self, as_error *err,
 
 static as_status add_add_op_list_remove_by_value_rel_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type)
+    as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
     bool count_present = false;
     int64_t count;
@@ -1815,13 +1708,12 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, static_pool,
-                  serializer_type, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, dynamic_pool, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 
@@ -1855,7 +1747,7 @@ static as_status add_add_op_list_remove_by_value_rel_rank_range(
 
 static as_status add_add_op_list_get_by_value_rel_rank_range(
     AerospikeClient *self, as_error *err, char *bin, PyObject *op_dict,
-    as_operations *ops, as_static_pool *static_pool, int serializer_type)
+    as_operations *ops, as_dynamic_pool *dynamic_pool)
 {
 
     bool count_present = false;
@@ -1879,13 +1771,12 @@ static as_status add_add_op_list_get_by_value_rel_rank_range(
         return err->code;
     }
 
-    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, static_pool,
-                  serializer_type, true) != AEROSPIKE_OK) {
+    if (get_asval(self, err, AS_PY_VAL_KEY, op_dict, &value, dynamic_pool, true) != AEROSPIKE_OK) {
         return err->code;
     }
 
-    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, static_pool,
-                    serializer_type) != AEROSPIKE_OK) {
+
+    if (get_cdt_ctx(self, err, &ctx, op_dict, &ctx_in_use, dynamic_pool, DESTROY_BUFFERS) != AEROSPIKE_OK) {
         return err->code;
     }
 

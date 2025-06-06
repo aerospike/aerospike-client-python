@@ -27,6 +27,7 @@
 #include "exceptions.h"
 #include "policy.h"
 
+
 /**
  *******************************************************************************************************
  * This function applies a registered udf module on a particular record.
@@ -67,13 +68,16 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     as_exp exp_list;
     as_exp *exp_list_p = NULL;
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
     // Initialisation flags
     bool key_initialised = false;
 
+    bool destroy_buffers = false;
+
     // Initialize error
     as_error_init(&err);
+
+    as_dynamic_pool dynamic_pool;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
 
     if (!PyList_Check(py_arglist)) {
         PyErr_SetString(PyExc_TypeError,
@@ -102,8 +106,8 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     // Convert python list to as_list
-    pyobject_to_list(self, &err, py_arglist, &arglist, &static_pool,
-                     SERIALIZER_PYTHON);
+    pyobject_to_list(self, &err, py_arglist, &arglist, &dynamic_pool,
+                     SERIALIZER_NONE, destroy_buffers);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -148,6 +152,7 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
 CLEANUP:
+
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
     }
@@ -166,6 +171,7 @@ CLEANUP:
     }
     as_list_destroy(arglist);
     as_val_destroy(result);
+    DESTROY_DYNAMIC_POOL(&dynamic_pool, destroy_buffers);
 
     if (err.code != AEROSPIKE_OK) {
         raise_exception_base(&err, py_key, Py_None, py_module, py_function,

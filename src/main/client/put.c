@@ -66,11 +66,12 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_record_init(&rec, 0);
     record_initialised = true;
 
-    as_static_pool static_pool;
-    memset(&static_pool, 0, sizeof(static_pool));
-
     // Initialize error
     as_error_init(&err);
+
+    as_dynamic_pool dynamic_pool;
+    BYTE_POOL_INIT_NULL(&dynamic_pool);
+
 
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
@@ -93,7 +94,8 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Convert python bins and metadata objects to as_record
     as_record_init_from_pyobject(self, &err, py_bins, py_meta, &rec,
-                                 serializer_option, &static_pool);
+                                 serializer_option, &dynamic_pool);
+
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -113,7 +115,6 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     Py_END_ALLOW_THREADS
 
 CLEANUP:
-    POOL_DESTROY(&static_pool);
 
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
@@ -127,6 +128,16 @@ CLEANUP:
         // Destroy the record if it is initialised.
         as_record_destroy(&rec);
     }
+
+    if(self->is_client_put_serializer || self->user_serializer_call_info.callback){
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, true);
+    }
+    else{
+        DESTROY_DYNAMIC_POOL(&dynamic_pool, false);
+    }
+
+    self->is_client_put_serializer = false;
+    
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
