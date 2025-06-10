@@ -51,13 +51,13 @@ static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
         index_datatype = AS_INDEX_BLOB;
     }
     else {
-        goto error;
+        goto exit;
     }
 
     return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, index_datatype, py_bin,
                          py_val, Py_None, AS_INDEX_TYPE_DEFAULT);
 
-error:
+exit:
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -72,6 +72,20 @@ static PyObject *AerospikePredicates_Contains(PyObject *self, PyObject *args)
     if (PyArg_ParseTuple(args, "OOO:equals", &py_bin, &py_indextype, &py_val) ==
         false) {
         return NULL;
+    }
+
+    as_index_datatype index_datatype;
+    if (PyLong_Check(py_val)) {
+        index_datatype = AS_INDEX_NUMERIC;
+    }
+    else if (PyUnicode_Check(py_val)) {
+        index_datatype = AS_INDEX_STRING;
+    }
+    else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
+        index_datatype = AS_INDEX_BLOB;
+    }
+    else {
+        goto exit;
     }
 
     if (PyLong_Check(py_indextype)) {
@@ -90,9 +104,10 @@ static PyObject *AerospikePredicates_Contains(PyObject *self, PyObject *args)
                              py_bin, py_val, Py_None, index_type);
     }
     else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
-        return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_BLOB,
-                             py_bin, py_val, Py_None, index_type);
     }
+
+    return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_BLOB, py_bin,
+                         py_val, Py_None, index_type);
 
 exit:
     Py_INCREF(Py_None);
