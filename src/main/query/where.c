@@ -42,7 +42,7 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 }
 
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
-                                    PyObject *py_expr, const char *index_name,
+                                    PyObject *py_expr,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,
                                     PyObject *py_bin, PyObject *py_val1,
@@ -112,20 +112,20 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 // TODO: should index name be NULL?
                 switch (index_type) {
                 case AS_INDEX_TYPE_DEFAULT:
-                    as_query_where_with_exp(&self->query, index_name, exp_list,
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
                                             as_equals(STRING, val));
                     break;
                 case AS_INDEX_TYPE_LIST:
-                    as_query_where_with_exp(&self->query, index_name, exp_list,
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
                                             as_contains(LIST, STRING, val));
                     break;
                 case AS_INDEX_TYPE_MAPKEYS:
-                    as_query_where_with_exp(&self->query, index_name, exp_list,
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
                                             as_contains(MAPKEYS, STRING, val));
                     break;
                 case AS_INDEX_TYPE_MAPVALUES:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_contains(MAPVALUES, STRING, val));
                     break;
                 default:
@@ -183,20 +183,20 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 // TODO: should index name be NULL?
                 switch (index_type) {
                 case AS_INDEX_TYPE_DEFAULT:
-                    as_query_where_with_exp(&self->query, index_name, exp_list,
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
                                             as_equals(NUMERIC, val));
                     break;
                 case AS_INDEX_TYPE_LIST:
-                    as_query_where_with_exp(&self->query, index_name, exp_list,
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
                                             as_contains(LIST, NUMERIC, val));
                     break;
                 case AS_INDEX_TYPE_MAPKEYS:
-                    as_query_where_with_exp(&self->query, index_name, exp_list,
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
                                             as_contains(MAPKEYS, NUMERIC, val));
                     break;
                 case AS_INDEX_TYPE_MAPVALUES:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_contains(MAPVALUES, NUMERIC, val));
                     break;
                 default:
@@ -274,22 +274,22 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 switch (index_type) {
                 case AS_INDEX_TYPE_DEFAULT:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_blob_equals(val, bytes_size, true));
                     break;
                 case AS_INDEX_TYPE_LIST:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_blob_contains(LIST, val, bytes_size, true));
                     break;
                 case AS_INDEX_TYPE_MAPKEYS:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_blob_contains(MAPKEYS, val, bytes_size, true));
                     break;
                 case AS_INDEX_TYPE_MAPVALUES:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_blob_contains(MAPVALUES, val, bytes_size, true));
                     break;
                 default:
@@ -373,21 +373,21 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                 switch (index_type) {
                 case AS_INDEX_TYPE_DEFAULT:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_range(DEFAULT, NUMERIC, min, max));
                     break;
                 case AS_INDEX_TYPE_LIST:
-                    as_query_where_with_exp(&self->query, index_name, exp_list,
+                    as_query_where_with_exp(&self->query, NULL, exp_list,
                                             as_range(LIST, NUMERIC, min, max));
                     break;
                 case AS_INDEX_TYPE_MAPKEYS:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_range(MAPKEYS, NUMERIC, min, max));
                     break;
                 case AS_INDEX_TYPE_MAPVALUES:
                     as_query_where_with_exp(
-                        &self->query, index_name, exp_list,
+                        &self->query, NULL, exp_list,
                         as_range(MAPVALUES, NUMERIC, min, max));
                     break;
                 default:
@@ -456,7 +456,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
             as_query_where_init(&self->query, 1);
             if (py_expr) {
-                as_query_where_with_exp(&self->query, index_name, exp_list,
+                as_query_where_with_exp(&self->query, NULL, exp_list,
                                         AS_PREDICATE_RANGE, index_type,
                                         in_datatype, val);
             }
@@ -513,7 +513,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                             PyObject *py_ctx,
                                             PyObject *py_predicate,
-                                            const char *index_name,
                                             PyObject *py_exp)
 {
     as_error err;
@@ -538,7 +537,7 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
             as_index_datatype op_data =
                 (as_index_datatype)PyLong_AsLong(py_op_data);
             rc = AerospikeQuery_Where_Add(
-                self, py_ctx, py_exp, index_name, op, op_data,
+                self, py_ctx, py_exp, op, op_data,
                 size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
                 size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
                 size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
@@ -595,7 +594,7 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
         goto CLEANUP;
     }
 
-    return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred, NULL, NULL);
+    return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred, NULL);
 
 CLEANUP:
     raise_exception(&err);
@@ -608,11 +607,10 @@ AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
     as_error err;
 
     PyObject *py_pred = NULL;
-    const char *index_name = NULL;
     PyObject *py_expr = NULL;
 
-    if (PyArg_ParseTuple(args, "Os|O:where_with_expr", &py_pred, &index_name,
-                         &py_expr) == false) {
+    if (PyArg_ParseTuple(args, "O|O:where_with_expr", &py_pred, &py_expr) ==
+        false) {
         return NULL;
     }
 
@@ -630,8 +628,7 @@ AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
         goto CLEANUP;
     }
 
-    return AerospikeQuery_Where_Invoke(self, NULL, py_pred, index_name,
-                                       py_expr);
+    return AerospikeQuery_Where_Invoke(self, NULL, py_pred, py_expr);
 
 CLEANUP:
     raise_exception(&err);
