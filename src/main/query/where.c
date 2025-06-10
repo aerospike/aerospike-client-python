@@ -516,9 +516,19 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                             PyObject *py_exp)
 {
     as_error err;
-    int rc = 0;
-
     as_error_init(&err);
+    if (!self || !self->client->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+
+    if (!self->client->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
+    int rc = 0;
 
     if (PyTuple_Check(py_predicate) && PyTuple_Size(py_predicate) > 1 &&
         PyTuple_Size(py_predicate) <= 6) {
@@ -572,8 +582,6 @@ CLEANUP:
 
 AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 {
-    as_error err;
-
     PyObject *py_pred = NULL;
     PyObject *py_cdt_ctx = NULL;
 
@@ -581,31 +589,12 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
         return NULL;
     }
 
-    as_error_init(&err);
-
-    if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
-
     return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred, NULL);
-
-CLEANUP:
-    raise_exception(&err);
-    return NULL;
 }
 
 AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
                                              PyObject *args)
 {
-    as_error err;
-
     PyObject *py_pred = NULL;
     PyObject *py_expr = NULL;
 
@@ -614,23 +603,5 @@ AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
         return NULL;
     }
 
-    as_error_init(&err);
-
-    // TODO: Not sure if we need this?
-    if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
-
     return AerospikeQuery_Where_Invoke(self, NULL, py_pred, py_expr);
-
-CLEANUP:
-    raise_exception(&err);
-    return NULL;
 }
