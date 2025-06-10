@@ -105,22 +105,42 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
     }
     else if (in_datatype == AS_INDEX_NUMERIC) {
-        val1 = pyobject_to_int64(py_val1);
-        if (py_val2) {
-            val2 = pyobject_to_int64(py_val2);
+        val1 = convert_pyobject_to_uint64_t(py_val1);
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+            val1 = 0;
+        }
+        if (PyLong_Check(py_val2)) {
+            val2 = convert_pyobject_to_uint64_t(py_val2);
+            if (PyErr_Occurred()) {
+                PyErr_Clear();
+                val2 = 0;
+            }
         }
     }
     else if (in_datatype == AS_INDEX_BLOB) {
         if (PyBytes_Check(py_val1)) {
             val1_bytes = (uint8_t *)PyBytes_AsString(py_val1);
+            if (!val1_bytes) {
+                goto CLEANUP;
+            }
             bytes_size = PyBytes_Size(py_val1);
+            if (PyErr_Occurred()) {
+                goto CLEANUP;
+            }
         }
         else if (PyByteArray_Check(py_val1)) {
             val1_bytes = (uint8_t *)PyByteArray_AsString(py_val1);
+            if (!val1_bytes) {
+                goto CLEANUP;
+            }
             bytes_size = PyByteArray_Size(py_val1);
+            if (PyErr_Occurred()) {
+                goto CLEANUP;
+            }
         }
         else {
-            rc = 1;
+            goto CLEANUP;
         }
 
         uint8_t *val1_bytes_cpy =
@@ -132,43 +152,22 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     as_query_where_init(&self->query, 1);
 
     if (in_datatype == AS_INDEX_BLOB) {
-        if (exp_list) {
-            as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
-                                    index_type, in_datatype, val1_str,
-                                    bytes_size, true);
-        }
-        else {
-            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                    index_type, in_datatype, val1_str,
-                                    bytes_size, true);
-        }
+        as_query_where_with_ctx(&self->query, bin, pctx, predicate, index_type,
+                                in_datatype, val1_str, bytes_size, true);
     }
-    else if (in_datatype == AS_INDEX_BLOB ||
-             in_datatype == AS_INDEX_GEO2DSPHERE ||
+    else if (in_datatype == AS_INDEX_GEO2DSPHERE ||
              in_datatype == AS_INDEX_NUMERIC ||
              in_datatype == AS_INDEX_STRING) {
         if (predicate == AS_PREDICATE_RANGE) {
-            if (exp_list) {
-                as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
-                                        index_type, in_datatype, val1, val2);
-            }
-            else {
-                as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                        index_type, in_datatype, val1, val2);
-            }
+            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                    index_type, in_datatype, val1, val2);
             if (in_datatype == AS_INDEX_GEO2DSPHERE) {
                 self->query.where.entries[0].value.string_val._free = true;
             }
         }
         else if (predicate == AS_PREDICATE_EQUAL) {
-            if (exp_list) {
-                as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
-                                        index_type, in_datatype, val1);
-            }
-            else {
-                as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                        index_type, in_datatype, val1);
-            }
+            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                    index_type, in_datatype, val1);
         }
     }
     else {
