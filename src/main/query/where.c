@@ -42,6 +42,7 @@ int64_t pyobject_to_int64(PyObject *py_obj)
     }
 }
 
+// py_bin, py_val1, pyval2 are guaranteed to be non-NULL
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,
@@ -51,7 +52,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     as_error err;
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
-    int rc = 0;
+    // TODO: set rc to 0 once we succeed at the end
+    int rc = 1;
 
     if (py_ctx) {
         // TODO: does static pool go out of scope?
@@ -63,35 +65,43 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             return err.code;
         }
-
-        if (!ctx_in_use) {
-            cf_free(pctx);
-            pctx = NULL;
-        }
     }
 
+    // TODO: need to be a malloc'd copy?
     const char *bin = NULL;
     if (PyUnicode_Check(py_bin)) {
         bin = PyUnicode_AsUTF8(py_bin);
+        if (!bin) {
+            goto CLEANUP;
+        }
     }
     else if (PyByteArray_Check(py_bin)) {
         bin = PyByteArray_AsString(py_bin);
+        if (!bin) {
+            goto CLEANUP;
+        }
     }
     else {
-        rc = 1;
+        goto CLEANUP;
     }
 
     int64_t val1 = 0;
-    int64_t val2 = 0;
     const char *val1_str = NULL;
     uint8_t *val1_bytes = NULL;
+
+    int64_t val2 = 0;
     Py_ssize_t bytes_size = 0;
+
+    // We need to validate the value type both here and in predicates.c
+    // Because anyone can avoid using the predicates submodule and pass in their own predicate tuples
     if (in_datatype == AS_INDEX_STRING) {
         if (PyUnicode_Check(py_val1)) {
-            val1_str = PyUnicode_AsUTF8(py_val1);
+            goto CLEANUP;
         }
-        else {
-            rc = 1;
+        // TODO: malloc'd copy?
+        val1_str = PyUnicode_AsUTF8(py_val1);
+        if (!val1_str) {
+            goto CLEANUP;
         }
     }
     else if (in_datatype == AS_INDEX_NUMERIC) {
@@ -169,6 +179,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         PyErr_SetObject(PyExc_Exception, py_err);
         rc = 1;
     }
+
+CLEANUP:
 
     if (rc) {
         assert(false);
