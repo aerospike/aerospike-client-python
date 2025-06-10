@@ -612,16 +612,19 @@ static PyObject *createIndexWithDataAndCollectionType(
 
     // Convert python object into bin string
     char *bin_ptr = NULL;
-    if (PyUnicode_Check(py_bin)) {
-        py_ustr_bin = PyUnicode_AsUTF8String(py_bin);
-        bin_ptr = PyBytes_AsString(py_ustr_bin);
-    }
-    else if (PyByteArray_Check(py_bin)) {
-        bin_ptr = PyByteArray_AsString(py_bin);
-    }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
-        goto CLEANUP;
+    if (py_bin) {
+        if (PyUnicode_Check(py_bin)) {
+            py_ustr_bin = PyUnicode_AsUTF8String(py_bin);
+            bin_ptr = PyBytes_AsString(py_ustr_bin);
+        }
+        else if (PyByteArray_Check(py_bin)) {
+            bin_ptr = PyByteArray_AsString(py_bin);
+        }
+        else {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Bin should be a string");
+            goto CLEANUP;
+        }
     }
 
     // Convert PyObject into the name of the index
