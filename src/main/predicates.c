@@ -188,7 +188,7 @@ static PyObject *AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject *self,
         goto exit;
     }
 
-    // TODO: need to enforce index type is int or else undefined behavior
+    // We enforce the index type is an integer when where() is called
     return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE,
                          py_bin, py_shape, Py_None, py_indexType);
 
