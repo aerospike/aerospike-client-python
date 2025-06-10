@@ -160,8 +160,8 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
     PyObject *py_ns = NULL;
     PyObject *py_set = NULL;
     PyObject *py_expr = NULL;
-    as_index_datatype data_type;
     as_index_type index_type;
+    as_index_datatype data_type;
     as_exp *expr = NULL;
     PyObject *py_name = NULL;
     PyObject *py_policy = NULL;
@@ -174,7 +174,7 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
     // Python Function Argument Parsing
     if (PyArg_ParseTupleAndKeywords(
             args, kwds, "OOiiOO|O:index_expr_create", kwlist, &py_ns, &py_set,
-            &data_type, &index_type, &py_expr, &py_name, &py_policy) == false) {
+            &index_type, &data_type, &py_expr, &py_name, &py_policy) == false) {
         return NULL;
     }
 
