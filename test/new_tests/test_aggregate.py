@@ -412,7 +412,7 @@ class TestAggregate(object):
                                              expr, INDEX_EXPR_NAME, None)
 
         query: aerospike.Query = self.as_connection.query("test", "demo")
-        query.where_with_expr(p.equals(None, 2), expr)
+        query.where_with_expr(p.equals(None, 2), INDEX_EXPR_NAME, expr)
         recs = query.results()
         assert len(recs) == 1
         assert recs[0][2]['no'] == 1
