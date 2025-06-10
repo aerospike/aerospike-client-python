@@ -28,6 +28,9 @@
 #include "exceptions.h"
 #include "geo.h"
 
+// Predicate tuple format:
+// (as_predicate_type, as_index_datatype, bin name, value1, value2, as_index_type)
+
 static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
 {
     PyObject *py_bin = NULL;
@@ -37,19 +40,24 @@ static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
         return NULL;
     }
 
+    as_index_datatype index_datatype;
     if (PyLong_Check(py_val)) {
-        return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC,
-                             py_bin, py_val);
+        index_datatype = AS_INDEX_NUMERIC;
     }
     else if (PyUnicode_Check(py_val)) {
-        return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_STRING,
-                             py_bin, py_val);
+        index_datatype = AS_INDEX_STRING;
     }
     else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
-        return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_BLOB, py_bin,
-                             py_val);
+        index_datatype = AS_INDEX_BLOB;
+    }
+    else {
+        goto error;
     }
 
+    return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, index_datatype, py_bin,
+                         py_val, Py_None, AS_INDEX_TYPE_DEFAULT);
+
+error:
     Py_INCREF(Py_None);
     return Py_None;
 }

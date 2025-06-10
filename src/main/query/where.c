@@ -63,31 +63,22 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             return err.code;
         }
-    }
 
-    as_exp *exp_list = NULL;
-    if (py_expr) {
-        as_status status =
-            convert_exp_list(self->client, py_expr, &exp_list, &err);
-        if (status != AEROSPIKE_OK) {
-            return err.code;
+        if (!ctx_in_use) {
+            cf_free(pctx);
+            pctx = NULL;
         }
     }
 
     const char *bin = NULL;
-    if (py_bin) {
-        if (PyUnicode_Check(py_bin)) {
-            bin = PyUnicode_AsUTF8(py_bin);
-        }
-        else if (PyByteArray_Check(py_bin)) {
-            bin = PyByteArray_AsString(py_bin);
-        }
-        else {
-            rc = 1;
-        }
-
-        Py_DECREF(py_bin);
-        py_bin = NULL;
+    if (PyUnicode_Check(py_bin)) {
+        bin = PyUnicode_AsUTF8(py_bin);
+    }
+    else if (PyByteArray_Check(py_bin)) {
+        bin = PyByteArray_AsString(py_bin);
+    }
+    else {
+        rc = 1;
     }
 
     int64_t val1 = 0;
@@ -195,54 +186,101 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 }
 
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
-                                            PyObject *py_arg1,
-                                            PyObject *py_arg2)
+                                            PyObject *py_ctx,
+                                            PyObject *py_predicate)
 {
-    as_error err;
-    int rc = 0;
 
+    as_error err;
     as_error_init(&err);
 
-    if (PyTuple_Check(py_arg2) && PyTuple_Size(py_arg2) > 1 &&
-        PyTuple_Size(py_arg2) <= 6) {
+    // Parse predicate tuple
 
-        Py_ssize_t size = PyTuple_Size(py_arg2);
+    if (!PyTuple_Check(py_predicate)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate is invalid.");
+        goto CLEANUP;
+    }
+    Py_ssize_t size = PyTuple_Size(py_predicate);
+    if (size <= 1 || size > 6) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate is invalid.");
+        goto CLEANUP;
+    }
 
-        PyObject *py_predicate_type = PyTuple_GetItem(py_predicate, 0);
-        PyObject *py_index_datatype = PyTuple_GetItem(py_predicate, 1);
-        if (!py_predicate_type || !py_index_datatype) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to fetch predicate information");
-            goto CLEANUP;
-        }
-        if (PyLong_Check(py_predicate_type) &&
-            PyLong_Check(py_index_datatype)) {
-            as_predicate_type predicate_type =
-                (as_predicate_type)PyLong_AsLong(py_predicate_type);
-            as_index_datatype index_datatype =
-                (as_index_datatype)PyLong_AsLong(py_index_datatype);
-            rc = AerospikeQuery_Where_Add(
-                self, py_ctx, py_exp, predicate_type, index_datatype,
-                size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
-                size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
-                size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
-                size > 5 ? PyLong_AsLong(PyTuple_GetItem(py_predicate, 5)) : 0);
-            /* Failed to add the predicate for some reason */
-            if (rc != 0) {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                "Failed to add predicate");
+    PyObject *py_predicate_type = PyTuple_GetItem(py_predicate, 0);
+    if (!py_predicate_type) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to fetch predicate information");
+        goto CLEANUP;
+    }
+    PyObject *py_index_datatype = PyTuple_GetItem(py_predicate, 1);
+    if (!py_index_datatype) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Failed to fetch predicate information");
+        goto CLEANUP;
+    }
+
+    if (!PyLong_Check(py_predicate_type) || !PyLong_Check(py_index_datatype)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate is invalid.");
+        goto CLEANUP;
+    }
+
+    as_predicate_type predicate_type =
+        (as_predicate_type)PyLong_AsLong(py_predicate_type);
+    if (PyErr_Occurred()) {
+        goto CLEANUP;
+    }
+
+    as_index_datatype index_datatype =
+        (as_index_datatype)PyLong_AsLong(py_index_datatype);
+    if (PyErr_Occurred()) {
+        goto CLEANUP;
+    }
+
+    PyObject *py_bin;
+    PyObject *py_val1;
+    PyObject *py_val2;
+    PyObject **py_optional_tuple_items[] = {&py_bin, &py_val1, &py_val2};
+
+    // Read optional tuple items
+    const unsigned long FIRST_OPTIONAL_IDX = 2;
+    for (unsigned long i = FIRST_OPTIONAL_IDX; i <= 4; i++) {
+        if (i <= size - 1) {
+            *(py_optional_tuple_items[i - FIRST_OPTIONAL_IDX]) =
+                PyTuple_GetItem(py_predicate, i);
+            if (!py_bin) {
                 goto CLEANUP;
             }
-            /* Incorrect predicate or index type */
         }
         else {
+            py_bin = Py_None;
+        }
+    }
+
+    as_index_type index_type;
+    if (size == 6) {
+        PyObject *py_index_type = PyTuple_GetItem(py_predicate, 5);
+        if (!py_index_type) {
+            goto CLEANUP;
+        }
+        if (!PyLong_Check(py_index_type)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate is invalid.");
             goto CLEANUP;
         }
-        /* Predicate not a tuple, or too short or too long */
+        index_type = PyLong_AsLong(py_index_type);
+        if (PyErr_Occurred()) {
+            goto CLEANUP;
+        }
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate is invalid.");
+        index_type = AS_INDEX_TYPE_DEFAULT;
+    }
+
+    int rc =
+        AerospikeQuery_Where_Add(self, py_ctx, predicate_type, index_datatype,
+                                 py_bin, py_val1, py_val2, index_type);
+    /* Failed to add the predicate for some reason */
+    if (rc != 0) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to add predicate");
+        goto CLEANUP;
     }
 CLEANUP:
 
