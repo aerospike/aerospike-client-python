@@ -668,6 +668,9 @@ CLEANUP:
     if (py_ustr_name) {
         Py_DECREF(py_ustr_name);
     }
+    if (exp) {
+        as_exp_destroy(exp);
+    }
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;
