@@ -402,12 +402,20 @@ class TestAggregate(object):
         with pytest.raises(e.ParamError):
             query.where_with_expr(p.equals("test_age", 165), 4)
 
+    @pytest.mark.skipif(
+        condition=(TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1),
+        reason="Querying with expressions isn't supported yet"
+    )
     def test_query_with_expr(self):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
-            pytest.skip("Querying with expressions isn't supported yet.")
-        query: aerospike.Query = self.as_connection.query("test", "demo")
         expr = Add(IntBin("no"), IntBin("test_age")).compile()
+        INDEX_EXPR_NAME = "index_expr"
+        self.as_connection.index_expr_create("test", "demo", aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC,
+                                             expr, INDEX_EXPR_NAME, None)
+
+        query: aerospike.Query = self.as_connection.query("test", "demo")
         query.where_with_expr(p.equals(None, 2), expr)
         recs = query.results()
         assert len(recs) == 1
         assert recs[0][2]['no'] == 1
+
+        self.as_connection.index_remove("test", INDEX_EXPR_NAME)
