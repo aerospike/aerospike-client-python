@@ -176,9 +176,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
-        rc = 1;
     }
 
+    rc = 0;
 CLEANUP:
 
     if (rc) {
