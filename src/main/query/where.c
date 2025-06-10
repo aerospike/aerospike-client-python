@@ -42,7 +42,7 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 }
 
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
-                                    PyObject *py_expr,
+                                    PyObject *py_expr, const char *index_name,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,
                                     PyObject *py_bin, PyObject *py_val1,
@@ -513,7 +513,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                             PyObject *py_ctx,
                                             PyObject *py_predicate,
-                                            PyObject *py_exp)
+                                            PyObject *py_exp,
+                                            const char *index_name)
 {
     as_error err;
     as_error_init(&err);
@@ -547,7 +548,7 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
             as_index_datatype op_data =
                 (as_index_datatype)PyLong_AsLong(py_op_data);
             rc = AerospikeQuery_Where_Add(
-                self, py_ctx, py_exp, op, op_data,
+                self, py_ctx, py_exp, index_name, op, op_data,
                 size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
                 size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
                 size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
@@ -604,4 +605,18 @@ AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
     }
 
     return AerospikeQuery_Where_Invoke(self, NULL, py_pred, py_expr);
+}
+
+AerospikeQuery *AerospikeQuery_WhereWithIndexName(AerospikeQuery *self,
+                                                  PyObject *args)
+{
+    PyObject *py_pred = NULL;
+    const char *index_name = NULL;
+
+    if (PyArg_ParseTuple(args, "Os:where_with_index_name", &py_pred,
+                         &index_name) == false) {
+        return NULL;
+    }
+
+    return AerospikeQuery_Where_Invoke(self, NULL, py_pred, NULL, index_name);
 }
