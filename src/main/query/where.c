@@ -67,17 +67,16 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
     }
 
-    const char *buffer = NULL;
-    char *bin = NULL;
+    const char *bin = NULL;
     if (PyUnicode_Check(py_bin)) {
-        buffer = PyUnicode_AsUTF8(py_bin);
-        if (!buffer) {
+        bin = PyUnicode_AsUTF8(py_bin);
+        if (!bin) {
             goto CLEANUP;
         }
     }
     else if (PyByteArray_Check(py_bin)) {
-        buffer = PyByteArray_AsString(py_bin);
-        if (!buffer) {
+        bin = PyByteArray_AsString(py_bin);
+        if (!bin) {
             goto CLEANUP;
         }
     }
@@ -85,7 +84,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         // Bins are required for all where() calls
         goto CLEANUP;
     }
-    bin = strdup(buffer);
 
     int64_t val1_int = 0;
     int64_t val2_int = 0;
@@ -195,10 +193,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     rc = 0;
 
 CLEANUP:
-
-    if (bin) {
-        free(bin);
-    }
 
     if (rc) {
         if (ctx_in_use) {
