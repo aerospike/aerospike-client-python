@@ -256,23 +256,23 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
         goto CLEANUP;
     }
 
-    PyObject *py_bin;
-    PyObject *py_val1;
-    PyObject *py_val2;
+    PyObject *py_bin = NULL;
+    PyObject *py_val1 = NULL;
+    PyObject *py_val2 = NULL;
     PyObject **py_optional_tuple_items[] = {&py_bin, &py_val1, &py_val2};
 
     // Read optional tuple items
     const unsigned long FIRST_OPTIONAL_IDX = 2;
     for (unsigned long i = FIRST_OPTIONAL_IDX; i <= 4; i++) {
         if (i <= size - 1) {
-            *(py_optional_tuple_items[i - FIRST_OPTIONAL_IDX]) =
-                PyTuple_GetItem(py_predicate, i);
-            if (!py_bin) {
+            PyObject *py_tuple_item = PyTuple_GetItem(py_predicate, i);
+            if (!py_tuple_item) {
                 goto CLEANUP;
             }
+            *(py_optional_tuple_items[i - FIRST_OPTIONAL_IDX]) = py_tuple_item;
         }
         else {
-            py_bin = Py_None;
+            *(py_optional_tuple_items[i - FIRST_OPTIONAL_IDX]) = Py_None;
         }
     }
 
