@@ -271,8 +271,8 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
     PyObject **py_optional_tuple_items[] = {&py_bin, &py_val1, &py_val2};
 
     // Read optional tuple items
-    const unsigned long FIRST_OPTIONAL_IDX = 2;
-    for (unsigned long i = FIRST_OPTIONAL_IDX; i <= 4; i++) {
+    const Py_ssize_t FIRST_OPTIONAL_IDX = 2;
+    for (Py_ssize_t i = FIRST_OPTIONAL_IDX; i <= 4; i++) {
         PyObject *py_tuple_item;
         if (i <= size - 1) {
             py_tuple_item = PyTuple_GetItem(py_predicate, i);
