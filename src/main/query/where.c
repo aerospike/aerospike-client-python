@@ -97,7 +97,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     Py_ssize_t bytes_size = 0;
 
     if (in_datatype == AS_INDEX_STRING || in_datatype == AS_INDEX_GEO2DSPHERE) {
-        if (PyUnicode_Check(py_val1)) {
+        if (!PyUnicode_Check(py_val1)) {
             goto CLEANUP;
         }
         val1_str = PyUnicode_AsUTF8(py_val1);
