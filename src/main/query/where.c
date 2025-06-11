@@ -85,36 +85,41 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         goto CLEANUP;
     }
 
-    int64_t val1 = 0;
+    int64_t val1_int = 0;
+    int64_t val2_int = 0;
     const char *val1_str = NULL;
     uint8_t *val1_bytes = NULL;
 
-    int64_t val2 = 0;
+    void *val1 = NULL;
+
     Py_ssize_t bytes_size = 0;
 
     // We need to validate the value type both here and in predicates.c
     // Because anyone can avoid using the predicates submodule and pass in their own predicate tuples
-    if (in_datatype == AS_INDEX_STRING) {
+    if (in_datatype == AS_INDEX_STRING || in_datatype == AS_INDEX_GEO2DSPHERE) {
         if (PyUnicode_Check(py_val1)) {
             goto CLEANUP;
         }
-        // TODO: malloc'd copy?
         val1_str = PyUnicode_AsUTF8(py_val1);
         if (!val1_str) {
             goto CLEANUP;
         }
+        val1_str = strdup(val1_str);
+        val1 = (void *)val1_str;
     }
     else if (in_datatype == AS_INDEX_NUMERIC) {
-        val1 = convert_pyobject_to_uint64_t(py_val1);
+        val1_int = convert_pyobject_to_uint64_t(py_val1);
         if (PyErr_Occurred()) {
             PyErr_Clear();
             val1 = 0;
         }
+        val1 = (void *)val1_int;
+
         if (PyLong_Check(py_val2)) {
-            val2 = convert_pyobject_to_uint64_t(py_val2);
+            val2_int = convert_pyobject_to_uint64_t(py_val2);
             if (PyErr_Occurred()) {
                 PyErr_Clear();
-                val2 = 0;
+                val2_int = 0;
             }
         }
     }
@@ -147,25 +152,26 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
         memcpy(val1_bytes_cpy, val1_bytes, sizeof(uint8_t) * bytes_size);
         val1_bytes = val1_bytes_cpy;
+        // Blobs are handled separately so we don't need to use the void* pointer
     }
 
     as_query_where_init(&self->query, 1);
 
-    if (in_datatype == AS_INDEX_BLOB) {
+    if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
+        // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
         as_query_where_with_ctx(&self->query, bin, pctx, predicate, index_type,
-                                in_datatype, val1_str, bytes_size, true);
+                                AS_INDEX_BLOB, val1_bytes, bytes_size, true);
     }
-    else if (in_datatype == AS_INDEX_GEO2DSPHERE ||
-             in_datatype == AS_INDEX_NUMERIC ||
-             in_datatype == AS_INDEX_STRING) {
-        if (predicate == AS_PREDICATE_RANGE) {
+    else if (in_datatype == AS_INDEX_NUMERIC ||
+             in_datatype == AS_INDEX_STRING ||
+             in_datatype == AS_INDEX_GEO2DSPHERE) {
+        if (predicate == AS_PREDICATE_RANGE &&
+            in_datatype == AS_INDEX_NUMERIC) {
             as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                    index_type, in_datatype, val1, val2);
-            if (in_datatype == AS_INDEX_GEO2DSPHERE) {
-                self->query.where.entries[0].value.string_val._free = true;
-            }
+                                    index_type, in_datatype, val1_int,
+                                    val2_int);
         }
-        else if (predicate == AS_PREDICATE_EQUAL) {
+        else {
             as_query_where_with_ctx(&self->query, bin, pctx, predicate,
                                     index_type, in_datatype, val1);
         }
@@ -176,6 +182,10 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+    }
+
+    if (in_datatype == AS_INDEX_STRING || in_datatype == AS_INDEX_GEO2DSPHERE) {
+        self->query.where.entries[0].value.string_val._free = true;
     }
 
     rc = 0;
