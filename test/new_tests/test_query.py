@@ -1051,6 +1051,16 @@ class TestQuery(TestBaseClass):
         assert records
         assert len(records) == 3
 
+    def test_query_with_list_cdt_ctx_and_invalid_bin(self):
+        """
+        Make sure that ctx is being cleaned up properly
+        """
+        query = self.as_connection.query("test", "demo")
+        query.select("numeric_list")
+        # Invalid bin
+        with pytest.raises(e.ParamError):
+            query.where(p.range(5, aerospike.INDEX_TYPE_DEFAULT, 2, 4), {"ctx": ctx_list_index})
+
     def test_query_with_map_cdt_ctx(self):
         """
         Invoke query() with cdt_ctx and correct arguments
