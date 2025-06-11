@@ -28,12 +28,6 @@
 #include "exceptions.h"
 #include "geo.h"
 
-// Predicate tuple format:
-// (as_predicate_type, as_index_datatype, bin name, value1, value2, as_index_type)
-
-// We validate that py_bin is a unicode object when this tuple is passed to query.where()
-// If failed to create predicate, return None
-
 static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
 {
     PyObject *py_bin = NULL;
@@ -43,24 +37,19 @@ static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    as_index_datatype index_datatype;
     if (PyLong_Check(py_val)) {
-        index_datatype = AS_INDEX_NUMERIC;
+        return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC,
+                             py_bin, py_val);
     }
     else if (PyUnicode_Check(py_val)) {
-        index_datatype = AS_INDEX_STRING;
+        return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_STRING,
+                             py_bin, py_val);
     }
     else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
-        index_datatype = AS_INDEX_BLOB;
-    }
-    else {
-        goto exit;
+        return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_BLOB, py_bin,
+                             py_val);
     }
 
-    return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, index_datatype, py_bin,
-                         py_val, Py_None, AS_INDEX_TYPE_DEFAULT);
-
-exit:
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -70,38 +59,32 @@ static PyObject *AerospikePredicates_Contains(PyObject *self, PyObject *args)
     PyObject *py_bin = NULL;
     PyObject *py_indextype = NULL;
     PyObject *py_val = NULL;
+    int index_type;
 
     if (PyArg_ParseTuple(args, "OOO:equals", &py_bin, &py_indextype, &py_val) ==
         false) {
         return NULL;
     }
 
-    as_index_datatype index_datatype;
-    if (PyLong_Check(py_val)) {
-        index_datatype = AS_INDEX_NUMERIC;
-    }
-    else if (PyUnicode_Check(py_val)) {
-        index_datatype = AS_INDEX_STRING;
-    }
-    else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
-        index_datatype = AS_INDEX_BLOB;
+    if (PyLong_Check(py_indextype)) {
+        index_type = PyLong_AsLong(py_indextype);
     }
     else {
         goto exit;
     }
 
-    if (!PyLong_Check(py_indextype)) {
-        goto exit;
+    if (PyLong_Check(py_val)) {
+        return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC,
+                             py_bin, py_val, Py_None, index_type);
     }
-
-    int index_type = PyLong_AsLong(py_indextype);
-    if (PyErr_Occurred()) {
-        PyErr_Clear();
-        goto exit;
+    else if (PyUnicode_Check(py_val)) {
+        return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_STRING,
+                             py_bin, py_val, Py_None, index_type);
     }
-
-    return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, index_datatype, py_bin,
-                         py_val, Py_None, index_type);
+    else if (PyBytes_Check(py_val) || PyByteArray_Check(py_val)) {
+        return Py_BuildValue("iiOOOi", AS_PREDICATE_EQUAL, AS_INDEX_BLOB,
+                             py_bin, py_val, Py_None, index_type);
+    }
 
 exit:
     Py_INCREF(Py_None);
@@ -115,27 +98,24 @@ static PyObject *AerospikePredicates_RangeContains(PyObject *self,
     PyObject *py_indextype = NULL;
     PyObject *py_min = NULL;
     PyObject *py_max = NULL;
+    int index_type;
 
     if (PyArg_ParseTuple(args, "OOOO:equals", &py_bin, &py_indextype, &py_min,
                          &py_max) == false) {
         return NULL;
     }
 
-    if (!PyLong_Check(py_indextype)) {
-        goto exit;
+    if (PyLong_Check(py_indextype)) {
+        index_type = PyLong_AsLong(py_indextype);
     }
-    int index_type = PyLong_AsLong(py_indextype);
-    if (PyErr_Occurred()) {
-        PyErr_Clear();
-        goto exit;
-    }
-
-    if (!PyLong_Check(py_min) || !PyLong_Check(py_max)) {
+    else {
         goto exit;
     }
 
-    return Py_BuildValue("iiOOOi", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC, py_bin,
-                         py_min, py_max, index_type);
+    if (PyLong_Check(py_min) && PyLong_Check(py_max)) {
+        return Py_BuildValue("iiOOOi", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC,
+                             py_bin, py_min, py_max, index_type);
+    }
 
 exit:
     Py_INCREF(Py_None);
@@ -153,14 +133,11 @@ static PyObject *AerospikePredicates_Between(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyLong_Check(py_min) || !PyLong_Check(py_max)) {
-        goto exit;
+    if (PyLong_Check(py_min) && PyLong_Check(py_max)) {
+        return Py_BuildValue("iiOOO", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC,
+                             py_bin, py_min, py_max);
     }
 
-    return Py_BuildValue("iiOOOi", AS_PREDICATE_RANGE, AS_INDEX_NUMERIC, py_bin,
-                         py_min, py_max, AS_INDEX_TYPE_DEFAULT);
-
-exit:
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -179,21 +156,13 @@ static PyObject *AerospikePredicates_GeoWithin_GeoJSONRegion(PyObject *self,
 
     if (!py_indexType) {
         py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
-        if (py_indexType == NULL) {
-            goto exit;
-        }
     }
 
-    if (!PyUnicode_Check(py_shape)) {
-        goto exit;
+    if (PyUnicode_Check(py_shape)) {
+        return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE,
+                             py_bin, py_shape, Py_None, py_indexType);
     }
 
-    // We enforce the index type is an integer when where() is called
-    return Py_BuildValue("iiOOOO", AS_PREDICATE_RANGE, AS_INDEX_GEO2DSPHERE,
-                         py_bin, py_shape, Py_None, py_indexType);
-
-exit:
-    Py_XDECREF(py_indexType);
     Py_INCREF(Py_None);
     return Py_None;
 }
@@ -220,9 +189,6 @@ static PyObject *AerospikePredicates_GeoWithin_Radius(PyObject *self,
 
     if (!py_indexType) {
         py_indexType = Py_BuildValue("i", AS_INDEX_TYPE_DEFAULT);
-        if (py_indexType == NULL) {
-            goto CLEANUP;
-        }
     }
 
     py_geo_object = PyDict_New();
