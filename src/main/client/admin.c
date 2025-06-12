@@ -31,73 +31,43 @@
 #include "policy.h"
 #include "global_hosts.h"
 
-/**
- *******************************************************************************************************
- * Create a user in the Aerospike DB.
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns an integer status. 0(Zero) is success value.
- * In case of error,appropriate exceptions will be raised.
- *******************************************************************************************************
- */
-PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
-                                            PyObject *args, PyObject *kwds)
+// py_password can be NULL
+static PyObject *admin_create_user_helper(AerospikeClient *self,
+                                          PyObject *py_user,
+                                          PyObject *py_password,
+                                          PyObject *py_roles,
+                                          PyObject *py_policy)
 {
-    // Initialize error
     as_error err;
     as_error_init(&err);
 
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *py_user = NULL;
-    PyObject *py_password = NULL;
-    PyObject *py_roles = NULL;
-
-    as_policy_admin admin_policy;
-    as_policy_admin *admin_policy_p = NULL;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"user", "password", "roles", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|O:admin_create_user",
-                                    kwlist, &py_user, &py_password, &py_roles,
-                                    &py_policy) == false) {
-        return NULL;
-    }
-
-    // Aerospike Operation Arguments
-    int roles_size = 0;
-    char **roles = NULL;
-    const char *user, *password;
-
     if (!self || !self->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
+        goto RAISE_EXCEPTION;
     }
 
     if (!self->is_conn_16) {
         as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
                         "No connection to aerospike cluster");
-        goto CLEANUP;
+        goto RAISE_EXCEPTION;
     }
 
     // Convert python object to an array of roles
-    if (PyList_Check(py_roles)) {
-        roles_size = PyList_Size(py_roles);
-        roles = alloca(sizeof(char *) * roles_size);
-        for (int i = 0; i < roles_size; i++) {
-            roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
-            memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
-        }
-    }
-    else {
+    if (!PyList_Check(py_roles)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Roles should be a list");
-        goto CLEANUP;
+        goto RAISE_EXCEPTION;
+    }
+    int roles_size = PyList_Size(py_roles);
+    if (PyErr_Occurred()) {
+        goto RAISE_EXCEPTION;
+    }
+    // TODO: Not sure if this should be used
+    // Could just heap allocate str array in helper function?
+    char **roles = alloca(sizeof(char *) * roles_size);
+    for (int i = 0; i < roles_size; i++) {
+        roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
+        // TODO: do we need?
+        memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
     }
 
     pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
@@ -105,14 +75,19 @@ PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
         goto CLEANUP;
     }
 
+    // TODO: use new helper funcs
     // Convert python objects to username and password strings
     if (!PyUnicode_Check(py_user)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Username should be a string");
         goto CLEANUP;
     }
-
-    user = PyUnicode_AsUTF8(py_user);
+    const char *user = PyUnicode_AsUTF8(py_user);
+    if (!user) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to convert unicode object to C string");
+        return err.code;
+    }
 
     if (!PyUnicode_Check(py_password)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -120,9 +95,16 @@ PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    password = PyUnicode_AsUTF8(py_password);
+    const char *password = PyUnicode_AsUTF8(py_password);
+    if (!password) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to convert unicode object to C string");
+        return err.code;
+    }
 
     // Convert python object to policy_admin
+    as_policy_admin admin_policy;
+    as_policy_admin *admin_policy_p = NULL;
     pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
                              &admin_policy_p, &self->as->config.policies.admin);
     if (err.code != AEROSPIKE_OK) {
@@ -141,12 +123,70 @@ CLEANUP:
             cf_free(roles[i]);
     }
 
+RAISE_EXCEPTION:
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;
     }
 
     return PyLong_FromLong(0);
+}
+
+/**
+ *******************************************************************************************************
+ * Create a user in the Aerospike DB.
+ *
+ * @param self                  AerospikeClient object
+ * @param args                  The args is a tuple object containing an argument
+ *                              list passed from Python to a C function
+ * @param kwds                  Dictionary of keywords
+ *
+ * Returns an integer status. 0(Zero) is success value.
+ * In case of error,appropriate exceptions will be raised.
+ *******************************************************************************************************
+ */
+PyObject *AerospikeClient_Admin_Create_User(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_policy = NULL;
+    PyObject *py_user = NULL;
+    PyObject *py_password = NULL;
+    PyObject *py_roles = NULL;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"user", "password", "roles", "policy", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO|O:admin_create_user",
+                                    kwlist, &py_user, &py_password, &py_roles,
+                                    &py_policy) == false) {
+        return NULL;
+    }
+
+    return admin_create_user_helper(self, py_user, py_password, py_roles,
+                                    py_policy);
+}
+
+PyObject *AerospikeClient_Admin_Create_PKI_User(AerospikeClient *self,
+                                                PyObject *args, PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_policy = NULL;
+    PyObject *py_user = NULL;
+    PyObject *py_roles = NULL;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"user", "password", "roles", "policy", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:admin_create_user",
+                                    kwlist, &py_user, &py_roles,
+                                    &py_policy) == false) {
+        return NULL;
+    }
+
+    return admin_create_user_helper(self, py_user, NULL, py_roles, py_policy);
 }
 
 /**
