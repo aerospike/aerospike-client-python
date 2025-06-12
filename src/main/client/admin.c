@@ -84,10 +84,14 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    const char *password = convert_pyobject_to_str(&err, py_password);
-    if (!password) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT, STR_CONVERSION_ERROR_MSG);
-        goto CLEANUP;
+    const char *password = NULL;
+    if (py_password) {
+        password = convert_pyobject_to_str(&err, py_password);
+        if (!password) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            STR_CONVERSION_ERROR_MSG);
+            goto CLEANUP;
+        }
     }
 
     // Convert python object to policy_admin
@@ -101,8 +105,14 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
-    aerospike_create_user(self->as, &err, admin_policy_p, user, password,
-                          (const char **)roles, roles_size);
+    if (password) {
+        aerospike_create_user(self->as, &err, admin_policy_p, user, password,
+                              (const char **)roles, roles_size);
+    }
+    else {
+        aerospike_create_pki_user(self->as, &err, admin_policy_p, user,
+                                  (const char **)roles, roles_size);
+    }
     Py_END_ALLOW_THREADS
 
 CLEANUP:
@@ -160,15 +170,15 @@ PyObject *AerospikeClient_Admin_Create_PKI_User(AerospikeClient *self,
                                                 PyObject *args, PyObject *kwds)
 {
     // Python Function Arguments
-    PyObject *py_policy = NULL;
     PyObject *py_user = NULL;
     PyObject *py_roles = NULL;
+    PyObject *py_policy = NULL;
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"user", "password", "roles", "policy", NULL};
+    static char *kwlist[] = {"user", "roles", "policy", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:admin_create_user",
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:admin_create_pki_user",
                                     kwlist, &py_user, &py_roles,
                                     &py_policy) == false) {
         return NULL;
