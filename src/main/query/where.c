@@ -43,7 +43,6 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 }
 
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
-// py_bin is guaranteed
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,
