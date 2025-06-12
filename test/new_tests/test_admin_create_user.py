@@ -353,14 +353,27 @@ class TestCreateUser(object):
 
     def test_create_user_with_very_long_role_name(self):
 
-        user = "user7"
+        self.user = "user7"
         password = "user7"
         roles = ["read-write", "abc" * 50]
         try:
-            self.client.admin_drop_user(user)
+            self.client.admin_drop_user(self.user)
             time.sleep(2)
         except Exception:
             pass
 
         with pytest.raises(e.ClientError):
-            self.client.admin_create_user(user, password, roles)
+            self.client.admin_create_user(self.user, password, roles)
+
+    def test_create_pki_user(self):
+
+        try:
+            self.client.admin_drop_user(self.user)
+            time.sleep(2)
+        except Exception:
+            pass
+
+        roles = ["read-write"]
+        admin_policy = {}
+        with pytest.raises(e.ClientError):
+            self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
