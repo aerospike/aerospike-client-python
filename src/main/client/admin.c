@@ -31,7 +31,7 @@
 #include "policy.h"
 #include "global_hosts.h"
 
-#define STR_CONVERSION_ERROR_MSG "Unable to convert unicode object to C string"
+#define STR_CONVERSION_ERROR_MSG "%s should be a string"
 
 // py_password can be NULL, the other pyobjects are non-NULL
 static PyObject *admin_create_user_helper(AerospikeClient *self,
@@ -80,7 +80,8 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     // Convert python objects to username and password strings
     const char *user = convert_pyobject_to_str(&err, py_user);
     if (!user) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG);
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
+                        "Username");
         goto CLEANUP;
     }
 
@@ -88,8 +89,8 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     if (py_password) {
         password = convert_pyobject_to_str(&err, py_password);
         if (!password) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            STR_CONVERSION_ERROR_MSG);
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
+                            "Password");
             goto CLEANUP;
         }
     }
