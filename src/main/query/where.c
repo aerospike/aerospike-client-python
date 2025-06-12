@@ -86,7 +86,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     int64_t val1_int = 0;
     int64_t val2_int = 0;
-    const char *val1_str = NULL;
+    char *val1_str = NULL;
     uint8_t *val1_bytes = NULL;
 
     // Can point to either val1_int or val1_str. We use this so we can pass in the same optional argument
@@ -99,11 +99,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (!PyUnicode_Check(py_val1)) {
             goto CLEANUP1;
         }
-        val1_str = PyUnicode_AsUTF8(py_val1);
-        if (!val1_str) {
+        const char *buffer = PyUnicode_AsUTF8(py_val1);
+        if (!buffer) {
             goto CLEANUP1;
         }
-        val1_str = strdup(val1_str);
+        val1_str = strdup(buffer);
         val1 = (void *)val1_str;
     }
     else if (in_datatype == AS_INDEX_NUMERIC) {
