@@ -31,7 +31,7 @@
 #include "policy.h"
 #include "global_hosts.h"
 
-// py_password can be NULL
+// py_password can be NULL, the other pyobjects are non-NULL
 static PyObject *admin_create_user_helper(AerospikeClient *self,
                                           PyObject *py_user,
                                           PyObject *py_password,
@@ -75,30 +75,15 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    // TODO: use new helper funcs
     // Convert python objects to username and password strings
-    if (!PyUnicode_Check(py_user)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Username should be a string");
-        goto CLEANUP;
-    }
-    const char *user = PyUnicode_AsUTF8(py_user);
+    // TODO: redundant err
+    const char *user = convert_pyobject_to_str(&err, py_user);
     if (!user) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to convert unicode object to C string");
         goto CLEANUP;
     }
 
-    if (!PyUnicode_Check(py_password)) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                        "Password should be a string");
-        goto CLEANUP;
-    }
-
-    const char *password = PyUnicode_AsUTF8(py_password);
+    const char *password = convert_pyobject_to_str(&err, py_password);
     if (!password) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to convert unicode object to C string");
         goto CLEANUP;
     }
 
