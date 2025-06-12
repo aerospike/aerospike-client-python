@@ -239,11 +239,11 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
                                      as_policy_operate *config_operate_policy,
                                      as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_batch *policy,
-                                   as_policy_batch **policy_p,
-                                   as_policy_batch *config_batch_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p);
+as_status as_policy_batch_init_and_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_batch *policy, as_policy_batch **policy_p,
+    as_policy_batch *config_batch_policy, as_exp *exp_list,
+    as_exp **exp_list_p);
 
 as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
                                  as_map_policy *policy);
