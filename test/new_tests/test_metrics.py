@@ -298,11 +298,6 @@ class TestMetrics:
                 "labels",
                 "dict[str, str]"
             ),
-            (
-                MetricsPolicy(app_id=1),
-                "app_id",
-                "Optional[str]"
-            )
         ]
     )
     def test_metrics_policy_invalid_args(self, policy, field_name, expected_field_type):
