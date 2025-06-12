@@ -195,6 +195,10 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 CLEANUP:
 
     if (rc) {
+        // The values end up not being used by as_query
+        if (val1_str) {
+            free(val1_str);
+        }
         if (val1_bytes) {
             free(val1_bytes);
         }
