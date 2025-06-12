@@ -650,7 +650,6 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
                             "String exceeds max length");
             return err->code;
         }
-        // TODO: memory error. off by 1
         strcpy(arr[i], s);
     }
 
