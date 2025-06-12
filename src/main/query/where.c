@@ -190,6 +190,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         goto CLEANUP2;
     }
 
+    if (ctx_in_use) {
+        self->query.where.entries[0].ctx_free = true;
+    }
     rc = 0;
 
 CLEANUP2:
@@ -214,9 +217,6 @@ CLEANUP1:
         if (pctx) {
             cf_free(pctx);
         }
-    }
-    else if (ctx_in_use) {
-        self->query.where.entries[0].ctx_free = true;
     }
 
     return rc;
