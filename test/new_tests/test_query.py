@@ -1005,14 +1005,12 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_CLUSTER_ERROR
 
-    @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_no_args(self):
         """ """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where("numeric_map", "range", aerospike.INDEX_TYPE_MAPVALUES, aerospike.INDEX_NUMERIC)
 
-    @pytest.mark.skip(reason="segfault")
     def test_query_predicate_range_wrong_one_end_args(self):
         """ """
         query = self.as_connection.query("test", "demo")
