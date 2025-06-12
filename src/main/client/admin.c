@@ -86,7 +86,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     if (!user) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                         "Unable to convert unicode object to C string");
-        return err.code;
+        goto CLEANUP;
     }
 
     if (!PyUnicode_Check(py_password)) {
@@ -99,7 +99,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     if (!password) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                         "Unable to convert unicode object to C string");
-        return err.code;
+        goto CLEANUP;
     }
 
     // Convert python object to policy_admin
