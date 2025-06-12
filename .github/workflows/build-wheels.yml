@@ -323,6 +323,11 @@ jobs:
       if: ${{ always() && env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       shell: bash
 
+    # TODO: dynamically get container name
+    - name: 'For debugging: print server logs'
+      if: ${{ always() }}
+      run: docker logs aerospike
+
     - name: Upload wheels to GitHub
       uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
