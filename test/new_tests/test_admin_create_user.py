@@ -365,7 +365,10 @@ class TestCreateUser(object):
         with pytest.raises(e.ClientError):
             self.client.admin_create_user(self.user, password, roles)
 
-    def test_create_pki_user(self):
+    # Need as_connection to get server version
+    def test_create_pki_user(self, as_connection):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            pytest.skip("Creating a PKI user with no password is not supported in server versions < 8.1")
 
         try:
             self.client.admin_drop_user(self.user)
@@ -375,5 +378,4 @@ class TestCreateUser(object):
 
         roles = ["read-write"]
         admin_policy = {}
-        with pytest.raises(e.ClientError):
-            self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
+        self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
