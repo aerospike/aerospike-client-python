@@ -4,7 +4,7 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-
+from contextlib import nullcontext
 import aerospike
 
 
@@ -367,15 +367,25 @@ class TestCreateUser(object):
 
     # Need as_connection to get server version
     def test_create_pki_user(self, as_connection):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
-            pytest.skip("Creating a PKI user with no password is not supported in server versions < 8.1")
-
         try:
             self.client.admin_drop_user(self.user)
             time.sleep(2)
         except Exception:
             pass
 
+        self.delete_users.append(self.user)
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            context = pytest.raises(e.AerospikeError)
+        else:
+            context = nullcontext()
+
         roles = ["read-write"]
         admin_policy = {}
-        self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
+        with context:
+            self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
+
+        if context == nullcontext():
+            # Check that the PKI user was created.
+            userDict = self.client.admin_query_user_info(self.user)
+            assert userDict["roles"] == ["read-write"]
