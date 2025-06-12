@@ -135,7 +135,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
         else if (PyByteArray_Check(py_val1)) {
             bytes_buffer = PyByteArray_AsString(py_val1);
-            if (!val1_bytes) {
+            if (!bytes_buffer) {
                 goto CLEANUP_ON_ERROR1;
             }
             bytes_size = PyByteArray_Size(py_val1);
