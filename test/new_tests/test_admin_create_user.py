@@ -10,6 +10,7 @@ import aerospike
 
 @pytest.mark.usefixtures("connection_config")
 class TestCreateUser(object):
+    user = "user7"
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
@@ -353,7 +354,6 @@ class TestCreateUser(object):
 
     def test_create_user_with_very_long_role_name(self):
 
-        self.user = "user7"
         password = "user7"
         roles = ["read-write", "abc" * 50]
         try:
