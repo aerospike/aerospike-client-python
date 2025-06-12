@@ -123,9 +123,10 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
     }
     else if (in_datatype == AS_INDEX_BLOB) {
+        char *bytes_buffer = NULL;
         if (PyBytes_Check(py_val1)) {
-            val1_bytes = (uint8_t *)PyBytes_AsString(py_val1);
-            if (!val1_bytes) {
+            bytes_buffer = PyBytes_AsString(py_val1);
+            if (!bytes_buffer) {
                 goto CLEANUP;
             }
             bytes_size = PyBytes_Size(py_val1);
@@ -134,7 +135,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
         }
         else if (PyByteArray_Check(py_val1)) {
-            val1_bytes = (uint8_t *)PyByteArray_AsString(py_val1);
+            bytes_buffer = PyByteArray_AsString(py_val1);
             if (!val1_bytes) {
                 goto CLEANUP;
             }
@@ -149,7 +150,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
         uint8_t *val1_bytes_cpy =
             (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
-        memcpy(val1_bytes_cpy, val1_bytes, sizeof(uint8_t) * bytes_size);
+        memcpy(val1_bytes_cpy, bytes_buffer, sizeof(uint8_t) * bytes_size);
         val1_bytes = val1_bytes_cpy;
         // Blobs are handled separately below, so we don't need to use the void* pointer
     }
@@ -194,6 +195,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 CLEANUP:
 
     if (rc) {
+        if (val1_bytes) {
+            free(val1_bytes);
+        }
         if (ctx_in_use) {
             as_cdt_ctx_destroy(pctx);
         }
