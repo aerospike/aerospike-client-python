@@ -109,7 +109,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         val1_int = pyobject_to_int64(py_val1);
         if (PyErr_Occurred()) {
             PyErr_Clear();
-            val1 = 0;
+            val1_int = 0;
         }
         val1 = (void *)val1_int;
 
