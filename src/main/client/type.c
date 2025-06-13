@@ -1064,8 +1064,23 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
     if (py_cluster_name && PyUnicode_Check(py_cluster_name)) {
+        // TODO: memory leak?
         as_config_set_cluster_name(
             &config, strdup((char *)PyUnicode_AsUTF8(py_cluster_name)));
+    }
+
+    PyObject *py_app_id = PyDict_GetItemWithError(py_config, "app_id");
+    if (py_app_id) {
+        const char *str = convert_pyobject_to_str(&constructor_err, py_app_id);
+        if (!str) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        as_config_set_app_id(&config, str);
+    }
+    else {
+        if (PyErr_Occurred()) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
     }
 
     //strict_types check
