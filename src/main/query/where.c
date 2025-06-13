@@ -221,6 +221,19 @@ CLEANUP_ON_ERROR1:
 #define PREDICATE_INVALID_ERROR_MSG1 "predicate is invalid."
 #define PREDICATE_INVALID_ERROR_MSG2 "Failed to fetch predicate information"
 
+enum {
+    PREDICATE_TUPLE_POS_FOR_PRED_TYPE,
+    PREDICATE_TUPLE_POS_FOR_INDEX_DATATYPE,
+    PREDICATE_TUPLE_POS_FOR_BIN_NAME,
+    PREDICATE_TUPLE_POS_FOR_VAL1,
+    PREDICATE_TUPLE_POS_FOR_VAL2,
+    PREDICATE_TUPLE_POS_FOR_INDEX_TYPE,
+};
+
+#define PREDICATE_TUPLE_MIN_SIZE 2
+#define PREDICATE_TUPLE_FIRST_OPTIONAL_POS 2
+#define PREDICATE_TUPLE_MAX_SIZE 6
+
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                             PyObject *py_ctx,
                                             PyObject *py_predicate)
@@ -230,6 +243,9 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
     as_error_init(&err);
 
     // Parse predicate tuple
+    // The tuple format is:
+    // (as_predicate_type, as_index_datatype, bin name, value1, value2, as_index_type)
+    // All tuple members from bin name and onward are optional
 
     if (!PyTuple_Check(py_predicate)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -237,19 +253,22 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
         goto CLEANUP;
     }
     Py_ssize_t predicate_size = PyTuple_Size(py_predicate);
-    if (predicate_size <= 1 || predicate_size > 6) {
+    if (predicate_size <= PREDICATE_TUPLE_MIN_SIZE ||
+        predicate_size > PREDICATE_TUPLE_MAX_SIZE) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         PREDICATE_INVALID_ERROR_MSG1);
         goto CLEANUP;
     }
 
-    PyObject *py_predicate_type = PyTuple_GetItem(py_predicate, 0);
+    PyObject *py_predicate_type =
+        PyTuple_GetItem(py_predicate, PREDICATE_TUPLE_POS_FOR_PRED_TYPE);
     if (!py_predicate_type) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                         PREDICATE_INVALID_ERROR_MSG2);
         goto CLEANUP;
     }
-    PyObject *py_index_datatype = PyTuple_GetItem(py_predicate, 1);
+    PyObject *py_index_datatype =
+        PyTuple_GetItem(py_predicate, PREDICATE_TUPLE_POS_FOR_INDEX_DATATYPE);
     if (!py_index_datatype) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                         PREDICATE_INVALID_ERROR_MSG2);
@@ -280,24 +299,28 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
     PyObject **py_optional_tuple_items[] = {&py_bin, &py_val1, &py_val2};
 
     // Read optional tuple items
-    const Py_ssize_t FIRST_OPTIONAL_IDX = 2;
-    for (Py_ssize_t i = FIRST_OPTIONAL_IDX; i <= 4; i++) {
+    for (Py_ssize_t i = PREDICATE_TUPLE_POS_FOR_BIN_NAME;
+         i <= PREDICATE_TUPLE_POS_FOR_VAL2; i++) {
         PyObject *py_tuple_item;
         if (i <= predicate_size - 1) {
+            // Optional item exists in tuple
             py_tuple_item = PyTuple_GetItem(py_predicate, i);
             if (!py_tuple_item) {
                 goto CLEANUP;
             }
         }
         else {
+            // Optional item does not exist in tuple
             py_tuple_item = Py_None;
         }
-        *(py_optional_tuple_items[i - FIRST_OPTIONAL_IDX]) = py_tuple_item;
+        *(py_optional_tuple_items[i - PREDICATE_TUPLE_FIRST_OPTIONAL_POS]) =
+            py_tuple_item;
     }
 
     as_index_type index_type;
-    if (predicate_size == 6) {
-        PyObject *py_index_type = PyTuple_GetItem(py_predicate, 5);
+    if (predicate_size == PREDICATE_TUPLE_MAX_SIZE) {
+        PyObject *py_index_type =
+            PyTuple_GetItem(py_predicate, PREDICATE_TUPLE_POS_FOR_INDEX_TYPE);
         if (!py_index_type) {
             goto CLEANUP;
         }
