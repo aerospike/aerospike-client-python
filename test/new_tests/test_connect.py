@@ -141,7 +141,7 @@ class TestConnect(object):
 
         try:
             self.client = aerospike.client(config).connect()
-        except e.ClientError as e:
+        except e.ClientError:
             pass
 
     def test_connect_positive_reconnect(self):
