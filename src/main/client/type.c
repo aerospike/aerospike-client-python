@@ -24,6 +24,7 @@
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
 
+#include "pythoncapi_compat.h"
 #include "admin.h"
 #include "client.h"
 #include "policy.h"
@@ -1069,18 +1070,17 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             &config, strdup((char *)PyUnicode_AsUTF8(py_cluster_name)));
     }
 
-    PyObject *py_app_id = PyDict_GetItemWithError(py_config, "app_id");
-    if (py_app_id) {
+    PyObject *py_app_id = NULL;
+    int retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
+    if (retval == 1) {
         const char *str = convert_pyobject_to_str(&constructor_err, py_app_id);
         if (!str) {
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
         as_config_set_app_id(&config, str);
     }
-    else {
-        if (PyErr_Occurred()) {
-            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
-        }
+    else if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
 
     //strict_types check
