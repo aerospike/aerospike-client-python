@@ -2,6 +2,8 @@
 import pytest
 from aerospike import exception as e
 from aerospike import predicates as p
+from aerospike_helpers.expressions.arithmetic import Add
+from aerospike_helpers.expressions.base import IntBin
 from .test_base_class import TestBaseClass
 
 import aerospike
@@ -394,3 +396,25 @@ class TestAggregate(object):
         query: aerospike.Query = self.as_connection.query("test", "demo")
         with pytest.raises(TypeError):
             query.apply("stream_example", "count", policy=None)
+
+    def test_query_with_invalid_expr(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            query.where_with_expr(p.equals("test_age", 165), 4)
+
+    def test_query_with_expr(self):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            pytest.skip("Querying with expressions isn't supported yet")
+
+        expr = Add(IntBin("no"), IntBin("test_age")).compile()
+        INDEX_EXPR_NAME = "index_expr"
+        self.as_connection.index_expr_create("test", "demo", aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC,
+                                             expr, INDEX_EXPR_NAME, None)
+
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        query.where_with_expr(p.equals(None, 2), expr)
+        recs = query.results()
+        assert len(recs) == 1
+        assert recs[0][2]['no'] == 1
+
+        self.as_connection.index_remove("test", INDEX_EXPR_NAME)

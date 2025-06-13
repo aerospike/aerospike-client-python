@@ -43,11 +43,14 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 }
 
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
+// 3 cases:
+// Either index_name is non-NULL, py_expr is non-NULL, or py_bin is non-NULL
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,
                                     PyObject *py_bin, PyObject *py_val1,
-                                    PyObject *py_val2, int index_type)
+                                    PyObject *py_val2, int index_type,
+                                    PyObject *py_expr, const char *index_name)
 {
     as_error err;
     as_cdt_ctx *pctx = NULL;
@@ -62,6 +65,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             return err.code;
+        }
+    }
+
+    as_exp *exp_list = NULL;
+    if (py_expr) {
+        as_status status =
+            convert_exp_list(self->client, py_expr, &exp_list, &err);
+        if (status != AEROSPIKE_OK) {
+            goto CLEANUP_CTX_ON_ERROR;
         }
     }
 
@@ -156,21 +168,48 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     as_query_where_init(&self->query, 1);
 
+    // TODO: combine with third case
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
-        // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
-        as_query_where_with_ctx(&self->query, bin, pctx, predicate, index_type,
-                                AS_INDEX_BLOB, val1_bytes, bytes_size, true);
+        if (py_expr) {
+            as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
+                                    index_type, AS_INDEX_BLOB, val1_bytes,
+                                    bytes_size, true);
+        }
+        else if (index_name) {
+            as_query_where_with_index_name(&self->query, index_name, predicate,
+                                           index_type, AS_INDEX_BLOB,
+                                           val1_bytes, bytes_size, true);
+        }
+        else {
+            // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
+            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                    index_type, AS_INDEX_BLOB, val1_bytes,
+                                    bytes_size, true);
+        }
     }
     else if (in_datatype == AS_INDEX_NUMERIC ||
              in_datatype == AS_INDEX_STRING ||
              in_datatype == AS_INDEX_GEO2DSPHERE) {
         if (predicate == AS_PREDICATE_RANGE &&
             in_datatype == AS_INDEX_NUMERIC) {
-            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                    index_type, in_datatype, val1_int,
-                                    val2_int);
+            if (py_expr) {
+                as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
+                                        index_type, in_datatype, val1_int,
+                                        val2_int);
+            }
+            else if (index_name) {
+                as_query_where_with_index_name(&self->query, index_name,
+                                               predicate, index_type,
+                                               in_datatype, val1_int, val2_int);
+            }
+            else {
+                as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                        index_type, in_datatype, val1_int,
+                                        val2_int);
+            }
         }
         else {
+            // TODO
             as_query_where_with_ctx(&self->query, bin, pctx, predicate,
                                     index_type, in_datatype, val1);
         }
@@ -207,6 +246,12 @@ CLEANUP_ON_ERROR2:
 
 CLEANUP_ON_ERROR1:
 
+    // TODO: Does query need to free exp list when destroyed?
+    if (exp_list) {
+        free(exp_list);
+    }
+
+CLEANUP_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
     if (ctx_in_use) {
         as_cdt_ctx_destroy(pctx);
@@ -236,7 +281,9 @@ enum {
 
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                             PyObject *py_ctx,
-                                            PyObject *py_predicate)
+                                            PyObject *py_predicate,
+                                            PyObject *py_expr,
+                                            const char *index_name)
 {
 
     as_error err;
@@ -338,9 +385,9 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
         index_type = AS_INDEX_TYPE_DEFAULT;
     }
 
-    int rc =
-        AerospikeQuery_Where_Add(self, py_ctx, predicate_type, index_datatype,
-                                 py_bin, py_val1, py_val2, index_type);
+    int rc = AerospikeQuery_Where_Add(self, py_ctx, predicate_type,
+                                      index_datatype, py_bin, py_val1, py_val2,
+                                      index_type, py_expr, index_name);
     /* Failed to add the predicate for some reason */
     if (rc != 0) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to add predicate");
@@ -359,8 +406,6 @@ CLEANUP:
 
 AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
 {
-    as_error err;
-
     PyObject *py_pred = NULL;
     PyObject *py_cdt_ctx = NULL;
 
@@ -368,22 +413,33 @@ AerospikeQuery *AerospikeQuery_Where(AerospikeQuery *self, PyObject *args)
         return NULL;
     }
 
-    as_error_init(&err);
+    return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred, NULL, NULL);
+}
 
-    if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
+AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
+                                             PyObject *args)
+{
+    PyObject *py_pred = NULL;
+    PyObject *py_expr = NULL;
+
+    if (PyArg_ParseTuple(args, "OO:where_with_expr", &py_pred, &py_expr) ==
+        false) {
+        return NULL;
     }
 
-    if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
+    return AerospikeQuery_Where_Invoke(self, NULL, py_pred, py_expr, NULL);
+}
+
+AerospikeQuery *AerospikeQuery_WhereWithIndexName(AerospikeQuery *self,
+                                                  PyObject *args)
+{
+    PyObject *py_pred = NULL;
+    const char *index_name = NULL;
+
+    if (PyArg_ParseTuple(args, "Os:where_with_index_name", &py_pred,
+                         &index_name) == false) {
+        return NULL;
     }
 
-    return AerospikeQuery_Where_Invoke(self, py_cdt_ctx, py_pred);
-
-CLEANUP:
-    raise_exception(&err);
-    return NULL;
+    return AerospikeQuery_Where_Invoke(self, NULL, py_pred, NULL, index_name);
 }
