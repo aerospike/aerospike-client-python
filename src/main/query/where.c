@@ -236,8 +236,8 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                         PREDICATE_INVALID_ERROR_MSG1);
         goto CLEANUP;
     }
-    Py_ssize_t size = PyTuple_Size(py_predicate);
-    if (size <= 1 || size > 6) {
+    Py_ssize_t predicate_size = PyTuple_Size(py_predicate);
+    if (predicate_size <= 1 || predicate_size > 6) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         PREDICATE_INVALID_ERROR_MSG1);
         goto CLEANUP;
@@ -283,7 +283,7 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
     const Py_ssize_t FIRST_OPTIONAL_IDX = 2;
     for (Py_ssize_t i = FIRST_OPTIONAL_IDX; i <= 4; i++) {
         PyObject *py_tuple_item;
-        if (i <= size - 1) {
+        if (i <= predicate_size - 1) {
             py_tuple_item = PyTuple_GetItem(py_predicate, i);
             if (!py_tuple_item) {
                 goto CLEANUP;
@@ -296,7 +296,7 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
     }
 
     as_index_type index_type;
-    if (size == 6) {
+    if (predicate_size == 6) {
         PyObject *py_index_type = PyTuple_GetItem(py_predicate, 5);
         if (!py_index_type) {
             goto CLEANUP;
