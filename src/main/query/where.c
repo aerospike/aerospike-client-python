@@ -31,6 +31,7 @@
 #undef TRACE
 #define TRACE()
 
+// TODO: replace with helper function from conversions.c
 int64_t pyobject_to_int64(PyObject *py_obj)
 {
     if (PyLong_Check(py_obj)) {
@@ -41,6 +42,7 @@ int64_t pyobject_to_int64(PyObject *py_obj)
     }
 }
 
+// py_bin, py_val1, pyval2 are guaranteed to be non-NULL
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     PyObject *py_expr, const char *index_name,
                                     as_predicate_type predicate,
@@ -49,14 +51,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     PyObject *py_val2, int index_type)
 {
     as_error err;
-    as_error_init(&err);
-    char *val = NULL, *bin = NULL;
-    PyObject *py_ubin = NULL;
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
-    int rc = 0;
 
     if (py_ctx) {
+        // TODO: does static pool go out of scope?
         as_static_pool static_pool;
         memset(&static_pool, 0, sizeof(static_pool));
         pctx = cf_malloc(sizeof(as_cdt_ctx));
@@ -65,510 +64,288 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             return err.code;
         }
-        if (!ctx_in_use) {
-            cf_free(pctx);
-            pctx = NULL;
-        }
     }
 
-    as_exp *exp_list = NULL;
-    if (py_expr) {
-        as_status status =
-            convert_exp_list(self->client, py_expr, &exp_list, &err);
-        if (status != AEROSPIKE_OK) {
-            return err.code;
+    const char *bin = NULL;
+    if (PyUnicode_Check(py_bin)) {
+        bin = PyUnicode_AsUTF8(py_bin);
+        if (!bin) {
+            goto CLEANUP_ON_ERROR1;
         }
     }
-
-    switch (predicate) {
-    case AS_PREDICATE_EQUAL: {
-        if (in_datatype == AS_INDEX_STRING) {
-            if (!exp_list) {
-                if (PyUnicode_Check(py_bin)) {
-                    py_ubin = PyUnicode_AsUTF8String(py_bin);
-                    bin = PyBytes_AsString(py_ubin);
-                }
-                else if (PyByteArray_Check(py_bin)) {
-                    bin = PyByteArray_AsString(py_bin);
-                }
-                else {
-                    rc = 1;
-                    break;
-                }
-            }
-
-            if (PyUnicode_Check(py_val1)) {
-                PyObject *py_uval = PyUnicode_AsUTF8String(py_val1);
-                val = strdup(PyBytes_AsString(py_uval));
-                Py_DECREF(py_uval);
-            }
-            else {
-                rc = 1;
-                break;
-            }
-
-            as_query_where_init(&self->query, 1);
-            if (py_expr) {
-                // TODO: should index name be NULL?
-                switch (index_type) {
-                case AS_INDEX_TYPE_DEFAULT:
-                    as_query_where_with_exp(&self->query, NULL, exp_list,
-                                            as_equals(STRING, val));
-                    break;
-                case AS_INDEX_TYPE_LIST:
-                    as_query_where_with_exp(&self->query, NULL, exp_list,
-                                            as_contains(LIST, STRING, val));
-                    break;
-                case AS_INDEX_TYPE_MAPKEYS:
-                    as_query_where_with_exp(&self->query, NULL, exp_list,
-                                            as_contains(MAPKEYS, STRING, val));
-                    break;
-                case AS_INDEX_TYPE_MAPVALUES:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_contains(MAPVALUES, STRING, val));
-                    break;
-                default:
-                    rc = 1;
-                    break;
-                }
-            }
-            else {
-                if (index_type == AS_INDEX_TYPE_DEFAULT) {
-                    as_query_where_with_ctx(&self->query, bin, pctx,
-                                            as_equals(STRING, val));
-                }
-                else if (index_type == AS_INDEX_TYPE_LIST) {
-                    as_query_where_with_ctx(&self->query, bin, pctx,
-                                            as_contains(LIST, STRING, val));
-                }
-                else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-                    as_query_where_with_ctx(&self->query, bin, pctx,
-                                            as_contains(MAPKEYS, STRING, val));
-                }
-                else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_contains(MAPVALUES, STRING, val));
-                }
-                else {
-                    rc = 1;
-                    break;
-                }
-            }
-            if (py_ubin) {
-                Py_DECREF(py_ubin);
-                py_ubin = NULL;
-            }
-            self->query.where.entries[0].value.string_val._free = true;
+    else if (PyByteArray_Check(py_bin)) {
+        bin = PyByteArray_AsString(py_bin);
+        if (!bin) {
+            goto CLEANUP_ON_ERROR1;
         }
-        else if (in_datatype == AS_INDEX_NUMERIC) {
-            if (!exp_list) {
-                if (PyUnicode_Check(py_bin)) {
-                    py_ubin = PyUnicode_AsUTF8String(py_bin);
-                    bin = PyBytes_AsString(py_ubin);
-                }
-                else if (PyByteArray_Check(py_bin)) {
-                    bin = PyByteArray_AsString(py_bin);
-                }
-                else {
-                    rc = 1;
-                    break;
-                }
-            }
-            int64_t val = pyobject_to_int64(py_val1);
+    }
+    else {
+        // Bins are required for all where() calls
+        goto CLEANUP_ON_ERROR1;
+    }
 
-            as_query_where_init(&self->query, 1);
-            if (py_expr) {
-                // TODO: should index name be NULL?
-                switch (index_type) {
-                case AS_INDEX_TYPE_DEFAULT:
-                    as_query_where_with_exp(&self->query, NULL, exp_list,
-                                            as_equals(NUMERIC, val));
-                    break;
-                case AS_INDEX_TYPE_LIST:
-                    as_query_where_with_exp(&self->query, NULL, exp_list,
-                                            as_contains(LIST, NUMERIC, val));
-                    break;
-                case AS_INDEX_TYPE_MAPKEYS:
-                    as_query_where_with_exp(&self->query, NULL, exp_list,
-                                            as_contains(MAPKEYS, NUMERIC, val));
-                    break;
-                case AS_INDEX_TYPE_MAPVALUES:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_contains(MAPVALUES, NUMERIC, val));
-                    break;
-                default:
-                    rc = 1;
-                    break;
-                }
-            }
-            else {
-                if (index_type == AS_INDEX_TYPE_DEFAULT) {
-                    as_query_where_with_ctx(&self->query, bin, pctx,
-                                            as_equals(NUMERIC, val));
-                }
-                else if (index_type == AS_INDEX_TYPE_LIST) {
-                    as_query_where_with_ctx(&self->query, bin, pctx,
-                                            as_contains(LIST, NUMERIC, val));
-                }
-                else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-                    as_query_where_with_ctx(&self->query, bin, pctx,
-                                            as_contains(MAPKEYS, NUMERIC, val));
-                }
-                else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_contains(MAPVALUES, NUMERIC, val));
-                }
-                else {
-                    rc = 1;
-                    break;
-                }
-            }
-            if (py_ubin) {
-                Py_DECREF(py_ubin);
-                py_ubin = NULL;
+    int64_t val1_int = 0;
+    int64_t val2_int = 0;
+    char *val1_str = NULL;
+    uint8_t *val1_bytes = NULL;
+
+    // Can point to either val1_int or val1_str. We use this so we can pass in the same optional argument
+    // for both ints or strs to as_query_where_with_ctx().
+    void *val1 = NULL;
+
+    Py_ssize_t bytes_size = 0;
+
+    if (in_datatype == AS_INDEX_STRING || in_datatype == AS_INDEX_GEO2DSPHERE) {
+        if (!PyUnicode_Check(py_val1)) {
+            goto CLEANUP_ON_ERROR1;
+        }
+        const char *buffer = PyUnicode_AsUTF8(py_val1);
+        if (!buffer) {
+            goto CLEANUP_ON_ERROR1;
+        }
+        val1_str = strdup(buffer);
+        val1 = (void *)val1_str;
+    }
+    else if (in_datatype == AS_INDEX_NUMERIC) {
+        val1_int = pyobject_to_int64(py_val1);
+        if (PyErr_Occurred()) {
+            PyErr_Clear();
+            val1_int = 0;
+        }
+        val1 = (void *)val1_int;
+
+        if (PyLong_Check(py_val2)) {
+            val2_int = pyobject_to_int64(py_val2);
+            if (PyErr_Occurred()) {
+                PyErr_Clear();
+                val2_int = 0;
             }
         }
-        else if (in_datatype == AS_INDEX_BLOB) {
-            // TODO: Some of this code can be shared by all the other index data types
-            if (!exp_list) {
-                if (PyUnicode_Check(py_bin)) {
-                    const char *py_bin_buffer = PyUnicode_AsUTF8(py_bin);
-                    // bin points to the internal buffer of the Python string
-                    // so we need to make a copy of the bin string in case the Python string gets garbage collected
-                    bin = strdup(py_bin_buffer);
-                }
-                else {
-                    rc = 1;
-                    break;
-                }
+    }
+    else if (in_datatype == AS_INDEX_BLOB) {
+        char *bytes_buffer = NULL;
+        if (PyBytes_Check(py_val1)) {
+            bytes_buffer = PyBytes_AsString(py_val1);
+            if (!bytes_buffer) {
+                goto CLEANUP_ON_ERROR1;
             }
-            uint8_t *val = NULL;
-            Py_ssize_t bytes_size;
-
-            if (PyBytes_Check(py_val1)) {
-                val = (uint8_t *)PyBytes_AsString(py_val1);
-                bytes_size = PyBytes_Size(py_val1);
+            bytes_size = PyBytes_Size(py_val1);
+            if (PyErr_Occurred()) {
+                goto CLEANUP_ON_ERROR1;
             }
-            else if (PyByteArray_Check(py_val1)) {
-                val = (uint8_t *)PyByteArray_AsString(py_val1);
-                bytes_size = PyByteArray_Size(py_val1);
+        }
+        else if (PyByteArray_Check(py_val1)) {
+            bytes_buffer = PyByteArray_AsString(py_val1);
+            if (!bytes_buffer) {
+                goto CLEANUP_ON_ERROR1;
             }
-            else {
-                rc = 1;
-                free(bin);
-                break;
+            bytes_size = PyByteArray_Size(py_val1);
+            if (PyErr_Occurred()) {
+                goto CLEANUP_ON_ERROR1;
             }
-
-            uint8_t *bytes_buffer =
-                (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
-            memcpy(bytes_buffer, val, sizeof(uint8_t) * bytes_size);
-            val = bytes_buffer;
-
-            as_query_where_init(&self->query, 1);
-            if (py_expr) {
-                // TODO: should index name be NULL?
-                switch (index_type) {
-                case AS_INDEX_TYPE_DEFAULT:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_blob_equals(val, bytes_size, true));
-                    break;
-                case AS_INDEX_TYPE_LIST:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_blob_contains(LIST, val, bytes_size, true));
-                    break;
-                case AS_INDEX_TYPE_MAPKEYS:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_blob_contains(MAPKEYS, val, bytes_size, true));
-                    break;
-                case AS_INDEX_TYPE_MAPVALUES:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_blob_contains(MAPVALUES, val, bytes_size, true));
-                    break;
-                default:
-                    rc = 1;
-                    break;
-                }
-            }
-            else {
-                if (index_type == AS_INDEX_TYPE_DEFAULT) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_blob_equals(val, bytes_size, true));
-                }
-                else if (index_type == AS_INDEX_TYPE_LIST) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_blob_contains(LIST, val, bytes_size, true));
-                }
-                else if (index_type == AS_INDEX_TYPE_MAPKEYS) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_blob_contains(MAPKEYS, val, bytes_size, true));
-                }
-                else if (index_type == AS_INDEX_TYPE_MAPVALUES) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_blob_contains(MAPVALUES, val, bytes_size, true));
-                }
-                else {
-                    rc = 1;
-                    free(bin);
-                    break;
-                }
-            }
-
-            if (py_ubin) {
-                Py_DECREF(py_ubin);
-                py_ubin = NULL;
-            }
-
-            self->query.where.entries[0].value.blob_val._free = true;
-
-            // Cleanup
-            free(bin);
         }
         else {
-            // If it ain't expected, raise and error
-            as_error_update(
-                &err, AEROSPIKE_ERR_PARAM,
-                "predicate 'equals' expects a string or integer value.");
-            PyObject *py_err = NULL;
-            error_to_pyobject(&err, &py_err);
-            PyErr_SetObject(PyExc_Exception, py_err);
-            rc = 1;
-            break;
+            goto CLEANUP_ON_ERROR1;
         }
 
-        break;
+        uint8_t *val1_bytes_cpy =
+            (uint8_t *)malloc(sizeof(uint8_t) * bytes_size);
+        memcpy(val1_bytes_cpy, bytes_buffer, sizeof(uint8_t) * bytes_size);
+        val1_bytes = val1_bytes_cpy;
+        // Blobs are handled separately below, so we don't need to use the void* pointer
     }
-    case AS_PREDICATE_RANGE: {
-        if (in_datatype == AS_INDEX_NUMERIC) {
-            if (!exp_list) {
-                if (PyUnicode_Check(py_bin)) {
-                    py_ubin = PyUnicode_AsUTF8String(py_bin);
-                    bin = PyBytes_AsString(py_ubin);
-                }
-                else if (PyByteArray_Check(py_bin)) {
-                    bin = PyByteArray_AsString(py_bin);
-                }
-                else {
-                    rc = 1;
-                    break;
-                }
-            }
-            int64_t min = pyobject_to_int64(py_val1);
-            int64_t max = pyobject_to_int64(py_val2);
 
-            as_query_where_init(&self->query, 1);
-            if (py_expr) {
-                // TODO: should index name be NULL?
-                switch (index_type) {
-                case AS_INDEX_TYPE_DEFAULT:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_range(DEFAULT, NUMERIC, min, max));
-                    break;
-                case AS_INDEX_TYPE_LIST:
-                    as_query_where_with_exp(&self->query, NULL, exp_list,
-                                            as_range(LIST, NUMERIC, min, max));
-                    break;
-                case AS_INDEX_TYPE_MAPKEYS:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_range(MAPKEYS, NUMERIC, min, max));
-                    break;
-                case AS_INDEX_TYPE_MAPVALUES:
-                    as_query_where_with_exp(
-                        &self->query, NULL, exp_list,
-                        as_range(MAPVALUES, NUMERIC, min, max));
-                    break;
-                default:
-                    rc = 1;
-                    break;
-                }
-            }
-            else {
-                if (index_type == 0) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_range(DEFAULT, NUMERIC, min, max));
-                }
-                else if (index_type == 1) {
-                    as_query_where_with_ctx(&self->query, bin, pctx,
-                                            as_range(LIST, NUMERIC, min, max));
-                }
-                else if (index_type == 2) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_range(MAPKEYS, NUMERIC, min, max));
-                }
-                else if (index_type == 3) {
-                    as_query_where_with_ctx(
-                        &self->query, bin, pctx,
-                        as_range(MAPVALUES, NUMERIC, min, max));
-                }
-                else {
-                    rc = 1;
-                    break;
-                }
-            }
+    as_query_where_init(&self->query, 1);
 
-            if (py_ubin) {
-                Py_DECREF(py_ubin);
-                py_ubin = NULL;
-            }
-        }
-        else if (in_datatype == AS_INDEX_STRING) {
-            // NOT IMPLEMENTED
-        }
-        else if (in_datatype == AS_INDEX_GEO2DSPHERE) {
-            if (!exp_list) {
-                if (PyUnicode_Check(py_bin)) {
-                    py_ubin = PyUnicode_AsUTF8String(py_bin);
-                    bin = PyBytes_AsString(py_ubin);
-                }
-                else if (PyByteArray_Check(py_bin)) {
-                    bin = PyByteArray_AsString(py_bin);
-                }
-                else {
-                    rc = 1;
-                    break;
-                }
-            }
-
-            if (PyUnicode_Check(py_val1)) {
-                PyObject *py_uval = PyUnicode_AsUTF8String(py_val1);
-                val = strdup(PyBytes_AsString(py_uval));
-                Py_DECREF(py_uval);
-            }
-            else {
-                rc = 1;
-                break;
-            }
-
-            as_query_where_init(&self->query, 1);
-            if (py_expr) {
-                as_query_where_with_exp(&self->query, NULL, exp_list,
-                                        AS_PREDICATE_RANGE, index_type,
-                                        in_datatype, val);
-            }
-            else {
-                as_query_where_with_ctx(&self->query, bin, pctx,
-                                        AS_PREDICATE_RANGE, index_type,
-                                        in_datatype, val);
-            }
-
-            if (py_ubin) {
-                Py_DECREF(py_ubin);
-                py_ubin = NULL;
-            }
-            self->query.where.entries[0].value.string_val._free = true;
+    if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
+        // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
+        as_query_where_with_ctx(&self->query, bin, pctx, predicate, index_type,
+                                AS_INDEX_BLOB, val1_bytes, bytes_size, true);
+    }
+    else if (in_datatype == AS_INDEX_NUMERIC ||
+             in_datatype == AS_INDEX_STRING ||
+             in_datatype == AS_INDEX_GEO2DSPHERE) {
+        if (predicate == AS_PREDICATE_RANGE &&
+            in_datatype == AS_INDEX_NUMERIC) {
+            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                    index_type, in_datatype, val1_int,
+                                    val2_int);
         }
         else {
-            // If it ain't right, raise and error
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "range predicate type not supported");
-            PyObject *py_err = NULL;
-            error_to_pyobject(&err, &py_err);
-            PyErr_SetObject(PyExc_Exception, py_err);
-            rc = 1;
-            break;
+            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                    index_type, in_datatype, val1);
         }
-        break;
+
+        if (in_datatype == AS_INDEX_STRING ||
+            in_datatype == AS_INDEX_GEO2DSPHERE) {
+            self->query.where.entries[0].value.string_val._free = true;
+        }
     }
-    default: {
+    else {
         // If it ain't supported, raise and error
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
-        rc = 1;
-        break;
-    }
+        goto CLEANUP_ON_ERROR2;
     }
 
-    if (rc) {
-        assert(false);
-        if (ctx_in_use) {
-            as_cdt_ctx_destroy(pctx);
-        }
-        if (pctx) {
-            cf_free(pctx);
-        }
-    }
-    else if (ctx_in_use) {
+    if (ctx_in_use) {
         self->query.where.entries[0].ctx_free = true;
     }
-    return rc;
+
+    return 0;
+
+CLEANUP_ON_ERROR2:
+
+    // The values end up not being used by as_query
+    if (val1_str) {
+        free(val1_str);
+    }
+    if (val1_bytes) {
+        free(val1_bytes);
+    }
+
+CLEANUP_ON_ERROR1:
+
+    // The ctx ends up not being used by as_query
+    if (ctx_in_use) {
+        as_cdt_ctx_destroy(pctx);
+    }
+    if (pctx) {
+        cf_free(pctx);
+    }
+
+    return 1;
 }
+
+#define PREDICATE_INVALID_ERROR_MSG1 "predicate is invalid."
+#define PREDICATE_INVALID_ERROR_MSG2 "Failed to fetch predicate information"
+
+enum {
+    PREDICATE_TUPLE_POS_FOR_PRED_TYPE,
+    PREDICATE_TUPLE_POS_FOR_INDEX_DATATYPE,
+    PREDICATE_TUPLE_POS_FOR_BIN_NAME,
+    PREDICATE_TUPLE_POS_FOR_VAL1,
+    PREDICATE_TUPLE_POS_FOR_VAL2,
+    PREDICATE_TUPLE_POS_FOR_INDEX_TYPE,
+};
+
+#define PREDICATE_TUPLE_MIN_SIZE 2
+#define PREDICATE_TUPLE_FIRST_OPTIONAL_POS 2
+#define PREDICATE_TUPLE_MAX_SIZE 6
 
 AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
                                             PyObject *py_ctx,
-                                            PyObject *py_predicate,
-                                            PyObject *py_exp,
-                                            const char *index_name)
+                                            PyObject *py_predicate)
 {
+
     as_error err;
     as_error_init(&err);
-    if (!self || !self->client->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+
+    // Parse predicate tuple
+    // The tuple format is:
+    // (as_predicate_type, as_index_datatype, bin name, value1, value2, as_index_type)
+    // All tuple members from bin name and onward are optional
+
+    if (!PyTuple_Check(py_predicate)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        PREDICATE_INVALID_ERROR_MSG1);
+        goto CLEANUP;
+    }
+    Py_ssize_t predicate_size = PyTuple_Size(py_predicate);
+    if (predicate_size <= PREDICATE_TUPLE_MIN_SIZE ||
+        predicate_size > PREDICATE_TUPLE_MAX_SIZE) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        PREDICATE_INVALID_ERROR_MSG1);
         goto CLEANUP;
     }
 
-    if (!self->client->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
+    PyObject *py_predicate_type =
+        PyTuple_GetItem(py_predicate, PREDICATE_TUPLE_POS_FOR_PRED_TYPE);
+    if (!py_predicate_type) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        PREDICATE_INVALID_ERROR_MSG2);
+        goto CLEANUP;
+    }
+    PyObject *py_index_datatype =
+        PyTuple_GetItem(py_predicate, PREDICATE_TUPLE_POS_FOR_INDEX_DATATYPE);
+    if (!py_index_datatype) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        PREDICATE_INVALID_ERROR_MSG2);
         goto CLEANUP;
     }
 
-    int rc = 0;
+    if (!PyLong_Check(py_predicate_type) || !PyLong_Check(py_index_datatype)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        PREDICATE_INVALID_ERROR_MSG1);
+        goto CLEANUP;
+    }
 
-    if (PyTuple_Check(py_predicate) && PyTuple_Size(py_predicate) > 1 &&
-        PyTuple_Size(py_predicate) <= 6) {
+    as_predicate_type predicate_type =
+        (as_predicate_type)PyLong_AsLong(py_predicate_type);
+    if (PyErr_Occurred()) {
+        goto CLEANUP;
+    }
 
-        Py_ssize_t size = PyTuple_Size(py_predicate);
+    as_index_datatype index_datatype =
+        (as_index_datatype)PyLong_AsLong(py_index_datatype);
+    if (PyErr_Occurred()) {
+        goto CLEANUP;
+    }
 
-        PyObject *py_op = PyTuple_GetItem(py_predicate, 0);
-        PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
-        if (!py_op || !py_op_data) {
-            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                            "Failed to fetch predicate information");
-            goto CLEANUP;
-        }
-        if (PyLong_Check(py_op) && PyLong_Check(py_op_data)) {
-            as_predicate_type op = (as_predicate_type)PyLong_AsLong(py_op);
-            as_index_datatype op_data =
-                (as_index_datatype)PyLong_AsLong(py_op_data);
-            rc = AerospikeQuery_Where_Add(
-                self, py_ctx, py_exp, index_name, op, op_data,
-                size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
-                size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
-                size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
-                size > 5 ? PyLong_AsLong(PyTuple_GetItem(py_predicate, 5)) : 0);
-            /* Failed to add the predicate for some reason */
-            if (rc != 0) {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                "Failed to add predicate");
+    PyObject *py_bin = NULL;
+    PyObject *py_val1 = NULL;
+    PyObject *py_val2 = NULL;
+    PyObject **py_optional_tuple_items[] = {&py_bin, &py_val1, &py_val2};
+
+    // Read optional tuple items
+    for (Py_ssize_t i = PREDICATE_TUPLE_POS_FOR_BIN_NAME;
+         i <= PREDICATE_TUPLE_POS_FOR_VAL2; i++) {
+        PyObject *py_tuple_item;
+        if (i <= predicate_size - 1) {
+            // Optional item exists in tuple
+            py_tuple_item = PyTuple_GetItem(py_predicate, i);
+            if (!py_tuple_item) {
                 goto CLEANUP;
             }
-            /* Incorrect predicate or index type */
         }
         else {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate is invalid.");
+            // Optional item does not exist in tuple
+            py_tuple_item = Py_None;
+        }
+        *(py_optional_tuple_items[i - PREDICATE_TUPLE_FIRST_OPTIONAL_POS]) =
+            py_tuple_item;
+    }
+
+    as_index_type index_type;
+    if (predicate_size == PREDICATE_TUPLE_MAX_SIZE) {
+        PyObject *py_index_type =
+            PyTuple_GetItem(py_predicate, PREDICATE_TUPLE_POS_FOR_INDEX_TYPE);
+        if (!py_index_type) {
             goto CLEANUP;
         }
-        /* Predicate not a tuple, or too short or too long */
+        if (!PyLong_Check(py_index_type)) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            PREDICATE_INVALID_ERROR_MSG1);
+            goto CLEANUP;
+        }
+        index_type = PyLong_AsLong(py_index_type);
+        if (PyErr_Occurred()) {
+            goto CLEANUP;
+        }
     }
     else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "predicate is invalid.");
+        index_type = AS_INDEX_TYPE_DEFAULT;
+    }
+
+    int rc =
+        AerospikeQuery_Where_Add(self, py_ctx, predicate_type, index_datatype,
+                                 py_bin, py_val1, py_val2, index_type);
+    /* Failed to add the predicate for some reason */
+    if (rc != 0) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to add predicate");
+        goto CLEANUP;
     }
 CLEANUP:
 
