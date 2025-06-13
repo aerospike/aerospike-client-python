@@ -24,6 +24,7 @@
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
 
+#include "pythoncapi_compat.h"
 #include "admin.h"
 #include "client.h"
 #include "policy.h"
@@ -331,6 +332,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // ADMIN OPERATIONS
 
+    {"admin_create_pki_user",
+     (PyCFunction)AerospikeClient_Admin_Create_PKI_User,
+     METH_VARARGS | METH_KEYWORDS, "Create a new user."},
     {"admin_create_user", (PyCFunction)AerospikeClient_Admin_Create_User,
      METH_VARARGS | METH_KEYWORDS, "Create a new user."},
     {"admin_drop_user", (PyCFunction)AerospikeClient_Admin_Drop_User,
@@ -1061,8 +1065,22 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
     if (py_cluster_name && PyUnicode_Check(py_cluster_name)) {
+        // TODO: memory leak?
         as_config_set_cluster_name(
             &config, strdup((char *)PyUnicode_AsUTF8(py_cluster_name)));
+    }
+
+    PyObject *py_app_id = NULL;
+    int retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
+    if (retval == 1) {
+        const char *str = convert_pyobject_to_str(&constructor_err, py_app_id);
+        if (!str) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        as_config_set_app_id(&config, str);
+    }
+    else if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
 
     //strict_types check

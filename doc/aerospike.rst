@@ -690,6 +690,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Default: ``0``, meaning 'never compress'
         * **cluster_name** (:class:`str`)
             Only server nodes matching this name will be used when determining the cluster name.
+        * **app_id** (:class:`str`)
+            Application identifier.
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
