@@ -131,7 +131,6 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() is None
 
-    @pytest.mark.skip(reason=("This raises an error," + " but it isn't clear whether it should"))
     def test_connect_positive_cluster_name(self):
         """
         Invoke connect() giving a cluster name
