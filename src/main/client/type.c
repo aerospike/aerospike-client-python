@@ -1061,8 +1061,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
     if (py_cluster_name && PyUnicode_Check(py_cluster_name)) {
-        as_config_set_cluster_name(
-            &config, strdup((char *)PyUnicode_AsUTF8(py_cluster_name)));
+        const char *cluster_name = PyUnicode_AsUTF8(py_cluster_name);
+        if (!cluster_name) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        as_config_set_cluster_name(&config, cluster_name);
     }
 
     //strict_types check
