@@ -1192,11 +1192,13 @@ class TestQuery(TestBaseClass):
     INT_BIN_EXPR = Add(IntBin("test_age"), IntBin("no"))
     GEO_BIN_EXPR = GeoBin("geo_circle")
 
+    INDEX_EXPR_NAME = "index_expr"
+
     @pytest.mark.parametrize(
         "expr, index_datatype, predicate, expected_rec_count",
         [
             (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
-            (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.between(None, 1, 3), 3),
+            (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.between(None, 0, 2), 2),
             (
                 GEO_BIN_EXPR,
                 aerospike.INDEX_GEO2DSPHERE,
@@ -1215,14 +1217,13 @@ class TestQuery(TestBaseClass):
             pytest.skip("Querying with expressions isn't supported yet")
 
         expr = expr.compile()
-        INDEX_EXPR_NAME = "index_expr"
         self.as_connection.index_expr_create(ns="test", set="demo", index_type=aerospike.INDEX_TYPE_DEFAULT,
                                              index_datatype=index_datatype,
-                                             expressions=expr, name=INDEX_EXPR_NAME, policy=None)
+                                             expressions=expr, name=self.INDEX_EXPR_NAME, policy=None)
 
         # Verify where_with_expr returns a Query object as well
         query: aerospike.Query = self.as_connection.query("test", "demo").where_with_expr(expr, predicate)
         recs = query.results()
         assert len(recs) == expected_rec_count
 
-        self.as_connection.index_remove("test", INDEX_EXPR_NAME)
+        self.as_connection.index_remove("test", self.INDEX_EXPR_NAME)
