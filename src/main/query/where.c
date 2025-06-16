@@ -168,8 +168,12 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     as_query_where_init(&self->query, 1);
 
-    // TODO: combine with third case
+    // 1st case takes 3 optional args.
+    // 2nd case takes 2 optional args.
+    // 3rd case takes 1 optional arg.
+    // So we need to have separate codepaths for each case
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
+        // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
         if (py_expr) {
             as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
                                     index_type, AS_INDEX_BLOB, val1_bytes,
@@ -181,7 +185,6 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                            val1_bytes, bytes_size, true);
         }
         else {
-            // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
             as_query_where_with_ctx(&self->query, bin, pctx, predicate,
                                     index_type, AS_INDEX_BLOB, val1_bytes,
                                     bytes_size, true);
@@ -209,9 +212,19 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
             }
         }
         else {
-            // TODO
-            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                    index_type, in_datatype, val1);
+            if (py_expr) {
+                as_query_where_with_exp(&self->query, NULL, pctx, predicate,
+                                        index_type, in_datatype, val1);
+            }
+            else if (index_name) {
+                as_query_where_with_index_name(&self->query, index_name,
+                                               predicate, index_type,
+                                               in_datatype, val1);
+            }
+            else {
+                as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                        index_type, in_datatype, val1);
+            }
         }
 
         if (in_datatype == AS_INDEX_STRING ||
