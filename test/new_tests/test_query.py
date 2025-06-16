@@ -12,7 +12,8 @@ from threading import Lock
 import time
 
 from aerospike_helpers.expressions.arithmetic import Add
-from aerospike_helpers.expressions.base import IntBin, GeoBin
+from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin
+from aerospike_helpers.expressions.list import ListAppend
 
 list_index = "list_index"
 list_rank = "list_rank"
@@ -1203,6 +1204,8 @@ class TestQuery(TestBaseClass):
     # Should contain geo_point bin geographically
     GEOJSON_POLYGON = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[20, 20], 10]})
 
+    LIST_EXPR = ListAppend(None, None, 99, ListBin("numeric_list"))
+
     @pytest.mark.parametrize(
         "expr, index_datatype, predicate, expected_rec_count",
         [
@@ -1225,6 +1228,9 @@ class TestQuery(TestBaseClass):
                 5
             ),
             (GEO_POINT_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_within_radius(None, 24, 24, 5), 5),
+            # 99 should not be in the original list
+            (LIST_EXPR, aerospike.INDEX_NUMERIC, p.contains(None, aerospike.INDEX_TYPE_LIST, 99), 5),
+            (LIST_EXPR, aerospike.INDEX_NUMERIC, p.range(None, aerospike.INDEX_TYPE_LIST, 99, 99), 5)
         ]
     )
     def test_query_with_expr(self, expr, index_datatype, predicate, expected_rec_count):
