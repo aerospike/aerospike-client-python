@@ -260,7 +260,7 @@ class TestQuery(TestBaseClass):
         for i in range(5):
             key = ("test", "demo", i)
             rec = {
-                "geo_circle": aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[i * 10, 0], 1]}),
+                "geo_circle": aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[i * 10, 0], 3]}),
                 "name": "name%s" % (str(i)),
                 "addr": "name%s" % (str(i)),
                 "numeric_list": [i, i + 1, i + 2],
