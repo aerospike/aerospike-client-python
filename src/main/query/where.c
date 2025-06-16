@@ -213,7 +213,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
         else {
             if (py_expr) {
-                as_query_where_with_exp(&self->query, NULL, pctx, predicate,
+                as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
                                         index_type, in_datatype, val1);
             }
             else if (index_name) {
