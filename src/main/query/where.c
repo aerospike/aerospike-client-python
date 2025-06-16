@@ -84,18 +84,18 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (PyUnicode_Check(py_bin)) {
             bin = PyUnicode_AsUTF8(py_bin);
             if (!bin) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
         }
         else if (PyByteArray_Check(py_bin)) {
             bin = PyByteArray_AsString(py_bin);
             if (!bin) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
         }
         else {
             // Bin is not the right type
-            goto CLEANUP_ON_ERROR1;
+            goto CLEANUP_EXP_ON_ERROR;
         }
     }
 
@@ -112,11 +112,11 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     if (in_datatype == AS_INDEX_STRING || in_datatype == AS_INDEX_GEO2DSPHERE) {
         if (!PyUnicode_Check(py_val1)) {
-            goto CLEANUP_ON_ERROR1;
+            goto CLEANUP_EXP_ON_ERROR;
         }
         const char *buffer = PyUnicode_AsUTF8(py_val1);
         if (!buffer) {
-            goto CLEANUP_ON_ERROR1;
+            goto CLEANUP_EXP_ON_ERROR;
         }
         val1_str = strdup(buffer);
         val1 = (void *)val1_str;
@@ -142,25 +142,25 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (PyBytes_Check(py_val1)) {
             bytes_buffer = PyBytes_AsString(py_val1);
             if (!bytes_buffer) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
             bytes_size = PyBytes_Size(py_val1);
             if (PyErr_Occurred()) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
         }
         else if (PyByteArray_Check(py_val1)) {
             bytes_buffer = PyByteArray_AsString(py_val1);
             if (!bytes_buffer) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
             bytes_size = PyByteArray_Size(py_val1);
             if (PyErr_Occurred()) {
-                goto CLEANUP_ON_ERROR1;
+                goto CLEANUP_EXP_ON_ERROR;
             }
         }
         else {
-            goto CLEANUP_ON_ERROR1;
+            goto CLEANUP_EXP_ON_ERROR;
         }
 
         uint8_t *val1_bytes_cpy =
@@ -242,7 +242,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
-        goto CLEANUP_ON_ERROR2;
+        goto CLEANUP_VALUES_ON_ERROR;
     }
 
     if (ctx_in_use) {
@@ -254,7 +254,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     return 0;
 
-CLEANUP_ON_ERROR2:
+CLEANUP_VALUES_ON_ERROR:
 
     // The values end up not being used by as_query
     if (val1_str) {
@@ -264,7 +264,7 @@ CLEANUP_ON_ERROR2:
         free(val1_bytes);
     }
 
-CLEANUP_ON_ERROR1:
+CLEANUP_EXP_ON_ERROR:
 
     if (exp_list) {
         free(exp_list);
