@@ -308,6 +308,16 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
     as_error err;
     as_error_init(&err);
 
+    if (!self || !self->client->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    if (!self->client->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
     // Parse predicate tuple
     // The tuple format is:
     // (as_predicate_type, as_index_datatype, bin name, value1, value2, as_index_type)
