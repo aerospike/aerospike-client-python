@@ -214,7 +214,7 @@ class TestGeospatial(object):
         self.keys = []
         if not self.skip_old_server:
             key = ("test", "demo", "circle")
-            geo_circle = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[-122.0, 37.0], 250.2]})
+            geo_circle = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[0, 0], 3]})
             as_connection.put(key, {"loc_circle": geo_circle})
             self.keys.append(key)
 
@@ -863,7 +863,7 @@ class TestGeospatial(object):
         records = []
         query = self.as_connection.query("test", "demo")
 
-        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates": [-122.000000, 37.000000]})
+        geo_object2 = aerospike.GeoJSON({"type": "Point", "coordinates": [0.5, 0.5]})
 
         query.where(p.geo_contains_geojson_point("loc_circle", geo_object2.dumps()))
 
