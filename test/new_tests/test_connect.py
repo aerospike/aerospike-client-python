@@ -95,9 +95,10 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() == 3
 
-    # TODO: this test doesn't actually check if the options work properly
+    # This test doesn't actually check if the options work properly
     # It just checks that the setting is configured in the Python client (basically a coverage test)
     @pytest.mark.parametrize(
+        "other_config",
         [
             {"min_conns_per_node": 0},
             {"app_id": "app_name"}
