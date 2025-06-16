@@ -1207,8 +1207,8 @@ class TestQuery(TestBaseClass):
                                              index_datatype=index_datatype,
                                              expressions=expr, name=INDEX_EXPR_NAME, policy=None)
 
-        query: aerospike.Query = self.as_connection.query("test", "demo")
-        query.where_with_expr(expr, predicate)
+        # Verify where_with_expr returns a Query object as well
+        query: aerospike.Query = self.as_connection.query("test", "demo").where_with_expr(expr, predicate)
         recs = query.results()
         assert len(recs) == 1
         assert recs[0][2]['no'] == 1
