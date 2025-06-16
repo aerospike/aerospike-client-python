@@ -12,7 +12,7 @@ from threading import Lock
 import time
 
 from aerospike_helpers.expressions.arithmetic import Add
-from aerospike_helpers.expressions.base import IntBin
+from aerospike_helpers.expressions.base import IntBin, GeoBin
 
 list_index = "list_index"
 list_rank = "list_rank"
@@ -260,6 +260,7 @@ class TestQuery(TestBaseClass):
         for i in range(5):
             key = ("test", "demo", i)
             rec = {
+                "geo_circle": aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[i * 10, 0], 1]}),
                 "name": "name%s" % (str(i)),
                 "addr": "name%s" % (str(i)),
                 "numeric_list": [i, i + 1, i + 2],
@@ -1188,16 +1189,28 @@ class TestQuery(TestBaseClass):
         with pytest.raises(e.ParamError):
             query.where_with_expr(4, p.equals("test_age", 165))
 
-    int_bin_expr = Add(IntBin("no"), IntBin("test_age"))
+    INT_BIN_EXPR = Add(IntBin("test_age"), IntBin("no"))
+    GEO_BIN_EXPR = GeoBin("geo_circle")
 
     @pytest.mark.parametrize(
-        "expr, index_datatype, predicate",
+        "expr, index_datatype, predicate, expected_rec_count",
         [
-            (int_bin_expr, aerospike.INDEX_NUMERIC, p.equals(None, 2)),
-            (int_bin_expr, aerospike.INDEX_NUMERIC, p.between(None, 1, 3)),
+            (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
+            (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.between(None, 1, 3), 3),
+            (
+                GEO_BIN_EXPR,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_contains_geojson_point(
+                    None,
+                    aerospike.GeoJSON({"type": "Point", "coordinates": [0.5, 0.5]})
+                ),
+                1
+            ),
+            (GEO_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 0.5, 0.5), 1),
+
         ]
     )
-    def test_query_with_expr(self, expr, index_datatype, predicate):
+    def test_query_with_expr(self, expr, index_datatype, predicate, expected_rec_count):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
             pytest.skip("Querying with expressions isn't supported yet")
 
@@ -1210,7 +1223,6 @@ class TestQuery(TestBaseClass):
         # Verify where_with_expr returns a Query object as well
         query: aerospike.Query = self.as_connection.query("test", "demo").where_with_expr(expr, predicate)
         recs = query.results()
-        assert len(recs) == 1
-        assert recs[0][2]['no'] == 1
+        assert len(recs) == expected_rec_count
 
         self.as_connection.index_remove("test", INDEX_EXPR_NAME)
