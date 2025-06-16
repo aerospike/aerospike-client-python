@@ -402,18 +402,27 @@ class TestAggregate(object):
         with pytest.raises(e.ParamError):
             query.where_with_expr(4, p.equals("test_age", 165))
 
-    def test_query_with_expr(self):
+    int_bin_expr = Add(IntBin("no"), IntBin("test_age"))
+
+    @pytest.mark.parametrize(
+        "expr, index_datatype, predicate",
+        [
+            (int_bin_expr, aerospike.INDEX_NUMERIC, p.equals(None, 2))
+            (int_bin_expr, aerospike.INDEX_NUMERIC, p.between(None, 1, 3))
+        ]
+    )
+    def test_query_with_expr(self, expr, index_datatype, predicate):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
             pytest.skip("Querying with expressions isn't supported yet")
 
-        expr = Add(IntBin("no"), IntBin("test_age")).compile()
+        expr = expr.compile()
         INDEX_EXPR_NAME = "index_expr"
         self.as_connection.index_expr_create(ns="test", set="demo", index_type=aerospike.INDEX_TYPE_DEFAULT,
-                                             index_datatype=aerospike.INDEX_NUMERIC,
+                                             index_datatype=index_datatype,
                                              expressions=expr, name=INDEX_EXPR_NAME, policy=None)
 
         query: aerospike.Query = self.as_connection.query("test", "demo")
-        query.where_with_expr(expr, p.equals(None, 2))
+        query.where_with_expr(expr, predicate)
         recs = query.results()
         assert len(recs) == 1
         assert recs[0][2]['no'] == 1
