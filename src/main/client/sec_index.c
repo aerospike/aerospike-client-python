@@ -552,6 +552,7 @@ static PyObject *createIndexWithCollectionType(
  * else return NULL with an error raised.
  */
 
+// py_bin can be NULL if we are indexing an expression
 static PyObject *createIndexWithDataAndCollectionType(
     AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
     PyObject *py_set, PyObject *py_bin, PyObject *py_name,
