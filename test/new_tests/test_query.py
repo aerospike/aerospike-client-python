@@ -252,6 +252,8 @@ class TestQuery(TestBaseClass):
 
         client.close()
 
+    GEOJSON_POINT = aerospike.GeoJSON({"type": "Point", "coordinates": [23, 23]})
+
     @pytest.fixture(autouse=True)
     def setup_method(self, request, as_connection):
         """
@@ -262,7 +264,8 @@ class TestQuery(TestBaseClass):
             # 5x5 box, then 10x10 box, ... until 25x25 box
             box_coordinates = [[0, 0], [0, 5 * (i + 1)], [5 * (i + 1), 5 * (i + 1)], [5 * (i + 1), 0], [0, 0]]
             rec = {
-                "geo_circle": aerospike.GeoJSON({"type": "Polygon", "coordinates": [box_coordinates]}),
+                "geo_point": self.GEOJSON_POINT,
+                "geo_polygon": aerospike.GeoJSON({"type": "Polygon", "coordinates": [box_coordinates]}),
                 "name": "name%s" % (str(i)),
                 "addr": "name%s" % (str(i)),
                 "numeric_list": [i, i + 1, i + 2],
@@ -1192,10 +1195,13 @@ class TestQuery(TestBaseClass):
             query.where_with_expr(4, p.equals("test_age", 165))
 
     INT_BIN_EXPR = Add(IntBin("test_age"), IntBin("no"))
-    GEO_CIRCLE_BIN_EXPR = GeoBin("geo_circle")
+    GEO_POLYGON_BIN_EXPR = GeoBin("geo_polygon")
+    GEO_POINT_BIN_EXPR = GeoBin("geo_point")
 
     INDEX_EXPR_NAME = "index_expr"
-    GEOJSON_POINT = aerospike.GeoJSON({"type": "Point", "coordinates": [23, 23]})
+
+    # Should contain geo_point bin geographically
+    GEOJSON_POLYGON = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[20, 20], 10]})
 
     @pytest.mark.parametrize(
         "expr, index_datatype, predicate, expected_rec_count",
@@ -1203,7 +1209,7 @@ class TestQuery(TestBaseClass):
             (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
             (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.between(None, 0, 2), 2),
             (
-                GEO_CIRCLE_BIN_EXPR,
+                GEO_POLYGON_BIN_EXPR,
                 aerospike.INDEX_GEO2DSPHERE,
                 p.geo_contains_geojson_point(
                     None,
@@ -1211,7 +1217,14 @@ class TestQuery(TestBaseClass):
                 ),
                 1
             ),
-            (GEO_CIRCLE_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
+            (GEO_POLYGON_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
+            (
+                GEO_POINT_BIN_EXPR,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_within_geojson_region(None, GEOJSON_POLYGON.dumps()),
+                5
+            ),
+            (GEO_POINT_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_within_radius(None, 24, 24, 5), 5),
         ]
     )
     def test_query_with_expr(self, expr, index_datatype, predicate, expected_rec_count):
