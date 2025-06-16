@@ -870,6 +870,19 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+    .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
+
+        Create secondary index on an expression.
+
+        :param str ns: The namespace to be indexed.
+        :param str set: The set to be indexed.
+        :param str index_type: The type of index, default or complex type.
+        :param str index_datatype: The data type of index, string or integer.
+        :param list expressions: The compiled expression to be indexed. See :mod:`aerospike_helpers.expressions`.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
     .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
 
         Create an index named *name* for numeric, string or GeoJSON values \

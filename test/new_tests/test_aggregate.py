@@ -408,8 +408,9 @@ class TestAggregate(object):
 
         expr = Add(IntBin("no"), IntBin("test_age")).compile()
         INDEX_EXPR_NAME = "index_expr"
-        self.as_connection.index_expr_create("test", "demo", aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC,
-                                             expr, INDEX_EXPR_NAME, None)
+        self.as_connection.index_expr_create(ns="test", set="demo", index_type=aerospike.INDEX_TYPE_DEFAULT,
+                                             index_datatype=aerospike.INDEX_NUMERIC,
+                                             expressions=expr, name=INDEX_EXPR_NAME, policy=None)
 
         query: aerospike.Query = self.as_connection.query("test", "demo")
         query.where_with_expr(expr, p.equals(None, 2))
