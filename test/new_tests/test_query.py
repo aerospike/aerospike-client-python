@@ -11,6 +11,9 @@ from aerospike_helpers import cdt_ctx
 from threading import Lock
 import time
 
+from aerospike_helpers.expressions.arithmetic import Add
+from aerospike_helpers.expressions.base import IntBin
+
 list_index = "list_index"
 list_rank = "list_rank"
 list_value = "list_value"
@@ -1179,3 +1182,35 @@ class TestQuery(TestBaseClass):
         with pytest.raises(e.ParamError) as excinfo:
             query.results(policy=policy)
         assert excinfo.value.msg == "expected_duration is invalid"
+
+    def test_query_with_invalid_expr(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            query.where_with_expr(4, p.equals("test_age", 165))
+
+    int_bin_expr = Add(IntBin("no"), IntBin("test_age"))
+
+    @pytest.mark.parametrize(
+        "expr, index_datatype, predicate",
+        [
+            (int_bin_expr, aerospike.INDEX_NUMERIC, p.equals(None, 2)),
+            (int_bin_expr, aerospike.INDEX_NUMERIC, p.between(None, 1, 3)),
+        ]
+    )
+    def test_query_with_expr(self, expr, index_datatype, predicate):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            pytest.skip("Querying with expressions isn't supported yet")
+
+        expr = expr.compile()
+        INDEX_EXPR_NAME = "index_expr"
+        self.as_connection.index_expr_create(ns="test", set="demo", index_type=aerospike.INDEX_TYPE_DEFAULT,
+                                             index_datatype=index_datatype,
+                                             expressions=expr, name=INDEX_EXPR_NAME, policy=None)
+
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        query.where_with_expr(expr, predicate)
+        recs = query.results()
+        assert len(recs) == 1
+        assert recs[0][2]['no'] == 1
+
+        self.as_connection.index_remove("test", INDEX_EXPR_NAME)
