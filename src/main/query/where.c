@@ -53,6 +53,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     PyObject *py_expr, const char *index_name)
 {
     as_error err;
+    as_error_init(&err);
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
 
