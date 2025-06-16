@@ -1193,6 +1193,7 @@ class TestQuery(TestBaseClass):
     GEO_BIN_EXPR = GeoBin("geo_circle")
 
     INDEX_EXPR_NAME = "index_expr"
+    GEOJSON_POINT = aerospike.GeoJSON({"type": "Point", "coordinates": [0.5, 0.5]})
 
     @pytest.mark.parametrize(
         "expr, index_datatype, predicate, expected_rec_count",
@@ -1204,7 +1205,7 @@ class TestQuery(TestBaseClass):
                 aerospike.INDEX_GEO2DSPHERE,
                 p.geo_contains_geojson_point(
                     None,
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [0.5, 0.5]})
+                    GEOJSON_POINT.dumps()
                 ),
                 1
             ),
