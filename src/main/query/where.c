@@ -78,21 +78,23 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     }
 
     const char *bin = NULL;
-    if (PyUnicode_Check(py_bin)) {
-        bin = PyUnicode_AsUTF8(py_bin);
-        if (!bin) {
+    if (py_bin) {
+        if (PyUnicode_Check(py_bin)) {
+            bin = PyUnicode_AsUTF8(py_bin);
+            if (!bin) {
+                goto CLEANUP_ON_ERROR1;
+            }
+        }
+        else if (PyByteArray_Check(py_bin)) {
+            bin = PyByteArray_AsString(py_bin);
+            if (!bin) {
+                goto CLEANUP_ON_ERROR1;
+            }
+        }
+        else {
+            // Bin is not the right type
             goto CLEANUP_ON_ERROR1;
         }
-    }
-    else if (PyByteArray_Check(py_bin)) {
-        bin = PyByteArray_AsString(py_bin);
-        if (!bin) {
-            goto CLEANUP_ON_ERROR1;
-        }
-    }
-    else {
-        // Bins are required for all where() calls
-        goto CLEANUP_ON_ERROR1;
     }
 
     int64_t val1_int = 0;
