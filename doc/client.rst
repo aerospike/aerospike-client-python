@@ -878,7 +878,7 @@ Index Operations
         :param str set: The set to be indexed.
         :param str index_type: The type of index, default or complex type.
         :param str index_datatype: The data type of index, string or integer.
-        :param list expressions: The compiled expression to be indexed. See :mod:`aerospike_helpers.expressions`.
+        :param list expressions: The compiled expression to be indexed. Produced from :ref:`aerospike_operation_helpers.expressions`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
