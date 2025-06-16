@@ -44,7 +44,7 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
 // 3 cases:
-// Either index_name is non-NULL, py_expr is non-NULL, or py_bin is non-NULL
+// Either index_name is NULL, py_expr is NULL, or both are NULL
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,
@@ -78,7 +78,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     }
 
     const char *bin = NULL;
-    if (py_bin) {
+    if (py_bin == Py_None) {
         if (PyUnicode_Check(py_bin)) {
             bin = PyUnicode_AsUTF8(py_bin);
             if (!bin) {
