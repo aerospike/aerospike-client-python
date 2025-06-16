@@ -439,7 +439,7 @@ AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
     PyObject *py_pred = NULL;
     PyObject *py_expr = NULL;
 
-    if (PyArg_ParseTuple(args, "OO:where_with_expr", &py_pred, &py_expr) ==
+    if (PyArg_ParseTuple(args, "OO:where_with_expr", &py_expr, &py_pred) ==
         false) {
         return NULL;
     }

@@ -120,13 +120,14 @@ Assume this boilerplate code is run before all examples below:
         :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
         :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
 
-    .. method:: where_with_expr(expr: list)
+    .. method:: where_with_expr(expr: list, predicate)
 
-        Add an expression *predicate* to the query.
+        Add an expression *predicate* to the query. Predicate must not have a bin name set.
 
         You can only assign at most one predicate to the query.
 
-        :param list expr: Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
+        :param list expr: Compiled aerospike expressions :mod:`aerospike_helpers`.
+        :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 

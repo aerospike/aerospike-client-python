@@ -400,7 +400,7 @@ class TestAggregate(object):
     def test_query_with_invalid_expr(self):
         query: aerospike.Query = self.as_connection.query("test", "demo")
         with pytest.raises(e.ParamError):
-            query.where_with_expr(p.equals("test_age", 165), 4)
+            query.where_with_expr(4, p.equals("test_age", 165))
 
     def test_query_with_expr(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
@@ -412,7 +412,7 @@ class TestAggregate(object):
                                              expr, INDEX_EXPR_NAME, None)
 
         query: aerospike.Query = self.as_connection.query("test", "demo")
-        query.where_with_expr(p.equals(None, 2), expr)
+        query.where_with_expr(expr, p.equals(None, 2))
         recs = query.results()
         assert len(recs) == 1
         assert recs[0][2]['no'] == 1
