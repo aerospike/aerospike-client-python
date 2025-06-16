@@ -78,7 +78,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     }
 
     const char *bin = NULL;
-    if (py_bin == Py_None) {
+    if (py_bin != Py_None) {
+        // User provided a bin name
         if (PyUnicode_Check(py_bin)) {
             bin = PyUnicode_AsUTF8(py_bin);
             if (!bin) {
