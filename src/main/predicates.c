@@ -313,7 +313,7 @@ static PyObject *AerospikePredicates_GeoContains_Point(PyObject *self,
     PyDict_SetItemString(py_geo_object, "type", py_point);
     Py_DECREF(py_point);
 
-    if (PyUnicode_Check(py_bin) &&
+    if ((PyUnicode_Check(py_bin) || py_bin == Py_None) &&
         (PyFloat_Check(py_lat) || PyLong_Check(py_lat)) &&
         (PyFloat_Check(py_long) || PyLong_Check(py_long))) {
         py_list = Py_BuildValue("[OO]", py_lat, py_long);
