@@ -39,7 +39,7 @@ static PyObject *AerospikePredicates_Equals(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    // If we don't specify a 5th item (the index type), query.where() will assume it is AS_INDEX_TYPE_DEFAULT
+    // If we don't specify a 6th item (the index type), query.where() will assume it is AS_INDEX_TYPE_DEFAULT
     if (PyLong_Check(py_val)) {
         return Py_BuildValue("iiOO", AS_PREDICATE_EQUAL, AS_INDEX_NUMERIC,
                              py_bin, py_val);
