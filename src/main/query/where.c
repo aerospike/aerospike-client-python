@@ -248,6 +248,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     if (ctx_in_use) {
         self->query.where.entries[0].ctx_free = true;
     }
+    if (exp_list) {
+        self->query.where.entries[0].exp_free = true;
+    }
 
     return 0;
 
@@ -263,7 +266,6 @@ CLEANUP_ON_ERROR2:
 
 CLEANUP_ON_ERROR1:
 
-    // TODO: Does query need to free exp list when destroyed?
     if (exp_list) {
         free(exp_list);
     }
