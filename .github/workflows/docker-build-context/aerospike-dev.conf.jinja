@@ -26,6 +26,7 @@ network {
 	tls docker {
 		key-file /etc/ssl/private/server.pem
 		cert-file /etc/ssl/certs/server.cer
+		ca-file /etc/ssl/certs/ca.cer
 	}
 	{% endif %}
 	service {
