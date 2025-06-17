@@ -16,11 +16,13 @@
 
 #include <Python.h>
 #include <stdbool.h>
+#include <pthread.h>
 
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_scan.h>
 #include <aerospike/as_partition.h>
+#include <aerospike/as_arraylist.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -30,10 +32,11 @@
 
 // Struct for Python User-Data for the Callback
 typedef struct {
-    as_error error;
     PyObject *callback;
     AerospikeClient *client;
     int partition_scan;
+    as_arraylist *thread_errors;
+    pthread_mutex_t thread_errors_mutex;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -55,7 +58,6 @@ static bool each_result(const as_val *val, void *udata)
 
     // Extract callback user-data
     LocalData *data = (LocalData *)udata;
-    as_error *err = &data->error;
     PyObject *py_callback = data->callback;
 
     // Python Function Arguments and Result Value
@@ -67,8 +69,12 @@ static bool each_result(const as_val *val, void *udata)
     PyGILState_STATE gstate;
     gstate = PyGILState_Ensure();
 
+    // Use thread-local error for val_to_pyobject
+    as_error thread_err;
+    as_error_init(&thread_err);
+
     // Convert as_val to a Python Object
-    val_to_pyobject(data->client, err, val, &py_result);
+    val_to_pyobject(data->client, &thread_err, val, &py_result);
 
     if (!py_result) {
         PyGILState_Release(gstate);
@@ -96,7 +102,7 @@ static bool each_result(const as_val *val, void *udata)
     if (!py_return) {
         // an exception was raised, handle it (someday)
         // for now, we bail from the loop
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+        as_error_update(&thread_err, AEROSPIKE_ERR_CLIENT,
                         "Callback function raised an exception");
         rval = false;
     }
@@ -112,6 +118,15 @@ static bool each_result(const as_val *val, void *udata)
     else {
         rval = true;
         Py_DECREF(py_return);
+    }
+
+    // Collect thread error if any occurred
+    if (thread_err.code != AEROSPIKE_OK) {
+        pthread_mutex_lock(&data->thread_errors_mutex);
+        as_error *stored_err = (as_error *)cf_malloc(sizeof(as_error));
+        as_error_copy(stored_err, &thread_err);
+        as_arraylist_append(data->thread_errors, (as_val *)stored_err);
+        pthread_mutex_unlock(&data->thread_errors_mutex);
     }
 
     // Release Python State
@@ -158,26 +173,32 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
     data.client = self->client;
     data.partition_scan = 0;
 
-    as_error_init(&data.error);
+    // Initialize thread error collection
+    data.thread_errors = as_arraylist_new(0, 0);
+    pthread_mutex_init(&data.thread_errors_mutex, NULL);
+
+    // Aerospike Client Arguments
+    as_error err;
+    as_error_init(&err);
 
     if (!self || !self->client->as) {
-        as_error_update(&data.error, AEROSPIKE_ERR_PARAM,
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Invalid aerospike object");
         goto CLEANUP;
     }
 
     if (!self->client->is_conn_16) {
-        as_error_update(&data.error, AEROSPIKE_ERR_CLUSTER,
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
                         "No connection to aerospike cluster");
         goto CLEANUP;
     }
 
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_scan(
-        self->client, &data.error, py_policy, &scan_policy, &scan_policy_p,
+        self->client, &err, py_policy, &scan_policy, &scan_policy_p,
         &self->client->as->config.policies.scan, &exp_list, &exp_list_p);
 
-    if (data.error.code != AEROSPIKE_OK) {
+    if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -187,17 +208,17 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
         if (py_partition_filter) {
             if (convert_partition_filter(self->client, py_partition_filter,
                                          &partition_filter, &ps,
-                                         &data.error) == AEROSPIKE_OK) {
+                                         &err) == AEROSPIKE_OK) {
                 partition_filter_p = &partition_filter;
             }
             data.partition_scan = 1;
         }
     }
-    as_error_reset(&data.error);
+    as_error_reset(&err);
 
     if (py_options && PyDict_Check(py_options)) {
-        set_scan_options(&data.error, &self->scan, py_options);
-        if (data.error.code != AEROSPIKE_OK) {
+        set_scan_options(&err, &self->scan, py_options);
+        if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -207,7 +228,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
             nodename = (char *)PyUnicode_AsUTF8(py_nodename);
         }
         else {
-            as_error_update(&data.error, AEROSPIKE_ERR_PARAM,
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "nodename must be a string");
             goto CLEANUP;
         }
@@ -220,7 +241,7 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
         if (ps) {
             as_partition_filter_set_partitions(partition_filter_p, ps);
         }
-        aerospike_scan_partitions(self->client->as, &data.error, scan_policy_p,
+        aerospike_scan_partitions(self->client->as, &err, scan_policy_p,
                                   &self->scan, partition_filter_p, each_result,
                                   &data);
         if (ps) {
@@ -228,17 +249,24 @@ PyObject *AerospikeScan_Foreach(AerospikeScan *self, PyObject *args,
         }
     }
     else if (nodename) {
-        aerospike_scan_node(self->client->as, &data.error, scan_policy_p,
+        aerospike_scan_node(self->client->as, &err, scan_policy_p,
                             &self->scan, nodename, each_result, &data);
     }
     else {
-        aerospike_scan_foreach(self->client->as, &data.error, scan_policy_p,
+        aerospike_scan_foreach(self->client->as, &err, scan_policy_p,
                                &self->scan, each_result, &data);
     }
     // We are done using multiple threads
     Py_END_ALLOW_THREADS
 
-    if (data.error.code != AEROSPIKE_OK) {
+    // Aggregate thread errors if any occurred
+    if (data.thread_errors->size > 0) {
+        // Get the first error from the collection
+        as_error *first_error = (as_error *)as_arraylist_get(data.thread_errors, 0);
+        as_error_copy(&err, first_error);
+    }
+
+    if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
 
@@ -249,8 +277,19 @@ CLEANUP:
         ;
     }
 
-    if (data.error.code != AEROSPIKE_OK) {
-        raise_exception(&data.error);
+    // Clean up thread error collection
+    if (data.thread_errors) {
+        // Free all stored errors
+        for (uint32_t i = 0; i < data.thread_errors->size; i++) {
+            as_error *stored_err = (as_error *)as_arraylist_get(data.thread_errors, i);
+            cf_free(stored_err);
+        }
+        as_arraylist_destroy(data.thread_errors);
+    }
+    pthread_mutex_destroy(&data.thread_errors_mutex);
+
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
         return NULL;
     }
 
