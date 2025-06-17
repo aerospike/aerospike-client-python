@@ -254,8 +254,6 @@ class TestQuery(TestBaseClass):
 
         client.close()
 
-    GEOJSON_POINT = aerospike.GeoJSON({"type": "Point", "coordinates": [23, 23]})
-
     @pytest.fixture(autouse=True)
     def setup_method(self, request, as_connection):
         """
@@ -266,7 +264,7 @@ class TestQuery(TestBaseClass):
             # 5x5 box, then 10x10 box, ... until 25x25 box
             box_coordinates = [[0, 0], [0, 5 * (i + 1)], [5 * (i + 1), 5 * (i + 1)], [5 * (i + 1), 0], [0, 0]]
             rec = {
-                "geo_point": self.GEOJSON_POINT,
+                "geo_point": aerospike.GeoJSON({"type": "Point", "coordinates": [i, i]}),
                 "geo_polygon": aerospike.GeoJSON({"type": "Polygon", "coordinates": [box_coordinates]}),
                 "name": "name%s" % (str(i)),
                 "addr": "name%s" % (str(i)),
@@ -1203,7 +1201,7 @@ class TestQuery(TestBaseClass):
     INDEX_EXPR_NAME = "index_expr"
 
     # Should contain geo_point bin geographically
-    GEOJSON_POLYGON = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[20, 20], 10]})
+    GEOJSON_CIRCLE = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[0, 0], 20]})
 
     LIST_EXPR = ListAppend(None, None, 99, ListBin("numeric_list"))
 
@@ -1222,19 +1220,24 @@ class TestQuery(TestBaseClass):
                 aerospike.INDEX_GEO2DSPHERE,
                 p.geo_contains_geojson_point(
                     None,
-                    GEOJSON_POINT.dumps()
+                    # Only the 25x25 box should contain this point
+                    aerospike.GeoJSON({"type": "Point", "coordinates": [23, 23]}).dumps()
                 ),
                 1
             ),
+            # Same test as above, but with a different predicate
             (GEO_POLYGON_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
             (
                 GEO_POINT_BIN_EXPR,
                 aerospike.INDEX_GEO2DSPHERE,
-                p.geo_within_geojson_region(None, GEOJSON_POLYGON.dumps()),
+                p.geo_within_geojson_region(None, GEOJSON_CIRCLE.dumps()),
+                # The circle should cover all 5 points
                 5
             ),
-            (GEO_POINT_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_within_radius(None, 24, 24, 5), 5),
+            # Same test as above but with a different pred
+            (GEO_POINT_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_within_radius(None, 0, 0, 20), 5),
             # 99 should not be in the original list
+            # But we insert it in the expression, so all records' lists should have 99
             (LIST_EXPR, aerospike.INDEX_NUMERIC, p.contains(None, aerospike.INDEX_TYPE_LIST, 99), 5),
             (LIST_EXPR, aerospike.INDEX_NUMERIC, p.range(None, aerospike.INDEX_TYPE_LIST, 99, 99), 5)
         ]
