@@ -1068,7 +1068,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_app_id = NULL;
     int retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
     if (retval == 1) {
-        const char *str = convert_pyobject_to_str(&constructor_err, py_app_id);
+        const char *str = convert_pyobject_to_str(py_app_id);
         if (!str) {
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
