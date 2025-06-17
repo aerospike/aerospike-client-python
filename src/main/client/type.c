@@ -24,6 +24,7 @@
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
 
+#include "pythoncapi_compat.h"
 #include "admin.h"
 #include "client.h"
 #include "policy.h"
