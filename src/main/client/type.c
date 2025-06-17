@@ -1071,9 +1071,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     if (retval == 1) {
         const char *str = convert_pyobject_to_str(py_app_id);
         if (!str) {
+            Py_DECREF(py_app_id);
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
         as_config_set_app_id(&config, str);
+        Py_DECREF(py_app_id);
     }
     else if (retval == -1) {
         goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
