@@ -62,6 +62,7 @@ ctx_map_value.append(add_ctx_op(map_value, 3))
 
 
 class TestQuery(TestBaseClass):
+    # TODO: This fixture should be split up to speed up this test class
     def setup_class(cls):
         client = TestBaseClass.get_new_connection()
 
@@ -1206,6 +1207,11 @@ class TestQuery(TestBaseClass):
 
     LIST_EXPR = ListAppend(None, None, 99, ListBin("numeric_list"))
 
+    @pytest.fixture
+    def index_expr_cleanup(self):
+        yield
+        self.as_connection.index_remove("test", self.INDEX_EXPR_NAME)
+
     @pytest.mark.parametrize(
         "expr, index_datatype, predicate, expected_rec_count",
         [
@@ -1233,7 +1239,7 @@ class TestQuery(TestBaseClass):
             (LIST_EXPR, aerospike.INDEX_NUMERIC, p.range(None, aerospike.INDEX_TYPE_LIST, 99, 99), 5)
         ]
     )
-    def test_query_with_expr(self, expr, index_datatype, predicate, expected_rec_count):
+    def test_query_with_expr(self, expr, index_datatype, predicate, expected_rec_count, index_expr_cleanup):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
             pytest.skip("Querying with expressions isn't supported yet")
 
@@ -1246,5 +1252,3 @@ class TestQuery(TestBaseClass):
         query: aerospike.Query = self.as_connection.query("test", "demo").where_with_expr(expr, predicate)
         recs = query.results()
         assert len(recs) == expected_rec_count
-
-        self.as_connection.index_remove("test", self.INDEX_EXPR_NAME)
