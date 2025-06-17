@@ -115,6 +115,13 @@ class TestConnect(object):
             assert client is not None
             assert client.is_connected()
 
+    def test_invalid_app_id(self):
+        config = self.connection_config.copy()
+        config["app_id"] = 1
+
+        with pytest.raises(TypeError):
+            aerospike.client(config)
+
     def test_connect_positive_shm_key_default(self):
         """
         Invoke connect() with shm enabled but shm_key not specified
