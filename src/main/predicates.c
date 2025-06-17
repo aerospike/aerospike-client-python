@@ -200,7 +200,7 @@ static PyObject *AerospikePredicates_GeoWithin_Radius(PyObject *self,
     PyDict_SetItemString(py_geo_object, "type", py_circle);
     Py_DECREF(py_circle);
 
-    if (PyUnicode_Check(py_bin) &&
+    if ((PyUnicode_Check(py_bin) || py_bin == Py_None) &&
         (PyFloat_Check(py_lat) || PyLong_Check(py_lat)) &&
         (PyFloat_Check(py_long) || PyLong_Check(py_long)) &&
         (PyFloat_Check(py_radius) || PyLong_Check(py_radius))) {
