@@ -1065,6 +1065,19 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             &config, strdup((char *)PyUnicode_AsUTF8(py_cluster_name)));
     }
 
+    PyObject *py_app_id = NULL;
+    int retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
+    if (retval == 1) {
+        const char *str = convert_pyobject_to_str(&constructor_err, py_app_id);
+        if (!str) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        as_config_set_app_id(&config, str);
+    }
+    else if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+
     //strict_types check
     self->strict_types = true;
     PyObject *py_strict_types = PyDict_GetItemString(py_config, "strict_types");
