@@ -3024,7 +3024,7 @@ uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject)
                                                                   UINT64_MAX);
 }
 
-const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj)
+const char *convert_pyobject_to_str(PyObject *py_obj)
 {
     if (!PyUnicode_Check(py_obj)) {
         PyErr_Format(PyExc_TypeError, "%S is not a Python unicode object",
