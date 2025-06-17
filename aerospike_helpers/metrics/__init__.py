@@ -135,7 +135,6 @@ class MetricsPolicy:
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
             The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
-        labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
 
             Example::
 
@@ -154,6 +153,7 @@ class MetricsPolicy:
             latency_columns: int = 7,
             latency_shift: int = 1,
             labels: dict[str, str] = {},
+            app_id: Optional[str] = None
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
@@ -162,3 +162,4 @@ class MetricsPolicy:
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
         self.labels = labels
+        self.app_id = app_id

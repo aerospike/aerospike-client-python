@@ -130,7 +130,14 @@ class TestMetrics:
         metrics_log_filenames = glob.glob("./metrics-*.log")
         assert len(metrics_log_filenames) > 0
 
-    def test_setting_metrics_policy_custom_settings(self):
+    @pytest.mark.parametrize(
+        "app_id",
+        [
+            "application",
+            None
+        ]
+    )
+    def test_setting_metrics_policy_custom_settings(self, app_id):
         self.metrics_log_folder = "./metrics-logs"
 
         # Save bucket count for testing later
@@ -143,6 +150,7 @@ class TestMetrics:
             latency_columns=bucket_count,
             latency_shift=2,
             labels={"a": "b"},
+            app_id=app_id
         )
 
         self.as_connection.enable_metrics(policy=policy)
@@ -290,6 +298,11 @@ class TestMetrics:
                 "labels",
                 "dict[str, str]"
             ),
+            (
+                MetricsPolicy(app_id=1),
+                "app_id",
+                "Optional[str]"
+            )
         ]
     )
     def test_metrics_policy_invalid_args(self, policy, field_name, expected_field_type):
