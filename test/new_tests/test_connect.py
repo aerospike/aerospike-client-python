@@ -95,14 +95,21 @@ class TestConnect(object):
             assert client.is_connected()
             assert client.shm_key() == 3
 
-    # TODO: this test doesn't actually check if min_conns_per_node works properly
+    # This test doesn't actually check if the options work properly
     # It just checks that the setting is configured in the Python client (basically a coverage test)
-    def test_connect_positive_min_conns_per_node(self):
+    @pytest.mark.parametrize(
+        "other_config",
+        [
+            {"min_conns_per_node": 0},
+            {"app_id": "app_name"}
+        ]
+    )
+    def test_connect_positive_config_options(self, other_config):
         """
         Invoke connect() with min_conns_per_node specified
         """
         config = self.connection_config.copy()
-        config["min_conns_per_node"] = 0
+        config.update(other_config)
 
         with open_as_connection(config) as client:
             assert client is not None
