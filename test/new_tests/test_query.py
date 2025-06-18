@@ -1253,6 +1253,7 @@ class TestQuery(TestBaseClass):
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_NUMERIC,
                 p.contains(None, aerospike.INDEX_TYPE_LIST, 0),
+                # Only the first record
                 1
             ),
             (
@@ -1260,6 +1261,7 @@ class TestQuery(TestBaseClass):
                 aerospike.INDEX_TYPE_LIST,
                 aerospike.INDEX_NUMERIC,
                 p.range(None, aerospike.INDEX_TYPE_LIST, 0, 1),
+                # Only the first two records
                 2
             )
         ]
