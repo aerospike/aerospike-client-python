@@ -114,6 +114,9 @@ runs:
       crudini --set config.conf tls enable true
       # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
       crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
+      crudini --set config.conf tls keyfile ../.github/workflows/docker-build-context/client.pem
+      crudini --set config.conf tls certfile ../.github/workflows/docker-build-context/client.cer
+
     working-directory: test
     shell: bash
 
