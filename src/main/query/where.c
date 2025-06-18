@@ -86,6 +86,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                             "Bin should be a string");
             goto CLEANUP_EXP_ON_ERROR;
         }
+
         // User provided a bin name
         else if (PyUnicode_Check(py_bin)) {
             bin = PyUnicode_AsUTF8(py_bin);
