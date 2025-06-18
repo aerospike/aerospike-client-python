@@ -261,7 +261,7 @@ class TestQuery(TestBaseClass):
         for i in range(5):
             key = ("test", "demo", i)
             # 5x5 box, then 10x10 box, ... until 25x25 box
-            box_coordinates = [[0, 0], [0, 5 * (i + 1)], [5 * (i + 1), 5 * (i + 1)], [5 * (i + 1), 0], [0, 0]]
+            box_coordinates = [[0, 0], [5 * (i + 1), 0], [5 * (i + 1), 5 * (i + 1)], [0, 5 * (i + 1)], [0, 0]]
             rec = {
                 "geo_point": aerospike.GeoJSON({"type": "Point", "coordinates": [i, i]}),
                 "geo_polygon": aerospike.GeoJSON({"type": "Polygon", "coordinates": [box_coordinates]}),
@@ -1221,15 +1221,15 @@ class TestQuery(TestBaseClass):
                 p.geo_contains_geojson_point(
                     None,
                     # Only the 25x25 box should contain this point
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [23, 23]}).dumps()
+                    aerospike.GeoJSON({"type": "Point", "coordinates": [1, 1]}).dumps()
                 ),
-                1
+                5
             ),
             # Same test as above, but with a different predicate
             (
                 GEO_POLYGON_BIN_EXPR,
                 aerospike.INDEX_TYPE_DEFAULT,
-                aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
+                aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 1, 1), 5),
             (
                 GEO_POINT_BIN_EXPR,
                 aerospike.INDEX_TYPE_DEFAULT,
