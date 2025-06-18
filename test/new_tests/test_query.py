@@ -1210,12 +1210,13 @@ class TestQuery(TestBaseClass):
         self.as_connection.index_remove("test", self.INDEX_EXPR_NAME)
 
     @pytest.mark.parametrize(
-        "expr, index_datatype, predicate, expected_rec_count",
+        "expr, index_datatype, index_type, predicate, expected_rec_count",
         [
-            (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
-            (INT_BIN_EXPR, aerospike.INDEX_NUMERIC, p.between(None, 0, 2), 2),
+            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
+            (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.between(None, 0, 2), 2),
             (
                 GEO_POLYGON_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_GEO2DSPHERE,
                 p.geo_contains_geojson_point(
                     None,
@@ -1225,26 +1226,48 @@ class TestQuery(TestBaseClass):
                 1
             ),
             # Same test as above, but with a different predicate
-            (GEO_POLYGON_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
+            (
+                GEO_POLYGON_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
             (
                 GEO_POINT_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_GEO2DSPHERE,
                 p.geo_within_geojson_region(None, GEOJSON_CIRCLE.dumps()),
                 # The circle should cover all 5 points
                 5
             ),
             # Same test as above but with a different pred
-            (GEO_POINT_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_within_radius(None, 0, 0, 20), 5),
-            (LIST_EXPR, aerospike.INDEX_NUMERIC, p.contains(None, aerospike.INDEX_TYPE_LIST, 0), 1),
-            (LIST_EXPR, aerospike.INDEX_NUMERIC, p.range(None, aerospike.INDEX_TYPE_LIST, 0, 1), 2)
+            (
+                GEO_POINT_BIN_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_GEO2DSPHERE,
+                p.geo_within_radius(None, 0, 0, 20),
+                5
+            ),
+            (
+                LIST_EXPR,
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_NUMERIC,
+                p.contains(None, aerospike.INDEX_TYPE_LIST, 0),
+                1
+            ),
+            (
+                LIST_EXPR,
+                aerospike.INDEX_TYPE_LIST,
+                aerospike.INDEX_NUMERIC,
+                p.range(None, aerospike.INDEX_TYPE_LIST, 0, 1),
+                2
+            )
         ]
     )
-    def test_query_with_expr(self, expr, index_datatype, predicate, expected_rec_count, index_expr_cleanup):
+    def test_query_with_expr(self, expr, index_datatype, index_type, predicate, expected_rec_count, index_expr_cleanup):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
             pytest.skip("Querying with expressions isn't supported yet")
 
         expr = expr.compile()
-        self.as_connection.index_expr_create(ns="test", set="demo", index_type=aerospike.INDEX_TYPE_DEFAULT,
+        self.as_connection.index_expr_create(ns="test", set="demo", index_type=index_type,
                                              index_datatype=index_datatype,
                                              expressions=expr, name=self.INDEX_EXPR_NAME, policy=None)
 
