@@ -1199,8 +1199,10 @@ class TestQuery(TestBaseClass):
 
     INDEX_EXPR_NAME = "index_expr"
 
-    # Should contain geo_point bin geographically
-    GEOJSON_CIRCLE = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[0, 0], 20]})
+    # Should contain each records' geo_point bin geographically
+    # Note: we have to convert meters so that it covers the latitude and longitude (they are in different units)
+    CIRCLE_RADIUS_METERS = 629000
+    GEOJSON_CIRCLE = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[0, 0], CIRCLE_RADIUS_METERS]})
 
     LIST_EXPR = ListBin("numeric_list")
 
@@ -1243,7 +1245,7 @@ class TestQuery(TestBaseClass):
                 GEO_POINT_BIN_EXPR,
                 aerospike.INDEX_TYPE_DEFAULT,
                 aerospike.INDEX_GEO2DSPHERE,
-                p.geo_within_radius(None, 0, 0, 20),
+                p.geo_within_radius(None, 0, 0, CIRCLE_RADIUS_METERS),
                 5
             ),
             (
