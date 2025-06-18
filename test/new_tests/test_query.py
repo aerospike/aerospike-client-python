@@ -1266,7 +1266,17 @@ class TestQuery(TestBaseClass):
             )
         ]
     )
-    def test_query_with_expr(self, expr, index_type, index_datatype, predicate, expected_rec_count, index_expr_cleanup):
+    @pytest.mark.parametrize("use_index_name", [False, True])
+    def test_query_with_expr_or_index_name(
+        self,
+        expr,
+        index_type,
+        index_datatype,
+        predicate,
+        expected_rec_count,
+        index_expr_cleanup,
+        use_index_name
+    ):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
             pytest.skip("Querying with expressions isn't supported yet")
 
@@ -1276,6 +1286,11 @@ class TestQuery(TestBaseClass):
                                              expressions=expr, name=self.INDEX_EXPR_NAME, policy=None)
 
         # Verify where_with_expr returns a Query object as well
-        query: aerospike.Query = self.as_connection.query("test", "demo").where_with_expr(expr, predicate)
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        if use_index_name:
+            query = query.where_with_expr(expr, predicate)
+        else:
+            query = query.where_with_index_name(self.INDEX_EXPR_NAME, predicate)
+
         recs = query.results()
         assert len(recs) == expected_rec_count
