@@ -613,7 +613,14 @@ static PyObject *createIndexWithDataAndCollectionType(
 
     // Convert python object into bin string
     char *bin_ptr = NULL;
-    if (py_bin) {
+    if (exp == NULL) {
+        // Bin is required in this case.
+        if (py_bin == NULL) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Bin should be a string");
+            goto CLEANUP;
+        }
+
         if (PyUnicode_Check(py_bin)) {
             py_ustr_bin = PyUnicode_AsUTF8String(py_bin);
             bin_ptr = PyBytes_AsString(py_ustr_bin);
