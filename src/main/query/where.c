@@ -470,8 +470,8 @@ AerospikeQuery *AerospikeQuery_WhereWithIndexName(AerospikeQuery *self,
     const char *index_name = NULL;
     PyObject *py_pred = NULL;
 
-    if (PyArg_ParseTuple(args, "sO:where_with_index_name", &py_pred,
-                         &index_name) == false) {
+    if (PyArg_ParseTuple(args, "sO:where_with_index_name", index_name,
+                         &py_pred) == false) {
         return NULL;
     }
 
