@@ -307,7 +307,7 @@ class TestQuery(TestBaseClass):
             key = ("test", None, 145)
             as_connection.remove(key)
 
-        # request.addfinalizer(teardown)
+        request.addfinalizer(teardown)
 
     def test_query_with_correct_parameters_hi(self):
         """
