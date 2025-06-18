@@ -79,9 +79,15 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     }
 
     const char *bin = NULL;
-    if (py_bin != Py_None) {
+    if (py_expr == NULL && index_name == NULL) {
+        // Bin is required in this case.
+        if (py_bin == Py_None) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Bin should be a string");
+            goto CLEANUP_EXP_ON_ERROR;
+        }
         // User provided a bin name
-        if (PyUnicode_Check(py_bin)) {
+        else if (PyUnicode_Check(py_bin)) {
             bin = PyUnicode_AsUTF8(py_bin);
             if (!bin) {
                 goto CLEANUP_EXP_ON_ERROR;
@@ -172,10 +178,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     as_query_where_init(&self->query, 1);
 
-    // 1st case takes 3 optional args.
-    // 2nd case takes 2 optional args.
-    // 3rd case takes 1 optional arg.
-    // So we need to have separate codepaths for each case
+    // We have 9 separate codepaths because we need to pass in either 1, 2, or 3 optional arguments to the C client call
+    // and for each of those, we have to call one of the three as_query_where_with_{exp,index_name,ctx}()
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
         // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
         if (py_expr) {
