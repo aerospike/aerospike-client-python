@@ -59,14 +59,18 @@ static bool each_result(const as_val *val, void *udata)
     gstate = PyGILState_Ensure();
 
     // Convert as_val to a Python Object
+    if (err->code != AEROSPIKE_OK) {
+        // Error was already set by another thread.
+        rval = false;
+        goto FINISH;
+    }
     val_to_pyobject(data->client, err, val, &py_result);
 
     // The record could not be converted to a python object
     if (!py_result) {
         //TBD set error here
         // Must release the interpreter lock before returning
-        PyGILState_Release(gstate);
-        return true;
+        goto FINISH;
     }
 
     // Build Python Function Arguments
@@ -118,6 +122,7 @@ static bool each_result(const as_val *val, void *udata)
         Py_DECREF(py_return);
     }
 
+FINISH:
     // Release Python State
     PyGILState_Release(gstate);
 
