@@ -1162,6 +1162,11 @@ class TestQuery(TestBaseClass):
 
         assert len(records) == 1
 
+    def test_query_with_none_bin_and_where(self):
+        query = self.as_connection.query("test", "demo")
+        with pytest.raises(e.ParamError):
+            query.where(p.equals(None, 1))
+
     @pytest.mark.parametrize(
         "duration",
         [
