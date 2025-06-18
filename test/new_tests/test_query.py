@@ -1210,7 +1210,7 @@ class TestQuery(TestBaseClass):
         self.as_connection.index_remove("test", self.INDEX_EXPR_NAME)
 
     @pytest.mark.parametrize(
-        "expr, index_datatype, index_type, predicate, expected_rec_count",
+        "expr, index_type, index_datatype, predicate, expected_rec_count",
         [
             (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
             (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.between(None, 0, 2), 2),
@@ -1262,7 +1262,7 @@ class TestQuery(TestBaseClass):
             )
         ]
     )
-    def test_query_with_expr(self, expr, index_datatype, index_type, predicate, expected_rec_count, index_expr_cleanup):
+    def test_query_with_expr(self, expr, index_type, index_datatype, predicate, expected_rec_count, index_expr_cleanup):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
             pytest.skip("Querying with expressions isn't supported yet")
 
