@@ -1288,9 +1288,9 @@ class TestQuery(TestBaseClass):
         # Verify where_with_expr returns a Query object as well
         query: aerospike.Query = self.as_connection.query("test", "demo")
         if use_index_name:
-            query = query.where_with_expr(expr, predicate)
-        else:
             query = query.where_with_index_name(self.INDEX_EXPR_NAME, predicate)
+        else:
+            query = query.where_with_expr(expr, predicate)
 
         recs = query.results()
         assert len(recs) == expected_rec_count
