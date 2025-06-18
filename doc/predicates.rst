@@ -40,7 +40,7 @@ Bin Predicates
 
     Represent a *bin* **=** *val* predicate.
 
-    :param str Optional[bin]: the bin name.
+    :param Optional[str] bin: the bin name.
     :param val: the value to be matched with an equals operator.
     :type val: :py:class:`str` or :py:class:`int`
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
