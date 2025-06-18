@@ -467,10 +467,10 @@ AerospikeQuery *AerospikeQuery_WhereWithExpr(AerospikeQuery *self,
 AerospikeQuery *AerospikeQuery_WhereWithIndexName(AerospikeQuery *self,
                                                   PyObject *args)
 {
-    PyObject *py_pred = NULL;
     const char *index_name = NULL;
+    PyObject *py_pred = NULL;
 
-    if (PyArg_ParseTuple(args, "Os:where_with_index_name", &py_pred,
+    if (PyArg_ParseTuple(args, "sO:where_with_index_name", &py_pred,
                          &index_name) == false) {
         return NULL;
     }
