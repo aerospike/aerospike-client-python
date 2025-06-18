@@ -1223,15 +1223,15 @@ class TestQuery(TestBaseClass):
                 p.geo_contains_geojson_point(
                     None,
                     # Only the 25x25 box should contain this point
-                    aerospike.GeoJSON({"type": "Point", "coordinates": [1, 1]}).dumps()
+                    aerospike.GeoJSON({"type": "Point", "coordinates": [23, 23]}).dumps()
                 ),
-                5
+                1
             ),
             # Same test as above, but with a different predicate
             (
                 GEO_POLYGON_BIN_EXPR,
                 aerospike.INDEX_TYPE_DEFAULT,
-                aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 1, 1), 5),
+                aerospike.INDEX_GEO2DSPHERE, p.geo_contains_point(None, 23, 23), 1),
             (
                 GEO_POINT_BIN_EXPR,
                 aerospike.INDEX_TYPE_DEFAULT,
