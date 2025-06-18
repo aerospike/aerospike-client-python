@@ -68,7 +68,7 @@ GeoJSON Predicates
     (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param str shape: the shape formatted as a GeoJSON string.
     :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
@@ -117,7 +117,7 @@ GeoJSON Predicates
     (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param float long: the longitude of the center point of the AeroCircle.
     :param float lat: the latitude of the center point of the AeroCircle.
     :param float radius_meters: the radius length in meters of the AeroCircle.
@@ -156,7 +156,7 @@ GeoJSON Predicates
     (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param str point: the point formatted as a GeoJSON string.
     :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
@@ -202,7 +202,7 @@ GeoJSON Predicates
     (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param float long: the longitude of the point.
     :param float lat: the latitude of the point.
     :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
@@ -247,7 +247,7 @@ Map and List Predicates
     Represent the predicate *bin* **CONTAINS** *val* for a bin with a complex \
     (list or map) type.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :param val: match records whose *bin* is an *index_type* (ex: list) containing *val*.
     :type val: :py:class:`str` or :py:class:`int`
@@ -284,7 +284,7 @@ Map and List Predicates
     Represent the predicate *bin* **CONTAINS** values **BETWEEN** *min* **AND** \
     *max* for a bin with a complex (list or map) type.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
     :param int min: the minimum value to be used for matching with the range operator.
     :param int max: the maximum value to be used for matching with the range operator.
