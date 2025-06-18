@@ -13,7 +13,6 @@ import time
 
 from aerospike_helpers.expressions.arithmetic import Add
 from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin
-from aerospike_helpers.expressions.list import ListAppend
 
 list_index = "list_index"
 list_rank = "list_rank"
@@ -1203,7 +1202,7 @@ class TestQuery(TestBaseClass):
     # Should contain geo_point bin geographically
     GEOJSON_CIRCLE = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[0, 0], 20]})
 
-    LIST_EXPR = ListAppend(None, None, 99, ListBin("numeric_list"))
+    LIST_EXPR = ListBin("numeric_list")
 
     @pytest.fixture
     def index_expr_cleanup(self):
@@ -1236,10 +1235,8 @@ class TestQuery(TestBaseClass):
             ),
             # Same test as above but with a different pred
             (GEO_POINT_BIN_EXPR, aerospike.INDEX_GEO2DSPHERE, p.geo_within_radius(None, 0, 0, 20), 5),
-            # 99 should not be in the original list
-            # But we insert it in the expression, so all records' lists should have 99
-            (LIST_EXPR, aerospike.INDEX_NUMERIC, p.contains(None, aerospike.INDEX_TYPE_LIST, 99), 5),
-            (LIST_EXPR, aerospike.INDEX_NUMERIC, p.range(None, aerospike.INDEX_TYPE_LIST, 99, 99), 5)
+            (LIST_EXPR, aerospike.INDEX_NUMERIC, p.contains(None, aerospike.INDEX_TYPE_LIST, 0), 1),
+            (LIST_EXPR, aerospike.INDEX_NUMERIC, p.range(None, aerospike.INDEX_TYPE_LIST, 0, 1), 2)
         ]
     )
     def test_query_with_expr(self, expr, index_datatype, predicate, expected_rec_count, index_expr_cleanup):
