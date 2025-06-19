@@ -34,6 +34,8 @@ typedef struct {
     PyObject *callback;
     AerospikeClient *client;
     int partition_query;
+    as_arraylist *thread_errors;
+    pthread_mutex_t thread_errors_mutex;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -64,7 +66,24 @@ static bool each_result(const as_val *val, void *udata)
         rval = false;
         goto FINISH;
     }
-    val_to_pyobject(data->client, err, val, &py_result);
+    // Use local thread error to avoid overwriting shared error
+    as_error thread_err_local;
+    as_error_init(&thread_err_local);
+
+    val_to_pyobject(data->client, &thread_err_local, val, &py_result);
+
+    // If val_to_pyobject fails, store error separately
+    if (thread_err_local.code != AEROSPIKE_OK) {
+        pthread_mutex_lock(&data->thread_errors_mutex);
+        as_error *stored_err = (as_error *)cf_malloc(sizeof(as_error));
+        as_error_copy(stored_err, &thread_err_local);
+        as_arraylist_append(data->thread_errors, (as_val *)stored_err);
+        pthread_mutex_unlock(&data->thread_errors_mutex);
+
+        rval = false;
+        goto FINISH;
+    }
+
 
     // The record could not be converted to a python object
     if (!py_result) {
@@ -154,6 +173,9 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     data.partition_query = 0;
 
     as_error_init(&data.error);
+    data.thread_errors = (as_arraylist *)cf_malloc(sizeof(as_arraylist));
+    as_arraylist_init(data.thread_errors, 10, sizeof(as_error *));
+    pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
     // Aerospike Client Arguments
     as_error err;
@@ -233,6 +255,14 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     Py_END_ALLOW_THREADS
 
+    // Promote any thread-level error if the main error was not set
+    if (data.error.code == AEROSPIKE_OK && data.thread_errors && data.thread_errors->size > 0) {
+        as_error *thread_err = (as_error *)as_arraylist_get(data.thread_errors, 0);
+        if (thread_err) {
+            as_error_copy(&data.error, thread_err);
+        }
+    }
+
     if (data.error.code != AEROSPIKE_OK) {
         as_error_update(&data.error, data.error.code, NULL);
         goto CLEANUP;
@@ -250,15 +280,23 @@ CLEANUP:
 
     if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
         if (err.code != AEROSPIKE_OK) {
-            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None,
-                                 Py_None);
+            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         }
         if (data.error.code != AEROSPIKE_OK) {
-            raise_exception_base(&data.error, Py_None, Py_None, Py_None,
-                                 Py_None, Py_None);
+            raise_exception_base(&data.error, Py_None, Py_None, Py_None, Py_None, Py_None);
         }
         return NULL;
     }
+
+    if (data.thread_errors) {
+        for (uint32_t i = 0; i < data.thread_errors->size; ++i) {
+            as_error *err_ptr = (as_error *)as_arraylist_get(data.thread_errors, i);
+            cf_free(err_ptr);
+        }
+        as_arraylist_destroy(data.thread_errors);
+        cf_free(data.thread_errors);
+    }
+    pthread_mutex_destroy(&data.thread_errors_mutex);
 
     Py_INCREF(Py_None);
     return Py_None;
