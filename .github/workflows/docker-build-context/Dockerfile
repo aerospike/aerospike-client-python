@@ -95,6 +95,8 @@ RUN apt update
 # Verified that installing these should not interfere with the server
 # There are a few packages being upgraded with this command, but it should be ok
 RUN apt install -y python3 python3-pip
+# We do this to support the --break-system-packages flag introduced in later pip versions
+RUN python3 -m pip install --upgrade pip
 RUN python3 -m pip install --break-system-packages jinja2
 WORKDIR /
 COPY toggle-features-in-conf-files.py .
