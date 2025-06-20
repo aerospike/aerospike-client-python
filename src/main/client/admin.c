@@ -78,7 +78,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     }
 
     // Convert python objects to username and password strings
-    const char *user = convert_pyobject_to_str(&err, py_user);
+    const char *user = convert_pyobject_to_str(py_user);
     if (!user) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
                         "Username");
@@ -87,7 +87,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
 
     const char *password = NULL;
     if (py_password) {
-        password = convert_pyobject_to_str(&err, py_password);
+        password = convert_pyobject_to_str(py_password);
         if (!password) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
                             "Password");
