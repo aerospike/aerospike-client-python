@@ -263,4 +263,4 @@ uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject);
 uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
 
 // Returns NULL on error.
-const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj);
+const char *convert_pyobject_to_str(PyObject *py_obj);
