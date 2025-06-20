@@ -7,13 +7,19 @@ on:
         description: 'new_test/<test-file>'
         required: false
         default: ""
-      use-server-rc:
-        type: boolean
-        description: 'Use server release candidate?'
-        required: true
-        default: false
+      registry-name:
+        type: string
+        required: false
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         required: false
+        description: Server tag
         default: latest
       massif:
         type: boolean
@@ -147,7 +153,10 @@ jobs:
     - name: Run EE server
       uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}

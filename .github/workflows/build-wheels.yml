@@ -58,12 +58,12 @@ on:
         default: false
       registry-name:
         type: string
-        required: true
+        required: false
         description: Registry name
         default: 'docker.io'
       image-name:
         type: string
-        required: true
+        required: false
         description: Image name
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:

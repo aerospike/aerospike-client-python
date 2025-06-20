@@ -19,11 +19,16 @@ on:
         required: false
       # These will be set if use_jfrog_builds is false (i.e when someone is building the artifacts from scratch and stage testing them in a calling workflow)
       # If use_jfrog_builds is true, only the defaults will be used
-      use-server-rc:
-        type: boolean
+      registry-name:
+        type: string
         required: false
-        default: false
-        description: 'Test against server release candidate?'
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: false
@@ -105,7 +110,10 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
@@ -206,7 +214,10 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
