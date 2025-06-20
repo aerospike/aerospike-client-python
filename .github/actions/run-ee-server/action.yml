@@ -34,8 +34,8 @@ runs:
   steps:
   # Start up server
 
-  - name: Log into registry to get server RC
-    if: ${{ inputs.use-server-rc == 'true' }}
+  - name: Log into registry to get non-public server RCs
+    # We can still pull public images while logged in, so just do this all the time to make things simple
     run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }} ${{ inputs.registry-name }}
     shell: bash
 
