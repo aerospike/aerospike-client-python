@@ -1,0 +1,82 @@
+name: 'Setup config.conf for testing'
+description: '_'
+inputs:
+  where-is-client-connecting-from:
+    required: false
+    description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
+    default: 'docker-host'
+  server-container-name:
+    required: true
+    # Need description key or lint error will be thrown
+    description: ''
+  username:
+    required: false
+    description: ''
+  password:
+    required: false
+    description: ''
+  cluster-name:
+    required: true
+    description: "Used to connect to server via TLS"
+  tls-port:
+    required: true
+    description: ''
+
+runs:
+  using: "composite"
+  steps:
+  - name: Install crudini to manipulate config.conf
+    run: pipx install crudini --pip-args "-c ${{ github.workspace }}/.github/workflows/requirements.txt"
+    working-directory: .github/workflows
+    shell: bash
+
+  - name: Create config.conf
+    run: cp config.conf.template config.conf
+    working-directory: test
+    shell: bash
+
+  - name: Disable community edition connection
+    run: crudini --existing=param --set config.conf community-edition hosts ''
+    working-directory: test
+    shell: bash
+
+  - name: Set credentials in config file
+    run: |
+      crudini --existing=param --set config.conf enterprise-edition user ${{ inputs.username }}
+      crudini --existing=param --set config.conf enterprise-edition password ${{ inputs.password }}
+      crudini --set config.conf tls enable true
+      # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
+      crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
+    working-directory: test
+    shell: bash
+
+  - name: Set server IP address to connect to
+    # We want a single step to get an output from
+    # Don't save server ip to environment variable because it will persist outside of composite action
+    if: ${{ inputs.where-is-client-connecting-from == 'docker-host' }}
+    run: echo SERVER_IP=127.0.0.1 >> $GITHUB_ENV
+    working-directory: test
+    shell: bash
+
+  - name: Set IP address to remote machine running the Docker daemon
+    if: ${{ inputs.where-is-client-connecting-from == 'remote-connection' }}
+    run: |
+      SERVER_IP=${DOCKER_HOST/tcp:\/\//}
+      echo SERVER_IP=${SERVER_IP/:2375/} >> $GITHUB_ENV
+    working-directory: test
+    shell: bash
+
+  - name: Set IP address to Docker container for the server
+    if: ${{ inputs.where-is-client-connecting-from == 'separate-docker-container' }}
+    run: echo SERVER_IP=$(docker container inspect -f '{{ .NetworkSettings.IPAddress }}' ${{ inputs.server-container-name }}) >> $GITHUB_ENV
+    shell: bash
+
+  - name: Invalid input
+    if: ${{ env.SERVER_IP == '' }}
+    run: exit 1
+    shell: bash
+
+  - name: Set EE server's IP address
+    run: crudini --existing=param --set config.conf enterprise-edition hosts "${{ env.SERVER_IP }}:${{ inputs.tls-port }}|${{ inputs.cluster-name }}"
+    working-directory: test
+    shell: bash
