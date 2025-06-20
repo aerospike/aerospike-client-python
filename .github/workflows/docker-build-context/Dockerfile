@@ -98,7 +98,7 @@ RUN apt install -y python3 python3-pip python3-venv
 WORKDIR /
 RUN python3 -m venv .venv
 ENV PATH="/.venv/bin:$ENV"
-RUN python3 -m pip install --break-system-packages jinja2
+RUN python3 -m pip install jinja2
 COPY toggle-features-in-conf-files.py .
 
 ENV HEALTHCHECK_FILE_PATH=/finalized
