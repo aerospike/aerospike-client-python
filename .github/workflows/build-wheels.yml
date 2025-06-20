@@ -56,11 +56,16 @@ on:
         type: boolean
         required: false
         default: false
-      use-server-rc:
-        type: boolean
+      registry-name:
+        type: string
         required: true
-        default: false
-        description: 'Test against server release candidate?'
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: true
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         required: true
         default: 'latest'
@@ -100,11 +105,14 @@ on:
         type: boolean
         required: false
         default: false
-      use-server-rc:
-        required: false
-        type: boolean
-        default: false
-        description: 'Test against server release candidate?'
+      registry-name:
+        type: string
+        required: true
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: true
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         required: false
         type: string
@@ -119,6 +127,10 @@ on:
       DOCKER_HUB_BOT_USERNAME:
         required: true
       DOCKER_HUB_BOT_PW:
+        required: true
+      QE_DOCKER_REGISTRY_USERNAME:
+        required: true
+      QE_DOCKER_REGISTRY_PASSWORD:
         required: true
       MAC_M1_SELF_HOSTED_RUNNER_PW:
         required: true
@@ -201,10 +213,11 @@ jobs:
       if: ${{ env.RUN_INTEGRATION_TESTS_IN_CIBW == 'true' }}
       uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: ${{ inputs.platform-tag == 'macosx_x86_64' && 'docker-host' || 'separate-docker-container' }}
 
     - name: If not running tests against server, only run basic import test
@@ -372,7 +385,10 @@ jobs:
 
       - uses: ./.github/actions/run-ee-server
         with:
-          use-server-rc: ${{ inputs.use-server-rc }}
+          registry-name: ${{ inputs.registry-name }}
+          registry-username: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+          registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+          image-name: ${{ inputs.image-name }}
           server-tag: ${{ inputs.server-tag }}
           docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
           docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
