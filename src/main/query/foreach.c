@@ -78,7 +78,7 @@ static bool each_result(const as_val *val, void *udata)
         pthread_mutex_lock(&data->thread_errors_mutex);
         as_error *stored_err = (as_error *)cf_malloc(sizeof(as_error));
         as_error_copy(stored_err, &thread_err_local);
-        as_vector_append(data.thread_errors, stored_err);
+        as_vector_append(&data->thread_errors, stored_err);
         pthread_mutex_unlock(&data->thread_errors_mutex);
 
         rval = false;
