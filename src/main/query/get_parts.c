@@ -22,11 +22,12 @@
 #include "exceptions.h"
 #include "query.h"
 #include "conversions.h"
+#include "partitions_status.h"
 
 PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self)
 {
     PyObject *py_parts = NULL;
-    const as_partitions_status *all_parts = NULL;
+    as_partitions_status *all_parts = NULL;
     as_error err;
     as_error_init(&err);
 
@@ -36,8 +37,7 @@ PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self)
     }
 
     all_parts = self->query.parts_all;
-
-    as_partitions_status_to_pyobject(&err, all_parts, &py_parts);
+    py_parts = create_py_partitions_status_object(&err, all_parts);
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {

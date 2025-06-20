@@ -2,10 +2,11 @@
 
 import pytest
 from .test_base_class import TestBaseClass
+import aerospike
 
 
 class TestQueryGetPartitionsStatus(TestBaseClass):
-    @pytest.fixture(autouse=True)
+    @pytest.fixture(autouse=True, params=[aerospike.Client.scan, aerospike.Client.query])
     def setup(self, request, as_connection):
         if self.server_version < [6, 0]:
             pytest.mark.xfail(reason="Servers older than 6.0 do not support partition queries.")
@@ -47,6 +48,8 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
                 }
                 as_connection.put(key, rec)
 
+        self.query_creation_method = request.param
+
         def teardown():
             for i in range(1, 100000):
                 put = 0
@@ -70,78 +73,9 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    def test_query_get_partitions_status_no_tracking(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
-
-        stats = query_obj.get_partitions_status()
-        assert stats == {}
-
-    def test_get_partitions_status_after_foreach(self):
-        """
-        Resume a query using foreach.
-        """
-        records = 0
-        resumed_records = 0
-
-        def callback(part_id, input_tuple):
-            nonlocal records
-            if records == 5:
-                return False
-            records += 1
-
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
-
-        query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
-
-        assert records == 5
-
-        partition_status = query_obj.get_partitions_status()
-
-        def resume_callback(part_id, input_tuple):
-            nonlocal resumed_records
-            resumed_records += 1
-
-        query_obj2 = self.as_connection.query(self.test_ns, self.test_set)
-
-        policy = {
-            "partition_filter": {"begin": 1001, "count": 1, "partition_status": partition_status},
-        }
-
-        query_obj2.foreach(resume_callback, policy)
-
-        assert records + resumed_records == self.partition_1001_count
-
-    def test_query_get_partitions_status_results(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
-
-        # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
+    def test_get_partitions_status_after_running_paginated_and_partitioned_query(self):
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
         query_obj.paginate()
-        query_obj.results()
-
-        stats = query_obj.get_partitions_status()
-        assert stats
-
-    def test_query_get_partitions_status_results_no_tracking(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
-
-        # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
-        query_obj.results()
-
-        stats = query_obj.get_partitions_status()
-        assert not stats
-
-    def test_query_get_partitions_status_results_parts(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
-
-        policy = {"partition_filter": {"begin": 1001, "count": 1}}
-        results = query_obj.results(policy)
-        assert len(results) == self.partition_1001_count
-
-        stats = query_obj.get_partitions_status()
-        assert stats
-
-    def test_query_get_partitions_status_foreach_parts(self):
-        query_obj = self.as_connection.query(self.test_ns, self.test_set)
         ids = []
 
         def callback(part_id, input_tuple):
@@ -152,4 +86,70 @@ class TestQueryGetPartitionsStatus(TestBaseClass):
         assert len(ids) == self.partition_1001_count
 
         stats = query_obj.get_partitions_status()
-        assert stats
+        assert type(stats) == aerospike.PartitionsStatus
+
+    def test_resume_terminated_paginated_query(self):
+        records = 0
+        resumed_records = 0
+
+        def callback(part_id, input_tuple):
+            nonlocal records
+            if records == 5:
+                return False
+            records += 1
+
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
+        query_obj.paginate()
+        query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
+
+        assert records == 5
+
+        partition_status = query_obj.get_partitions_status()
+        assert type(partition_status) == aerospike.PartitionsStatus
+
+        def resume_callback(part_id, input_tuple):
+            nonlocal resumed_records
+            resumed_records += 1
+
+        query_obj2 = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
+
+        policy = {
+            "partition_filter": {"begin": 1001, "count": 1, "partition_status": partition_status},
+        }
+
+        query_obj2.foreach(resume_callback, policy)
+        assert records + resumed_records == self.partition_1001_count
+
+    @pytest.mark.parametrize("policy", [
+        {},
+        {"partition_filter": {"begin": 1001, "count": 1}}
+    ])
+    def test_get_partitions_status_after_finishing_paginated_query(self, policy):
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
+
+        query_obj.paginate()
+        results = query_obj.results(policy)
+
+        stats = query_obj.get_partitions_status()
+        assert type(stats) == aerospike.PartitionsStatus
+
+        if "partition_filter" in policy:
+            assert len(results) == self.partition_1001_count
+
+    # Negative tests
+
+    def test_get_partitions_status_without_running_query(self):
+        # Non-paginated queries don't support getting partitions status
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
+
+        stats = query_obj.get_partitions_status()
+        assert stats is None
+
+    def test_get_partitions_status_after_finishing_nonpaginated_query(self):
+        query_obj = self.query_creation_method(self.as_connection, self.test_ns, self.test_set)
+
+        # policy = {'partition_filter': {'begin': 1001, 'count': 1}}
+        query_obj.results()
+
+        stats = query_obj.get_partitions_status()
+        assert stats is None

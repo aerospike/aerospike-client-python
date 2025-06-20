@@ -356,65 +356,6 @@ END:
     return err->code;
 }
 
-// creates a python dict of tuples from an as_partitions_status
-// EX: {id:(id, init, done, digest, bval) for id in range (1000, 1004,1)}
-// returns and empty dict if parts_status == NULL
-as_status as_partitions_status_to_pyobject(
-    as_error *err, const as_partitions_status *parts_status, PyObject **py_dict)
-{
-    as_error_reset(err);
-
-    PyObject *new_dict = PyDict_New();
-    if (new_dict == NULL) {
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "failed to create new_dict");
-        goto END;
-    }
-
-    if (parts_status == NULL) {
-        // If parts_status is NULL return an empty dict because
-        // the query/scan is not tracking its partitions.
-        *py_dict = new_dict;
-        goto END;
-    }
-
-    PyObject *py_done = PyBool_FromLong(parts_status->done);
-    PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_DONE, py_done);
-    Py_DECREF(py_done);
-
-    PyObject *py_retry = PyBool_FromLong(parts_status->retry);
-    PyDict_SetItemString(new_dict, PARTITIONS_STATUS_KEY_RETRY, py_retry);
-    Py_DECREF(py_retry);
-
-    for (int i = 0; i < parts_status->part_count; ++i) {
-
-        const as_partition_status *part = &parts_status->parts[i];
-
-        PyObject *new_py_tuple = NULL;
-        if (as_partition_status_to_pyobject(err, part, &new_py_tuple) !=
-            AEROSPIKE_OK) {
-            Py_DECREF(new_dict);
-            goto END;
-        }
-
-        PyObject *py_id = PyLong_FromUnsignedLong((unsigned long)part->part_id);
-
-        if (PyDict_SetItem(new_dict, py_id, new_py_tuple) != 0) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "failed set item in new_dict");
-            Py_DECREF(new_dict);
-            Py_DECREF(new_py_tuple);
-            Py_XDECREF(py_id);
-            goto END;
-        }
-        Py_DECREF(py_id);
-    }
-
-    *py_dict = new_dict;
-
-END:
-    return err->code;
-}
-
 as_status as_user_info_to_pyobject(as_error *err, as_user *user,
                                    PyObject **py_as_user)
 {

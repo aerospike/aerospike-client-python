@@ -325,7 +325,7 @@ class TestScanPartition(TestBaseClass):
             records += 1
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-
+        scan_obj.paginate()
         scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         assert records == 5
@@ -360,7 +360,7 @@ class TestScanPartition(TestBaseClass):
             records += 1
 
         scan_obj = self.as_connection.scan(self.test_ns, self.test_set)
-
+        scan_obj.paginate()
         scan_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         assert records == 5
