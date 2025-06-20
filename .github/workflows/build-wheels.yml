@@ -1,5 +1,5 @@
 name: 'Build wheels'
-run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})'
+run-name: 'Build wheels (python-tags=${{ inputs.python-tags }}, platform-tag=${{ inputs.platform-tag }}, unoptimized=${{ inputs.unoptimized }}, include-debug-info-for-macos=${{ inputs.include-debug-info-for-macos }}, run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, image-name=${{ inputs.image-name }}, server-tag=${{ inputs.server-tag }}), test-file=${{ inputs.test-file }}'
 
 # Build wheels on all (or select) Python versions supported by the Python client for a specific platform
 
