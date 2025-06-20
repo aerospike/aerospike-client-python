@@ -181,17 +181,18 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
     if (py_policy_batch) {
         if (pyobject_to_policy_batch(
                 self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
+                &self->as->config.policies.batch_parent_write, &batch_exp_list,
                 &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
 
     if (py_policy_batch_apply) {
-        if (pyobject_to_batch_apply_policy(
-                self, err, py_policy_batch_apply, &policy_batch_apply,
-                &policy_batch_apply_p, &batch_apply_exp_list,
-                &batch_apply_exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_apply(self, err, py_policy_batch_apply,
+                                     &policy_batch_apply, &policy_batch_apply_p,
+                                     &self->as->config.policies.batch_apply,
+                                     &batch_apply_exp_list,
+                                     &batch_apply_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
