@@ -97,7 +97,7 @@ RUN apt update
 RUN apt install -y python3 python3-pip python3-venv
 WORKDIR /
 RUN python3 -m venv .venv
-ENV PATH="/.venv/bin:$ENV"
+ENV PATH="/.venv/bin:$PATH"
 RUN python3 -m pip install jinja2
 COPY toggle-features-in-conf-files.py .
 
