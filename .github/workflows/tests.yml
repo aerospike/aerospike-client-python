@@ -120,8 +120,8 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike-server-enterprise-rc' || 'aerospike-server-enterprise' }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
@@ -296,8 +296,8 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike-server-enterprise-rc' || 'aerospike-server-enterprise' }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by 
@@ -431,8 +431,8 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike-server-enterprise-rc' || 'aerospike-server-enterprise' }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
+        registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run tests
       run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning

@@ -115,8 +115,6 @@ jobs:
         registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: 'separate-docker-container'
 
     - name: Run distro container
@@ -219,8 +217,6 @@ jobs:
         registry-password: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
         image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: 'docker-host'
 
     - name: Install wheel
