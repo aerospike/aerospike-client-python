@@ -119,7 +119,7 @@ jobs:
     - name: Run Aerospike server
       uses: ./.github/actions/run-ee-server
       with:
-        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike-server-enterprise-rc' || 'aerospike-server-enterprise' }}
+        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike/aerospike-server-enterprise-rc' || 'aerospike/aerospike-server-enterprise' }}
         registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
@@ -295,7 +295,7 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike-server-enterprise-rc' || 'aerospike-server-enterprise' }}
+        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike/aerospike-server-enterprise-rc' || 'aerospike/aerospike-server-enterprise' }}
         registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
@@ -430,7 +430,7 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike-server-enterprise-rc' || 'aerospike-server-enterprise' }}
+        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike/aerospike-server-enterprise-rc' || 'aerospike/aerospike-server-enterprise' }}
         registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
