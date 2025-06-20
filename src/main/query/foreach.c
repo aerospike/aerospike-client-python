@@ -21,6 +21,7 @@
 #include <aerospike/as_query.h>
 #include <aerospike/as_partition.h>
 #include <aerospike/as_arraylist.h>
+#include <aerospike/as_vector.h>
 
 #include "client.h"
 #include "conversions.h"
@@ -34,6 +35,8 @@ typedef struct {
     PyObject *callback;
     AerospikeClient *client;
     int partition_query;
+    as_vector thread_errors;
+    pthread_mutex_t thread_errors_mutex;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -59,14 +62,34 @@ static bool each_result(const as_val *val, void *udata)
     gstate = PyGILState_Ensure();
 
     // Convert as_val to a Python Object
-    val_to_pyobject(data->client, err, val, &py_result);
+    if (err->code != AEROSPIKE_OK) {
+        // Error was already set by another thread.
+        rval = false;
+        goto FINISH;
+    }
+    // Use local thread error to avoid overwriting shared error
+    as_error thread_err_local;
+    as_error_init(&thread_err_local);
+
+    val_to_pyobject(data->client, &thread_err_local, val, &py_result);
+
+    // If val_to_pyobject fails, store error separately
+    if (thread_err_local.code != AEROSPIKE_OK) {
+        pthread_mutex_lock(&data->thread_errors_mutex);
+        as_error *stored_err = (as_error *)cf_malloc(sizeof(as_error));
+        as_error_copy(stored_err, &thread_err_local);
+        as_vector_append(&data->thread_errors, stored_err);
+        pthread_mutex_unlock(&data->thread_errors_mutex);
+
+        rval = false;
+        goto FINISH;
+    }
 
     // The record could not be converted to a python object
     if (!py_result) {
         //TBD set error here
         // Must release the interpreter lock before returning
-        PyGILState_Release(gstate);
-        return true;
+        goto FINISH;
     }
 
     // Build Python Function Arguments
@@ -118,6 +141,7 @@ static bool each_result(const as_val *val, void *udata)
         Py_DECREF(py_return);
     }
 
+FINISH:
     // Release Python State
     PyGILState_Release(gstate);
 
@@ -149,6 +173,8 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     data.partition_query = 0;
 
     as_error_init(&data.error);
+    as_vector_init(&(data.thread_errors), sizeof(as_error *), 16);
+    pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
     // Aerospike Client Arguments
     as_error err;
@@ -228,6 +254,13 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     Py_END_ALLOW_THREADS
 
+    // Promote any thread-level error if the main error was not set
+    if (data.error.code == AEROSPIKE_OK && data.thread_errors.size > 0) {
+        as_error *thread_err =
+            (as_error *)as_vector_get(&data.thread_errors, 0);
+        as_error_copy(&data.error, thread_err);
+    }
+
     if (data.error.code != AEROSPIKE_OK) {
         as_error_update(&data.error, data.error.code, NULL);
         goto CLEANUP;
@@ -254,6 +287,13 @@ CLEANUP:
         }
         return NULL;
     }
+
+    for (uint32_t i = 0; i < data.thread_errors.size; ++i) {
+        void *err_ptr = as_vector_get(&data.thread_errors, i);
+        cf_free(err_ptr);
+    }
+    as_vector_destroy(&data.thread_errors);
+    pthread_mutex_destroy(&data.thread_errors_mutex);
 
     Py_INCREF(Py_None);
     return Py_None;
