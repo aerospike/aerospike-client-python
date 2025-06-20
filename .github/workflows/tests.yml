@@ -313,6 +313,7 @@ jobs:
         py-version: [
           "3.9",
           "3.10",
+          "3.10d",
           "3.11",
           "3.12",
           "3.13"
@@ -324,10 +325,16 @@ jobs:
       with:
         submodules: recursive
 
-    - uses: actions/setup-python@v2
+    - if: ${{ matrix.py-version != '3.10d' }}
+      uses: actions/setup-python@v2
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
+
+    - if: ${{ matrix.py-version == '3.10d' }}
+      run: |
+        sudo apt update
+        sudo apt install -y python3.10-dbg
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
@@ -336,10 +343,10 @@ jobs:
         name: ${{ env.WHEEL_GH_ARTIFACT_NAME }}
 
     - name: Install client
-      run: pip install *.whl
+      run: python${{ matrix.py-version}} -m pip install *.whl
 
     - name: Install test dependencies
-      run: pip install -r test/requirements.txt
+      run: python${{ matrix.py-version}} -m pip install -r test/requirements.txt
 
     - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
       uses: docker/login-action@v3
@@ -364,7 +371,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: python${{ matrix.py-version}} -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
   test-lowest-supported-server:
