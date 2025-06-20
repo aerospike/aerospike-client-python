@@ -1132,6 +1132,16 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
+    .. method:: admin_create_pki_user(username: str, roles: list[, policy: dict])
+
+        Create a user and grant it roles.
+
+        :param str username: the username to be added to the Aerospike cluster.
+        :param list roles: the list of role names assigned to the user.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
     .. method:: admin_create_user(username, password, roles[, policy: dict])
 
         Create a user and grant it roles.
