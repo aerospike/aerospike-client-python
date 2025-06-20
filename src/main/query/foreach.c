@@ -84,7 +84,6 @@ static bool each_result(const as_val *val, void *udata)
         goto FINISH;
     }
 
-
     // The record could not be converted to a python object
     if (!py_result) {
         //TBD set error here
@@ -174,7 +173,7 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     as_error_init(&data.error);
     data.thread_errors = (as_arraylist *)cf_malloc(sizeof(as_arraylist));
-    as_arraylist_init(data.thread_errors, 10, sizeof(as_error *));
+    as_arraylist_init(data.thread_errors, 16, 16);
     pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
     // Aerospike Client Arguments
@@ -256,8 +255,10 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
     // Promote any thread-level error if the main error was not set
-    if (data.error.code == AEROSPIKE_OK && data.thread_errors && data.thread_errors->size > 0) {
-        as_error *thread_err = (as_error *)as_arraylist_get(data.thread_errors, 0);
+    if (data.error.code == AEROSPIKE_OK && data.thread_errors &&
+        data.thread_errors->size > 0) {
+        as_error *thread_err =
+            (as_error *)as_arraylist_get(data.thread_errors, 0);
         if (thread_err) {
             as_error_copy(&data.error, thread_err);
         }
@@ -280,17 +281,20 @@ CLEANUP:
 
     if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
         if (err.code != AEROSPIKE_OK) {
-            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
+            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None,
+                                 Py_None);
         }
         if (data.error.code != AEROSPIKE_OK) {
-            raise_exception_base(&data.error, Py_None, Py_None, Py_None, Py_None, Py_None);
+            raise_exception_base(&data.error, Py_None, Py_None, Py_None,
+                                 Py_None, Py_None);
         }
         return NULL;
     }
 
     if (data.thread_errors) {
         for (uint32_t i = 0; i < data.thread_errors->size; ++i) {
-            as_error *err_ptr = (as_error *)as_arraylist_get(data.thread_errors, i);
+            as_error *err_ptr =
+                (as_error *)as_arraylist_get(data.thread_errors, i);
             cf_free(err_ptr);
         }
         as_arraylist_destroy(data.thread_errors);
