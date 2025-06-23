@@ -43,10 +43,12 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 }
 
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
-// 3 cases:
+// The rest of the PyObject parameters can be NULL and are optional.
+// 3 cases for these optional parameters:
 // 1. index_name is non-NULL because we are indexing using the index name
 // 2. py_expr is non-NULL because are indexing using an expression
-// 3. Both index_name and py_expr are NULL because we are indexing on a bin (and an optional ctx)
+// 3. Both index_name and py_expr are NULL, and py_bin is non-NULL because we are indexing on a bin.
+//    py_ctx may also be non-NULL in this case.
 static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
                                     as_predicate_type predicate,
                                     as_index_datatype in_datatype,
