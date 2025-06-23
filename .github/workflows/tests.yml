@@ -22,11 +22,9 @@ on:
     ]
   workflow_dispatch:
     inputs:
-      test-server-rc:
-        type: boolean
-        default: false
-        required: true
+      # Used to test server RCs stored on the main server Docker repo
       server-tag:
+        description: Server tag
         type: string
         default: latest
         required: true
@@ -124,7 +122,6 @@ jobs:
       uses: ./.github/actions/run-ee-server
       with:
         server-tag: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
-        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
@@ -301,7 +298,6 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         server-tag: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
-        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
@@ -439,7 +435,6 @@ jobs:
     - uses: ./.github/actions/run-ee-server
       with:
         server-tag: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
-        use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
