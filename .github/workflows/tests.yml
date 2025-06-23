@@ -123,7 +123,7 @@ jobs:
     - name: Run Aerospike server
       uses: ./.github/actions/run-ee-server
       with:
-        server-tag: ${{ inputs.server-tag }}
+        server-tag: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
@@ -300,7 +300,7 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        server-tag: ${{ inputs.server-tag }}
+        server-tag: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
@@ -353,13 +353,15 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
+    - run: echo SERVER_TAG=${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }} >> $GITHUB_ENV
+
     - name: Run Aerospike server release candidate
       if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server-rc:${{ inputs.server-tag }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server-rc:${{ env.SERVER_TAG }}
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ inputs.server-tag }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
@@ -436,7 +438,7 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        server-tag: ${{ inputs.server-tag }}
+        server-tag: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
