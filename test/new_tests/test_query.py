@@ -1219,7 +1219,9 @@ class TestQuery(TestBaseClass):
     @pytest.mark.parametrize(
         "expr, index_type, index_datatype, predicate, expected_rec_count",
         [
+            # Only the first record
             (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
+            # The first two records
             (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.between(None, 0, 2), 2),
             (
                 GEO_POLYGON_BIN_EXPR,
