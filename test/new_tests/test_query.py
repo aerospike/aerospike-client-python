@@ -1292,7 +1292,7 @@ class TestQuery(TestBaseClass):
                                              index_datatype=index_datatype,
                                              expressions=expr, name=self.INDEX_EXPR_NAME, policy=None)
 
-        # Verify where_with_expr returns a Query object as well
+        # Verify where_*() methods return a Query object as well
         query: aerospike.Query = self.as_connection.query("test", "demo")
         if use_index_name:
             query = query.where_with_index_name(self.INDEX_EXPR_NAME, predicate)
