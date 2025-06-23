@@ -26,10 +26,6 @@ on:
         type: boolean
         default: false
         required: true
-      server-tag:
-        type: string
-        default: latest
-        required: true
 
 jobs:
   lint:
@@ -123,7 +119,6 @@ jobs:
     - name: Run Aerospike server
       uses: ./.github/actions/run-ee-server
       with:
-        server-tag: ${{ inputs.server-tag }}
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
@@ -300,7 +295,6 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        server-tag: ${{ inputs.server-tag }}
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
@@ -353,13 +347,13 @@ jobs:
         username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
-    - name: Run Aerospike server release candidate
+    - name: Run Aerospike server release candidate with latest tag
       if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server-rc:${{ inputs.server-tag }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server-rc:latest
 
     - name: Run Aerospike server
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server:${{ inputs.server-tag }}
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
@@ -436,7 +430,6 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        server-tag: ${{ inputs.server-tag }}
         use-server-rc: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
