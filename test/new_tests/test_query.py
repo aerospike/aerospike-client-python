@@ -12,7 +12,7 @@ from threading import Lock
 import time
 
 from aerospike_helpers.expressions.arithmetic import Add
-from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin
+from aerospike_helpers.expressions.base import IntBin, GeoBin, ListBin, BlobBin
 
 list_index = "list_index"
 list_rank = "list_rank"
@@ -1210,6 +1210,7 @@ class TestQuery(TestBaseClass):
     GEOJSON_CIRCLE = aerospike.GeoJSON({"type": "AeroCircle", "coordinates": [[0, 0], CIRCLE_RADIUS_METERS]})
 
     LIST_EXPR = ListBin("numeric_list")
+    BLOB_EXPR = BlobBin("blob")
 
     @pytest.fixture
     def index_expr_cleanup(self):
@@ -1219,6 +1220,8 @@ class TestQuery(TestBaseClass):
     @pytest.mark.parametrize(
         "expr, index_type, index_datatype, predicate, expected_rec_count",
         [
+            # Test every predicate to make sure it accepts a bin name of None
+
             # Only the first record
             (INT_BIN_EXPR, aerospike.INDEX_TYPE_DEFAULT, aerospike.INDEX_NUMERIC, p.equals(None, 2), 1),
             # The first two records
@@ -1270,6 +1273,15 @@ class TestQuery(TestBaseClass):
                 p.range(None, aerospike.INDEX_TYPE_LIST, 0, 1),
                 # Only the first two records
                 2
+            ),
+            # Test blobs with where_with_*() calls for code coverage
+            (
+                BLOB_EXPR,
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_BLOB,
+                p.equals(None, (0).to_bytes(length=1, byteorder='big')),
+                # Only the first record
+                1
             )
         ]
     )
