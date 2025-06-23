@@ -190,7 +190,7 @@ jobs:
         name: coverage-report
         path: ./coverage-report
 
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v5
       with:
         flags: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
         directory: coverage-report
