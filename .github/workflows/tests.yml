@@ -192,6 +192,7 @@ jobs:
 
     - uses: codecov/codecov-action@v3
       with:
+        flags: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
         directory: coverage-report
         verbose: true # optional (default = false)
         fail_ci_if_error: true
