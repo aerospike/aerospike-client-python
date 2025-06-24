@@ -175,7 +175,7 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
 
         if (in_datatype == AS_INDEX_STRING ||
             in_datatype == AS_INDEX_GEO2DSPHERE) {
-            query.where.entries[0].value.string_val._free = true;
+            query->where.entries[0].value.string_val._free = true;
         }
     }
     else {
@@ -188,7 +188,7 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
     }
 
     if (ctx_in_use) {
-        query.where.entries[0].ctx_free = true;
+        query->where.entries[0].ctx_free = true;
     }
 
     return 0;
