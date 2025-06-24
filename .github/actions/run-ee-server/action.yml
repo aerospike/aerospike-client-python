@@ -11,6 +11,8 @@ inputs:
   registry-username:
     description: Required for using release candidates
     required: false
+  # Github Composite Actions can't access secrets
+  # so we need to pass them in as inputs
   registry-password:
     description: Required for using release candidates
     required: false
@@ -22,8 +24,6 @@ inputs:
     required: true
     description: Specify Docker tag
     default: 'latest'
-  # Github Composite Actions can't access secrets
-  # so we need to pass them in as inputs
   where-is-client-connecting-from:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
