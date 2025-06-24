@@ -107,11 +107,11 @@ on:
         default: false
       registry-name:
         type: string
-        required: true
+        required: false
         default: 'docker.io'
       image-name:
         type: string
-        required: true
+        required: false
         default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         required: false
