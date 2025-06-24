@@ -96,6 +96,8 @@ RUN apt update
 # There are a few packages being upgraded with this command, but it should be ok
 RUN apt install -y python3 python3-pip python3-venv
 WORKDIR /
+# We use a venv to handle newer Python versions (3.12+)
+# Those versions require a flag to "break system packages" when installing pip packages directly to the system
 RUN python3 -m venv .venv
 ENV PATH="/.venv/bin:$PATH"
 RUN python3 -m pip install jinja2
