@@ -48,6 +48,9 @@ runs:
   - run: echo NEW_IMAGE_FULL_NAME=${{ env.IMAGE_FULL_NAME }}-python-client-testing >> $GITHUB_ENV
     shell: bash
 
+  - name: Allow building images from different platforms other than the native one
+    uses: docker/setup-qemu-action@v3
+
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
   - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
     uses: docker/setup-buildx-action@v3
