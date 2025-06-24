@@ -2,6 +2,11 @@ name: PR tests
 
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.9'
+  # pull_request event doesn't support inputs
+  REGISTRY_NAME: ${{ github.event_name == 'pull_request' && 'docker.io' || inputs.registry-name }}
+  SERVER_TAG: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
+  REGISTRY_USERNAME: ${{ github.event_name == 'pull_request' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ github.event_name == 'pull_request' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -22,9 +27,16 @@ on:
     ]
   workflow_dispatch:
     inputs:
-      test-server-rc:
-        type: boolean
-        default: false
+      # Used to test server RCs
+      registry-name:
+        description: Registry name
+        type: string
+        default: docker.io
+        required: true
+      server-tag:
+        description: Server tag
+        type: string
+        default: latest
         required: true
 
 jobs:
@@ -119,9 +131,10 @@ jobs:
     - name: Run Aerospike server
       uses: ./.github/actions/run-ee-server
       with:
-        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike/aerospike-server-enterprise-rc' || 'aerospike/aerospike-server-enterprise' }}
-        registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        registry-name: ${{ env.REGISTRY_NAME }}
+        server-tag: ${{ env.SERVER_TAG }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
 
     - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
@@ -188,8 +201,9 @@ jobs:
         name: coverage-report
         path: ./coverage-report
 
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v5
       with:
+        flags: ${{ env.REGISTRY_NAME }},${{ env.SERVER_TAG }}
         directory: coverage-report
         verbose: true # optional (default = false)
         fail_ci_if_error: true
@@ -219,48 +233,6 @@ jobs:
     - run: pip install mypy
 
     - run: stubtest aerospike --allowlist stubtest-allowlist
-
-  # Run this when testing new server features on server release candidate
-  # to make sure the tests don't regress on the last server release.
-  test-ce-latest-release:
-    runs-on: ubuntu-22.04
-    if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-    needs: build
-
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: recursive
-
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-
-    - uses: actions/download-artifact@v4
-      with:
-        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-
-    - name: Install client
-      run: pip install *.whl
-
-    - name: Install test dependencies
-      run: pip install -r test/requirements.txt
-
-    - name: Run Aerospike server
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server
-
-    - name: Create config.conf
-      run: cp config.conf.template config.conf
-      working-directory: test
-
-    - uses: ./.github/actions/wait-for-ce-server-to-start
-      with:
-        container-name: aerospike
-
-    - name: Run tests
-      run: python -m pytest ./new_tests
-      working-directory: test
 
   test-sanitizer:
     runs-on: ubuntu-22.04
@@ -295,9 +267,10 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike/aerospike-server-enterprise-rc' || 'aerospike/aerospike-server-enterprise' }}
-        registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        registry-name: ${{ env.REGISTRY_NAME }}
+        server-tag: ${{ env.SERVER_TAG }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
 
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by 
@@ -341,19 +314,8 @@ jobs:
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
 
-    - if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      uses: docker/login-action@v3
-      with:
-        username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Run Aerospike server release candidate with latest tag
-      if: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server-rc:latest
-
     - name: Run Aerospike server
-      if: ${{ !contains(github.event.pull_request.labels.*.name, 'new-server-features') }}
-      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 aerospike/aerospike-server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
     - name: Create config.conf
       run: cp config.conf.template config.conf
@@ -430,9 +392,10 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        image-name: ${{ contains(github.event.pull_request.labels.*.name, 'new-server-features') && 'aerospike/aerospike-server-enterprise-rc' || 'aerospike/aerospike-server-enterprise' }}
-        registry-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        registry-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
+        registry-name: ${{ env.REGISTRY_NAME }}
+        server-tag: ${{ env.SERVER_TAG }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
 
     - name: Run tests
       run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
