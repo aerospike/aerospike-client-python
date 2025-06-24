@@ -1,4 +1,5 @@
 name: Valgrind
+run-name: Valgrind (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }}, test-file=${{ inputs.test-file }}, massif=${{ inputs.massif }})
 
 on:
   workflow_dispatch:
