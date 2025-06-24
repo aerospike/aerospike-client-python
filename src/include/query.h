@@ -147,8 +147,8 @@ PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj);
 
 int64_t pyobject_to_int64(PyObject *py_obj);
 
-int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
-                             as_predicate_type predicate,
+int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
+                             PyObject *py_ctx, as_predicate_type predicate,
                              as_index_datatype in_datatype, PyObject *py_bin,
                              PyObject *py_val1, PyObject *py_val2,
                              int index_type, as_error *err);
