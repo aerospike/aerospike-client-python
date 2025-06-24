@@ -48,6 +48,7 @@ runs:
   - run: echo NEW_IMAGE_FULL_NAME=${{ env.IMAGE_FULL_NAME }}-python-client-testing >> $GITHUB_ENV
     shell: bash
 
+  # QE images are not multi-platform and only support a single platform.
   - name: Allow building images from different platforms other than the native one
     uses: docker/setup-qemu-action@v3
 
