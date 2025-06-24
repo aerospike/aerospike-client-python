@@ -153,7 +153,7 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
         // Blobs are handled separately below, so we don't need to use the void* pointer
     }
 
-    as_query_where_init(&query, 1);
+    as_query_where_init(query, 1);
 
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
         // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
