@@ -43,13 +43,12 @@ int64_t pyobject_to_int64(PyObject *py_obj)
 }
 
 // py_bin, py_val1, pyval2 are guaranteed to be non-NULL
-static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
-                                    as_predicate_type predicate,
-                                    as_index_datatype in_datatype,
-                                    PyObject *py_bin, PyObject *py_val1,
-                                    PyObject *py_val2, int index_type)
+int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
+                             as_predicate_type predicate,
+                             as_index_datatype in_datatype, PyObject *py_bin,
+                             PyObject *py_val1, PyObject *py_val2,
+                             int index_type, as_error *err)
 {
-    as_error err;
     as_cdt_ctx *pctx = NULL;
     bool ctx_in_use = false;
 
@@ -59,9 +58,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         memset(&static_pool, 0, sizeof(static_pool));
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
-        if (get_cdt_ctx(self->client, &err, pctx, py_ctx, &ctx_in_use,
+        if (get_cdt_ctx(self->client, err, pctx, py_ctx, &ctx_in_use,
                         &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
-            return err.code;
+            return err->code;
         }
     }
 
@@ -182,9 +181,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     }
     else {
         // If it ain't supported, raise and error
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "unknown predicate type");
         PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
+        error_to_pyobject(err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
         goto CLEANUP_ON_ERROR2;
     }
@@ -340,7 +339,7 @@ AerospikeQuery *AerospikeQuery_Where_Invoke(AerospikeQuery *self,
 
     int rc =
         AerospikeQuery_Where_Add(self, py_ctx, predicate_type, index_datatype,
-                                 py_bin, py_val1, py_val2, index_type);
+                                 py_bin, py_val1, py_val2, index_type, &err);
     /* Failed to add the predicate for some reason */
     if (rc != 0) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to add predicate");
