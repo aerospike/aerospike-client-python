@@ -58,8 +58,8 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
         memset(&static_pool, 0, sizeof(static_pool));
         pctx = cf_malloc(sizeof(as_cdt_ctx));
         memset(pctx, 0, sizeof(as_cdt_ctx));
-        if (get_cdt_ctx(self->client, err, pctx, py_ctx, &ctx_in_use,
-                        &static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {
+        if (get_cdt_ctx(client, err, pctx, py_ctx, &ctx_in_use, &static_pool,
+                        SERIALIZER_PYTHON) != AEROSPIKE_OK) {
             return err->code;
         }
     }
@@ -153,11 +153,11 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
         // Blobs are handled separately below, so we don't need to use the void* pointer
     }
 
-    as_query_where_init(&self->query, 1);
+    as_query_where_init(&query, 1);
 
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
         // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
-        as_query_where_with_ctx(&self->query, bin, pctx, predicate, index_type,
+        as_query_where_with_ctx(query, bin, pctx, predicate, index_type,
                                 AS_INDEX_BLOB, val1_bytes, bytes_size, true);
     }
     else if (in_datatype == AS_INDEX_NUMERIC ||
@@ -165,18 +165,17 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
              in_datatype == AS_INDEX_GEO2DSPHERE) {
         if (predicate == AS_PREDICATE_RANGE &&
             in_datatype == AS_INDEX_NUMERIC) {
-            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                    index_type, in_datatype, val1_int,
-                                    val2_int);
+            as_query_where_with_ctx(query, bin, pctx, predicate, index_type,
+                                    in_datatype, val1_int, val2_int);
         }
         else {
-            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                    index_type, in_datatype, val1);
+            as_query_where_with_ctx(query, bin, pctx, predicate, index_type,
+                                    in_datatype, val1);
         }
 
         if (in_datatype == AS_INDEX_STRING ||
             in_datatype == AS_INDEX_GEO2DSPHERE) {
-            self->query.where.entries[0].value.string_val._free = true;
+            query.where.entries[0].value.string_val._free = true;
         }
     }
     else {
@@ -189,7 +188,7 @@ int AerospikeQuery_Where_Add(AerospikeClient *client, as_query *query,
     }
 
     if (ctx_in_use) {
-        self->query.where.entries[0].ctx_free = true;
+        query.where.entries[0].ctx_free = true;
     }
 
     return 0;
