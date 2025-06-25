@@ -1,14 +1,19 @@
 name: Build artifacts and run stage tests
-run-name: Build artifacts and run stage tests (use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
+run-name: Build artifacts and run stage tests (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
 
 on:
   workflow_dispatch:
     inputs:
-      use-server-rc:
-        type: boolean
-        required: true
-        default: false
-        description: 'Test against server release candidate?'
+      registry-name:
+        type: string
+        required: false
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: true
@@ -50,6 +55,7 @@ jobs:
     secrets: inherit
     with:
       use_jfrog_builds: false
-      use-server-rc: ${{ inputs.use-server-rc }}
+      registry-name: ${{ inputs.registry-name }}
+      image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
       test-macos-x86: ${{ inputs.test-macos-x86 }}
