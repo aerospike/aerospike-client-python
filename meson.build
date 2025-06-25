@@ -6,8 +6,8 @@ incdir = include_directories('src/include')
 
 py = import('python').find_installation(pure: false)
 
-os = run_command('uname')
-arch = run_command('uname', '-m')
+os = run_command('uname', check: true)
+arch = run_command('uname', '-m', check: true)
 target_folder = os.stdout().strip() + '-' + arch.stdout().strip()
 
 c_compiler = meson.get_compiler('c')
