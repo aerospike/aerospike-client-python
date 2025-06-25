@@ -14,7 +14,6 @@ COPY $AEROSPIKE_CONF_FILE_NAME $AEROSPIKE_CONF_PATH
 
 ARG SERVER_KEY_FILE_NAME=server.pem
 ARG SERVER_CERT_FILE_NAME=server.cer
-ARG CA_CERT_FILE_NAME=ca.cer
 
 FROM shared AS enable-security
 
@@ -56,6 +55,7 @@ RUN openssl req -newkey rsa:4096 -keyout $SERVER_KEY_FILE_NAME -nodes -new -out 
 # via TLS.
 # By default we use the "dummy" CA cert and key that are committed in the repo
 ARG CA_KEY_FILE_NAME=ca.pem
+ARG CA_CERT_FILE_NAME=ca.cer
 COPY $CA_KEY_FILE_NAME .
 COPY $CA_CERT_FILE_NAME .
 RUN openssl x509 -req -in $SERVER_CSR_FILE_NAME -CA $CA_CERT_FILE_NAME -CAkey $CA_KEY_FILE_NAME -out $SERVER_CERT_FILE_NAME
