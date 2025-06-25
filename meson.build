@@ -89,7 +89,7 @@ py.extension_module(
     'src/main/convert_partition_filter.c',
     'src/main/aerospike.c',
     install: true,
-    link_with: 'aerospike-client-c/libaerospike.a',
+    link_with: 'aerospike-client-c/target/*/lib/libaerospike.a',
     include_directories: incdir,
     install_rpath: '$ORIGIN'
 )
