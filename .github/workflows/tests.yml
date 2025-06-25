@@ -483,7 +483,7 @@ jobs:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
-    - run: go install aerospike.jfrog.io/artifactory/qe-go-dev-local/testctl.amd64.linux
+    - run: go install aerospike.jfrog.io/artifactory/qe-go-dev-local/testctl.amd64.linux@latest
 
     - uses: actions/checkout@v4
       with:
