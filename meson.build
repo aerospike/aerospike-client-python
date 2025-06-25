@@ -6,8 +6,8 @@ incdir = include_directories('src/include')
 
 py = import('python').find_installation(pure: false)
 
-os = run_comamnd('shell', 'uname')
-arch = run_command('shell', 'uname', '-m')
+os = run_command('uname')
+arch = run_command('uname', '-m')
 target_folder = os.stdout() + '-' + arch.stdout()
 
 py.extension_module(
