@@ -476,8 +476,7 @@ jobs:
         sparse-checkout-cone-mode: false
 
     - name: Add test-enqueue to PATH
-      run: echo $(realpath .):$PATH >> $GITHUB_ENV
-      working-directory: bin
+      run: echo $(realpath qe-tools/bin):$PATH >> $GITHUB_ENV
 
     - uses: actions/checkout@v4
       with:
