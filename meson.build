@@ -10,6 +10,8 @@ os = run_command('uname')
 arch = run_command('uname', '-m')
 target_folder = os.stdout().strip() + '-' + arch.stdout().strip()
 
+c_client_lib = find_library('libaerospike.a', ['aerospike-client-c/target/' + target_folder + '/lib/'])
+
 py.extension_module(
     'aerospike',
     'src/main/log.c',
@@ -93,7 +95,7 @@ py.extension_module(
     'src/main/convert_partition_filter.c',
     'src/main/aerospike.c',
     install: true,
-    link_with: 'aerospike-client-c/target/' + target_folder + '/lib/libaerospike.a',
+    link_with: c_client_lib,
     include_directories: incdir,
     install_rpath: '$ORIGIN'
 )
