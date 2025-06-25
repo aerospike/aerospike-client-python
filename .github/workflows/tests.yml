@@ -500,5 +500,7 @@ jobs:
         aws-secret-access-key: ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}
         aws-region: us-west-1
 
+    - run: ls ~/.aws/credentials
+
     - run: test-enqueue --config staging --deployment perf_client client_perf.yaml
       working-directory: aerospike-client-python/test/
