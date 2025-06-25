@@ -19,11 +19,16 @@ on:
         required: false
       # These will be set if use_jfrog_builds is false (i.e when someone is building the artifacts from scratch and stage testing them in a calling workflow)
       # If use_jfrog_builds is true, only the defaults will be used
-      use-server-rc:
-        type: boolean
+      registry-name:
+        type: string
         required: false
-        default: false
-        description: 'Test against server release candidate?'
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: false
@@ -34,6 +39,10 @@ on:
         type: boolean
         default: false
         description: 'Test macOS x86 wheels (unstable)'
+
+env:
+  REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+  REGISTRY_PASSWORD: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
 jobs:
   linux-distro-tests:
@@ -105,10 +114,11 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: 'separate-docker-container'
 
     - name: Run distro container
@@ -206,10 +216,11 @@ jobs:
 
     - uses: ./.github/actions/run-ee-server
       with:
-        use-server-rc: ${{ inputs.use-server-rc }}
+        registry-name: ${{ inputs.registry-name }}
+        registry-username: ${{ env.REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        image-name: ${{ inputs.image-name }}
         server-tag: ${{ inputs.server-tag }}
-        docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
-        docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
         where-is-client-connecting-from: 'docker-host'
 
     - name: Install wheel
