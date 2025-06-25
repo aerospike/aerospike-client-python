@@ -8,7 +8,7 @@ py = import('python').find_installation(pure: false)
 
 os = run_command('uname')
 arch = run_command('uname', '-m')
-target_folder = os.stdout() + '-' + arch.stdout()
+target_folder = os.stdout().strip() + '-' + arch.stdout().strip()
 
 py.extension_module(
     'aerospike',
