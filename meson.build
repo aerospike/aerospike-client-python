@@ -11,8 +11,8 @@ arch = run_command('uname', '-m', check: true)
 target_folder = os.stdout().strip() + '-' + arch.stdout().strip()
 
 c_compiler = meson.get_compiler('c')
-lib_search_dir = meson.current_source_dir() + 'aerospike-client-c/target/' + target_folder + '/lib/'
-message(' - ', lib_search_dir)
+lib_search_dir = meson.current_source_dir() + '/aerospike-client-c/target/' + target_folder + '/lib/'
+# message(' - ', lib_search_dir)
 c_client_lib = c_compiler.find_library('aerospike', dirs: [lib_search_dir])
 
 py.extension_module(
