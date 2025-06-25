@@ -483,8 +483,10 @@ jobs:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
-    - run: jf rt download qe-go-dev-local/testctl.amd64.linux ~/.local/bin/testctl
-    - run: chmod u+x testctl
+    - run: jf rt download qe-go-dev-local/testctl.amd64.linux ~/bin/testctl
+    - run: chmod u+x ./testctl
+      working-directory: ~/bin
+    - run: echo "$(realpath ~/bin)" >> $GITHUB_PATH
     - uses: actions/checkout@v4
       with:
         path: aerospike-client-python
