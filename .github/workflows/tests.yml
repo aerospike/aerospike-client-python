@@ -461,3 +461,37 @@ jobs:
       working-directory: test/metrics
     - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/metrics
+
+  foo:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Get test-enqueue
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-tools
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        path: qe-tools
+        sparse-checkout: |
+          bin/test-enqueue
+        sparse-checkout-cone-mode: false
+
+    - name: Add test-enqueue to PATH
+      run: echo $(realpath .):$PATH >> $GITHUB_ENV
+      working-directory: bin
+
+    - uses: actions/checkout@v4
+      with:
+        path: aerospike-client-python
+        sparse-checkout: |
+          test/client_perf.yaml
+        sparse-checkout-cone-mode: false
+
+    - name: Allow test-enqueue to connect to Aerospike VPN
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.QE_TEST_ENQUEUE_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-west-1
+
+    - run: test-enqueue --config staging --deployment perf_client client_perf.yaml
+      working-directory: test/
