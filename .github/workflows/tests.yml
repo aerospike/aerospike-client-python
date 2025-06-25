@@ -493,4 +493,4 @@ jobs:
         aws-region: us-west-1
 
     - run: test-enqueue --config staging --deployment perf_client client_perf.yaml
-      working-directory: test/
+      working-directory: aerospike-client-python/test/
