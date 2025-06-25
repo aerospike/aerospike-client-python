@@ -19,6 +19,7 @@ lib_search_dir = meson.current_source_dir() + '/' + c_client_target_folder + '/l
 # message(' - ', lib_search_dir)
 c_client_lib = c_compiler.find_library('aerospike', dirs: [lib_search_dir])
 
+py.add_global_arguments('-fno-strict-aliasing')
 py.extension_module(
     'aerospike',
     'src/main/log.c',
