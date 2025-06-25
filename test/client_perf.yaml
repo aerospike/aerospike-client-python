@@ -1,0 +1,15 @@
+build:
+  repo: citrusleaf/aerospike-server
+  ref: 
+    - 8.0.0.8
+
+  script: enterprise
+  target:
+    - x86-ubuntu-22.04
+
+scenarios:
+  std:
+    - perfasd
+definitions:
+  std:
+    - perf_new_configs2@perf_regression/kvs_basic:50
