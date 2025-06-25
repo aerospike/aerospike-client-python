@@ -98,7 +98,7 @@ py.extension_module(
     'src/main/convert_partition_filter.c',
     'src/main/aerospike.c',
     install: true,
-    link_with: c_client_lib,
+    dependencies: c_client_lib,
     include_directories: incdir,
     install_rpath: '$ORIGIN'
 )
