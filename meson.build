@@ -2,16 +2,20 @@ project('aerospike', 'c')
 
 run_command('make', '-C', 'aerospike-client-c', check: true)
 
-incdir = include_directories('src/include')
-
-py = import('python').find_installation(pure: false)
-
 os = run_command('uname', check: true)
 arch = run_command('uname', '-m', check: true)
 target_folder = os.stdout().strip() + '-' + arch.stdout().strip()
+c_client_target_folder = 'aerospike-client-c/target/' + target_folder
+
+incdir = include_directories(
+    c_client_target_folder + '/include',
+    'aerospike-client-c/'
+)
+
+py = import('python').find_installation(pure: false)
 
 c_compiler = meson.get_compiler('c')
-lib_search_dir = meson.current_source_dir() + '/aerospike-client-c/target/' + target_folder + '/lib/'
+lib_search_dir = meson.current_source_dir() + '/' + c_client_target_folder + '/lib/'
 # message(' - ', lib_search_dir)
 c_client_lib = c_compiler.find_library('aerospike', dirs: [lib_search_dir])
 
