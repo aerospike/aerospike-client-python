@@ -9,7 +9,7 @@ c_client_target_folder = 'aerospike-client-c/target/' + target_folder
 
 incdir = include_directories(
     c_client_target_folder + '/include',
-    'aerospike-client-c/'
+    'src/include'
 )
 
 py = import('python').find_installation(pure: false)
