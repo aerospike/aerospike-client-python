@@ -478,6 +478,13 @@ jobs:
     - name: Add test-enqueue to PATH
       run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
 
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - run: go install aerospike.jfrog.io/artifactory/qe-go-dev-local/testctl.amd64.linux
+
     - uses: actions/checkout@v4
       with:
         path: aerospike-client-python
