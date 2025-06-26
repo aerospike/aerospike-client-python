@@ -108,7 +108,7 @@ py.extension_module(
     install: true,
     dependencies: [
         c_client_lib,
-        openssl_lib,
+        ssl_lib,
         crypto_lib
     ],
     include_directories: incdir,
