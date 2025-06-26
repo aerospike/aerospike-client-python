@@ -364,7 +364,7 @@ jobs:
         container-name: aerospike
 
     - name: Run tests
-      run: python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
+      run: LD_LIBRARY_PATH=$(openssl version -d | cut -f2- -d' ' | tr -d \")/lib python -m pytest ./new_tests -vv -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
   test-lowest-supported-server:
