@@ -22,6 +22,7 @@ lib_search_dir = meson.current_source_dir() + '/' + c_client_target_folder + '/l
 c_client_lib = c_compiler.find_library('aerospike', dirs: [lib_search_dir], static: true)
 ssl_lib = c_compiler.find_library('ssl', static: true)
 crypto_lib = c_compiler.find_library('crypto', static: true)
+yaml_lib = c_compiler.find_library('yaml', static: true)
 
 py.extension_module(
     'aerospike',
@@ -109,7 +110,8 @@ py.extension_module(
     dependencies: [
         c_client_lib,
         ssl_lib,
-        crypto_lib
+        crypto_lib,
+        yaml_lib
     ],
     include_directories: incdir,
     c_args: ['-fno-strict-aliasing'],
