@@ -20,6 +20,7 @@ c_compiler = meson.get_compiler('c')
 lib_search_dir = meson.current_source_dir() + '/' + c_client_target_folder + '/lib/'
 # message(' - ', lib_search_dir)
 c_client_lib = c_compiler.find_library('aerospike', dirs: [lib_search_dir], static: true)
+openssl_lib = c_compiler.find_library('ssl', static: true)
 
 py.extension_module(
     'aerospike',
@@ -104,7 +105,10 @@ py.extension_module(
     'src/main/convert_partition_filter.c',
     'src/main/aerospike.c',
     install: true,
-    dependencies: c_client_lib,
+    dependencies: [
+        c_client_lib,
+        openssl_lib
+    ]
     include_directories: incdir,
     c_args: ['-fno-strict-aliasing'],
     install_rpath: '$ORIGIN'
