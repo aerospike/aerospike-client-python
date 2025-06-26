@@ -201,7 +201,6 @@ jobs:
 
     - uses: codecov/codecov-action@v5
       with:
-        flags: ${{ env.REGISTRY_NAME }},${{ env.SERVER_TAG }}
         directory: coverage-report
         verbose: true # optional (default = false)
         fail_ci_if_error: true
