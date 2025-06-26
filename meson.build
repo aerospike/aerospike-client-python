@@ -1,8 +1,8 @@
 project('aerospike', 'c')
 
 c_client_msgs = run_command('make', '-C', 'aerospike-client-c', check: true)
-debug(c_client_msgs.stdout())
-debug(c_client_msgs.stderr())
+message(c_client_msgs.stdout())
+message(c_client_msgs.stderr())
 
 os = run_command('uname', check: true)
 arch = run_command('uname', '-m', check: true)
