@@ -1,6 +1,7 @@
 #include <Python.h>
 
 #include "types.h"
+#include "conversions.h"
 
 static void AerospikeTransaction_dealloc(AerospikeTransaction *self)
 {

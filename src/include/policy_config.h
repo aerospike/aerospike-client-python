@@ -22,6 +22,8 @@
 
 as_status set_optional_uint32_property(uint32_t *target_ptr,
                                        PyObject *policy_dict, const char *name);
+as_status set_optional_uint16_property(uint16_t *target_ptr,
+                                       PyObject *py_policy, const char *name);
 as_status set_optional_bool_property(bool *target_ptr, PyObject *py_policy,
                                      const char *name);
 as_status set_base_policy(as_policy_base *base, PyObject *py_policy);

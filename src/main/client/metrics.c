@@ -19,6 +19,7 @@
 
 #include "metrics.h"
 #include "conversions.h"
+#include "exceptions.h"
 #include "policy.h"
 
 PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,

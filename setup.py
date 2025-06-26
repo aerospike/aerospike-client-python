@@ -77,7 +77,6 @@ extra_compile_args = [
 if not WINDOWS:
     # Windows does not have this flag
     extra_compile_args.append("-Wno-strict-prototypes")
-    extra_compile_args.append('-Wno-implicit-function-declaration')
 
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
