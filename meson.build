@@ -108,7 +108,7 @@ py.extension_module(
     dependencies: [
         c_client_lib,
         openssl_lib
-    ]
+    ],
     include_directories: incdir,
     c_args: ['-fno-strict-aliasing'],
     install_rpath: '$ORIGIN'
