@@ -1475,7 +1475,7 @@ Index data types
 
 .. data:: INDEX_GEO2DSPHERE
 
-    An index whose values are of the aerospike GetJSON data type.
+    An index whose values are of the aerospike GeoJSON data type.
 
 .. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
 
