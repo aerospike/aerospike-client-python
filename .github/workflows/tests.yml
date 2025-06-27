@@ -1,5 +1,8 @@
 name: PR tests
 
+permissions:
+  contents: read
+
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.9'
   # pull_request event doesn't support inputs
@@ -464,3 +467,57 @@ jobs:
       working-directory: test/metrics
     - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/metrics
+
+  foo:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Get test-enqueue
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-tools
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        path: qe-tools
+        sparse-checkout: |
+          bin/test-enqueue
+        sparse-checkout-cone-mode: false
+
+    - name: Add test-enqueue to PATH
+      run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - run: jf rt download qe-go-dev-local/testctl.amd64.linux qe-tools/bin/testctl
+    - run: chmod u+x ./testctl
+      working-directory: qe-tools/bin
+    - uses: actions/checkout@v4
+      with:
+        path: aerospike-client-python
+        sparse-checkout: |
+          test/client_perf.yaml
+        sparse-checkout-cone-mode: false
+
+    - name: Add AWS credentials
+      run: |
+        mkdir -p ~/.aws
+        sections=("default" "qe")
+        for section in ${sections[@]};
+        do
+          echo "[$section]" > ~/.aws/credentials
+          echo "aws_access_key_id = ${{ secrets.QE_TEST_ENQUEUE_AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
+          echo "aws_secret_access_key = ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
+          echo "region = us-west-1" >> ~/.aws/credentials
+        done
+      shell: bash
+
+    - run: testctl --version
+
+    # - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
+    #   working-directory: aerospike-client-python/test/
+
+    - run: test-enqueue --config staging --deployment perf_client client_perf.yaml
+      working-directory: aerospike-client-python/test/
+
+    - run: testctl --config staging ps --since 10m
