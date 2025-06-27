@@ -877,7 +877,7 @@ Index Operations
         :param str ns: The namespace to be indexed.
         :param str set: The set to be indexed.
         :param str index_type: The type of index, default or complex type.
-        :param str index_datatype: The data type of index, string or integer.
+        :param str index_datatype: The data type being indexed. Possible values are Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
         :param list expressions: The compiled expression to be indexed. Produced from :ref:`aerospike_operation_helpers.expressions`.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
