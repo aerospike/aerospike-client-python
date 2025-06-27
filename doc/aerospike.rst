@@ -1458,6 +1458,9 @@ Bin Types
 
 .. _aerospike_index_datatypes:
 
+Index data types
+----------------
+
 .. data:: INDEX_STRING
 
     An index whose values are of the aerospike string data type.
