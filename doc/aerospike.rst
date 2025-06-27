@@ -1456,14 +1456,7 @@ Bin Types
     (int): 24
 
 
-.. _aerospike_misc_constants:
-
-Miscellaneous
--------------
-
-.. data:: UDF_TYPE_LUA
-
-    UDF type is LUA (which is the only UDF type).
+.. _aerospike_index_datatypes:
 
 .. data:: INDEX_STRING
 
@@ -1482,6 +1475,15 @@ Miscellaneous
     An index whose values are of the aerospike GetJSON data type.
 
 .. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+
+.. _aerospike_misc_constants:
+
+Miscellaneous
+-------------
+
+.. data:: UDF_TYPE_LUA
+
+    UDF type is LUA (which is the only UDF type).
 
 .. data:: INDEX_TYPE_DEFAULT
 
