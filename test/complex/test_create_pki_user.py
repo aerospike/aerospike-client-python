@@ -46,6 +46,9 @@ class TestCreatePKIUser(unittest.TestCase):
                 # Check that the PKI user was created.
                 userDict = as_client.admin_query_user_info(pki_user)
                 assert userDict["roles"] == ["read-write"]
+                print("PKI user created successfully.")
+            else:
+                print("admin_create_pki_user() failed as expected for unsupported server versions.")
         finally:
             # Cleanup
             as_client.close()
