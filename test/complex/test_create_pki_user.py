@@ -4,9 +4,6 @@ import aerospike
 from aerospike import exception as e
 from contextlib import nullcontext
 
-# Creating a PKI user with the superuser doesn't work
-# I believe it's because the user creating a PKI user must only have the user-admin role
-# The superuser has many other roles for testing and setting up strong consistency in the entrypoint script.
 config = {
     "hosts": [
         ("127.0.0.1", 4333, "docker")
