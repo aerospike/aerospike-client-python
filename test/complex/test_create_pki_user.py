@@ -1,0 +1,33 @@
+import aerospike
+
+# Creating a PKI user with the superuser doesn't work
+# I believe it's because the user creating a PKI user must only have the user-admin role
+# The superuser has many other roles for testing and setting up strong consistency in the entrypoint script.
+config = {
+    "hosts": [
+        ("127.0.0.1", 4333, "docker")
+    ],
+    "user": "pki1",
+    # "password": ""
+    "tls": {
+        "enable": True,
+        "cafile": "../../.github/workflows/docker-build-context/ca.cer",
+        "keyfile": "../../.github/workflows/docker-build-context/client.pem",
+        "certfile": "../../.github/workflows/docker-build-context/client.cer"
+    }
+}
+print("Connecting to server...")
+as_client = aerospike.client(config)
+
+try:
+    pki_user = "pki2"
+    roles = ["read-write"]
+    admin_policy = {}
+    as_client.admin_create_pki_user(user=pki_user, roles=roles, policy=admin_policy)
+
+    # Check that the PKI user was created.
+    userDict = as_client.admin_query_user_info(pki_user)
+    assert userDict["roles"] == ["read-write"]
+finally:
+    # Cleanup
+    as_client.close()
