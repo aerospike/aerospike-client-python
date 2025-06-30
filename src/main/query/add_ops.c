@@ -65,6 +65,12 @@ AerospikeQuery *AerospikeQuery_Add_Ops(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
+    if (strlen(self->query.apply.module)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "Query can have either a UDF or operations, not both");
+        goto CLEANUP;
+    }
+
     if (PyList_Check(py_ops)) {
         Py_ssize_t size = PyList_Size(py_ops);
         self->query.ops = as_operations_new((uint16_t)size);
