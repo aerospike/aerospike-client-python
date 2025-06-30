@@ -102,6 +102,10 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
      select_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
+    {"where_with_expr", (PyCFunction)AerospikeQuery_WhereWithExpr, METH_VARARGS,
+     where_doc},
+    {"where_with_index_name", (PyCFunction)AerospikeQuery_WhereWithIndexName,
+     METH_VARARGS, where_doc},
 
     {"execute_background", (PyCFunction)AerospikeQuery_ExecuteBackground,
      METH_VARARGS | METH_KEYWORDS, execute_background_doc},
