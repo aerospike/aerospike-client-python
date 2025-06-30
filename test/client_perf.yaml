@@ -12,4 +12,4 @@ scenarios:
     - perfasd
 definitions:
   std:
-    - perf_new_configs2@perf_regression/kvs_basic:50
+    - perf_new_configs2@perf_regression/client_centered_kvs:50
