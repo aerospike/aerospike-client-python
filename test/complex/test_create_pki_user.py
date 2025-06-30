@@ -1,5 +1,5 @@
 import unittest
-
+import time
 import aerospike
 from aerospike import exception as e
 from contextlib import nullcontext
@@ -47,6 +47,7 @@ class TestCreatePKIUser(unittest.TestCase):
                 as_client.admin_create_pki_user(user=pki_user, roles=roles, policy=admin_policy)
 
             if type(context) == nullcontext:
+                time.sleep(3)
                 # Check that the PKI user was created.
                 userDict = as_client.admin_query_user_info(pki_user)
                 assert userDict["roles"] == ["read-write"]
