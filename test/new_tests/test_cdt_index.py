@@ -674,6 +674,27 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         except e.InvalidRequest as exception:
             assert exception.code == 4
 
+    def test_neg_cdtindex_with_incorrect_cdt_ctx(self):
+        """
+        Invoke createindex() with incorrect namespace
+        """
+        policy = {}
+
+        try:
+            self.as_connection.index_cdt_create(
+                "test",
+                "demo",
+                "numeric_list",
+                aerospike.INDEX_TYPE_DEFAULT,
+                aerospike.INDEX_NUMERIC,
+                "test_numeric_list_cdt_index",
+                {"ctx": False},
+                policy,
+            )
+
+        except e.ParamError as exception:
+            assert exception.code == -2
+
     def test_neg_cdtindex_with_incorrect_set(self):
         """
         Invoke createindex() with incorrect set
