@@ -33,7 +33,11 @@ class TestCreatePKIUser(unittest.TestCase):
             pki_user = "pki2"
             roles = ["read-write"]
             admin_policy = {}
-            server_version = as_client.info_random_node("build")
+            info_response = as_client.info_random_node("build")
+            print(info_response)
+            # Example response format: build <version>
+            tokens = info_response.split()
+            server_version = tokens[1]
             if server_version.startswith('8.1'):
                 context = nullcontext()
             else:
@@ -52,6 +56,7 @@ class TestCreatePKIUser(unittest.TestCase):
         finally:
             # Cleanup
             as_client.close()
+
 
 if __name__ == '__main__':
     unittest.main()
