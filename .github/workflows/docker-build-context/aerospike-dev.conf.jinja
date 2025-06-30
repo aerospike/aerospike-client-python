@@ -85,5 +85,8 @@ namespace test {
 {% if security is true %}
 security {
 	enable-quotas true
+	log {
+		report-violations true
+	}
 }
 {% endif %}
