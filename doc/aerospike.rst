@@ -950,6 +950,11 @@ Specifies the type of authentication to be used when communicating with the serv
     .. warning::
         This mode should only be used for testing purposes because it is not secure authentication.
 
+.. data:: AUTH_PKI
+
+    Authentication and authorization based on a certificate.  No user name or
+    password needs to be configured.  Requires TLS and a client certificate.
+
 .. _aerospike_job_constants:
 
 Job Constants
