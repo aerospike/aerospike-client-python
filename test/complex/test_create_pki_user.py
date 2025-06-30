@@ -8,7 +8,9 @@ config = {
         ("127.0.0.1", 4333, "docker")
     ],
     "user": "pki1",
-    # "password": ""
+    "policies": {
+        "auth_mode": aerospike.AUTH_PKI
+    },
     "tls": {
         "enable": True,
         "cafile": "../../.github/workflows/docker-build-context/ca.cer",
