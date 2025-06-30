@@ -11,7 +11,7 @@ config = {
     "hosts": [
         ("127.0.0.1", 4333, "docker")
     ],
-    "user": "pki1",
+    # "user": "pki1",
     "policies": {
         "auth_mode": aerospike.AUTH_PKI
     },
