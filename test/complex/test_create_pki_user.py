@@ -52,3 +52,6 @@ class TestCreatePKIUser(unittest.TestCase):
         finally:
             # Cleanup
             as_client.close()
+
+if __name__ == '__main__':
+    unittest.main()
