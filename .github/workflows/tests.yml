@@ -464,7 +464,8 @@ jobs:
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/complex
 
-    - uses: .github/actions/run-ee-server
+    - if: ${{ matrix.suffix == 'create_pki_user' }}
+      uses: .github/actions/run-ee-server
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
