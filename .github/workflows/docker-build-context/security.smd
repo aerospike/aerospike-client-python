@@ -22,27 +22,9 @@
       "timestamp": 458774922440
    },
    {
-      "key": "superuser|R|read-write-udf",
-      "value": "",
-      "generation": 3,
-      "timestamp": 458774922441
-   },
-   {
-      "key": "superuser|R|sys-admin",
-      "value": "",
-      "generation": 3,
-      "timestamp": 458774922442
-   },
-   {
       "key": "superuser|R|user-admin",
       "value": "",
       "generation": 3,
       "timestamp": 458774922442
    },
-   {
-      "key": "superuser|R|data-admin",
-      "value": null,
-      "generation": 2,
-      "timestamp": 458774718056
-   }
 ]
