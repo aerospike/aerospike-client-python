@@ -465,7 +465,7 @@ jobs:
       working-directory: test/complex
 
     - if: ${{ matrix.suffix == 'create_pki_user' }}
-      uses: .github/actions/run-ee-server
+      uses: ./.github/actions/run-ee-server
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
