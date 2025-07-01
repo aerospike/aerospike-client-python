@@ -526,7 +526,7 @@ jobs:
         set -x
         while true; do
           run_id=$(testctl --config staging ps --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d')
-          if [[ -n "$run_id" ]]; then
+          if [[ -z "$run_id" ]]; then
             echo "Test has not finished yet..."
             sleep 2
           else
