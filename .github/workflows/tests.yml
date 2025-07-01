@@ -441,14 +441,13 @@ jobs:
       run: sphinx-build -b linkcheck . links
       working-directory: doc
 
-  test-cases-with-specific-server-configs:
+  test-metrics:
     needs: build
     strategy:
       matrix:
         suffix:
         - node_close_listener
         - cluster_name
-        - create_pki_user
       fail-fast: false
     runs-on: ubuntu-22.04
     steps:
@@ -462,15 +461,6 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
-      working-directory: test/complex
-
-    - if: ${{ matrix.suffix == 'create_pki_user' }}
-      uses: ./.github/actions/run-ee-server
-      with:
-        registry-name: ${{ env.REGISTRY_NAME }}
-        server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
-
+      working-directory: test/metrics
     - run: python3 test_${{ matrix.suffix }}.py
-      working-directory: test/complex
+      working-directory: test/metrics
