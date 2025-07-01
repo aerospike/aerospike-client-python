@@ -524,7 +524,8 @@ jobs:
       id: poll-run-id
       run: |
         while true; do
-          run_id=$(testctl --config staging ps --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d')
+          # Color messes up the run_id's string
+          run_id=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d')
           if [[ -z "$run_id" ]]; then
             echo "Test has not finished yet..."
             sleep 2
