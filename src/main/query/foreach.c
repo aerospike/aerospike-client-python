@@ -167,7 +167,6 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
     // Aerospike Client Arguments
-    as_error err;
     as_policy_query query_policy;
     as_policy_query *query_policy_p = NULL;
 
