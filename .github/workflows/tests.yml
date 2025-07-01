@@ -539,7 +539,7 @@ jobs:
 
     # We don't want to save the test results to the full run id
     # Just use the shortened id so it's easier to CD into the directory below
-    - run: testctl download ${{ steps.poll-run-id.outputs.run_id }} -dest ${{ steps.poll-run-id.outputs.run_id }}
+    - run: testctl --config staging download ${{ steps.poll-run-id.outputs.run_id }} -dest ${{ steps.poll-run-id.outputs.run_id }}
 
     - run: cat test_stdout
       working-directory: ${{ steps.poll-run-id.outputs.run_id }}
