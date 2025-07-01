@@ -525,7 +525,8 @@ jobs:
       run: |
         while true; do
           # Color messes up the run_id's string
-          run_id=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d')
+          # Use xargs to trim whitespace from testctl's output
+          run_id=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
           if [[ -z "$run_id" ]]; then
             echo "Test run has not finished yet..."
             sleep 2
