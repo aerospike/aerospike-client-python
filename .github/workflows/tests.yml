@@ -520,4 +520,24 @@ jobs:
     - run: test-enqueue --config staging --deployment perf_client client_perf.yaml
       working-directory: aerospike-client-python/test/
 
-    - run: testctl --config staging ps --user ${{ env.TESTCTL_USER }} -n 1
+    - name: Wait for test run to finish
+      id: poll-run-id
+      run: |
+        while true; do
+          run_id=$(testctl --config staging ps --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d')
+          if [[ -n "$run_id" ]]; then
+            echo "Test has not finished yet..."
+            sleep 2
+          else
+            echo "Test has finished."
+            break
+          fi
+        done
+        echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+    # We don't want to save the test results to the full run id
+    # Just use the shortened id so it's easier to CD into the directory below
+    - run: testctl download ${{ steps.poll-run-id.outputs.run-id }} --dest ${{ steps.poll-run-id.outputs.run-id }}
+
+    - run: cat test_stdout
+      working-directory: ${{ steps.poll-run-id.outputs.run-id }}
