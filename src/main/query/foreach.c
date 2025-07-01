@@ -246,7 +246,7 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     // Promote any thread-level error if the main error was not set
     if (data.thread_errors.size > 0) {
         as_error *thread_err =
-            (as_error *)as_vector_get(&data.thread_errors, 0);
+            *(as_error **)as_vector_get(&data.thread_errors, 0);
         as_error_copy(&err, thread_err);
     }
 
