@@ -523,6 +523,7 @@ jobs:
     - name: Wait for test run to finish
       id: poll-run-id
       run: |
+        set -x
         while true; do
           run_id=$(testctl --config staging ps --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d')
           if [[ -n "$run_id" ]]; then
