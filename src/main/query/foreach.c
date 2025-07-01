@@ -161,7 +161,8 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     data.client = self->client;
     data.partition_query = 0;
 
-    as_error_init(&data.error);
+    as_error err;
+    as_error_init(&err);
     as_vector_init(&(data.thread_errors), sizeof(as_error *), 16);
     pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
@@ -228,9 +229,9 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
             as_partition_filter_set_partitions(partition_filter_p, ps);
         }
 
-        aerospike_query_partitions(self->client->as, &data.error,
-                                   query_policy_p, &self->query,
-                                   partition_filter_p, each_result, &data);
+        aerospike_query_partitions(self->client->as, &err, query_policy_p,
+                                   &self->query, partition_filter_p,
+                                   each_result, &data);
 
         if (ps) {
             as_partitions_status_release(ps);
@@ -244,15 +245,10 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     Py_END_ALLOW_THREADS
 
     // Promote any thread-level error if the main error was not set
-    if (data.error.code == AEROSPIKE_OK && data.thread_errors.size > 0) {
+    if (data.thread_errors.size > 0) {
         as_error *thread_err =
             (as_error *)as_vector_get(&data.thread_errors, 0);
-        as_error_copy(&data.error, thread_err);
-    }
-
-    if (data.error.code != AEROSPIKE_OK) {
-        as_error_update(&data.error, data.error.code, NULL);
-        goto CLEANUP;
+        as_error_copy(&err, thread_err);
     }
 
 CLEANUP:
@@ -265,15 +261,8 @@ CLEANUP:
     }
     self->query.apply.arglist = NULL;
 
-    if (err.code != AEROSPIKE_OK || data.error.code != AEROSPIKE_OK) {
-        if (err.code != AEROSPIKE_OK) {
-            raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None,
-                                 Py_None);
-        }
-        if (data.error.code != AEROSPIKE_OK) {
-            raise_exception_base(&data.error, Py_None, Py_None, Py_None,
-                                 Py_None, Py_None);
-        }
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
