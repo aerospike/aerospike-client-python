@@ -514,7 +514,10 @@ jobs:
     # - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
     #   working-directory: aerospike-client-python/test/
 
+    - name: Allows us to get the exact test run id that was created by test-enqueue.
+      run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
+
     - run: test-enqueue --config staging --deployment perf_client client_perf.yaml
       working-directory: aerospike-client-python/test/
 
-    - run: testctl --config staging ps --since 10m
+    - run: testctl --config staging ps --user ${{ env.TESTCTL_USER }} -n 1
