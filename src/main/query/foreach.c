@@ -31,7 +31,6 @@
 
 // Struct for Python User-Data for the Callback
 typedef struct {
-    as_error error;
     PyObject *callback;
     AerospikeClient *client;
     int partition_query;
@@ -49,7 +48,6 @@ static bool each_result(const as_val *val, void *udata)
 
     // Extract callback user-data
     LocalData *data = (LocalData *)udata;
-    as_error *err = &data->error;
     PyObject *py_callback = data->callback;
 
     // Python Function Arguments and Result Value
@@ -62,33 +60,15 @@ static bool each_result(const as_val *val, void *udata)
     gstate = PyGILState_Ensure();
 
     // Convert as_val to a Python Object
-    if (err->code != AEROSPIKE_OK) {
-        // Error was already set by another thread.
-        rval = false;
-        goto FINISH;
-    }
-    // Use local thread error to avoid overwriting shared error
+    // Use local thread error so we don't need to use the main error
+    // We want to avoid resetting the main error
+    // in case the shared error is set by another thread before val_to_pyobject() is called.
     as_error thread_err_local;
     as_error_init(&thread_err_local);
-
     val_to_pyobject(data->client, &thread_err_local, val, &py_result);
 
     // If val_to_pyobject fails, store error separately
     if (thread_err_local.code != AEROSPIKE_OK) {
-        pthread_mutex_lock(&data->thread_errors_mutex);
-        as_error *stored_err = (as_error *)cf_malloc(sizeof(as_error));
-        as_error_copy(stored_err, &thread_err_local);
-        as_vector_append(&data->thread_errors, stored_err);
-        pthread_mutex_unlock(&data->thread_errors_mutex);
-
-        rval = false;
-        goto FINISH;
-    }
-
-    // The record could not be converted to a python object
-    if (!py_result) {
-        //TBD set error here
-        // Must release the interpreter lock before returning
         goto FINISH;
     }
 
@@ -123,9 +103,8 @@ static bool each_result(const as_val *val, void *udata)
     if (!py_return) {
         // an exception was raised, handle it (someday)
         // for now, we bail from the loop
-        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+        as_error_update(&thread_err_local, AEROSPIKE_ERR_CLIENT,
                         "Callback function contains an error");
-        rval = false;
     }
     else if (PyBool_Check(py_return)) {
         if (Py_False == py_return) {
@@ -142,6 +121,16 @@ static bool each_result(const as_val *val, void *udata)
     }
 
 FINISH:
+    if (thread_err_local.code != AEROSPIKE_OK) {
+        pthread_mutex_lock(&data->thread_errors_mutex);
+        as_error *stored_err = (as_error *)cf_malloc(sizeof(as_error));
+        as_error_copy(stored_err, &thread_err_local);
+        as_vector_append(&data->thread_errors, stored_err);
+        pthread_mutex_unlock(&data->thread_errors_mutex);
+
+        rval = false;
+    }
+
     // Release Python State
     PyGILState_Release(gstate);
 
