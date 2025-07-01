@@ -68,7 +68,6 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     char **roles = alloca(sizeof(char *) * roles_size);
     for (int i = 0; i < roles_size; i++) {
         roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
-        // TODO: do we need?
         memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
     }
 
