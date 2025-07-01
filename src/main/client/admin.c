@@ -74,7 +74,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
 
     pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
     if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP_AND_RAISE_EXC;
+        goto CLEANUP_AND_RAISE_EXCEPTION;
     }
 
     // Convert python objects to username and password strings
@@ -82,7 +82,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     if (!user) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
                         "Username");
-        goto CLEANUP_AND_RAISE_EXC;
+        goto CLEANUP_AND_RAISE_EXCEPTION;
     }
 
     const char *password = NULL;
@@ -91,7 +91,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
         if (!password) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM, STR_CONVERSION_ERROR_MSG,
                             "Password");
-            goto CLEANUP_AND_RAISE_EXC;
+            goto CLEANUP_AND_RAISE_EXCEPTION;
         }
     }
 
@@ -101,7 +101,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     pyobject_to_policy_admin(self, &err, py_policy, &admin_policy,
                              &admin_policy_p, &self->as->config.policies.admin);
     if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP_AND_RAISE_EXC;
+        goto CLEANUP_AND_RAISE_EXCEPTION;
     }
 
     // Invoke operation
@@ -116,7 +116,7 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     }
     Py_END_ALLOW_THREADS
 
-CLEANUP_AND_RAISE_EXC:
+CLEANUP_AND_RAISE_EXCEPTION:
     for (int i = 0; i < roles_size; i++) {
         if (roles[i])
             cf_free(roles[i]);
