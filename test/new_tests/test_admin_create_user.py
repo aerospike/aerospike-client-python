@@ -385,9 +385,8 @@ class TestCreateUser(object):
         with context:
             self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
 
-        time.sleep(2)
-
         if type(context) == nullcontext:
             # Check that the PKI user was created.
+            time.sleep(2)
             userDict = self.client.admin_query_user_info(self.user)
             assert userDict["roles"] == ["read-write"]
