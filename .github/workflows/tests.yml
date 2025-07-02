@@ -517,7 +517,13 @@ jobs:
     - name: Allows us to get the exact test run id that was created by test-enqueue.
       run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
 
-    - run: test-enqueue --config staging --deployment perf_client client_perf.yaml
+    - name: Enqueue test run and fail fast if unable to enqueue
+      run: |
+        enqueue_count=$(test-enqueue --config staging --deployment perf_client client_perf.yaml | grep "COUNT:" | sed 's/COUNT\://' | xargs)
+        if [[ "$enqueue_count" != "1" ]]; then
+          echo "We expected 1 test run to be enqueued, not $enqueue_count"
+          exit 1
+        fi
       working-directory: aerospike-client-python/test/
 
     - name: Wait for test run to finish
