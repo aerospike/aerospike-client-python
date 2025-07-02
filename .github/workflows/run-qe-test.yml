@@ -99,10 +99,10 @@ jobs:
 
     - name: Print test run logs
       run: |
-        # So we can differentiate btwn stdout and stderr
-        set -x
         cd ${{ steps.poll-run-id.outputs.run_id }}*/work/test_0
+        echo "stdout:"
         cat stdout
+        echo "stderr:"
         cat stderr
 
     - name: Set Github job status
