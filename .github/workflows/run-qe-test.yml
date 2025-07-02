@@ -5,8 +5,6 @@ on:
         required: true
         default: CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs
         description: Test scenario
-  # TODO: remove
-  pull_request:
 
 jobs:
   foo:
