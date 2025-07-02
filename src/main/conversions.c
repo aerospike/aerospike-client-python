@@ -633,18 +633,12 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
                                    "Unable to get list item.");
         }
 
-        if (!PyUnicode_Check(py_val)) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Item is not a string");
-            return err->code;
+        const char *str = convert_pyobject_to_str(py_val);
+        if (!str) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert unicode object to C string");
         }
-
-        s = PyUnicode_AsUTF8(py_val);
-        if (!s) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to convert unicode object to C string");
-            return err->code;
-        }
-
         if (strlen(s) >= max_len) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "String exceeds max length");
