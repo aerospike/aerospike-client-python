@@ -253,7 +253,7 @@ CLEANUP:
     self->query.apply.arglist = NULL;
 
     for (uint32_t i = 0; i < data.thread_errors.size; ++i) {
-        void *err_ptr = as_vector_get(&data.thread_errors, i);
+        void *err_ptr = as_vector_get_ptr(&data.thread_errors, i);
         cf_free(err_ptr);
     }
     as_vector_destroy(&data.thread_errors);
