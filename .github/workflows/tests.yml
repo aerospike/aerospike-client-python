@@ -512,8 +512,9 @@ jobs:
         done
       shell: bash
 
-    - run: testctl --version
+    # - run: testctl --version
 
+    # test-enqueue hides testctl's output, so this can be helpful for debugging
     # - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
     #   working-directory: aerospike-client-python/test/
 
