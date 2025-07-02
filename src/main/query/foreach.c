@@ -41,7 +41,7 @@ typedef struct {
 
 static bool each_result(const as_val *val, void *udata)
 {
-    bool rval = true;
+    bool retval = true;
 
     if (!val) {
         return false;
@@ -106,18 +106,11 @@ static bool each_result(const as_val *val, void *udata)
                         "Callback function contains an error");
     }
     else if (PyBool_Check(py_return)) {
-        if (Py_False == py_return) {
-            rval = false;
+        if (py_return == Py_False) {
+            retval = false;
         }
-        else {
-            rval = true;
-        }
-        Py_DECREF(py_return);
     }
-    else {
-        rval = true;
-        Py_DECREF(py_return);
-    }
+    Py_XDECREF(py_return);
 
 FINISH:
     if (thread_err_local.code != AEROSPIKE_OK) {
@@ -127,13 +120,13 @@ FINISH:
         as_vector_append(&data->thread_errors, &stored_err_ref);
         pthread_mutex_unlock(&data->thread_errors_mutex);
 
-        rval = false;
+        retval = false;
     }
 
     // Release Python State
     PyGILState_Release(gstate);
 
-    return rval;
+    return retval;
 }
 
 PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
