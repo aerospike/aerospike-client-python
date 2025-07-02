@@ -1,5 +1,8 @@
 name: PR tests
 
+permissions:
+  contents: read
+
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.9'
   # pull_request event doesn't support inputs
