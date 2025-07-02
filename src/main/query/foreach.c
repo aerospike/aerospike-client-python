@@ -68,7 +68,7 @@ static bool each_result(const as_val *val, void *udata)
     val_to_pyobject(data->client, &thread_err_local, val, &py_result);
 
     if (thread_err_local.code != AEROSPIKE_OK) {
-        goto FINISH;
+        goto EXIT_CALLBACK;
     }
 
     // Build Python Function Arguments
@@ -111,7 +111,7 @@ static bool each_result(const as_val *val, void *udata)
     }
     Py_XDECREF(py_return);
 
-FINISH:
+EXIT_CALLBACK:
     if (thread_err_local.code != AEROSPIKE_OK) {
         pthread_mutex_lock(&data->thread_errors_mutex);
         as_error *stored_err_ref = (as_error *)cf_malloc(sizeof(as_error));
