@@ -541,3 +541,12 @@ jobs:
     - run: testctl --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
 
     - run: cat ${{ steps.poll-run-id.outputs.run_id }}*/test_stdout
+
+    - name: Set Github job status
+      run: |
+        run_status=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
+        if [[ "$run_status" == "Failure" ]]; then
+          exit 1
+        else
+          exit 0
+        fi
