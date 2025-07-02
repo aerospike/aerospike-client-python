@@ -33,8 +33,9 @@
 
 #define STR_CONVERSION_ERROR_MSG "%s should be a string"
 
-// py_password can be NULL if we are creating a PKI user
-// The other pyobjects must be non-NULL
+// If we are creating a PKI user, py_password can be NULL
+// If not creating a PKI user, py_password must be non-NULL
+// In both cases, the other pyobjects must be non-NULL
 static PyObject *admin_create_user_helper(AerospikeClient *self,
                                           PyObject *py_user,
                                           PyObject *py_password,
