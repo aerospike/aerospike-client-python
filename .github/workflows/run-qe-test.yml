@@ -1,0 +1,112 @@
+on:
+  workflow_dispatch:
+    inputs:
+      test-scenario:
+        required: true
+        default: CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs
+        description: Test scenario
+  # TODO: remove
+  pull_request:
+
+jobs:
+  foo:
+    env:
+      TEST_CONFIG_FILE_NAME: client_perf.yaml
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Get test-enqueue
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-tools
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+        path: qe-tools
+        sparse-checkout: |
+          bin/test-enqueue
+        sparse-checkout-cone-mode: false
+
+    - name: Add test-enqueue to PATH
+      run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - run: jf rt download qe-go-dev-local/testctl.amd64.linux qe-tools/bin/testctl
+    - run: chmod u+x ./testctl
+      working-directory: qe-tools/bin
+    - uses: actions/checkout@v4
+      with:
+        path: aerospike-client-python
+        sparse-checkout: |
+          test/${{ env.TEST_CONFIG_FILE_NAME }}
+        sparse-checkout-cone-mode: false
+
+    - name: Add AWS credentials
+      run: |
+        mkdir -p ~/.aws
+        cd ~/.aws
+        sections=("default" "qe")
+        for section in ${sections[@]};
+        do
+          cat <<-EOF >> credentials
+          [$section]
+          aws_access_key_id = ${{ secrets.QE_TEST_ENQUEUE_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key = ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}
+          region = us-west-1
+        	EOF
+        done
+      shell: bash
+
+    # - run: testctl --version
+
+    # test-enqueue hides testctl's output, so this can be helpful for debugging
+    # - run: testctl --config staging run 901b1178-0159-452d-9b36-64d455e568f2 --deployment perf_client
+    #   working-directory: aerospike-client-python/test/
+
+    - name: Allows us to get the exact test run id that was created by test-enqueue.
+      run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
+
+    - run: yq write -i ${{ env.TEST_CONFIG_FILE_NAME }} '.definitions.std.[0] = "${{ inputs.test-scenario }}"'
+      working-directory: aerospike-client-python/test/
+
+    - name: Enqueue test run and fail fast if unable to enqueue
+      run: |
+        enqueue_count=$(test-enqueue --config staging --deployment perf_client ${{ env.TEST_CONFIG_FILE_NAME }} | grep "COUNT:" | sed 's/COUNT\://' | xargs)
+        if [[ "$enqueue_count" != "1" ]]; then
+          echo "We expected 1 test run to be enqueued, but $enqueue_count was actually enqueued."
+          exit 1
+        fi
+      working-directory: aerospike-client-python/test/
+
+    - name: Wait for test run to finish
+      id: poll-run-id
+      run: |
+        while true; do
+          # Color messes up the run_id's string
+          # Use xargs to trim whitespace from testctl's output
+          run_id=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
+          if [[ -z "$run_id" ]]; then
+            echo "Test run has not finished yet..."
+            sleep 2
+          else
+            echo "Test run $run_id has finished."
+            break
+          fi
+        done
+        echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+    # Downloading builds doesn't work here, so we disable it
+    - run: testctl --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
+
+    - run: cat ${{ steps.poll-run-id.outputs.run_id }}*/test_stdout
+
+    - name: Set Github job status
+      run: |
+        run_status=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns STATUS | sed '1d' | xargs)
+        echo $run_status
+        if [[ "$run_status" == "Failure" ]]; then
+          exit 1
+        else
+          exit 0
+        fi
