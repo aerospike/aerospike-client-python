@@ -97,7 +97,13 @@ jobs:
     # Downloading builds doesn't work here, so we disable it
     - run: testctl --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
 
-    - run: cat ${{ steps.poll-run-id.outputs.run_id }}*/test_stdout
+    - name: Print test run logs
+      run: |
+        # So we can differentiate btwn stdout and stderr
+        set -x
+        cd ${{ steps.poll-run-id.outputs.run_id }}*/work/test_0
+        cat stdout
+        cat stderr
 
     - name: Set Github job status
       run: |
