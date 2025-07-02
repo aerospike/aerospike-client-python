@@ -64,8 +64,6 @@ static PyObject *admin_create_user_helper(AerospikeClient *self,
     if (PyErr_Occurred()) {
         goto RAISE_EXCEPTION;
     }
-    // TODO: Not sure if this should be used
-    // Could just heap allocate str array in helper function?
     char **roles = alloca(sizeof(char *) * roles_size);
     for (int i = 0; i < roles_size; i++) {
         roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
