@@ -1147,7 +1147,10 @@ user\'s roles. Users are assigned roles, which are collections of \
 
     .. method:: admin_create_pki_user(username: str, roles: list[, policy: dict])
 
-        Create a user and grant it roles.
+        Create a user and grant it roles. PKI users are authenticated via TLS and a certificate instead of a password.
+
+        .. warning:: This function should only be called for server versions 8.1+. If this function is called for older server versions,
+            an error will be returned.
 
         :param str username: the username to be added to the Aerospike cluster.
         :param list roles: the list of role names assigned to the user.
