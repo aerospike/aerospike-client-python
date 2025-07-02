@@ -607,54 +607,53 @@ as_status as_privilege_to_pyobject(as_error *err, as_privilege privileges[],
     return err->code;
 }
 
-const char **pyobject_to_str_array(as_error *err, PyObject *py_list,
-                                   unsigned long max_str_length)
+as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
+                               uint32_t max_len)
 {
 
     as_error_reset(err);
 
+    // TODO: duplicate check in admin_create_user_helper before this is called
     if (!PyList_Check(py_list)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "not a list");
-        goto error;
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
     }
 
+    // TODO: same as above
     Py_ssize_t size = PyList_Size(py_list);
     if (PyErr_Occurred()) {
-        // Raise client error -1 for backwards compatibility
-        as_error_update(err, AEROSPIKE_ERR_CLIENT, "Failed to get list size");
-        goto error;
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get list size");
     }
 
-    const char **str_array = cf_malloc(sizeof(const char *) * size);
+    const char *s = NULL;
     for (int i = 0; i < size; i++) {
         PyObject *py_val = PyList_GetItem(py_list, i);
         if (!py_val) {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                            "Unable to get list item.");
-            goto cleanup_and_return_error;
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to get list item.");
         }
 
-        const char *str = convert_pyobject_to_str(py_val);
-        if (!str) {
+        if (!PyUnicode_Check(py_val)) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Item is not a string");
+            return err->code;
+        }
+
+        s = PyUnicode_AsUTF8(py_val);
+        if (!s) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Unable to convert unicode object to C string");
-            goto cleanup_and_return_error;
+            return err->code;
         }
 
-        if (strlen(str) >= max_str_length) {
+        if (strlen(s) >= max_len) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "String exceeds max length");
-            goto cleanup_and_return_error;
+            return err->code;
         }
-        str_array[i] = str;
+        strcpy(arr[i], s);
     }
 
     return err->code;
-
-cleanup_and_return_error:
-    cf_free(str_array);
-error:
-    return NULL;
 }
 
 as_status pyobject_to_list(AerospikeClient *self, as_error *err,
