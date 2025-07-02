@@ -45,16 +45,4 @@
       "generation": 2,
       "timestamp": 458774718056
    },
-   {
-      "key": "tls1|P",
-      "value": "$2a$10$7EqJtq98hPqEX7fNZaFWoOePA2sZy..tlOF99W2N0g5KZ3dLaw8WO",
-      "generation": 5,
-      "timestamp": 489013722602
-   },
-   {
-      "key": "tls1|R|user-admin",
-      "value": "",
-      "generation": 5,
-      "timestamp": 489013722603
-   }
 ]
