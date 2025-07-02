@@ -22,6 +22,7 @@
 #include <aerospike/as_partition.h>
 #include <aerospike/as_arraylist.h>
 #include <aerospike/as_vector.h>
+#include <aerospike/aerospike_query.h>
 
 #include "client.h"
 #include "conversions.h"
