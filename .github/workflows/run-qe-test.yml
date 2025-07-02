@@ -65,7 +65,7 @@ jobs:
     - name: Allows us to get the exact test run id that was created by test-enqueue.
       run: echo TESTCTL_USER=$(uuidgen) >> $GITHUB_ENV
 
-    - run: yq write -i ${{ env.TEST_CONFIG_FILE_NAME }} '.definitions.std.[0] = "${{ inputs.test-scenario }}"'
+    - run: yq write -i '.definitions.std.[0] = "${{ inputs.test-scenario }}"' ${{ env.TEST_CONFIG_FILE_NAME }}
       working-directory: aerospike-client-python/test/
 
     - name: Enqueue test run and fail fast if unable to enqueue
