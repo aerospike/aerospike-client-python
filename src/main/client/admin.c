@@ -490,18 +490,8 @@ PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    // Convert python object to array of roles
-    if (PyList_Check(py_roles)) {
-        roles_size = PyList_Size(py_roles);
-        roles = alloca(sizeof(char *) * roles_size);
-        for (int i = 0; i < roles_size; i++) {
-            roles[i] = cf_malloc(sizeof(char) * AS_ROLE_SIZE);
-            memset(roles[i], 0, sizeof(char) * AS_ROLE_SIZE);
-        }
-    }
-
-    pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
-    if (err.code != AEROSPIKE_OK) {
+    const char *str_array = pyobject_to_str_array(&err, py_roles, AS_ROLE_SIZE);
+    if (str_array == NULL) {
         goto CLEANUP;
     }
 
@@ -523,8 +513,8 @@ PyObject *AerospikeClient_Admin_Grant_Roles(AerospikeClient *self,
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
-    aerospike_grant_roles(self->as, &err, admin_policy_p, user,
-                          (const char **)roles, roles_size);
+    aerospike_grant_roles(self->as, &err, admin_policy_p, user, str_array,
+                          roles_size);
     Py_END_ALLOW_THREADS
 
 CLEANUP:
@@ -605,7 +595,7 @@ PyObject *AerospikeClient_Admin_Revoke_Roles(AerospikeClient *self,
         }
     }
 
-    pyobject_to_strArray(&err, py_roles, roles, AS_ROLE_SIZE);
+    pyobject_to_str_array(&err, py_roles, roles, AS_ROLE_SIZE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -947,8 +937,8 @@ PyObject *AerospikeClient_Admin_Create_Role(AerospikeClient *self,
             whitelist[i] = cf_malloc(sizeof(char) * AS_IP_ADDRESS_SIZE);
         }
 
-        if (pyobject_to_strArray(&err, py_whitelist, whitelist,
-                                 AS_IP_ADDRESS_SIZE) != AEROSPIKE_OK) {
+        if (pyobject_to_str_array(&err, py_whitelist, whitelist,
+                                  AS_IP_ADDRESS_SIZE) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
@@ -1066,8 +1056,8 @@ PyObject *AerospikeClient_Admin_Set_Whitelist(AerospikeClient *self,
             whitelist[i] = cf_malloc(sizeof(char) * AS_IP_ADDRESS_SIZE);
         }
 
-        if (pyobject_to_strArray(&err, py_whitelist, whitelist,
-                                 AS_IP_ADDRESS_SIZE) != AEROSPIKE_OK) {
+        if (pyobject_to_str_array(&err, py_whitelist, whitelist,
+                                  AS_IP_ADDRESS_SIZE) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
