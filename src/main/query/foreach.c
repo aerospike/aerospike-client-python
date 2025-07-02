@@ -152,8 +152,10 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     data.client = self->client;
     data.partition_query = 0;
 
+    // Main error
     as_error err;
     as_error_init(&err);
+    // Stores errors reported by individual threads when they call the each_result callback
     as_vector_init(&data.thread_errors, sizeof(as_error *), 16);
     pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
