@@ -553,7 +553,7 @@ jobs:
 
     - name: Set Github job status
       run: |
-        run_status=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
+        run_status=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns STATUS | sed '1d' | xargs)
         echo $run_status
         if [[ "$run_status" == "Failure" ]]; then
           exit 1
