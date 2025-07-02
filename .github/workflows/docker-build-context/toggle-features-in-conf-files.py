@@ -9,6 +9,8 @@ env = Environment(loader = FileSystemLoader(AEROSPIKE_CONF_FOLDER), trim_blocks=
 env_vars = [
     "NO_SECURITY",
     "NO_TLS",
+    # If mutual TLS is disabled, use standard TLS authentication instead
+    "NO_MUTUAL_TLS",
     "NO_SC"
 ]
 kwargs = {}

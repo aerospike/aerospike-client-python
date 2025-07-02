@@ -401,7 +401,9 @@ jobs:
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
+      # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
+      # There's no way to tell unless we see the logs
+      run: python -m pytest -s ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
     - name: Show logs if failed
