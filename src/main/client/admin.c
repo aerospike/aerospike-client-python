@@ -126,6 +126,9 @@ RAISE_EXCEPTION:
         raise_exception(&err);
         return NULL;
     }
+    if (PyErr_Occurred()) {
+        return NULL;
+    }
 
     return PyLong_FromLong(0);
 }
