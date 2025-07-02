@@ -21,6 +21,7 @@ class TestCreateUser(object):
         Setup method
         """
         config = TestBaseClass.get_connection_config()
+        self.config = config
 
         self.client = aerospike.client(config).connect(config["user"], config["password"])
 
@@ -373,12 +374,14 @@ class TestCreateUser(object):
         except Exception:
             pass
 
-        self.delete_users.append(self.user)
-
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
-            context = pytest.raises(e.AerospikeError)
-        else:
+        # Check if we are connecting via mutual authentication (which is a prerequisite for this API call to succeed).
+        is_mutual_tls_enabled = "tls" in self.config and "certfile" in self.config["tls"]
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (8, 1) and is_mutual_tls_enabled:
             context = nullcontext()
+        else:
+            context = pytest.raises(e.AerospikeError)
+
+        self.delete_users.append(self.user)
 
         roles = ["read-write"]
         admin_policy = {}
