@@ -521,7 +521,7 @@ jobs:
       run: |
         enqueue_count=$(test-enqueue --config staging --deployment perf_client client_perf.yaml | grep "COUNT:" | sed 's/COUNT\://' | xargs)
         if [[ "$enqueue_count" != "1" ]]; then
-          echo "We expected 1 test run to be enqueued, not $enqueue_count"
+          echo "We expected 1 test run to be enqueued, but $enqueue_count was actually enqueued."
           exit 1
         fi
       working-directory: aerospike-client-python/test/
