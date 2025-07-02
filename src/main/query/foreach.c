@@ -66,7 +66,6 @@ static bool each_result(const as_val *val, void *udata)
     as_error_init(&thread_err_local);
     val_to_pyobject(data->client, &thread_err_local, val, &py_result);
 
-    // If val_to_pyobject fails, store error separately
     if (thread_err_local.code != AEROSPIKE_OK) {
         goto FINISH;
     }
