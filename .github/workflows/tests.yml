@@ -499,13 +499,16 @@ jobs:
     - name: Add AWS credentials
       run: |
         mkdir -p ~/.aws
+        cd ~/.aws
         sections=("default" "qe")
         for section in ${sections[@]};
         do
-          echo "[$section]" > ~/.aws/credentials
-          echo "aws_access_key_id = ${{ secrets.QE_TEST_ENQUEUE_AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
-          echo "aws_secret_access_key = ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
-          echo "region = us-west-1" >> ~/.aws/credentials
+          cat << EOF >> credentials
+          [$section]
+          aws_access_key_id = ${{ secrets.QE_TEST_ENQUEUE_AWS_ACCESS_KEY_ID }}
+          aws_secret_access_key = ${{ secrets.QE_TEST_ENQUEUE_AWS_SECRET_ACCESS_KEY }}
+          region = us-west-1
+          EOF
         done
       shell: bash
 
