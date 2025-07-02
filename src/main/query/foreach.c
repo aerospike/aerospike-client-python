@@ -104,11 +104,10 @@ static bool each_result(const as_val *val, void *udata)
         // for now, we bail from the loop
         as_error_update(&thread_err_local, AEROSPIKE_ERR_CLIENT,
                         "Callback function contains an error");
+        retval = false;
     }
-    else if (PyBool_Check(py_return)) {
-        if (py_return == Py_False) {
-            retval = false;
-        }
+    else if (py_return == Py_False) {
+        retval = false;
     }
     Py_XDECREF(py_return);
 
