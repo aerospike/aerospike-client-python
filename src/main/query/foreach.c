@@ -154,7 +154,7 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     as_error err;
     as_error_init(&err);
-    as_vector_init(&(data.thread_errors), sizeof(as_error *), 16);
+    as_vector_init(&data.thread_errors, sizeof(as_error *), 16);
     pthread_mutex_init(&data.thread_errors_mutex, NULL);
 
     // Aerospike Client Arguments
