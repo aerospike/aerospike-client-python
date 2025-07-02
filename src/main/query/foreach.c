@@ -60,9 +60,8 @@ static bool each_result(const as_val *val, void *udata)
     gstate = PyGILState_Ensure();
 
     // Convert as_val to a Python Object
-    // Use local thread error so we don't need to use the main error
-    // We want to avoid resetting the main error
-    // in case the shared error is set by another thread before val_to_pyobject() is called.
+    // Use local thread error so we don't need to pass the main error to the callback
+    // We want to avoid resetting the main error in case it was already set by another thread.
     as_error thread_err_local;
     as_error_init(&thread_err_local);
     val_to_pyobject(data->client, &thread_err_local, val, &py_result);
