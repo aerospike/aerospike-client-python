@@ -122,9 +122,9 @@ static bool each_result(const as_val *val, void *udata)
 FINISH:
     if (thread_err_local.code != AEROSPIKE_OK) {
         pthread_mutex_lock(&data->thread_errors_mutex);
-        as_error *stored_err = (as_error *)cf_malloc(sizeof(as_error));
-        as_error_copy(stored_err, &thread_err_local);
-        as_vector_append(&data->thread_errors, stored_err);
+        as_error **stored_err_ref = (as_error *)cf_malloc(sizeof(as_error));
+        as_error_copy(stored_err_ref, &thread_err_local);
+        as_vector_append(&data->thread_errors, stored_err_ref);
         pthread_mutex_unlock(&data->thread_errors_mutex);
 
         rval = false;
@@ -244,9 +244,9 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
 
     // Promote any thread-level error if the main error was not set
     if (data.thread_errors.size > 0) {
-        as_error **vector_item_ref =
-            (as_error **)as_vector_get(&data.thread_errors, 0);
-        as_error_copy(&err, *vector_item_ref);
+        as_error *vector_item =
+            (as_error *)as_vector_get_ptr(&data.thread_errors, 0);
+        as_error_copy(&err, vector_item);
     }
 
 CLEANUP:
