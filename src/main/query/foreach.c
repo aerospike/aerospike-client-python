@@ -172,7 +172,6 @@ PyObject *AerospikeQuery_Foreach(AerospikeQuery *self, PyObject *args,
     as_partitions_status *ps = NULL;
 
     // Initialize error
-    as_error_init(&err);
 
     if (!self || !self->client->as) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
