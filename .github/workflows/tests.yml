@@ -537,9 +537,7 @@ jobs:
         done
         echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
-    # We don't want to save the test results to the full run id
-    # Just use the shortened id so it's easier to CD into the directory below
-    # Need to skip downloading builds since we don't have VPN access (TODO check)
+    # Downloading builds doesn't work here, so we disable it
     - run: testctl --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
 
     - run: cat ${{ steps.poll-run-id.outputs.run_id }}*/test_stdout
