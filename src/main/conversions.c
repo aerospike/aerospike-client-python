@@ -613,7 +613,7 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 
     as_error_reset(err);
 
-    // TODO: duplicate check in admin_create_user_helper before this is called
+    // Long term TODO: duplicate check in admin_create_user_helper before this is called
     if (!PyList_Check(py_list)) {
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
     }
