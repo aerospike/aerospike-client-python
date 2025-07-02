@@ -253,17 +253,17 @@ CLEANUP:
     }
     self->query.apply.arglist = NULL;
 
-    if (err.code != AEROSPIKE_OK) {
-        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
-        return NULL;
-    }
-
     for (uint32_t i = 0; i < data.thread_errors.size; ++i) {
         void *err_ptr = as_vector_get(&data.thread_errors, i);
         cf_free(err_ptr);
     }
     as_vector_destroy(&data.thread_errors);
     pthread_mutex_destroy(&data.thread_errors_mutex);
+
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
+        return NULL;
+    }
 
     Py_INCREF(Py_None);
     return Py_None;
