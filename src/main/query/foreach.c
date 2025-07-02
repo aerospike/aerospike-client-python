@@ -122,9 +122,9 @@ static bool each_result(const as_val *val, void *udata)
 FINISH:
     if (thread_err_local.code != AEROSPIKE_OK) {
         pthread_mutex_lock(&data->thread_errors_mutex);
-        as_error **stored_err_ref = (as_error *)cf_malloc(sizeof(as_error));
+        as_error *stored_err_ref = (as_error *)cf_malloc(sizeof(as_error));
         as_error_copy(stored_err_ref, &thread_err_local);
-        as_vector_append(&data->thread_errors, stored_err_ref);
+        as_vector_append(&data->thread_errors, &stored_err_ref);
         pthread_mutex_unlock(&data->thread_errors_mutex);
 
         rval = false;
