@@ -625,7 +625,7 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
                                "Failed to get list size");
     }
 
-    const char *s = NULL;
+    const char *str = NULL;
     for (int i = 0; i < size; i++) {
         PyObject *py_val = PyList_GetItem(py_list, i);
         if (!py_val) {
@@ -633,18 +633,18 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
                                    "Unable to get list item.");
         }
 
-        const char *str = convert_pyobject_to_str(py_val);
+        str = convert_pyobject_to_str(py_val);
         if (!str) {
             return as_error_update(
                 err, AEROSPIKE_ERR_CLIENT,
                 "Unable to convert unicode object to C string");
         }
-        if (strlen(s) >= max_len) {
+        if (strlen(str) >= max_len) {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "String exceeds max length");
             return err->code;
         }
-        strcpy(arr[i], s);
+        strcpy(arr[i], str);
     }
 
     return err->code;
