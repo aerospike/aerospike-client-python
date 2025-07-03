@@ -15,7 +15,7 @@
  ******************************************************************************/
 #include <Python.h>
 #include <stdbool.h>
-#include "pthread.h"
+#include <pthread.h>
 
 #include <aerospike/aerospike_scan.h>
 #include <aerospike/as_error.h>
