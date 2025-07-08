@@ -98,18 +98,18 @@ if SANITIZER:
     extra_link_args.extend(sanitizer_ldflags)
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
-libraries = [
-    'm',
-    'z',
-    'yaml'
-]
 if not WINDOWS:
-    libraries.append('ssl')
-    libraries.append('crypto')
-    libraries.append('pthread')
+    libraries = [
+        'm',
+        'z',
+        'yaml',
+        'ssl',
+        'crypto',
+        'pthread'
+]
 else:
     # TODO: missing crypto library
-    libraries.append('ssleay32')
+    libraries = ['ssleay32']
 
 ##########################
 # GITHUB ACTIONS SETTINGS
