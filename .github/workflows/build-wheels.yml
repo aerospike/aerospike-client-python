@@ -393,10 +393,6 @@ jobs:
           image-name: ${{ inputs.image-name }}
           server-tag: ${{ inputs.server-tag }}
           where-is-client-connecting-from: ${{ inputs.platform-tag == 'win_amd64' && 'remote-connection' || 'docker-host' }}
-          # Currently there is a bug with Windows running using mutual authentication, causing the tests to fail out early:
-          # "no OPENSSL_Applink"
-          # We just disable mutual TLS for now for the Windows tests to run.
-          enable-mutual-tls: ${{ inputs.platform-tag != 'win_amd64' }}
 
       - name: Download wheel
         uses: actions/download-artifact@v4

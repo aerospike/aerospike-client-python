@@ -32,7 +32,7 @@ network {
 	service {
 		{% if tls is true %}
 		tls-port 4333
-		tls-authenticate-client {% if mutual_tls is true %}any{% else %}false{% endif %}
+		tls-authenticate-client any
 		tls-name docker
 		{% endif %}
 		address any
