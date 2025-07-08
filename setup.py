@@ -99,7 +99,6 @@ if SANITIZER:
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
-    'pthread',
     'm',
     'z',
     'yaml'
@@ -107,6 +106,7 @@ libraries = [
 if not WINDOWS:
     libraries.append('ssl')
     libraries.append('crypto')
+    libraries.append('pthread')
 else:
     # TODO: missing crypto library
     libraries.append('ssleay32')
