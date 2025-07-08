@@ -99,13 +99,16 @@ if SANITIZER:
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 libraries = [
-    'ssl',
     'crypto',
     'pthread',
     'm',
     'z',
     'yaml'
 ]
+if not WINDOWS:
+    libraries.append('ssl')
+else:
+    libraries.append('ssleay32')
 
 ##########################
 # GITHUB ACTIONS SETTINGS
