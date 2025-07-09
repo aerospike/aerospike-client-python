@@ -108,8 +108,7 @@ if not WINDOWS:
         'pthread'
 ]
 else:
-    # TODO: missing crypto library
-    libraries = ['ssleay32']
+    libraries = []
 
 ##########################
 # GITHUB ACTIONS SETTINGS
