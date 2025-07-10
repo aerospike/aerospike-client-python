@@ -381,7 +381,11 @@ class TestCreateUser(object):
             context = nullcontext()
 
         # Make sure mutual TLS is enabled.
-        if not (TestBaseClass.tls_in_use() and "certfile" in self.connection_config):
+        if not (
+            TestBaseClass.tls_in_use()
+            and "tls" in self.connection_config
+            and "certfile" in self.connection_config["tls"]
+        ):
             pytest.skip("Mutual TLS is not enabled")
 
         roles = ["read-write"]
