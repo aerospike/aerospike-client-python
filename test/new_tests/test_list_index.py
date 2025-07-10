@@ -187,22 +187,18 @@ class TestListIndex(object):
         self.as_connection.index_remove("test", "test_string_list_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_list_index")
 
-    """
-    This test case causes a db crash and hence has been commented. Work pending
-on the C-client side
     def test_createindex_with_long_index_name(self):
-            Invoke createindex() with long index name
+        # Invoke createindex() with long index name
         policy = {}
-        retobj = self.as_connection.index_list_create( 'test', 'demo',
+        retobj = self.as_connection.index_list_create('test', 'demo',
 'age',
 'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453rf9qwfa\
 sdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc', policy)
 
-        assert retobj == 0L
+        assert retobj == 0
         self.as_connection.index_remove(policy, 'test',
 'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453rf9qwfasd\
-cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
-    """
+cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc')
 
     def test_pos_create_liststringindex_unicode_positive(self):
         """

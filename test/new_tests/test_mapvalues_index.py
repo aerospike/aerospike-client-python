@@ -281,11 +281,8 @@ class TestMapValuesIndex(object):
         self.as_connection.index_remove("test", "test_string_map_index", policy)
         ensure_dropped_index(self.as_connection, "test", "test_string_map_index")
 
-    """
-    This test case causes a db crash and hence has been commented. Work pending
-on the C-client side
     def test_createindex_with_long_index_name(self):
-            Invoke createindex() with long index name
+        # Invoke createindex() with long index name
         policy = {}
         retobj = self.as_connection.index_map_values_create(
             'test', 'demo',
@@ -293,11 +290,10 @@ on the C-client side
 'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453r\
 f9qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc', policy)
 
-        assert retobj == 0L
+        assert retobj == 0
         self.as_connection.index_remove(policy, 'test',
 'bin2_integer_indexsdadadfasdfasdfeartfqrgahfasdfheudsdfasdfawf312342q3453rf9\
-qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
-    """
+qwfasdcfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc')
 
     def test_create_mapvaluesindex_unicode_positive(self):
         """
