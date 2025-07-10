@@ -679,7 +679,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``1``
         * **tend_interval** (:class:`int`)
-            Polling interval in milliseconds for tending the cluster
+            Polling interval in milliseconds for tending the cluster. The minimum value is ``250``.
 
             Default: ``1000``
         * **compression_threshold** (:class:`int`)
