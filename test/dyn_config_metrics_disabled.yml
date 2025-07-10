@@ -4,4 +4,4 @@ dynamic:
     enable: false
 static:
   client:
-    config_interval: 1
+    config_interval: 1000
