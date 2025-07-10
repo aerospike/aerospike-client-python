@@ -12,18 +12,18 @@ METRICS_LOG_FILES = "./metrics-*.log"
 class TestDynamicConfig:
     def test_config_provider_defaults(self):
         provider = aerospike.ConfigProvider(path="path")
-        assert provider.interval == 60
+        assert provider.interval == 60000
 
     def test_config_provider_class(self):
-        provider = aerospike.ConfigProvider(path="path", interval=30)
+        provider = aerospike.ConfigProvider(path="path", interval=30000)
 
         assert provider.path == "path"
-        assert provider.interval == 30
+        assert provider.interval == 30000
         # Fields should be read only
         with pytest.raises(AttributeError):
             provider.path = "invalid"
         with pytest.raises(AttributeError):
-            provider.interval = 10
+            provider.interval = 10000
 
     def test_config_provider_class_invalid_args(self):
         # See comment in test_mrt_api.py's test_transaction_class test case
