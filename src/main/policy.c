@@ -1306,7 +1306,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         // Need to deallocate metrics listeners' udata
         goto error;
     }
-    const char *report_dir = convert_pyobject_to_str(err, py_report_dir);
+    const char *report_dir = convert_pyobject_to_str(py_report_dir);
     if (!report_dir) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         "report_dir", "str");
@@ -1389,16 +1389,14 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         PyObject *py_label_name, *py_label_value;
         Py_ssize_t pos = 0;
         while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
-            const char *label_name =
-                convert_pyobject_to_str(err, py_label_name);
+            const char *label_name = convert_pyobject_to_str(py_label_name);
             if (label_name == NULL) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 INVALID_ATTR_TYPE_ERROR_MSG, labels_attr_name,
                                 "dict[str, str]");
                 goto while_error;
             }
-            const char *label_value =
-                convert_pyobject_to_str(err, py_label_value);
+            const char *label_value = convert_pyobject_to_str(py_label_value);
             if (label_value == NULL) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 INVALID_ATTR_TYPE_ERROR_MSG, labels_attr_name,
@@ -1420,29 +1418,6 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         labels_attr_name, "dict[str, str]");
         goto error;
-    }
-
-    const char *app_id_attr_name = "app_id";
-    PyObject *py_app_id =
-        PyObject_GetAttrString(py_metrics_policy, app_id_attr_name);
-    if (!py_app_id) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                        app_id_attr_name);
-        goto error;
-    }
-    else {
-        if (py_app_id != Py_None) {
-            const char *app_id = convert_pyobject_to_str(err, py_app_id);
-            if (app_id == NULL) {
-                Py_DECREF(py_app_id);
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                INVALID_ATTR_TYPE_ERROR_MSG, app_id_attr_name,
-                                "Optional[str]");
-                goto error;
-            }
-            as_metrics_policy_set_app_id(metrics_policy, app_id);
-        }
-        Py_DECREF(py_app_id);
     }
 
     return 0;

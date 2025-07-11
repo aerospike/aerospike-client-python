@@ -1,5 +1,5 @@
 name: Build artifacts
-run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, use-server-rc=${{ inputs.use-server-rc }}, server-tag=${{ inputs.server-tag }})
+run-name: Build artifacts (run_tests=${{ inputs.run_tests }}, registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }})
 
 # Builds manylinux wheels and source distribution
 # Optionally run tests on manylinux wheels
@@ -24,11 +24,16 @@ on:
         required: true
         type: boolean
         default: false
-      use-server-rc:
-        type: boolean
+      registry-name:
+        type: string
         required: true
-        default: false
-        description: 'Test against server release candidate? (e.g to test new server features)'
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: true
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: true
@@ -68,10 +73,14 @@ on:
         type: boolean
         required: false
         default: false
-      use-server-rc:
+      registry-name:
+        type: string
         required: false
-        default: false
-        type: boolean
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        default: 'aerospike/aerospike-server-enterprise'
       server-tag:
         type: string
         required: false
@@ -112,8 +121,9 @@ jobs:
       sha-to-build-and-test: ${{ inputs.is_workflow_call == true && inputs.sha-to-build-and-test || github.sha }}
       unoptimized: ${{ inputs.unoptimized }}
       include-debug-info-for-macos: ${{ inputs.include-debug-info-for-macos }}
+      registry-name: ${{ inputs.registry-name }}
+      image-name: ${{ inputs.image-name }}
       run_tests: ${{ inputs.run_tests }}
-      use-server-rc: ${{ inputs.use-server-rc }}
       server-tag: ${{ inputs.server-tag }}
       test-file: ${{ inputs.test-file }}
     secrets: inherit

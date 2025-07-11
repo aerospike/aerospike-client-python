@@ -3,7 +3,7 @@
 This Docker image deploys an Aerospike server with these features enabled by default:
 - Strong consistency
 - Security
-- TLS standard authentication
+- TLS mutual authentication
 
 To disable any of the above features, start up the Docker container with any combination of these environment variables set:
 ```sh
