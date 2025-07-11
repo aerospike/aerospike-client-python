@@ -334,7 +334,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     {"admin_create_pki_user",
      (PyCFunction)AerospikeClient_Admin_Create_PKI_User,
-     METH_VARARGS | METH_KEYWORDS, "Create a new user."},
+     METH_VARARGS | METH_KEYWORDS, "Create a new pki user."},
     {"admin_create_user", (PyCFunction)AerospikeClient_Admin_Create_User,
      METH_VARARGS | METH_KEYWORDS, "Create a new user."},
     {"admin_drop_user", (PyCFunction)AerospikeClient_Admin_Drop_User,
