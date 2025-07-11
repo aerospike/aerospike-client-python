@@ -1145,64 +1145,77 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_create_user(username, password, roles[, policy: dict])
+    .. method:: admin_create_pki_user(user: str, roles: list[, policy: dict])
+
+        Create a user and grant it roles. PKI users are authenticated via TLS and a certificate instead of a password.
+
+        .. warning:: This function should only be called for server versions 8.1+. If this function is called for older server versions,
+            an error will be returned.
+
+        :param str user: the username to be added to the Aerospike cluster.
+        :param list roles: the list of role names assigned to the user.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+    .. method:: admin_create_user(user, password, roles[, policy: dict])
 
         Create a user and grant it roles.
 
-        :param str username: the username to be added to the Aerospike cluster.
+        :param str user: the username to be added to the Aerospike cluster.
         :param str password: the password associated with the given username.
         :param list roles: the list of role names assigned to the user.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_drop_user(username[, policy: dict])
+    .. method:: admin_drop_user(user[, policy: dict])
 
         Drop the user with a specified username from the cluster.
 
-        :param str username: the username to be dropped from the aerospike cluster.
+        :param str user: the username to be dropped from the aerospike cluster.
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_change_password(username, password[, policy: dict])
+    .. method:: admin_change_password(user, password[, policy: dict])
 
         Change the password of a user.
 
         This operation can only be performed by that same user.
 
-        :param str username: the username of the user.
+        :param str user: the username of the user.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_set_password(username, password[, policy: dict])
+    .. method:: admin_set_password(user, password[, policy: dict])
 
         Set the password of a user by a user administrator.
 
-        :param str username: the username to be added to the aerospike cluster.
+        :param str user: the username to be added to the aerospike cluster.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_grant_roles(username, roles[, policy: dict])
+    .. method:: admin_grant_roles(user, roles[, policy: dict])
 
         Add roles to a user.
 
-        :param str username: the username of the user.
+        :param str user: the username of the user.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_revoke_roles(username, roles[, policy: dict])
+    .. method:: admin_revoke_roles(user, roles[, policy: dict])
 
         Remove roles from a user.
 
-        :param str username: the username to have the roles revoked.
+        :param str user: the username to have the roles revoked.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 

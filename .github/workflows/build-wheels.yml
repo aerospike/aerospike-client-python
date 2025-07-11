@@ -420,7 +420,7 @@ jobs:
         working-directory: test
         shell: bash
 
-      - run: python3 -m pytest -vv new_tests/${{ inputs.test-file }}
+      - run: python3 -m pytest -vvs --full-trace new_tests/${{ inputs.test-file }}
         working-directory: test
         shell: bash
 

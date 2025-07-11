@@ -679,7 +679,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``1``
         * **tend_interval** (:class:`int`)
-            Polling interval in milliseconds for tending the cluster
+            Polling interval in milliseconds for tending the cluster. The minimum value is ``250``.
 
             Default: ``1000``
         * **compression_threshold** (:class:`int`)
@@ -949,6 +949,11 @@ Specifies the type of authentication to be used when communicating with the serv
 
     .. warning::
         This mode should only be used for testing purposes because it is not secure authentication.
+
+.. data:: AUTH_PKI
+
+    Authentication and authorization based on a certificate.  No user name or
+    password needs to be configured.  Requires TLS and a client certificate.
 
 .. _aerospike_job_constants:
 
