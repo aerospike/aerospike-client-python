@@ -178,7 +178,7 @@ PyObject *AerospikeClient_Admin_Create_PKI_User(AerospikeClient *self,
     PyObject *py_policy = NULL;
 
     // Python Function Keyword Arguments
-    static char *kwlist[] = {"user", "roles", "policy", NULL};
+    static char *kwlist[] = {"username", "roles", "policy", NULL};
 
     // Python Function Argument Parsing
     if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:admin_create_pki_user",

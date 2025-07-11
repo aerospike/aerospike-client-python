@@ -391,7 +391,7 @@ class TestCreateUser(object):
         roles = ["read-write"]
         admin_policy = {}
         with context:
-            self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
+            self.client.admin_create_pki_user(username=self.user, roles=roles, policy=admin_policy)
 
         if type(context) == nullcontext:
             print("Check that the PKI user was created.")
