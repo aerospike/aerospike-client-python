@@ -179,7 +179,7 @@ class TestBitwiseOperations(object):
             self.as_connection.operate(self.test_key, ops)
 
     # TODO: duplicate test name
-    @pytest.mark.xfail(reason="Had a duplicate test name, but fails when renamed.")
+
     def test_bit_resize_partial_no_fail_duplicate(self):
         """
         By default we can create a new bin with resize.

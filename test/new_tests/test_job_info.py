@@ -41,7 +41,7 @@ class TestScanInfo(object):
             self.as_connection.job_info()
         assert "argument 'job_id' (pos 1)" in str(typeError.value)
 
-    @pytest.mark.xfail(reason="This test fails if job_info() finishes in < 1ms")
+
     def test_job_info_with_small_timeout(self, connection_with_udf):
         """
         Invoke job_info() with correct policy and an expected timeout

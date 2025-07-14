@@ -77,7 +77,7 @@ class TestQueryPagination(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    @pytest.mark.xfail(reason="Might fail, server may return less than what asked for.")
+
     def test_query_pagination_with_existent_ns_and_set(self):
 
         records = []
@@ -150,7 +150,7 @@ class TestQueryPagination(TestBaseClass):
         assert len(records) == all_records
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
-    @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+
     def test_query_pagination_with_max_records_policy(self):
 
         records = []

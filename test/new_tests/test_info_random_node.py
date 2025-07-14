@@ -8,7 +8,7 @@ from aerospike import exception as e
 import aerospike
 
 
-@pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
+
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoSingleNode(object):
     pytest_skip = False
@@ -114,7 +114,7 @@ class TestInfoSingleNode(object):
 
 
 # Tests for incorrect usage
-@pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
+
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestInfoRandomNodeIncorrectUsage(object):
     """

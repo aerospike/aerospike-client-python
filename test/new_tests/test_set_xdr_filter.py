@@ -26,7 +26,7 @@ from aerospike_helpers.expressions import (
 import aerospike
 
 
-@pytest.mark.xfail(TestBaseClass.temporary_xfail(), reason="xfail variable set")
+
 @pytest.mark.usefixtures("as_connection", "connection_config")
 class TestSetXDRFilter(object):
     @pytest.fixture(autouse=True)

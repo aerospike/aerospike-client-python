@@ -180,7 +180,7 @@ class TestExpressions(TestBaseClass):
             expr = Eq(IntBin("extra"), Val(4))
             self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
 
-    @pytest.mark.xfail(reason="Will fail on storage engine device.")
+
     def test_device_size_pos(self):
         expr = Eq(DeviceSize(), 0)
         record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})

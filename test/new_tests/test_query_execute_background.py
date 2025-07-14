@@ -161,7 +161,7 @@ class TestQueryApply(object):
             else:
                 assert bins.get(test_bin) is None
 
-    @pytest.mark.xfail(reason="predicate and exp used at same time")
+
     def test_background_execute_exp_and_predicate(self, clean_test_background):
         """
         Ensure that Query.execute_background() gets applied to records that match the predicate

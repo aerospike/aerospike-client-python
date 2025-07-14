@@ -60,7 +60,7 @@ class TestUdfRemove(object):
 
         assert not present
 
-    @pytest.mark.xfail(reason="This is the only method which allows" + " invalid timeout")
+
     def test_udf_remove_with_invalid_timeout_policy_value(self):
         """
         Verify that an incorrect timeout policy will not prevent UDF removal
@@ -188,7 +188,7 @@ class TestIncorrectCallsToUDFRemove(object):
         with pytest.raises(e.ParamError):
             self.as_connection.udf_remove(udf)
 
-    @pytest.mark.xfail(reason="These do not raise errors")
+
     @pytest.mark.parametrize("policy", [False, "policy", 5, (), []])
     def test_udf_remove_with_invalid_policy_type(self, policy):
         """

@@ -123,7 +123,7 @@ class TestScanPartition(TestBaseClass):
         assert len(records) == self.partition_1000_count
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
-    @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+
     def test_scan_partition_with_max_records_policy(self):
 
         records = []
@@ -139,7 +139,7 @@ class TestScanPartition(TestBaseClass):
         scan_obj.foreach(callback, {"max_records": max_records, "partition_filter": {"begin": 1000, "count": 1}})
         assert len(records) == self.partition_1000_count // 2
 
-    @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+
     def test_scan_partition_with_all_records_policy(self):
 
         records = []

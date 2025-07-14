@@ -429,7 +429,7 @@ class TestQuery(TestBaseClass):
         query.foreach(callback, policy)
         assert len(records) == 1
 
-    @pytest.mark.xfail(reason="Query policies do not support rps")
+
     def test_query_with_policy_records_per_second(self):
         """
         Invoke query() with the records_per_second policy set
@@ -447,7 +447,7 @@ class TestQuery(TestBaseClass):
         query.foreach(callback, policy)
         assert len(records) == 1
 
-    @pytest.mark.xfail(reason="Only pass with server version >= 3.15")
+
     def test_query_with_no_bins_option(self):
         """
         Invoke query() with policy

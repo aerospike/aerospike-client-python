@@ -247,7 +247,7 @@ class TestQueryPartition(TestBaseClass):
         assert len(records) == self.partition_1000_count
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
-    # @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+
     def test_query_partition_with_max_records_policy(self):
 
         records = []
@@ -265,7 +265,7 @@ class TestQueryPartition(TestBaseClass):
         assert len(records) <= self.partition_1000_count // 2
 
     # NOTE: This could fail if node record counts are small and unbalanced across nodes.
-    # @pytest.mark.xfail(reason="Might fail depending on record count and distribution.")
+
     def test_query_partition_with_all_records_policy(self):
 
         records = []

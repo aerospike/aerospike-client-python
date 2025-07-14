@@ -121,7 +121,7 @@ class TestScanApply(object):
             else:
                 assert bins.get(test_bin) == i
 
-    @pytest.mark.xfail(reason="scan does not implement .where()")
+
     def test_background_execute_expressions_and_predicate(self):
         """
         Ensure that Scan.execute_background() gets applied to records that match the predicate.
@@ -252,7 +252,7 @@ class TestScanApply(object):
             else:
                 assert br.record[2]["numbers"] == {1: i, 2: i * 2}
 
-    @pytest.mark.xfail(reason="Scan does not implement .where()")
+
     def test_background_execute_with_ops_and_preds(self):
         """
         Ensure that Scan.execute_background() applies ops to records that match the predicate.
@@ -286,7 +286,7 @@ class TestScanApply(object):
 
         validate_records(self.as_connection, keys, lambda rec: rec[test_bin] == "aerospike")
 
-    @pytest.mark.xfail(reason="Scan does not implement .where()")
+
     def test_background_execute_sindex_predicate(self):
         """
         Ensure that Scan.execute_background() only applies to records matched by

@@ -193,7 +193,7 @@ class TestDropUser(object):
 
         assert "admin_drop_user() takes at most 2 arguments (3 given)" in str(typeError.value)
 
-    @pytest.mark.xfail(reason="It is no longer possible to create a user with" "a name too long")
+
     def test_drop_user_with_too_long_username(self):
 
         user = "user$" * 1000

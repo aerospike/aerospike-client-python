@@ -764,7 +764,7 @@ class TestCTXOperations(object):
             self.as_connection.operate(self.test_key, ops)
 
     # TODO: duplicate test name
-    @pytest.mark.xfail(reason="Had a duplicate test name, but fails when renamed.")
+
     @pytest.mark.parametrize(
         "list_indexes, expected",
         [

@@ -273,7 +273,7 @@ class TestQueryExpressions(object):
         assert len(results) == 1
         assert_each_record_bins(results, lambda b: all([b["map"][key] != 3 for key in b["map"]]))
 
-    @pytest.mark.xfail(reason="This only works when not running data in memory")  # TODO test this on device config
+
     def test_rec_device_size(self):
         long_str_len = 65 * 1024
         long_str = long_str_len * "a"  # A 65K string

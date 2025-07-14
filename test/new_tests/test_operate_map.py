@@ -237,7 +237,7 @@ class TestOperate(object):
         _, _, bins = self.as_connection.get(self.test_map_key)
         assert bins[self.test_map_bin] == {"a": 1, "e": 5}
 
-    @pytest.mark.xfail(reason="previously worked")
+
     def test_map_remove_by_index_range_no_index(self):
         ops = [
             {
@@ -729,7 +729,7 @@ class TestOperate(object):
         with pytest.raises(e.ParamError):
             self.as_connection.operate(self.test_map_key, ops)
 
-    @pytest.mark.xfail(reason="This works, but shouldn't")
+
     def test_map_remove_by_index_range_no_strict_types_val(self):
         result_map = self.test_map.copy()
         del result_map["b"]
