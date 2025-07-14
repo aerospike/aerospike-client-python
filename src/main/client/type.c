@@ -577,26 +577,29 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     // Very first thing to check before validating config keys
-    PyObject *py_validate_keys_str = PyUnicode_FromString("validate_keys");
-    if (py_validate_keys_str == NULL) {
+    int validate_keys = 0;
+    PyObject *py_validate_keys = NULL;
+    int retval =
+        PyDict_GetItemStringRef(py_config, "validate_keys", py_validate_keys);
+    if (retval == -1) {
         goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
-
-    int validate_keys = 0;
-    PyObject *py_validate_keys =
-        PyDict_GetItemWithError(py_config, py_validate_keys_str);
-    Py_DECREF(py_validate_keys_str);
-    if (py_validate_keys) {
+    else if (retval == 1) {
         if (!PyBool_Check(py_validate_keys)) {
             as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
                             "config[\"validate_keys\"] must be a boolean");
+            Py_DECREF(py_validate_keys);
             goto RAISE_EXCEPTION_WITH_AS_ERROR;
         }
+
         validate_keys = PyObject_IsTrue(py_validate_keys);
         if (validate_keys == -1) {
+            Py_DECREF(py_validate_keys);
             goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
         }
+
         self->validate_keys = (bool)validate_keys;
+        Py_DECREF(py_validate_keys);
     }
 
     if (validate_keys) {
@@ -1012,10 +1015,12 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         if (set_subpolicies(&constructor_err, &config, py_policies,
                             validate_keys) != AEROSPIKE_OK) {
             if (constructor_err.code != AEROSPIKE_OK) {
+                // This would only be set if an invalid key was passed to a policy.
+                // Don't override the error caused by validating the dictionary keys
                 goto RAISE_EXCEPTION_WITH_AS_ERROR;
             }
             else {
-                // Return error without using as_error object
+                // Original behavior
                 error_code = INIT_POLICY_PARAM_ERR;
                 goto CONSTRUCTOR_ERROR;
             }

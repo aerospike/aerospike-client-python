@@ -265,7 +265,7 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
                                        ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
             }
             else if (retval == 0) {
-                return AEROSPIKE_ERR;
+                return err->code;
             }
         }
 
@@ -366,7 +366,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
                                        ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
             }
             else if (retval == 0) {
-                return AEROSPIKE_ERR;
+                return err->code;
             }
         }
 
@@ -420,7 +420,7 @@ as_status pyobject_to_policy_info(AerospikeClient *self, as_error *err,
                                        ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
             }
             else if (retval == 0) {
-                return AEROSPIKE_ERR;
+                return err->code;
             }
         }
 
@@ -465,7 +465,7 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                        ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
             }
             else if (retval == 0) {
-                return AEROSPIKE_ERR;
+                return err->code;
             }
         }
 
@@ -520,7 +520,7 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
                     "Failed to validate keys for read policy dictionary.");
             }
             else if (retval == 0) {
-                return AEROSPIKE_ERR;
+                return err->code;
             }
         }
 
