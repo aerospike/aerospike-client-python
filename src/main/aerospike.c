@@ -612,6 +612,9 @@ DEFINE_SET_OF_VALID_KEYS(apply_policy, BASE_POLICY_KEYS, "key", "replica",
 
 )
 
+// send_as_is and check_bounds should not be used by the user
+// That's why they are not documented.
+// But they were already exposed in the API for a long time, so we allow them to be used
 DEFINE_SET_OF_VALID_KEYS(info_policy, "timeout", "send_as_is", "check_bounds",
                          NULL
 
