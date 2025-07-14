@@ -174,14 +174,13 @@ class TestQueryPagination(TestBaseClass):
         st = "demo"
         all_recs = 0
 
-        query_obj = self.as_connection.query(ns, st)
+        query_obj: aerospike.Query = self.as_connection.query(ns, st)
 
         query_obj.max_records = math.ceil(self.partition_1001_count / 2)
 
         part_filter = {"begin": 1001, "count": 1}
 
-        # The client has to run the query a 3rd time to confirm that there are no records left to query
-        for i in range(3):
+        while query_obj.is_done() is False:
             records = query_obj.results({"partition_filter": part_filter})
             all_recs += len(records)
 
