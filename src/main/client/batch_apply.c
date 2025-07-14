@@ -179,8 +179,8 @@ static PyObject *AerospikeClient_Batch_Apply_Invoke(
            sizeof(as_key) * processed_key_count);
 
     if (py_policy_batch) {
-        if (pyobject_to_policy_batch(
-                self, err, py_policy_batch, &policy_batch, &policy_batch_p,
+        if (as_policy_batch_init_and_set_from_pyobject(
+                self, err, py_policy_batch, &policy_batch,
                 &self->as->config.policies.batch, &batch_exp_list,
                 &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
