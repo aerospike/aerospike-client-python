@@ -44,16 +44,6 @@ static PyObject *Aerospike_Calc_Digest_Invoke(PyObject *py_ns, PyObject *py_set,
     // Initialised flags
     bool key_initialised = false;
 
-    if (!PyUnicode_Check(py_ns)) {
-        PyErr_SetString(PyExc_TypeError, "Namespace should be a string");
-        return NULL;
-    }
-
-    if (!PyUnicode_Check(py_set)) {
-        PyErr_SetString(PyExc_TypeError, "Set should be a string or unicode");
-        return NULL;
-    }
-
     if (!PyUnicode_Check(py_key) && !PyLong_Check(py_key) &&
         !PyByteArray_Check(py_key)) {
         PyErr_SetString(PyExc_TypeError, "Key is invalid");
@@ -122,7 +112,7 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds)
     static char *kwlist[] = {"ns", "set", "key", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOO:calc_digest", kwlist,
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "ssO:calc_digest", kwlist,
                                     &py_ns, &py_set, &py_key) == false) {
         return NULL;
     }
