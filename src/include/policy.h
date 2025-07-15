@@ -294,7 +294,7 @@ as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
                                            as_policy_read *policy,
                                            bool is_policy_txn_level);
 
-as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
+as_policy_write *as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             as_error *err, PyObject *py_policy,
                                             as_policy_write *policy,
                                             bool is_policy_txn_level);
@@ -305,7 +305,7 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
 // *py_policy* must be a Python dictionary, and *src* and *dst* must point to valid as_policy_write instances.
 // Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
 
-as_status as_policy_write_copy_and_set_from_pyobject(AerospikeClient *self,
+as_policy_write * as_policy_write_copy_and_set_from_pyobject(AerospikeClient *self,
                                                      as_error *err,
                                                      PyObject *py_policy,
                                                      as_policy_write *dst,
