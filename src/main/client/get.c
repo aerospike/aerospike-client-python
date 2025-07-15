@@ -80,7 +80,6 @@ PyObject *AerospikeClient_Get_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     if (py_policy) {
-        // Convert python policy object to as_policy_exists
         as_policy_read_copy_and_set_from_pyobject(
             self, &err, py_policy, &read_policy,
             &self->as->config.policies.read);
