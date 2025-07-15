@@ -46,11 +46,11 @@
 // Either way, we want as_policy_*_set_from_pyobject to be a no-op.
 #define VALIDATE_POLICY()                                                      \
     if (py_policy == NULL || py_policy == Py_None) {                           \
-        return AEROSPIKE_OK;                                                   \
+        return NULL;                                                           \
     }                                                                          \
     else if (!PyDict_Check(py_policy)) {                                       \
-        return as_error_update(err, AEROSPIKE_ERR_PARAM,                       \
-                               "policy must be a dict");                       \
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");    \
+        return NULL;                                                           \
     }
 
 // TODO: Python exceptions should be propagated up instead of being cleared
@@ -542,20 +542,19 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_status as_policy_write_copy_and_set_from_pyobject(AerospikeClient *self,
-                                                     as_error *err,
-                                                     PyObject *py_policy,
-                                                     as_policy_write *dst,
-                                                     as_policy_write *src)
+as_policy_write *as_policy_write_copy_and_set_from_pyobject(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_write *dst, as_policy_write *src)
 {
     as_policy_write_copy(src, dst);
     return as_policy_write_set_from_pyobject(self, err, py_policy, dst, true);
 }
 
-as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
-                                            as_error *err, PyObject *py_policy,
-                                            as_policy_write *policy,
-                                            bool is_policy_txn_level)
+as_policy_write *as_policy_write_set_from_pyobject(AerospikeClient *self,
+                                                   as_error *err,
+                                                   PyObject *py_policy,
+                                                   as_policy_write *policy,
+                                                   bool is_policy_txn_level)
 {
     VALIDATE_POLICY();
 
@@ -579,7 +578,7 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
         POLICY_SET_FIELD(ttl, uint32_t);
     }
 
-    return err->code;
+    return policy;
 }
 
 /**

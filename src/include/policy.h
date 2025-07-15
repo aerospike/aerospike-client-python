@@ -271,6 +271,34 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           as_exp *exp_list,
                                           as_exp **exp_list_p);
 
+// These methods are used for setting config-level policies and are re-used for the helper methods
+// that set transaction-level policies.
+//
+// Overrides an as_policy_* *policy* fields using entries from a Python object *py_policy*.
+//
+// *policy* must point to a valid as_policy_* instance.
+//
+// If py_policy is NULL, do nothing. Else if it is not a Python dictionary, an error will be raised.
+// (We check if it's a dictionary here because *py_policy*'s type is not validated when parsing API arguments)
+//
+// Client instance *self* can be NULL if is_policy_txn_level is false. We only need *self* for parsing Python client
+// expressions.
+//
+// *is_this_txn_policy* is required because there are fields that should only be set in *policy* for txn-level
+// policies.
+//
+// Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
+
+as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
+                                           PyObject *py_policy,
+                                           as_policy_read *policy,
+                                           bool is_policy_txn_level);
+
+as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
+                                            as_error *err, PyObject *py_policy,
+                                            as_policy_write *policy,
+                                            bool is_policy_txn_level);
+
 // These methods are used for setting transaction level policies
 // 1. Copies an config-level as_policy_* *src* to a txn-level *dst* policy
 // 2. Sets an as_policy_* *dst* from a Python object *py_policy*. to override the defaults from *src*
@@ -298,31 +326,6 @@ as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
 as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
                                             as_error *err, PyObject *py_policy,
                                             as_policy_apply *policy,
-                                            bool is_policy_txn_level);
-
-// Overrides an as_policy_* *policy* fields using entries from a Python object *py_policy*.
-//
-// *policy* must point to a valid as_policy_* instance.
-//
-// If py_policy is NULL, do nothing. Else if it is not a Python dictionary, an error will be raised.
-// (We check if it's a dictionary here because *py_policy*'s type is not validated when parsing API arguments)
-//
-// Client instance *self* can be NULL if is_policy_txn_level is false. We only need *self* for parsing Python client
-// expressions.
-//
-// *is_this_txn_policy* is required because there are fields that should only be set in *policy* for txn-level
-// policies.
-//
-// Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
-
-as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
-                                           PyObject *py_policy,
-                                           as_policy_read *policy,
-                                           bool is_policy_txn_level);
-
-as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
-                                            as_error *err, PyObject *py_policy,
-                                            as_policy_write *policy,
                                             bool is_policy_txn_level);
 
 // TODO: make consistent
