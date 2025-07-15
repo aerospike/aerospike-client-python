@@ -4,12 +4,13 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-
+from contextlib import nullcontext
 import aerospike
 
 
 @pytest.mark.usefixtures("connection_config")
 class TestCreateUser(object):
+    user = "user7"
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
@@ -353,14 +354,47 @@ class TestCreateUser(object):
 
     def test_create_user_with_very_long_role_name(self):
 
-        user = "user7"
         password = "user7"
         roles = ["read-write", "abc" * 50]
         try:
-            self.client.admin_drop_user(user)
+            self.client.admin_drop_user(self.user)
             time.sleep(2)
         except Exception:
             pass
 
         with pytest.raises(e.ClientError):
-            self.client.admin_create_user(user, password, roles)
+            self.client.admin_create_user(self.user, password, roles)
+
+    # Need as_connection to get server version
+    def test_create_pki_user(self, as_connection):
+        try:
+            self.client.admin_drop_user(self.user)
+            time.sleep(2)
+        except Exception:
+            pass
+
+        self.delete_users.append(self.user)
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            context = pytest.raises(e.AerospikeError)
+        else:
+            context = nullcontext()
+
+        # Make sure mutual TLS is enabled.
+        if not (
+            TestBaseClass.tls_in_use()
+            and "tls" in self.connection_config
+            and "certfile" in self.connection_config["tls"]
+        ):
+            pytest.skip("Mutual TLS is not enabled")
+
+        roles = ["read-write"]
+        admin_policy = {}
+        with context:
+            self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
+
+        if type(context) == nullcontext:
+            print("Check that the PKI user was created.")
+            time.sleep(2)
+            userDict = self.client.admin_query_user_info(self.user)
+            assert userDict["roles"] == ["read-write"]

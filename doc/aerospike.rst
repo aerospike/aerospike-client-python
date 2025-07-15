@@ -679,7 +679,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``1``
         * **tend_interval** (:class:`int`)
-            Polling interval in milliseconds for tending the cluster
+            Polling interval in milliseconds for tending the cluster. The minimum value is ``250``.
 
             Default: ``1000``
         * **compression_threshold** (:class:`int`)
@@ -690,6 +690,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             Default: ``0``, meaning 'never compress'
         * **cluster_name** (:class:`str`)
             Only server nodes matching this name will be used when determining the cluster name.
+        * **app_id** (:class:`str`)
+            Application identifier.
         * **rack_id** (:class:`int`)
             Rack id where this client instance resides.
 
@@ -947,6 +949,11 @@ Specifies the type of authentication to be used when communicating with the serv
 
     .. warning::
         This mode should only be used for testing purposes because it is not secure authentication.
+
+.. data:: AUTH_PKI
+
+    Authentication and authorization based on a certificate.  No user name or
+    password needs to be configured.  Requires TLS and a client certificate.
 
 .. _aerospike_job_constants:
 
@@ -1454,14 +1461,10 @@ Bin Types
     (int): 24
 
 
-.. _aerospike_misc_constants:
+.. _aerospike_index_datatypes:
 
-Miscellaneous
--------------
-
-.. data:: UDF_TYPE_LUA
-
-    UDF type is LUA (which is the only UDF type).
+Index data types
+----------------
 
 .. data:: INDEX_STRING
 
@@ -1477,9 +1480,18 @@ Miscellaneous
 
 .. data:: INDEX_GEO2DSPHERE
 
-    An index whose values are of the aerospike GetJSON data type.
+    An index whose values are of the aerospike GeoJSON data type.
 
 .. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+
+.. _aerospike_misc_constants:
+
+Miscellaneous
+-------------
+
+.. data:: UDF_TYPE_LUA
+
+    UDF type is LUA (which is the only UDF type).
 
 .. data:: INDEX_TYPE_DEFAULT
 

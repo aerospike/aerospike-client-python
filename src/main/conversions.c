@@ -613,32 +613,38 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 
     as_error_reset(err);
 
+    // Long term TODO: duplicate check in admin_create_user_helper before this is called
     if (!PyList_Check(py_list)) {
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
     }
 
+    // TODO: same as above
     Py_ssize_t size = PyList_Size(py_list);
+    if (PyErr_Occurred()) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get list size");
+    }
 
-    char *s;
+    const char *str = NULL;
     for (int i = 0; i < size; i++) {
         PyObject *py_val = PyList_GetItem(py_list, i);
-
-        if (PyUnicode_Check(py_val)) {
-            s = (char *)PyUnicode_AsUTF8(py_val);
-
-            if (strlen(s) < max_len) {
-                strcpy(arr[i], s);
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                "String exceeds max length");
-                return err->code;
-            }
+        if (!py_val) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to get list item.");
         }
-        else {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Item is not a string");
+
+        str = convert_pyobject_to_str(py_val);
+        if (!str) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert unicode object to C string");
+        }
+        if (strlen(str) >= max_len) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "String exceeds max length");
             return err->code;
         }
+        strcpy(arr[i], str);
     }
 
     return err->code;
@@ -772,21 +778,51 @@ error:
     return NULL;
 }
 
-// Creates and returns a Python client NodeMetrics object from a C client's as_node_metrics struct
+// Creates and returns a Python client NamespaceMetrics object from a C client's as_ns_metrics struct
 // If an error occurs here, return NULL
-PyObject *
-create_py_node_metrics_from_as_node_metrics(as_error *error_p,
-                                            as_node_metrics *node_metrics)
+PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
+                                                  as_ns_metrics *ns_metrics)
 {
-    PyObject *py_node_metrics = create_class_instance_from_module(
-        error_p, "aerospike_helpers.metrics", "NodeMetrics", NULL);
-    if (!py_node_metrics) {
+    PyObject *py_ns_metrics = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "NamespaceMetrics", NULL);
+    if (!py_ns_metrics) {
         return NULL;
     }
+
+    PyObject *py_ns = PyUnicode_FromString(ns_metrics->ns);
+    if (py_ns == NULL) {
+        goto error;
+    }
+    int retval = PyObject_SetAttrString(py_ns_metrics, "ns", py_ns);
+    Py_DECREF(py_ns);
+    if (retval == -1) {
+        goto error;
+    }
+
+    const char *uint64_fields[] = {"bytes_in", "bytes_out", "error_count",
+                                   "timeout_count", "key_busy_count"};
+    uint64_t field_vals[] = {ns_metrics->bytes_in, ns_metrics->bytes_out,
+                             ns_metrics->error_count, ns_metrics->timeout_count,
+                             ns_metrics->key_busy_count};
+    for (unsigned long i = 0;
+         i < sizeof(uint64_fields) / sizeof(uint64_fields[0]); i++) {
+        PyObject *py_field_val = PyLong_FromUnsignedLongLong(field_vals[i]);
+        if (!py_field_val) {
+            goto error;
+        }
+
+        int retval = PyObject_SetAttrString(py_ns_metrics, uint64_fields[i],
+                                            py_field_val);
+        Py_DECREF(py_field_val);
+        if (retval == -1) {
+            goto error;
+        }
+    }
+
     const char *node_metrics_fields[] = {"conn_latency", "write_latency",
                                          "read_latency", "batch_latency",
                                          "query_latency"};
-    uint32_t max = AS_LATENCY_TYPE_NONE;
+    uint32_t max = AS_LATENCY_TYPE_MAX;
     // For each latency type, get list of buckets
     for (uint32_t i = 0; i < max; i++) {
         PyObject *py_buckets = PyList_New(0);
@@ -796,8 +832,8 @@ create_py_node_metrics_from_as_node_metrics(as_error *error_p,
                             node_metrics_fields[i]);
             goto error;
         }
-        as_latency_buckets *buckets = &node_metrics->latency[i];
-        uint32_t bucket_max = buckets->latency_columns;
+        as_latency *buckets = ns_metrics->latency[i];
+        uint32_t bucket_max = buckets->size;
         // Append each bucket to a list of buckets
         for (uint32_t j = 0; j < bucket_max; j++) {
             uint64_t bucket = as_latency_get_bucket(buckets, j);
@@ -822,7 +858,7 @@ create_py_node_metrics_from_as_node_metrics(as_error *error_p,
             }
         }
 
-        int result = PyObject_SetAttrString(py_node_metrics,
+        int result = PyObject_SetAttrString(py_ns_metrics,
                                             node_metrics_fields[i], py_buckets);
         Py_DECREF(py_buckets);
         if (result == -1) {
@@ -834,10 +870,10 @@ create_py_node_metrics_from_as_node_metrics(as_error *error_p,
         }
     }
 
-    return py_node_metrics;
+    return py_ns_metrics;
 
 error:
-    Py_DECREF(py_node_metrics);
+    Py_DECREF(py_ns_metrics);
     return NULL;
 }
 
@@ -851,19 +887,27 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
         return NULL;
     }
 
-    PyObject *py_name = PyUnicode_FromString(node->name);
-    PyObject_SetAttrString(py_node, "name", py_name);
-    Py_DECREF(py_name);
-
     // Get address short name (reused code from C client's metrics writer code)
     as_address *address = as_node_get_address(node);
     struct sockaddr *addr = (struct sockaddr *)&address->addr;
     char address_name[AS_IP_ADDRESS_SIZE];
     as_address_short_name(addr, address_name, sizeof(address_name));
 
-    PyObject *py_address = PyUnicode_FromString(address_name);
-    PyObject_SetAttrString(py_node, "address", py_address);
-    Py_DECREF(py_address);
+    const char *str_attr_names[] = {"name", "address"};
+    const char *str_attr_values[] = {node->name, address_name};
+    for (unsigned long i = 0;
+         i < sizeof(str_attr_names) / sizeof(str_attr_names[0]); i++) {
+        PyObject *py_attr_value = PyUnicode_FromString(str_attr_values[i]);
+        if (py_attr_value == NULL) {
+            goto error;
+        }
+        int retval =
+            PyObject_SetAttrString(py_node, str_attr_names[i], py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (retval == -1) {
+            goto error;
+        }
+    }
 
     uint16_t port = as_address_port(addr);
     PyObject *py_port = PyLong_FromLong(port);
@@ -876,28 +920,66 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(error_p, sync);
     if (py_conn_stats == NULL) {
+        aerospike_node_stats_destroy(&node_stats);
         goto error;
     }
     PyObject_SetAttrString(py_node, "conns", py_conn_stats);
     Py_DECREF(py_conn_stats);
 
-    PyObject *py_error_count = PyLong_FromUnsignedLongLong(node->error_count);
-    PyObject_SetAttrString(py_node, "error_count", py_error_count);
-    Py_DECREF(py_error_count);
+    const char *const as_node_stats_attr_names[] = {
+        "error_count", "timeout_count", "key_busy_count"};
+    uint64_t as_node_stats_attr_values[] = {
+        node_stats.error_count,
+        node_stats.timeout_count,
+        node_stats.key_busy_count,
+    };
+    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
+                                      sizeof(as_node_stats_attr_values[0]);
+         i++) {
+        PyObject *py_attr_value =
+            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
+        if (!py_attr_value) {
+            aerospike_node_stats_destroy(&node_stats);
+            goto error;
+        }
+        int retval = PyObject_SetAttrString(
+            py_node, as_node_stats_attr_names[i], py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (retval == -1) {
+            aerospike_node_stats_destroy(&node_stats);
+            goto error;
+        }
+    }
+    aerospike_node_stats_destroy(&node_stats);
 
-    PyObject *py_timeout_count =
-        PyLong_FromUnsignedLongLong(node->timeout_count);
-    PyObject_SetAttrString(py_node, "timeout_count", py_timeout_count);
-    Py_DECREF(py_timeout_count);
-
-    as_node_metrics *node_metrics = node->metrics;
-    PyObject *py_node_metrics =
-        create_py_node_metrics_from_as_node_metrics(error_p, node_metrics);
-    if (!py_node_metrics) {
+    as_ns_metrics **ns_metrics = node->metrics;
+    PyObject *py_ns_metrics_list = PyList_New(node->metrics_size);
+    if (py_ns_metrics_list == NULL) {
         goto error;
     }
-    PyObject_SetAttrString(py_node, "metrics", py_node_metrics);
-    Py_DECREF(py_node_metrics);
+    for (uint8_t i = 0; i < node->metrics_size; i++) {
+        PyObject *py_ns_metrics =
+            create_py_ns_metrics_from_as_ns_metrics(error_p, ns_metrics[i]);
+        if (!py_ns_metrics) {
+            goto loop_error;
+        }
+
+        int retval = PyList_SetItem(py_ns_metrics_list, i, py_ns_metrics);
+        if (retval == -1) {
+            goto loop_error;
+        }
+        continue;
+
+    loop_error:
+        Py_DECREF(py_ns_metrics_list);
+        goto error;
+    }
+
+    int retval = PyObject_SetAttrString(py_node, "metrics", py_ns_metrics_list);
+    Py_DECREF(py_ns_metrics_list);
+    if (retval == -1) {
+        goto error;
+    }
 
     return py_node;
 
@@ -2599,6 +2681,7 @@ as_status batch_read_records_to_pyobject(AerospikeClient *self, as_error *err,
 This fetches a string from a Python String like. If it is a unicode in Python27, we need to convert it
 to a bytes like object first, and keep track of the intermediate object for later deletion.
 */
+// TODO: replace with convert_pyobject_to_str
 as_status string_and_pyuni_from_pystring(PyObject *py_string,
                                          PyObject **pyuni_r, char **c_str_ptr,
                                          as_error *err)
@@ -2885,29 +2968,69 @@ as_status as_batch_result_to_BatchRecord(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
-                                      const char *param_name_of_pyobj)
+// TODO: There's a helper function in the Python client wrapper code called
+// get_uint32_value, but this can replace it.
+unsigned long long
+convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
+                                             unsigned long long max_bound)
 {
     if (!PyLong_Check(pyobject)) {
-        PyErr_Format(PyExc_TypeError, "%s must be an integer",
-                     param_name_of_pyobj);
+        PyErr_Format(PyExc_TypeError, "%S must be an integer", pyobject);
         goto error;
     }
-    unsigned long long_value = PyLong_AsUnsignedLong(pyobject);
+    unsigned long long value = PyLong_AsUnsignedLongLong(pyobject);
     if (PyErr_Occurred()) {
         goto error;
     }
 
-    if (long_value > UINT32_MAX) {
-        PyErr_Format(PyExc_ValueError,
-                     "%s is too large for an unsigned 32-bit integer",
-                     param_name_of_pyobj);
+    if (value > max_bound) {
+        PyErr_Format(PyExc_ValueError, "%S exceeds %llu", pyobject, max_bound);
         goto error;
     }
 
-    uint32_t value = (uint32_t)long_value;
     return value;
 
 error:
-    return 0;
+    return -1;
+}
+
+uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject)
+{
+    return (uint8_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
+                                                                 UINT8_MAX);
+}
+
+uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject)
+{
+    return (uint16_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
+                                                                  UINT16_MAX);
+}
+
+uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject)
+{
+    return (uint32_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
+                                                                  UINT32_MAX);
+}
+
+uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject)
+{
+    return (uint64_t)convert_pyobject_to_fixed_width_integer_type(pyobject,
+                                                                  UINT64_MAX);
+}
+
+const char *convert_pyobject_to_str(PyObject *py_obj)
+{
+    if (!PyUnicode_Check(py_obj)) {
+        PyErr_Format(PyExc_TypeError, "%S is not a Python unicode object",
+                     py_obj);
+        goto error;
+    }
+
+    const char *str = PyUnicode_AsUTF8(py_obj);
+    if (!str) {
+        goto error;
+    }
+    return str;
+error:
+    return NULL;
 }

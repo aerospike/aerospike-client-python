@@ -16,7 +16,7 @@
 
 """Classes used for metrics.
 
-:class:`ConnectionStats`, :class:`NodeMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
+:class:`ConnectionStats`, :class:`NamespaceMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
 because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
 callbacks for reading data about the server and client.
 """
@@ -38,13 +38,22 @@ class ConnectionStats:
     pass
 
 
-class NodeMetrics:
+class NamespaceMetrics:
     """
-    Each type of latency has a list of latency buckets.
+    Namespace metrics.
 
-    Latency bucket counts are cumulative and not reset on each metrics snapshot interval.
+    Each command group has its own histogram (i.e list of latency buckets).
+    Latency histogram counts are cumulative and not reset on each metrics snapshot interval.
 
     Attributes:
+        ns (str): namespace
+        bytes_in (int): Bytes received from the server.
+        bytes_out (int): Bytes sent to the server.
+        error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
+            per command may occur.
+        timeout_count (int): Command timeout count since node was initialized. If the timeout is retryable
+            (i.e socket_timeout), multiple timeouts per command may occur.
+        key_busy_count (int): Command key busy error count since node was initialized.
         conn_latency (list[int])
         write_latency (list[int])
         read_latency (list[int])
@@ -62,11 +71,7 @@ class Node:
         address (str): The IP address / host name of the node (not including the port number).
         port (int): Port number of the node's address.
         conns (:py:class:`ConnectionStats`): Synchronous connection stats on this node.
-        error_count (int): Command error count since node was initialized. If the error is retryable,
-            multiple errors per command may occur.
-        timeout_count (int): Command timeout count since node was initialized.
-            If the timeout is retryable (i.e socketTimeout), multiple timeouts per command may occur.
-        metrics (:py:class:`NodeMetrics`): Node metrics
+        metrics (list[:py:class:`NamespaceMetrics`]): Node/namespace metrics
     """
     pass
 
@@ -130,6 +135,7 @@ class MetricsPolicy:
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
             The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
+        labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
 
             Example::
 
@@ -146,7 +152,8 @@ class MetricsPolicy:
             report_size_limit: int = 0,
             interval: int = 30,
             latency_columns: int = 7,
-            latency_shift: int = 1
+            latency_shift: int = 1,
+            labels: dict[str, str] = {},
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
@@ -154,3 +161,4 @@ class MetricsPolicy:
         self.interval = interval
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
+        self.labels = labels

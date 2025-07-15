@@ -247,7 +247,20 @@ PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *class_name,
                                             PyObject *py_arg);
 
-// Error indicator must always be checked after this call
-// Constructor parameter name needed for constructing error message
-uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
-                                      const char *param_name_of_pyobj);
+// Convert a Python integer into a fixed-width integer and verify it is within that range
+// We return an unsigned long long because it should be able to fit all fixed-width int types up to uint64_t
+// Returns -1 on error. Error indicator can be checked to verify if error occurred
+// TODO: replace this with new API calls in Python 3.14
+unsigned long long
+convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
+                                             unsigned long long max_bound);
+uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject);
+
+uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject);
+
+uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject);
+
+uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
+
+// Returns NULL on error.
+const char *convert_pyobject_to_str(PyObject *py_obj);

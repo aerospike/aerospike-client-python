@@ -1,6 +1,7 @@
 #include <Python.h>
 
 #include "types.h"
+#include "conversions.h"
 
 static void AerospikeTransaction_dealloc(AerospikeTransaction *self)
 {
@@ -44,8 +45,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     as_txn *txn;
     uint32_t reads_capacity, writes_capacity;
     if (py_reads_capacity) {
-        reads_capacity =
-            convert_pyobject_to_uint32_t(py_reads_capacity, kwlist[0]);
+        reads_capacity = convert_pyobject_to_uint32_t(py_reads_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }
@@ -55,8 +55,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     }
 
     if (py_writes_capacity) {
-        writes_capacity =
-            convert_pyobject_to_uint32_t(py_writes_capacity, kwlist[1]);
+        writes_capacity = convert_pyobject_to_uint32_t(py_writes_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }
@@ -112,7 +111,8 @@ static PyObject *AerospikeTransaction_get_timeout(AerospikeTransaction *self,
 static int AerospikeTransaction_set_timeout(AerospikeTransaction *self,
                                             PyObject *py_value, void *closure)
 {
-    uint32_t timeout = convert_pyobject_to_uint32_t(py_value, "timeout");
+    uint32_t timeout = (uint32_t)convert_pyobject_to_fixed_width_integer_type(
+        py_value, UINT32_MAX);
     if (PyErr_Occurred()) {
         return -1;
     }
