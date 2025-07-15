@@ -109,7 +109,9 @@ PyObject *AerospikeClient_Apply_Invoke(AerospikeClient *self, PyObject *py_key,
     // also checks the same thing before setting the apply policy.
     // But this is because for the client config dictionary, as_policy_apply_set_from_pyobject is the only
     // place where we check if py_policy is NULL before setting apply policy.
-    // I didn't want to set the pointer to the apply policy in this helper function as well.
+    //
+    // Also, I didn't want to set the pointer to the apply policy in this helper function as well to make
+    // the latter more simple
     if (py_policy) {
         as_policy_apply_copy_and_set_from_pyobject(
             self, &err, py_policy, &apply_policy,
