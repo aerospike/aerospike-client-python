@@ -271,8 +271,9 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           as_exp *exp_list,
                                           as_exp **exp_list_p);
 
-// 1. Copies an as_policy_* *src* to a txn-level *dst* policy
-// 2. Sets an as_policy_* *dst* from a Python object *py_policy*.
+// These methods are used for setting transaction level policies
+// 1. Copies an config-level as_policy_* *src* to a txn-level *dst* policy
+// 2. Sets an as_policy_* *dst* from a Python object *py_policy*. to override the defaults from *src*
 // *py_policy* must be a Python dictionary, and *src* and *dst* must point to valid as_policy_write instances.
 // Returns AEROSPIKE_OK on success or another status code on error. On error, the err argument is populated.
 
