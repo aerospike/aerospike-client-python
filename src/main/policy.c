@@ -30,6 +30,7 @@
 #include "aerospike/as_job.h"
 #include <aerospike/as_metrics.h>
 #include <aerospike/as_cluster.h>
+#include "pythoncapi_compat.h"
 
 #include "conversions.h"
 #include "policy.h"
@@ -59,42 +60,36 @@
 // populate the as_error object instead. This currently makes it harder to
 // debug why a C-API call failed though, because we don't have the exact
 // exception that was thrown
-#define POLICY_SET_FIELD(__field, __type)                                      \
-    {                                                                          \
-        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
-        if (py_field_name == NULL) {                                           \
-            PyErr_Clear();                                                     \
-            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
-                                   "Unable to create Python unicode object");  \
-        }                                                                      \
-        PyObject *py_field =                                                   \
-            PyDict_GetItemWithError(py_policy, py_field_name);                 \
-        if (py_field == NULL && PyErr_Occurred()) {                            \
-            PyErr_Clear();                                                     \
-            Py_DECREF(py_field_name);                                          \
-            return as_error_update(                                            \
-                err, AEROSPIKE_ERR_CLIENT,                                     \
-                "Unable to fetch field from policy dictionary");               \
-        }                                                                      \
-        Py_DECREF(py_field_name);                                              \
-                                                                               \
-        if (py_field) {                                                        \
-            if (PyLong_Check(py_field)) {                                      \
-                long field_val = PyLong_AsLong(py_field);                      \
-                if (field_val == -1 && PyErr_Occurred()) {                     \
-                    PyErr_Clear();                                             \
-                    return as_error_update(                                    \
-                        err, AEROSPIKE_ERR_CLIENT,                             \
-                        "Unable to fetch long value from policy field");       \
-                }                                                              \
-                policy->__field = (__type)field_val;                           \
-            }                                                                  \
-            else {                                                             \
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
-                                       "%s is invalid", #__field);             \
-            }                                                                  \
-        }                                                                      \
+static inline void POLICY_SET_FIELD(as_error *err, PyObject *py_policy,
+                                    const char *field_name)
+{
+    PyObject *py_field = PyDict_GetItemStringRef(py_policy, field_name);
+    if (py_field == NULL && PyErr_Occurred()) {
+        PyErr_Clear();
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to fetch field from policy dictionary");
+        return;
     }
+
+    if (py_field) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "%s is invalid", field_name);
+        return;
+    }
+
+    // if (!PyLong_Check(py_field)) {
+    //     return;
+    // }
+
+    // TODO: overflow
+    uint64_t val = convert_pyobject_to_uint64_t(py_field);
+    if (val == -1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Unable to fetch long value from policy field");
+    }
+
+    return val;
+}
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
     {                                                                          \
