@@ -288,7 +288,7 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        uint32_t field_val =
+        policy->timeout =
             (uint32_t)policy_set_field(err, py_policy, "timeout", UINT32_MAX);
     }
     // Update the policy
