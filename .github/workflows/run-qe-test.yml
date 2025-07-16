@@ -18,7 +18,7 @@ jobs:
         rclone_config: ${{ secrets.RCLONE_CONFIG }}
 
     - name: Download test-enqueue and testctl
-      run: 'rclone --drive-root-folder-id ${{ secrets.TEST_ENQUEUE_PERF_GOOGLE_DRIVE_FOLDER_ID }} copy source:/ dest:~/bin'
+      run: 'rclone --drive-root-folder-id ${{ secrets.TEST_ENQUEUE_PERF_GOOGLE_DRIVE_FOLDER_ID }} copy remote:/ ~/bin'
 
     - name: Add test-enqueue and testctl to PATH
       run: echo "$(realpath ~/bin)" >> $GITHUB_PATH
