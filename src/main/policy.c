@@ -117,7 +117,7 @@ static inline unsigned long long policy_set_field(as_error *err,
 
     unsigned long long val =
         convert_pyobject_to_fixed_width_integer_type(py_field_val, max_bound);
-    if (val == -1 && PyErr_Occurred()) {
+    if (PyErr_Occurred()) {
         PyErr_Clear();
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to fetch long value from policy field");
