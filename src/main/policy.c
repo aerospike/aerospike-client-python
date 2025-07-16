@@ -53,6 +53,42 @@
 
 #define POLICY_UPDATE() *policy_p = policy;
 
+#define POLICY_SET_FIELD(__field, __type)                                      \
+    {                                                                          \
+        PyObject *py_field_name = PyUnicode_FromString(#__field);              \
+        if (py_field_name == NULL) {                                           \
+            PyErr_Clear();                                                     \
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,                  \
+                                   "Unable to create Python unicode object");  \
+        }                                                                      \
+        PyObject *py_field =                                                   \
+            PyDict_GetItemWithError(py_policy, py_field_name);                 \
+        if (py_field == NULL && PyErr_Occurred()) {                            \
+            PyErr_Clear();                                                     \
+            Py_DECREF(py_field_name);                                          \
+            return as_error_update(                                            \
+                err, AEROSPIKE_ERR_CLIENT,                                     \
+                "Unable to fetch field from policy dictionary");               \
+        }                                                                      \
+        Py_DECREF(py_field_name);                                              \
+                                                                               \
+        if (py_field) {                                                        \
+            if (PyLong_Check(py_field)) {                                      \
+                long field_val = PyLong_AsLong(py_field);                      \
+                if (field_val == -1 && PyErr_Occurred()) {                     \
+                    PyErr_Clear();                                             \
+                    return as_error_update(                                    \
+                        err, AEROSPIKE_ERR_CLIENT,                             \
+                        "Unable to fetch long value from policy field");       \
+                }                                                              \
+                policy->__field = (__type)field_val;                           \
+            }                                                                  \
+            else {                                                             \
+                return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
+                                       "%s is invalid", #__field);             \
+            }                                                                  \
+        }
+
 // TODO: Python exceptions should be propagated up instead of being cleared
 // but the policy helper functions don't handle this case and they only populate
 // an as_error object and return a status code.
@@ -60,32 +96,36 @@
 // populate the as_error object instead. This currently makes it harder to
 // debug why a C-API call failed though, because we don't have the exact
 // exception that was thrown
-static inline unsigned long long get_and_validate_policy_field_val_from_py_dict(
-    as_error *err, PyObject *py_policy, const char *field_name,
-    unsigned long long max_bound)
+static inline unsigned long long policy_set_field(as_error *err,
+                                                  PyObject *py_policy,
+                                                  const char *field_name,
+                                                  unsigned long long max_bound)
 {
-    PyObject *py_field = PyDict_GetItemStringRef(py_policy, field_name);
-    if (py_field == NULL && PyErr_Occurred()) {
+    PyObject *py_field_val = PyDict_GetItemStringRef(py_policy, field_name);
+    if (py_field_val == NULL && PyErr_Occurred()) {
         PyErr_Clear();
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to fetch field from policy dictionary");
         return;
     }
 
-    if (py_field) {
+    if (py_field_val) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "%s is invalid", field_name);
         return;
     }
 
-    unsigned long long val =
-        convert_pyobject_to_fixed_width_integer_type(py_field, max_bound);
-    if (val == -1 && PyErr_Occurred()) {
-        PyErr_Clear();
-        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                               "Unable to fetch long value from policy field");
-    }
+    if (PyLong_Check(py_field_val)) {
+        unsigned long long val = convert_pyobject_to_fixed_width_integer_type(
+            py_field_val, max_bound);
+        if (val == -1 && PyErr_Occurred()) {
+            PyErr_Clear();
+            return as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to fetch long value from policy field");
+        }
 
-    return val;
+        return val;
+    }
 }
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
@@ -247,8 +287,7 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         uint32_t field_val =
-            (uint32_t)get_and_validate_policy_field_val_from_py_dict(
-                err, py_policy, "timeout", UINT32_MAX);
+            (uint32_t)policy_set_field(err, py_policy, "timeout", UINT32_MAX);
     }
     // Update the policy
     POLICY_UPDATE();
@@ -298,12 +337,11 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
                         PyObject *py_policy, as_policy_base *policy,
                         as_exp *exp_list, as_exp **exp_list_p)
 {
-    get_and_validate_policy_field_val_from_py_dict(total_timeout, uint32_t);
-    get_and_validate_policy_field_val_from_py_dict(socket_timeout, uint32_t);
-    get_and_validate_policy_field_val_from_py_dict(max_retries, uint32_t);
-    get_and_validate_policy_field_val_from_py_dict(sleep_between_retries,
-                                                   uint32_t);
-    get_and_validate_policy_field_val_from_py_dict(compress, bool);
+    POLICY_SET_FIELD(total_timeout, uint32_t);
+    POLICY_SET_FIELD(socket_timeout, uint32_t);
+    POLICY_SET_FIELD(max_retries, uint32_t);
+    POLICY_SET_FIELD(sleep_between_retries, uint32_t);
+    POLICY_SET_FIELD(compress, bool);
 
     // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
     // so this is safe to call for a scan/query policy's base policy
@@ -343,15 +381,13 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        get_and_validate_policy_field_val_from_py_dict(key, as_policy_key);
-        get_and_validate_policy_field_val_from_py_dict(replica,
-                                                       as_policy_replica);
+        POLICY_SET_FIELD(key, as_policy_key);
+        POLICY_SET_FIELD(replica, as_policy_replica);
         //POLICY_SET_FIELD(gen, as_policy_gen); removed
-        get_and_validate_policy_field_val_from_py_dict(commit_level,
-                                                       as_policy_commit_level);
-        get_and_validate_policy_field_val_from_py_dict(durable_delete, bool);
-        get_and_validate_policy_field_val_from_py_dict(ttl, uint32_t);
-        get_and_validate_policy_field_val_from_py_dict(on_locking_only, bool);
+        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+        POLICY_SET_FIELD(durable_delete, bool);
+        POLICY_SET_FIELD(ttl, uint32_t);
+        POLICY_SET_FIELD(on_locking_only, bool);
     }
 
     // Update the policy
@@ -380,9 +416,9 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        get_and_validate_policy_field_val_from_py_dict(timeout, uint32_t);
-        get_and_validate_policy_field_val_from_py_dict(send_as_is, bool);
-        get_and_validate_policy_field_val_from_py_dict(check_bounds, bool);
+        POLICY_SET_FIELD(timeout, uint32_t);
+        POLICY_SET_FIELD(send_as_is, bool);
+        POLICY_SET_FIELD(check_bounds, bool);
     }
     // Update the policy
     POLICY_UPDATE();
@@ -416,15 +452,13 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
         if (retval != AEROSPIKE_OK) {
             return retval;
         }
-        get_and_validate_policy_field_val_from_py_dict(deserialize, bool);
-        get_and_validate_policy_field_val_from_py_dict(replica,
-                                                       as_policy_replica);
+        POLICY_SET_FIELD(deserialize, bool);
+        POLICY_SET_FIELD(replica, as_policy_replica);
 
         // C client 6.0.0
-        get_and_validate_policy_field_val_from_py_dict(short_query, bool);
+        POLICY_SET_FIELD(short_query, bool);
 
-        get_and_validate_policy_field_val_from_py_dict(expected_duration,
-                                                       as_query_duration);
+        POLICY_SET_FIELD(expected_duration, as_query_duration);
     }
 
     // Update the policy
@@ -461,18 +495,14 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        get_and_validate_policy_field_val_from_py_dict(key, as_policy_key);
-        get_and_validate_policy_field_val_from_py_dict(replica,
-                                                       as_policy_replica);
-        get_and_validate_policy_field_val_from_py_dict(deserialize, bool);
-        get_and_validate_policy_field_val_from_py_dict(read_touch_ttl_percent,
-                                                       int);
+        POLICY_SET_FIELD(key, as_policy_key);
+        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(deserialize, bool);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
-        get_and_validate_policy_field_val_from_py_dict(read_mode_ap,
-                                                       as_policy_read_mode_ap);
-        get_and_validate_policy_field_val_from_py_dict(read_mode_sc,
-                                                       as_policy_read_mode_sc);
+        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
     }
 
     // Update the policy
@@ -509,15 +539,13 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        get_and_validate_policy_field_val_from_py_dict(generation, uint16_t);
+        POLICY_SET_FIELD(generation, uint16_t);
 
-        get_and_validate_policy_field_val_from_py_dict(key, as_policy_key);
-        get_and_validate_policy_field_val_from_py_dict(gen, as_policy_gen);
-        get_and_validate_policy_field_val_from_py_dict(commit_level,
-                                                       as_policy_commit_level);
-        get_and_validate_policy_field_val_from_py_dict(replica,
-                                                       as_policy_replica);
-        get_and_validate_policy_field_val_from_py_dict(durable_delete, bool);
+        POLICY_SET_FIELD(key, as_policy_key);
+        POLICY_SET_FIELD(gen, as_policy_gen);
+        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(durable_delete, bool);
     }
 
     // Update the policy
@@ -553,12 +581,10 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        get_and_validate_policy_field_val_from_py_dict(durable_delete, bool);
-        get_and_validate_policy_field_val_from_py_dict(records_per_second,
-                                                       uint32_t);
-        get_and_validate_policy_field_val_from_py_dict(max_records, uint64_t);
-        get_and_validate_policy_field_val_from_py_dict(replica,
-                                                       as_policy_replica);
+        POLICY_SET_FIELD(durable_delete, bool);
+        POLICY_SET_FIELD(records_per_second, uint32_t);
+        POLICY_SET_FIELD(max_records, uint64_t);
+        POLICY_SET_FIELD(replica, as_policy_replica);
     }
 
     // Update the policy
@@ -594,18 +620,14 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        get_and_validate_policy_field_val_from_py_dict(key, as_policy_key);
-        get_and_validate_policy_field_val_from_py_dict(gen, as_policy_gen);
-        get_and_validate_policy_field_val_from_py_dict(exists,
-                                                       as_policy_exists);
-        get_and_validate_policy_field_val_from_py_dict(commit_level,
-                                                       as_policy_commit_level);
-        get_and_validate_policy_field_val_from_py_dict(durable_delete, bool);
-        get_and_validate_policy_field_val_from_py_dict(replica,
-                                                       as_policy_replica);
-        get_and_validate_policy_field_val_from_py_dict(compression_threshold,
-                                                       uint32_t);
-        get_and_validate_policy_field_val_from_py_dict(on_locking_only, bool);
+        POLICY_SET_FIELD(key, as_policy_key);
+        POLICY_SET_FIELD(gen, as_policy_gen);
+        POLICY_SET_FIELD(exists, as_policy_exists);
+        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+        POLICY_SET_FIELD(durable_delete, bool);
+        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(compression_threshold, uint32_t);
+        POLICY_SET_FIELD(on_locking_only, bool);
     }
 
     // Update the policy
@@ -642,25 +664,19 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        get_and_validate_policy_field_val_from_py_dict(key, as_policy_key);
-        get_and_validate_policy_field_val_from_py_dict(gen, as_policy_gen);
-        get_and_validate_policy_field_val_from_py_dict(commit_level,
-                                                       as_policy_commit_level);
-        get_and_validate_policy_field_val_from_py_dict(replica,
-                                                       as_policy_replica);
-        get_and_validate_policy_field_val_from_py_dict(durable_delete, bool);
-        get_and_validate_policy_field_val_from_py_dict(deserialize, bool);
-        get_and_validate_policy_field_val_from_py_dict(exists,
-                                                       as_policy_exists);
-        get_and_validate_policy_field_val_from_py_dict(read_touch_ttl_percent,
-                                                       int);
-        get_and_validate_policy_field_val_from_py_dict(on_locking_only, bool);
+        POLICY_SET_FIELD(key, as_policy_key);
+        POLICY_SET_FIELD(gen, as_policy_gen);
+        POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(durable_delete, bool);
+        POLICY_SET_FIELD(deserialize, bool);
+        POLICY_SET_FIELD(exists, as_policy_exists);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
+        POLICY_SET_FIELD(on_locking_only, bool);
 
         // 4.0.0 new policies
-        get_and_validate_policy_field_val_from_py_dict(read_mode_ap,
-                                                       as_policy_read_mode_ap);
-        get_and_validate_policy_field_val_from_py_dict(read_mode_sc,
-                                                       as_policy_read_mode_sc);
+        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
     }
 
     // Update the policy
@@ -696,23 +712,19 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
             return retval;
         }
 
-        get_and_validate_policy_field_val_from_py_dict(concurrent, bool);
-        get_and_validate_policy_field_val_from_py_dict(allow_inline, bool);
-        get_and_validate_policy_field_val_from_py_dict(deserialize, bool);
-        get_and_validate_policy_field_val_from_py_dict(replica,
-                                                       as_policy_replica);
-        get_and_validate_policy_field_val_from_py_dict(read_touch_ttl_percent,
-                                                       int);
+        POLICY_SET_FIELD(concurrent, bool);
+        POLICY_SET_FIELD(allow_inline, bool);
+        POLICY_SET_FIELD(deserialize, bool);
+        POLICY_SET_FIELD(replica, as_policy_replica);
+        POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
         // 4.0.0 new policies
-        get_and_validate_policy_field_val_from_py_dict(read_mode_ap,
-                                                       as_policy_read_mode_ap);
-        get_and_validate_policy_field_val_from_py_dict(read_mode_sc,
-                                                       as_policy_read_mode_sc);
+        POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+        POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
 
         // C client 6.0.0 (batch writes)
-        get_and_validate_policy_field_val_from_py_dict(allow_inline_ssd, bool);
-        get_and_validate_policy_field_val_from_py_dict(respond_all_keys, bool);
+        POLICY_SET_FIELD(allow_inline_ssd, bool);
+        POLICY_SET_FIELD(respond_all_keys, bool);
     }
 
     // Update the policy
@@ -731,13 +743,12 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
     POLICY_INIT(as_policy_batch_write);
 
     // Set policy fields
-    get_and_validate_policy_field_val_from_py_dict(key, as_policy_key);
-    get_and_validate_policy_field_val_from_py_dict(commit_level,
-                                                   as_policy_commit_level);
-    get_and_validate_policy_field_val_from_py_dict(gen, as_policy_gen);
-    get_and_validate_policy_field_val_from_py_dict(exists, as_policy_exists);
-    get_and_validate_policy_field_val_from_py_dict(durable_delete, bool);
-    get_and_validate_policy_field_val_from_py_dict(on_locking_only, bool);
+    POLICY_SET_FIELD(key, as_policy_key);
+    POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+    POLICY_SET_FIELD(gen, as_policy_gen);
+    POLICY_SET_FIELD(exists, as_policy_exists);
+    POLICY_SET_FIELD(durable_delete, bool);
+    POLICY_SET_FIELD(on_locking_only, bool);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
@@ -758,11 +769,9 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
     POLICY_INIT(as_policy_batch_read);
 
     // Set policy fields
-    get_and_validate_policy_field_val_from_py_dict(read_mode_ap,
-                                                   as_policy_read_mode_ap);
-    get_and_validate_policy_field_val_from_py_dict(read_mode_sc,
-                                                   as_policy_read_mode_sc);
-    get_and_validate_policy_field_val_from_py_dict(read_touch_ttl_percent, int);
+    POLICY_SET_FIELD(read_mode_ap, as_policy_read_mode_ap);
+    POLICY_SET_FIELD(read_mode_sc, as_policy_read_mode_sc);
+    POLICY_SET_FIELD(read_touch_ttl_percent, int);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
@@ -783,12 +792,11 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
     POLICY_INIT(as_policy_batch_apply);
 
     // Set policy fields
-    get_and_validate_policy_field_val_from_py_dict(key, as_policy_key);
-    get_and_validate_policy_field_val_from_py_dict(commit_level,
-                                                   as_policy_commit_level);
-    get_and_validate_policy_field_val_from_py_dict(ttl, uint32_t);
-    get_and_validate_policy_field_val_from_py_dict(durable_delete, bool);
-    get_and_validate_policy_field_val_from_py_dict(on_locking_only, bool);
+    POLICY_SET_FIELD(key, as_policy_key);
+    POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+    POLICY_SET_FIELD(ttl, uint32_t);
+    POLICY_SET_FIELD(durable_delete, bool);
+    POLICY_SET_FIELD(on_locking_only, bool);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
@@ -809,12 +817,11 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
     POLICY_INIT(as_policy_batch_remove);
 
     // Set policy fields
-    get_and_validate_policy_field_val_from_py_dict(key, as_policy_key);
-    get_and_validate_policy_field_val_from_py_dict(commit_level,
-                                                   as_policy_commit_level);
-    get_and_validate_policy_field_val_from_py_dict(gen, as_policy_gen);
-    get_and_validate_policy_field_val_from_py_dict(durable_delete, bool);
-    get_and_validate_policy_field_val_from_py_dict(generation, uint16_t);
+    POLICY_SET_FIELD(key, as_policy_key);
+    POLICY_SET_FIELD(commit_level, as_policy_commit_level);
+    POLICY_SET_FIELD(gen, as_policy_gen);
+    POLICY_SET_FIELD(durable_delete, bool);
+    POLICY_SET_FIELD(generation, uint16_t);
 
     // C client 5.0 new expressions
     POLICY_SET_EXPRESSIONS_FIELD();
