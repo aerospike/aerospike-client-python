@@ -12,27 +12,39 @@ jobs:
       TEST_CONFIG_FILE_NAME: client_perf.yaml
     runs-on: ubuntu-24.04
     steps:
-    - name: Get test-enqueue
-      uses: actions/checkout@v4
+    - name: Setup Rclone
+      uses: AnimMouse/setup-rclone@0d99fa3878a334d3e307c1a8372ad55550fdaea7
       with:
-        repository: citrusleaf/qe-tools
-        token: ${{ secrets.CLIENT_BOT_PAT }}
-        path: qe-tools
-        sparse-checkout: |
-          bin/test-enqueue
-        sparse-checkout-cone-mode: false
+        rclone_config: ${{ secrets.RCLONE_CONFIG }}
 
-    - name: Add test-enqueue to PATH
-      run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+    - name: Download test-enqueue and testctl
+      run: 'rclone --drive-root-folder-id ${{ secrets.TEST_ENQUEUE_PERF_GOOGLE_DRIVE_FOLDER_ID }} copy source:/ dest:~/bin'
 
-    - uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+    - name: Add test-enqueue and testctl to PATH
+      run: echo "$(realpath ~/bin)" >> $GITHUB_PATH
 
-    - run: jf rt download qe-go-dev-local/testctl.amd64.linux qe-tools/bin/testctl
-    - run: chmod u+x ./testctl
-      working-directory: qe-tools/bin
+    # - name: Get test-enqueue
+    #   uses: actions/checkout@v4
+    #   with:
+    #     repository: citrusleaf/qe-tools
+    #     token: ${{ secrets.CLIENT_BOT_PAT }}
+    #     path: qe-tools
+    #     sparse-checkout: |
+    #       bin/test-enqueue
+    #     sparse-checkout-cone-mode: false
+
+    # - name: Add test-enqueue to PATH
+    #   run: echo "$(realpath qe-tools/bin)" >> $GITHUB_PATH
+
+    # - uses: jfrog/setup-jfrog-cli@v4
+    #   env:
+    #     JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+    #     JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    # - run: jf rt download qe-go-dev-local/testctl.amd64.linux qe-tools/bin/testctl
+    # - run: chmod u+x ./testctl
+    #   working-directory: qe-tools/bin
+
     - uses: actions/checkout@v4
       with:
         path: aerospike-client-python
