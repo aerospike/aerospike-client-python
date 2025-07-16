@@ -101,31 +101,29 @@ static inline unsigned long long policy_set_field(as_error *err,
                                                   const char *field_name,
                                                   unsigned long long max_bound)
 {
-    PyObject *py_field_val = PyDict_GetItemStringRef(py_policy, field_name);
-    if (py_field_val == NULL && PyErr_Occurred()) {
+    PyObject *py_field_val = NULL;
+    int retval = PyDict_GetItemStringRef(py_policy, field_name, &py_field_val);
+    if (retval == -1) {
         PyErr_Clear();
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to fetch field from policy dictionary");
         return;
     }
 
-    if (py_field_val) {
+    if (!PyLong_Check(py_field_val)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "%s is invalid", field_name);
         return;
     }
 
-    if (PyLong_Check(py_field_val)) {
-        unsigned long long val = convert_pyobject_to_fixed_width_integer_type(
-            py_field_val, max_bound);
-        if (val == -1 && PyErr_Occurred()) {
-            PyErr_Clear();
-            return as_error_update(
-                err, AEROSPIKE_ERR_CLIENT,
-                "Unable to fetch long value from policy field");
-        }
-
-        return val;
+    unsigned long long val =
+        convert_pyobject_to_fixed_width_integer_type(py_field_val, max_bound);
+    if (val == -1 && PyErr_Occurred()) {
+        PyErr_Clear();
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Unable to fetch long value from policy field");
     }
+
+    return val;
 }
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
