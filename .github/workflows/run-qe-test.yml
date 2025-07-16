@@ -10,6 +10,7 @@ jobs:
   foo:
     env:
       TEST_CONFIG_FILE_NAME: client_perf.yaml
+      TESTCTL_BINARY_NAME: testctl.perf
     runs-on: ubuntu-24.04
     steps:
     - name: Setup Rclone
@@ -82,7 +83,7 @@ jobs:
 
     - name: Enqueue test run and fail fast if unable to enqueue
       run: |
-        enqueue_count=$(test-enqueue --config staging --deployment perf_client ${{ env.TEST_CONFIG_FILE_NAME }} | grep "COUNT:" | sed 's/COUNT\://' | xargs)
+        enqueue_count=$(test-enqueue.perf --config staging --deployment perf_client ${{ env.TEST_CONFIG_FILE_NAME }} | grep "COUNT:" | sed 's/COUNT\://' | xargs)
         if [[ "$enqueue_count" != "1" ]]; then
           echo "We expected 1 test run to be enqueued, but $enqueue_count was actually enqueued."
           exit 1
@@ -95,7 +96,7 @@ jobs:
         while true; do
           # Color messes up the run_id's string
           # Use xargs to trim whitespace from testctl's output
-          run_id=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
+          run_id=$(${{ env.TESTCTL_BINARY_NAME }} --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
           if [[ -z "$run_id" ]]; then
             echo "Test run has not finished yet..."
             sleep 2
@@ -107,7 +108,7 @@ jobs:
         echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
     # Downloading builds doesn't work here, so we disable it
-    - run: testctl --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
+    - run: ${{ env.TESTCTL_BINARY_NAME }} --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
 
     - name: Print test run logs
       run: |
@@ -119,7 +120,7 @@ jobs:
 
     - name: Set Github job status
       run: |
-        run_status=$(testctl --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns STATUS | sed '1d' | xargs)
+        run_status=$(${{ env.TESTCTL_BINARY_NAME }} --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns STATUS | sed '1d' | xargs)
         echo $run_status
         if [[ "$run_status" == "Failure" ]]; then
           exit 1
