@@ -77,7 +77,7 @@ static inline unsigned long long get_and_validate_policy_field_val_from_py_dict(
         return;
     }
 
-    uint64_t val =
+    unsigned long long val =
         convert_pyobject_to_fixed_width_integer_type(py_field, max_bound);
     if (val == -1 && PyErr_Occurred()) {
         PyErr_Clear();
