@@ -87,7 +87,8 @@
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
                                        "%s is invalid", #__field);             \
             }                                                                  \
-        }
+        }                                                                      \
+    }
 
 // TODO: Python exceptions should be propagated up instead of being cleared
 // but the policy helper functions don't handle this case and they only populate
