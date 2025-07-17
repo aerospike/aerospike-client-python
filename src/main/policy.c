@@ -97,10 +97,9 @@
 // populate the as_error object instead. This currently makes it harder to
 // debug why a C-API call failed though, because we don't have the exact
 // exception that was thrown
-static inline unsigned long long policy_set_field(as_error *err,
-                                                  PyObject *py_policy,
-                                                  const char *field_name,
-                                                  unsigned long long max_bound)
+static inline void override_uint32_t_field_using_py_policy_field(
+    as_error *err, PyObject *py_policy, const char *field_name,
+    uint32_t *field_value_ref)
 {
     PyObject *py_field_val = NULL;
     int retval = PyDict_GetItemStringRef(py_policy, field_name, &py_field_val);
@@ -108,27 +107,23 @@ static inline unsigned long long policy_set_field(as_error *err,
         PyErr_Clear();
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to fetch field from policy dictionary");
-        goto error;
+        goto CLEANUP;
+    }
+    else if (retval == 0) {
+        goto CLEANUP;
     }
 
-    if (!PyLong_Check(py_field_val)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "%s is invalid", field_name);
-        goto error;
-    }
-
-    unsigned long long val =
-        convert_pyobject_to_fixed_width_integer_type(py_field_val, max_bound);
+    uint32_t val = convert_pyobject_to_uint32_t(py_field_val);
     if (PyErr_Occurred()) {
         PyErr_Clear();
         as_error_update(err, AEROSPIKE_ERR_CLIENT,
                         "Unable to fetch long value from policy field");
-        goto error;
     }
 
-    return val;
+    *field_value_ref = val;
 
-error:
-    return -1;
+CLEANUP:
+    Py_XDECREF(py_field_val);
 }
 
 #define POLICY_SET_EXPRESSIONS_FIELD()                                         \
@@ -289,9 +284,8 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
-        // TODO: no value should be assigned if policy_set_field fails.
-        policy->timeout =
-            (uint32_t)policy_set_field(err, py_policy, "timeout", UINT32_MAX);
+        override_uint32_t_field_using_py_policy_field(err, py_policy, "timeout",
+                                                      &policy->timeout);
         if (err->code != AEROSPIKE_OK) {
             return err->code;
         }
