@@ -42,6 +42,7 @@
 #include <aerospike/as_record.h>
 #include <aerospike/as_exp_operations.h>
 #include <aerospike/aerospike_txn.h>
+#include <aerospike/version.h>
 
 PyObject *py_global_hosts;
 int counter = 0xA8000000;
@@ -560,8 +561,11 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"ConfigProvider", AerospikeConfigProvider_Ready},
 };
 
+extern char *aerospike_client_language;
+
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
+    aerospike_client_language = "python";
     static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         .m_name = AEROSPIKE_MODULE_NAME,
@@ -660,6 +664,26 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         goto SYS_MODULES_CLEANUP;
     }
 
+    // VERSION doesn't have the local version identifier
+    // But this is ok since the user agent should be used by customers in production.
+    // So it doesn't need to have the local version identifier
+    FILE *version_file = fopen("VERSION", "r");
+    if (version_file == NULL) {
+        goto SYS_MODULES_CLEANUP;
+    }
+    int retval = fseek(version_file, 0, SEEK_END);
+    // TODO: off by 1?
+    // TODO: missing error handling
+    long pos = ftell(version_file);
+    // TODO: need to cleanup once aerospike module is deleted
+    char *buffer = malloc(sizeof(char) * pos);
+    fseek(version_file, 0, SEEK_SET);
+    fgets(buffer, pos, version_file);
+    aerospike_client_version = buffer;
+    // Cleanup
+    fclose(version_file);
+
+    // TODO: dup code path as below
     // We don't need these anymore. Only for initializing module
     Py_DECREF(py_sys_modules);
     Py_DECREF(py_sys);
