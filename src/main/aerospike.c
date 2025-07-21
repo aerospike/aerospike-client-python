@@ -679,7 +679,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     }
 
     PyObject *py_aerospike_module_version =
-        PyObject_CallOneArg(py_version_function, AEROSPIKE_MODULE_NAME);
+        PyObject_CallFunction(py_version_function, "s", AEROSPIKE_MODULE_NAME);
     if (py_aerospike_module_version == NULL) {
         goto VERSION_FUNC_CLEANUP;
     }
