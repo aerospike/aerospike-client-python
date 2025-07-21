@@ -678,7 +678,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     // TODO: need to cleanup once aerospike module is deleted
     char *buffer = malloc(sizeof(char) * pos);
     fseek(version_file, 0, SEEK_SET);
-    fgets(buffer, pos, version_file);
+    buffer = fgets(buffer, pos, version_file);
+    if (buffer == NULL) {
+        fclose(version_file);
+        goto SYS_MODULES_CLEANUP;
+    }
     aerospike_client_version = buffer;
     // Cleanup
     fclose(version_file);
