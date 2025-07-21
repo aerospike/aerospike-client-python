@@ -671,7 +671,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     if (version_file == NULL) {
         goto SYS_MODULES_CLEANUP;
     }
-    int retval = fseek(version_file, 0, SEEK_END);
+    fseek(version_file, 0, SEEK_END);
     // TODO: off by 1?
     // TODO: missing error handling
     long pos = ftell(version_file);
