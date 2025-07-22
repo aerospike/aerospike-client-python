@@ -563,11 +563,16 @@ static struct type_name_to_creation_method py_module_types[] = {
 
 extern char *aerospike_client_language;
 
+bool is_python_client_version_set_for_user_agent = false;
+
 void aerospike_free(void *self)
 {
-    // TODO: here we assume the module was fully initialized and returned.
-    // handle case where that is false
-    cf_free(aerospike_client_version);
+    // The aerospike module may be created but if initialization fails before we create a heap-allocated
+    // version string, we don't want to deallocate the default C string constant stored in data for the C client
+    if (is_python_client_version_set_for_user_agent) {
+        cf_free(aerospike_client_version);
+        is_python_client_version_set_for_user_agent = false;
+    }
 }
 
 PyMODINIT_FUNC PyInit_aerospike(void)
@@ -698,6 +703,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     // Here we assume that the original value of aerospike_client_version was not heap allocated
     aerospike_client_version = cf_strdup(aerospike_module_version);
+    is_python_client_version_set_for_user_agent = true;
 
     // TODO: dup code path as below
     // We don't need these anymore. Only for initializing module
