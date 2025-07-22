@@ -497,7 +497,7 @@ jobs:
         # When background processes fail, this step won't fail.
 
     - if: ${{ matrix.test-case == 'user_agent' }}
-      name: Confirm that the user agent shows the language client is Python (only for server 8.1)
+      name: Confirm that the user agent shows the correct client language and version (only for server 8.1)
       run: |
         server_version=$(asinfo -v build)
         major_num=$(echo $server_version | cut -d '.' -f 1)
