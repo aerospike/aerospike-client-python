@@ -563,16 +563,22 @@ static struct type_name_to_creation_method py_module_types[] = {
 
 extern char *aerospike_client_language;
 
+void aerospike_free(void *self)
+{
+    // TODO: here we assume the module was fully initialized and returned.
+    // handle case where that is false
+    cf_free(aerospike_client_version);
+}
+
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
     aerospike_client_language = "python";
-    static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        .m_name = AEROSPIKE_MODULE_NAME,
-        .m_doc = "Aerospike Python Client",
-        .m_methods = aerospike_methods,
-        .m_size = -1,
-    };
+    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
+                                           .m_name = AEROSPIKE_MODULE_NAME,
+                                           .m_doc = "Aerospike Python Client",
+                                           .m_methods = aerospike_methods,
+                                           .m_size = -1,
+                                           .m_free = aerospike_free};
 
     PyObject *py_aerospike_module = PyModule_Create(&moduledef);
     if (py_aerospike_module == NULL) {
@@ -690,7 +696,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         goto AEROSPIKE_MODULE_VERSION_CLEANUP;
     }
 
-    // TODO: mem leak
+    // Here we assume that the original value of aerospike_client_version was not heap allocated
     aerospike_client_version = cf_strdup(aerospike_module_version);
 
     // TODO: dup code path as below
