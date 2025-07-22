@@ -481,22 +481,6 @@ jobs:
       with:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
-    - name: Run client in background
-      run: |
-        cat <<-EOF >> run-client-in-bg.py
-        import aerospike
-        import time
-        config = {
-          "hosts": [
-            ("127.0.0.1", 3000)
-          ]
-        }
-        client = aerospike.client(config)
-        while True:
-          time.sleep(1)
-        EOF
-        # This shell will be closed once this step completes
-        nohup python3 run-client-in-bg.py &
 
     - uses: docker/login-action@v3
       with:
@@ -514,6 +498,23 @@ jobs:
     - uses: ./.github/actions/wait-for-ce-server-to-start
       with:
         container-name: aerospike
+
+    - name: Run client in background
+      run: |
+        cat <<-EOF >> run-client-in-bg.py
+        import aerospike
+        import time
+        config = {
+          "hosts": [
+            ("127.0.0.1", 3000)
+          ]
+        }
+        client = aerospike.client(config)
+        while True:
+          time.sleep(1)
+        EOF
+        # This shell will be closed once this step completes
+        nohup python3 run-client-in-bg.py &
 
     - name: Confirm that the user agent shows the language client is Python
       run: |
