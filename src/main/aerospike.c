@@ -693,35 +693,6 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     // TODO: mem leak
     aerospike_client_version = cf_strdup(aerospike_module_version);
 
-    // // VERSION doesn't have the local version identifier
-    // // But this is ok since the user agent should be used by customers in production.
-    // // So it doesn't need to have the local version identifier
-    // FILE *version_file = fopen("VERSION", "r");
-    // if (version_file == NULL) {
-    //     PyErr_SetString(PyExc_ImportError, "Unable to open VERSION file");
-    //     goto SYS_MODULES_CLEANUP;
-    // }
-    // fseek(version_file, 0, SEEK_END);
-
-    // // TODO: off by 1?
-    // // TODO: missing error handling
-    // long pos = ftell(version_file);
-
-    // // TODO: need to cleanup once aerospike module is deleted
-    // char *buffer = malloc(sizeof(char) * pos);
-
-    // fseek(version_file, 0, SEEK_SET);
-    // buffer = fgets(buffer, pos, version_file);
-    // if (buffer == NULL) {
-    //     PyErr_SetString(PyExc_ImportError, "Unable to read VERSION file");
-    //     fclose(version_file);
-    //     goto SYS_MODULES_CLEANUP;
-    // }
-    // aerospike_client_version = buffer;
-
-    // Cleanup
-    // fclose(version_file);
-
     // TODO: dup code path as below
     // We don't need these anymore. Only for initializing module
     Py_DECREF(py_sys_modules);
