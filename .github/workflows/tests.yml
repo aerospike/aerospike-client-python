@@ -485,6 +485,7 @@ jobs:
       run: |
         cat <<-EOF >> run-client-in-bg.py
         import aerospike
+        import time
         config = {
           "hosts": [
             ("127.0.0.1", 3000)
@@ -492,7 +493,7 @@ jobs:
         }
         client = aerospike.client(config)
         while True:
-          sleep 1
+          time.sleep(1)
         EOF
         # This shell will be closed once this step completes
         nohup python3 run-client-in-bg.py &
