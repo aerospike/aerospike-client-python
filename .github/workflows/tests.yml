@@ -515,7 +515,9 @@ jobs:
         EOF
         # This shell will be closed once this step completes
         nohup python3 run-client-in-bg.py &
-
+        # We want to check if the python script fails or not.
+        # If it fails once run in the background, this step won't fail.
+        wait $!
     - name: Confirm that the user agent shows the language client is Python
       run: |
         info_cmd_response=$(docker exec aerospike asinfo -v "user-agents" | head -n 1)
