@@ -520,4 +520,9 @@ jobs:
         user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
         user_agent=$(echo $user_agent_base64_encoded | base64 -d)
         client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
-        test $client_language = "python"
+        test "$client_language" = "python"
+        # Debug
+        print $info_cmd_response
+        print $user_agent_base64_encoded
+        print $user_agent
+        print $client_language
