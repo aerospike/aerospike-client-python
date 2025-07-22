@@ -518,7 +518,6 @@ jobs:
 
     - name: Confirm that the user agent shows the language client is Python
       run: |
-        sleep 5
         info_cmd_response=$(docker exec aerospike asinfo -v "user-agents" | head -n 1)
         echo "Info command response: $info_cmd_response"
         user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
