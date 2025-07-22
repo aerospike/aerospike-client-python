@@ -476,6 +476,7 @@ jobs:
       working-directory: test
 
     - if: ${{ matrix.test-case == 'user_agent' }}
+      # Even for server versions < 8.1 that don't support user agent, this client version should still work on older servers
       name: Run client in background
       run: |
         cat <<-EOF >> run-client-in-bg.py
@@ -496,8 +497,15 @@ jobs:
         # When background processes fail, this step won't fail.
 
     - if: ${{ matrix.test-case == 'user_agent' }}
-      name: Confirm that the user agent shows the language client is Python
+      name: Confirm that the user agent shows the language client is Python (only for server 8.1)
       run: |
+        server_version=$(asinfo -v build)
+        major_num=$(echo $server_version | cut -d '.' -f 1)
+        minor_num=$(echo $server_version | cut -d '.' -f 2)
+        if [[ $major_num -lt 8 || ( $major_num -eq 8 && $minor_num -lt 1 ) ]]; then
+          exit 0
+        fi
+
         info_cmd_response=$(docker exec aerospike asinfo -v "user-agents" | head -n 1)
         echo "Info command response: $info_cmd_response"
         user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
@@ -507,3 +515,4 @@ jobs:
         client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
         echo $client_language
         test "$client_language" = "python"
+      shell: bash
