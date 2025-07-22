@@ -466,3 +466,58 @@ jobs:
       working-directory: test/metrics
     - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/metrics
+
+  # TODO: reuse code
+  test-user-agent-app-id:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        architecture: 'x64'
+    - uses: actions/download-artifact@v4
+      with:
+        name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+    - run: python3 -m pip install *.whl
+    - name: Run client in background
+      run: |
+        cat <<-EOF >> run-client-in-bg.py
+        import aerospike
+        config = {
+          "hosts": [
+            ("127.0.0.1", 3000)
+          ]
+        }
+        client = aerospike.client(config)
+        while True:
+          sleep 1
+        EOF
+        # This shell will be closed once this step completes
+        nohup python3 run-client-in-bg.py &
+
+    - uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY_NAME }}
+        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
+    - name: Run Aerospike server
+      run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
+
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
+
+    - uses: ./.github/actions/wait-for-ce-server-to-start
+      with:
+        container-name: aerospike
+
+    - name: Confirm that the user agent shows the language client is Python
+      run: |
+        response=$(docker exec aerospike asinfo -v "user-agents" | head -n 1)
+        user_agent_base64_encoded=$(echo $response | sed 's/user-agent=(.*):.*/\1/')
+        user_agent=$(echo $user_agent_base64_encoded | base64 -d)
+        client_language=$(echo $user_agent | sed 's/1,(.*)-.*/\1/')
+        test $client_language = "python"
