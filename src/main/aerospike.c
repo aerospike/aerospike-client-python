@@ -561,7 +561,7 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"ConfigProvider", AerospikeConfigProvider_Ready},
 };
 
-extern AS_EXTERN char *aerospike_client_language;
+AS_EXTERN extern char *aerospike_client_language;
 
 bool is_python_client_version_set_for_user_agent = false;
 
