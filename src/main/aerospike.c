@@ -567,8 +567,9 @@ bool is_python_client_version_set_for_user_agent = false;
 
 void aerospike_free(void *self)
 {
-    // The aerospike module may be created but if initialization fails before we create a heap-allocated
-    // version string, we don't want to deallocate the default C string constant stored in data for the C client
+    // The aerospike module may be created, but initializing the module may fail.
+    // In that case, this m_free callback will be called.
+    // So we don't want to deallocate the default C string constant stored in data for the C client
     if (is_python_client_version_set_for_user_agent) {
         cf_free(aerospike_client_version);
         is_python_client_version_set_for_user_agent = false;
