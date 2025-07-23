@@ -116,7 +116,9 @@ jobs:
       # Use --wheel command to generate object .o files in build/temp*/src/main directory
       # They will also contain .gcno files there
       # and .gcda files will be generated there after running the tests
-      run: COVERAGE=1 python3 -m build --wheel
+      run: |
+        python3 -m pip install build -c requirements.txt
+        COVERAGE=1 python3 -m build --wheel
 
     - name: Install client
       # Install in user directory to prevent permission errors
