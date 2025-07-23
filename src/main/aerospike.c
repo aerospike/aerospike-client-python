@@ -595,7 +595,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     py_global_hosts = PyDict_New();
     if (py_global_hosts == NULL) {
-        goto MODULE_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     unsigned long i = 0;
@@ -644,9 +644,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     if (py_sys == NULL) {
         goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
-    PyObject *py_sys_modules = PyObject_GetAttrString(py_sys, "modules");
-    if (py_sys_modules == NULL) {
-        goto SYS_CLEANUP;
+
+    PyObject *py_sys_dot_modules = PyObject_GetAttrString(py_sys, "modules");
+    Py_DECREF(py_sys);
+    if (py_sys_dot_modules == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
     for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
@@ -654,10 +656,10 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             py_submodules[i].pyobject_creation_method;
         PyObject *py_submodule = create_py_submodule();
         if (py_submodule == NULL) {
-            goto SYS_MODULES_CLEANUP;
+            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
 
-        int retval = PyDict_SetItemString(py_sys_modules,
+        int retval = PyDict_SetItemString(py_sys_dot_modules,
                                           py_submodules[i].fully_qualified_name,
                                           py_submodule);
         if (retval == -1) {
@@ -673,62 +675,55 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     SUBMODULE_CLEANUP_ON_ERROR:
         Py_DECREF(py_submodule);
-        goto SYS_MODULES_CLEANUP;
+        Py_DECREF(py_sys_dot_modules);
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
+
+    Py_DECREF(py_sys_dot_modules);
 
     // TODO: should this be written in pure python instead and executed with a C-API call?
 
     PyObject *py_metadata_subpackage =
         PyImport_ImportModule("importlib.metadata");
     if (py_metadata_subpackage == NULL) {
-        goto SYS_MODULES_CLEANUP;
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
-    PyObject *py_version_function =
+    PyObject *py_version_callback =
         PyObject_GetAttrString(py_metadata_subpackage, "version");
-    if (py_version_function == NULL) {
-        goto METADATA_SUBPACKAGE_CLEANUP;
+    Py_DECREF(py_metadata_subpackage);
+    if (py_version_callback == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
-    PyObject *py_aerospike_module_version =
-        PyObject_CallFunction(py_version_function, "s", AEROSPIKE_MODULE_NAME);
-    if (py_aerospike_module_version == NULL) {
-        goto VERSION_FUNC_CLEANUP;
+    PyObject *py_aerospike_module_version_str =
+        PyObject_CallFunction(py_version_callback, "s", AEROSPIKE_MODULE_NAME);
+    Py_DECREF(py_version_callback);
+    if (py_aerospike_module_version_str == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
     const char *aerospike_module_version =
-        PyUnicode_AsUTF8(py_aerospike_module_version);
+        PyUnicode_AsUTF8(py_aerospike_module_version_str);
     if (aerospike_module_version == NULL) {
-        goto AEROSPIKE_MODULE_VERSION_CLEANUP;
+        Py_DECREF(py_aerospike_module_version_str);
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
     // Here we assume that the original value of aerospike_client_version was not heap allocated
     aerospike_client_version = cf_strdup(aerospike_module_version);
     is_python_client_version_set_for_user_agent = true;
-
-    // TODO: dup code path as below
-    // We don't need these anymore. Only for initializing module
-    Py_DECREF(py_sys_modules);
-    Py_DECREF(py_sys);
+    Py_DECREF(py_aerospike_module_version_str);
 
     return py_aerospike_module;
 
-AEROSPIKE_MODULE_VERSION_CLEANUP:
-    Py_DECREF(py_aerospike_module_version);
-VERSION_FUNC_CLEANUP:
-    Py_DECREF(py_version_function);
-METADATA_SUBPACKAGE_CLEANUP:
-    Py_DECREF(py_metadata_subpackage);
-
-SYS_MODULES_CLEANUP:
-    Py_DECREF(py_sys_modules);
-SYS_CLEANUP:
-    // TODO: Clean up any submodules that were manually added to sys.modules
-    // This isn't a big deal though, so just leave off for now
-    Py_DECREF(py_sys);
 GLOBAL_HOSTS_CLEANUP_ON_ERROR:
     Py_DECREF(py_global_hosts);
-MODULE_CLEANUP_ON_ERROR:
+
+AEROSPIKE_MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_aerospike_module);
+
+    // TODO: Clean up any submodules that were manually added to sys.modules
+    // This isn't a big deal though, so just leave off for now
     return NULL;
 }
