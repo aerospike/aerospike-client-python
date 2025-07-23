@@ -432,6 +432,7 @@ jobs:
   test-misc:
     needs: build
     strategy:
+      fail-fast: false
       matrix:
         test-case:
           - "lowest_supported_server_version"
