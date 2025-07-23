@@ -121,7 +121,7 @@ jobs:
 
     - name: Install client
       # Install in user directory to prevent permission errors
-      run: python3 setup.py install --user
+      run: python3 -m pip install --user .
 
     - run: pip install -r requirements.txt
       working-directory: test
