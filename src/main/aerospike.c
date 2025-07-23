@@ -645,9 +645,10 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
-    PyObject *py_sys_dot_modules = PyObject_GetAttrString(py_sys, "modules");
+    PyObject *py_sys_dot_modules_dict =
+        PyObject_GetAttrString(py_sys, "modules");
     Py_DECREF(py_sys);
-    if (py_sys_dot_modules == NULL) {
+    if (py_sys_dot_modules_dict == NULL) {
         goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
@@ -659,7 +660,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
         }
 
-        int retval = PyDict_SetItemString(py_sys_dot_modules,
+        int retval = PyDict_SetItemString(py_sys_dot_modules_dict,
                                           py_submodules[i].fully_qualified_name,
                                           py_submodule);
         if (retval == -1) {
@@ -675,11 +676,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     SUBMODULE_CLEANUP_ON_ERROR:
         Py_DECREF(py_submodule);
-        Py_DECREF(py_sys_dot_modules);
+        Py_DECREF(py_sys_dot_modules_dict);
         goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
     }
 
-    Py_DECREF(py_sys_dot_modules);
+    Py_DECREF(py_sys_dot_modules_dict);
 
     // TODO: should this be written in pure python instead and executed with a C-API call?
 
