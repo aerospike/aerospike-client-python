@@ -657,7 +657,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             py_submodules[i].pyobject_creation_method;
         PyObject *py_submodule = create_py_submodule();
         if (py_submodule == NULL) {
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+            goto SYS_DOT_MODULES_DICT_CLEANUP_ON_ERROR;
         }
 
         int retval = PyDict_SetItemString(py_sys_dot_modules_dict,
@@ -676,13 +676,10 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     SUBMODULE_CLEANUP_ON_ERROR:
         Py_DECREF(py_submodule);
-        Py_DECREF(py_sys_dot_modules_dict);
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto SYS_DOT_MODULES_DICT_CLEANUP_ON_ERROR;
     }
 
     Py_DECREF(py_sys_dot_modules_dict);
-
-    // TODO: should this be written in pure python instead and executed with a C-API call?
 
     PyObject *py_metadata_subpackage =
         PyImport_ImportModule("importlib.metadata");
@@ -717,6 +714,9 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     Py_DECREF(py_aerospike_module_version_str);
 
     return py_aerospike_module;
+
+SYS_DOT_MODULES_DICT_CLEANUP_ON_ERROR:
+    Py_DECREF(py_sys_dot_modules_dict);
 
 GLOBAL_HOSTS_CLEANUP_ON_ERROR:
     Py_DECREF(py_global_hosts);
