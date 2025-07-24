@@ -37,6 +37,7 @@ sys.modules.update({"aerospike": Mock()})
 extensions = [
     "sphinx.ext.todo",
     "sphinx.ext.autodoc",
+    "sphinx_autodoc_typehints",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinxcontrib.spelling"
