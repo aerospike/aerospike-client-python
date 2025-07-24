@@ -1502,7 +1502,7 @@ Write Policies
     .. hlist::
         :columns: 1
 
-        * .. include:: ./base_policy.rst
+    .. include:: ./base_policy.rst
 
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
@@ -1556,7 +1556,7 @@ Read Policies
     .. hlist::
         :columns: 1
 
-        * .. include:: ./base_policy.rst
+    .. include:: ./base_policy.rst
 
         * **deserialize** (:class:`bool`)
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
@@ -1617,7 +1617,7 @@ Operate Policies
     .. hlist::
         :columns: 1
 
-        * .. include:: ./base_policy.rst
+    .. include:: ./base_policy.rst
 
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
@@ -1704,7 +1704,7 @@ Apply Policies
     .. hlist::
         :columns: 1
 
-        * .. include:: ./base_policy.rst
+    .. include:: ./base_policy.rst
 
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
@@ -1741,7 +1741,7 @@ Remove Policies
     .. hlist::
         :columns: 1
 
-        * .. include:: ./base_policy.rst
+    .. include:: ./base_policy.rst
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
@@ -1780,7 +1780,7 @@ Batch Policies
     .. hlist::
         :columns: 1
 
-        * .. include:: ./base_policy.rst
+    .. include:: ./base_policy.rst
 
         * **read_mode_ap**
             | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
