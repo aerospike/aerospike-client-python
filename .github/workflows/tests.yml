@@ -375,35 +375,27 @@ jobs:
         docker container logs aerospike
         cat ./configs/aerospike.conf
 
-  spellcheck-docs:
+  sphinx:
     runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        builder-command:
+        - 'spelling . spelling -W --keep-going'
+        - 'linkcheck . links'
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
     - uses: actions/setup-python@v2
       with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
+        python-version: 3.11
         architecture: 'x64'
-    - name: Install dependencies for checking spelling in docs
+    - name: Install dependencies
       # TODO: find way to split up dependencies
       run: python -m pip install -r doc/requirements.txt
-    - name: Check spelling
-      run: sphinx-build -b spelling . spelling -W --keep-going
-      working-directory: doc
-
-  check-links-docs:
-    runs-on: ubuntu-22.04
-    steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-python@v2
-      with:
-        python-version: ${{ env.LOWEST_SUPPORTED_PY_VERSION }}
-        architecture: 'x64'
-    - name: Install documentation dependencies
-      run: python -m pip install -r doc/requirements.txt
-    - name: Check spelling
-      run: sphinx-build -b linkcheck . links
+    - name: Run builder
+      run: sphinx-build -b ${{ matrix.builder-command }}
       working-directory: doc
 
   test-metrics:
