@@ -465,6 +465,9 @@ jobs:
         server-tag: ${{ env.SERVER_TAG }}
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+      env:
+        NO_SC: 1
+        NO_TLS: 1
 
     - name: Install test dependencies
       if: ${{ matrix.test-case == 'lowest_supported_server_version' }}
@@ -489,7 +492,8 @@ jobs:
         import time
         config = {
           "hosts": [
-            ("127.0.0.1", 3000)
+            ("127.0.0.1", 3000),
+            ${{ endsWith(matrix.test-case, 'with_ee' && '"user": "superuser", "password": "superuser"') }}
           ]
         }
         client = aerospike.client(config)
