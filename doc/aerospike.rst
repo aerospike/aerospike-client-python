@@ -545,7 +545,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default: ``0xA9000000``
 
                 .. seealso::
-                    `Shared Memory <https://aerospike.com/developer/client/shm>`_
+                    `Shared Memory <https://aerospike.com/docs/develop/client/c/shm>`_
 
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process.
