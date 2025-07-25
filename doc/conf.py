@@ -268,5 +268,3 @@ linkcheck_anchors_ignore = [
 linkcheck_ignore = [
     "https://docs.aerospike.com/server/guide/security/index.html"
 ]
-
-linkcheck_timeout = 60
