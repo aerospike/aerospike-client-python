@@ -85,7 +85,7 @@ runs:
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker run -d -${{ inputs.docker-run-extra-flags }} --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_FULL_NAME }}
+  - run: docker run -d ${{ inputs.docker-run-extra-flags }} --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_FULL_NAME }}
     shell: bash
 
   - name: 'macOS: install timeout command'
