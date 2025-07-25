@@ -674,6 +674,17 @@ Only the `hosts` key is required; the rest of the keys are optional.
             The counted error types are any error that causes the connection to close (socket errors and client timeouts),
             server device overload and server timeouts.
 
+            .. admonition:: Circuit Breaker Feature
+
+                The circuit breaker functionality uses the ``max_error_rate`` and ``error_rate_window``
+                configuration options to progressively slow down connection attempts in order to let
+                the server catch up with client requests. When the ``max_error_rate`` is reached,
+                the client waits for the duration of the ``error_rate_window`` before trying again. The
+                client also decreases the allowable errors by half until network stability
+                is achieved. (i.e the client no longer exceeds the max error rate per window). Then the client doubles the
+                allowed max error rate for each successive window until it is restored to the value set by the user,
+                or the default value if not set.
+
             The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded`
             stops being returned.
 
@@ -682,6 +693,9 @@ Only the `hosts` key is required; the rest of the keys are optional.
             The number of cluster tend iterations that defines the window for ``max_error_rate``. One tend iteration is
             defined as ``tend_interval`` plus the time to tend all nodes. At the end of the window, the error count is
             reset to zero and backoff state is removed on all nodes.
+
+            If the ratio of ``max_error_rate`` to ``error_rate_window`` is less than 1 or greater than 100, both
+            options will be reset to their respective default values.
 
             Default: ``1``
         * **tend_interval** (:class:`int`)
