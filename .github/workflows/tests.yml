@@ -6,10 +6,8 @@ permissions:
 env:
   LOWEST_SUPPORTED_PY_VERSION: '3.9'
   # pull_request event doesn't support inputs
-  REGISTRY_NAME: ${{ github.event_name == 'pull_request' && 'docker.io' || inputs.registry-name }}
-  SERVER_TAG: ${{ github.event_name == 'pull_request' && 'latest' || inputs.server-tag }}
-  REGISTRY_USERNAME: ${{ github.event_name == 'pull_request' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
-  REGISTRY_PASSWORD: ${{ github.event_name == 'pull_request' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+  REGISTRY_NAME: ${{ github.event_name == 'workflow_dispatch' && inputs.registry-name || 'docker.io' }}
+  SERVER_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.server-tag || 'latest' }}
 
 # Trigger test workflow whenever:
 # 1. A pull request is updated (e.g with new commits)
@@ -136,8 +134,8 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - run: python3 -m pytest --cov=aerospike_helpers --cov-report xml:coverage.xml ./new_tests
       working-directory: test
@@ -206,7 +204,6 @@ jobs:
 
     - uses: codecov/codecov-action@v5
       with:
-        flags: ${{ env.REGISTRY_NAME }},${{ env.SERVER_TAG }}
         directory: coverage-report
         verbose: true # optional (default = false)
         fail_ci_if_error: true
@@ -272,8 +269,8 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - name: Run tests
       # We need to disable capturing output or else we cannot see memory errors reported by 
@@ -316,6 +313,12 @@ jobs:
 
     - name: Install test dependencies
       run: pip install -r test/requirements.txt
+
+    - uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY_NAME }}
+        username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - name: Run Aerospike server
       run: docker run -d --name aerospike -p 3000-3002:3000-3002 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
@@ -397,11 +400,13 @@ jobs:
       with:
         registry-name: ${{ env.REGISTRY_NAME }}
         server-tag: ${{ env.SERVER_TAG }}
-        registry-username: ${{ env.REGISTRY_USERNAME }}
-        registry-password: ${{ env.REGISTRY_PASSWORD }}
+        registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
     - name: Run tests
-      run: python -m pytest ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
+      # -s: we want to check that the test_create_pki_user test case passes or raises an exception as expected
+      # There's no way to tell unless we see the logs
+      run: python -m pytest -s ./new_tests/test_{mrt_functionality,admin_*,compress}.py -W error::pytest.PytestUnraisableExceptionWarning
       working-directory: test
 
     - name: Show logs if failed

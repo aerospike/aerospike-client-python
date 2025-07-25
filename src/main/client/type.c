@@ -332,6 +332,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // ADMIN OPERATIONS
 
+    {"admin_create_pki_user",
+     (PyCFunction)AerospikeClient_Admin_Create_PKI_User,
+     METH_VARARGS | METH_KEYWORDS, "Create a new pki user."},
     {"admin_create_user", (PyCFunction)AerospikeClient_Admin_Create_User,
      METH_VARARGS | METH_KEYWORDS, "Create a new user."},
     {"admin_drop_user", (PyCFunction)AerospikeClient_Admin_Drop_User,
@@ -462,6 +465,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, index_blob_create_doc},
     {"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
      METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
+    {"index_expr_create", (PyCFunction)AerospikeClient_Index_Expr_Create,
+     METH_VARARGS | METH_KEYWORDS, ""},
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
      METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
     {"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
