@@ -67,7 +67,7 @@ Methods
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
         :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
 
-        .. seealso:: `Developing Record UDFs <https://aerospike.com/developer/udf/developing_record_udfs>`_
+        .. seealso:: `Developing Record UDFs <https://aerospike.com/docs/database/advanced/udf/modules/record/develop>`_
 
 
     .. method:: add_ops(ops)
