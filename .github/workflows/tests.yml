@@ -490,12 +490,15 @@ jobs:
         cat <<-EOF >> run-client-in-bg.py
         import aerospike
         import time
+        import sys
         config = {
           "hosts": [
-            ("127.0.0.1", 3000),
-            ${{ endsWith(matrix.test-case, 'with_ee') && '"user": "superuser", "password": "superuser"' || '' }}
+            ("127.0.0.1", 3000)
           ]
         }
+        if "${{ endsWith(matrix.test-case, 'with-ee') }}" == "true":
+          config["user"] = "superuser"
+          config["password"] = "superuser"
         client = aerospike.client(config)
         while True:
           time.sleep(1)
