@@ -382,7 +382,7 @@ jobs:
       matrix:
         builder-command:
         - 'spelling . spelling -W --keep-going'
-        - 'linkcheck . links'
+        - 'linkcheck -vv . links'
     steps:
     - uses: actions/checkout@v2
       with:
