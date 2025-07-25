@@ -494,7 +494,7 @@ jobs:
             ("127.0.0.1", 3000)
           ]
         }
-        if "${{ endsWith(matrix.test-case, 'with-ee') }}" == "true":
+        if "${{ endsWith(matrix.test-case, 'with_ee') }}" == "true":
           config["user"] = "superuser"
           config["password"] = "superuser"
         client = aerospike.client(config)
