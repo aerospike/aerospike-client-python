@@ -493,7 +493,7 @@ jobs:
         config = {
           "hosts": [
             ("127.0.0.1", 3000),
-            ${{ endsWith(matrix.test-case, 'with_ee' && '"user": "superuser", "password": "superuser"') }}
+            ${{ endsWith(matrix.test-case, 'with_ee') && '"user": "superuser", "password": "superuser"' || '' }}
           ]
         }
         client = aerospike.client(config)
