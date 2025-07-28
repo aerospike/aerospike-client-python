@@ -509,7 +509,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
-                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/server/architecture/consistency.html>`_.
+                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/database/learn/architecture/clustering/consistency-modes>`_.
 
         * **shm** (:class:`dict`)
             Contains optional shared-memory cluster tending parameters
