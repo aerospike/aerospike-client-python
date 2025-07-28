@@ -912,6 +912,18 @@ Specifies which partition replica to read from.
 
     If there are no nodes on the same rack, use :data:`POLICY_REPLICA_SEQUENCE` instead.
 
+.. data:: POLICY_REPLICA_RANDOM
+
+    Distribute reads and writes across all nodes in cluster in round-robin fashion.
+
+    This option is useful on reads when the replication factor equals the number
+    of nodes in the cluster and the overhead of requesting proles is not desired.
+
+    This option could temporarily be useful on writes when the client can't connect
+    to a node, but that node is reachable via a proxy from a different node.
+
+    This option can also be used to test server proxies.
+
 .. _TTL_CONSTANTS:
 
 TTL Constants

@@ -146,6 +146,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"POLICY_REPLICA_SEQUENCE", .value.integer = AS_POLICY_REPLICA_SEQUENCE},
     {"POLICY_REPLICA_PREFER_RACK",
      .value.integer = AS_POLICY_REPLICA_PREFER_RACK},
+    {"POLICY_REPLICA_RANDOM", .value.integer = AS_POLICY_REPLICA_RANDOM},
 
     {"POLICY_COMMIT_LEVEL_ALL", .value.integer = AS_POLICY_COMMIT_LEVEL_ALL},
     {"POLICY_COMMIT_LEVEL_MASTER",
