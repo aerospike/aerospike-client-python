@@ -525,6 +525,7 @@ jobs:
         echo $user_agent_base64_encoded
         user_agent=$(echo $user_agent_base64_encoded | base64 -d)
         echo $user_agent
+        # User agent format: <format-version>,<client language>-<version>,...
         client_language=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+, ([a-z]+) -/x')
         client_version=$(echo $user_agent | perl -n -E 'say $1 if m/[0-9]+,[a-z]+- ([0-9.a-zA-Z+]+),/x')
         echo $client_language
