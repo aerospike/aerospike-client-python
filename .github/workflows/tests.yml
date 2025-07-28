@@ -520,6 +520,7 @@ jobs:
 
         info_cmd_response=$(docker exec ${{ env.CONTAINER_NAME }} asinfo -v "user-agents" | head -n 1)
         echo "Info command response: $info_cmd_response"
+        # Response format: user-agent=<base64 encoded string>:...
         user_agent_base64_encoded=$(echo $info_cmd_response | perl -n -E 'say $1 if m/user-agent= ([a-zA-Z0-9+\/=]+) :/x')
         echo $user_agent_base64_encoded
         user_agent=$(echo $user_agent_base64_encoded | base64 -d)
