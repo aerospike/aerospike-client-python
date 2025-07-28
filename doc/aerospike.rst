@@ -694,7 +694,8 @@ Only the `hosts` key is required; the rest of the keys are optional.
             defined as ``tend_interval`` plus the time to tend all nodes. At the end of the window, the error count is
             reset to zero and backoff state is removed on all nodes.
 
-            If the ratio of ``max_error_rate`` to ``error_rate_window`` is less than 1 or greater than 100, both
+            If the user sets both ``max_error_rate`` and ``error_rate_window`` such that the ratio of ``max_error_rate``
+            to ``error_rate_window`` is less than 1 or greater than 100, both
             options will be reset to their respective default values.
 
             Default: ``1``
