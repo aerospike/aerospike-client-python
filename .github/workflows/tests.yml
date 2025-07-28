@@ -382,7 +382,8 @@ jobs:
       matrix:
         builder-command:
         - 'spelling . spelling -W --keep-going'
-        - 'linkcheck -vv . links'
+        # -vv is too verbose and makes it hard to read logs
+        - 'linkcheck -v . links'
     steps:
     - uses: actions/checkout@v2
       with:
