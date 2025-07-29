@@ -40,7 +40,6 @@ def get_memory_usage():
         'percent': process.memory_percent()
     }
 
-
 def calculate_percentiles(latencies):
     """Calculate latency percentiles"""
     latencies_sorted = sorted(latencies)

@@ -6,11 +6,18 @@
 #include <aerospike/as_exp.h>
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_log_macros.h>
+#include <time.h>
+#include <sys/time.h>
 
 #include "types.h"
 #include "policy.h"
 #include "conversions.h"
 #include "exceptions.h"
+
+// Debug flag for latency measurement - can be controlled via environment variable
+#ifndef ENABLE_LATENCY_DEBUG
+    #define ENABLE_LATENCY_DEBUG 1
+#endif
 
 // Cached numpy objects for performance
 static PyObject *numpy_module = NULL;
@@ -28,7 +35,26 @@ typedef struct {
     uint32_t max_rows;    // Pre-calculated for bounds checking
     char **bin_names;
     bool has_error; // Single error flag for early termination
+
+    // Latency debugging fields
+    struct timespec start_callback_time;
+    double total_callback_time_ms;
+    uint32_t callback_count;
 } LocalData;
+
+// Utility function to get current time in microseconds
+static inline double get_time_microseconds()
+{
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (double)ts.tv_sec * 1000000.0 + (double)ts.tv_nsec / 1000.0;
+}
+
+// Utility function to calculate time difference in milliseconds
+static inline double time_diff_ms(double start_us, double end_us)
+{
+    return (end_us - start_us) / 1000.0;
+}
 
 // Helper function to initialize numpy functions (called once)
 static inline int init_numpy_functions()
@@ -78,6 +104,10 @@ static bool batch_read_cb(const as_batch_result *results, uint32_t n,
                           void *udata)
 {
     LocalData *data = (LocalData *)udata;
+
+#if ENABLE_LATENCY_DEBUG
+    double callback_start_time = get_time_microseconds();
+#endif
 
     // Early termination if previous error occurred
     if (__builtin_expect(data->has_error, 0)) {
@@ -142,12 +172,26 @@ static bool batch_read_cb(const as_batch_result *results, uint32_t n,
     }
 
     PyGILState_Release(gstate);
+
+#if ENABLE_LATENCY_DEBUG
+    double callback_end_time = get_time_microseconds();
+    double callback_duration_ms =
+        time_diff_ms(callback_start_time, callback_end_time);
+    data->total_callback_time_ms += callback_duration_ms;
+    data->callback_count++;
+#endif
+
     return !data->has_error;
 }
 
 PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
                                     PyObject *kwds)
 {
+#if ENABLE_LATENCY_DEBUG
+    double function_start_time = get_time_microseconds();
+    double preprocessing_start_time = function_start_time;
+#endif
+
     PyObject *py_keys = NULL;
     PyObject *py_bins = NULL;
     PyObject *py_policy_batch = NULL;
@@ -401,6 +445,17 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     data.bin_names = bin_names;
     data.has_error = false;
 
+    // Initialize latency debugging fields
+    data.total_callback_time_ms = 0.0;
+    data.callback_count = 0;
+
+#if ENABLE_LATENCY_DEBUG
+    double preprocessing_end_time = get_time_microseconds();
+    double preprocessing_duration_ms =
+        time_diff_ms(preprocessing_start_time, preprocessing_end_time);
+    double network_start_time = preprocessing_end_time;
+#endif
+
     // Call aerospike batch_get_bins
     Py_BEGIN_ALLOW_THREADS
 
@@ -409,6 +464,12 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
                              &data);
 
     Py_END_ALLOW_THREADS
+
+#if ENABLE_LATENCY_DEBUG
+    double network_end_time = get_time_microseconds();
+    double network_duration_ms =
+        time_diff_ms(network_start_time, network_end_time);
+#endif
 
     // Final cleanup with optimized order
     for (Py_ssize_t i = 0; i < bins_size; i++) {
@@ -426,6 +487,39 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
         Py_DECREF(numpy_array);
         goto CLEANUP1;
     }
+
+#if ENABLE_LATENCY_DEBUG
+    double function_end_time = get_time_microseconds();
+    double total_function_time_ms =
+        time_diff_ms(function_start_time, function_end_time);
+
+    // Print detailed latency breakdown
+    printf("\n=== batch_read Latency Debug Report ===\n");
+    printf("Keys processed: %zu\n", keys_size);
+    printf("Bins per key: %zu\n", bins_size);
+    printf("Callback calls: %u\n", data.callback_count);
+    printf("\n--- Timing Breakdown ---\n");
+    printf("1. Preprocessing latency: %.3f ms\n", preprocessing_duration_ms);
+    printf("2. Network latency (aerospike_batch_get_bins): %.3f ms\n",
+           network_duration_ms);
+    printf("3. NumPy array composition latency: %.3f ms (avg: %.3f ms per "
+           "callback)\n",
+           data.total_callback_time_ms,
+           data.callback_count > 0
+               ? data.total_callback_time_ms / data.callback_count
+               : 0.0);
+    printf("4. Total function latency: %.3f ms\n", total_function_time_ms);
+    printf("\n--- Performance Metrics ---\n");
+    printf("Preprocessing overhead: %.1f%%\n",
+           (preprocessing_duration_ms / total_function_time_ms) * 100.0);
+    printf("Network overhead: %.1f%%\n",
+           (network_duration_ms / total_function_time_ms) * 100.0);
+    printf("NumPy composition overhead: %.1f%%\n",
+           (data.total_callback_time_ms / total_function_time_ms) * 100.0);
+    printf("Records per second: %.0f\n",
+           (keys_size * 1000.0) / total_function_time_ms);
+    printf("========================================\n\n");
+#endif
 
     return numpy_array;
 
