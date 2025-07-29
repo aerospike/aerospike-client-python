@@ -19,6 +19,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
+
 #include "client.h"
 #include "query.h"
 #include "geo.h"
@@ -558,7 +561,7 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"Transaction", AerospikeTransaction_Ready},
 };
 
-PyMODINIT_FUNC PyInit_aerospike(void)
+PyMODINIT_FUNC PyInit_fast_aerospike(void)
 {
     static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
@@ -570,6 +573,12 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     PyObject *py_aerospike_module = PyModule_Create(&moduledef);
     if (py_aerospike_module == NULL) {
+        return NULL;
+    }
+
+    // Initialize NumPy C API safely
+    if (_import_array() < 0) {
+        Py_DECREF(py_aerospike_module);
         return NULL;
     }
 

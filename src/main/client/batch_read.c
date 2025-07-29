@@ -1,4 +1,6 @@
 #include <Python.h>
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+#include <numpy/arrayobject.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_exp.h>
@@ -12,66 +14,78 @@
 
 // Struct for Python User-Data for the Callback
 typedef struct {
-    PyObject *py_results;
-    PyObject *batch_records_module;
-    PyObject *func_name;
+    PyObject *numpy_array;
     AerospikeClient *client;
-    bool checking_if_records_exist;
+    int current_row;
+    int num_bins;
+    char **bin_names;
 } LocalData;
 
 static bool batch_read_cb(const as_batch_result *results, uint32_t n,
                           void *udata)
 {
-    // Extract callback user-data
     LocalData *data = (LocalData *)udata;
     as_error err;
     as_error_init(&err);
-    PyObject *py_key = NULL;
-    PyObject *py_batch_record = NULL;
     bool success = true;
 
-    // Lock Python State
-    PyGILState_STATE gstate;
-    gstate = PyGILState_Ensure();
+    // Lock Python GIL
+    PyGILState_STATE gstate = PyGILState_Ensure();
 
     for (uint32_t i = 0; i < n; i++) {
-
-        as_batch_read *res = NULL;
-        res = (as_batch_read *)&results[i];
-
-        // NOTE these conversions shouldn't go wrong but if they do, return
-        if (key_to_pyobject(&err, res->key, &py_key) != AEROSPIKE_OK) {
-            as_log_error("unable to convert res->key at results index: %d", i);
-            success = false;
-            break;
+        const as_batch_result *result = &results[i];
+        
+        if (result->result == AEROSPIKE_OK && result->record.bins.size > 0) {
+            // Set each field individually using Python API
+            for (int j = 0; j < data->num_bins; j++) {
+                PyObject *bin_value = NULL;
+                
+                // Get bin value from aerospike record
+                as_bin_value *bin_val = as_record_get(&result->record, data->bin_names[j]);
+                if (bin_val) {
+                    as_val *val = (as_val*)bin_val;
+                    if (val_to_pyobject(data->client, &err, val, &bin_value) != AEROSPIKE_OK) {
+                        // If conversion fails, use appropriate default based on field type
+                        bin_value = Py_None;
+                        Py_INCREF(bin_value);
+                    }
+                } else {
+                    // If bin doesn't exist, use appropriate default based on field type
+                    bin_value = Py_None;
+                    Py_INCREF(bin_value);
+                }
+                
+                if (bin_value) {
+                    // Create index tuple (row_index,)
+                    PyObject *row_idx = PyLong_FromLong(data->current_row);
+                    if (row_idx) {
+                        // Get field name for this column
+                        PyObject *field_name = PyUnicode_FromString(data->bin_names[j]);
+                        if (field_name) {
+                            // Get the field array: numpy_array[field_name]
+                            PyObject *field_array = PyObject_GetItem(data->numpy_array, field_name);
+                            if (field_array) {
+                                // Set the value: field_array[row_index] = bin_value
+                                if (bin_value != Py_None) {
+                                    if (PyObject_SetItem(field_array, row_idx, bin_value) < 0) {
+                                        // Clear the error and continue
+                                        PyErr_Clear();
+                                    }
+                                }
+                                Py_DECREF(field_array);
+                            } else {
+                                PyErr_Clear();
+                            }
+                            Py_DECREF(field_name);
+                        }
+                        Py_DECREF(row_idx);
+                    }
+                    Py_DECREF(bin_value);
+                }
+            }
         }
-
-        // Create BatchRecord instance
-        py_batch_record = PyObject_CallMethodObjArgs(
-            data->batch_records_module, data->func_name, py_key, NULL);
-        if (py_batch_record == NULL) {
-            as_log_error("unable to instance BatchRecord at results index: %d",
-                         i);
-            success = false;
-            Py_DECREF(py_key);
-            break;
-        }
-        Py_DECREF(py_key);
-
-        // Initialize BatchRecord instance
-        as_batch_result_to_BatchRecord(data->client, &err, res, py_batch_record,
-                                       data->checking_if_records_exist);
-        if (err.code != AEROSPIKE_OK) {
-            as_log_error(
-                "as_batch_result_to_BatchRecord failed at results index: %d",
-                i);
-            success = false;
-            Py_DECREF(py_batch_record);
-            break;
-        }
-
-        PyList_Append(data->py_results, py_batch_record);
-        Py_DECREF(py_batch_record);
+        
+        data->current_row++;
     }
 
     PyGILState_Release(gstate);
@@ -85,224 +99,260 @@ PyObject *AerospikeClient_BatchRead(AerospikeClient *self, PyObject *args,
     PyObject *py_bins = NULL;
     PyObject *py_policy_batch = NULL;
     static char *kwlist[] = {"keys", "bins", "policy", NULL};
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|OO:batch_read", kwlist,
-                                    &py_keys, &py_bins,
-                                    &py_policy_batch) == false) {
+    
+    // bins is now required
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OO|O:batch_read", kwlist,
+                                    &py_keys, &py_bins, &py_policy_batch) == false) {
         return NULL;
     }
 
     as_error err;
     as_error_init(&err);
 
-    PyObject *br_instance = NULL;
-
-    // required arg so don't need to check for NULL
+    // Validate required arguments
     if (!PyList_Check(py_keys)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "keys should be a list of aerospike key tuples");
         goto CLEANUP1;
     }
 
-    as_vector tmp_keys;
+    if (!PyList_Check(py_bins)) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                        "bins should be a list of (name, dtype) tuples");
+        goto CLEANUP1;
+    }
+
     Py_ssize_t keys_size = PyList_Size(py_keys);
-    as_vector_init(&tmp_keys, sizeof(as_key), keys_size);
-    as_vector *tmp_keys_p = &tmp_keys;
+    Py_ssize_t bins_size = PyList_Size(py_bins);
 
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP2;
+    if (bins_size == 0) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "bins cannot be empty");
+        goto CLEANUP1;
     }
 
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP2;
+    // Create bin_names array for aerospike call
+    char **bin_names = (char**)malloc(bins_size * sizeof(char*));
+    if (!bin_names) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to allocate bin_names");
+        goto CLEANUP1;
     }
 
-    uint64_t processed_key_count = 0;
-    for (int i = 0; i < keys_size; i++) {
-        PyObject *py_key = PyList_GetItem(py_keys, i);
-        as_key *tmp_key = (as_key *)as_vector_get(&tmp_keys, i);
+    // Parse bins and create structured dtype using numpy Python API
+    PyObject *numpy_module = PyImport_ImportModule("numpy");
+    if (!numpy_module) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to import numpy");
+        for (Py_ssize_t i = 0; i < bins_size; i++) {
+            free(bin_names[i]);
+        }
+        free(bin_names);
+        goto CLEANUP1;
+    }
 
-        Py_INCREF(py_key);
-        if (!PyTuple_Check(py_key)) {
+    PyObject *dtype_func = PyObject_GetAttrString(numpy_module, "dtype");
+    if (!dtype_func) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to get numpy.dtype");
+        Py_DECREF(numpy_module);
+        for (Py_ssize_t i = 0; i < bins_size; i++) {
+            free(bin_names[i]);
+        }
+        free(bin_names);
+        goto CLEANUP1;
+    }
+
+    // Create dtype list for structured array
+    PyObject *dtype_list = PyList_New(bins_size);
+    if (!dtype_list) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to create dtype list");
+        Py_DECREF(dtype_func);
+        Py_DECREF(numpy_module);
+        for (Py_ssize_t i = 0; i < bins_size; i++) {
+            free(bin_names[i]);
+        }
+        free(bin_names);
+        goto CLEANUP1;
+    }
+
+    for (Py_ssize_t i = 0; i < bins_size; i++) {
+        PyObject *bin_spec = PyList_GetItem(py_bins, i);
+        if (!PyTuple_Check(bin_spec) || PyTuple_Size(bin_spec) != 2) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "key should be an aerospike key tuple");
-            Py_DECREF(py_key);
-            goto CLEANUP2;
+                            "Each bin must be a (name, dtype) tuple");
+            Py_DECREF(dtype_list);
+            Py_DECREF(dtype_func);
+            Py_DECREF(numpy_module);
+            for (Py_ssize_t j = 0; j < i; j++) {
+                free(bin_names[j]);
+            }
+            free(bin_names);
+            goto CLEANUP1;
         }
 
-        pyobject_to_key(&err, py_key, tmp_key);
-        if (err.code != AEROSPIKE_OK) {
+        PyObject *bin_name = PyTuple_GetItem(bin_spec, 0);
+        PyObject *bin_dtype = PyTuple_GetItem(bin_spec, 1);
+        
+        if (!PyUnicode_Check(bin_name) || !PyUnicode_Check(bin_dtype)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "failed to convert key at index: %d", i);
-            Py_DECREF(py_key);
-            goto CLEANUP2;
+                            "Bin name and dtype must be strings");
+            Py_DECREF(dtype_list);
+            Py_DECREF(dtype_func);
+            Py_DECREF(numpy_module);
+            for (Py_ssize_t j = 0; j < i; j++) {
+                free(bin_names[j]);
+            }
+            free(bin_names);
+            goto CLEANUP1;
         }
 
-        Py_DECREF(py_key);
-        processed_key_count++;
+        // Store bin name for aerospike call
+        const char *bin_name_str = PyUnicode_AsUTF8(bin_name);
+        bin_names[i] = strdup(bin_name_str);
+        
+        // Add to dtype list
+        Py_INCREF(bin_spec);
+        PyList_SetItem(dtype_list, i, bin_spec);
     }
 
+    // Create numpy dtype from the list using Python API
+    PyObject *numpy_dtype = PyObject_CallFunction(dtype_func, "O", dtype_list);
+    if (!numpy_dtype) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to create numpy dtype");
+        Py_DECREF(dtype_list);
+        Py_DECREF(dtype_func);
+        Py_DECREF(numpy_module);
+        for (Py_ssize_t i = 0; i < bins_size; i++) {
+            free(bin_names[i]);
+        }
+        free(bin_names);
+        goto CLEANUP1;
+    }
+
+    // Create zeros array with the structured dtype
+    PyObject *zeros_func = PyObject_GetAttrString(numpy_module, "zeros");
+    if (!zeros_func) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to get numpy.zeros");
+        Py_DECREF(numpy_dtype);
+        Py_DECREF(dtype_list);
+        Py_DECREF(dtype_func);
+        Py_DECREF(numpy_module);
+        for (Py_ssize_t i = 0; i < bins_size; i++) {
+            free(bin_names[i]);
+        }
+        free(bin_names);
+        goto CLEANUP1;
+    }
+
+    PyObject *numpy_array = PyObject_CallFunction(zeros_func, "iO", (int)keys_size, numpy_dtype);
+    if (!numpy_array) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to create numpy array");
+        Py_DECREF(zeros_func);
+        Py_DECREF(numpy_dtype);
+        Py_DECREF(dtype_list);
+        Py_DECREF(dtype_func);
+        Py_DECREF(numpy_module);
+        for (Py_ssize_t i = 0; i < bins_size; i++) {
+            free(bin_names[i]);
+        }
+        free(bin_names);
+        goto CLEANUP1;
+    }
+
+    // Clean up creation objects
+    Py_DECREF(zeros_func);
+    Py_DECREF(numpy_dtype);
+    Py_DECREF(dtype_list);
+    Py_DECREF(dtype_func);
+    Py_DECREF(numpy_module);
+
+    // Convert keys to as_batch
     as_batch batch;
-    as_batch_init(&batch, processed_key_count);
-    memcpy(batch.keys.entries, tmp_keys.list,
-           sizeof(as_key) * processed_key_count);
+    if (as_batch_init(&batch, keys_size) == false) {
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT, "Failed to initialize batch");
+        Py_DECREF(numpy_array);
+        for (Py_ssize_t i = 0; i < bins_size; i++) {
+            free(bin_names[i]);
+        }
+        free(bin_names);
+        goto CLEANUP1;
+    }
+    
+    for (Py_ssize_t i = 0; i < keys_size; i++) {
+        PyObject *py_key = PyList_GetItem(py_keys, i);
+        if (pyobject_to_key(&err, py_key, &batch.keys.entries[i]) != AEROSPIKE_OK) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid key at index %d", (int)i);
+            Py_DECREF(numpy_array);
+            for (Py_ssize_t j = 0; j < bins_size; j++) {
+                free(bin_names[j]);
+            }
+            free(bin_names);
+            as_batch_destroy(&batch);
+            goto CLEANUP1;
+        }
+    }
 
-    as_policy_batch policy_batch;
+    // Set up policy
     as_policy_batch *policy_batch_p = NULL;
-
-    // For expressions conversion.
+    as_policy_batch policy_batch;
     as_exp batch_exp_list;
     as_exp *batch_exp_list_p = NULL;
-
-    if (py_policy_batch) {
-        if (pyobject_to_policy_batch(
-                self, &err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
-                &batch_exp_list_p) != AEROSPIKE_OK) {
-            goto CLEANUP3;
-        }
-    }
-
-    // import batch_records helper
-    PyObject *br_module = NULL;
-    PyObject *sys_modules = PyImport_GetModuleDict();
-
-    Py_INCREF(sys_modules);
-    if (PyMapping_HasKeyString(sys_modules,
-                               "aerospike_helpers.batch.records")) {
-        br_module = PyMapping_GetItemString(sys_modules,
-                                            "aerospike_helpers.batch.records");
-    }
-    else {
-        br_module = PyImport_ImportModule("aerospike_helpers.batch.records");
-    }
-    Py_DECREF(sys_modules);
-
-    if (!br_module) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to load batch_records module");
-        goto CLEANUP3;
-    }
-
-    PyObject *obj_name = PyUnicode_FromString("BatchRecords");
-    PyObject *res_list = PyList_New(0);
-    br_instance =
-        PyObject_CallMethodObjArgs(br_module, obj_name, res_list, NULL);
-
-    Py_DECREF(obj_name);
-    Py_DECREF(res_list);
-
-    if (!br_instance) {
-        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
-                        "Unable to instance BatchRecords");
-        goto CLEANUP4;
-    }
-
-    // Create and initialize callback user-data
-    LocalData data;
-    // Used to decode record bins
-    data.client = self;
-    // Used to append BatchRecord instances to the BatchRecords object in this function
-    data.py_results = PyObject_GetAttrString(br_instance, "batch_records");
-    // Used to create a new BatchRecord instance in the callback function
-    data.batch_records_module = br_module;
-    data.func_name = PyUnicode_FromString("BatchRecord");
-    data.checking_if_records_exist = false;
-
-    Py_ssize_t bin_count = 0;
-    const char **filter_bins = NULL;
-
-    // Parse list of bins
-    if (py_bins == Py_None) {
-        // Treat as the same
-        py_bins = NULL;
-    }
-
-    if (py_bins != NULL) {
-        if (!PyList_Check(py_bins)) {
-            as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                            "Bins argument should be a list.");
-            goto CLEANUP4;
-        }
-
-        bin_count = PyList_Size(py_bins);
-        if (bin_count == 0) {
-            data.checking_if_records_exist = true;
-        }
-        else {
-            filter_bins = (const char **)malloc(sizeof(char *) * bin_count);
-
-            for (Py_ssize_t i = 0; i < bin_count; i++) {
-                PyObject *py_bin = PyList_GetItem(py_bins, i);
-                if (PyUnicode_Check(py_bin)) {
-                    filter_bins[i] = PyUnicode_AsUTF8(py_bin);
-                }
-                else {
-                    as_error_update(
-                        &err, AEROSPIKE_ERR_PARAM,
-                        "Bin name should be a string or unicode string.");
-                    goto CLEANUP5;
-                }
+    
+    if (py_policy_batch && py_policy_batch != Py_None) {
+        if (pyobject_to_policy_batch(self, &err, py_policy_batch, &policy_batch,
+                                     &policy_batch_p, &self->as->config.policies.batch,
+                                     &batch_exp_list, &batch_exp_list_p) != AEROSPIKE_OK) {
+            Py_DECREF(numpy_array);
+            for (Py_ssize_t i = 0; i < bins_size; i++) {
+                free(bin_names[i]);
             }
+            free(bin_names);
+            as_batch_destroy(&batch);
+            goto CLEANUP1;
         }
     }
 
+    // Set up callback data
+    LocalData data;
+    data.numpy_array = numpy_array;
+    data.client = self;
+    data.current_row = 0;
+    data.num_bins = bins_size;
+    data.bin_names = bin_names;
+
+    // Call aerospike batch_get_bins
     Py_BEGIN_ALLOW_THREADS
 
-    if (py_bins == NULL) {
-        aerospike_batch_get(self->as, &err, policy_batch_p, &batch,
-                            batch_read_cb, &data);
-    }
-    else if (bin_count == 0) {
-        aerospike_batch_exists(self->as, &err, policy_batch_p, &batch,
-                               batch_read_cb, &data);
-    }
-    else {
-        aerospike_batch_get_bins(self->as, &err, policy_batch_p, &batch,
-                                 filter_bins, bin_count, batch_read_cb, &data);
-    }
+    aerospike_batch_get_bins(self->as, &err, policy_batch_p, &batch,
+                             (const char **)bin_names, bins_size, batch_read_cb, &data);
 
     Py_END_ALLOW_THREADS
 
-    PyObject *py_br_res = PyLong_FromLong((long)err.code);
-    PyObject_SetAttrString(br_instance, FIELD_NAME_BATCH_RESULT, py_br_res);
-    Py_DECREF(py_br_res);
+    if (err.code != AEROSPIKE_OK) {
+        Py_DECREF(numpy_array);
+        for (Py_ssize_t i = 0; i < bins_size; i++) {
+            free(bin_names[i]);
+        }
+        free(bin_names);
+        as_batch_destroy(&batch);
+        if (batch_exp_list_p) {
+            as_exp_destroy(batch_exp_list_p);
+        }
+        goto CLEANUP1;
+    }
 
-    as_error_reset(&err);
-
-CLEANUP5:
-
-    free(filter_bins);
-
-CLEANUP4:
-
-    Py_DECREF(br_module);
-
-    Py_DECREF(data.py_results);
-    Py_DECREF(data.func_name);
-
-CLEANUP3:
-
+    // Clean up and return numpy array
+    for (Py_ssize_t i = 0; i < bins_size; i++) {
+        free(bin_names[i]);
+    }
+    free(bin_names);
     as_batch_destroy(&batch);
-
     if (batch_exp_list_p) {
         as_exp_destroy(batch_exp_list_p);
     }
 
-CLEANUP2:
-
-    if (tmp_keys_p) {
-        as_vector_destroy(tmp_keys_p);
-    }
+    return numpy_array;
 
 CLEANUP1:
-
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);
-        return NULL;
     }
-
-    return br_instance;
+    return NULL;
 }

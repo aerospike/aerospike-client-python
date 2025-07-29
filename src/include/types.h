@@ -28,7 +28,7 @@
 #include <aerospike/as_txn.h>
 #include "pool.h"
 
-#define AEROSPIKE_MODULE_NAME "aerospike"
+#define AEROSPIKE_MODULE_NAME "fast_aerospike"
 #define FULLY_QUALIFIED_TYPE_NAME(name) AEROSPIKE_MODULE_NAME "." name
 
 // Bin names can be of type Unicode in Python
