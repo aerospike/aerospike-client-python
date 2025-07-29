@@ -29,6 +29,7 @@ import time
 import io
 import xml.etree.ElementTree as ET
 import glob
+import numpy  # numpy import 추가
 
 ################################################################################
 # ENVIRONMENT VARIABLES
@@ -66,7 +67,8 @@ INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 include_dirs = ['src/include'] + \
     [x for x in os.getenv('CPATH', '').split(':') if len(x) > 0] + \
     ['/usr/local/opt/openssl/include'] + \
-    ['aerospike-client-c/modules/common/src/include']
+    ['aerospike-client-c/modules/common/src/include'] + \
+    [numpy.get_include()]  # numpy headers 추가
 extra_compile_args = [
     '-std=gnu99', '-g', '-Wall', '-fPIC', '-DDEBUG', '-O1',
     '-fno-common', '-fno-strict-aliasing',
@@ -287,12 +289,13 @@ class CClientClean(clean):
 source_files = glob.glob(pathname="src/main/**/*.c", recursive=True)
 
 setup(
+    name='fast-aerospike',
     version=version.strip(),
     # Data files
     ext_modules=[
         Extension(
             # Extension Name
-            'aerospike',
+            'fast_aerospike',
 
             # Compile
             sources=source_files,
@@ -307,9 +310,9 @@ setup(
         )
     ],
     package_data={
-        "aerospike-stubs": [
+        "fast_aerospike_stubs": [
             "__init__.pyi",
-            "aerospike.pyi",
+            "fast_aerospike.pyi",
             "exception.pyi",
             "predicates.pyi",
         ]
@@ -317,7 +320,10 @@ setup(
     packages=['aerospike_helpers', 'aerospike_helpers.operations', 'aerospike_helpers.batch',
               'aerospike_helpers.expressions',
               'aerospike_helpers.metrics',
-              'aerospike-stubs'],
+              'fast_aerospike_stubs'],
+    install_requires=[
+        'numpy>=1.20.0',
+    ],
     cmdclass={
         'build': CClientBuild,
         'clean': CClientClean
