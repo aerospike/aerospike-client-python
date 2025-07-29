@@ -1517,14 +1517,7 @@ Index data types
 
 .. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
 
-.. _aerospike_misc_constants:
-
-Miscellaneous
--------------
-
-.. data:: UDF_TYPE_LUA
-
-    UDF type is LUA (which is the only UDF type).
+.. _aerospike_index_types:
 
 .. data:: INDEX_TYPE_DEFAULT
 
@@ -1541,6 +1534,15 @@ Miscellaneous
 .. data:: INDEX_TYPE_MAPVALUES
 
     Index the values of a bin whose contents is an aerospike map.
+
+.. _aerospike_misc_constants:
+
+Miscellaneous
+-------------
+
+.. data:: UDF_TYPE_LUA
+
+    UDF type is LUA (which is the only UDF type).
 
 .. _aerospike_log_levels:
 
