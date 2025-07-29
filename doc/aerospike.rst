@@ -1519,6 +1519,9 @@ Index data types
 
 .. _aerospike_index_types:
 
+Index types
+-----------
+
 .. data:: INDEX_TYPE_DEFAULT
 
     Index a bin that doesn't contain a complex data type.
