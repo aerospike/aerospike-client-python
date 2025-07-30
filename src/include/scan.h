@@ -30,9 +30,6 @@
 
 PyTypeObject *AerospikeScan_Ready(void);
 
-AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
-                                 PyObject *kwds);
-
 /*******************************************************************************
  * OPERATIONS
  ******************************************************************************/

@@ -317,22 +317,6 @@ PyTypeObject *AerospikeQuery_Ready()
                                                    : NULL;
 }
 
-AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
-                                   PyObject *kwds)
-{
-    AerospikeQuery *self = (AerospikeQuery *)AerospikeQuery_Type_New(
-        &AerospikeQuery_Type, args, kwds);
-    self->client = client;
-
-    if (AerospikeQuery_Type.tp_init((PyObject *)self, args, kwds) == 0) {
-        Py_INCREF(client);
-        return self;
-    }
-
-    AerospikeQuery_Type.tp_free(self);
-    return NULL;
-}
-
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj)
 {
     if (self->u_objs.size < MAX_UNICODE_OBJECTS) {
