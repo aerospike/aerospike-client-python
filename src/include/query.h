@@ -147,3 +147,6 @@ PyObject *AerospikeQuery_Get_Partitions_status(AerospikeQuery *self);
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj);
 
 int64_t pyobject_to_int64(PyObject *py_obj);
+
+PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
+                                 PyObject *kwds);

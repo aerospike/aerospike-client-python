@@ -110,8 +110,8 @@ static PyMemberDef AerospikeScan_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
-                                        PyObject *kwds)
+PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
+                                 PyObject *kwds)
 {
     AerospikeScan *self = NULL;
 

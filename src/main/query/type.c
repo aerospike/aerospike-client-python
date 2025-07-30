@@ -156,8 +156,8 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
-                                         PyObject *kwds)
+PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
+                                  PyObject *kwds)
 {
     AerospikeQuery *self = NULL;
 
