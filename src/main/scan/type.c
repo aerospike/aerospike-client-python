@@ -229,11 +229,11 @@ static PyTypeObject AerospikeScan_Type = {
     0,                                 // tp_dictoffset
     (initproc)AerospikeScan_Type_Init,
     // tp_init
-    0,                      // tp_alloc
-    AerospikeScan_Type_New, // tp_new
-    0,                      // tp_free
-    0,                      // tp_is_gc
-    0                       // tp_bases
+    0, // tp_alloc
+    0, // tp_new
+    0, // tp_free
+    0, // tp_is_gc
+    0  // tp_bases
 };
 
 /*******************************************************************************
@@ -248,7 +248,7 @@ PyTypeObject *AerospikeScan_Ready()
 AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
                                  PyObject *kwds)
 {
-    AerospikeScan *self = (AerospikeScan *)AerospikeScan_Type.tp_new(
+    AerospikeScan *self = (AerospikeScan *)AerospikeScan_Type_New(
         &AerospikeScan_Type, args, kwds);
     self->client = client;
     Py_INCREF(client);
