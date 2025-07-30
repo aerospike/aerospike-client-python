@@ -310,7 +310,7 @@ PyTypeObject *AerospikeQuery_Ready()
 AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
                                    PyObject *kwds)
 {
-    AerospikeQuery *self = (AerospikeQuery *)AerospikeQuery_Type.tp_new(
+    AerospikeQuery *self = (AerospikeQuery *)AerospikeQuery_Type_New(
         &AerospikeQuery_Type, args, kwds);
     self->client = client;
 
