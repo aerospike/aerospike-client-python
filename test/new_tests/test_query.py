@@ -1313,3 +1313,7 @@ class TestQuery(TestBaseClass):
 
         recs = query.results()
         assert len(recs) == expected_rec_count
+
+    # Usage test. We need to check the logs that a warning is printed
+    def test_class_constructor(self):
+        aerospike.Query("test", "demo")

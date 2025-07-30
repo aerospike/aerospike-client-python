@@ -467,3 +467,7 @@ class TestScan(TestBaseClass):
 
         with pytest.raises(e.InvalidRequest):
             scan_obj.foreach(callback, {"expressions": expr.compile()})
+
+    # Usage test. We need to check the logs that a warning is printed
+    def test_class_constructor(self):
+        aerospike.Scan("test", "demo")
