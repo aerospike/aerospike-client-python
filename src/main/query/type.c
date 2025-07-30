@@ -156,15 +156,6 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject *AerospikeQuery_Type_New_With_Warning(PyTypeObject *type,
-                                                      PyObject *args,
-                                                      PyObject *kwds)
-{
-    as_log_warn("aerospike.Query() should not be called directly to create a "
-                "Query instance. Use aerospike.Client.query() instead");
-    return AerospikeQuery_Type_New(type, args, kwds);
-}
-
 static PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
                                          PyObject *kwds)
 {
@@ -177,6 +168,15 @@ static PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
     }
 
     return (PyObject *)self;
+}
+
+static PyObject *AerospikeQuery_Type_New_With_Warning(PyTypeObject *type,
+                                                      PyObject *args,
+                                                      PyObject *kwds)
+{
+    as_log_warn("aerospike.Query() should not be called directly to create a "
+                "Query instance. Use aerospike.Client.query() instead");
+    return AerospikeQuery_Type_New(type, args, kwds);
 }
 
 static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
