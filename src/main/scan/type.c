@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_scan.h>
+#include <aerospike/as_log_macros.h>
 
 #include "client.h"
 #include "scan.h"
