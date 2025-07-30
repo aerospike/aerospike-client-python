@@ -1258,6 +1258,39 @@ Metrics
 
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
+Scan and Query Constructors
+---------------------------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: scan(namespace[, set]) -> Scan
+
+        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
+
+        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
+
+        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name, otherwise the entire \
+            *namespace* will be scanned.
+
+        :return: an :py:class:`aerospike.Scan` class.
+
+    .. method:: query(namespace[, set]) -> Query
+
+        Return a :class:`aerospike.Query` object to be used for executing queries
+        over a specified set in a namespace.
+
+        See :ref:`aerospike.Query` for more details.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name, otherwise the records \
+            which are not part of any *set* will be queried (**Note**: this is \
+            different from not providing the *set* in :meth:`scan`).
+        :return: an :py:class:`aerospike.Query` class.
+
 .. _admin_user_dict:
 
 User Dictionary
@@ -1294,39 +1327,6 @@ The user dictionary has the following key-value pairs:
     * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
 
     * ``"roles"`` (:class:`list[str]`): list of assigned role names.
-
-Scan and Query Constructors
-===========================
-
-.. class:: Client
-    :noindex:
-
-    .. method:: scan(namespace[, set]) -> Scan
-
-        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
-
-        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
-
-        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
-
-        :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the entire \
-            *namespace* will be scanned.
-
-        :return: an :py:class:`aerospike.Scan` class.
-
-    .. method:: query(namespace[, set]) -> Query
-
-        Return a :class:`aerospike.Query` object to be used for executing queries
-        over a specified set in a namespace.
-
-        See :ref:`aerospike.Query` for more details.
-
-        :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the records \
-            which are not part of any *set* will be queried (**Note**: this is \
-            different from not providing the *set* in :meth:`scan`).
-        :return: an :py:class:`aerospike.Query` class.
 
 .. index::
     single: Other Methods
