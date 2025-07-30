@@ -183,6 +183,15 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
+static PyObject *AerospikeScan_Type_New_With_Warning(PyTypeObject *type,
+                                                     PyObject *args,
+                                                     PyObject *kwds)
+{
+    as_log_warn("aerospike.Scan() should not be called directly to create a "
+                "Scan instance. Use aerospike.Client.Scan() instead");
+    return AerospikeScan_Type_New(type, args, kwds);
+}
+
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
@@ -229,11 +238,11 @@ static PyTypeObject AerospikeScan_Type = {
     0,                                 // tp_dictoffset
     (initproc)AerospikeScan_Type_Init,
     // tp_init
-    0,                      // tp_alloc
-    AerospikeScan_Type_New, // tp_new
-    0,                      // tp_free
-    0,                      // tp_is_gc
-    0                       // tp_bases
+    0,                                   // tp_alloc
+    AerospikeScan_Type_New_With_Warning, // tp_new
+    0,                                   // tp_free
+    0,                                   // tp_is_gc
+    0                                    // tp_bases
 };
 
 /*******************************************************************************
@@ -248,7 +257,7 @@ PyTypeObject *AerospikeScan_Ready()
 AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
                                  PyObject *kwds)
 {
-    AerospikeScan *self = (AerospikeScan *)AerospikeScan_Type.tp_new(
+    AerospikeScan *self = (AerospikeScan *)AerospikeScan_Type_New(
         &AerospikeScan_Type, args, kwds);
     self->client = client;
     Py_INCREF(client);

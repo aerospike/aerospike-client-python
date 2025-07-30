@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_query.h>
+#include <aerospike/as_log_macros.h>
 
 #include "client.h"
 #include "query.h"
@@ -155,6 +156,15 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
+static PyObject *AerospikeQuery_Type_New_With_Warning(PyTypeObject *type,
+                                                      PyObject *args,
+                                                      PyObject *kwds)
+{
+    as_log_warn("aerospike.Query() should not be called directly to create a "
+                "Query instance. Use aerospike.Client.query() instead");
+    return AerospikeQuery_Type_New(type, args, kwds);
+}
+
 static PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
                                          PyObject *kwds)
 {
@@ -275,26 +285,26 @@ static PyTypeObject AerospikeQuery_Type = {
     "operation. To create a new instance of the Query class, call the\n"
     "query() method on an instance of a Client class.\n",
     // tp_doc
-    0,                                  // tp_traverse
-    0,                                  // tp_clear
-    0,                                  // tp_richcompare
-    0,                                  // tp_weaklistoffset
-    0,                                  // tp_iter
-    0,                                  // tp_iternext
-    AerospikeQuery_Type_Methods,        // tp_methods
-    AerospikeQuery_Type_custom_members, // tp_members
-    0,                                  // tp_getset
-    0,                                  // tp_base
-    0,                                  // tp_dict
-    0,                                  // tp_descr_get
-    0,                                  // tp_descr_set
-    0,                                  // tp_dictoffset
-    (initproc)AerospikeQuery_Type_Init, // tp_init
-    0,                                  // tp_alloc
-    AerospikeQuery_Type_New,            // tp_new
-    0,                                  // tp_free
-    0,                                  // tp_is_gc
-    0                                   // tp_bases
+    0,                                    // tp_traverse
+    0,                                    // tp_clear
+    0,                                    // tp_richcompare
+    0,                                    // tp_weaklistoffset
+    0,                                    // tp_iter
+    0,                                    // tp_iternext
+    AerospikeQuery_Type_Methods,          // tp_methods
+    AerospikeQuery_Type_custom_members,   // tp_members
+    0,                                    // tp_getset
+    0,                                    // tp_base
+    0,                                    // tp_dict
+    0,                                    // tp_descr_get
+    0,                                    // tp_descr_set
+    0,                                    // tp_dictoffset
+    (initproc)AerospikeQuery_Type_Init,   // tp_init
+    0,                                    // tp_alloc
+    AerospikeQuery_Type_New_With_Warning, // tp_new
+    0,                                    // tp_free
+    0,                                    // tp_is_gc
+    0                                     // tp_bases
 };
 
 /*******************************************************************************
@@ -310,7 +320,7 @@ PyTypeObject *AerospikeQuery_Ready()
 AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
                                    PyObject *kwds)
 {
-    AerospikeQuery *self = (AerospikeQuery *)AerospikeQuery_Type.tp_new(
+    AerospikeQuery *self = (AerospikeQuery *)AerospikeQuery_Type_New(
         &AerospikeQuery_Type, args, kwds);
     self->client = client;
 
