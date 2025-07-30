@@ -1313,3 +1313,7 @@ class TestQuery(TestBaseClass):
 
         recs = query.results()
         assert len(recs) == expected_rec_count
+
+    def test_creating_query_with_class_constructor_fails(self):
+        with pytest.raises(TypeError):
+            aerospike.Query()
