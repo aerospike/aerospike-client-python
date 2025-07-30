@@ -122,7 +122,7 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: where_with_expr(expr, predicate)
 
-        Add an expression *predicate* to the query. Predicate must not have a bin name set.
+        Add an expression *predicate* to the query. Predicate must have the bin name set to :py:obj:`None`.
 
         You can only assign at most one predicate to the query.
 
@@ -131,7 +131,7 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: where_with_index_name(index_name, predicate)
 
-        Add an index name *predicate* to the query. Predicate must not have a bin name set.
+        Add an index name *predicate* to the query. Predicate must have the bin name set to :py:obj:`None`.
 
         You can only assign at most one predicate to the query.
 
