@@ -197,7 +197,7 @@ static PyObject *AerospikeScan_Type_New_With_Warning(PyTypeObject *type,
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeScan_Type = {
+PyTypeObject AerospikeScan_Type = {
     PyVarObject_HEAD_INIT(NULL, 0) FULLY_QUALIFIED_TYPE_NAME("Scan"), // tp_name
     sizeof(AerospikeScan), // tp_basicsize
     0,                     // tp_itemsize
