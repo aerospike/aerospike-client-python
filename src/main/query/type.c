@@ -291,7 +291,7 @@ static PyTypeObject AerospikeQuery_Type = {
     0,                                  // tp_dictoffset
     (initproc)AerospikeQuery_Type_Init, // tp_init
     0,                                  // tp_alloc
-    NULL,                               // tp_new
+    AerospikeQuery_Type_New,            // tp_new
     0,                                  // tp_free
     0,                                  // tp_is_gc
     0                                   // tp_bases
