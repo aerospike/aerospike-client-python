@@ -236,3 +236,9 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+@pytest.fixture
+def set_log_level(request):
+    aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)
+    yield
+    aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)
