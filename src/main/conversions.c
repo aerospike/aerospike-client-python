@@ -3034,3 +3034,5 @@ const char *convert_pyobject_to_str(PyObject *py_obj)
 error:
     return NULL;
 }
+
+PyObject *convert_as_exp_list_to_py_expr(as_exp *exp) { return NULL; }
