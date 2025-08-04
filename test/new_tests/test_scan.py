@@ -470,4 +470,4 @@ class TestScan(TestBaseClass):
 
     def test_creating_scan_with_class_constructor_fails(self):
         with pytest.raises(TypeError):
-            aerospike.Scan()
+            aerospike.Scan("test", "demo")

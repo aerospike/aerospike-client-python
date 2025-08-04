@@ -1316,4 +1316,4 @@ class TestQuery(TestBaseClass):
 
     def test_creating_query_with_class_constructor_fails(self):
         with pytest.raises(TypeError):
-            aerospike.Query()
+            aerospike.Query("test", "demo")
