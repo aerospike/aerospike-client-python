@@ -188,7 +188,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
         // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
         if (py_expr) {
-            as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
+            as_query_where_with_exp(&self->query, exp_list, predicate,
                                     index_type, AS_INDEX_BLOB, val1_bytes,
                                     bytes_size, true);
         }
@@ -209,7 +209,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (predicate == AS_PREDICATE_RANGE &&
             in_datatype == AS_INDEX_NUMERIC) {
             if (py_expr) {
-                as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
+                as_query_where_with_exp(&self->query, exp_list, predicate,
                                         index_type, in_datatype, val1_int,
                                         val2_int);
             }
@@ -226,7 +226,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         }
         else {
             if (py_expr) {
-                as_query_where_with_exp(&self->query, NULL, exp_list, predicate,
+                as_query_where_with_exp(&self->query, exp_list, predicate,
                                         index_type, in_datatype, val1);
             }
             else if (index_name) {

@@ -509,7 +509,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 See :ref:`POLICY_COMMIT_LEVEL` for possible values.
 
                 .. seealso::
-                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/server/architecture/consistency.html>`_.
+                    `Per-Transaction Consistency Guarantees <https://aerospike.com/docs/database/learn/architecture/clustering/consistency-modes>`_.
 
         * **shm** (:class:`dict`)
             Contains optional shared-memory cluster tending parameters
@@ -545,7 +545,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
                 Default: ``0xA9000000``
 
                 .. seealso::
-                    `Shared Memory <https://aerospike.com/developer/client/shm>`_
+                    `Shared Memory <https://aerospike.com/docs/develop/client/c/shm>`_
 
         * **use_shared_connection** (:class:`bool`)
             Indicates whether this instance should share its connection to the Aerospike cluster with other client instances in the same process.
@@ -667,15 +667,36 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``100``
         * **max_error_rate** (:class:`int`)
-            Maximum number of errors allowed per node per ``error_rate_window`` before backoff algorithm returns :exc:`~aerospike.exception.MaxErrorRateExceeded` for database commands to that node. If ``max_error_rate`` is zero, there is no error limit.
+            Maximum number of errors allowed per node per ``error_rate_window`` before backoff algorithm returns
+            :exc:`~aerospike.exception.MaxErrorRateExceeded` for database commands to that node. If ``max_error_rate``
+            is zero, there is no error limit.
 
-            The counted error types are any error that causes the connection to close (socket errors and client timeouts), server device overload and server timeouts.
+            The counted error types are any error that causes the connection to close (socket errors and client timeouts),
+            server device overload and server timeouts.
 
-            The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded` stops being returned.
+            .. admonition:: Circuit Breaker Feature
+
+                The circuit breaker functionality uses the ``max_error_rate`` and ``error_rate_window``
+                configuration options to progressively slow down connection attempts in order to let
+                the server catch up with client requests. When the ``max_error_rate`` is reached,
+                the client waits for the duration of the ``error_rate_window`` before trying again. The
+                client also decreases the allowable errors by half until network stability
+                is achieved. (i.e the client no longer exceeds the max error rate per window). Then the client doubles the
+                allowed max error rate for each successive window until it is restored to the value set by the user,
+                or the default value if not set.
+
+            The application should backoff or reduce the command load until :exc:`~aerospike.exception.MaxErrorRateExceeded`
+            stops being returned.
 
             Default: ``100``
         * **error_rate_window** (:class:`int`)
-            The number of cluster tend iterations that defines the window for ``max_error_rate``. One tend iteration is defined as ``tend_interval`` plus the time to tend all nodes. At the end of the window, the error count is reset to zero and backoff state is removed on all nodes.
+            The number of cluster tend iterations that defines the window for ``max_error_rate``. One tend iteration is
+            defined as ``tend_interval`` plus the time to tend all nodes. At the end of the window, the error count is
+            reset to zero and backoff state is removed on all nodes.
+
+            If the user sets both ``max_error_rate`` and ``error_rate_window`` such that the ratio of ``max_error_rate``
+            to ``error_rate_window`` is less than 1 or greater than 100, both
+            options will be reset to their respective default values.
 
             Default: ``1``
         * **tend_interval** (:class:`int`)
@@ -890,6 +911,18 @@ Specifies which partition replica to read from.
     Try node on the same rack as the client first.
 
     If there are no nodes on the same rack, use :data:`POLICY_REPLICA_SEQUENCE` instead.
+
+.. data:: POLICY_REPLICA_RANDOM
+
+    Distribute reads and writes across all nodes in cluster in round-robin fashion.
+
+    This option is useful on reads when the replication factor equals the number
+    of nodes in the cluster and the overhead of requesting proles is not desired.
+
+    This option could temporarily be useful on writes when the client can't connect
+    to a node, but that node is reachable via a proxy from a different node.
+
+    This option can also be used to test server proxies.
 
 .. _TTL_CONSTANTS:
 
@@ -1484,14 +1517,10 @@ Index data types
 
 .. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
 
-.. _aerospike_misc_constants:
+.. _aerospike_index_types:
 
-Miscellaneous
--------------
-
-.. data:: UDF_TYPE_LUA
-
-    UDF type is LUA (which is the only UDF type).
+Index types
+-----------
 
 .. data:: INDEX_TYPE_DEFAULT
 
@@ -1508,6 +1537,15 @@ Miscellaneous
 .. data:: INDEX_TYPE_MAPVALUES
 
     Index the values of a bin whose contents is an aerospike map.
+
+.. _aerospike_misc_constants:
+
+Miscellaneous
+-------------
+
+.. data:: UDF_TYPE_LUA
+
+    UDF type is LUA (which is the only UDF type).
 
 .. _aerospike_log_levels:
 
