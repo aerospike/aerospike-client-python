@@ -264,3 +264,5 @@ uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
 
 // Returns NULL on error.
 const char *convert_pyobject_to_str(PyObject *py_obj);
+
+PyObject *convert_as_exp_list_to_py_expr(as_exp *exp);
