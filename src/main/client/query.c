@@ -22,6 +22,8 @@
 #include "conversions.h"
 #include "exceptions.h"
 #include "policy.h"
+// Required for Py_NewRef in python 3.9
+#include "pythoncapi_compat.h"
 
 #include <aerospike/aerospike_query.h>
 #include <aerospike/as_job.h>
@@ -42,11 +44,24 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
+
+extern PyTypeObject AerospikeQuery_Type;
+
 AerospikeQuery *AerospikeClient_Query(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds)
 {
-    return AerospikeQuery_New(self, args, kwds);
+    AerospikeQuery *query = (AerospikeQuery *)AerospikeQuery_Type_New(
+        &AerospikeQuery_Type, args, kwds);
+    query->client = Py_NewRef(self);
+
+    if (AerospikeQuery_Type.tp_init((PyObject *)query, args, kwds) == 0) {
+        return query;
+    }
+
+    AerospikeQuery_Type.tp_free(query);
+    return NULL;
 }
+
 static int query_where_add(as_query **query, as_predicate_type predicate,
                            as_index_datatype in_datatype, PyObject *py_bin,
                            PyObject *py_val1, PyObject *py_val2, int index_type,

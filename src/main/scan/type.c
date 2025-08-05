@@ -109,8 +109,8 @@ static PyMemberDef AerospikeScan_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
-                                        PyObject *kwds)
+PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
+                                 PyObject *kwds)
 {
     AerospikeScan *self = NULL;
 
@@ -187,7 +187,7 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeScan_Type = {
+PyTypeObject AerospikeScan_Type = {
     PyVarObject_HEAD_INIT(NULL, 0) FULLY_QUALIFIED_TYPE_NAME("Scan"), // tp_name
     sizeof(AerospikeScan), // tp_basicsize
     0,                     // tp_itemsize
@@ -229,11 +229,11 @@ static PyTypeObject AerospikeScan_Type = {
     0,                                 // tp_dictoffset
     (initproc)AerospikeScan_Type_Init,
     // tp_init
-    0,                      // tp_alloc
-    AerospikeScan_Type_New, // tp_new
-    0,                      // tp_free
-    0,                      // tp_is_gc
-    0                       // tp_bases
+    0, // tp_alloc
+    0, // tp_new
+    0, // tp_free
+    0, // tp_is_gc
+    0  // tp_bases
 };
 
 /*******************************************************************************
@@ -243,24 +243,4 @@ static PyTypeObject AerospikeScan_Type = {
 PyTypeObject *AerospikeScan_Ready()
 {
     return PyType_Ready(&AerospikeScan_Type) == 0 ? &AerospikeScan_Type : NULL;
-}
-
-AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
-                                 PyObject *kwds)
-{
-    AerospikeScan *self = (AerospikeScan *)AerospikeScan_Type.tp_new(
-        &AerospikeScan_Type, args, kwds);
-    self->client = client;
-    Py_INCREF(client);
-    if (AerospikeScan_Type.tp_init((PyObject *)self, args, kwds) != -1) {
-        return self;
-    }
-    else {
-        Py_XDECREF(self);
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
-        raise_exception(&err);
-        return NULL;
-    }
 }
