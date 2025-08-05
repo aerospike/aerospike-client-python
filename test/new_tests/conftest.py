@@ -236,3 +236,10 @@ def invalid_key(request):
 
 # aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 # aerospike.set_log_handler(None)
+
+@pytest.fixture
+def set_log_level(request):
+    aerospike.set_log_level(aerospike.LOG_LEVEL_WARN)
+    yield
+    # This is supposed to be the default across all the tests
+    aerospike.set_log_level(aerospike.LOG_LEVEL_ERROR)

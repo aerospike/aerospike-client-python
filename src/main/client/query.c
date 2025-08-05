@@ -42,11 +42,25 @@
  * In case of error,appropriate exceptions will be raised.
  *******************************************************************************************************
  */
+
+extern PyTypeObject AerospikeQuery_Type;
+
 AerospikeQuery *AerospikeClient_Query(AerospikeClient *self, PyObject *args,
                                       PyObject *kwds)
 {
-    return AerospikeQuery_New(self, args, kwds);
+    AerospikeQuery *query = (AerospikeQuery *)AerospikeQuery_Type_New(
+        &AerospikeQuery_Type, args, kwds);
+    query->client = self;
+
+    if (AerospikeQuery_Type.tp_init((PyObject *)query, args, kwds) == 0) {
+        Py_INCREF(self);
+        return query;
+    }
+
+    AerospikeQuery_Type.tp_free(query);
+    return NULL;
 }
+
 static int query_where_add(as_query **query, as_predicate_type predicate,
                            as_index_datatype in_datatype, PyObject *py_bin,
                            PyObject *py_val1, PyObject *py_val2, int index_type,

@@ -23,6 +23,7 @@
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
 #include <aerospike/as_scan.h>
+#include <aerospike/as_log_macros.h>
 
 #include "client.h"
 #include "scan.h"
@@ -109,8 +110,8 @@ static PyMemberDef AerospikeScan_Type_custom_members[] = {
  * PYTHON TYPE HOOKS
  ******************************************************************************/
 
-static PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
-                                        PyObject *kwds)
+PyObject *AerospikeScan_Type_New(PyTypeObject *type, PyObject *args,
+                                 PyObject *kwds)
 {
     AerospikeScan *self = NULL;
 
@@ -183,11 +184,20 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
+static PyObject *AerospikeScan_Type_New_With_Warning(PyTypeObject *type,
+                                                     PyObject *args,
+                                                     PyObject *kwds)
+{
+    as_log_warn("aerospike.Scan() should not be called directly to create a "
+                "Scan instance. Use aerospike.Client.Scan() instead");
+    return AerospikeScan_Type_New(type, args, kwds);
+}
+
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 
-static PyTypeObject AerospikeScan_Type = {
+PyTypeObject AerospikeScan_Type = {
     PyVarObject_HEAD_INIT(NULL, 0) FULLY_QUALIFIED_TYPE_NAME("Scan"), // tp_name
     sizeof(AerospikeScan), // tp_basicsize
     0,                     // tp_itemsize
@@ -243,24 +253,4 @@ static PyTypeObject AerospikeScan_Type = {
 PyTypeObject *AerospikeScan_Ready()
 {
     return PyType_Ready(&AerospikeScan_Type) == 0 ? &AerospikeScan_Type : NULL;
-}
-
-AerospikeScan *AerospikeScan_New(AerospikeClient *client, PyObject *args,
-                                 PyObject *kwds)
-{
-    AerospikeScan *self = (AerospikeScan *)AerospikeScan_Type_New(
-        &AerospikeScan_Type, args, kwds);
-    self->client = client;
-    Py_INCREF(client);
-    if (AerospikeScan_Type.tp_init((PyObject *)self, args, kwds) != -1) {
-        return self;
-    }
-    else {
-        Py_XDECREF(self);
-        as_error err;
-        as_error_init(&err);
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Parameters are incorrect");
-        raise_exception(&err);
-        return NULL;
-    }
 }
