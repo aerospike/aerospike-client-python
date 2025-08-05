@@ -184,15 +184,6 @@ static void AerospikeScan_Type_Dealloc(AerospikeScan *self)
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
-static PyObject *AerospikeScan_Type_New_With_Warning(PyTypeObject *type,
-                                                     PyObject *args,
-                                                     PyObject *kwds)
-{
-    as_log_warn("aerospike.Scan() should not be called directly to create a "
-                "Scan instance. Use aerospike.Client.Scan() instead");
-    return AerospikeScan_Type_New(type, args, kwds);
-}
-
 /*******************************************************************************
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
