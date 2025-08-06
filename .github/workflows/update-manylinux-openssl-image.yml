@@ -76,6 +76,7 @@ jobs:
           exit(1)
 
         with open(output_file, 'a') as f:
+          print("base image:", BASE_IMAGE)
           f.write(f"manylinux_base_image={BASE_IMAGE}\n")
       shell: python
       working-directory: cibuildwheel
