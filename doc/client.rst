@@ -1699,7 +1699,7 @@ Apply Policies
     A :class:`dict` of optional apply policies, which are applicable to :meth:`~Client.apply`.
 
     .. hlist::
-        :columns: 1
+        :columns: 1.::
 
         .. include:: ./base_policy.rst
 
