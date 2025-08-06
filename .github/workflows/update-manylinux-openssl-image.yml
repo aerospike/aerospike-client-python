@@ -50,7 +50,7 @@ jobs:
     - name: Get cibuildwheel version used to build wheels
       id: get_cibw_version
       run: cibw_version=$(yq eval '.jobs.cibuildwheel.steps | map(select(.id == "cibuildwheel"))[0].uses' build-wheels.yml | cut -f 2- -d "@") >> $GITHUB_OUTPUT
-      working-directory: .github/workflows
+      working-directory: aerospike-client-python/.github/workflows
 
     - uses: actions/checkout@v4
       with:
