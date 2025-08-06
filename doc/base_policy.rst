@@ -1,5 +1,6 @@
 .. hlist::
     :columns: 1
+
     * **max_retries** (:class:`int`)
         | Maximum number of retries before aborting the current command. The initial attempt is not counted as a
         | retry.
