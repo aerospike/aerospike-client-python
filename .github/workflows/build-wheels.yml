@@ -294,6 +294,7 @@ jobs:
 
     - name: Build wheel
       uses: pypa/cibuildwheel@v2.21.3
+      id: cibuildwheel
       env:
         # manylinux_2_28 x64 image doesn't search in this directory for shared libraries
         CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH=/usr/local/lib64
