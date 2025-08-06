@@ -50,6 +50,7 @@ jobs:
     - name: Get cibuildwheel version used to build wheels
       id: get_cibw_version
       run: cibw_version=$(yq eval '.jobs.cibuildwheel.steps | map(select(.id == "cibuildwheel"))[0].uses' build-wheels.yml | cut -f 2- -d "@") >> $GITHUB_OUTPUT
+      working-directory: .github/workflows
 
     - uses: actions/checkout@v4
       with:
@@ -68,7 +69,7 @@ jobs:
 
         config = configparser.ConfigParser()
         config.read('${{ env.CIBW_PINNED_DOCKER_IMAGE_CONFIG_PATH }}')
-        BASE_IMAGE=config['${{ matrix.arch-and-runner-os[0] }}']['${{ env.MANYLINUX_TAG }}']
+        BASE_IMAGE = config['${{ matrix.arch-and-runner-os[0] }}']['${{ env.MANYLINUX_TAG }}']
 
         output_file = os.getenv('GITHUB_OUTPUT')
         if not output_file:
