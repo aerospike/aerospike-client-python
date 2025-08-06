@@ -84,9 +84,9 @@ jobs:
       uses: docker/build-push-action@v6
       with:
         # Don't want to use default Git context or else it will clone the whole Python client repo again
-        # TODO: not pretty
-        context: ${{ github.workspace }}/aerospike-client-python/aerospike-client-python/.github/workflows
-        file: ${{ github.workspace }}/aerospike-client-python/aerospike-client-python/.github/workflows/${{ env.MANYLINUX_TAG }}-openssl.Dockerfile
+        # TODO: review how main repo is cloned
+        context: ${{ github.workspace }}/aerospike-client-python/.github/workflows
+        file: ${{ github.workspace }}/aerospike-client-python/.github/workflows/${{ env.MANYLINUX_TAG }}-openssl.Dockerfile
         build-args: |
           OPENSSL_VERSION=${{ inputs.openssl-version }}
           CPU_ARCH=${{ matrix.arch-and-runner-os[0] }}
