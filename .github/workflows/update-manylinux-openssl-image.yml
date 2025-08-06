@@ -78,13 +78,15 @@ jobs:
         with open(output_file, 'a') as f:
           f.write(f"manylinux_base_image={BASE_IMAGE}\n")
       shell: python
+      working-directory: cibuildwheel
 
     - name: Build and push
       uses: docker/build-push-action@v6
       with:
         # Don't want to use default Git context or else it will clone the whole Python client repo again
-        context: ${{ github.workspace }}/aerospike-client-python/.github/workflows
-        file: ${{ github.workspace }}/aerospike-client-python/.github/workflows/${{ env.MANYLINUX_TAG }}-openssl.Dockerfile
+        # TODO: not pretty
+        context: ${{ github.workspace }}/aerospike-client-python/aerospike-client-python/.github/workflows
+        file: ${{ github.workspace }}/aerospike-client-python/aerospike-client-python/.github/workflows/${{ env.MANYLINUX_TAG }}-openssl.Dockerfile
         build-args: |
           OPENSSL_VERSION=${{ inputs.openssl-version }}
           CPU_ARCH=${{ matrix.arch-and-runner-os[0] }}
