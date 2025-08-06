@@ -1112,7 +1112,7 @@ class TestQuery(TestBaseClass):
 
     def test_query_with_invalid_ctx(self):
         query = self.as_connection.query("test", "demo")
-        query.where(p.equals("bin", 1), ctx=1)
+        query.where(p.equals("bin", 1), 1)
 
     def test_query_with_base64_cdt_ctx(self):
         bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
