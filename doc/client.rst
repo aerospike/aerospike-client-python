@@ -1496,10 +1496,10 @@ Write Policies
 
     A :class:`dict` of optional write policies, which are applicable to :meth:`~Client.put`, :meth:`~Client.query_apply`. :meth:`~Client.remove_bin`.
 
+    .. include:: ./base_policy.rst
+
     .. hlist::
         :columns: 1
-
-        .. include:: ./base_policy.rst
 
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
@@ -1550,10 +1550,10 @@ Read Policies
 
     A :class:`dict` of optional read policies, which are applicable to :meth:`~Client.get`, :meth:`~Client.exists`, :meth:`~Client.select`.
 
+    .. include:: ./base_policy.rst
+
     .. hlist::
         :columns: 1
-
-        .. include:: ./base_policy.rst
 
         * **deserialize** (:class:`bool`)
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
@@ -1611,10 +1611,10 @@ Operate Policies
 
     A :class:`dict` of optional operate policies, which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list and map operations.
 
+    .. include:: ./base_policy.rst
+
     .. hlist::
         :columns: 1
-
-        .. include:: ./base_policy.rst
 
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
@@ -1698,10 +1698,10 @@ Apply Policies
 
     A :class:`dict` of optional apply policies, which are applicable to :meth:`~Client.apply`.
 
-    .. hlist::
-        :columns: 1.::
+    .. include:: ./base_policy.rst
 
-        .. include:: ./base_policy.rst
+    .. hlist::
+        :columns: 1
 
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
@@ -1735,10 +1735,11 @@ Remove Policies
 
     A :class:`dict` of optional remove policies, which are applicable to :meth:`~Client.remove`.
 
+    .. include:: ./base_policy.rst
+
     .. hlist::
         :columns: 1
 
-        .. include:: ./base_policy.rst
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
@@ -1774,10 +1775,10 @@ Batch Policies
 
     A :class:`dict` of optional batch policies.
 
+    .. include:: ./base_policy.rst
+
     .. hlist::
         :columns: 1
-
-        .. include:: ./base_policy.rst
 
         * **read_mode_ap**
             | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
