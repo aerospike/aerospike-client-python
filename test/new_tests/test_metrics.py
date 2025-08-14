@@ -6,6 +6,7 @@ import glob
 import os
 import time
 from typing import Optional
+from aerospike_helpers import HyperLogLog
 
 
 # Flags for testing callbacks
@@ -113,9 +114,19 @@ class TestMetrics:
     def test_enable_metrics_with_valid_arg_types(self, policy):
         self.as_connection.enable_metrics(policy=policy)
 
-    def test_enable_metrics_with_invalid_arg(self):
+    @pytest.mark.parametrize(
+        "policy",
+        [
+            1,
+            # We're testing a negative code path in a helper function
+            # where the object's actual type belongs to aerospike_helpers but does not match the expected
+            # type from aerospike_helpers
+            HyperLogLog([1, 2, 3])
+        ]
+    )
+    def test_enable_metrics_with_invalid_arg(self, policy):
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.enable_metrics(1)
+            self.as_connection.enable_metrics(policy)
         assert excinfo.value.msg == "policy parameter must be an aerospike_helpers.MetricsPolicy type"
 
     def test_metrics_writer(self):

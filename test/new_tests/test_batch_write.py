@@ -5,7 +5,7 @@ import pytest
 
 import aerospike
 
-from aerospike_helpers import expressions as exp
+from aerospike_helpers import expressions as exp, HyperLogLog
 from aerospike_helpers.batch import records as br
 from aerospike_helpers.operations import operations as op
 from aerospike_helpers.operations import list_operations as lop
@@ -395,6 +395,25 @@ class TestBatchWrite(TestBaseClass):
                             ],
                         ),
                         "bad_batch_record",
+                    ]
+                ),
+                {},
+                e.ParamError,
+            ),
+            (
+                # We're testing a specific helper function that checks if an object's base class
+                # is an aerospike_helpers class. BatchRecord is the expected base class,
+                # but the object's actual base class is bytes
+                "bad-batch-record-but-is-aerospike-helpers-class-instance",
+                br.BatchRecords(
+                    [
+                        br.Read(
+                            ("test", "demo", 1),
+                            [
+                                op.read("count"),
+                            ],
+                        ),
+                        HyperLogLog([1, 2, 3]),
                     ]
                 ),
                 {},
