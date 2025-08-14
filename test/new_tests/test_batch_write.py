@@ -407,12 +407,6 @@ class TestBatchWrite(TestBaseClass):
                 "bad-batch-record-but-is-aerospike-helpers-class-instance",
                 br.BatchRecords(
                     [
-                        br.Read(
-                            ("test", "demo", 1),
-                            [
-                                op.read("count"),
-                            ],
-                        ),
                         HyperLogLog([1, 2, 3]),
                     ]
                 ),
