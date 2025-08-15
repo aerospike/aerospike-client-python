@@ -26,16 +26,37 @@ jobs:
       sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets: inherit
 
-  upload-to-jfrog:
-    name: Upload artifacts to JFrog
-    needs: [
-      bump-dev-number,
-      rebuild-artifacts-with-new-dev-num
-    ]
-    uses: ./.github/workflows/upload-to-jfrog.yml
+  upload-github-artifacts-to-jfrog:
+    uses: aerospike/shared-workflows/workflows/reusable_upload-artifacts.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
     with:
-      version: ${{ needs.bump-dev-number.outputs.new_version }}
-    secrets: inherit
+      project: clients
+      # build-name:
+      #   description: JFrog build name
+      #   required: true
+      #   type: string
+      # version:
+      #   description: Version of the artifact to upload
+      #   required: true
+      #   type: string
+
+  create-jfrog-release-bundle:
+    uses: aerospike/shared-workflows/workflows/reusable_create-release-bundle.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
+    with:
+      project: clients
+      # build-names: 
+      # bundle-name: 
+      # version: 
+
+  # upload-to-jfrog:
+  #   name: Upload artifacts to JFrog
+  #   needs: [
+  #     bump-dev-number,
+  #     rebuild-artifacts-with-new-dev-num
+  #   ]
+  #   uses: ./.github/workflows/upload-to-jfrog.yml
+  #   with:
+  #     version: ${{ needs.bump-dev-number.outputs.new_version }}
+  #   secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
   delete-artifacts:
