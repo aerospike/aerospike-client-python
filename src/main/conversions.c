@@ -1174,7 +1174,6 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
         if (strcmp(obj->ob_type->tp_base->tp_name, expected_type_name)) {
             // object's parent class does not match expected class
             retval = false;
-            goto CLEANUP2;
         }
     }
 
