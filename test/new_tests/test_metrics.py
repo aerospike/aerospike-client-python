@@ -6,7 +6,6 @@ import glob
 import os
 import time
 from typing import Optional
-from aerospike_helpers import HyperLogLog
 
 
 # Flags for testing callbacks
@@ -121,7 +120,8 @@ class TestMetrics:
             # We're testing a negative code path in a helper function
             # where the object's actual type belongs to aerospike_helpers but does not match the expected
             # type from aerospike_helpers
-            HyperLogLog([1, 2, 3])
+            # The actual type needs to be in the same submodule as the expected type (metrics in aerospike_helpers)
+            listeners
         ]
     )
     def test_enable_metrics_with_invalid_arg(self, policy):
