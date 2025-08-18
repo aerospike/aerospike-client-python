@@ -38,7 +38,7 @@ class ConnectionStats:
             connection that timed out on a socket read and then independently drained (read all incoming
             data) so the connection can be put back into the connection pool. The recovery process is
             attempted when the ``timeout_delay`` policy is greater than zero.
-        aborted (int): Total number of aborted connections since node creation. An aborted connecton is a connection
+        aborted (int): Total number of aborted connections since node creation. An aborted connection is a connection
             that timed out on a socket read and the drain (read all incoming data) failed. The drain failure is
             mostly likely due a downed node and results in the connection being closed. The recovery process
             is attempted when the ``timeout_delay`` policy is greater than zero.
