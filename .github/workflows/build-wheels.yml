@@ -344,6 +344,7 @@ jobs:
       with:
         path: ./wheelhouse/*.whl
         name: ${{ env.BUILD_IDENTIFIER }}.build
+        if-no-files-found: error
 
     - name: Set final commit status
       uses: myrotvorets/set-commit-status-action@v2.0.0
