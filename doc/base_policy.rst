@@ -36,6 +36,25 @@
         | return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
         |
         | Default: ``1000``
+    * **timeout_delay** (:class:`int`)
+        Number of milliseconds to wait after a socket read times out before closing the socket for
+        good.  If set to zero, this feature will be disabled.
+
+        If, upon performing a database operation, the host finds the socket it was using timing out
+        while reading, the client will receive a timeout error.  However, we don't always want to
+        close that socket right away; doing so introduces unwanted latencies.  It might be possible
+        to recover the socket, thus saving the socket for future re-use.
+
+        The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+        milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+        away, effectively disabling this feature.
+
+        Please note that this feature only applies to sockets being read; write timeouts are not
+        affected by this setting.
+
+        The value must be an unsigned 32-bit integer.
+
+        Default: ``0``
     * **compress** (:class:`bool`)
         | Compress client requests and server responses.
         |
