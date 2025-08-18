@@ -38,7 +38,6 @@
 #include <aerospike/as_record_iterator.h>
 #include <aerospike/as_msgpack_ext.h>
 #include <aerospike/as_cluster.h>
-#include <aerospike/aerospike_stats.h>
 
 #include "conversions.h"
 #include "geo.h"

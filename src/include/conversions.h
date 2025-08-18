@@ -28,6 +28,7 @@
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_partition_filter.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "types.h"
 
