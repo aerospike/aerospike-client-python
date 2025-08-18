@@ -746,9 +746,10 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
         return NULL;
     }
 
-    const char *field_names[] = {"in_use", "in_pool", "opened", "closed"};
-    uint32_t conn_stats[] = {stats->in_use, stats->in_pool, stats->opened,
-                             stats->closed};
+    const char *field_names[] = {"in_use", "in_pool",   "opened",
+                                 "closed", "recovered", "aborted"};
+    uint32_t conn_stats[] = {stats->in_use, stats->in_pool,   stats->opened,
+                             stats->closed, stats->recovered, stats->aborted};
     for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
          i++) {
         PyObject *py_value = PyLong_FromLong(conn_stats[i]);
@@ -913,6 +914,35 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject *py_port = PyLong_FromLong(port);
     PyObject_SetAttrString(py_node, "port", py_port);
     Py_DECREF(py_port);
+
+    // TODO: do we even need this? other as_node.sync_conn_* fields aren't exposed.
+    // TODO: code can be reused with as_conn_stats conversion code?
+    // TODO: need to get atomically?
+
+    // const char *field_names[] = {"conns_recovered", "conns_aborted"};
+    // uint32_t field_values[] = {node->sync_conns_recovered, node->sync_conns_aborted};
+
+    // for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
+    //      i++) {
+    //     PyObject *py_value = PyLong_FromLong(field_values[i]);
+    //     if (!py_value) {
+    //         as_error_update(error_p, AEROSPIKE_ERR,
+    //                         "Unable to get Node field %s",
+    //                         field_names[i]);
+    //         goto error;
+    //     }
+    //     int result =
+    //         PyObject_SetAttrString(py_node, field_names[i], py_value);
+    //     // Either way if call succeeded or failed, we don't need py_value anymore
+    //     Py_DECREF(py_value);
+    //     if (result == -1) {
+    //         PyErr_Clear();
+    //         as_error_update(error_p, AEROSPIKE_ERR,
+    //                         "Unable to set ConnectionStats field %s",
+    //                         field_names[i]);
+    //         goto error;
+    //     }
+    // }
 
     as_node_stats node_stats;
     aerospike_node_stats(node, &node_stats);
