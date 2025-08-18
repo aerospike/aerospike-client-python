@@ -98,6 +98,21 @@ class Cluster:
     pass
 
 
+class ClusterStats:
+    # """
+    # TODO: ConnectionStats docs not clear about being for each node.
+    # TODO: nodes size not needed?
+    # nodes (list[ConnectionStats]): Statistics for all nodes.
+    # retry_count (int): Count of command retries since cluster was started.
+    # thread_pool_queued_tasks (int): Count of sync batch/scan/query tasks awaiting execution.
+    #     If the count is greater than zero, then all threads in the thread pool are active.
+    # """
+    """
+    recover_queue_size (int): Count of sync sockets currently in timeout recovery.
+    """
+    pass
+
+
 class MetricsListeners:
     """Metrics listener callbacks.
 

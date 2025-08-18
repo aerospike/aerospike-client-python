@@ -3064,3 +3064,31 @@ const char *convert_pyobject_to_str(PyObject *py_obj)
 error:
     return NULL;
 }
+
+PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
+                                                        as_cluster_stats *stats)
+{
+    PyObject *py_cluster_stats = create_class_instance_from_module(
+        err, "aerospike_helpers.metrics", "ClusterStats", NULL);
+    if (!py_cluster_stats) {
+        goto error;
+    }
+
+    PyObject *py_recover_queue_size =
+        PyLong_FromUnsignedLong(stats->recover_queue_size);
+    if (!py_recover_queue_size) {
+        goto error;
+    }
+    int retval = PyObject_SetAttrString(py_cluster_stats, "recover_queue_size",
+                                        py_recover_queue_size);
+    Py_DECREF(py_recover_queue_size);
+    if (retval == -1) {
+        goto error;
+    }
+
+    return py_cluster_stats;
+
+error:
+    Py_XDECREF(py_cluster_stats);
+    return NULL;
+}
