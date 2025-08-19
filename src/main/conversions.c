@@ -3063,6 +3063,12 @@ create_py_node_stats_from_as_node_stats(as_error *error_p,
         goto error;
     }
 
+    int retval = PyObject_SetAttrString(py_node_stats, "sync", py_conn_stats);
+    Py_DECREF(py_conn_stats);
+    if (retval == -1) {
+        goto error;
+    }
+
     const char *const as_node_stats_attr_names[] = {
         "error_count", "timeout_count", "key_busy_count"};
     uint64_t as_node_stats_attr_values[] = {
