@@ -1487,6 +1487,17 @@ The metadata dictionary has the following key-value pairs:
 Policies
 ========
 
+.. _aerospike_base_policies:
+
+Base Policies:
+--------------
+
+.. object:: policy
+
+    Base policies that apply to some other policies.
+
+    .. include:: ./base_policy.rst
+
 .. _aerospike_write_policies:
 
 Write Policies
@@ -1496,7 +1507,7 @@ Write Policies
 
     A :class:`dict` of optional write policies, which are applicable to :meth:`~Client.put`, :meth:`~Client.query_apply`. :meth:`~Client.remove_bin`.
 
-    .. include:: ./base_policy.rst
+    See :ref:`aerospike_base_policies` as well.
 
     .. hlist::
         :columns: 1
@@ -1550,7 +1561,7 @@ Read Policies
 
     A :class:`dict` of optional read policies, which are applicable to :meth:`~Client.get`, :meth:`~Client.exists`, :meth:`~Client.select`.
 
-    .. include:: ./base_policy.rst
+    See :ref:`aerospike_base_policies` as well.
 
     .. hlist::
         :columns: 1
@@ -1611,7 +1622,7 @@ Operate Policies
 
     A :class:`dict` of optional operate policies, which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list and map operations.
 
-    .. include:: ./base_policy.rst
+    See :ref:`aerospike_base_policies` as well.
 
     .. hlist::
         :columns: 1
@@ -1698,7 +1709,7 @@ Apply Policies
 
     A :class:`dict` of optional apply policies, which are applicable to :meth:`~Client.apply`.
 
-    .. include:: ./base_policy.rst
+    See :ref:`aerospike_base_policies` as well.
 
     .. hlist::
         :columns: 1
@@ -1735,7 +1746,7 @@ Remove Policies
 
     A :class:`dict` of optional remove policies, which are applicable to :meth:`~Client.remove`.
 
-    .. include:: ./base_policy.rst
+    See :ref:`aerospike_base_policies` as well.
 
     .. hlist::
         :columns: 1
@@ -1775,7 +1786,7 @@ Batch Policies
 
     A :class:`dict` of optional batch policies.
 
-    .. include:: ./base_policy.rst
+    See :ref:`aerospike_base_policies` as well.
 
     .. hlist::
         :columns: 1
