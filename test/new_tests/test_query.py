@@ -309,13 +309,22 @@ class TestQuery(TestBaseClass):
 
         request.addfinalizer(teardown)
 
-    def test_query_with_correct_parameters_hi(self):
+    @pytest.mark.parametrize(
+        "extra_args",
+        [
+            # ctx
+            [],
+            [None],
+            [[]]
+        ]
+    )
+    def test_query_with_correct_parameters_hi(self, extra_args):
         """
         Invoke query() with correct arguments
         """
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
-        query.where(p.equals("test_age", 1))
+        query.where(p.equals("test_age", 1), *extra_args)
 
         records = []
 
@@ -1100,6 +1109,10 @@ class TestQuery(TestBaseClass):
 
         assert records
         assert len(records) == 3
+
+    def test_query_with_invalid_ctx(self):
+        query = self.as_connection.query("test", "demo")
+        query.where(p.equals("bin", 1), 1)
 
     def test_query_with_base64_cdt_ctx(self):
         bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
