@@ -46,7 +46,6 @@ class ConnectionStats:
     pass
 
 
-
 class NamespaceMetrics:
     """
     Namespace metrics.
