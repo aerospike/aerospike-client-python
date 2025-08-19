@@ -98,6 +98,8 @@ class Cluster:
     pass
 
 
+# as_node_stats as a reference to an as_node object
+# We are using name and address to identify that as_node instead
 class NodeStats:
     """Node statistics.
 

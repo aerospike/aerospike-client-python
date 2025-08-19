@@ -9,7 +9,6 @@ class TestGetStats(object):
         assert isinstance(cluster_stats, ClusterStats)
 
         # Test class API
-        # TODO: attrs not in type hints.
         # TODO: can test list more specifically?
         assert isinstance(cluster_stats.nodes, list)
         assert isinstance(cluster_stats.retry_count, int)
