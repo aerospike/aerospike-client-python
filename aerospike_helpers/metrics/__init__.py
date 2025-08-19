@@ -46,9 +46,6 @@ class ConnectionStats:
     pass
 
 
-NODE_NAME_ATTR_DOCSTRING = "name (str): The name of the node."
-NODE_ADDRESS_ATTR_DOCSTRING = "address (str): The IP address / host name of the node (not including the port number)."
-
 
 class NamespaceMetrics:
     """
@@ -79,8 +76,8 @@ class Node:
     f"""Server node representation.
 
     Attributes:
-        {NODE_NAME_ATTR_DOCSTRING}
-        {NODE_ADDRESS_ATTR_DOCSTRING}
+        name (str): The name of the node.
+        address (str): The IP address / host name of the node (not including the port number).
         port (int): Port number of the node's address.
         conns (:py:class:`ConnectionStats`): Synchronous connection stats on this node.
         metrics (list[:py:class:`NamespaceMetrics`]): Node/namespace metrics
@@ -106,8 +103,8 @@ class NodeStats:
     f"""Node statistics.
 
     Attributes:
-        {NODE_NAME_ATTR_DOCSTRING}
-        {NODE_ADDRESS_ATTR_DOCSTRING}
+        name (str): The name of the node.
+        address (str): The IP address / host name of the node (not including the port number).
         error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
             per command may occur.
         timeout_count (int): Command timeout count since node was initialized. If the timeout is retryable
