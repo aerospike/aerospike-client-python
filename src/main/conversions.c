@@ -943,6 +943,16 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     //     }
     // }
 
+    // When implementing extended metrics, as_node_stats was not exposed in the Python API at that time.
+    // And the Python client only supports sync connection stats, so we decided to make
+    // the API simpler by creating Node.conns (ConnectionStats) field to represent as_conn_stats as_node_stats.sync,
+    // as well as assign the as_node_stats.*_count fields to the Node class.
+    //
+    // These 4 fields also are exposed in the Python client API via NodeStats
+    // But we added NodeStats after adding extended metrics support
+    // and we don't want to make breaking changes by replacing these fields assigned to Node
+    // with a single NodeStats field.
+
     as_node_stats node_stats;
     aerospike_node_stats(node, &node_stats);
     as_conn_stats *sync = &node_stats.sync;
@@ -3064,6 +3074,56 @@ error:
     return NULL;
 }
 
+static PyObject *
+create_py_node_stats_from_as_node_stats(as_error *error_p,
+                                        as_node_stats *node_stats)
+{
+
+    PyObject *py_node_stats = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "NodeStats", NULL);
+    if (!py_node_stats) {
+        return NULL;
+    }
+
+    as_conn_stats *sync_conn_stats = &node_stats->sync;
+    PyObject *py_conn_stats =
+        create_py_conn_stats_from_as_conn_stats(error_p, sync_conn_stats);
+    if (py_conn_stats == NULL) {
+        goto error;
+    }
+
+    const char *const as_node_stats_attr_names[] = {
+        "error_count", "timeout_count", "key_busy_count"};
+    uint64_t as_node_stats_attr_values[] = {
+        node_stats->error_count,
+        node_stats->timeout_count,
+        node_stats->key_busy_count,
+    };
+    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
+                                      sizeof(as_node_stats_attr_values[0]);
+         i++) {
+        PyObject *py_attr_value =
+            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
+        if (!py_attr_value) {
+            goto error;
+        }
+        int retval = PyObject_SetAttrString(
+            py_node_stats, as_node_stats_attr_names[i], py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (retval == -1) {
+            goto error;
+        }
+    }
+
+    return py_node_stats;
+
+error:
+    Py_DECREF(py_node_stats);
+    return NULL;
+}
+
+#define RETRY_COUNT_FIELD_NAME "retry_count"
+
 PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
                                                         as_cluster_stats *stats)
 {
@@ -3073,15 +3133,79 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
         goto error;
     }
 
-    PyObject *py_recover_queue_size =
-        PyLong_FromUnsignedLong(stats->recover_queue_size);
-    if (!py_recover_queue_size) {
+    // When implementing extended metrics, we did not add a Python class for as_node_stats
+    // For ClusterStats, we don't want to return a list of Nodes
+    PyObject *py_list_of_node_stats = PyList_New(stats->nodes_size);
+    if (py_list_of_node_stats == NULL) {
         goto error;
     }
-    int retval = PyObject_SetAttrString(py_cluster_stats, "recover_queue_size",
-                                        py_recover_queue_size);
-    Py_DECREF(py_recover_queue_size);
+
+    for (unsigned long i = 0; i < stats->nodes_size; i++) {
+        // TODO: need to reserve as_node_stats?
+        PyObject *py_node_stats =
+            create_py_node_stats_from_as_node_stats(err, &stats->nodes[i]);
+        if (py_node_stats == NULL) {
+            goto error;
+        }
+
+        int retval = PyList_SetItem(py_list_of_node_stats, i, py_node_stats);
+        if (retval == -1) {
+            goto loop_error;
+        }
+        continue;
+
+    loop_error:
+        Py_DECREF(py_list_of_node_stats);
+        goto error;
+    }
+
+    int retval = PyObject_SetAttrString(py_cluster_stats, "nodes",
+                                        py_list_of_node_stats);
+    Py_DECREF(py_list_of_node_stats);
     if (retval == -1) {
+        goto error;
+    }
+
+    const char *field_names[] = {"thread_pool_queued_tasks",
+                                 "recover_queue_size"};
+    uint32_t field_values[] = {stats->thread_pool_queued_tasks,
+                               stats->recover_queue_size};
+    for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
+         i++) {
+        PyObject *py_value = PyLong_FromUnsignedLong(field_values[i]);
+        if (!py_value) {
+            as_error_update(err, AEROSPIKE_ERR,
+                            "Unable to get ClusterStats field %s",
+                            field_names[i]);
+            goto error;
+        }
+        int result =
+            PyObject_SetAttrString(py_cluster_stats, field_names[i], py_value);
+        Py_DECREF(py_value);
+        if (result == -1) {
+            PyErr_Clear();
+            as_error_update(err, AEROSPIKE_ERR,
+                            "Unable to set ClusterStats field %s",
+                            field_names[i]);
+            goto error;
+        }
+    }
+
+    PyObject *py_retry_count = PyLong_FromUnsignedLongLong(stats->retry_count);
+    if (!py_retry_count) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Unable to get ClusterStats field %s",
+                        RETRY_COUNT_FIELD_NAME);
+        goto error;
+    }
+    int result = PyObject_SetAttrString(py_cluster_stats,
+                                        RETRY_COUNT_FIELD_NAME, py_retry_count);
+    Py_DECREF(py_retry_count);
+    if (result == -1) {
+        PyErr_Clear();
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Unable to set ClusterStats field %s",
+                        RETRY_COUNT_FIELD_NAME);
         goto error;
     }
 

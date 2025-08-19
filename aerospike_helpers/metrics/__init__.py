@@ -46,6 +46,10 @@ class ConnectionStats:
     pass
 
 
+NODE_NAME_ATTR_DOCSTRING = "name (str): The name of the node."
+NODE_ADDRESS_ATTR_DOCSTRING = "address (str): The IP address / host name of the node (not including the port number)."
+
+
 class NamespaceMetrics:
     """
     Namespace metrics.
@@ -72,11 +76,11 @@ class NamespaceMetrics:
 
 
 class Node:
-    """Server node representation.
+    f"""Server node representation.
 
     Attributes:
-        name (str): The name of the node.
-        address (str): The IP address / host name of the node (not including the port number).
+        {NODE_NAME_ATTR_DOCSTRING}
+        {NODE_ADDRESS_ATTR_DOCSTRING}
         port (int): Port number of the node's address.
         conns (:py:class:`ConnectionStats`): Synchronous connection stats on this node.
         metrics (list[:py:class:`NamespaceMetrics`]): Node/namespace metrics
@@ -98,16 +102,30 @@ class Cluster:
     pass
 
 
-class ClusterStats:
-    # """
-    # TODO: ConnectionStats docs not clear about being for each node.
-    # TODO: nodes size not needed?
-    # nodes (list[ConnectionStats]): Statistics for all nodes.
-    # retry_count (int): Count of command retries since cluster was started.
-    # thread_pool_queued_tasks (int): Count of sync batch/scan/query tasks awaiting execution.
-    #     If the count is greater than zero, then all threads in the thread pool are active.
-    # """
+# TODO: fields are duplicates of Node.
+class NodeStats:
+    f"""Node statistics.
+
+    Attributes:
+        {NODE_NAME_ATTR_DOCSTRING}
+        {NODE_ADDRESS_ATTR_DOCSTRING}
+        error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
+            per command may occur.
+        timeout_count (int): Command timeout count since node was initialized. If the timeout is retryable
+            (i.e socket_timeout), multiple timeouts per command may occur.
+        key_busy_count (int): Command key busy error count since node was initialized.
     """
+    pass
+
+
+# - We don't need to expose as_cluster_stats.nodes_size since len(nodes) represents the number of nodes.
+# - NOTE: Cluster.retry_count is a duplicate of ClusterStats.retry_count. This is also in the C client.
+class ClusterStats:
+    """
+    nodes (list[NodeStats]): Statistics for all nodes.
+    retry_count (int): Count of command retries since cluster was started.
+    thread_pool_queued_tasks (int): Count of sync batch/scan/query tasks awaiting execution.
+        If the count is greater than zero, then all threads in the thread pool are active.
     recover_queue_size (int): Count of sync sockets currently in timeout recovery.
     """
     pass
