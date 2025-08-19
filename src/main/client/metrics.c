@@ -24,6 +24,8 @@
 #include "exceptions.h"
 #include "policy.h"
 
+// Extended metrics
+
 PyObject *AerospikeClient_EnableMetrics(AerospikeClient *self, PyObject *args,
                                         PyObject *kwds)
 {
@@ -126,7 +128,9 @@ PyObject *AerospikeClient_DisableMetrics(AerospikeClient *self, PyObject *args)
     }
 }
 
-PyObject *AerospikeClient_GetStats(AerospikeClient *self, PyObject *args)
+// Regular metrics
+
+PyObject *AerospikeClient_GetStats(AerospikeClient *self)
 {
     as_cluster_stats stats;
 
@@ -143,5 +147,6 @@ PyObject *AerospikeClient_GetStats(AerospikeClient *self, PyObject *args)
         raise_exception(&err);
         return NULL;
     }
+    // TODO: raise exception without as_error?
     return py_cluster_stats;
 }

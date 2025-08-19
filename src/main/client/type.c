@@ -323,8 +323,7 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"shm_key", (PyCFunction)AerospikeClient_shm_key,
      METH_VARARGS | METH_KEYWORDS, "Get the shm key of the cluster"},
 
-    {"get_stats", (PyCFunction)AerospikeClient_GetStats,
-     METH_VARARGS | METH_KEYWORDS, NULL},
+    {"get_stats", (PyCFunction)AerospikeClient_GetStats, METH_NOARGS, NULL},
 
     // METRICS
 
