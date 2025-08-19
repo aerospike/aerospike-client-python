@@ -103,14 +103,18 @@ class NodeStats:
 
     Attributes:
         name: The name of the node.
-        address (str): The IP address / host name of the node (not including the port number).
-        error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
+        address: The IP address / host name of the node (not including the port number).
+        error_count: Command error count since node was initialized. If the error is retryable, multiple errors
             per command may occur.
-        timeout_count (int): Command timeout count since node was initialized. If the timeout is retryable
+        timeout_count: Command timeout count since node was initialized. If the timeout is retryable
             (i.e socket_timeout), multiple timeouts per command may occur.
-        key_busy_count (int): Command key busy error count since node was initialized.
+        key_busy_count: Command key busy error count since node was initialized.
     """
     name: str
+    address: str
+    error_count: int
+    timeout_count: int
+    key_busy_count: int
 
 
 # - We don't need to expose as_cluster_stats.nodes_size since len(nodes) represents the number of nodes.
@@ -120,13 +124,16 @@ class ClusterStats:
     Cluster statistics.
 
     Attributes:
-        nodes (list[NodeStats]): Statistics for all nodes.
-        retry_count (int): Count of command retries since cluster was started.
-        thread_pool_queued_tasks (int): Count of sync batch/scan/query tasks awaiting execution.
+        nodes: Statistics for all nodes.
+        retry_count: Count of command retries since cluster was started.
+        thread_pool_queued_tasks: Count of sync batch/scan/query tasks awaiting execution.
             If the count is greater than zero, then all threads in the thread pool are active.
-        recover_queue_size (int): Count of sync sockets currently in timeout recovery.
+        recover_queue_size: Count of sync sockets currently in timeout recovery.
     """
-    pass
+    nodes: list[NodeStats]
+    retry_count: int
+    thread_pool_queued_tasks: int
+    recover_queue_size: int
 
 
 class MetricsListeners:
