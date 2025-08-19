@@ -23,3 +23,7 @@ class TestGetStats(object):
             assert isinstance(single_node_stats.error_count, int)
             assert isinstance(single_node_stats.timeout_count, int)
             assert isinstance(single_node_stats.key_busy_count, int)
+
+    def test_invalid_args(self):
+        with pytest.raises(TypeError):
+            self.as_connection.get_stats("")
