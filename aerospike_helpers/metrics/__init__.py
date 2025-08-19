@@ -73,7 +73,7 @@ class NamespaceMetrics:
 
 
 class Node:
-    f"""Server node representation.
+    """Server node representation.
 
     Attributes:
         name (str): The name of the node.
@@ -100,7 +100,7 @@ class Cluster:
 
 
 class NodeStats:
-    f"""Node statistics.
+    """Node statistics.
 
     Attributes:
         name (str): The name of the node.
