@@ -914,35 +914,6 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject_SetAttrString(py_node, "port", py_port);
     Py_DECREF(py_port);
 
-    // TODO: do we even need this? other as_node.sync_conn_* fields aren't exposed.
-    // TODO: code can be reused with as_conn_stats conversion code?
-    // TODO: need to get atomically?
-
-    // const char *field_names[] = {"conns_recovered", "conns_aborted"};
-    // uint32_t field_values[] = {node->sync_conns_recovered, node->sync_conns_aborted};
-
-    // for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
-    //      i++) {
-    //     PyObject *py_value = PyLong_FromLong(field_values[i]);
-    //     if (!py_value) {
-    //         as_error_update(error_p, AEROSPIKE_ERR,
-    //                         "Unable to get Node field %s",
-    //                         field_names[i]);
-    //         goto error;
-    //     }
-    //     int result =
-    //         PyObject_SetAttrString(py_node, field_names[i], py_value);
-    //     // Either way if call succeeded or failed, we don't need py_value anymore
-    //     Py_DECREF(py_value);
-    //     if (result == -1) {
-    //         PyErr_Clear();
-    //         as_error_update(error_p, AEROSPIKE_ERR,
-    //                         "Unable to set ConnectionStats field %s",
-    //                         field_names[i]);
-    //         goto error;
-    //     }
-    // }
-
     // When implementing extended metrics, as_node_stats was not exposed in the Python API at that time.
     // And the Python client only supports sync connection stats, so we decided to make
     // the API simpler by creating Node.conns (ConnectionStats) field to represent as_conn_stats as_node_stats.sync,
