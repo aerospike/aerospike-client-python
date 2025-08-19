@@ -102,7 +102,6 @@ class Cluster:
     pass
 
 
-# TODO: fields are duplicates of Node.
 class NodeStats:
     f"""Node statistics.
 
