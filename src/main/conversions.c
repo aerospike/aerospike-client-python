@@ -3056,6 +3056,17 @@ create_py_node_stats_from_as_node_stats(as_error *error_p,
         return NULL;
     }
 
+    PyObject *py_node_name = PyUnicode_FromString(node_stats->node->name);
+    if (py_node_name == NULL) {
+        goto error;
+    }
+    int retval =
+        PyObject_SetAttrString(py_node_stats, "node_name", py_node_name);
+    Py_DECREF(py_node_name);
+    if (retval == -1) {
+        goto error;
+    }
+
     as_conn_stats *sync_conn_stats = &node_stats->sync;
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(error_p, sync_conn_stats);
