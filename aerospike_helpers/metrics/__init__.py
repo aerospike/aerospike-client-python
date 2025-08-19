@@ -102,7 +102,7 @@ class NodeStats:
     """Node statistics.
 
     Attributes:
-        name (str): The name of the node.
+        name: The name of the node.
         address (str): The IP address / host name of the node (not including the port number).
         error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
             per command may occur.
@@ -110,7 +110,7 @@ class NodeStats:
             (i.e socket_timeout), multiple timeouts per command may occur.
         key_busy_count (int): Command key busy error count since node was initialized.
     """
-    pass
+    name: str
 
 
 # - We don't need to expose as_cluster_stats.nodes_size since len(nodes) represents the number of nodes.
