@@ -3060,8 +3060,7 @@ create_py_node_stats_from_as_node_stats(as_error *error_p,
     if (py_node_name == NULL) {
         goto error;
     }
-    int retval =
-        PyObject_SetAttrString(py_node_stats, "node_name", py_node_name);
+    int retval = PyObject_SetAttrString(py_node_stats, "name", py_node_name);
     Py_DECREF(py_node_name);
     if (retval == -1) {
         goto error;
