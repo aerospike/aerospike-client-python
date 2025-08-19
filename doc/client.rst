@@ -1489,8 +1489,8 @@ Policies
 
 .. _aerospike_base_policies:
 
-Base Policies:
---------------
+Base Policies
+-------------
 
 .. object:: policy
 
