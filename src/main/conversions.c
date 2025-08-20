@@ -982,6 +982,9 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
         goto error;
     }
 
+    as_node_stats node_stats;
+    aerospike_node_stats(node, &node_stats);
+
     // When implementing extended metrics, as_node_stats was not exposed in the Python API at that time.
     // And the Python client only supports sync connection stats, so we decided to make
     // the API simpler by creating Node.conns (ConnectionStats) field to represent as_conn_stats as_node_stats.sync,
@@ -991,9 +994,11 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     // But we added NodeStats after adding extended metrics support
     // and we don't want to make breaking changes by replacing these fields assigned to Node
     // with a single NodeStats field.
-
-    as_node_stats node_stats;
-    aerospike_node_stats(node, &node_stats);
+    success = py_obj_set_common_attrs_from_as_node_stats(error_p, py_node,
+                                                         &node_stats);
+    if (!success) {
+        goto error;
+    }
 
     as_ns_metrics **ns_metrics = node->metrics;
     PyObject *py_ns_metrics_list = PyList_New(node->metrics_size);
