@@ -877,16 +877,10 @@ error:
     return NULL;
 }
 
-// Creates and returns a Python client Node object from a C client's as_node_s struct
-// If an error occurs here, return NULL
-PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
+// These fields need to be set for both Node and NodeStats class instances
+static inline bool py_obj_set_common_attrs_from_as_node(PyObject *py_obj,
+                                                        as_node *node)
 {
-    PyObject *py_node = create_class_instance_from_module(
-        error_p, "aerospike_helpers.metrics", "Node", NULL);
-    if (!py_node) {
-        return NULL;
-    }
-
     // Get address short name (reused code from C client's metrics writer code)
     as_address *address = as_node_get_address(node);
     struct sockaddr *addr = (struct sockaddr *)&address->addr;
@@ -902,7 +896,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
             goto error;
         }
         int retval =
-            PyObject_SetAttrString(py_node, str_attr_names[i], py_attr_value);
+            PyObject_SetAttrString(py_obj, str_attr_names[i], py_attr_value);
         Py_DECREF(py_attr_value);
         if (retval == -1) {
             goto error;
@@ -910,9 +904,83 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     }
 
     uint16_t port = as_address_port(addr);
-    PyObject *py_port = PyLong_FromLong(port);
-    PyObject_SetAttrString(py_node, "port", py_port);
+    PyObject *py_port = PyLong_FromUnsignedLong(port);
+    if (!py_port) {
+        goto error;
+    }
+    int retval = PyObject_SetAttrString(py_obj, "port", py_port);
     Py_DECREF(py_port);
+    if (retval == -1) {
+        goto error;
+    }
+
+    return true;
+
+error:
+    return false;
+}
+
+// These fields need to be set for both Node and NodeStats class instances
+static inline bool
+py_obj_set_common_attrs_from_as_node_stats(as_error *error_p, PyObject *py_obj,
+                                           as_node_stats *node_stats)
+{
+    const char *const as_node_stats_attr_names[] = {
+        "error_count", "timeout_count", "key_busy_count"};
+    uint64_t as_node_stats_attr_values[] = {
+        node_stats->error_count,
+        node_stats->timeout_count,
+        node_stats->key_busy_count,
+    };
+    int retval = 0;
+    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
+                                      sizeof(as_node_stats_attr_values[0]);
+         i++) {
+        PyObject *py_attr_value =
+            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
+        if (!py_attr_value) {
+            goto error;
+        }
+        retval = PyObject_SetAttrString(py_obj, as_node_stats_attr_names[i],
+                                        py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (retval == -1) {
+            goto error;
+        }
+    }
+
+    as_conn_stats *sync = &node_stats->sync;
+    PyObject *py_conn_stats =
+        create_py_conn_stats_from_as_conn_stats(error_p, sync);
+    if (py_conn_stats == NULL) {
+        goto error;
+    }
+    retval = PyObject_SetAttrString(py_obj, "conns", py_conn_stats);
+    Py_DECREF(py_conn_stats);
+    if (retval == -1) {
+        goto error;
+    }
+
+    return true;
+
+error:
+    return false;
+}
+
+// Creates and returns a Python client Node object from a C client's as_node_s struct
+// If an error occurs here, return NULL
+PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
+{
+    PyObject *py_node = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "Node", NULL);
+    if (!py_node) {
+        return NULL;
+    }
+
+    bool success = py_obj_set_common_attrs_from_as_node(py_node, node);
+    if (!success) {
+        goto error;
+    }
 
     // When implementing extended metrics, as_node_stats was not exposed in the Python API at that time.
     // And the Python client only supports sync connection stats, so we decided to make
@@ -926,41 +994,6 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
 
     as_node_stats node_stats;
     aerospike_node_stats(node, &node_stats);
-    as_conn_stats *sync = &node_stats.sync;
-    PyObject *py_conn_stats =
-        create_py_conn_stats_from_as_conn_stats(error_p, sync);
-    if (py_conn_stats == NULL) {
-        aerospike_node_stats_destroy(&node_stats);
-        goto error;
-    }
-    PyObject_SetAttrString(py_node, "conns", py_conn_stats);
-    Py_DECREF(py_conn_stats);
-
-    const char *const as_node_stats_attr_names[] = {
-        "error_count", "timeout_count", "key_busy_count"};
-    uint64_t as_node_stats_attr_values[] = {
-        node_stats.error_count,
-        node_stats.timeout_count,
-        node_stats.key_busy_count,
-    };
-    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
-                                      sizeof(as_node_stats_attr_values[0]);
-         i++) {
-        PyObject *py_attr_value =
-            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
-        if (!py_attr_value) {
-            aerospike_node_stats_destroy(&node_stats);
-            goto error;
-        }
-        int retval = PyObject_SetAttrString(
-            py_node, as_node_stats_attr_names[i], py_attr_value);
-        Py_DECREF(py_attr_value);
-        if (retval == -1) {
-            aerospike_node_stats_destroy(&node_stats);
-            goto error;
-        }
-    }
-    aerospike_node_stats_destroy(&node_stats);
 
     as_ns_metrics **ns_metrics = node->metrics;
     PyObject *py_ns_metrics_list = PyList_New(node->metrics_size);
@@ -3049,57 +3082,22 @@ static PyObject *
 create_py_node_stats_from_as_node_stats(as_error *error_p,
                                         as_node_stats *node_stats)
 {
-
     PyObject *py_node_stats = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "NodeStats", NULL);
     if (!py_node_stats) {
         return NULL;
     }
 
-    PyObject *py_node_name = PyUnicode_FromString(node_stats->node->name);
-    if (py_node_name == NULL) {
-        goto error;
-    }
-    int retval = PyObject_SetAttrString(py_node_stats, "name", py_node_name);
-    Py_DECREF(py_node_name);
-    if (retval == -1) {
+    bool success =
+        py_obj_set_common_attrs_from_as_node(py_node_stats, node_stats->node);
+    if (!success) {
         goto error;
     }
 
-    as_conn_stats *sync_conn_stats = &node_stats->sync;
-    PyObject *py_conn_stats =
-        create_py_conn_stats_from_as_conn_stats(error_p, sync_conn_stats);
-    if (py_conn_stats == NULL) {
+    success = py_obj_set_common_attrs_from_as_node_stats(error_p, py_node_stats,
+                                                         node_stats);
+    if (!success) {
         goto error;
-    }
-
-    retval = PyObject_SetAttrString(py_node_stats, "sync", py_conn_stats);
-    Py_DECREF(py_conn_stats);
-    if (retval == -1) {
-        goto error;
-    }
-
-    const char *const as_node_stats_attr_names[] = {
-        "error_count", "timeout_count", "key_busy_count"};
-    uint64_t as_node_stats_attr_values[] = {
-        node_stats->error_count,
-        node_stats->timeout_count,
-        node_stats->key_busy_count,
-    };
-    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
-                                      sizeof(as_node_stats_attr_values[0]);
-         i++) {
-        PyObject *py_attr_value =
-            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
-        if (!py_attr_value) {
-            goto error;
-        }
-        retval = PyObject_SetAttrString(
-            py_node_stats, as_node_stats_attr_names[i], py_attr_value);
-        Py_DECREF(py_attr_value);
-        if (retval == -1) {
-            goto error;
-        }
     }
 
     return py_node_stats;

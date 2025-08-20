@@ -98,14 +98,19 @@ class Cluster:
     pass
 
 
-# as_node_stats as a reference to an as_node object
-# We are using name and address to identify that as_node instead
+# as_node_stats has a reference to the corresponding as_node object
+# Here, we are using specific as_node fields to identify that as_node instead of storing the full as_node.
+# Since as_node has a ton of fields, we don't want to return the whole as_node.
+#
+# Our Node class also has fields we don't want to expose when returning ClusterStats to the user
+# i.e Node's namespace metrics when extended metrics is disabled.
 class NodeStats:
     """Node statistics.
 
     Attributes:
         name: The name of the node.
         address: The IP address / host name of the node (not including the port number).
+        port (int): Port number of the node's address.
         error_count: Command error count since node was initialized. If the error is retryable, multiple errors
             per command may occur.
         timeout_count: Command timeout count since node was initialized. If the timeout is retryable
@@ -114,6 +119,7 @@ class NodeStats:
     """
     name: str
     address: str
+    port: int
     error_count: int
     timeout_count: int
     key_busy_count: int
