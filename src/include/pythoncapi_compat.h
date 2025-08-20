@@ -1134,6 +1134,7 @@ static inline int PyTime_PerfCounter(PyTime_t *result)
     }
 
     PyObject *res = PyObject_CallNoArgs(func);
+    Py_XDECREF(func);
     if (res == NULL) {
         return -1;
     }
@@ -1165,6 +1166,7 @@ static inline int PyTime_PerfCounter(PyTime_t *result)
     }
 
     PyObject *res = PyObject_CallNoArgs(func);
+    Py_XDECREF(func);
     if (res == NULL) {
         return -1;
     }
