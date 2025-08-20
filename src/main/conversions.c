@@ -3073,7 +3073,7 @@ create_py_node_stats_from_as_node_stats(as_error *error_p,
         goto error;
     }
 
-    int retval = PyObject_SetAttrString(py_node_stats, "sync", py_conn_stats);
+    retval = PyObject_SetAttrString(py_node_stats, "sync", py_conn_stats);
     Py_DECREF(py_conn_stats);
     if (retval == -1) {
         goto error;
@@ -3094,7 +3094,7 @@ create_py_node_stats_from_as_node_stats(as_error *error_p,
         if (!py_attr_value) {
             goto error;
         }
-        int retval = PyObject_SetAttrString(
+        retval = PyObject_SetAttrString(
             py_node_stats, as_node_stats_attr_names[i], py_attr_value);
         Py_DECREF(py_attr_value);
         if (retval == -1) {
