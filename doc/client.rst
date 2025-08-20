@@ -1506,6 +1506,7 @@ Base Policies
             | If max_retries is exceeded, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
             |
             | Default: ``0``
+
             .. warning:: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
                 if the client timed out previous command attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
 
@@ -1569,6 +1570,7 @@ Base Policies
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
             |
             | Default: None
+
             .. note:: Requires Aerospike server version >= 5.2.
 
         * .. include:: ./txn.rst
