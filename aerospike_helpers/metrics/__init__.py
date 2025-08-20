@@ -102,7 +102,8 @@ class Cluster:
 # Here, we are using specific as_node fields to identify that as_node instead of storing the full as_node.
 # Since as_node has a ton of fields, we don't want to return the whole as_node.
 #
-# Our Node class also has fields we don't want to expose when returning ClusterStats to the user
+# We also don't want to have a reference to a Node class instance
+# because our Node class has fields we don't want to expose when returning ClusterStats to the user
 # i.e Node's namespace metrics when extended metrics is disabled.
 class NodeStats:
     """Node statistics.
