@@ -34,7 +34,15 @@ class ConnectionStats:
             There can be multiple pools per node. This value is a summary of those pools on this node.
         opened (int): Total number of node connections opened since node creation.
         closed (int): Total number of node connections closed since node creation.
-    """
+        recovered (int): Total number of recovered connections since node creation. A recovered connection is a
+            connection that timed out on a socket read and then independently drained (read all incoming
+            data) so the connection can be put back into the connection pool. The recovery process is
+            attempted when the ``timeout_delay`` policy is greater than zero.
+        aborted (int): Total number of aborted connections since node creation. An aborted connection is a connection
+            that timed out on a socket read and the drain (read all incoming data) failed. The drain failure is
+            mostly likely due a downed node and results in the connection being closed. The recovery process
+            is attempted when the ``timeout_delay`` policy is greater than zero.
+        """
     pass
 
 
@@ -88,6 +96,53 @@ class Cluster:
         nodes (list[:py:class:`Node`]): Active nodes in cluster.
     """
     pass
+
+
+# as_node_stats has a reference to the corresponding as_node object
+# Here, we are using specific as_node fields to identify that as_node instead of storing the full as_node.
+# Since as_node has a ton of fields, we don't want to return the whole as_node.
+#
+# We also don't want to have a reference to a Node class instance
+# because our Node class has fields we don't want to expose when returning ClusterStats to the user
+# i.e Node's namespace metrics when extended metrics is disabled.
+class NodeStats:
+    """Node statistics.
+
+    Attributes:
+        name: The name of the node.
+        address: The IP address / host name of the node (not including the port number).
+        port (int): Port number of the node's address.
+        error_count: Command error count since node was initialized. If the error is retryable, multiple errors
+            per command may occur.
+        timeout_count: Command timeout count since node was initialized. If the timeout is retryable
+            (i.e socket_timeout), multiple timeouts per command may occur.
+        key_busy_count: Command key busy error count since node was initialized.
+    """
+    name: str
+    address: str
+    port: int
+    error_count: int
+    timeout_count: int
+    key_busy_count: int
+
+
+# - We don't need to expose as_cluster_stats.nodes_size since len(nodes) represents the number of nodes.
+# - NOTE: Cluster.retry_count is a duplicate of ClusterStats.retry_count. This is also in the C client.
+class ClusterStats:
+    """
+    Cluster statistics.
+
+    Attributes:
+        nodes: Statistics for all nodes.
+        retry_count: Count of command retries since cluster was started.
+        thread_pool_queued_tasks: Count of sync batch/scan/query tasks awaiting execution.
+            If the count is greater than zero, then all threads in the thread pool are active.
+        recover_queue_size: Count of sync sockets currently in timeout recovery.
+    """
+    nodes: list[NodeStats]
+    retry_count: int
+    thread_pool_queued_tasks: int
+    recover_queue_size: int
 
 
 class MetricsListeners:
