@@ -19,6 +19,9 @@
 :class:`ConnectionStats`, :class:`NamespaceMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
 because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
 callbacks for reading data about the server and client.
+
+:class:`NodeStats` and :class:`ClusterStats` also do not have a constructor because they are meant to be returned using
+a Python client API method.
 """
 
 from typing import Optional, Callable
