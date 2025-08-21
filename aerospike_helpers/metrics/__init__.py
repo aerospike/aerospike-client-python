@@ -71,11 +71,12 @@ class NamespaceMetrics:
     pass
 
 
-NamespaceMetrics.__doc__ = NamespaceMetrics.__doc__.format(
-    ERROR_COUNT_DOCSTRING,
-    TIMEOUT_COUNT_DOCSTRING,
-    KEY_BUSY_COUNT_DOCSTRING
-)
+if isinstance(NamespaceMetrics.__doc__, str):
+    NamespaceMetrics.__doc__ = NamespaceMetrics.__doc__.format(
+        ERROR_COUNT_DOCSTRING,
+        TIMEOUT_COUNT_DOCSTRING,
+        KEY_BUSY_COUNT_DOCSTRING
+    )
 
 
 class Node:
@@ -133,11 +134,12 @@ class NodeStats:
     key_busy_count: int
 
 
-NodeStats.__doc__ = NodeStats.__doc__.format(
-    ERROR_COUNT_DOCSTRING,
-    TIMEOUT_COUNT_DOCSTRING,
-    KEY_BUSY_COUNT_DOCSTRING
-)
+if isinstance(NodeStats.__doc__, str):
+    NodeStats.__doc__ = NodeStats.__doc__.format(
+        ERROR_COUNT_DOCSTRING,
+        TIMEOUT_COUNT_DOCSTRING,
+        KEY_BUSY_COUNT_DOCSTRING
+    )
 
 
 # - We don't need to expose as_cluster_stats.nodes_size since len(nodes) represents the number of nodes.
