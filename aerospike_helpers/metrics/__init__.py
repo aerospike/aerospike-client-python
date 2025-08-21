@@ -150,12 +150,10 @@ class ClusterStats:
         retry_count: Count of command retries since cluster was started.
         thread_pool_queued_tasks: Count of sync batch/scan/query tasks awaiting execution.
             If the count is greater than zero, then all threads in the thread pool are active.
-        recover_queue_size: Count of sync sockets currently in timeout recovery.
     """
     nodes: list[NodeStats]
     retry_count: int
     thread_pool_queued_tasks: int
-    recover_queue_size: int
 
 
 class MetricsListeners:
