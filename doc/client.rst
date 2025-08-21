@@ -1244,6 +1244,12 @@ Metrics
 .. class:: Client
     :noindex:
 
+    .. method:: get_stats() -> aerospike_helpers.metrics.ClusterStats
+
+        Retrieve aerospike client instance statistics.
+
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
     .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
 
         Enable extended periodic cluster and node latency metrics.
