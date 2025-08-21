@@ -1244,10 +1244,11 @@ Metrics
 .. class:: Client
     :noindex:
 
-    .. method:: get_stats() -> aerospike_helpers.metrics.ClusterStats
+    .. method:: get_stats()
 
         Retrieve aerospike client instance statistics.
 
+        :return: :py:class:`aerospike_helpers.metrics.ClusterStats`
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
 
     .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
