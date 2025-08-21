@@ -745,10 +745,9 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
         return NULL;
     }
 
-    const char *field_names[] = {"in_use", "in_pool",   "opened",
-                                 "closed", "recovered", "aborted"};
-    uint32_t conn_stats[] = {stats->in_use, stats->in_pool,   stats->opened,
-                             stats->closed, stats->recovered, stats->aborted};
+    const char *field_names[] = {"in_use", "in_pool", "opened", "closed"};
+    uint32_t conn_stats[] = {stats->in_use, stats->in_pool, stats->opened,
+                             stats->closed};
     for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
          i++) {
         PyObject *py_value = PyLong_FromLong(conn_stats[i]);
@@ -3156,10 +3155,10 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
         goto error;
     }
 
-    const char *field_names[] = {"thread_pool_queued_tasks",
-                                 "recover_queue_size"};
-    uint32_t field_values[] = {stats->thread_pool_queued_tasks,
-                               stats->recover_queue_size};
+    const char *field_names[] = {"thread_pool_queued_tasks"};
+    uint32_t field_values[] = {
+        stats->thread_pool_queued_tasks,
+    };
     for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
          i++) {
         PyObject *py_value = PyLong_FromUnsignedLong(field_values[i]);
