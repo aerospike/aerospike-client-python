@@ -41,6 +41,13 @@ class ConnectionStats:
     pass
 
 
+ERROR_COUNT_DOCSTRING = "Command error count since node was initialized. If the error is retryable, multiple errors \
+    per command may occur."
+TIMEOUT_COUNT_DOCSTRING = "Command timeout count since node was initialized. If the timeout is retryable \
+    (i.e socket_timeout), multiple timeouts per command may occur."
+KEY_BUSY_COUNT_DOCSTRING = "Command key busy error count since node was initialized."
+
+
 class NamespaceMetrics:
     """
     Namespace metrics.
@@ -52,11 +59,9 @@ class NamespaceMetrics:
         ns (str): namespace
         bytes_in (int): Bytes received from the server.
         bytes_out (int): Bytes sent to the server.
-        error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
-            per command may occur.
-        timeout_count (int): Command timeout count since node was initialized. If the timeout is retryable
-            (i.e socket_timeout), multiple timeouts per command may occur.
-        key_busy_count (int): Command key busy error count since node was initialized.
+        error_count (int): {}
+        timeout_count (int): {}
+        key_busy_count (int): {}
         conn_latency (list[int])
         write_latency (list[int])
         read_latency (list[int])
@@ -64,6 +69,13 @@ class NamespaceMetrics:
         query_latency (list[int])
     """
     pass
+
+
+NamespaceMetrics.__doc__ = NamespaceMetrics.__doc__.format(
+    ERROR_COUNT_DOCSTRING,
+    TIMEOUT_COUNT_DOCSTRING,
+    KEY_BUSY_COUNT_DOCSTRING
+)
 
 
 class Node:
@@ -106,12 +118,10 @@ class NodeStats:
     Attributes:
         name: The name of the node.
         address: The IP address / host name of the node (not including the port number).
-        port (int): Port number of the node's address.
-        error_count: Command error count since node was initialized. If the error is retryable, multiple errors
-            per command may occur.
-        timeout_count: Command timeout count since node was initialized. If the timeout is retryable
-            (i.e socket_timeout), multiple timeouts per command may occur.
-        key_busy_count: Command key busy error count since node was initialized.
+        port: Port number of the node's address.
+        error_count: {}
+        timeout_count: {}
+        key_busy_count: {}
     """
     name: str
     address: str
@@ -119,6 +129,13 @@ class NodeStats:
     error_count: int
     timeout_count: int
     key_busy_count: int
+
+
+NodeStats.__doc__ = NodeStats.__doc__.format(
+    ERROR_COUNT_DOCSTRING,
+    TIMEOUT_COUNT_DOCSTRING,
+    KEY_BUSY_COUNT_DOCSTRING
+)
 
 
 # - We don't need to expose as_cluster_stats.nodes_size since len(nodes) represents the number of nodes.
