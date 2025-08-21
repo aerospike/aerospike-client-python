@@ -9,16 +9,15 @@ class TestGetStats(object):
         assert isinstance(cluster_stats, ClusterStats)
 
         # Test class API
-        # TODO: can test list more specifically?
         assert isinstance(cluster_stats.nodes, list)
         assert isinstance(cluster_stats.retry_count, int)
         assert isinstance(cluster_stats.thread_pool_queued_tasks, int)
 
         for single_node_stats in cluster_stats.nodes:
             assert isinstance(single_node_stats, NodeStats)
-            # TODO: can be None?
             assert isinstance(single_node_stats.name, str)
             assert isinstance(single_node_stats.address, str)
+            assert isinstance(single_node_stats.port, int)
             assert isinstance(single_node_stats.error_count, int)
             assert isinstance(single_node_stats.timeout_count, int)
             assert isinstance(single_node_stats.key_busy_count, int)
