@@ -37,7 +37,7 @@ class ConnectionStats:
             There can be multiple pools per node. This value is a summary of those pools on this node.
         opened (int): Total number of node connections opened since node creation.
         closed (int): Total number of node connections closed since node creation.
-        """
+    """
     pass
 
 
