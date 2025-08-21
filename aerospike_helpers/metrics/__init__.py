@@ -119,6 +119,7 @@ class NodeStats:
         name: The name of the node.
         address: The IP address / host name of the node (not including the port number).
         port: Port number of the node's address.
+        conns: Synchronous connection stats on this node.
         error_count: {}
         timeout_count: {}
         key_busy_count: {}
@@ -126,6 +127,7 @@ class NodeStats:
     name: str
     address: str
     port: int
+    conns: ConnectionStats
     error_count: int
     timeout_count: int
     key_busy_count: int
@@ -139,7 +141,6 @@ NodeStats.__doc__ = NodeStats.__doc__.format(
 
 
 # - We don't need to expose as_cluster_stats.nodes_size since len(nodes) represents the number of nodes.
-# - NOTE: Cluster.retry_count is a duplicate of ClusterStats.retry_count. This is also in the C client.
 class ClusterStats:
     """
     Cluster statistics.
