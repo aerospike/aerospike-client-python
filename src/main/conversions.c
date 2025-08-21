@@ -962,6 +962,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
 
     success = py_obj_set_common_attrs_from_as_node_stats(error_p, py_node,
                                                          &node_stats);
+    aerospike_node_stats_destroy(&node_stats);
     if (!success) {
         goto error;
     }
@@ -3119,7 +3120,6 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
     }
 
     for (unsigned long i = 0; i < stats->nodes_size; i++) {
-        // TODO: need to reserve as_node_stats?
         PyObject *py_node_stats =
             create_py_node_stats_from_as_node_stats(err, &stats->nodes[i]);
         if (py_node_stats == NULL) {
