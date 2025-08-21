@@ -924,37 +924,13 @@ static inline bool
 py_obj_set_common_attrs_from_as_node_stats(as_error *error_p, PyObject *py_obj,
                                            as_node_stats *node_stats)
 {
-    const char *const as_node_stats_attr_names[] = {
-        "error_count", "timeout_count", "key_busy_count"};
-    uint64_t as_node_stats_attr_values[] = {
-        node_stats->error_count,
-        node_stats->timeout_count,
-        node_stats->key_busy_count,
-    };
-    int retval = 0;
-    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
-                                      sizeof(as_node_stats_attr_values[0]);
-         i++) {
-        PyObject *py_attr_value =
-            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
-        if (!py_attr_value) {
-            goto error;
-        }
-        retval = PyObject_SetAttrString(py_obj, as_node_stats_attr_names[i],
-                                        py_attr_value);
-        Py_DECREF(py_attr_value);
-        if (retval == -1) {
-            goto error;
-        }
-    }
-
     as_conn_stats *sync = &node_stats->sync;
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(error_p, sync);
     if (py_conn_stats == NULL) {
         goto error;
     }
-    retval = PyObject_SetAttrString(py_obj, "conns", py_conn_stats);
+    int retval = PyObject_SetAttrString(py_obj, "conns", py_conn_stats);
     Py_DECREF(py_conn_stats);
     if (retval == -1) {
         goto error;
@@ -984,15 +960,6 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     as_node_stats node_stats;
     aerospike_node_stats(node, &node_stats);
 
-    // When implementing extended metrics, as_node_stats was not exposed in the Python API at that time.
-    // And the Python client only supports sync connection stats, so we decided to make
-    // the API simpler by creating Node.conns (ConnectionStats) field to represent as_conn_stats as_node_stats.sync,
-    // as well as assign the as_node_stats.*_count fields to the Node class.
-    //
-    // These 4 fields also are exposed in the Python client API via NodeStats
-    // But we added NodeStats after adding extended metrics support
-    // and we don't want to make breaking changes by replacing these fields assigned to Node
-    // with a single NodeStats field.
     success = py_obj_set_common_attrs_from_as_node_stats(error_p, py_node,
                                                          &node_stats);
     if (!success) {
@@ -3102,6 +3069,28 @@ create_py_node_stats_from_as_node_stats(as_error *error_p,
                                                          node_stats);
     if (!success) {
         goto error;
+    }
+
+    const char *const attr_names[] = {"error_count", "timeout_count",
+                                      "key_busy_count"};
+    uint64_t attr_values[] = {
+        node_stats->error_count,
+        node_stats->timeout_count,
+        node_stats->key_busy_count,
+    };
+    int retval = 0;
+    for (unsigned long i = 0; i < sizeof(attr_values) / sizeof(attr_values[0]);
+         i++) {
+        PyObject *py_attr_value = PyLong_FromUnsignedLongLong(attr_values[i]);
+        if (!py_attr_value) {
+            goto error;
+        }
+        retval =
+            PyObject_SetAttrString(py_node_stats, attr_names[i], py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (retval == -1) {
+            goto error;
+        }
     }
 
     return py_node_stats;

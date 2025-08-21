@@ -78,6 +78,17 @@ NamespaceMetrics.__doc__ = NamespaceMetrics.__doc__.format(
 )
 
 
+# TODO: missing 3 *_count fields from NodeStats
+#
+# When implementing extended metrics, as_node_stats was not exposed in the Python API at that time.
+# And the Python client only supports sync connection stats, so we decided to make
+# the API simpler by creating Node.conns (ConnectionStats) field to represent as_conn_stats as_node_stats.sync,
+# as well as assign the as_node_stats.*_count fields to the Node class.
+#
+# These 4 fields also are exposed in the Python client API via NodeStats
+# But we added NodeStats after adding extended metrics support
+# and we don't want to make breaking changes by replacing these fields assigned to Node
+# with a single NodeStats field.
 class Node:
     """Server node representation.
 
