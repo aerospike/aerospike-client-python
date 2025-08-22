@@ -919,7 +919,7 @@ error:
     return false;
 }
 
-// These fields need to be set for both Node and NodeStats class instances
+// This field need to be set for both Node and NodeStats class instances
 static inline bool
 py_obj_set_common_attrs_from_as_node_stats(as_error *error_p, PyObject *py_obj,
                                            as_node_stats *node_stats)
