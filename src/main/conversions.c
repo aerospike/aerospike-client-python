@@ -3144,6 +3144,7 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
         goto error;
     }
 
+    // For timeout delay, we need to add another uint32_t field to ClusterStats
     const char *field_names[] = {"thread_pool_queued_tasks"};
     uint32_t field_values[] = {
         stats->thread_pool_queued_tasks,
