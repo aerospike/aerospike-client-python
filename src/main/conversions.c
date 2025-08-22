@@ -613,32 +613,38 @@ as_status pyobject_to_strArray(as_error *err, PyObject *py_list, char **arr,
 
     as_error_reset(err);
 
+    // Long term TODO: duplicate check in admin_create_user_helper before this is called
     if (!PyList_Check(py_list)) {
         return as_error_update(err, AEROSPIKE_ERR_CLIENT, "not a list");
     }
 
+    // TODO: same as above
     Py_ssize_t size = PyList_Size(py_list);
+    if (PyErr_Occurred()) {
+        return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                               "Failed to get list size");
+    }
 
-    char *s;
+    const char *str = NULL;
     for (int i = 0; i < size; i++) {
         PyObject *py_val = PyList_GetItem(py_list, i);
-
-        if (PyUnicode_Check(py_val)) {
-            s = (char *)PyUnicode_AsUTF8(py_val);
-
-            if (strlen(s) < max_len) {
-                strcpy(arr[i], s);
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_CLIENT,
-                                "String exceeds max length");
-                return err->code;
-            }
+        if (!py_val) {
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                                   "Unable to get list item.");
         }
-        else {
-            as_error_update(err, AEROSPIKE_ERR_CLIENT, "Item is not a string");
+
+        str = convert_pyobject_to_str(py_val);
+        if (!str) {
+            return as_error_update(
+                err, AEROSPIKE_ERR_CLIENT,
+                "Unable to convert unicode object to C string");
+        }
+        if (strlen(str) >= max_len) {
+            as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                            "String exceeds max length");
             return err->code;
         }
+        strcpy(arr[i], str);
     }
 
     return err->code;
@@ -1160,13 +1166,13 @@ bool is_pyobj_correct_as_helpers_type(PyObject *obj,
     if (!is_subclass_instance) {
         if (strcmp(obj->ob_type->tp_name, expected_type_name)) {
             // object's class does not match expected class
-            return false;
+            retval = false;
         }
     }
     else {
         if (strcmp(obj->ob_type->tp_base->tp_name, expected_type_name)) {
             // object's parent class does not match expected class
-            return false;
+            retval = false;
         }
     }
 
@@ -3012,7 +3018,7 @@ uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject)
                                                                   UINT64_MAX);
 }
 
-const char *convert_pyobject_to_str(as_error *err, PyObject *py_obj)
+const char *convert_pyobject_to_str(PyObject *py_obj)
 {
     if (!PyUnicode_Check(py_obj)) {
         PyErr_Format(PyExc_TypeError, "%S is not a Python unicode object",
