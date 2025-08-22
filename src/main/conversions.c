@@ -3120,8 +3120,6 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
         goto error;
     }
 
-    // When implementing extended metrics, we did not add a Python class for as_node_stats
-    // For ClusterStats, we don't want to return a list of Nodes
     PyObject *py_list_of_node_stats = PyList_New(stats->nodes_size);
     if (py_list_of_node_stats == NULL) {
         goto error;
