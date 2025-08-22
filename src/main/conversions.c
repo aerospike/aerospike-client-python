@@ -762,7 +762,6 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
         // Either way if call succeeded or failed, we don't need py_value anymore
         Py_DECREF(py_value);
         if (result == -1) {
-            PyErr_Clear();
             as_error_update(error_p, AEROSPIKE_ERR,
                             "Unable to set ConnectionStats field %s",
                             field_names[i]);
@@ -3168,7 +3167,6 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
             PyObject_SetAttrString(py_cluster_stats, field_names[i], py_value);
         Py_DECREF(py_value);
         if (result == -1) {
-            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR,
                             "Unable to set ClusterStats field %s",
                             field_names[i]);
