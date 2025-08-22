@@ -831,9 +831,15 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
                             node_metrics_fields[i]);
             goto error;
         }
-        as_latency *buckets = ns_metrics->latency[i];
-        uint32_t bucket_max = buckets->size;
+
+        // Dynamic config allows users to resize the number of latency buckets
+        // so they can delete buckets.
+        // We want to make sure the latency buckets aren't being deleted while we are
+        // reading from them.
+        as_latency *buckets = as_latency_reserve(ns_metrics->latency[i]);
+
         // Append each bucket to a list of buckets
+        uint32_t bucket_max = buckets->size;
         for (uint32_t j = 0; j < bucket_max; j++) {
             uint64_t bucket = as_latency_get_bucket(buckets, j);
             PyObject *py_bucket = PyLong_FromUnsignedLongLong(bucket);
@@ -856,6 +862,8 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
                 goto error;
             }
         }
+
+        as_latency_release(buckets);
 
         int result = PyObject_SetAttrString(py_ns_metrics,
                                             node_metrics_fields[i], py_buckets);
