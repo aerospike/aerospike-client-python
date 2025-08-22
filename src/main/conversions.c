@@ -949,7 +949,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject *py_node = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "Node", NULL);
     if (!py_node) {
-        return NULL;
+        goto error;
     }
 
     bool success = py_obj_set_common_attrs_from_as_node(py_node, node);
@@ -999,7 +999,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     return py_node;
 
 error:
-    Py_DECREF(py_node);
+    Py_XDECREF(py_node);
     return NULL;
 }
 
