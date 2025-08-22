@@ -147,6 +147,7 @@ PyObject *AerospikeClient_GetStats(AerospikeClient *self)
         raise_exception(&err);
         return NULL;
     }
-    // TODO: raise exception without as_error?
+
+    // A Python native exception can also be raised in this case.
     return py_cluster_stats;
 }
