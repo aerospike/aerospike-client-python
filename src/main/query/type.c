@@ -158,9 +158,7 @@ static PyMemberDef AerospikeQuery_Type_custom_members[] = {
 PyObject *AerospikeQuery_Type_New(PyTypeObject *type, PyObject *args,
                                   PyObject *kwds)
 {
-    AerospikeQuery *self = NULL;
-
-    self = (AerospikeQuery *)type->tp_alloc(type, 0);
+    AerospikeQuery *self = (AerospikeQuery *)type->tp_alloc(type, 0);
 
     if (self) {
         self->client = NULL;
