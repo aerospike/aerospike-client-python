@@ -100,7 +100,7 @@ PyObject *AerospikeClient_GetExpressionFromBase64(AerospikeClient *self,
                                                   PyObject *kwds)
 {
     const char *base64_encoded_str = NULL;
-    PyObject *py_expression_filter = NULL;
+    AerospikeCompiledExpression *py_compiled_expression = NULL;
 
     as_error err;
     as_error_init(&err);
@@ -114,7 +114,7 @@ PyObject *AerospikeClient_GetExpressionFromBase64(AerospikeClient *self,
     // TODO: check if fails?
     as_exp *exp = as_exp_from_base64(base64_encoded_str);
 
-    py_expression_filter = convert_as_exp_list_to_py_expr(exp);
+    py_compiled_expression = convert_as_exp_to_py_compiled_expr(exp);
 
 CLEANUP:
     as_exp_destroy(exp);
@@ -124,5 +124,5 @@ CLEANUP:
         return NULL;
     }
 
-    return py_expression_filter;
+    return py_compiled_expression;
 }

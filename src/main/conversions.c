@@ -3035,4 +3035,7 @@ error:
     return NULL;
 }
 
-PyObject *convert_as_exp_list_to_py_expr(as_exp *exp) { return NULL; }
+AerospikeCompiledExpression *convert_as_exp_to_py_compiled_expr(as_exp *exp)
+{
+    return NULL;
+}
