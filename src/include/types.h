@@ -117,3 +117,10 @@ typedef struct {
 } AerospikeConfigProvider;
 
 extern PyTypeObject AerospikeConfigProvider_Type;
+
+// TODO: variable size as_exp obj?
+typedef struct {
+    PyObject_HEAD as_exp *exp;
+} AerospikeCompiledExpression;
+
+extern PyTypeObject AerospikeCompiledExpression_Type;

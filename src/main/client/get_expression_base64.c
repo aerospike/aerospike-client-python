@@ -94,3 +94,35 @@ CLEANUP:
 
     return py_response;
 }
+
+PyObject *AerospikeClient_GetExpressionFromBase64(AerospikeClient *self,
+                                                  PyObject *args,
+                                                  PyObject *kwds)
+{
+    const char *base64_encoded_str = NULL;
+    AerospikeCompiledExpression *py_compiled_expression = NULL;
+
+    as_error err;
+    as_error_init(&err);
+
+    static char *kwlist[] = {"base64_encoded_str", NULL};
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "s:get_expression_from_base64",
+                                    kwlist, &base64_encoded_str) == false) {
+        return NULL;
+    }
+
+    // TODO: check if fails?
+    as_exp *exp = as_exp_from_base64(base64_encoded_str);
+
+    py_compiled_expression = convert_as_exp_to_py_compiled_expr(exp);
+
+CLEANUP:
+    as_exp_destroy(exp);
+
+    if (err.code != AEROSPIKE_OK) {
+        raise_exception(&err);
+        return NULL;
+    }
+
+    return py_compiled_expression;
+}

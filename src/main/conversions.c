@@ -3034,3 +3034,8 @@ const char *convert_pyobject_to_str(PyObject *py_obj)
 error:
     return NULL;
 }
+
+AerospikeCompiledExpression *convert_as_exp_to_py_compiled_expr(as_exp *exp)
+{
+    return NULL;
+}
