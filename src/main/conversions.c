@@ -38,7 +38,6 @@
 #include <aerospike/as_record_iterator.h>
 #include <aerospike/as_msgpack_ext.h>
 #include <aerospike/as_cluster.h>
-#include <aerospike/aerospike_stats.h>
 
 #include "conversions.h"
 #include "geo.h"
@@ -763,7 +762,6 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
         // Either way if call succeeded or failed, we don't need py_value anymore
         Py_DECREF(py_value);
         if (result == -1) {
-            PyErr_Clear();
             as_error_update(error_p, AEROSPIKE_ERR,
                             "Unable to set ConnectionStats field %s",
                             field_names[i]);
@@ -832,9 +830,15 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
                             node_metrics_fields[i]);
             goto error;
         }
-        as_latency *buckets = ns_metrics->latency[i];
-        uint32_t bucket_max = buckets->size;
+
+        // Dynamic config allows users to resize the number of latency buckets
+        // so they can delete buckets.
+        // We want to make sure the latency buckets aren't being deleted while we are
+        // reading from them.
+        as_latency *buckets = as_latency_reserve(ns_metrics->latency[i]);
+
         // Append each bucket to a list of buckets
+        uint32_t bucket_max = buckets->size;
         for (uint32_t j = 0; j < bucket_max; j++) {
             uint64_t bucket = as_latency_get_bucket(buckets, j);
             PyObject *py_bucket = PyLong_FromUnsignedLongLong(bucket);
@@ -858,6 +862,8 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
             }
         }
 
+        as_latency_release(buckets);
+
         int result = PyObject_SetAttrString(py_ns_metrics,
                                             node_metrics_fields[i], py_buckets);
         Py_DECREF(py_buckets);
@@ -877,16 +883,10 @@ error:
     return NULL;
 }
 
-// Creates and returns a Python client Node object from a C client's as_node_s struct
-// If an error occurs here, return NULL
-PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
+// These fields need to be set for both Node and NodeStats class instances
+static inline bool py_obj_set_common_attrs_from_as_node(PyObject *py_obj,
+                                                        as_node *node)
 {
-    PyObject *py_node = create_class_instance_from_module(
-        error_p, "aerospike_helpers.metrics", "Node", NULL);
-    if (!py_node) {
-        return NULL;
-    }
-
     // Get address short name (reused code from C client's metrics writer code)
     as_address *address = as_node_get_address(node);
     struct sockaddr *addr = (struct sockaddr *)&address->addr;
@@ -902,7 +902,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
             goto error;
         }
         int retval =
-            PyObject_SetAttrString(py_node, str_attr_names[i], py_attr_value);
+            PyObject_SetAttrString(py_obj, str_attr_names[i], py_attr_value);
         Py_DECREF(py_attr_value);
         if (retval == -1) {
             goto error;
@@ -910,47 +910,69 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     }
 
     uint16_t port = as_address_port(addr);
-    PyObject *py_port = PyLong_FromLong(port);
-    PyObject_SetAttrString(py_node, "port", py_port);
+    PyObject *py_port = PyLong_FromUnsignedLong(port);
+    if (!py_port) {
+        goto error;
+    }
+    int retval = PyObject_SetAttrString(py_obj, "port", py_port);
     Py_DECREF(py_port);
+    if (retval == -1) {
+        goto error;
+    }
 
-    as_node_stats node_stats;
-    aerospike_node_stats(node, &node_stats);
-    as_conn_stats *sync = &node_stats.sync;
+    return true;
+
+error:
+    return false;
+}
+
+// This field need to be set for both Node and NodeStats class instances
+static inline bool
+py_obj_set_common_attrs_from_as_node_stats(as_error *error_p, PyObject *py_obj,
+                                           as_node_stats *node_stats)
+{
+    as_conn_stats *sync = &node_stats->sync;
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(error_p, sync);
     if (py_conn_stats == NULL) {
-        aerospike_node_stats_destroy(&node_stats);
         goto error;
     }
-    PyObject_SetAttrString(py_node, "conns", py_conn_stats);
+    int retval = PyObject_SetAttrString(py_obj, "conns", py_conn_stats);
     Py_DECREF(py_conn_stats);
-
-    const char *const as_node_stats_attr_names[] = {
-        "error_count", "timeout_count", "key_busy_count"};
-    uint64_t as_node_stats_attr_values[] = {
-        node_stats.error_count,
-        node_stats.timeout_count,
-        node_stats.key_busy_count,
-    };
-    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
-                                      sizeof(as_node_stats_attr_values[0]);
-         i++) {
-        PyObject *py_attr_value =
-            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
-        if (!py_attr_value) {
-            aerospike_node_stats_destroy(&node_stats);
-            goto error;
-        }
-        int retval = PyObject_SetAttrString(
-            py_node, as_node_stats_attr_names[i], py_attr_value);
-        Py_DECREF(py_attr_value);
-        if (retval == -1) {
-            aerospike_node_stats_destroy(&node_stats);
-            goto error;
-        }
+    if (retval == -1) {
+        goto error;
     }
+
+    return true;
+
+error:
+    return false;
+}
+
+// Creates and returns a Python client Node object from a C client's as_node_s struct
+// If an error occurs here, return NULL
+PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
+{
+    PyObject *py_node = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "Node", NULL);
+    if (!py_node) {
+        goto error;
+    }
+
+    bool success = py_obj_set_common_attrs_from_as_node(py_node, node);
+    if (!success) {
+        goto error;
+    }
+
+    as_node_stats node_stats;
+    aerospike_node_stats(node, &node_stats);
+
+    success = py_obj_set_common_attrs_from_as_node_stats(error_p, py_node,
+                                                         &node_stats);
     aerospike_node_stats_destroy(&node_stats);
+    if (!success) {
+        goto error;
+    }
 
     as_ns_metrics **ns_metrics = node->metrics;
     PyObject *py_ns_metrics_list = PyList_New(node->metrics_size);
@@ -984,7 +1006,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     return py_node;
 
 error:
-    Py_DECREF(py_node);
+    Py_XDECREF(py_node);
     return NULL;
 }
 
@@ -3032,5 +3054,147 @@ const char *convert_pyobject_to_str(PyObject *py_obj)
     }
     return str;
 error:
+    return NULL;
+}
+
+static PyObject *
+create_py_node_stats_from_as_node_stats(as_error *error_p,
+                                        as_node_stats *node_stats)
+{
+    PyObject *py_node_stats = create_class_instance_from_module(
+        error_p, "aerospike_helpers.metrics", "NodeStats", NULL);
+    if (!py_node_stats) {
+        return NULL;
+    }
+
+    bool success =
+        py_obj_set_common_attrs_from_as_node(py_node_stats, node_stats->node);
+    if (!success) {
+        goto error;
+    }
+
+    success = py_obj_set_common_attrs_from_as_node_stats(error_p, py_node_stats,
+                                                         node_stats);
+    if (!success) {
+        goto error;
+    }
+
+    const char *const attr_names[] = {"error_count", "timeout_count",
+                                      "key_busy_count"};
+    uint64_t attr_values[] = {
+        node_stats->error_count,
+        node_stats->timeout_count,
+        node_stats->key_busy_count,
+    };
+    int retval = 0;
+    for (unsigned long i = 0; i < sizeof(attr_values) / sizeof(attr_values[0]);
+         i++) {
+        PyObject *py_attr_value = PyLong_FromUnsignedLongLong(attr_values[i]);
+        if (!py_attr_value) {
+            goto error;
+        }
+        retval =
+            PyObject_SetAttrString(py_node_stats, attr_names[i], py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (retval == -1) {
+            goto error;
+        }
+    }
+
+    return py_node_stats;
+
+error:
+    Py_DECREF(py_node_stats);
+    return NULL;
+}
+
+#define RETRY_COUNT_FIELD_NAME "retry_count"
+
+PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
+                                                        as_cluster_stats *stats)
+{
+    PyObject *py_cluster_stats = create_class_instance_from_module(
+        err, "aerospike_helpers.metrics", "ClusterStats", NULL);
+    if (!py_cluster_stats) {
+        goto error;
+    }
+
+    PyObject *py_list_of_node_stats = PyList_New(stats->nodes_size);
+    if (py_list_of_node_stats == NULL) {
+        goto error;
+    }
+
+    for (unsigned long i = 0; i < stats->nodes_size; i++) {
+        PyObject *py_node_stats =
+            create_py_node_stats_from_as_node_stats(err, &stats->nodes[i]);
+        if (py_node_stats == NULL) {
+            goto error;
+        }
+
+        int retval = PyList_SetItem(py_list_of_node_stats, i, py_node_stats);
+        if (retval == -1) {
+            goto loop_error;
+        }
+        continue;
+
+    loop_error:
+        Py_DECREF(py_list_of_node_stats);
+        goto error;
+    }
+
+    int retval = PyObject_SetAttrString(py_cluster_stats, "nodes",
+                                        py_list_of_node_stats);
+    Py_DECREF(py_list_of_node_stats);
+    if (retval == -1) {
+        goto error;
+    }
+
+    // For timeout delay, we need to add another uint32_t field to ClusterStats
+    const char *field_names[] = {"thread_pool_queued_tasks"};
+    uint32_t field_values[] = {
+        stats->thread_pool_queued_tasks,
+    };
+    for (unsigned long i = 0; i < sizeof(field_names) / sizeof(field_names[0]);
+         i++) {
+        PyObject *py_value = PyLong_FromUnsignedLong(field_values[i]);
+        if (!py_value) {
+            as_error_update(err, AEROSPIKE_ERR,
+                            "Unable to get ClusterStats field %s",
+                            field_names[i]);
+            goto error;
+        }
+        int result =
+            PyObject_SetAttrString(py_cluster_stats, field_names[i], py_value);
+        Py_DECREF(py_value);
+        if (result == -1) {
+            as_error_update(err, AEROSPIKE_ERR,
+                            "Unable to set ClusterStats field %s",
+                            field_names[i]);
+            goto error;
+        }
+    }
+
+    PyObject *py_retry_count = PyLong_FromUnsignedLongLong(stats->retry_count);
+    if (!py_retry_count) {
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Unable to get ClusterStats field %s",
+                        RETRY_COUNT_FIELD_NAME);
+        goto error;
+    }
+    int result = PyObject_SetAttrString(py_cluster_stats,
+                                        RETRY_COUNT_FIELD_NAME, py_retry_count);
+    Py_DECREF(py_retry_count);
+    if (result == -1) {
+        PyErr_Clear();
+        as_error_update(err, AEROSPIKE_ERR,
+                        "Unable to set ClusterStats field %s",
+                        RETRY_COUNT_FIELD_NAME);
+        goto error;
+    }
+
+    return py_cluster_stats;
+
+error:
+    Py_XDECREF(py_cluster_stats);
     return NULL;
 }

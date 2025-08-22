@@ -28,6 +28,7 @@
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_partition_filter.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "types.h"
 
@@ -264,3 +265,8 @@ uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
 
 // Returns NULL on error.
 const char *convert_pyobject_to_str(PyObject *py_obj);
+
+// Returns NULL on error.
+PyObject *
+create_py_cluster_stats_from_as_cluster_stats(as_error *err,
+                                              as_cluster_stats *stats);
