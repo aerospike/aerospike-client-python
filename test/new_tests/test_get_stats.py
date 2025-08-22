@@ -1,5 +1,5 @@
 import pytest
-from aerospike_helpers.metrics import ClusterStats, NodeStats
+from aerospike_helpers.metrics import ClusterStats, NodeStats, ConnectionStats
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -18,6 +18,7 @@ class TestGetStats(object):
             assert isinstance(single_node_stats.name, str)
             assert isinstance(single_node_stats.address, str)
             assert isinstance(single_node_stats.port, int)
+            assert isinstance(single_node_stats.conns, ConnectionStats)
             assert isinstance(single_node_stats.error_count, int)
             assert isinstance(single_node_stats.timeout_count, int)
             assert isinstance(single_node_stats.key_busy_count, int)
