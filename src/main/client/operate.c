@@ -434,8 +434,9 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
 
     if (py_bin) {
         if (PyUnicode_Check(py_bin)) {
-            py_ustr = PyUnicode_AsUTF8String(py_bin);
-            bin = strdup(PyBytes_AsString(py_ustr));
+            // TODO: need to decref py_bin
+            const char *bin_name = PyUnicode_AsUTF8(py_bin);
+            bin = strdup(bin_name);
             as_vector_append(unicodeStrVector, &bin);
             Py_DECREF(py_ustr);
         }
