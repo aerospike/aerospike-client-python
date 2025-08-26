@@ -216,6 +216,11 @@ class TestBaseClass(object):
         config["user"] = TestBaseClass.user
         config["password"] = TestBaseClass.password
 
+        config_parser = configparser.ConfigParser()
+        config_parser.read("config.conf")
+        if config_parser.has_option(None, "validate_keys"):
+            config["validate_keys"] = True
+
         # Disable total_timeout and timeout
         # config["timeout"] = 0
         # config["total_timeout"] = 0
@@ -234,6 +239,7 @@ class TestBaseClass(object):
         config["policies"]["info"] = {}
         config["policies"]["info"]["timeout"] = 180000
 
+        
         config["validate_keys"] = True
 
         config["policies"]["admin"] = {}
