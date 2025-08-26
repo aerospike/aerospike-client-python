@@ -1,0 +1,14 @@
+name: 'Run tests'
+description: 'Run Python client tests'
+inputs:
+
+runs:
+  using: "composite"
+  steps:
+  - run: python3 -m pip install pytest -c requirements.txt
+    working-directory: test
+    shell: bash
+
+  - run: python3 -m pytest new_tests/
+    working-directory: test
+    shell: bash

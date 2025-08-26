@@ -235,4 +235,6 @@ class TestBaseClass(object):
         config["policies"]["info"]["timeout"] = 180000
         config["validate_keys"] = True
 
+        config["policies"]["admin"] = {}
+        config["policies"]["admin"]["timeout"] = 180000
         return config

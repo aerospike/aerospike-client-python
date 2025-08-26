@@ -80,4 +80,4 @@ as a value.
 .. _list: https://aerospike.com/docs/server/guide/data-types/cdt-list
 .. _blob: https://aerospike.com/docs/server/guide/data-types/blob
 .. _GeoJSON: https://aerospike.com/docs/server/guide/data-types/geospatial
-.. _HyperLogLog: https://aerospike.com/docs/server/guide/data-types/hll
+.. _HyperLogLog: https://aerospike.com/docs/develop/data-types/hll#operations
