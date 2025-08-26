@@ -580,7 +580,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     int validate_keys = 0;
     PyObject *py_validate_keys = NULL;
     int retval =
-        PyDict_GetItemStringRef(py_config, "validate_keys", py_validate_keys);
+        PyDict_GetItemStringRef(py_config, "validate_keys", &py_validate_keys);
     if (retval == -1) {
         goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
@@ -1191,7 +1191,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_app_id = NULL;
-    int retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
+    retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
     if (retval == 1) {
         const char *str = convert_pyobject_to_str(py_app_id);
         if (!str) {
