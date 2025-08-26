@@ -50,17 +50,3 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
     }
 
     return AerospikeQuery_Foreach_Invoke(self, NULL, py_policy, py_options);
-
-CLEANUP: /*??trace()*/
-    if (exp_list_p) {
-        as_exp_destroy(exp_list_p);
-    }
-
-    if (err.code != AEROSPIKE_OK) {
-        Py_XDECREF(py_results);
-        raise_exception(&err);
-        return NULL;
-    }
-
-    return py_results;
-}
