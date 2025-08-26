@@ -820,7 +820,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         PyObject *py_valid_keys =
             py_set_new_from_str_list(py_set_name_to_str_lists[i].valid_keys);
         if (py_valid_keys == NULL) {
-            goto MODULE_CLEANUP_ON_ERROR;
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
 
         *(py_set_name_to_str_lists[i].py_set_of_keys) = py_valid_keys;
