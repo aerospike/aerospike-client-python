@@ -63,8 +63,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
 
     // Get the bin list size;
     Py_ssize_t size = PyList_Size(py_binList);
-    // Initialize record
-    as_record_inita(&rec, size);
 
     // Convert python key object to as_key
     pyobject_to_key(err, py_key, &key);
