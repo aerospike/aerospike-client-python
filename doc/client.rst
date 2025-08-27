@@ -100,14 +100,12 @@ Record Commands
 
         Create a new record, or remove / add bins to a record.
 
+        .. versionchanged:: 17.2.0
+            Deprecated the ``meta`` parameter. Use the write policy to set ``ttl`` and ``gen`` instead.
+
         :param tuple key: a :ref:`aerospike_key_tuple` associated with the record.
         :param dict bins: contains bin name-value pairs of the record.
-        :param dict meta:
-            record metadata to be set. see :ref:`metadata_dict`.
-
-            .. deprecated:: 17.2.0
-                Use the write policy to set ``ttl`` and ``gen`` instead.
-
+        :param dict meta: Deprecated: record metadata to be set. see :ref:`metadata_dict`.
         :param dict policy: see :ref:`aerospike_write_policies`.
 
         :param serializer: override the serialization mode of the client \
