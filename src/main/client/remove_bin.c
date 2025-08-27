@@ -56,6 +56,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     char *binName = NULL;
     int count = 0;
     PyObject *py_ustr = NULL;
+    bool record_initialised = false;
 
     // For converting expressions.
     as_exp exp_list;
@@ -94,6 +95,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     if (err->code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
+    record_initialised = true;
 
     for (count = 0; count < size; count++) {
         PyObject *py_val = PyList_GetItem(py_binList, count);
@@ -123,7 +125,9 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
 
 CLEANUP:
 
-    as_record_destroy(&rec);
+    if (record_initialised) {
+        as_record_destroy(&rec);
+    }
 
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);

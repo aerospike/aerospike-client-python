@@ -91,10 +91,10 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     as_record_init_from_pyobject(self, &err, py_bins, py_meta, &rec,
                                  serializer_option, &static_pool);
     // Initialize record
-    record_initialised = true;
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
+    record_initialised = true;
 
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, &err, py_policy, &write_policy,
