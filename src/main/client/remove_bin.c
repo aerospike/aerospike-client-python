@@ -83,6 +83,19 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     }
 
     // Invoke operation
+    // TODO: check for mem leak from policy
+    PyObject *py_bins = PyDict_New();
+    if (py_bins) {
+        goto CLEANUP;
+    }
+
+    // Serializer option doesn't matter since we're just deleting bins
+    // static_pool isn't used since the bin dictionary is guaranteed to be empty
+    as_record_init_from_pyobject(self, err, py_bins, py_meta, &rec,
+                                 SERIALIZER_NONE, NULL);
+    if (err->code != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
 
     for (count = 0; count < size; count++) {
         PyObject *py_val = PyList_GetItem(py_binList, count);
@@ -93,53 +106,16 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         else {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Invalid bin name, bin name should be a string or "
-                            "unicode string") goto CLEANUP;
+                            "unicode string");
+            goto CLEANUP;
         }
         if (!as_record_set_nil(&rec, binName)) {
+            // TODO: mem leak
             goto CLEANUP;
         }
         if (py_ustr) {
             Py_DECREF(py_ustr);
             py_ustr = NULL;
-        }
-    }
-
-    if (py_meta && PyDict_Check(py_meta)) {
-        PyObject *py_gen = PyDict_GetItemString(py_meta, "gen");
-        PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
-
-        if (py_ttl) {
-            if (PyLong_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyLong_AsLong(py_ttl);
-                if ((uint32_t)-1 == rec.ttl && PyErr_Occurred()) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "integer value for ttl exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Ttl should be an int or long");
-                goto CLEANUP;
-            }
-        }
-
-        if (py_gen) {
-            if (PyLong_Check(py_gen)) {
-                rec.gen = (uint16_t)PyLong_AsLongLong(py_gen);
-                if ((uint16_t)-1 == rec.gen && PyErr_Occurred()) {
-                    as_error_update(
-                        err, AEROSPIKE_ERR_PARAM,
-                        "integer value for gen exceeds sys.maxsize");
-                    goto CLEANUP;
-                }
-            }
-            else {
-                as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                "Generation should be an int or long");
-                goto CLEANUP;
-            }
         }
     }
 
@@ -161,6 +137,9 @@ CLEANUP:
 
     if (err->code != AEROSPIKE_OK) {
         raise_exception_base(err, py_key, Py_None, Py_None, Py_None, Py_None);
+        return NULL;
+    }
+    else if (PyErr_Occurred()) {
         return NULL;
     }
     return PyLong_FromLong(0);
