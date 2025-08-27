@@ -41,11 +41,11 @@ class ConnectionStats:
     pass
 
 
-ERROR_COUNT_DOCSTRING = "Command error count since node was initialized. If the error is retryable, multiple errors \
+_ERROR_COUNT_DOCSTRING = "Command error count since node was initialized. If the error is retryable, multiple errors \
     per command may occur."
-TIMEOUT_COUNT_DOCSTRING = "Command timeout count since node was initialized. If the timeout is retryable \
+_TIMEOUT_COUNT_DOCSTRING = "Command timeout count since node was initialized. If the timeout is retryable \
     (i.e socket_timeout), multiple timeouts per command may occur."
-KEY_BUSY_COUNT_DOCSTRING = "Command key busy error count since node was initialized."
+_KEY_BUSY_COUNT_DOCSTRING = "Command key busy error count since node was initialized."
 
 
 class NamespaceMetrics:
@@ -73,9 +73,9 @@ class NamespaceMetrics:
 
 if isinstance(NamespaceMetrics.__doc__, str):
     NamespaceMetrics.__doc__ = NamespaceMetrics.__doc__.format(
-        ERROR_COUNT_DOCSTRING,
-        TIMEOUT_COUNT_DOCSTRING,
-        KEY_BUSY_COUNT_DOCSTRING
+        _ERROR_COUNT_DOCSTRING,
+        _TIMEOUT_COUNT_DOCSTRING,
+        _KEY_BUSY_COUNT_DOCSTRING
     )
 
 
@@ -136,9 +136,9 @@ class NodeStats:
 
 if isinstance(NodeStats.__doc__, str):
     NodeStats.__doc__ = NodeStats.__doc__.format(
-        ERROR_COUNT_DOCSTRING,
-        TIMEOUT_COUNT_DOCSTRING,
-        KEY_BUSY_COUNT_DOCSTRING
+        _ERROR_COUNT_DOCSTRING,
+        _TIMEOUT_COUNT_DOCSTRING,
+        _KEY_BUSY_COUNT_DOCSTRING
     )
 
 
