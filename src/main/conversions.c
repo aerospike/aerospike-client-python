@@ -776,6 +776,62 @@ error:
     return NULL;
 }
 
+// latency_type is for error reporting purposes
+static inline PyObject *create_py_list_of_buckets_from_as_latency_list(
+    as_error *error_p, const char *latency_type, as_latency *buckets)
+{
+    PyObject *py_retval = NULL;
+
+    // Dynamic config allows users to resize the number of latency buckets
+    // so they can delete buckets.
+    // We want to make sure the latency buckets aren't being deleted while we are
+    // reading from them.
+    as_latency *buckets = as_latency_reserve(buckets);
+
+    // Python list of integer values
+    // Each "bucket" is an integer
+    PyObject *py_list_of_buckets = PyList_New(buckets->size);
+    if (!py_list_of_buckets) {
+        as_error_update(error_p, AEROSPIKE_ERR,
+                        "Failed to create list of buckets for %s",
+                        latency_type);
+        goto AS_LATENCY_RELEASE_ON_ERROR;
+    }
+
+    // Append each bucket to a list of buckets
+    uint32_t bucket_max = buckets->size;
+    for (uint32_t i = 0; i < bucket_max; i++) {
+        uint64_t bucket = as_latency_get_bucket(buckets, i);
+        PyObject *py_bucket = PyLong_FromUnsignedLongLong(bucket);
+        if (!py_bucket) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Failed to create bucket at index %d for %s", i,
+                            latency_type);
+            goto CLEANUP_PY_LIST_OF_BUCKETS_ON_ERROR;
+        }
+
+        int result = PyList_SetItem(py_list_of_buckets, i, py_bucket);
+        if (result == -1) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Failed to append bucket at index %d for %s", i,
+                            latency_type);
+            goto CLEANUP_PY_LIST_OF_BUCKETS_ON_ERROR;
+        }
+
+        continue;
+
+    CLEANUP_PY_LIST_OF_BUCKETS_ON_ERROR:
+        Py_DECREF(py_list_of_buckets);
+        goto AS_LATENCY_RELEASE_ON_ERROR;
+    }
+
+    py_retval = py_list_of_buckets;
+
+AS_LATENCY_RELEASE_ON_ERROR:
+    as_latency_release(buckets);
+    return py_retval;
+}
+
 // Creates and returns a Python client NamespaceMetrics object from a C client's as_ns_metrics struct
 // If an error occurs here, return NULL
 PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
@@ -789,12 +845,12 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
 
     PyObject *py_ns = PyUnicode_FromString(ns_metrics->ns);
     if (py_ns == NULL) {
-        goto error;
+        goto CLEANUP_PY_NS_METRICS_ON_ERROR;
     }
     int retval = PyObject_SetAttrString(py_ns_metrics, "ns", py_ns);
     Py_DECREF(py_ns);
     if (retval == -1) {
-        goto error;
+        goto CLEANUP_PY_NS_METRICS_ON_ERROR;
     }
 
     const char *uint64_fields[] = {"bytes_in", "bytes_out", "error_count",
@@ -806,79 +862,42 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
          i < sizeof(uint64_fields) / sizeof(uint64_fields[0]); i++) {
         PyObject *py_field_val = PyLong_FromUnsignedLongLong(field_vals[i]);
         if (!py_field_val) {
-            goto error;
+            goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
 
         int retval = PyObject_SetAttrString(py_ns_metrics, uint64_fields[i],
                                             py_field_val);
         Py_DECREF(py_field_val);
         if (retval == -1) {
-            goto error;
+            goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
     }
 
-    const char *node_metrics_fields[] = {"conn_latency", "write_latency",
-                                         "read_latency", "batch_latency",
-                                         "query_latency"};
-    uint32_t max = AS_LATENCY_TYPE_MAX;
-    // For each latency type, get list of buckets
-    for (uint32_t i = 0; i < max; i++) {
-        PyObject *py_buckets = PyList_New(0);
+    // These fields must be ordered in the same way as the AS_LATENCY_TYPE_* macros
+    const char *latency_types[] = {"conn_latency", "write_latency",
+                                   "read_latency", "batch_latency",
+                                   "query_latency"};
+    for (uint32_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
+        PyObject *py_buckets = create_py_list_of_buckets_from_as_latency_list(
+            error_p, latency_types[i], ns_metrics->latency[i]);
         if (!py_buckets) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Failed to create list of buckets for %s",
-                            node_metrics_fields[i]);
-            goto error;
+            goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
 
-        // Dynamic config allows users to resize the number of latency buckets
-        // so they can delete buckets.
-        // We want to make sure the latency buckets aren't being deleted while we are
-        // reading from them.
-        as_latency *buckets = as_latency_reserve(ns_metrics->latency[i]);
-
-        // Append each bucket to a list of buckets
-        uint32_t bucket_max = buckets->size;
-        for (uint32_t j = 0; j < bucket_max; j++) {
-            uint64_t bucket = as_latency_get_bucket(buckets, j);
-            PyObject *py_bucket = PyLong_FromUnsignedLongLong(bucket);
-            if (!py_bucket) {
-                as_error_update(error_p, AEROSPIKE_ERR,
-                                "Failed to create bucket at index %d for %s", j,
-                                node_metrics_fields[i]);
-                Py_DECREF(py_buckets);
-                goto error;
-            }
-
-            int result = PyList_Append(py_buckets, py_bucket);
-            Py_DECREF(py_bucket);
-            if (result == -1) {
-                PyErr_Clear();
-                as_error_update(error_p, AEROSPIKE_ERR,
-                                "Failed to append bucket at index %d for %s", j,
-                                node_metrics_fields[i]);
-                Py_DECREF(py_buckets);
-                goto error;
-            }
-        }
-
-        as_latency_release(buckets);
-
-        int result = PyObject_SetAttrString(py_ns_metrics,
-                                            node_metrics_fields[i], py_buckets);
+        int result =
+            PyObject_SetAttrString(py_ns_metrics, latency_types[i], py_buckets);
         Py_DECREF(py_buckets);
         if (result == -1) {
-            PyErr_Clear();
             as_error_update(error_p, AEROSPIKE_ERR,
                             "Unable to set list of bucket for %s",
-                            node_metrics_fields[i]);
-            goto error;
+                            latency_types[i]);
+            goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
     }
 
     return py_ns_metrics;
 
-error:
+CLEANUP_PY_NS_METRICS_ON_ERROR:
     Py_DECREF(py_ns_metrics);
     return NULL;
 }
