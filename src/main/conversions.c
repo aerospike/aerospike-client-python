@@ -786,7 +786,7 @@ static inline PyObject *create_py_list_of_buckets_from_as_latency_list(
     // so they can delete buckets.
     // We want to make sure the latency buckets aren't being deleted while we are
     // reading from them.
-    as_latency *buckets = as_latency_reserve(buckets);
+    as_latency_reserve(buckets);
 
     // Python list of integer values
     // Each "bucket" is an integer
