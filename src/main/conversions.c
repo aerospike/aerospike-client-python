@@ -3147,7 +3147,7 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
         PyObject *py_node_stats =
             create_py_node_stats_from_as_node_stats(err, &stats->nodes[i]);
         if (py_node_stats == NULL) {
-            goto error;
+            goto loop_error;
         }
 
         int retval = PyList_SetItem(py_list_of_node_stats, i, py_node_stats);
