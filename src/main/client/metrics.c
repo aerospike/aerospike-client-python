@@ -143,10 +143,13 @@ PyObject *AerospikeClient_GetStats(AerospikeClient *self)
     PyObject *py_cluster_stats =
         create_py_cluster_stats_from_as_cluster_stats(&err, &stats);
 
+    aerospike_stats_destroy(&stats);
+
     if (py_cluster_stats == NULL && err.code != AEROSPIKE_OK) {
         raise_exception(&err);
         return NULL;
     }
-    // TODO: raise exception without as_error?
+
+    // A Python native exception can also be raised in this case.
     return py_cluster_stats;
 }

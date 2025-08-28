@@ -763,7 +763,6 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
         // Either way if call succeeded or failed, we don't need py_value anymore
         Py_DECREF(py_value);
         if (result == -1) {
-            PyErr_Clear();
             as_error_update(error_p, AEROSPIKE_ERR,
                             "Unable to set ConnectionStats field %s",
                             field_names[i]);
@@ -776,6 +775,62 @@ PyObject *create_py_conn_stats_from_as_conn_stats(as_error *error_p,
 error:
     Py_DECREF(py_conn_stats);
     return NULL;
+}
+
+// latency_type is for error reporting purposes
+static inline PyObject *create_py_list_of_buckets_from_as_latency_list(
+    as_error *error_p, const char *latency_type, as_latency *buckets)
+{
+    PyObject *py_retval = NULL;
+
+    // Dynamic config allows users to resize the number of latency buckets
+    // so they can delete buckets.
+    // We want to make sure the latency buckets aren't being deleted while we are
+    // reading from them.
+    as_latency_reserve(buckets);
+
+    // Python list of integer values
+    // Each "bucket" is an integer
+    PyObject *py_list_of_buckets = PyList_New(buckets->size);
+    if (!py_list_of_buckets) {
+        as_error_update(error_p, AEROSPIKE_ERR,
+                        "Failed to create list of buckets for %s",
+                        latency_type);
+        goto AS_LATENCY_RELEASE_ON_ERROR;
+    }
+
+    // Append each bucket to a list of buckets
+    uint32_t bucket_max = buckets->size;
+    for (uint32_t i = 0; i < bucket_max; i++) {
+        uint64_t bucket = as_latency_get_bucket(buckets, i);
+        PyObject *py_bucket = PyLong_FromUnsignedLongLong(bucket);
+        if (!py_bucket) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Failed to create bucket at index %d for %s", i,
+                            latency_type);
+            goto CLEANUP_PY_LIST_OF_BUCKETS_ON_ERROR;
+        }
+
+        int result = PyList_SetItem(py_list_of_buckets, i, py_bucket);
+        if (result == -1) {
+            as_error_update(error_p, AEROSPIKE_ERR,
+                            "Failed to append bucket at index %d for %s", i,
+                            latency_type);
+            goto CLEANUP_PY_LIST_OF_BUCKETS_ON_ERROR;
+        }
+
+        continue;
+
+    CLEANUP_PY_LIST_OF_BUCKETS_ON_ERROR:
+        Py_DECREF(py_list_of_buckets);
+        goto AS_LATENCY_RELEASE_ON_ERROR;
+    }
+
+    py_retval = py_list_of_buckets;
+
+AS_LATENCY_RELEASE_ON_ERROR:
+    as_latency_release(buckets);
+    return py_retval;
 }
 
 // Creates and returns a Python client NamespaceMetrics object from a C client's as_ns_metrics struct
@@ -791,12 +846,12 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
 
     PyObject *py_ns = PyUnicode_FromString(ns_metrics->ns);
     if (py_ns == NULL) {
-        goto error;
+        goto CLEANUP_PY_NS_METRICS_ON_ERROR;
     }
     int retval = PyObject_SetAttrString(py_ns_metrics, "ns", py_ns);
     Py_DECREF(py_ns);
     if (retval == -1) {
-        goto error;
+        goto CLEANUP_PY_NS_METRICS_ON_ERROR;
     }
 
     const char *uint64_fields[] = {"bytes_in", "bytes_out", "error_count",
@@ -808,71 +863,42 @@ PyObject *create_py_ns_metrics_from_as_ns_metrics(as_error *error_p,
          i < sizeof(uint64_fields) / sizeof(uint64_fields[0]); i++) {
         PyObject *py_field_val = PyLong_FromUnsignedLongLong(field_vals[i]);
         if (!py_field_val) {
-            goto error;
+            goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
 
         int retval = PyObject_SetAttrString(py_ns_metrics, uint64_fields[i],
                                             py_field_val);
         Py_DECREF(py_field_val);
         if (retval == -1) {
-            goto error;
+            goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
     }
 
-    const char *node_metrics_fields[] = {"conn_latency", "write_latency",
-                                         "read_latency", "batch_latency",
-                                         "query_latency"};
-    uint32_t max = AS_LATENCY_TYPE_MAX;
-    // For each latency type, get list of buckets
-    for (uint32_t i = 0; i < max; i++) {
-        PyObject *py_buckets = PyList_New(0);
+    // These fields must be ordered in the same way as the AS_LATENCY_TYPE_* macros
+    const char *latency_types[] = {"conn_latency", "write_latency",
+                                   "read_latency", "batch_latency",
+                                   "query_latency"};
+    for (uint32_t i = 0; i < AS_LATENCY_TYPE_MAX; i++) {
+        PyObject *py_buckets = create_py_list_of_buckets_from_as_latency_list(
+            error_p, latency_types[i], ns_metrics->latency[i]);
         if (!py_buckets) {
-            as_error_update(error_p, AEROSPIKE_ERR,
-                            "Failed to create list of buckets for %s",
-                            node_metrics_fields[i]);
-            goto error;
-        }
-        as_latency *buckets = ns_metrics->latency[i];
-        uint32_t bucket_max = buckets->size;
-        // Append each bucket to a list of buckets
-        for (uint32_t j = 0; j < bucket_max; j++) {
-            uint64_t bucket = as_latency_get_bucket(buckets, j);
-            PyObject *py_bucket = PyLong_FromUnsignedLongLong(bucket);
-            if (!py_bucket) {
-                as_error_update(error_p, AEROSPIKE_ERR,
-                                "Failed to create bucket at index %d for %s", j,
-                                node_metrics_fields[i]);
-                Py_DECREF(py_buckets);
-                goto error;
-            }
-
-            int result = PyList_Append(py_buckets, py_bucket);
-            Py_DECREF(py_bucket);
-            if (result == -1) {
-                PyErr_Clear();
-                as_error_update(error_p, AEROSPIKE_ERR,
-                                "Failed to append bucket at index %d for %s", j,
-                                node_metrics_fields[i]);
-                Py_DECREF(py_buckets);
-                goto error;
-            }
+            goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
 
-        int result = PyObject_SetAttrString(py_ns_metrics,
-                                            node_metrics_fields[i], py_buckets);
+        int result =
+            PyObject_SetAttrString(py_ns_metrics, latency_types[i], py_buckets);
         Py_DECREF(py_buckets);
         if (result == -1) {
-            PyErr_Clear();
             as_error_update(error_p, AEROSPIKE_ERR,
                             "Unable to set list of bucket for %s",
-                            node_metrics_fields[i]);
-            goto error;
+                            latency_types[i]);
+            goto CLEANUP_PY_NS_METRICS_ON_ERROR;
         }
     }
 
     return py_ns_metrics;
 
-error:
+CLEANUP_PY_NS_METRICS_ON_ERROR:
     Py_DECREF(py_ns_metrics);
     return NULL;
 }
@@ -920,42 +946,18 @@ error:
     return false;
 }
 
-// These fields need to be set for both Node and NodeStats class instances
+// This field need to be set for both Node and NodeStats class instances
 static inline bool
 py_obj_set_common_attrs_from_as_node_stats(as_error *error_p, PyObject *py_obj,
                                            as_node_stats *node_stats)
 {
-    const char *const as_node_stats_attr_names[] = {
-        "error_count", "timeout_count", "key_busy_count"};
-    uint64_t as_node_stats_attr_values[] = {
-        node_stats->error_count,
-        node_stats->timeout_count,
-        node_stats->key_busy_count,
-    };
-    int retval = 0;
-    for (unsigned long i = 0; i < sizeof(as_node_stats_attr_values) /
-                                      sizeof(as_node_stats_attr_values[0]);
-         i++) {
-        PyObject *py_attr_value =
-            PyLong_FromUnsignedLongLong(as_node_stats_attr_values[i]);
-        if (!py_attr_value) {
-            goto error;
-        }
-        retval = PyObject_SetAttrString(py_obj, as_node_stats_attr_names[i],
-                                        py_attr_value);
-        Py_DECREF(py_attr_value);
-        if (retval == -1) {
-            goto error;
-        }
-    }
-
     as_conn_stats *sync = &node_stats->sync;
     PyObject *py_conn_stats =
         create_py_conn_stats_from_as_conn_stats(error_p, sync);
     if (py_conn_stats == NULL) {
         goto error;
     }
-    retval = PyObject_SetAttrString(py_obj, "conns", py_conn_stats);
+    int retval = PyObject_SetAttrString(py_obj, "conns", py_conn_stats);
     Py_DECREF(py_conn_stats);
     if (retval == -1) {
         goto error;
@@ -974,7 +976,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     PyObject *py_node = create_class_instance_from_module(
         error_p, "aerospike_helpers.metrics", "Node", NULL);
     if (!py_node) {
-        return NULL;
+        goto error;
     }
 
     bool success = py_obj_set_common_attrs_from_as_node(py_node, node);
@@ -985,17 +987,9 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     as_node_stats node_stats;
     aerospike_node_stats(node, &node_stats);
 
-    // When implementing extended metrics, as_node_stats was not exposed in the Python API at that time.
-    // And the Python client only supports sync connection stats, so we decided to make
-    // the API simpler by creating Node.conns (ConnectionStats) field to represent as_conn_stats as_node_stats.sync,
-    // as well as assign the as_node_stats.*_count fields to the Node class.
-    //
-    // These 4 fields also are exposed in the Python client API via NodeStats
-    // But we added NodeStats after adding extended metrics support
-    // and we don't want to make breaking changes by replacing these fields assigned to Node
-    // with a single NodeStats field.
     success = py_obj_set_common_attrs_from_as_node_stats(error_p, py_node,
                                                          &node_stats);
+    aerospike_node_stats_destroy(&node_stats);
     if (!success) {
         goto error;
     }
@@ -1032,7 +1026,7 @@ PyObject *create_py_node_from_as_node(as_error *error_p, struct as_node_s *node)
     return py_node;
 
 error:
-    Py_DECREF(py_node);
+    Py_XDECREF(py_node);
     return NULL;
 }
 
@@ -3105,6 +3099,28 @@ create_py_node_stats_from_as_node_stats(as_error *error_p,
         goto error;
     }
 
+    const char *const attr_names[] = {"error_count", "timeout_count",
+                                      "key_busy_count"};
+    uint64_t attr_values[] = {
+        node_stats->error_count,
+        node_stats->timeout_count,
+        node_stats->key_busy_count,
+    };
+    int retval = 0;
+    for (unsigned long i = 0; i < sizeof(attr_values) / sizeof(attr_values[0]);
+         i++) {
+        PyObject *py_attr_value = PyLong_FromUnsignedLongLong(attr_values[i]);
+        if (!py_attr_value) {
+            goto error;
+        }
+        retval =
+            PyObject_SetAttrString(py_node_stats, attr_names[i], py_attr_value);
+        Py_DECREF(py_attr_value);
+        if (retval == -1) {
+            goto error;
+        }
+    }
+
     return py_node_stats;
 
 error:
@@ -3123,19 +3139,16 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
         goto error;
     }
 
-    // When implementing extended metrics, we did not add a Python class for as_node_stats
-    // For ClusterStats, we don't want to return a list of Nodes
     PyObject *py_list_of_node_stats = PyList_New(stats->nodes_size);
     if (py_list_of_node_stats == NULL) {
         goto error;
     }
 
     for (unsigned long i = 0; i < stats->nodes_size; i++) {
-        // TODO: need to reserve as_node_stats?
         PyObject *py_node_stats =
             create_py_node_stats_from_as_node_stats(err, &stats->nodes[i]);
         if (py_node_stats == NULL) {
-            goto error;
+            goto loop_error;
         }
 
         int retval = PyList_SetItem(py_list_of_node_stats, i, py_node_stats);
@@ -3173,7 +3186,6 @@ PyObject *create_py_cluster_stats_from_as_cluster_stats(as_error *err,
             PyObject_SetAttrString(py_cluster_stats, field_names[i], py_value);
         Py_DECREF(py_value);
         if (result == -1) {
-            PyErr_Clear();
             as_error_update(err, AEROSPIKE_ERR,
                             "Unable to set ClusterStats field %s",
                             field_names[i]);
