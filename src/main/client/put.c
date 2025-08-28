@@ -62,6 +62,10 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     bool key_initialised = false;
     bool record_initialised = false;
 
+    // Initialize record
+    as_record_init(&rec, 0);
+    record_initialised = true;
+
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
 
@@ -90,11 +94,9 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     // Convert python bins and metadata objects to as_record
     as_record_init_from_pyobject(self, &err, py_bins, py_meta, &rec,
                                  serializer_option, &static_pool);
-    // Initialize record
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
-    record_initialised = true;
 
     // Convert python policy object to as_policy_write
     pyobject_to_policy_write(self, &err, py_policy, &write_policy,
