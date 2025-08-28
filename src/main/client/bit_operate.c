@@ -269,7 +269,6 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
     int64_t bit_offset = 0;
     uint32_t bit_size = 0;
     uint32_t value_byte_size = 0;
-    uint8_t *value = NULL;
 
     if (get_bit_policy(err, op_dict, &bit_policy) != AEROSPIKE_OK) {
         return err->code;
@@ -291,6 +290,7 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
             return err->code;
         }
 
+        uint8_t *value = NULL;
         if (get_uint8t_from_pyargs(err, VALUE_KEY, op_dict, &value) !=
             AEROSPIKE_OK) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -304,6 +304,7 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
         }
     }
     else if (operation_code == OP_BIT_SET_INT) {
+        int64_t *value = NULL;
         if (get_int64_t(err, VALUE_KEY, op_dict, &value) != AEROSPIKE_OK) {
             return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
