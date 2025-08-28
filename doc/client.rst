@@ -1559,7 +1559,7 @@ Base Policies
 
             The value must be an unsigned 32-bit integer.
 
-            Default: ``0``
+            Default: ``3000``
         * **compress** (:class:`bool`)
             | Compress client requests and server responses.
             |
@@ -2147,6 +2147,8 @@ Info Policies
             good. If set to zero, this feature will be disabled.
 
             The value must be an unsigned 32-bit integer.
+
+            Default: ``3000``
 
 .. _aerospike_admin_policies:
 
