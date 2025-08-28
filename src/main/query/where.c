@@ -276,7 +276,7 @@ CLEANUP_VALUES_ON_ERROR:
 CLEANUP_EXP_ON_ERROR:
 
     if (exp_list) {
-        free(exp_list);
+        as_exp_destroy(exp_list);
     }
 
 CLEANUP_CTX_ON_ERROR:

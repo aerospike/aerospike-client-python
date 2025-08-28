@@ -1314,9 +1314,12 @@ class TestQuery(TestBaseClass):
         recs = query.results()
         assert len(recs) == expected_rec_count
 
+        # TODO: using the same query object doesn't work since we cannot call .where() more than once on
+        # the same query object. need to confirm this, though
+        query2: aerospike.Query = self.as_connection.query("test", "demo")
         # We should also be able to query using the base64 encoded string for an expression
         if use_index_name is False:
             expr_base64_encoded = self.as_connection.get_expression_base64(expr)
-            query = query.where_with_expr(expr_base64_encoded, predicate)
-            recs = query.results()
+            query2 = query.where_with_expr(expr_base64_encoded, predicate)
+            recs = query2.results()
             assert len(recs) == expected_rec_count
