@@ -337,3 +337,9 @@ class TestScanApply(object):
         # Policy needs to be a dict. Not a string
         with pytest.raises(exception.ParamError):
             scan.execute_background("Honesty is the best Policy")
+
+    def test_background_execute_with_invalid_offset(self):
+        test_bin = "St6"
+        scan = self.as_connection.scan(TEST_NS, TEST_SET)
+        with pytest.raises(exception.ClientError):
+            scan.apply(TEST_UDF_MODULE, TEST_UDF_FUNCTION, [test_bin, (1, 2, 3)])

@@ -38,7 +38,7 @@ See available write operations at :mod:`aerospike_helpers.operations`.
 Query Aggregations
 ------------------
 
-A `stream UDF <https://aerospike.com/developer/udf/developing_stream_udfs>`_ \
+A `stream UDF <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
@@ -119,6 +119,28 @@ Assume this boilerplate code is run before all examples below:
 
         :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
         :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
+
+    .. method:: where_with_expr(expr, predicate)
+
+        Add an expression *predicate* to the query.
+
+        Predicate must have the bin name set to :py:obj:`None`.
+
+        You can only assign at most one predicate to the query.
+
+        :param expr: Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
+        :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
+
+    .. method:: where_with_index_name(index_name, predicate)
+
+        Add an index name *predicate* to the query.
+
+        Predicate must have the bin name set to :py:obj:`None`.
+
+        You can only assign at most one predicate to the query.
+
+        :param index_name str: The name of the index.
+        :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 
@@ -224,7 +246,7 @@ Assume this boilerplate code is run before all examples below:
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
 
-        .. seealso:: `Developing Stream UDFs <https://aerospike.com/developer/udf/developing_stream_udfs>`_
+        .. seealso:: `Developing Stream UDFs <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_
 
         Example: find the first name distribution of users who are 21 or older using \
         a query aggregation:
