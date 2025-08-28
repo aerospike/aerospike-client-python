@@ -204,6 +204,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
                       as_static_pool *static_pool, int serializer_type);
 
+// allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
 as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                                    as_exp **exp_list, as_error *err,
                                    bool allow_base64_encoded_exprs);
