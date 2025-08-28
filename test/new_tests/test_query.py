@@ -1320,6 +1320,6 @@ class TestQuery(TestBaseClass):
         # We should also be able to query using the base64 encoded string for an expression
         if use_index_name is False:
             expr_base64_encoded = self.as_connection.get_expression_base64(expr)
-            query2 = query.where_with_expr(expr_base64_encoded, predicate)
+            query2 = query2.where_with_expr(expr_base64_encoded, predicate)
             recs = query2.results()
             assert len(recs) == expected_rec_count
