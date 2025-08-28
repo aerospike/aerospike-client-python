@@ -1637,28 +1637,29 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
     if (py_expr == NULL) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
-        goto error;
+        goto FINISH_WITHOUT_CLEANUP;
     }
     else if (allow_base64_encoded_exprs && PyUnicode_Check(py_expr)) {
         // We assume the string is base64 encoded
         const char *expr_str = PyUnicode_AsUTF8(py_expr);
         if (!expr_str) {
             as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
-            goto error;
+            goto FINISH_WITHOUT_CLEANUP;
         }
 
         as_exp *exp = as_exp_from_base64(expr_str);
-        return exp;
+        *exp_list = exp;
+        goto FINISH_WITHOUT_CLEANUP;
     }
     else if (!PyList_Check(py_expr)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
-        goto error;
+        goto FINISH_WITHOUT_CLEANUP;
     }
 
     Py_ssize_t size = PyList_Size(py_expr);
     if (size <= 0) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
-        goto error;
+        goto FINISH_WITHOUT_CLEANUP;
     }
 
     int processed_exp_count = 0;
@@ -1850,7 +1851,7 @@ CLEANUP:
     POOL_DESTROY(&static_pool);
     as_vector_destroy(unicodeStrVector);
 
-error:
+FINISH_WITHOUT_CLEANUP:
     return err->code;
 }
 
