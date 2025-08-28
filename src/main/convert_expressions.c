@@ -1826,6 +1826,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
     }
 
     *exp_list = as_exp_compile(c_expr_entries, bottom);
+
 CLEANUP:
     if (is_building_temp_expr) {
         bool success = free_temp_expr(&temp_expr, err, is_ctx_initialized);
