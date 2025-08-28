@@ -130,7 +130,8 @@ Assume this boilerplate code is run before all examples below:
 
         :param aerospike_helpers.expressions.resources.TypeExpression | str expr:
             Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
-            Alternatively, you can pass in a base64 encoded string of an expression returned from asadm.
+            Alternatively, you can pass in a base64 encoded string of an expression returned from asinfo when printing
+            a list of secondary indexes based on expressions in the server.
         :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: where_with_index_name(index_name, predicate)
