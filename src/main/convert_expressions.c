@@ -1630,6 +1630,7 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
     "a compiled aerospike expression. For Query.where_with_expr(), it can "    \
     "also be a base64 string."
 
+// allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
 as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                                    as_exp **exp_list, as_error *err,
                                    bool allow_base64_encoded_exprs)
