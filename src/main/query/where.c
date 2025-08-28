@@ -75,6 +75,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     as_exp *exp_list = NULL;
     if (py_expr) {
+        // TODO: mem leak if exp gets allocated but fails to init later in helper function.
         as_status status = as_exp_new_from_pyobject(self->client, py_expr,
                                                     &exp_list, &err, true);
         if (status != AEROSPIKE_OK) {
