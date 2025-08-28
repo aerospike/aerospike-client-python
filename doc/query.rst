@@ -128,7 +128,7 @@ Assume this boilerplate code is run before all examples below:
 
         You can only assign at most one predicate to the query.
 
-        :param expr aerospike_helpers.expressions.resources.TypeExpression | str:
+        :param aerospike_helpers.expressions.resources.TypeExpression | str expr:
             Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
             Alternatively, you can pass in a base64 encoded string of an expression returned from asadm.
         :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
