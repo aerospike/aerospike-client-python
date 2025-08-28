@@ -204,13 +204,15 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
                       as_static_pool *static_pool, int serializer_type);
 
-as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_exp_list,
-                                   as_exp **exp_list, as_error *err);
+as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
+                                   as_exp **exp_list, as_error *err,
+                                   bool allow_base64_encoded_exprs)
 
-as_status convert_partition_filter(AerospikeClient *self,
-                                   PyObject *py_partition_filter,
-                                   as_partition_filter *partition_filter,
-                                   as_partitions_status **ps, as_error *err);
+    as_status
+    convert_partition_filter(AerospikeClient *self,
+                             PyObject *py_partition_filter,
+                             as_partition_filter *partition_filter,
+                             as_partitions_status **ps, as_error *err);
 
 as_status get_int_from_py_int(as_error *err, PyObject *py_long,
                               int *int_pointer, const char *py_object_name);

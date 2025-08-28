@@ -87,7 +87,7 @@ static as_status add_op_expr_write(AerospikeClient *self, as_error *err,
 
     py_exp_list = PyDict_GetItemString(op_dict, AS_EXPR_KEY);
 
-    if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list_p, err) !=
+    if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list_p, err, false) !=
         AEROSPIKE_OK) {
         return err->code;
     }
@@ -125,7 +125,7 @@ static as_status add_op_expr_read(AerospikeClient *self, as_error *err,
 
     py_exp_list = PyDict_GetItemString(op_dict, AS_EXPR_KEY);
 
-    if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list_p, err) !=
+    if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list_p, err, false) !=
         AEROSPIKE_OK) {
         return err->code;
     }

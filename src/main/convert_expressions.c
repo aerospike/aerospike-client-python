@@ -1630,7 +1630,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
     "a compiled aerospike expression"
 
 as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
-                                   as_exp **exp_list, as_error *err)
+                                   as_exp **exp_list, as_error *err,
+                                   bool allow_base64_encoded_exprs)
 {
     int bottom = 0;
 
@@ -1638,7 +1639,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
         goto error;
     }
-    else if (PyUnicode_Check(py_expr)) {
+    else if (allow_base64_encoded_exprs && PyUnicode_Check(py_expr)) {
         // We assume the string is base64 encoded
         const char *expr_str = PyUnicode_AsUTF8(py_expr);
         if (!expr_str) {

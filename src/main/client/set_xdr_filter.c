@@ -96,7 +96,7 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
     }
     else {
         if (as_exp_new_from_pyobject(self, py_expression_filter, &exp_list_p,
-                                     &err) != AEROSPIKE_OK) {
+                                     &err, false) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
 
