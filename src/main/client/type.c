@@ -523,6 +523,33 @@ static PyObject *AerospikeClient_Type_New(PyTypeObject *type, PyObject *args,
     return (PyObject *)self;
 }
 
+int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
+                                    PyObject *py_set, bool validating_policy)
+{
+    Py_ssize_t pos = 0;
+    PyObject *py_key = NULL;
+    while (PyDict_Next(py_dict, &pos, &py_key, NULL)) {
+        int res = PySet_Contains(py_set, py_key);
+        if (res == -1) {
+            return -1;
+        }
+        if (res == 0) {
+            const char *key = PyUnicode_AsUTF8(py_key);
+            if (key == NULL) {
+                return -1;
+            }
+            const char *adjective =
+                validating_policy ? "policy" : "client config";
+            as_error_update(err, AEROSPIKE_ERR_PARAM,
+                            "\"%s\" is an invalid %s dictionary key", key,
+                            adjective);
+            return 0;
+        }
+        // Config key is valid
+    }
+    return 1;
+}
+
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                                      PyObject *kwds)
 {
@@ -549,6 +576,43 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     if (!PyDict_Check(py_config)) {
         error_code = INIT_CONFIG_TYPE_ERR;
         goto CONSTRUCTOR_ERROR;
+    }
+
+    // Very first thing to check before validating config keys
+    int validate_keys = 0;
+    PyObject *py_validate_keys = NULL;
+    int retval =
+        PyDict_GetItemStringRef(py_config, "validate_keys", &py_validate_keys);
+    if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+    else if (retval == 1) {
+        if (!PyBool_Check(py_validate_keys)) {
+            as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                            "config[\"validate_keys\"] must be a boolean");
+            Py_DECREF(py_validate_keys);
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+
+        validate_keys = PyObject_IsTrue(py_validate_keys);
+        if (validate_keys == -1) {
+            Py_DECREF(py_validate_keys);
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+
+        self->validate_keys = (bool)validate_keys;
+        Py_DECREF(py_validate_keys);
+    }
+
+    if (validate_keys) {
+        int retval = does_py_dict_contain_valid_keys(
+            &constructor_err, py_config, py_client_config_valid_keys, false);
+        if (retval == -1) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        else if (retval == 0) {
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
     }
 
     // We create a new class for as_config_provider
@@ -594,9 +658,19 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     bool lua_user_path = false;
-
     PyObject *py_lua = PyDict_GetItemString(py_config, "lua");
     if (py_lua && PyDict_Check(py_lua)) {
+        if (validate_keys) {
+            int retval = does_py_dict_contain_valid_keys(
+                &constructor_err, py_lua, py_client_config_lua_valid_keys,
+                false);
+            if (retval == -1) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            else if (retval == 0) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+        }
 
         PyObject *py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
         if (py_lua_user_path && PyUnicode_Check(py_lua_user_path)) {
@@ -624,6 +698,17 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_tls = PyDict_GetItemString(py_config, "tls");
     if (py_tls && PyDict_Check(py_tls)) {
+        if (validate_keys) {
+            int retval = does_py_dict_contain_valid_keys(
+                &constructor_err, py_tls, py_client_config_tls_valid_keys,
+                false);
+            if (retval == -1) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            else if (retval == 0) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+        }
         setup_tls_config(&config, py_tls);
     }
 
@@ -695,6 +780,17 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_shm = PyDict_GetItemString(py_config, "shm");
     if (py_shm && PyDict_Check(py_shm)) {
+        if (validate_keys) {
+            int retval = does_py_dict_contain_valid_keys(
+                &constructor_err, py_shm, py_client_config_shm_valid_keys,
+                false);
+            if (retval == -1) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            else if (retval == 0) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+        }
 
         config.use_shm = true;
 
@@ -778,6 +874,17 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
     if (py_policies && PyDict_Check(py_policies)) {
+        if (validate_keys) {
+            int retval = does_py_dict_contain_valid_keys(
+                &constructor_err, py_policies,
+                py_client_config_policies_valid_keys, false);
+            if (retval == -1) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            else if (retval == 0) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+        }
         //global defaults setting
         PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
         if (py_key_policy && PyLong_Check(py_key_policy)) {
@@ -907,9 +1014,18 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 		 * Set the individual policy groups new in 3.0
 		 * */
 
-        if (set_subpolicies(&config, py_policies) != AEROSPIKE_OK) {
-            error_code = INIT_POLICY_PARAM_ERR;
-            goto CONSTRUCTOR_ERROR;
+        if (set_subpolicies(&constructor_err, &config, py_policies,
+                            validate_keys) != AEROSPIKE_OK) {
+            if (constructor_err.code != AEROSPIKE_OK) {
+                // This would only be set if an invalid key was passed to a policy.
+                // Don't override the error caused by validating the dictionary keys
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+            else {
+                // Original behavior
+                error_code = INIT_POLICY_PARAM_ERR;
+                goto CONSTRUCTOR_ERROR;
+            }
         }
 
         // See comment at end of set_subpolicies() for why we process metrics policy here
@@ -1077,7 +1193,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     }
 
     PyObject *py_app_id = NULL;
-    int retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
+    retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
     if (retval == 1) {
         const char *str = convert_pyobject_to_str(py_app_id);
         if (!str) {
@@ -1218,7 +1334,6 @@ CONSTRUCTOR_ERROR:
 
 RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
-
 RAISE_EXCEPTION_WITHOUT_AS_ERROR:
     as_config_destroy(&config);
     return -1;
