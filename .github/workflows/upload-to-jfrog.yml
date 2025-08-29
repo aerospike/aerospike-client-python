@@ -18,6 +18,9 @@ on:
 
 jobs:
   upload-to-jfrog:
+    permissions:
+        id-token: write
+
     name: Upload artifacts to JFrog
     runs-on: ubuntu-22.04
     steps:
