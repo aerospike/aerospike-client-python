@@ -32,7 +32,6 @@ jobs:
       uses: jfrog/setup-jfrog-cli@v3
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
     - name: Upload manylinux builds from arbitrary branches to JFrog generic repo
       if: ${{ inputs.jfrog-repo-name == vars.JFROG_GENERIC_REPO_NAME }}
