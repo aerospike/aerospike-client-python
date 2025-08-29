@@ -493,7 +493,7 @@ class TestIndex(object):
                 set="demo",
                 index_type=aerospike.INDEX_TYPE_DEFAULT,
                 index_datatype=aerospike.INDEX_BLOB,
-                expressions=GeoBin("geo_point")
+                expressions=GeoBin("geo_point").compile()
             )
 
     def test_index_expr_create_invalid_expr(self):
@@ -503,5 +503,6 @@ class TestIndex(object):
                 set="demo",
                 index_type=aerospike.INDEX_TYPE_DEFAULT,
                 index_datatype=aerospike.INDEX_BLOB,
-                expressions=("1")
+                # Common mistake: uncompiled expression
+                expressions=GeoBin("geo_point")
             )
