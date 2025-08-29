@@ -39,7 +39,7 @@ jobs:
 
   upload-github-artifacts-to-jfrog:
     needs: get-jfrog-project-to-store-artifacts
-    uses: aerospike/shared-workflows/workflows/reusable_upload-artifacts.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
+    uses: aerospike/shared-workflows/.github/workflows/reusable_upload-artifacts.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
     with:
       project: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-project }}
       # build-name:
@@ -53,7 +53,7 @@ jobs:
 
   create-jfrog-release-bundle:
     needs: upload-github-artifacts-to-jfrog
-    uses: aerospike/shared-workflows/workflows/reusable_create-release-bundle.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
+    uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
     with:
       project: clients
       # build-names: 
