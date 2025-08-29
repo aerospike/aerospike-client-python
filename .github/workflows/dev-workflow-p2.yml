@@ -26,10 +26,22 @@ jobs:
       sha-to-build-and-test: ${{ needs.bump-dev-number.outputs.bump_sha }}
     secrets: inherit
 
+  get-jfrog-project-to-store-artifacts:
+    needs: rebuild-artifacts-with-new-dev-num
+    name: Get Jfrog project to store artifacts
+    runs-on: ubuntu-24.04
+    outputs:
+      jfrog-project: ${{ steps.get-jfrog-project.outputs.jfrog_project }}
+
+    steps:
+    - id: get-jfrog-project
+      run: echo jfrog_project=${{ env.JFROG_PYTHON_CLIENT_PROJECT }} >> $GITHUB_OUTPUT
+
   upload-github-artifacts-to-jfrog:
+    needs: get-jfrog-project-to-store-artifacts
     uses: aerospike/shared-workflows/workflows/reusable_upload-artifacts.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
     with:
-      project: clients
+      project: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-project }}
       # build-name:
       #   description: JFrog build name
       #   required: true
@@ -40,6 +52,7 @@ jobs:
       #   type: string
 
   create-jfrog-release-bundle:
+    needs: upload-github-artifacts-to-jfrog
     uses: aerospike/shared-workflows/workflows/reusable_create-release-bundle.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
     with:
       project: clients
@@ -59,6 +72,6 @@ jobs:
   #   secrets: inherit
 
   # We don't want the artifacts in JFrog to also exist in Github
-  delete-artifacts:
-    needs: upload-to-jfrog
-    uses: ./.github/workflows/delete-artifacts.yml
+  # delete-artifacts:
+  #   needs: upload-to-jfrog
+  #   uses: ./.github/workflows/delete-artifacts.yml
