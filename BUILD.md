@@ -14,19 +14,19 @@ The client depends on:
 
 - The Python devel package
 - OpenSSL 1.1 >= 1.1.1
+- Libyaml
 - The Aerospike C client
 
-### RedHat, CentOS, Amazon Linux 2023
+### RedHat, Amazon Linux 2023
 
 The following are dependencies for:
 
 - RedHat Enterprise (RHEL) 8 or newer
-- CentOS 7 Linux
 - Related distributions which use the `yum` package manager
 
 ```sh
 sudo yum install openssl-devel
-sudo yum install python-devel # on CentOS 7
+sudo yum install libyaml-devel
 # Possibly needed
 sudo yum install python-setuptools
 ```
@@ -40,7 +40,7 @@ The following are dependencies for:
 - Related distributions which use the `apt` package manager
 
 ```sh
-sudo apt-get install libssl-dev
+sudo apt-get install libssl-dev libyaml-dev
 sudo apt-get install build-essential python-dev
 ```
 
@@ -87,8 +87,8 @@ By default macOS will be missing command line tools.
 
 The dependencies can be installed through the macOS package manager [Homebrew](http://brew.sh/).
 
-    brew install openssl@1
-    # brew uninstall openssl@3
+    brew install openssl@3
+    brew install libyaml
 
 ### All distros
 
@@ -109,8 +109,8 @@ using the wrong version of the C client. This can causes strange issues when bui
 Also, for macOS or any other operating system that doesn't have OpenSSL installed by default, you must install it and
 specify its location when building the wheel. In macOS, you would run these commands:
 ```
-export SSL_LIB_PATH="$(brew --prefix openssl@1.1)/lib/"
-export CPATH="$(brew --prefix openssl@1.1)/include/"
+export SSL_LIB_PATH="$(brew --prefix openssl@3)/lib/"
+export CPATH="$(brew --prefix openssl@3)/include/"
 export STATIC_SSL=1
 ```
 
@@ -119,6 +119,16 @@ Then build the source distribution and wheel.
 python3 -m pip install -r requirements.txt
 python3 -m build
 ```
+
+### Local version identifier
+
+If you are building on a non-tagged commit, or there are uncommitted changes to the repository, a local version
+identifier will be added to the version. The formatting of the local version identifier can be found [here](https://github.com/jwodder/versioningit/tree/v3.1.0?tab=readme-ov-file#example-configurations) under the versioneer
+section. 
+
+The local version identifier will appear in:
+- The package version in the wheel name
+- `python3 -m pip show aerospike` if you installed the wheel
 
 ### Unoptimized builds (only Linux and macOS)
 
@@ -129,8 +139,7 @@ environment variable:
 UNOPTIMIZED=1 python3 -m build
 ```
 
-In Linux, the package version will be labelled with `+debug`. This label is not applied to macOS currently, but it
-will be supported in the future (soon).
+In Linux and macOS builds, the package version will be labelled with `+unoptimized`.
 
 ### Including debug symbols in macOS
 
@@ -143,6 +152,8 @@ INCLUDE_DSYM=1 python3 -m build
 This way, when you debug the Python client using lldb, the source files and line numbers will appear in backtraces,
 breakpoints will actually work, etc. macOS builds with this option enabled do not have a labelled version yet, but this
 will be added in the future.
+
+In macOS builds, the package version will be labelled with `+dsym`.
 
 ### Building with sanitizer enabled
 
@@ -159,6 +170,8 @@ Then once you install the build with sanitizer, you may run a Python script usin
 # ldconfig -p | grep libasan.so
 LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.6 python3 -c "import aerospike"
 ```
+
+This is only supported for building with GCC.
 
 ### Troubleshooting macOS
 

@@ -52,6 +52,7 @@ from aerospike_helpers.operations import expression_operations as expr_ops
 
 import aerospike
 from aerospike import KeyOrderedDict
+from . import as_errors
 
 # Constants
 _NUM_RECORDS = 9
@@ -126,10 +127,11 @@ def add_ctx_op(ctx_type, value):
 
 
 def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
@@ -163,7 +165,7 @@ class TestExpressions(TestBaseClass):
     def setup(self, request, as_connection):
         self.test_ns = "test"
         self.test_set = "demo"
-
+        self.first_key = (self.test_ns, self.test_set, 0)
         for i in range(_NUM_RECORDS):
             key = ("test", "demo", i)
             rec = {
@@ -828,7 +830,15 @@ class TestExpressions(TestBaseClass):
         ops = [
             expr_ops.expression_read(bin_name, expr.compile())
         ]
-        key = (self.test_ns, self.test_set, 0)
-        _, _, bins = self.as_connection.operate(key, ops)
+        _, _, bins = self.as_connection.operate(self.first_key, ops)
 
         assert bins[bin_name] == expected
+
+    def test_map_get_nil_value_type(self):
+        bin_name = "nmap_bin"
+        exp = MapGetByKey(None, aerospike.MAP_RETURN_VALUE, ResultType.NIL, 2, bin_name).compile()
+        ops = [
+            expr_ops.expression_read(bin_name, exp)
+        ]
+        _, _, bins = self.as_connection.operate(self.first_key, ops)
+        assert bins[bin_name] is None

@@ -1,0 +1,38 @@
+name: Build and upload wheels for QE
+run-name: Build and upload wheels for QE (disable-optimizations=${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }})
+
+on:
+  push:
+    branches-ignore:
+      - dev*
+      - stage*
+      - master*
+  workflow_dispatch:
+    inputs:
+      disable-optimizations:
+        description: 'Build unoptimized wheels?'
+        default: false
+        type: boolean
+        required: true
+
+jobs:
+  build-artifacts:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64"
+        ]
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      platform-tag: ${{ matrix.platform-tag }}
+      unoptimized: ${{ github.event_name == 'workflow_dispatch' && inputs.disable-optimizations || false }}
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
+
+  upload-to-jfrog:
+    needs: build-artifacts
+    uses: ./.github/workflows/upload-to-jfrog.yml
+    with:
+      jfrog-repo-name: ${{ vars.JFROG_GENERIC_REPO_NAME }}
+    secrets: inherit

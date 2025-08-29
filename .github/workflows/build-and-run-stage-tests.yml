@@ -1,0 +1,61 @@
+name: Build artifacts and run stage tests
+run-name: Build artifacts and run stage tests (registry-name=${{ inputs.registry-name }}, server-tag=${{ inputs.server-tag }}, test-macos-x86=${{ inputs.test-macos-x86 }})
+
+on:
+  workflow_dispatch:
+    inputs:
+      registry-name:
+        type: string
+        required: false
+        description: Registry name
+        default: 'docker.io'
+      image-name:
+        type: string
+        required: false
+        description: Image name
+        default: 'aerospike/aerospike-server-enterprise'
+      server-tag:
+        type: string
+        required: true
+        default: 'latest'
+        description: 'Server docker image tag'
+      test-macos-x86:
+        required: true
+        type: boolean
+        default: true
+        description: 'Test macOS x86 wheels (unstable)'
+
+jobs:
+  build-select-wheels:
+    strategy:
+      matrix:
+        platform-tag: [
+          "manylinux_x86_64",
+          "manylinux_aarch64",
+          "macosx_x86_64"
+        ]
+      # Need all the artifacts to run all the stage tests, so fail fast
+    uses: ./.github/workflows/build-wheels.yml
+    with:
+      platform-tag: ${{ matrix.platform-tag }}
+      sha-to-build-and-test: ${{ github.sha }}
+    secrets: inherit
+
+  build-sdist:
+    uses: ./.github/workflows/build-sdist.yml
+    with:
+      sha_to_build: ${{ github.sha }}
+
+  run-stage-tests:
+    uses: ./.github/workflows/stage-tests.yml
+    needs: [
+      build-select-wheels,
+      build-sdist
+    ]
+    secrets: inherit
+    with:
+      use_jfrog_builds: false
+      registry-name: ${{ inputs.registry-name }}
+      image-name: ${{ inputs.image-name }}
+      server-tag: ${{ inputs.server-tag }}
+      test-macos-x86: ${{ inputs.test-macos-x86 }}

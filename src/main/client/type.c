@@ -24,6 +24,7 @@
 #include <aerospike/as_policy.h>
 #include <aerospike/as_vector.h>
 
+#include "pythoncapi_compat.h"
 #include "admin.h"
 #include "client.h"
 #include "policy.h"
@@ -263,29 +264,6 @@ PyDoc_STRVAR(index_geo2dsphere_create_doc,
 \n\
 Create a geospatial 2D spherical index with index_name on the bin in the specified ns, set.");
 
-PyDoc_STRVAR(get_many_doc, "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
-\n\
-Batch-read multiple records with applying list of operations and returns them as a list. \
-Any record that does not exist will have a None value for metadata and status in the record tuple.");
-
-PyDoc_STRVAR(batch_get_ops_doc,
-             "batch_get_ops(keys, ops, meta, policy) -> [ (key, meta, bins)]\n\
-\n\
-Batch-read multiple records, and return them as a list. \
-Any record that does not exist will have a exception type value as metadata and None value as bin in the record tuple.");
-
-PyDoc_STRVAR(select_many_doc,
-             "select_many(keys, bins[, policy]) -> [(key, meta, bins)]\n\
-\n\
-Batch-read multiple records, and return them as a list. \
-Any record that does not exist will have a None value for metadata and bins in the record tuple. \
-The bins will be filtered as specified.");
-
-PyDoc_STRVAR(exists_many_doc, "exists_many(keys[, policy]) -> [ (key, meta)]\n\
-\n\
-Batch-read metadata for multiple keys, and return it as a list. \
-Any record that does not exist will have a None value for metadata in the result tuple.");
-
 PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
 \n\
 Read/Write multiple records for specified batch keys in one batch call. \
@@ -346,6 +324,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"shm_key", (PyCFunction)AerospikeClient_shm_key,
      METH_VARARGS | METH_KEYWORDS, "Get the shm key of the cluster"},
 
+    {"get_stats", (PyCFunction)AerospikeClient_GetStats, METH_NOARGS, NULL},
+
     // METRICS
 
     {"enable_metrics", (PyCFunction)AerospikeClient_EnableMetrics,
@@ -355,6 +335,9 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // ADMIN OPERATIONS
 
+    {"admin_create_pki_user",
+     (PyCFunction)AerospikeClient_Admin_Create_PKI_User,
+     METH_VARARGS | METH_KEYWORDS, "Create a new pki user."},
     {"admin_create_user", (PyCFunction)AerospikeClient_Admin_Create_User,
      METH_VARARGS | METH_KEYWORDS, "Create a new user."},
     {"admin_drop_user", (PyCFunction)AerospikeClient_Admin_Drop_User,
@@ -368,14 +351,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Grant Roles."},
     {"admin_revoke_roles", (PyCFunction)AerospikeClient_Admin_Revoke_Roles,
      METH_VARARGS | METH_KEYWORDS, "Revoke roles"},
-    {"admin_query_user", (PyCFunction)AerospikeClient_Admin_Query_User,
-     METH_VARARGS | METH_KEYWORDS, "Query a user for roles."},
     {"admin_query_user_info",
      (PyCFunction)AerospikeClient_Admin_Query_User_Info,
      METH_VARARGS | METH_KEYWORDS,
      "Query a user for read/write info, connections-in-use and roles."},
-    {"admin_query_users", (PyCFunction)AerospikeClient_Admin_Query_Users,
-     METH_VARARGS | METH_KEYWORDS, "Query all users for roles."},
     {"admin_query_users_info",
      (PyCFunction)AerospikeClient_Admin_Query_Users_Info,
      METH_VARARGS | METH_KEYWORDS,
@@ -489,6 +468,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, index_blob_create_doc},
     {"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
      METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
+    {"index_expr_create", (PyCFunction)AerospikeClient_Index_Expr_Create,
+     METH_VARARGS | METH_KEYWORDS, ""},
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
      METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
     {"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
@@ -507,14 +488,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // BATCH OPERATIONS
 
-    {"get_many", (PyCFunction)AerospikeClient_Get_Many,
-     METH_VARARGS | METH_KEYWORDS, get_many_doc},
-    {"batch_get_ops", (PyCFunction)AerospikeClient_Batch_GetOps,
-     METH_VARARGS | METH_KEYWORDS, batch_get_ops_doc},
-    {"select_many", (PyCFunction)AerospikeClient_Select_Many,
-     METH_VARARGS | METH_KEYWORDS, select_many_doc},
-    {"exists_many", (PyCFunction)AerospikeClient_Exists_Many,
-     METH_VARARGS | METH_KEYWORDS, exists_many_doc},
     {"batch_write", (PyCFunction)AerospikeClient_BatchWrite,
      METH_VARARGS | METH_KEYWORDS, batch_write_doc},
     {"batch_operate", (PyCFunction)AerospikeClient_Batch_Operate,
@@ -529,6 +502,11 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     // TRUNCATE OPERATIONS
     {"truncate", (PyCFunction)AerospikeClient_Truncate,
      METH_VARARGS | METH_KEYWORDS, truncate_doc},
+
+    // Multi record transactions
+    {"commit", (PyCFunction)AerospikeClient_Commit,
+     METH_VARARGS | METH_KEYWORDS},
+    {"abort", (PyCFunction)AerospikeClient_Abort, METH_VARARGS | METH_KEYWORDS},
 
     {NULL}};
 
@@ -573,6 +551,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->as = NULL;
     self->send_bool_as = SEND_BOOL_AS_AS_BOOL;
 
+    as_config config;
+    as_config_init(&config);
+
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist,
                                     &py_config) == false) {
         error_code = INIT_NO_CONFIG_ERR;
@@ -584,8 +565,47 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         goto CONSTRUCTOR_ERROR;
     }
 
-    as_config config;
-    as_config_init(&config);
+    // We create a new class for as_config_provider
+    // because dictionaries are meant to have any kind of keys / values
+    // whereas classes follow a well defined spec
+    PyObject *py_config_provider_option_name =
+        PyUnicode_FromString("config_provider");
+    if (py_config_provider_option_name == NULL) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+    PyObject *py_obj_config_provider =
+        PyDict_GetItemWithError(py_config, py_config_provider_option_name);
+    Py_DECREF(py_config_provider_option_name);
+
+    PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
+    if (py_obj_config_provider == NULL) {
+        if (PyErr_Occurred()) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        // User didn't provide config provider.
+        // It is optional so just move on
+    }
+    else if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "config_provider must be an "
+                        "aerospike.ConfigProvider class instance. But "
+                        "a %s was received instead",
+                        py_obj_config_provider->ob_type->tp_name);
+        goto RAISE_EXCEPTION_WITH_AS_ERROR;
+    }
+    else {
+        // In Python, users can have their own instance of aerospike.ConfigProvider
+        // that lives independently from the client config dictionary.
+        // But here, we need to copy over its values into the C client config provider
+        // because the latter is embedded inside as_config
+        AerospikeConfigProvider *py_config_provider =
+            (AerospikeConfigProvider *)py_obj_config_provider;
+
+        config.config_provider.interval = py_config_provider->interval;
+        // This method creates a new copy of the string at py_config_provider->provider->path
+        // so that the as_config object doesn't depend on the lifetime of the aerospike.ConfigProvider object in Python
+        as_config_provider_set_path(&config, py_config_provider->path);
+    }
 
     bool lua_user_path = false;
 
@@ -1011,6 +1031,45 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto CONSTRUCTOR_ERROR;
         }
 
+        // See comment at end of set_subpolicies() for why we process metrics policy here
+        PyObject *py_metrics_policy_option_name =
+            PyUnicode_FromString("metrics");
+        if (py_metrics_policy_option_name == NULL) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        PyObject *py_obj_metrics_policy =
+            PyDict_GetItemWithError(py_policies, py_metrics_policy_option_name);
+        Py_DECREF(py_metrics_policy_option_name);
+
+        if (py_obj_metrics_policy == NULL) {
+            if (PyErr_Occurred()) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            // User didn't provide default metrics policy.
+            // It is optional so just move on
+        }
+        else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
+                                                  "metrics", "MetricsPolicy",
+                                                  false) == false) {
+            // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
+            // But we want to set a different error message here
+            as_error_update(
+                &constructor_err, AEROSPIKE_ERR_PARAM,
+                "metrics must be an "
+                "aerospike_helpers.metrics.MetricsPolicy class instance. But "
+                "a %s was received instead",
+                py_obj_metrics_policy->ob_type->tp_name);
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+        else {
+            int retval = set_as_metrics_policy_using_pyobject(
+                &constructor_err, py_obj_metrics_policy,
+                &(config.policies.metrics));
+            if (retval != AEROSPIKE_OK) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+        }
+
         PyObject *py_login_timeout =
             PyDict_GetItemString(py_policies, "login_timeout_ms");
         if (py_login_timeout) {
@@ -1204,14 +1263,34 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
     if (py_cluster_name) {
-        if (!PyUnicode_Check(py_cluster_name)) {
+        if (PyUnicode_Check(py_cluster_name)) {
             initialize_config_value_type_err(config_value_type_error_msg,
-                                             "[\"cluster_name\"]", "str",
-                                             &error_code);
+                                           "[\"cluster_name\"]", "str",
+                                           &error_code);
             goto CONSTRUCTOR_ERROR;
         }
-        as_config_set_cluster_name(
-            &config, strdup((char *)PyUnicode_AsUTF8(py_cluster_name)));
+
+        const char *cluster_name = PyUnicode_AsUTF8(py_cluster_name);
+        if (!cluster_name) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+
+        as_config_set_cluster_name(&config, cluster_name);
+    }
+
+    PyObject *py_app_id = NULL;
+    int retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
+    if (retval == 1) {
+        const char *str = convert_pyobject_to_str(py_app_id);
+        if (!str) {
+            Py_DECREF(py_app_id);
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        as_config_set_app_id(&config, str);
+        Py_DECREF(py_app_id);
+    }
+    else if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
 
     //strict_types check
@@ -1294,10 +1373,10 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     return 0;
 
 CONSTRUCTOR_ERROR:
-
     switch (error_code) {
     // 0 Is success
     case 0: {
+        // TODO: this is dead code
         // Initialize connection flag
         return 0;
     }
@@ -1372,7 +1451,11 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
+RAISE_EXCEPTION_WITH_AS_ERROR:
     raise_exception(&constructor_err);
+
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
+    as_config_destroy(&config);
     return -1;
 }
 
@@ -1523,24 +1606,25 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeClient_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Client", // tp_name
-    sizeof(AerospikeClient),                           // tp_basicsize
-    0,                                                 // tp_itemsize
-    (destructor)AerospikeClient_Type_Dealloc,          // tp_dealloc
-    0,                                                 // tp_print
-    0,                                                 // tp_getattr
-    0,                                                 // tp_setattr
-    0,                                                 // tp_compare
-    0,                                                 // tp_repr
-    0,                                                 // tp_as_number
-    0,                                                 // tp_as_sequence
-    0,                                                 // tp_as_mapping
-    0,                                                 // tp_hash
-    0,                                                 // tp_call
-    0,                                                 // tp_str
-    0,                                                 // tp_getattro
-    0,                                                 // tp_setattro
-    0,                                                 // tp_as_buffer
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
+    sizeof(AerospikeClient),                  // tp_basicsize
+    0,                                        // tp_itemsize
+    (destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
+    0,                                        // tp_print
+    0,                                        // tp_getattr
+    0,                                        // tp_setattr
+    0,                                        // tp_compare
+    0,                                        // tp_repr
+    0,                                        // tp_as_number
+    0,                                        // tp_as_sequence
+    0,                                        // tp_as_mapping
+    0,                                        // tp_hash
+    0,                                        // tp_call
+    0,                                        // tp_str
+    0,                                        // tp_getattro
+    0,                                        // tp_setattro
+    0,                                        // tp_as_buffer
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     // tp_flags
     "The Client class manages the connections and trasactions against\n"

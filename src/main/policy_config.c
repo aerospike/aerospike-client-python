@@ -137,6 +137,23 @@ as_status set_subpolicies(as_config *config, PyObject *py_policies)
         return set_policy_status;
     }
 
+    // TODO: combine with other batch policies
+    const char *batch_policy_names[] = {"txn_verify", "txn_roll"};
+    as_policy_batch *batch_policies[] = {&config->policies.txn_verify,
+                                         &config->policies.txn_roll};
+    for (unsigned long i = 0;
+         i < sizeof(batch_policy_names) / sizeof(batch_policy_names[0]); i++) {
+        PyObject *py_batch_policy =
+            PyDict_GetItemString(py_policies, batch_policy_names[i]);
+        set_policy_status =
+            set_batch_policy(batch_policies[i], py_batch_policy);
+        if (set_policy_status != AEROSPIKE_OK) {
+            return set_policy_status;
+        }
+    }
+    // Default metrics policy is processed right after this call in the client constructor code
+    // If this function fails, the calling function always sets as_error with our own error code and message
+    // But when reading the config-level metrics policy, we want to propagate native Python exceptions up to the user
     return AEROSPIKE_OK;
 }
 

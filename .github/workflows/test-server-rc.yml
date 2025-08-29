@@ -13,47 +13,37 @@ on:
 
 jobs:
   manylinux:
-    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
         # Python versions to build wheels on
         python: [
-          ["3.8", "cp38"],
           ["3.9", "cp39"],
           ["3.10", "cp310"],
           ["3.11", "cp311"],
           ["3.12", "cp312"]
         ]
         platform: [
-          "x86_64",
-          "aarch64"
+          ["x86_64", "ubuntu-22.04"],
+          ["aarch64", "aerospike_arm_runners_2"]
         ]
-
+    runs-on: ${{ matrix.platform[1] }}
     steps:
     - uses: actions/checkout@v4
 
-    - name: Set up QEMU for cross compiling arm64
-      if: ${{ matrix.platform == 'aarch64' }}
-      uses: docker/setup-qemu-action@v2
-      with:
-        platforms: arm64
+    - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform[0] }} tail -f /dev/null
 
-    - run: docker run -d --name manylinux quay.io/pypa/manylinux2014_${{ matrix.platform }} tail -f /dev/null
-
-    - uses: ./.github/actions/run-ee-server-for-ext-container
+    - uses: ./.github/actions/run-ee-server
       with:
         use-server-rc: true
         server-tag: latest
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Wait for server to be ready
-      run: sleep 5
+        where-is-client-connecting-from: 'docker-container'
 
     - uses: actions/download-artifact@v4
       with:
-        name: ${{ matrix.python[1] }}-manylinux_${{ matrix.platform }}.build
+        name: ${{ matrix.python[1] }}-manylinux_${{ matrix.platform[0] }}.build
         path: ./
 
     - name: Copy repo and wheel into manylinux container
@@ -76,7 +66,6 @@ jobs:
       fail-fast: false
       matrix:
         python: [
-          ["3.8", "cp38"],
           ["3.9", "cp39"],
           ["3.10", "cp310"],
           ["3.11", "cp311"],
@@ -86,14 +75,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install Docker Engine
-      run: brew install colima
-
-    - name: Install Docker client
-      run: brew install docker
-
-    - name: Start Docker Engine
-      run: colima start
+    - uses: ./.github/actions/setup-docker-on-macos
 
     - uses: ./.github/actions/run-ee-server
       with:
@@ -101,9 +83,6 @@ jobs:
         server-tag: latest
         docker-hub-username: ${{ secrets.DOCKER_HUB_BOT_USERNAME }}
         docker-hub-password: ${{ secrets.DOCKER_HUB_BOT_PW }}
-
-    - name: Wait for server to be ready
-      run: sleep 5
 
     - uses: actions/download-artifact@v4
       with:
@@ -133,7 +112,6 @@ jobs:
     strategy:
       matrix:
         python-version: [
-          ["3.8", "cp38"],
           ["3.9", "cp39"],
           ["3.10", "cp310"],
           ["3.11", "cp311"],
@@ -165,16 +143,21 @@ jobs:
         password: ${{ secrets.DOCKER_HUB_BOT_PW }}
 
     - name: Run server RC
-      run: docker run -d -p 3000:3000 --name aerospike ${{ vars.SERVER_RC_REPO_LINK }}
+      run: docker run -d -p 3000:3000 --name aerospike -e DEFAULT_TTL=2592000 ${{ vars.SERVER_RC_REPO_LINK }}
 
-    - name: Wait for server to be ready
-      run: sleep 5
+    - name: Create config.conf
+      run: cp config.conf.template config.conf
+      working-directory: test
 
     - name: Install wheel
       run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages *.whl
 
     - run: python${{ matrix.python-version[0] }} -m pip install --force-reinstall --break-system-packages -r requirements.txt
       working-directory: test
+
+    - uses: ./.github/actions/wait-for-ce-server-to-start
+      with:
+        container-name: aerospike
 
     - run: python${{ matrix.python-version[0] }} -m pytest new_tests/
       id: test
