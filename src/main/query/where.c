@@ -75,8 +75,8 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     as_exp *exp_list = NULL;
     if (py_expr) {
-        as_status status =
-            convert_exp_list(self->client, py_expr, &exp_list, &err);
+        as_status status = as_exp_new_from_pyobject(self->client, py_expr,
+                                                    &exp_list, &err, true);
         if (status != AEROSPIKE_OK) {
             goto CLEANUP_CTX_ON_ERROR;
         }
@@ -276,7 +276,7 @@ CLEANUP_VALUES_ON_ERROR:
 CLEANUP_EXP_ON_ERROR:
 
     if (exp_list) {
-        free(exp_list);
+        as_exp_destroy(exp_list);
     }
 
 CLEANUP_CTX_ON_ERROR:

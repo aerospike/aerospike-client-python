@@ -180,7 +180,9 @@ PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
 
     as_error err;
     as_error_init(&err);
-    if (convert_exp_list(self, py_expr, &expr, &err) != AEROSPIKE_OK) {
+    if (as_exp_new_from_pyobject(self, py_expr, &expr, &err, false) !=
+        AEROSPIKE_OK) {
+        raise_exception(&err);
         return NULL;
     }
 

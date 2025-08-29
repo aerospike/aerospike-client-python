@@ -493,5 +493,17 @@ class TestIndex(object):
                 set="demo",
                 index_type=aerospike.INDEX_TYPE_DEFAULT,
                 index_datatype=aerospike.INDEX_BLOB,
+                expressions=GeoBin("geo_point").compile()
+            )
+
+    def test_index_expr_create_invalid_expr(self):
+        with pytest.raises(e.ParamError):
+            self.as_connection.index_expr_create(
+                ns="test",
+                set="demo",
+                index_type=aerospike.INDEX_TYPE_DEFAULT,
+                index_datatype=aerospike.INDEX_BLOB,
+                # Common mistake: uncompiled expression
+                name="test",
                 expressions=GeoBin("geo_point")
             )
