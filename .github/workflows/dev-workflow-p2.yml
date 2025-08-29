@@ -31,34 +31,39 @@ jobs:
     name: Get Jfrog project to store artifacts
     runs-on: ubuntu-24.04
     outputs:
-      jfrog-project: ${{ steps.get-jfrog-project.outputs.jfrog_project }}
+      jfrog-project: ${{ steps.get-env-vars.outputs.jfrog_project }}
+      jfrog-build-name: ${{ steps.get-env-vars.outputs.jfrog_build_name }}
 
     steps:
-    - id: get-jfrog-project
-      run: echo jfrog_project=${{ env.JFROG_PYTHON_CLIENT_PROJECT }} >> $GITHUB_OUTPUT
+    - name: Get outputs
+      id: get-env-vars
+      run: |
+        echo jfrog_project=${{ env.JFROG_PYTHON_CLIENT_PROJECT }} >> $GITHUB_OUTPUT
+        echo jfrog_build_name=${{ env.JFROG_BUILD_NAME }} >> $GITHUB_OUTPUT
 
   upload-github-artifacts-to-jfrog:
-    needs: get-jfrog-project-to-store-artifacts
+    needs: [
+      bump-dev-number,
+      get-jfrog-project-to-store-artifacts
+    ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_upload-artifacts.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
     with:
       project: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-project }}
-      # build-name:
-      #   description: JFrog build name
-      #   required: true
-      #   type: string
-      # version:
-      #   description: Version of the artifact to upload
-      #   required: true
-      #   type: string
+      build-name: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-build-name }}
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
 
   create-jfrog-release-bundle:
-    needs: upload-github-artifacts-to-jfrog
+    needs: [
+      bump-dev-number,
+      get-jfrog-project-to-store-artifacts,
+      upload-github-artifacts-to-jfrog
+    ]
     uses: aerospike/shared-workflows/.github/workflows/reusable_create-release-bundle.yaml@34ffd4613504a792f3cd5530c69fb9a3115ad9c1
     with:
-      project: clients
-      # build-names: 
-      # bundle-name: 
-      # version: 
+      project: ${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-project }}
+      build-names: "${{ needs.get-jfrog-project-to-store-artifacts.outputs.jfrog-build-name }}:${{ needs.bump-dev-number.outputs.new_version }}"
+      bundle-name: asdf
+      version: ${{ needs.bump-dev-number.outputs.new_version }}
 
   # upload-to-jfrog:
   #   name: Upload artifacts to JFrog
