@@ -74,7 +74,6 @@ runs:
     if: ${{ inputs.get_from_jfrog == 'true' }}
     env:
       JF_URL: ${{ inputs.JFROG_PLATFORM_URL }}
-      JF_ACCESS_TOKEN: ${{ inputs.JFROG_ACCESS_TOKEN }}
 
   - name: Download artifact from JFrog
     if: ${{ inputs.get_from_jfrog == 'true' }}
