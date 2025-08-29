@@ -504,5 +504,6 @@ class TestIndex(object):
                 index_type=aerospike.INDEX_TYPE_DEFAULT,
                 index_datatype=aerospike.INDEX_BLOB,
                 # Common mistake: uncompiled expression
+                name="test",
                 expressions=GeoBin("geo_point")
             )
