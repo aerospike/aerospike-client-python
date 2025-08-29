@@ -33,17 +33,3 @@ PyObject *Aerospike_Calc_Digest(PyObject *self, PyObject *args, PyObject *kwds);
  *
  */
 PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args);
-
-/**
- * check whether async supported or not
- *
- *		aerospike.is_async_supoorted()
- *
- */
-PyObject *Aerospike_Is_AsyncSupported(PyObject *self);
-
-/*******************************************************************************
- * Aerospike initialization
- ******************************************************************************/
-
-PyObject *AerospikeInitAsync(PyObject *self, PyObject *args, PyObject *kwds);

@@ -176,10 +176,10 @@ PyObject *AerospikeClient_Connect(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
-    if (py_username && PyString_Check(py_username) && py_password &&
-        PyString_Check(py_password)) {
-        char *username = PyString_AsString(py_username);
-        char *password = PyString_AsString(py_password);
+    if (py_username && PyUnicode_Check(py_username) && py_password &&
+        PyUnicode_Check(py_password)) {
+        char *username = (char *)PyUnicode_AsUTF8(py_username);
+        char *password = (char *)PyUnicode_AsUTF8(py_password);
         as_config_set_user(&self->as->config, username, password);
     }
 

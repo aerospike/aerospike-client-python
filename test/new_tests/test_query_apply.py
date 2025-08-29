@@ -174,7 +174,7 @@ class TestQueryApply(object):
         """
         Invoke query_apply() with incorrect policy
         """
-        policy = {"timeout": 0.5}
+        policy = {"total_timeout": 0.5}
 
         with pytest.raises(e.ParamError):
             self.as_connection.query_apply(
@@ -319,6 +319,8 @@ class TestQueryApply(object):
             ("age"),
             ("age", 1),
             ("age", 1, 5),
+            (None, 1, "bin"),  # Invalid predicate type
+            (1, None, "bin"),  # Invalid index data type
             (1, 1, "bin"),  # start of a valid predicate
         ),
     )

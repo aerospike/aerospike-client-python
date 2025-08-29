@@ -54,7 +54,12 @@ class TestQueryUsersInfo(TestBaseClass):
         time.sleep(2)
         user_details = self.client.admin_query_users_info()
 
-        assert user_details.get("example-test").get("roles") == ["read", "read-write", "sys-admin"]
+        # Usage test; doesn't actually test if the server records user data
+        user_details = user_details.get("example-test")
+        assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
+        assert user_details.get("read_info") == 0
+        assert user_details.get("write_info") == 0
+        assert user_details.get("conns_in_use") == 0
 
     def test_query_users_info_with_invalid_timeout_policy_value(self):
 

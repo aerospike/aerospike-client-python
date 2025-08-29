@@ -22,6 +22,8 @@
 
 as_status set_optional_uint32_property(uint32_t *target_ptr,
                                        PyObject *policy_dict, const char *name);
+as_status set_optional_uint16_property(uint16_t *target_ptr,
+                                       PyObject *py_policy, const char *name);
 as_status set_optional_bool_property(bool *target_ptr, PyObject *py_policy,
                                      const char *name);
 as_status set_base_policy(as_policy_base *base, PyObject *py_policy);
@@ -50,3 +52,9 @@ as_status set_operate_policy(as_policy_operate *operate_policy,
 as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy);
 as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy);
 as_status set_admin_policy(as_policy_admin *admin_policy, PyObject *py_policy);
+as_status set_batch_apply_policy(as_policy_batch_apply *batch_apply_policy,
+                                 PyObject *py_policy);
+as_status set_batch_write_policy(as_policy_batch_write *batch_write_policy,
+                                 PyObject *py_policy);
+as_status set_batch_remove_policy(as_policy_batch_remove *batch_remove_policy,
+                                  PyObject *py_policy);

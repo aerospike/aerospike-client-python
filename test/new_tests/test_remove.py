@@ -34,7 +34,7 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
         meta = {"gen": 0}
-        policy = {"timeout": 180000}
+        policy = {"total_timeout": 180000}
 
         retobj = self.as_connection.remove(key, meta, policy)
 
@@ -59,7 +59,7 @@ class TestRemove:
         key = ("test", "demo", 1)
         meta = {"gen": 0}
         policy = {
-            "timeout": 180000,
+            "total_timeout": 180000,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,

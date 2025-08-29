@@ -71,7 +71,6 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
     PyObject *py_policy = NULL;
     PyObject *py_results = NULL;
     PyObject *py_nodename = NULL;
-    PyObject *py_ustr = NULL;
 
     as_static_pool static_pool;
     memset(&static_pool, 0, sizeof(static_pool));
@@ -136,18 +135,8 @@ PyObject *AerospikeScan_Results(AerospikeScan *self, PyObject *args,
 	 * If the user specified a nodename, validate and convert it to a char*
 	 */
     if (py_nodename) {
-        if (PyString_Check(py_nodename)) {
-            nodename = PyString_AsString(py_nodename);
-        }
-        else if (PyUnicode_Check(py_nodename)) {
-            /* The decoding could fail, so we need to check for null */
-            py_ustr = PyUnicode_AsUTF8String(py_nodename);
-            if (!py_ustr) {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                "Invalid unicode nodename");
-                goto CLEANUP;
-            }
-            nodename = PyBytes_AsString(py_ustr);
+        if (PyUnicode_Check(py_nodename)) {
+            nodename = (char *)PyUnicode_AsUTF8(py_nodename);
         }
         else {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -188,8 +177,6 @@ CLEANUP:
     if (exp_list_p) {
         as_exp_destroy(exp_list_p);
     }
-
-    Py_XDECREF(py_ustr);
 
     if (err.code != AEROSPIKE_OK) {
         Py_XDECREF(py_results);

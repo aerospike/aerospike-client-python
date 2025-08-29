@@ -73,6 +73,8 @@ class _ExprOp:  # TODO replace this with an enum
     META_KEY_EXISTS = 70
     META_SINCE_UPDATE_TIME = 71
     META_IS_TOMBSTONE = 72
+    META_MEMORY_SIZE = 73
+    META_RECORD_SIZE = 74
 
     REC_KEY = 80
     BIN = 81
@@ -103,11 +105,18 @@ class _ExprOp:  # TODO replace this with an enum
     VAL = 200
 
 
+class ReturnType:
+    # Define here because we aren't including this constant in the Python client
+    # But it exists in the C client
+    LIST_RETURN_INVERTED = 0x10000
+    MAP_RETURN_INVERTED = 0x10000
+
+
 class ResultType:
     """
     Flags used to indicate expression value_type.
     """
-
+    NIL = 0
     BOOLEAN = 1
     INTEGER = 2
     STRING = 3

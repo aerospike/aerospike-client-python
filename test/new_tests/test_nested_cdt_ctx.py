@@ -32,6 +32,11 @@ def add_ctx_op(ctx_type, value):
     return ctx_func(value)
 
 
+# InvalidRequest is thrown in server < 6.4
+# BinIncompatibleType is thrown in server >= 6.4
+invalid_nested_type_err = (e.InvalidRequest, e.BinIncompatibleType)
+
+
 class TestCTXOperations(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
@@ -46,10 +51,11 @@ class TestCTXOperations(object):
         self.nested_map = {
             "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
             "second": {
+                # TODO: remove this?
                 "nested": {
-                    4,
-                    5,
-                    6,
+                    "a": 4,
+                    "b": 5,
+                    "c": 6,
                 },
                 "hundred": 100,
             },
@@ -329,7 +335,7 @@ class TestCTXOperations(object):
         [
             (0, 1, None, [1], e.InvalidRequest),
             (0, "cat", None, [1], e.InvalidRequest),
-            (0, 1, None, [1, 1, 1, 1], e.InvalidRequest),
+            (0, 1, None, [1, 1, 1, 1], invalid_nested_type_err),
         ],
     )
     def test_ctx_list_increment_negative(self, index, value, policy, list_indexes, expected):
@@ -372,7 +378,7 @@ class TestCTXOperations(object):
         "index, list_indexes, expected",
         [
             (3, [1, 1, 1], e.OpNotApplicable),
-            (2, [1, 1, 1, 1], e.InvalidRequest),
+            (2, [1, 1, 1, 1], invalid_nested_type_err),
             ("cat", [0], e.ParamError),
         ],
     )
@@ -416,7 +422,7 @@ class TestCTXOperations(object):
         "index, list_indexes, count, expected",
         [
             # (4, [1,1,1], 1, e.OpNotApplicable),
-            (2, [1, 1, 1, 1], 1, e.InvalidRequest),
+            (2, [1, 1, 1, 1], 1, invalid_nested_type_err),
             ("cat", [0], 1, e.ParamError),
             # (0, [1,1,1], 20, e.OpNotApplicable),
         ],
@@ -462,7 +468,7 @@ class TestCTXOperations(object):
         [
             (0, "cat", e.ParamError),
             (40, [1], e.OpNotApplicable),
-            (0, [1, 1, 1, 1], e.InvalidRequest),
+            (0, [1, 1, 1, 1], invalid_nested_type_err),
         ],
     )
     def test_ctx_list_remove_negative(self, index, list_indexes, expected):
@@ -505,7 +511,7 @@ class TestCTXOperations(object):
         "count, index, list_indexes, expected",
         [
             (1, 0, "cat", e.ParamError),
-            (1, 0, [1, 1, 1, 1], e.InvalidRequest),
+            (1, 0, [1, 1, 1, 1], invalid_nested_type_err),
         ],
     )
     def test_ctx_list_remove_range_negative(self, count, index, list_indexes, expected):
@@ -548,7 +554,7 @@ class TestCTXOperations(object):
         "list_indexes, expected",
         [
             ("cat", e.ParamError),
-            ([1, 1, 1, 1], e.InvalidRequest),
+            ([1, 1, 1, 1], invalid_nested_type_err),
         ],
     )
     def test_ctx_list_clear_negative(self, list_indexes, expected):
@@ -863,7 +869,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "value, offset, return_type, count, inverted, list_indexes, expected",
         [
-            (2, 0, aerospike.LIST_RETURN_VALUE, 2, False, [1, 1, 1, 1], e.InvalidRequest),
+            (2, 0, aerospike.LIST_RETURN_VALUE, 2, False, [1, 1, 1, 1], invalid_nested_type_err),
         ],
     )
     def test_ctx_list_remove_by_value_rank_range_negative(
@@ -1312,7 +1318,7 @@ class TestCTXOperations(object):
             (1, aerospike.LIST_RETURN_VALUE, [2], e.OpNotApplicable),
             (4, aerospike.LIST_RETURN_VALUE, [1, 1, 1], e.OpNotApplicable),
             ("cat", aerospike.LIST_RETURN_VALUE, [1], e.ParamError),
-            (0, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], e.InvalidRequest),
+            (0, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], invalid_nested_type_err),
         ],
     )
     def test_ctx_list_remove_by_index_negative(self, index, return_type, list_indexes, expected):
@@ -1395,7 +1401,7 @@ class TestCTXOperations(object):
             (1, aerospike.LIST_RETURN_VALUE, 1, False, ["dog"], e.ParamError),
             (1, 42, 1, False, [1], e.OpNotApplicable),
             (0, aerospike.LIST_RETURN_INDEX, "dog", False, [1, 1, 1], e.ParamError),
-            (0, aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1, 1], e.InvalidRequest),
+            (0, aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1, 1], invalid_nested_type_err),
             # (4, aerospike.LIST_RETURN_VALUE, 3, False, [1], e.OpNotApplicable), why does this silently fail?
         ],
     )
@@ -1468,7 +1474,7 @@ class TestCTXOperations(object):
         [
             (1, aerospike.LIST_RETURN_VALUE, [2], e.OpNotApplicable),
             (3, aerospike.LIST_RETURN_VALUE, [1, 1, 1], e.OpNotApplicable),
-            (1, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], e.InvalidRequest),
+            (1, aerospike.LIST_RETURN_VALUE, [1, 1, 1, 1], invalid_nested_type_err),
             ("cat", aerospike.LIST_RETURN_VALUE, [1], e.ParamError),
         ],
     )
@@ -1550,7 +1556,7 @@ class TestCTXOperations(object):
             (1, aerospike.LIST_RETURN_VALUE, 1, False, ["dog"], e.ParamError),
             (1, 42, 1, False, [1], e.OpNotApplicable),
             (0, aerospike.LIST_RETURN_INDEX, "dog", False, [1, 1, 1], e.ParamError),
-            (0, aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1, 1], e.InvalidRequest),
+            (0, aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1, 1], invalid_nested_type_err),
             ("dog", aerospike.LIST_RETURN_VALUE, 3, False, [1, 1, 1], e.ParamError),
         ],
     )
@@ -1623,7 +1629,7 @@ class TestCTXOperations(object):
         "value, return_type, inverted, list_indexes, expected",
         [
             (1, aerospike.LIST_RETURN_VALUE, False, [2], e.OpNotApplicable),
-            (1, aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.InvalidRequest),
+            (1, aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], invalid_nested_type_err),
         ],
     )
     def test_ctx_list_remove_by_value_negative(self, value, return_type, inverted, list_indexes, expected):
@@ -1697,7 +1703,7 @@ class TestCTXOperations(object):
         "values, return_type, inverted, list_indexes, expected",
         [
             ([1], aerospike.LIST_RETURN_VALUE, False, [2], e.OpNotApplicable),
-            ([2], aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], e.InvalidRequest),
+            ([2], aerospike.LIST_RETURN_VALUE, False, [1, 1, 1, 1], invalid_nested_type_err),
             ([1], "bad_return_type", False, [1], e.ParamError),
         ],
     )
@@ -1780,7 +1786,7 @@ class TestCTXOperations(object):
         "return_type, value_begin, value_end, inverted, list_indexes, expected",
         [
             (aerospike.LIST_RETURN_VALUE, 0, 1, False, [2], e.OpNotApplicable),
-            (aerospike.LIST_RETURN_VALUE, 0, 1, False, [1, 1, 1, 1], e.InvalidRequest),
+            (aerospike.LIST_RETURN_VALUE, 0, 1, False, [1, 1, 1, 1], invalid_nested_type_err),
             ("bad_return_type", 0, 1, False, [1], e.ParamError),
         ],
     )
@@ -1828,7 +1834,7 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "list_order, list_indexes, expected",
         [
-            (aerospike.LIST_ORDERED, [0, 1], e.InvalidRequest),
+            (aerospike.LIST_ORDERED, [0, 1], invalid_nested_type_err),
             ("bad_list_order_type", [1], e.ParamError),
         ],
     )
@@ -1870,8 +1876,8 @@ class TestCTXOperations(object):
     @pytest.mark.parametrize(
         "sort_flags, list_indexes, expected",
         [
-            (aerospike.LIST_SORT_DEFAULT, [0, 1], e.InvalidRequest),
-            (aerospike.LIST_SORT_DROP_DUPLICATES, [0, 1], e.InvalidRequest),
+            (aerospike.LIST_SORT_DEFAULT, [0, 1], invalid_nested_type_err),
+            (aerospike.LIST_SORT_DROP_DUPLICATES, [0, 1], invalid_nested_type_err),
             ("bad_sort_flags_type", [1], e.ParamError),
         ],
     )
@@ -1893,7 +1899,7 @@ class TestCTXOperations(object):
         [
             ([map_index], "greet", aerospike.MAP_RETURN_VALUE, [0], "hi"),
             ([map_index], 3, aerospike.MAP_RETURN_VALUE, [0], "hello"),
-            ([map_index], "nested", aerospike.MAP_RETURN_VALUE, [1], {4, 5, 6}),
+            ([map_index], "nested", aerospike.MAP_RETURN_VALUE, [1], {"a": 4, "b": 5, "c": 6}),
             ([map_index], "dog", aerospike.MAP_RETURN_VALUE, [1], None),
             (
                 [map_index, map_index, map_index],
@@ -1992,7 +1998,14 @@ class TestCTXOperations(object):
         [
             ([map_index], ["greet"], aerospike.MAP_RETURN_VALUE, False, [0], ["hi"]),
             ([map_index], ["numbers", 3], aerospike.MAP_RETURN_VALUE, False, [0], ["hello", [3, 1, 2]]),
-            ([map_index], ["nested", "hundred"], aerospike.MAP_RETURN_VALUE, False, [1], [100, {4, 5, 6}]),
+            (
+                [map_index],
+                ["nested", "hundred"],
+                aerospike.MAP_RETURN_VALUE,
+                False,
+                [1],
+                [100, {"a": 4, "b": 5, "c": 6}]
+            ),
             ([map_index], ["dog"], aerospike.MAP_RETURN_VALUE, False, [1], []),
             (
                 [map_index, map_index, map_index],
@@ -2089,7 +2102,7 @@ class TestCTXOperations(object):
         [
             ([map_index], 1, 1, aerospike.MAP_RETURN_VALUE, False, [0], ["hi"]),
             ([map_index], 0, 3, aerospike.MAP_RETURN_VALUE, False, [0], ["hello", "hi", [3, 1, 2]]),
-            ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [1], [100, {4, 5, 6}]),
+            ([map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [1], [100, {"a": 4, "b": 5, "c": 6}]),
             ([map_index, map_index, map_index], 0, 2, aerospike.MAP_RETURN_VALUE, False, [2, 0, 0], ["pond", "shoe"]),
             ([map_key], 1, 2, aerospike.MAP_RETURN_INDEX, True, ["second"], [0]),
             (
@@ -2251,20 +2264,21 @@ class TestCTXOperations(object):
             ([map_index], ["hello"], aerospike.MAP_RETURN_VALUE, False, [0], ["hello"]),
             (
                 [map_value],
-                [{4, 5, 6}, 100],
+                [{"a": 4, "b": 5, "c": 6}, 100],
                 aerospike.MAP_RETURN_VALUE,
                 False,
                 [
                     {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     }
                 ],
-                [100, {4, 5, 6}],
+                # Server uses CDT ordering to put integers before maps in CDTs
+                [100, {"a": 4, "b": 5, "c": 6}],
             ),
             ([map_index], ["dog"], aerospike.MAP_RETURN_VALUE, False, [1], []),
             (
@@ -2318,7 +2332,7 @@ class TestCTXOperations(object):
         [
             ([map_index], 1, aerospike.MAP_RETURN_VALUE, [0], "hi"),
             ([map_index], 0, aerospike.MAP_RETURN_VALUE, [0], "hello"),
-            ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {4, 5, 6}),
+            ([map_index], 1, aerospike.MAP_RETURN_VALUE, [1], {"a": 4, "b": 5, "c": 6}),
             ([map_index, map_index, map_index], 0, aerospike.MAP_RETURN_VALUE, [2, 0, 0], "pond"),
             ([map_key], 1, aerospike.MAP_RETURN_INDEX, ["second"], 1),
         ],
@@ -2712,9 +2726,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 73,
                     },
@@ -2734,9 +2748,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -2756,9 +2770,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -2841,7 +2855,7 @@ class TestCTXOperations(object):
         [
             ([map_index], [3], e.OpNotApplicable),
             ([map_index, map_rank, map_value], [0, 0, {"dog": "cat"}], e.OpNotApplicable),
-            ([map_index, map_index, map_index, map_index], [1, 0, 0, 0], e.InvalidRequest),
+            ([map_index, map_index, map_index, map_index], [1, 0, 0, 0], invalid_nested_type_err),
         ],
     )
     def test_ctx_map_size_negative(self, ctx_types, map_indexes, expected):
@@ -2879,9 +2893,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -2895,9 +2909,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -2954,9 +2968,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -2976,9 +2990,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -2993,7 +3007,7 @@ class TestCTXOperations(object):
                 "nested",
                 aerospike.MAP_RETURN_VALUE,
                 [1],
-                {4, 5, 6},
+                {"a": 4, "b": 5, "c": 6},
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
@@ -3013,9 +3027,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3035,9 +3049,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3111,9 +3125,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3136,9 +3150,9 @@ class TestCTXOperations(object):
                     },
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3154,7 +3168,7 @@ class TestCTXOperations(object):
                 aerospike.MAP_RETURN_VALUE,
                 False,
                 [1],
-                [100, {4, 5, 6}],
+                [100, {"a": 4, "b": 5, "c": 6}],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {},
@@ -3175,9 +3189,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3198,9 +3212,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3218,9 +3232,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         }
                     },
                     "third": {
@@ -3376,9 +3390,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3399,9 +3413,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3413,11 +3427,11 @@ class TestCTXOperations(object):
             ),
             (
                 [map_index],
-                {4, 5, 6},
+                {"a": 4, "b": 5, "c": 6},
                 aerospike.MAP_RETURN_VALUE,
                 False,
                 [1],
-                [{4, 5, 6}],
+                [{"a": 4, "b": 5, "c": 6}],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
@@ -3438,9 +3452,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3461,9 +3475,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3479,7 +3493,7 @@ class TestCTXOperations(object):
                 [0],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
-                    "second": {"nested": {4, 5, 6}},
+                    "second": {"nested": {"a": 4, "b": 5, "c": 6}},
                     "third": {
                         "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
                         "two": [],
@@ -3540,9 +3554,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3563,9 +3577,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3577,20 +3591,20 @@ class TestCTXOperations(object):
             ),
             (
                 [map_value],
-                [{4, 5, 6}, 100],
+                [{"a": 4, "b": 5, "c": 6}, 100],
                 aerospike.MAP_RETURN_VALUE,
                 False,
                 [
                     {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     }
                 ],
-                [100, {4, 5, 6}],
+                [100, {"a": 4, "b": 5, "c": 6}],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {},
@@ -3611,9 +3625,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3634,9 +3648,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3794,9 +3808,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3816,9 +3830,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3833,7 +3847,7 @@ class TestCTXOperations(object):
                 1,
                 aerospike.MAP_RETURN_VALUE,
                 [1],
-                {4, 5, 6},
+                {"a": 4, "b": 5, "c": 6},
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
@@ -3853,9 +3867,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3931,9 +3945,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3955,9 +3969,9 @@ class TestCTXOperations(object):
                     "first": {},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -3974,7 +3988,7 @@ class TestCTXOperations(object):
                 aerospike.MAP_RETURN_VALUE,
                 False,
                 [1],
-                [100, {4, 5, 6}],
+                [100, {"a": 4, "b": 5, "c": 6}],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {},
@@ -3996,9 +4010,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4015,7 +4029,7 @@ class TestCTXOperations(object):
                 [0],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
-                    "second": {"nested": {4, 5, 6}},
+                    "second": {"nested": {"a": 4, "b": 5, "c": 6}},
                     "third": {
                         "one": {"cat": "dog", "barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]},
                         "two": [],
@@ -4034,9 +4048,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4104,9 +4118,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4126,9 +4140,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4143,7 +4157,7 @@ class TestCTXOperations(object):
                 1,
                 aerospike.MAP_RETURN_VALUE,
                 [1],
-                {4, 5, 6},
+                {"a": 4, "b": 5, "c": 6},
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {"hundred": 100},
@@ -4163,9 +4177,9 @@ class TestCTXOperations(object):
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4335,9 +4349,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4360,9 +4374,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4383,7 +4397,7 @@ class TestCTXOperations(object):
                 ["pond", "shoe"],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
-                    "second": {"nested": {4, 5, 6}, "hundred": 100},
+                    "second": {"nested": {"a": 4, "b": 5, "c": 6}, "hundred": 100},
                     "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
                 },
             ),
@@ -4398,7 +4412,7 @@ class TestCTXOperations(object):
                 ["dog", ["bird"]],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
-                    "second": {"nested": {4, 5, 6}, "hundred": 100},
+                    "second": {"nested": {"a": 4, "b": 5, "c": 6}, "hundred": 100},
                     "third": {"one": {"barn": {"horse": "shoe", "fish": "pond"}}, "two": []},
                 },
             ),
@@ -4544,9 +4558,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4569,9 +4583,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4592,7 +4606,7 @@ class TestCTXOperations(object):
                 ["pond", "shoe"],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
-                    "second": {"nested": {4, 5, 6}, "hundred": 100},
+                    "second": {"nested": {"a": 4, "b": 5, "c": 6}, "hundred": 100},
                     "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
                 },
             ),
@@ -4607,7 +4621,7 @@ class TestCTXOperations(object):
                 ["dog"],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
-                    "second": {"nested": {4, 5, 6}, "hundred": 100},
+                    "second": {"nested": {"a": 4, "b": 5, "c": 6}, "hundred": 100},
                     "third": {"one": {"barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]}, "two": []},
                 },
             ),
@@ -4682,9 +4696,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2], 3: "hello"},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4707,9 +4721,9 @@ class TestCTXOperations(object):
                     "first": {"numbers": [3, 1, 2]},
                     "second": {
                         "nested": {
-                            4,
-                            5,
-                            6,
+                            "a": 4,
+                            "b": 5,
+                            "c": 6,
                         },
                         "hundred": 100,
                     },
@@ -4730,7 +4744,7 @@ class TestCTXOperations(object):
                 ["pond", "shoe"],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
-                    "second": {"nested": {4, 5, 6}, "hundred": 100},
+                    "second": {"nested": {"a": 4, "b": 5, "c": 6}, "hundred": 100},
                     "third": {"one": {"cat": "dog", "barn": {}, "cage": ["bird"]}, "two": []},
                 },
             ),
@@ -4745,7 +4759,7 @@ class TestCTXOperations(object):
                 ["dog"],
                 {
                     "first": {"greet": "hi", "numbers": [3, 1, 2], 3: "hello"},
-                    "second": {"nested": {4, 5, 6}, "hundred": 100},
+                    "second": {"nested": {"a": 4, "b": 5, "c": 6}, "hundred": 100},
                     "third": {"one": {"barn": {"horse": "shoe", "fish": "pond"}, "cage": ["bird"]}, "two": []},
                 },
             ),

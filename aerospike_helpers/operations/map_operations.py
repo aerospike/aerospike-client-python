@@ -17,10 +17,14 @@
 Helper functions to create map operation dictionaries arguments for:
 
 * :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
-* Certain batch operations listed in :mod:`aerospike_helpers.batch.records`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 
 Map operations support nested CDTs through an optional ctx context argument.
 The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.
+
+For the map operations that remove map items, such as :mod:`~aerospike_helpers.operations.map_operations.map_clear` and
+all the ``remove_*`` operations, if all map items are removed in a map, the map becomes empty (i.e it does not get
+deleted).
 
 .. note:: Nested CDT (ctx) requires server version >= 4.6.0
 
@@ -41,16 +45,19 @@ RANGE_KEY = "range"
 COUNT_KEY = "count"
 RANK_KEY = "rank"
 CTX_KEY = "ctx"
+MAP_ORDER_KEY = "map_order"
+PERSIST_INDEX_KEY = "persist_index"
 
 
 def map_set_policy(bin_name: str, policy, ctx: Optional[list] = None):
     """Creates a map_set_policy_operation.
 
-    The operation allows a user to set the policy for the map.
+    This operation sets map policy attributes server-side for the designated map. Server does not return a value.
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        policy (dict): The :ref:`map_policy dictionary <aerospike_map_policies>`.
+        policy (dict): The :ref:`map_policy dictionary <aerospike_map_policies>`. Note that the "map_write_flags" option
+            in the map policy will be ignored in this operation.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -58,6 +65,34 @@ def map_set_policy(bin_name: str, policy, ctx: Optional[list] = None):
         format of the dictionary should be considered an internal detail, and subject to change.
     """
     op_dict = {OP_KEY: aerospike.OP_MAP_SET_POLICY, BIN_KEY: bin_name, POLICY_KEY: policy}
+
+    if ctx is not None:
+        op_dict[CTX_KEY] = ctx
+
+    return op_dict
+
+
+def map_create(bin_name: str, map_order: int, persist_index: bool, ctx: Optional[list] = None):
+    """
+    Create map create operation.
+
+    Server creates map at given context level.
+
+    Args:
+        bin_name (str):	Bin name.
+        map_order (int): See :ref:`aerospike_map_order` for possible values.
+        persist_index (bool): If :py:obj:`True`, persist map index. A map index improves lookup performance,
+            but requires more storage. A map index can be created for a top-level
+            ordered map only. Nested and unordered map indexes are not supported.
+        ctx (Optional[dict]): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>`
+            specifying the path to nested map. If not defined, the top-level map is used.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_CREATE,
+        BIN_KEY: bin_name,
+        MAP_ORDER_KEY: map_order,
+        PERSIST_INDEX_KEY: persist_index
+    }
 
     if ctx is not None:
         op_dict[CTX_KEY] = ctx
@@ -76,7 +111,8 @@ def map_put(bin_name: str, key, value, map_policy: Optional[dict] = None, ctx: O
         key: The key for the map.
         value: The item to store in the map with the corresponding key.
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -103,7 +139,8 @@ def map_put_items(bin_name: str, item_dict, map_policy: Optional[dict] = None, c
         bin_name (str): The name of the bin containing the map.
         item_dict (dict): A dictionary of key value pairs to be added to the map on the server.
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -146,7 +183,8 @@ def map_increment(bin_name: str, key, amount, map_policy: Optional[dict] = None,
         key: The key for the value to be incremented.
         amount: The amount by which to increment the value stored in map[key]
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -174,7 +212,8 @@ def map_decrement(bin_name: str, key, amount, map_policy: Optional[dict] = None,
         key: The key for the value to be decremented.
         amount: The amount by which to decrement the value stored in map[key]
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -752,7 +791,7 @@ def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, 
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        value_list (list): Entries with a value contained in this list will be returned from the map.
+        key_list (list): Entries with a value contained in this list will be returned from the map.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value contained in value_list will be ignored, and all others
@@ -913,9 +952,10 @@ def map_remove_by_value_rank_range_relative(
         bin_name (str): The name of the bin containing the map.
         value: The value of the entry in the map for which to search
         offset (int): Begin removing and returning items with rank == rank(found_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items with rank greater than found_item are returned.
-        return_type: Specifies what to return from the operation.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -985,6 +1025,8 @@ def map_get_by_value_rank_range_relative(
         bin_name (str): The name of the bin containing the map.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
@@ -1045,6 +1087,8 @@ def map_remove_by_key_index_range_relative(
         bin_name (str): The name of the bin containing the list.
         key (str): The key of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
@@ -1114,6 +1158,8 @@ def map_get_by_key_index_range_relative(
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted

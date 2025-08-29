@@ -33,7 +33,7 @@ class TestRemovebin(object):
         """
         key = ("test", "demo", 1)
         record = {"Name": "Herry", "age": 60}
-        policy = {"timeout": 180000}
+        policy = {"total_timeout": 180000}
         put_data(self.as_connection, key, record)
         self.as_connection.remove_bin(key, ["age"], {}, policy)
 
@@ -205,7 +205,7 @@ class TestRemovebin(object):
         """
         Invoke remove_bin() with policy
         """
-        key_digest = self.as_connection.get_key_digest(key[0], key[1], key[2])
+        key_digest = aerospike.calc_digest(key[0], key[1], key[2])
 
         put_data(self.as_connection, key, record)
         (key, meta) = self.as_connection.exists(key)

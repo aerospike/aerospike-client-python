@@ -41,7 +41,8 @@ static PyObject *createIndexWithCollectionType(
 static PyObject *createIndexWithDataAndCollectionType(
     AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
     PyObject *py_set, PyObject *py_bin, PyObject *py_name,
-    as_index_type index_type, as_index_datatype data_type, as_cdt_ctx *ctx);
+    as_index_type index_type, as_index_datatype data_type, as_cdt_ctx *ctx,
+    as_exp *exp);
 
 /**
  *******************************************************************************************************
@@ -82,7 +83,7 @@ PyObject *AerospikeClient_Index_Integer_Create(AerospikeClient *self,
 
     return createIndexWithDataAndCollectionType(
         self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-        AS_INDEX_NUMERIC, NULL);
+        AS_INDEX_NUMERIC, NULL, NULL);
 }
 
 /**
@@ -124,7 +125,68 @@ PyObject *AerospikeClient_Index_String_Create(AerospikeClient *self,
 
     return createIndexWithDataAndCollectionType(
         self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-        AS_INDEX_STRING, NULL);
+        AS_INDEX_STRING, NULL, NULL);
+}
+
+PyObject *AerospikeClient_Index_Blob_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_policy = NULL;
+    PyObject *py_ns = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_bin = NULL;
+    PyObject *py_name = NULL;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {"ns", "set", "bin", "name", "policy", NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "OOOO|O:index_blob_create",
+                                    kwlist, &py_ns, &py_set, &py_bin, &py_name,
+                                    &py_policy) == false) {
+        return NULL;
+    }
+
+    return createIndexWithDataAndCollectionType(
+        self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
+        AS_INDEX_BLOB, NULL, NULL);
+}
+
+PyObject *AerospikeClient_Index_Expr_Create(AerospikeClient *self,
+                                            PyObject *args, PyObject *kwds)
+{
+    // Python Function Arguments
+    PyObject *py_ns = NULL;
+    PyObject *py_set = NULL;
+    PyObject *py_expr = NULL;
+    as_index_type index_type;
+    as_index_datatype data_type;
+    as_exp *expr = NULL;
+    PyObject *py_name = NULL;
+    PyObject *py_policy = NULL;
+
+    // Python Function Keyword Arguments
+    static char *kwlist[] = {
+        "ns",          "set",  "index_type", "index_datatype",
+        "expressions", "name", "policy",     NULL};
+
+    // Python Function Argument Parsing
+    if (PyArg_ParseTupleAndKeywords(
+            args, kwds, "OOiiOO|O:index_expr_create", kwlist, &py_ns, &py_set,
+            &index_type, &data_type, &py_expr, &py_name, &py_policy) == false) {
+        return NULL;
+    }
+
+    as_error err;
+    as_error_init(&err);
+    if (convert_exp_list(self, py_expr, &expr, &err) != AEROSPIKE_OK) {
+        return NULL;
+    }
+
+    return createIndexWithDataAndCollectionType(self, py_policy, py_ns, py_set,
+                                                NULL, py_name, index_type,
+                                                data_type, NULL, expr);
 }
 
 /**
@@ -194,9 +256,9 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
         goto CLEANUP;
     }
 
-    py_obj = createIndexWithDataAndCollectionType(self, py_policy, py_ns,
-                                                  py_set, py_bin, py_name,
-                                                  index_type, data_type, &ctx);
+    py_obj = createIndexWithDataAndCollectionType(
+        self, py_policy, py_ns, py_set, py_bin, py_name, index_type, data_type,
+        &ctx, NULL);
 
     as_cdt_ctx_destroy(&ctx);
 
@@ -204,14 +266,7 @@ PyObject *AerospikeClient_Index_Cdt_Create(AerospikeClient *self,
 
 CLEANUP:
     if (py_obj == NULL) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "name")) {
-            PyObject_SetAttrString(exception_type, "name", py_name);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
     }
 
@@ -275,21 +330,18 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
     }
 
     // Convert python object into namespace string
-    if (!PyString_Check(py_ns)) {
+    if (!PyUnicode_Check(py_ns)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Namespace should be a string");
         goto CLEANUP;
     }
-    char *namespace = PyString_AsString(py_ns);
+    char *namespace = (char *)PyUnicode_AsUTF8(py_ns);
 
     // Convert PyObject into the name of the index
     char *name = NULL;
     if (PyUnicode_Check(py_name)) {
         py_ustr_name = PyUnicode_AsUTF8String(py_name);
         name = PyBytes_AsString(py_ustr_name);
-    }
-    else if (PyString_Check(py_name)) {
-        name = PyString_AsString(py_name);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -301,10 +353,6 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
     Py_BEGIN_ALLOW_THREADS
     aerospike_index_remove(self->as, &err, info_policy_p, namespace, name);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -312,14 +360,7 @@ CLEANUP:
         Py_DECREF(py_ustr_name);
     }
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "name")) {
-            PyObject_SetAttrString(exception_type, "name", py_name);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, py_name);
         return NULL;
     }
 
@@ -446,7 +487,7 @@ PyObject *AerospikeClient_Index_2dsphere_Create(AerospikeClient *self,
 
     return createIndexWithDataAndCollectionType(
         self, py_policy, py_ns, py_set, py_bin, py_name, AS_INDEX_TYPE_DEFAULT,
-        AS_INDEX_GEO2DSPHERE, NULL);
+        AS_INDEX_GEO2DSPHERE, NULL, NULL);
 }
 
 /*
@@ -457,10 +498,7 @@ static bool getTypeFromPyObject(PyObject *py_datatype, int *idx_datatype,
 {
 
     long type = 0;
-    if (PyInt_Check(py_datatype)) {
-        type = PyInt_AsLong(py_datatype);
-    }
-    else if (PyLong_Check(py_datatype)) {
+    if (PyLong_Check(py_datatype)) {
         type = PyLong_AsLong(py_datatype);
         if (type == -1 && PyErr_Occurred()) {
             if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
@@ -506,7 +544,7 @@ static PyObject *createIndexWithCollectionType(
 
     return createIndexWithDataAndCollectionType(self, py_policy, py_ns, py_set,
                                                 py_bin, py_name, index_type,
-                                                data_type, ctx);
+                                                data_type, ctx, NULL);
 }
 
 /*
@@ -514,10 +552,13 @@ static PyObject *createIndexWithCollectionType(
  * else return NULL with an error raised.
  */
 
+// exp is optional and can be NULL.
+// If exp is non-NULL (i.e we are indexing an expression), py_bin should be NULL.
 static PyObject *createIndexWithDataAndCollectionType(
     AerospikeClient *self, PyObject *py_policy, PyObject *py_ns,
     PyObject *py_set, PyObject *py_bin, PyObject *py_name,
-    as_index_type index_type, as_index_datatype data_type, as_cdt_ctx *ctx)
+    as_index_type index_type, as_index_datatype data_type, as_cdt_ctx *ctx,
+    as_exp *exp)
 {
 
     // Initialize error
@@ -552,21 +593,18 @@ static PyObject *createIndexWithDataAndCollectionType(
     }
 
     // Convert python object into namespace string
-    if (!PyString_Check(py_ns)) {
+    if (!PyUnicode_Check(py_ns)) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Namespace should be a string");
         goto CLEANUP;
     }
-    char *namespace = PyString_AsString(py_ns);
+    char *namespace = (char *)PyUnicode_AsUTF8(py_ns);
 
     // Convert python object into set string
     char *set_ptr = NULL;
     if (PyUnicode_Check(py_set)) {
         py_ustr_set = PyUnicode_AsUTF8String(py_set);
         set_ptr = PyBytes_AsString(py_ustr_set);
-    }
-    else if (PyString_Check(py_set)) {
-        set_ptr = PyString_AsString(py_set);
     }
     else if (py_set != Py_None) {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -576,19 +614,19 @@ static PyObject *createIndexWithDataAndCollectionType(
 
     // Convert python object into bin string
     char *bin_ptr = NULL;
-    if (PyUnicode_Check(py_bin)) {
-        py_ustr_bin = PyUnicode_AsUTF8String(py_bin);
-        bin_ptr = PyBytes_AsString(py_ustr_bin);
-    }
-    else if (PyString_Check(py_bin)) {
-        bin_ptr = PyString_AsString(py_bin);
-    }
-    else if (PyByteArray_Check(py_bin)) {
-        bin_ptr = PyByteArray_AsString(py_bin);
-    }
-    else {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Bin should be a string");
-        goto CLEANUP;
+    if (py_bin) {
+        if (PyUnicode_Check(py_bin)) {
+            py_ustr_bin = PyUnicode_AsUTF8String(py_bin);
+            bin_ptr = PyBytes_AsString(py_ustr_bin);
+        }
+        else if (PyByteArray_Check(py_bin)) {
+            bin_ptr = PyByteArray_AsString(py_bin);
+        }
+        else {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "Bin should be a string");
+            goto CLEANUP;
+        }
     }
 
     // Convert PyObject into the name of the index
@@ -596,9 +634,6 @@ static PyObject *createIndexWithDataAndCollectionType(
     if (PyUnicode_Check(py_name)) {
         py_ustr_name = PyUnicode_AsUTF8String(py_name);
         name = PyBytes_AsString(py_ustr_name);
-    }
-    else if (PyString_Check(py_name)) {
-        name = PyString_AsString(py_name);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -608,15 +643,18 @@ static PyObject *createIndexWithDataAndCollectionType(
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
-    aerospike_index_create_ctx(self->as, &err, &task, info_policy_p, namespace,
-                               set_ptr, bin_ptr, name, index_type, data_type,
-                               ctx);
-    Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-        goto CLEANUP;
+    if (exp) {
+        aerospike_index_create_exp(self->as, &err, &task, info_policy_p,
+                                   namespace, set_ptr, name, index_type,
+                                   data_type, exp);
     }
     else {
+        aerospike_index_create_ctx(self->as, &err, &task, info_policy_p,
+                                   namespace, set_ptr, bin_ptr, name,
+                                   index_type, data_type, ctx);
+    }
+    Py_END_ALLOW_THREADS
+    if (err.code == AEROSPIKE_OK) {
         Py_BEGIN_ALLOW_THREADS
         aerospike_index_create_wait(&err, &task, 2000);
         Py_END_ALLOW_THREADS
@@ -631,6 +669,9 @@ CLEANUP:
     }
     if (py_ustr_name) {
         Py_DECREF(py_ustr_name);
+    }
+    if (exp) {
+        as_exp_destroy(exp);
     }
     if (err.code != AEROSPIKE_OK) {
         raise_exception(&err);

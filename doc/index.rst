@@ -4,7 +4,7 @@ Introduction
 
 The Aerospike Python client enables you to build an application in Python with an
 Aerospike cluster as its database. The client manages the connections to the
-cluster and handles the transactions performed against it.
+cluster and handles the commands performed against it.
 
 The Python client is a CPython module built on the Aerospike C client.
 
@@ -23,9 +23,9 @@ Records are uniquely identified by their key, and record metadata is contained
 in an in-memory primary index.
 
 .. seealso::
-    `Architecture Overview <http://www.aerospike.com/docs/architecture/index.html>`_
+    `Architecture Overview <https://aerospike.com/docs/database/learn/architecture/>`_
     and `Aerospike Data Model
-    <http://www.aerospike.com/docs/architecture/data-model.html>`_ for more
+    <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/>`_ for more
     information about Aerospike.
 
 Layout
@@ -46,7 +46,7 @@ Layout
     * :mod:`aerospike_helpers`
         * Bin operations (list, map, bitwise, etc.)
         * Aerospike expressions
-        * Batch operations
+        * Batch commands
         * Complex data type context
 
 The :class:`aerospike` module contains these classes:
@@ -59,12 +59,14 @@ Class                                Description
 :ref:`aerospike.Query`               Handles queries over secondary indexes.
 :ref:`aerospike.geojson`             Handles GeoJSON type data.
 :ref:`aerospike.KeyOrderedDict`      Key ordered dictionary
+:ref:`aerospike.Transaction`         Transaction
+:ref:`aerospike.ConfigProvider`      Dynamic config provider
 =================================    ===========
 
 In addition, the :ref:`Data_Mapping` page explains how **Python** types map to **Aerospike Server** types.
 
 .. seealso::
-    The `Python Client Manual <https://developer.aerospike.com/client/python/>`_
+    The `Python Client Manual <https://aerospike.com/docs/develop/client/python/install/>`_
     for a quick guide.
 
 Content
@@ -79,6 +81,8 @@ Content
     query
     geojson
     key_ordered_dict
+    transaction
+    config_provider
     predicates
     exception
     aerospike_helpers

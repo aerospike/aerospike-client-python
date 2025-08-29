@@ -44,7 +44,7 @@ PyObject *AerospikeGeospatial_DoLoads(PyObject *py_geodata, as_error *err)
                         "Unable to load json module");
     }
     else {
-        PyObject *py_funcname = PyString_FromString("loads");
+        PyObject *py_funcname = PyUnicode_FromString("loads");
         Py_INCREF(json_module);
 
         initresult = PyObject_CallMethodObjArgs(json_module, py_funcname,
@@ -84,7 +84,7 @@ PyObject *AerospikeGeospatial_Loads(AerospikeGeospatial *self, PyObject *args,
     }
 
     PyObject *initresult = NULL;
-    if (PyString_Check(py_geodata)) {
+    if (PyUnicode_Check(py_geodata)) {
         initresult = AerospikeGeospatial_DoLoads(py_geodata, &err);
         if (!initresult) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,

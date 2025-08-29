@@ -92,8 +92,8 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     key_initialised = true;
 
     // Convert python bins and metadata objects to as_record
-    pyobject_to_record(self, &err, py_bins, py_meta, &rec, serializer_option,
-                       &static_pool);
+    as_record_init_from_pyobject(self, &err, py_bins, py_meta, &rec,
+                                 serializer_option, &static_pool);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -111,9 +111,6 @@ PyObject *AerospikeClient_Put_Invoke(AerospikeClient *self, PyObject *py_key,
     Py_BEGIN_ALLOW_THREADS
     aerospike_key_put(self->as, &err, write_policy_p, &key, &rec);
     Py_END_ALLOW_THREADS
-    if (err.code != AEROSPIKE_OK) {
-        as_error_update(&err, err.code, NULL);
-    }
 
 CLEANUP:
     POOL_DESTROY(&static_pool);
@@ -133,17 +130,7 @@ CLEANUP:
 
     // If an error occurred, tell Python.
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", py_bins);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(&err, py_key, py_bins, Py_None, Py_None, Py_None);
         return NULL;
     }
 
@@ -172,7 +159,7 @@ PyObject *AerospikeClient_Put(AerospikeClient *self, PyObject *args,
     PyObject *py_meta = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_serializer_option = NULL;
-    long serializer_option = SERIALIZER_PYTHON;
+    long serializer_option = SERIALIZER_NONE;
 
     // Python Function Keyword Arguments
     static char *kwlist[] = {"key",    "bins",       "meta",
@@ -186,8 +173,7 @@ PyObject *AerospikeClient_Put(AerospikeClient *self, PyObject *args,
     }
 
     if (py_serializer_option) {
-        if (PyInt_Check(py_serializer_option) ||
-            PyLong_Check(py_serializer_option)) {
+        if (PyLong_Check(py_serializer_option)) {
             self->is_client_put_serializer = true;
             serializer_option = PyLong_AsLong(py_serializer_option);
         }

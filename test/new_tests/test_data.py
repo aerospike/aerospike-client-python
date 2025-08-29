@@ -15,7 +15,6 @@ pos_data = [
     (("test", "demo", "string"), {"place": "New York", "name": "John"}),
     (("test", "demo", "bb"), {"a": ["aa", 2, "aa", 4, "cc", 3, 2, 1]}),
     (("test", "demo", 1), {"age": 1, "name": "name1"}),
-    (("test", "demo", 1), {"is_present": None}),
     (("test", "unknown_set", 1), {"a": {"k": [bytearray("askluy3oijs", "utf-8")]}}),
     # Bytearray
     (("test", "demo", bytearray("asd;as[d'as;d", "utf-8")), {"name": "John"}),
@@ -34,11 +33,6 @@ pos_data = [
     #        (('test', 'demo', 1),
     #            {'odict': OrderedDict(sorted({'banana': 3, 'apple': 4, 'pear': 1, 'orange': 2}.items(),
     #                key=lambda t: t[0]))}),
-    # Tuple Data
-    (("test", "demo", "tuple_key"), {"tuple_seq": tuple("abc")}),
-    # Set Data
-    (("test", "demo", "set_key"), {"set_data": set([1, 2])}),
-    (("test", "demo", "fset_key"), {"fset_data": frozenset(["Frankfurt", "Basel", "Freiburg"])}),
     # Hybrid
     (
         ("test", "demo", "multiple_bins"),
@@ -56,7 +50,6 @@ pos_data = [
             "names_and_age": [{"name": "John", "age": 24}, {"name": "Marlen", "age": 25}],
         },
     ),
-    (("test", "demo", "map_tuple_key"), {"seq": {"bb": tuple("abc")}}),
 ]
 
 key_neg = [

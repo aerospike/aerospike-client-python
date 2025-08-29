@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers.expressions import (
@@ -26,6 +27,7 @@ from aerospike_helpers.expressions import (
     LastUpdateTime,
     Let,
     ListBin,
+    MemorySize,
     NE,
     Not,
     Or,
@@ -35,10 +37,12 @@ from aerospike_helpers.expressions import (
     Unknown,
     Var,
     VoidTime,
-    Val
+    Val,
+    RecordSize
 )
 from aerospike_helpers.operations import expression_operations as expressions
 from aerospike_helpers.operations import operations
+from . import as_errors
 
 import aerospike
 
@@ -71,7 +75,8 @@ def verify_multiple_expression_avenues(client, test_ns, test_set, expr, op_bin, 
             pass
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
@@ -111,6 +116,8 @@ class TestExpressions(TestBaseClass):
                 "key": i,
                 "alt_name": "name%s" % (str(i)),
                 "list_bin": [
+                    # TODO: None should not be encoded
+                    # because it's not documented to represent a server null type
                     None,
                     i,
                     "string_test" + str(i),
@@ -119,7 +126,7 @@ class TestExpressions(TestBaseClass):
                     bytearray("bytearray_test" + str(i), "utf8"),
                     ("bytes_test" + str(i)).encode("utf8"),
                     i % 2 == 1,
-                    aerospike.null,
+                    aerospike.null(),
                     float(i),
                 ],
                 "ilist_bin": [
@@ -188,6 +195,15 @@ class TestExpressions(TestBaseClass):
         expr = NE(VoidTime(), 0)
         record = self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
         assert record[2]["extra"] == "record"
+
+    @pytest.mark.skip("MemorySize() value depends on whether server is configured to store data in memory or not.\
+                      QE tests #1 and #2 are failing because some of their server scenarios have this configured\
+                      where some nodes have it configured and some don't. It's also hard to figure out\
+                      which node the record belongs to.")
+    def test_memory_size_pos(self):
+        # The Docker Aerospike image uses storage-memory device by default
+        expr = Eq(MemorySize(), 0)
+        self.as_connection.get(("test", "demo", _NUM_RECORDS), policy={"expressions": expr.compile()})
 
     def test_remove_with_expressions_neg(self):
         self.as_connection.put(("test", "demo", 25), {"test": "test_data"})
@@ -366,11 +382,23 @@ class TestExpressions(TestBaseClass):
 
         # Check that record 0 has a server boolean bin named "t"
         expr = Eq(BinType("t"), aerospike.AS_BYTES_BOOL).compile()
-        records = test_client.get_many([key], {"expressions": expr})
+        brs = test_client.batch_read([key], policy={"expressions": expr})
 
         # bins would be None if the record was filtered out by the expression
-        record = records[0]
-        bins = record[2]
-        assert bins
+        assert brs.batch_records[0].result != as_errors.AEROSPIKE_FILTERED_OUT
 
         test_client.close()
+
+    def test_record_size_pos(self):
+        if self.server_version < [7, 0]:
+            pytest.mark.xfail(reason="RecordSize() expression only supported in server 7.0+")
+            pytest.xfail()
+
+        key = ("test", "demo", 0)
+        expr = RecordSize().compile()
+        ops = [
+            expressions.expression_read("record_size", expr)
+        ]
+        _, _, res = self.as_connection.operate(key, ops)
+
+        assert res["record_size"] > 0

@@ -34,6 +34,13 @@ class TestTouch(object):
             self.as_connection.touch()
         assert "argument 'key' (pos 1)" in str(typeError.value)
 
+    def test_touch_with_no_value(self):
+        """
+        Invoke touch() which sets record's ttl to default server ttl value
+        """
+        key = ("test", "demo", 1)
+        self.as_connection.touch(key)
+
     def test_touch_with_correct_paramters(self):
         """
         Invoke touch() with correct parameters
@@ -48,7 +55,7 @@ class TestTouch(object):
         Invoke touch() with correct policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 180000, "retry": aerospike.POLICY_RETRY_ONCE}
+        policy = {"total_timeout": 180000, "retry": aerospike.POLICY_RETRY_ONCE}
         response = self.as_connection.touch(key, 120, {}, policy)
         assert response == AerospikeStatus.AEROSPIKE_OK
 

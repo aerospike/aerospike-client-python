@@ -51,7 +51,7 @@ class TestUserSerializer(object):
         cls.client = TestBaseClass.get_new_connection()
 
         TestUserSerializer.skip_old_server = True
-        versioninfo = TestUserSerializer.client.info("version")
+        versioninfo = TestUserSerializer.client.info_all("version")
         for keys in versioninfo:
             for value in versioninfo[keys]:
                 if value is not None:
