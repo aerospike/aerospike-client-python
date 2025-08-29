@@ -1314,10 +1314,8 @@ class TestQuery(TestBaseClass):
         recs = query.results()
         assert len(recs) == expected_rec_count
 
-        # TODO: calling where() twice on the query object causes a memory leak because we did not clean up the first
-        # predicate in the query object.
-        query2: aerospike.Query = self.as_connection.query("test", "demo")
         # We should also be able to query using the base64 encoded string for an expression
+        query2: aerospike.Query = self.as_connection.query("test", "demo")
         if use_index_name is False:
             expr_base64_encoded = self.as_connection.get_expression_base64(expr)
             query2 = query2.where_with_expr(expr_base64_encoded, predicate)
