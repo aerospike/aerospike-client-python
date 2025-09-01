@@ -145,10 +145,15 @@ class TestMetrics:
         # The client language and version should be correct
         try:
             with open(metrics_log_filenames[0]) as f:
+                # Skip header
+                f.readline()
+                # Each line will show the client language and version
                 data = f.readline()
-            # cluster[cluster_name,client_language,client_version,...
-            regex = re.search(pattern=r"cluster\[[a-zA-Z0-9_\-$,]+,([a-z]+),([0-9.a-zA-Z+]+),", string=data)
+            # Each line includes cluster[cluster_name,client_language,client_version,...
+            # cluster_name can be empty
+            regex = re.search(pattern=r"cluster\[[a-zA-Z0-9_\-$,]*,([A-Za-z]+),([0-9.a-zA-Z+]+),", string=data)
             client_language, client_version = regex.groups()
+
             assert client_language == "python"
             assert client_version == version("aerospike")
         finally:
