@@ -146,7 +146,8 @@ class TestMetrics:
         try:
             with open(metrics_log_filenames[0]) as f:
                 data = f.readline()
-            regex = re.search(pattern=r"cluster\[[a-zA-Z0-9_-$,]+,([a-z]+),([0-9.a-zA-Z+]+),", string=data)
+            # cluster[cluster_name,client_language,client_version,...
+            regex = re.search(pattern=r"cluster\[[a-zA-Z0-9_\-$,]+,([a-z]+),([0-9.a-zA-Z+]+),", string=data)
             client_language, client_version = regex.groups()
             assert client_language == "python"
             assert client_version == version("aerospike")
