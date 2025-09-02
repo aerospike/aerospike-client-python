@@ -403,6 +403,9 @@ jobs:
 
   run-standalone-tests:
     needs: build
+    defaults:
+      run:
+        shell: 'bash -e sudo {0}'
     strategy:
       matrix:
         suffix:
@@ -423,7 +426,7 @@ jobs:
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/standalone
-    - run: sudo python3 test_${{ matrix.suffix }}.py
+    - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/standalone
 
   test-misc:
