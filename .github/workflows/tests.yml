@@ -460,7 +460,7 @@ jobs:
       run: |
         docker run -d --name ${{ env.CONTAINER_NAME }} --cap-add=NET_ADMIN -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
         if [[ "${{ matrix.test-case }}" -eq "timeout_delay" ]]; then
-          docker exec ${{ env.CONTAINER_NAME }} tc qdisc add dev eth0 root netem delay 100ms
+          tc qdisc add dev docker0 root netem delay 100ms
         fi
 
     - uses: ./.github/actions/wait-for-ce-server-to-start
