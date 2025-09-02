@@ -422,9 +422,7 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
 
-    # tcconfig will be installed on system Python, not the Python install from setup-python
-    # This is ok since we only care about running `tcset` in our standalone script
-    - run: sudo python3 -m pip install tcconfig -c requirements.txt
+    - run: curl -sSL https://raw.githubusercontent.com/thombashi/tcconfig/master/scripts/installer.sh | sudo bash
       working-directory: test/standalone
 
     - name: Install all required packages except tcconfig
