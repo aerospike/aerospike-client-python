@@ -405,7 +405,7 @@ jobs:
     needs: build
     defaults:
       run:
-        shell: 'bash -e sudo {0}'
+        shell: 'sudo bash -e {0}'
     strategy:
       matrix:
         suffix:
