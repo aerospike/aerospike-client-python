@@ -460,7 +460,8 @@ jobs:
       run: |
         docker run -d --name ${{ env.CONTAINER_NAME }} --cap-add=NET_ADMIN -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
         if [[ "${{ matrix.test-case }}" -eq "timeout_delay" ]]; then
-          sudo tc qdisc add dev docker0 root netem delay 100ms
+          # TODO: double check
+          sudo tc qdisc add dev docker0 root netem delay 1000ms
         fi
 
     - uses: ./.github/actions/wait-for-ce-server-to-start
@@ -548,3 +549,35 @@ jobs:
       shell: bash
       env:
         CONTAINER_NAME: aerospike
+
+    - if: ${{ startsWith(matrix.test-case, 'timeout_delay') }}
+      run: |
+        class TestTimeoutDelay(unittest.TestCase):
+            def test_case(self):
+              # Using unittest to check that exception was raised
+              import unittest
+              import aerospike
+              from aerospike import exception as e
+
+              config = {
+                "hosts": [
+                  ("127.0.0.1", 3000)
+                ]
+              }
+              client = aerospike.client(config)
+
+              key = ("test", "demo", 1)
+              policy = {
+                # Should cause first command to timeout
+                "total_timeout": 1
+                # All subsequent commands should timeout because of timeout_delay
+                "timeout_delay": 2000
+              }
+              with self.assertRaises(e.ClientError):
+                client.get(key=key, policy=policy)
+
+              with self.assertRaises(e.ClientError):
+                client.get(key=key, policy=policy)
+
+        unittest.main()
+      shell: python
