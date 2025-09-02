@@ -146,18 +146,20 @@ jobs:
       # In the same folder hierarchy as src/main
       # But the source files must be stored with its corresponding .o file
       run: |
+        # working-directory doesn't support glob paths
+        cd build/temp*/src/main
         # Cannot use -exec or we will recursively create new folders and "find" will also iterate on them
         dirs=$(find . -type d)
         for dir in $dirs; do
           mkdir -p $dir/src/main/$dir
           mv $GITHUB_WORKSPACE/src/main/$dir/*.c $dir/src/main/$dir/
         done
-      working-directory: build/temp*/src/main
 
     - name: Generate coverage report for all object files
       if: ${{ !cancelled() }}
-      run: find . -type f -name "*.o" -execdir gcov {} \;
-      working-directory: build/temp*/src/main
+      run: |
+        cd build/temp*/src/main
+        find . -type f -name "*.o" -execdir gcov {} \;
 
     - name: Move aerospike_helpers coverage report to this directory
       if: ${{ !cancelled() }}
