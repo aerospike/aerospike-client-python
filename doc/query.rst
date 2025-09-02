@@ -115,6 +115,8 @@ Assume this boilerplate code is run before all examples below:
         Set a where *predicate* for the query.
 
         You can only assign at most one predicate to the query.
+        If this method is called more than once on the same query instance, a :py:exc:`~aerospike.exception.ClientError` exception will be raised.
+
         If this function isn't called, the query will behave similar to :class:`aerospike.Scan`.
 
         :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
