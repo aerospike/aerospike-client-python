@@ -425,7 +425,8 @@ jobs:
       working-directory: test/standalone
     - run: |
         if [[ ${{ matrix.suffix == 'timeout_delay' }} ]]; then
-          sudo python3 test_${{ matrix.suffix }}.py
+          # System default Python is 3.10
+          sudo python${{ env.LOWEST_SUPPORTED_PY_VERSION }} test_${{ matrix.suffix }}.py
         else
           python3 test_${{ matrix.suffix }}.py
         fi
