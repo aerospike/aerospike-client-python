@@ -183,7 +183,9 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
 
     bool success = as_query_where_init(&self->query, 1);
     if (!success) {
-        goto CLEANUP_VALUES_ON_ERROR;
+        as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                        "Query.where() cannot be called more than once on the "
+                        "same instance.") goto CLEANUP_VALUES_ON_ERROR;
     }
 
     // We have 9 separate codepaths because we need to pass in either 1, 2, or 3 optional arguments to the C client call
