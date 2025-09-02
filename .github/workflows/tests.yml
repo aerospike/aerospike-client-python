@@ -425,7 +425,7 @@ jobs:
     - run: curl -sSL https://raw.githubusercontent.com/thombashi/tcconfig/master/scripts/installer.sh | sudo bash
       working-directory: test/standalone
 
-    - name: Install all required packages except tcconfig
+    - name: Install all required packages
       run: python3 -m pip install -r requirements.txt
       working-directory: test/standalone
 

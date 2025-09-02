@@ -52,10 +52,10 @@ class TestTimeoutDelay(unittest.TestCase):
             # All subsequent commands should timeout because of timeout_delay
             "timeout_delay": 2000
         }
-        with self.assertRaises(e.ClientError):
+        with self.assertRaises(e.TimeoutError):
             client.get(key=key, policy=policy)
 
-        with self.assertRaises(e.ClientError):
+        with self.assertRaises(e.TimeoutError):
             client.get(key=key, policy=policy)
 
 
