@@ -142,11 +142,6 @@ class TestOperate(object):
                 {"write_bin": {"no": 89}},
             ),
             (
-                ("test", "demo", 1),  # write_tuple_positive
-                [operations.write("write_bin", ("a", "b", "c")), operations.read("write_bin")],
-                {"write_bin": ("a", "b", "c")},
-            ),
-            (
                 ("test", "demo", 1),  # with_bin_bytearray
                 [operations.prepend("asd[;asjk", "ram"), operations.read("asd[;asjk")],
                 {"asd[;asjk": "ram"},
@@ -261,7 +256,7 @@ class TestOperate(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
+            "total_timeout": 180000,
             "key": aerospike.POLICY_KEY_SEND,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -280,7 +275,6 @@ class TestOperate(object):
             (
                 ("test", "demo", 1),
                 {
-                    "total_timeout": 1000,
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_IGNORE,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
@@ -384,7 +378,9 @@ class TestOperate(object):
 
         _, meta = self.as_connection.exists(key)
 
-        assert meta["ttl"] <= 1200 and meta["ttl"] >= 1150
+        # Clock skew between the client and server
+        # can cause the ttl value to differ from the value it was set to
+        assert meta["ttl"] <= 1250 and meta["ttl"] >= 1150
 
     def test_pos_operate_with_policy_gen_GT(self):
         """
@@ -587,6 +583,29 @@ class TestOperate(object):
         self.as_connection.remove(key)
 
     @pytest.mark.parametrize(
+        "ops, expected_result",
+        [
+            (
+                [
+                    # Fetch the last item in the list
+                    list_operations.list_get(bin_name="int_bin", index=-1)
+                ],
+                4
+            ),
+            (
+                [
+                    list_operations.list_get_range(bin_name="int_bin", index=-2, count=2)
+                ],
+                [3, 4]
+            )
+        ]
+    )
+    def test_list_get_ops_with_negative_index(self, ops: list, expected_result: int):
+        key = ("test", "demo", "list_key")
+        _, _, bins = self.as_connection.operate(key, ops)
+        assert bins["int_bin"] == expected_result
+
+    @pytest.mark.parametrize(
         "list, result, bin, expected",
         [
             (
@@ -610,6 +629,20 @@ class TestOperate(object):
                 "int_bin",
                 [1, 2, 3, 4],
             ),
+            # List insert with LIST_WRITE_DEFAULT policy explicitly set
+            (
+                [
+                    list_operations.list_insert(
+                        "int_bin",
+                        7,
+                        99,
+                        {"list_write": aerospike.LIST_WRITE_DEFAULT}
+                    ),
+                ],
+                {"int_bin": 8},
+                "int_bin",
+                [1, 2, 3, 4, None, None, None, 99],
+            ),
             (
                 [
                     list_operations.list_insert_items("int_bin", 2, [7, 9]),
@@ -631,6 +664,91 @@ class TestOperate(object):
                 "int_bin",
                 [1, 2, 3, 4, None, None, 10],  # Inserting outside of the range adds nils in between
             ),
+            # Negative index tests
+            (
+                [
+                    list_operations.list_increment(bin_name="int_bin", index=-1, value=4),
+                    list_operations.list_get(bin_name="int_bin", index=3)
+                ],
+                {"int_bin": 8},
+                "int_bin",
+                [1, 2, 3, 8]
+            ),
+            (
+                [
+                    list_operations.list_insert_items(bin_name="int_bin", index=-1, values=[5, 6]),
+                ],
+                {"int_bin": 6},
+                "int_bin",
+                [1, 2, 3, 5, 6, 4]
+            ),
+            # We also include list removal operations here since they return something
+            # The test function below doesn't test for the return value of the operations
+            (
+                [
+                    list_operations.list_pop(bin_name="int_bin", index=-1),
+                ],
+                {"int_bin": 4},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_pop_range(bin_name="int_bin", index=-2, count=2),
+                ],
+                {"int_bin": [3, 4]},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_remove(bin_name="int_bin", index=-1),
+                ],
+                {"int_bin": 1},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_remove_by_index(
+                        bin_name="int_bin",
+                        index=-1,
+                        return_type=aerospike.LIST_RETURN_VALUE
+                    ),
+                ],
+                {"int_bin": 4},
+                "int_bin",
+                [1, 2, 3]
+            ),
+            (
+                [
+                    list_operations.list_remove_by_index_range(
+                        bin_name="int_bin",
+                        index=-2,
+                        return_type=aerospike.LIST_RETURN_VALUE,
+                        count=2
+                    ),
+                ],
+                {"int_bin": [3, 4]},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_remove_range(bin_name="int_bin", index=-2, count=2)
+                ],
+                {"int_bin": 2},
+                "int_bin",
+                [1, 2]
+            ),
+            (
+                [
+                    list_operations.list_set(bin_name="int_bin", index=-1, value=44)
+                ],
+                {},
+                "int_bin",
+                [1, 2, 3, 44]
+            )
         ],
     )
     def test_pos_operate_with_list_addition_operations(self, list, result, bin, expected):
@@ -653,6 +771,14 @@ class TestOperate(object):
             ([list_operations.list_remove_range("int_bin", 2, 2)], "int_bin", [1, 2]),
             ([list_operations.list_trim("int_bin", 2, 2)], "int_bin", [3, 4]),
             ([list_operations.list_clear("int_bin")], "int_bin", []),
+            # Negative index tests
+            (
+                [
+                    list_operations.list_trim(bin_name="int_bin", index=-3, count=3)
+                ],
+                "int_bin",
+                [2, 3, 4]
+            )
         ],
     )
     def test_pos_operate_with_list_remove_operations(self, list, bin, expected):
@@ -752,12 +878,12 @@ class TestOperate(object):
             ),
             (
                 [
-                    list_operations.list_append_items("string_bin", [["z", "x"], ("y", "w")]),
+                    list_operations.list_append_items("string_bin", [["z", "x"], ["y", "w"]]),
                     list_operations.list_get_range("string_bin", 3, 3),
                 ],
-                {"string_bin": ["d", ["z", "x"], ("y", "w")]},
+                {"string_bin": ["d", ["z", "x"], ["y", "w"]]},
                 "string_bin",
-                ["a", "b", "c", "d", ["z", "x"], ("y", "w")],
+                ["a", "b", "c", "d", ["z", "x"], ["y", "w"]],
             ),
             (
                 [list_operations.list_insert("string_bin", 2, True), list_operations.list_pop("string_bin", 2)],
@@ -864,8 +990,9 @@ class TestOperate(object):
 
         llist = [operations.prepend("name", "ram"), operations.increment(max_length, 3)]
 
-        with pytest.raises(e.BinNameError):
+        with pytest.raises(e.BinNameError) as excinfo:
             self.as_connection.operate(key, llist)
+        assert excinfo.value.msg == "A bin name should not exceed 15 characters limit"
 
     def test_neg_operate_empty_string_key(self):
         """
@@ -880,7 +1007,7 @@ class TestOperate(object):
         Invoke operate() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {"total_timeout": 180000}
         llist = [operations.prepend("name", "ram")]
         with pytest.raises(TypeError):
             self.as_connection.operate(key, llist, {}, policy, "")

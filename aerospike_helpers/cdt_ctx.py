@@ -28,7 +28,7 @@ Example::
 
     # Configure the client.
     config = {"hosts": [("127.0.0.1", 3000)]}
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     key = ("test", "demo", "foo")
     listWithMaps = [
@@ -81,7 +81,7 @@ Example::
     # Example 3: create a CDT secondary index from a base64 encoded _cdt_ctx with info command
     policy = {}
 
-    bs_b4_cdt = client.get_cdtctx_base64({'ctx':ctx_list_index})
+    bs_b4_cdt = client.get_cdtctx_base64(ctx_list_index)
 
     r = []
     r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
@@ -214,7 +214,7 @@ def cdt_ctx_list_index_create(index: int, order: int = 0, pad: bool = False) -> 
     If a non-list element exists at the index, an :py:exc:`~aerospike.exception.InvalidRequest` will be thrown.
 
     Args:
-        key (object): The index to create the list at.
+        index (int): The index to create the list at.
         order (int): The :ref:`sort order <aerospike_list_order>` to create the List with.
             (default: ``aerospike.LIST_UNORDERED``)
         pad (bool): If index is out of bounds and ``pad`` is :py:obj:`True`,

@@ -183,7 +183,7 @@ def test_params_for_stanza(p, contx, is_namespace):
             info_code = "set-config:context=" + \
                 contx + ";" + t[0] + "=" + str(t[1])
         try:
-            v = list(client.info(info_code).items())
+            v = list(client.info_all(info_code).items())
             res = v[0][1][1]
             if res != "ok\n":
                 print(
@@ -319,7 +319,7 @@ for p in PARAMS_SERVICE:
 print("service parameters passed")
 
 print("getting initial ttl values")
-info = client.info("namespace/" + options.namespace)
+info = client.info_all("namespace/" + options.namespace)
 default_ttl = 0
 max_ttl = 0
 for key, value in list(info.items()):

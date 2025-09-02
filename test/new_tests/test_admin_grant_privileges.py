@@ -124,7 +124,7 @@ class TestGrantPrivileges(object):
         Grant privileges positive with policy
         """
         status = self.client.admin_grant_privileges(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ}], {"timeout": 180000}
         )
 
         assert status == 0

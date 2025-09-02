@@ -62,7 +62,7 @@ class TestGetRoles(TestBaseClass):
         """
         Get roles positive policy
         """
-        roles = self.client.admin_get_roles({"timeout": 1000})
+        roles = self.client.admin_get_roles({"timeout": 180000})
 
         assert roles["usr-sys-admin-test"] == {
             "privileges": [{"ns": "", "set": "", "code": 0}, {"ns": "", "set": "", "code": 1}],

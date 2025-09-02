@@ -17,13 +17,14 @@
 #include <Python.h>
 #include <structmember.h>
 #include <stdbool.h>
-#include <unistd.h>
 
 #include <aerospike/aerospike.h>
 #include <aerospike/as_config.h>
 #include <aerospike/as_error.h>
 #include <aerospike/as_policy.h>
+#include <aerospike/as_vector.h>
 
+#include "pythoncapi_compat.h"
 #include "admin.h"
 #include "client.h"
 #include "policy.h"
@@ -31,6 +32,7 @@
 #include "exceptions.h"
 #include "tls_config.h"
 #include "policy_config.h"
+#include "metrics.h"
 
 static int set_rack_aware_config(as_config *conf, PyObject *config_dict);
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict);
@@ -48,7 +50,7 @@ enum {
     INIT_DESERIALIZE_ERR,
     INIT_COMPRESSION_ERR,
     INIT_POLICY_PARAM_ERR,
-    INIT_INVALID_AUTHMODE_ERR
+    INIT_INVALID_AUTHMODE_ERR,
 };
 
 /*******************************************************************************
@@ -69,11 +71,6 @@ PyDoc_STRVAR(get_doc, "get(key[, policy]) -> (key, meta, bins)\n\
 \n\
 Read a record with a given key, and return the record as a tuple() consisting of key, meta and bins.");
 
-PyDoc_STRVAR(get_async_doc,
-             "get_async(get_callback, key[, policy]) -> (key, meta, bins)\n\
-\n\
-Read a record asynchronously with a given key, and return the record as a tuple() consisting of key, meta and bins.");
-
 PyDoc_STRVAR(select_doc, "select(key, bins[, policy]) -> (key, meta, bins)\n\
 \n\
 Read a record with a given key, and return the record as a tuple() consisting of key, meta and bins, \
@@ -84,10 +81,6 @@ Starting with 3.6.0, if a bin does not exist it will not be present in the retur
 PyDoc_STRVAR(put_doc, "put(key, bins[, meta[, policy[, serializer]]])\n\
 \n\
 Write a record with a given key to the cluster.");
-
-PyDoc_STRVAR(put_async_doc, "put(key, bins[, meta[, policy[, serializer]]])\n\
-\n\
-Write a record asynchronously with a given key to the cluster.");
 
 PyDoc_STRVAR(remove_doc, "remove(key[, policy])\n\
 \n\
@@ -134,238 +127,6 @@ PyDoc_STRVAR(
 Perform multiple bin operations on a record with the results being returned as a list of (bin-name, result) tuples. \
 The order of the elements in the list will correspond to the order of the operations from the input parameters.");
 
-PyDoc_STRVAR(list_append_doc, "list_append(key, bin, val[, meta[, policy]])\n\
-\n\
-Append a single element to a list value in bin.");
-
-PyDoc_STRVAR(list_extend_doc, "list_extend(key, bin, items[, meta[, policy]])\n\
-\n\
-Extend the list value in bin with the given items.");
-
-PyDoc_STRVAR(list_insert_doc,
-             "list_insert(key, bin, index, val[, meta[, policy]])\n\
-\n\
-Insert an element at the specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_insert_items_doc,
-             "list_insert_items(key, bin, index, items[, meta[, policy]])\n\
-\n\
-Insert the items at the specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_pop_doc,
-             "list_pop(key, bin, index[, meta[, policy]]) -> val\n\
-\n\
-Remove and get back a list element at a given index of a list value in bin.");
-
-PyDoc_STRVAR(list_pop_range_doc,
-             "list_pop_range(key, bin, index, count[, meta[, policy]]) -> val\n\
-\n\
-Remove and get back list elements at a given index of a list value in bin.");
-
-PyDoc_STRVAR(list_remove_doc, "list_remove(key, bin, index[, meta[, policy]])\n\
-\n\
-Remove a list element at a given index of a list value in bin.");
-
-PyDoc_STRVAR(list_remove_range_doc,
-             "list_remove_range(key, bin, index, count[, meta[, policy]])\n\
-\n\
-Remove list elements at a given index of a list value in bin.");
-
-PyDoc_STRVAR(list_clear_doc, "list_clear(key, bin[, meta[, policy]])\n\
-\n\
-Remove all the elements from a list value in bin.");
-
-PyDoc_STRVAR(list_set_doc, "list_set(key, bin, index, val[, meta[, policy]])\n\
-\n\
-Set list element val at the specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_get_doc,
-             "list_get(key, bin, index[, meta[, policy]]) -> val\n\
-\n\
-Get the list element at the specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_get_range_doc,
-             "list_get_range(key, bin, index, count[, meta[, policy]]) -> val\n\
-\n\
-Get the list of count elements starting at a specified index of a list value in bin.");
-
-PyDoc_STRVAR(list_trim_doc,
-             "list_trim(key, bin, index, count[, meta[, policy]]) -> val\n\
-\n\
-Remove elements from the list which are not within the range starting at the given index plus count.");
-
-PyDoc_STRVAR(list_size_doc, "list_size(key, bin[, meta[, policy]]) -> count\n\
-\n\
-Count the number of elements in the list value in bin.");
-
-PyDoc_STRVAR(map_set_policy_doc, "map_set_policy(key, bin, map_policy)\n\
-\n\
-Set the map policy for the given bin.");
-
-PyDoc_STRVAR(map_put_doc,
-             "map_put(key, bin, map_key, val[, map_policy[, meta[, policy]]])\n\
-\n\
-Add the given map_key/value pair to the map record specified by key and bin.");
-
-PyDoc_STRVAR(map_put_items_doc,
-             "map_put_items(key, bin, items[, map_policy[, meta[, policy]]])\n\
-\n\
-Add the given items dict of key/value pairs to the map record specified by key and bin.");
-
-PyDoc_STRVAR(
-    map_increment_doc,
-    "map_increment(key, bin, map_key, incr[, map_policy[, meta[, policy]]])\n\
-\n\
-Increment the value of the map entry by given incr. Map entry is specified by key, bin and map_key.");
-
-PyDoc_STRVAR(
-    map_decrement_doc,
-    "map_decrement(key, bin, map_key, decr[, map_policy[, meta[, policy]]])\n\
-\n\
-Decrement the value of the map entry by given decr. Map entry is specified by key, bin and map_key.");
-
-PyDoc_STRVAR(map_size_doc, "map_size(key, bin[, meta[, policy]]) -> count\n\
-\n\
-Return the size of the map specified by key and bin.");
-
-PyDoc_STRVAR(map_clear_doc, "map_clear(key, bin[, meta[, policy]])\n\
-\n\
-Remove all entries from the map specified by key and bin.");
-
-PyDoc_STRVAR(
-    map_remove_by_key_doc,
-    "map_remove_by_key(key, bin, map_key, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return first map entry from the map specified by key and bin which matches given map_key.");
-
-PyDoc_STRVAR(
-    map_remove_by_key_list_doc,
-    "map_remove_by_key_list(key, bin, list, return_type[, meta[, policy]][, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin \
-which have keys that match the given list of keys.");
-
-PyDoc_STRVAR(
-    map_remove_by_key_range_doc,
-    "map_remove_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin identified \
-by the key range (map_key inclusive, range exclusive).");
-
-PyDoc_STRVAR(
-    map_remove_by_value_doc,
-    "map_remove_by_value(key, bin, val, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin which \
-have a value matching val parameter.");
-
-PyDoc_STRVAR(
-    map_remove_by_value_list_doc,
-    "map_remove_by_value_list(key, bin, list, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin which \
-have a value matching the list of values.");
-
-PyDoc_STRVAR(
-    map_remove_by_value_range_doc,
-    "map_remove_by_value_range(key, bin, val, range, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return map entries from the map specified by key and bin identified \
-by the value range (val inclusive, range exclusive).");
-
-PyDoc_STRVAR(
-    map_remove_by_index_doc,
-    "map_remove_by_index(key, bin, index, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return the map entry from the map specified by key and bin at the given index location.");
-
-PyDoc_STRVAR(
-    map_remove_by_index_range_doc,
-    "map_remove_by_index_range(key, bin, index, range, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return the map entries from the map specified by key and bin starting at \
-the given index location and removing range number of items.");
-
-PyDoc_STRVAR(
-    map_remove_by_rank_doc,
-    "map_remove_by_rank(key, bin, rank, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return the map entry from the map specified by key and bin \
-with a value that has the given rank.");
-
-PyDoc_STRVAR(
-    map_remove_by_rank_range_doc,
-    "map_remove_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])\n\
-\n\
-Remove and optionally return the map entries from the map specified by key and bin which \
-have a value rank starting at rank and removing range number of items.");
-
-PyDoc_STRVAR(
-    map_get_by_key_doc,
-    "map_get_by_key(key, bin, map_key, return_type[, meta[, policy]])\n\
-\n\
-Return map entry from the map specified by key and bin which has a key that matches the given map_key.");
-
-PyDoc_STRVAR(
-    map_get_by_key_range_doc,
-    "map_get_by_key_range(key, bin, map_key, range, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin identified by the key range \
-(map_key inclusive, range exclusive).");
-
-PyDoc_STRVAR(map_get_by_value_doc,
-             "map_get_by_value(key, bin, val, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin which have a value matching val parameter.");
-
-PyDoc_STRVAR(
-    map_get_by_value_range_doc,
-    "map_get_by_value_range(key, bin, val, range, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin identified by the value \
-range (val inclusive, range exclusive).");
-
-PyDoc_STRVAR(
-    map_get_by_value_list_doc,
-    "map_get_by_value_range(key, bin, value_list, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin which contain a value matching one \
-of the values in the provided value_list.\n\
-Requires Aerospike Server versions >= 3.16.0.1");
-
-PyDoc_STRVAR(
-    map_get_by_key_list_doc,
-    "map_get_by_value_range(key, bin, key_list, return_type[, meta[, policy]])\n\
-\n\
-Return map entries from the map specified by key and bin for keys matching those \
-in the provided key_list.\n\
-Requires Aerospike Server versions >= 3.16.0.1");
-
-PyDoc_STRVAR(
-    map_get_by_index_doc,
-    "map_get_by_index(key, bin, index, return_type[, meta[, policy]])\n\
-\n\
-Return the map entry from the map specified by key and bin at the given index location.");
-
-PyDoc_STRVAR(
-    map_get_by_index_range_doc,
-    "map_get_by_index_range(key, bin, index, range, return_type[, meta[, policy]])\n\
-\n\
-Return the map entries from the map specified by key and bin starting at the given index \
-location and removing range number of items.");
-
-PyDoc_STRVAR(map_get_by_rank_doc,
-             "map_get_by_rank(key, bin, rank, return_type[, meta[, policy]])\n\
-\n\
-Return the map entry from the map specified by key and bin with a value that has the given rank.");
-
-PyDoc_STRVAR(
-    map_get_by_rank_range_doc,
-    "map_get_by_rank_range(key, bin, rank, range, return_type[, meta[, policy]])\n\
-\n\
-Return the map entries from the map specified by key and bin which have a value rank starting \
-at rank and removing range number of items.");
-
 PyDoc_STRVAR(query_doc, "query(namespace[, set]) -> Query\n\
 \n\
 Return a `aerospike.Query` object to be used for executing queries over a specified set \
@@ -394,14 +155,6 @@ PyDoc_STRVAR(
 \n\
 Initiate a background scan and apply a record UDF to each record matched by the scan.");
 
-PyDoc_STRVAR(scan_info_doc, "scan_info(scan_id) -> dict\n\
-\n\
-Return the status of a scan running in the background.");
-
-PyDoc_STRVAR(info_doc, "info(command[, hosts[, policy]]) -> {}\n\
-\n\
-Send an info command to multiple nodes specified in a hosts list.");
-
 PyDoc_STRVAR(
     set_xdr_filter_doc,
     "set_xdr_filter(data_center, namespace, expression_filter[, policy]) -> {}\n\
@@ -427,11 +180,6 @@ PyDoc_STRVAR(info_random_node_doc,
              "info_random_node(command, [policy]) -> str\n\
 \n\
 Send an info command to a single random node.");
-
-PyDoc_STRVAR(info_node_doc, "info_node(command, host[, policy]) -> str\n\
-\n\
-DEPRECATED: Please user info_single_node() instead.\n\
-Send an info command to a single node specified by host.");
 
 PyDoc_STRVAR(get_nodes_doc, "get_nodes() -> []\n\
 \n\
@@ -466,6 +214,11 @@ PyDoc_STRVAR(index_string_create_doc,
              "index_string_create(ns, set, bin, index_name[, policy])\n\
 \n\
 Create a string index with index_name on the bin in the specified ns, set.");
+
+PyDoc_STRVAR(index_blob_create_doc,
+             "index_blob_create(ns, set, bin, index_name[, policy])\n\
+\n\
+Create a blob index with index_name on the bin in the specified ns, set.");
 
 PyDoc_STRVAR(
     index_cdt_create_doc,
@@ -509,33 +262,6 @@ PyDoc_STRVAR(index_geo2dsphere_create_doc,
              "index_geo2dsphere_create(ns, set, bin, index_name[, policy])\n\
 \n\
 Create a geospatial 2D spherical index with index_name on the bin in the specified ns, set.");
-
-PyDoc_STRVAR(get_many_doc, "get_many(keys[, policy]) -> [ (key, meta, bins)]\n\
-\n\
-Batch-read multiple records with applying list of operations and returns them as a list. \
-Any record that does not exist will have a None value for metadata and status in the record tuple.");
-
-PyDoc_STRVAR(batch_get_ops_doc,
-             "batch_get_ops(keys, ops, meta, policy) -> [ (key, meta, bins)]\n\
-\n\
-Batch-read multiple records, and return them as a list. \
-Any record that does not exist will have a exception type value as metadata and None value as bin in the record tuple.");
-
-PyDoc_STRVAR(select_many_doc,
-             "select_many(keys, bins[, policy]) -> [(key, meta, bins)]\n\
-\n\
-Batch-read multiple records, and return them as a list. \
-Any record that does not exist will have a None value for metadata and bins in the record tuple. \
-The bins will be filtered as specified.");
-
-PyDoc_STRVAR(exists_many_doc, "exists_many(keys[, policy]) -> [ (key, meta)]\n\
-\n\
-Batch-read metadata for multiple keys, and return it as a list. \
-Any record that does not exist will have a None value for metadata in the result tuple.");
-
-PyDoc_STRVAR(get_key_digest_doc, "get_key_digest(ns, set, key) -> bytearray\n\
-\n\
-Calculate the digest of a particular key. See: Key Tuple.");
 
 PyDoc_STRVAR(batch_write_doc, "batch_write(batch_records, policy) -> None\n\
 \n\
@@ -597,8 +323,20 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"shm_key", (PyCFunction)AerospikeClient_shm_key,
      METH_VARARGS | METH_KEYWORDS, "Get the shm key of the cluster"},
 
+    {"get_stats", (PyCFunction)AerospikeClient_GetStats, METH_NOARGS, NULL},
+
+    // METRICS
+
+    {"enable_metrics", (PyCFunction)AerospikeClient_EnableMetrics,
+     METH_VARARGS | METH_KEYWORDS, NULL},
+    {"disable_metrics", (PyCFunction)AerospikeClient_DisableMetrics,
+     METH_NOARGS, NULL},
+
     // ADMIN OPERATIONS
 
+    {"admin_create_pki_user",
+     (PyCFunction)AerospikeClient_Admin_Create_PKI_User,
+     METH_VARARGS | METH_KEYWORDS, "Create a new pki user."},
     {"admin_create_user", (PyCFunction)AerospikeClient_Admin_Create_User,
      METH_VARARGS | METH_KEYWORDS, "Create a new user."},
     {"admin_drop_user", (PyCFunction)AerospikeClient_Admin_Drop_User,
@@ -612,14 +350,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, "Grant Roles."},
     {"admin_revoke_roles", (PyCFunction)AerospikeClient_Admin_Revoke_Roles,
      METH_VARARGS | METH_KEYWORDS, "Revoke roles"},
-    {"admin_query_user", (PyCFunction)AerospikeClient_Admin_Query_User,
-     METH_VARARGS | METH_KEYWORDS, "Query a user for roles."},
     {"admin_query_user_info",
      (PyCFunction)AerospikeClient_Admin_Query_User_Info,
      METH_VARARGS | METH_KEYWORDS,
      "Query a user for read/write info, connections-in-use and roles."},
-    {"admin_query_users", (PyCFunction)AerospikeClient_Admin_Query_Users,
-     METH_VARARGS | METH_KEYWORDS, "Query all users for roles."},
     {"admin_query_users_info",
      (PyCFunction)AerospikeClient_Admin_Query_Users_Info,
      METH_VARARGS | METH_KEYWORDS,
@@ -655,14 +389,10 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, exists_doc},
     {"get", (PyCFunction)AerospikeClient_Get, METH_VARARGS | METH_KEYWORDS,
      get_doc},
-    {"get_async", (PyCFunction)AerospikeClient_Get_Async,
-     METH_VARARGS | METH_KEYWORDS, get_async_doc},
     {"select", (PyCFunction)AerospikeClient_Select,
      METH_VARARGS | METH_KEYWORDS, select_doc},
     {"put", (PyCFunction)AerospikeClient_Put, METH_VARARGS | METH_KEYWORDS,
      put_doc},
-    {"put_async", (PyCFunction)AerospikeClient_Put_Async,
-     METH_VARARGS | METH_KEYWORDS, put_async_doc},
     {"get_key_partition_id", (PyCFunction)AerospikeClient_Get_Key_PartitionID,
      METH_VARARGS | METH_KEYWORDS, get_key_partition_id_doc},
     {"remove", (PyCFunction)AerospikeClient_Remove,
@@ -684,99 +414,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"operate_ordered", (PyCFunction)AerospikeClient_OperateOrdered,
      METH_VARARGS | METH_KEYWORDS, operate_ordered_doc},
 
-    // LIST OPERATIONS
-
-    {"list_append", (PyCFunction)AerospikeClient_ListAppend,
-     METH_VARARGS | METH_KEYWORDS, list_append_doc},
-    {"list_extend", (PyCFunction)AerospikeClient_ListExtend,
-     METH_VARARGS | METH_KEYWORDS, list_extend_doc},
-    {"list_insert", (PyCFunction)AerospikeClient_ListInsert,
-     METH_VARARGS | METH_KEYWORDS, list_insert_doc},
-    {"list_insert_items", (PyCFunction)AerospikeClient_ListInsertItems,
-     METH_VARARGS | METH_KEYWORDS, list_insert_items_doc},
-    {"list_pop", (PyCFunction)AerospikeClient_ListPop,
-     METH_VARARGS | METH_KEYWORDS, list_pop_doc},
-    {"list_pop_range", (PyCFunction)AerospikeClient_ListPopRange,
-     METH_VARARGS | METH_KEYWORDS, list_pop_range_doc},
-    {"list_remove", (PyCFunction)AerospikeClient_ListRemove,
-     METH_VARARGS | METH_KEYWORDS, list_remove_doc},
-    {"list_remove_range", (PyCFunction)AerospikeClient_ListRemoveRange,
-     METH_VARARGS | METH_KEYWORDS, list_remove_range_doc},
-    {"list_clear", (PyCFunction)AerospikeClient_ListClear,
-     METH_VARARGS | METH_KEYWORDS, list_clear_doc},
-    {"list_set", (PyCFunction)AerospikeClient_ListSet,
-     METH_VARARGS | METH_KEYWORDS, list_set_doc},
-    {"list_get", (PyCFunction)AerospikeClient_ListGet,
-     METH_VARARGS | METH_KEYWORDS, list_get_doc},
-    {"list_get_range", (PyCFunction)AerospikeClient_ListGetRange,
-     METH_VARARGS | METH_KEYWORDS, list_get_range_doc},
-    {"list_trim", (PyCFunction)AerospikeClient_ListTrim,
-     METH_VARARGS | METH_KEYWORDS, list_trim_doc},
-    {"list_size", (PyCFunction)AerospikeClient_ListSize,
-     METH_VARARGS | METH_KEYWORDS, list_size_doc},
-
-    // MAP OPERATIONS
-
-    {"map_set_policy", (PyCFunction)AerospikeClient_MapSetPolicy,
-     METH_VARARGS | METH_KEYWORDS, map_set_policy_doc},
-    {"map_put", (PyCFunction)AerospikeClient_MapPut,
-     METH_VARARGS | METH_KEYWORDS, map_put_doc},
-    {"map_put_items", (PyCFunction)AerospikeClient_MapPutItems,
-     METH_VARARGS | METH_KEYWORDS, map_put_items_doc},
-    {"map_increment", (PyCFunction)AerospikeClient_MapIncrement,
-     METH_VARARGS | METH_KEYWORDS, map_increment_doc},
-    {"map_decrement", (PyCFunction)AerospikeClient_MapDecrement,
-     METH_VARARGS | METH_KEYWORDS, map_decrement_doc},
-    {"map_size", (PyCFunction)AerospikeClient_MapSize,
-     METH_VARARGS | METH_KEYWORDS, map_size_doc},
-    {"map_clear", (PyCFunction)AerospikeClient_MapClear,
-     METH_VARARGS | METH_KEYWORDS, map_clear_doc},
-    {"map_remove_by_key", (PyCFunction)AerospikeClient_MapRemoveByKey,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_key_doc},
-    {"map_remove_by_key_list", (PyCFunction)AerospikeClient_MapRemoveByKeyList,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_key_list_doc},
-    {"map_remove_by_key_range",
-     (PyCFunction)AerospikeClient_MapRemoveByKeyRange,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_key_range_doc},
-    {"map_remove_by_value", (PyCFunction)AerospikeClient_MapRemoveByValue,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_value_doc},
-    {"map_remove_by_value_list",
-     (PyCFunction)AerospikeClient_MapRemoveByValueList,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_value_list_doc},
-    {"map_remove_by_value_range",
-     (PyCFunction)AerospikeClient_MapRemoveByValueRange,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_value_range_doc},
-    {"map_remove_by_index", (PyCFunction)AerospikeClient_MapRemoveByIndex,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_index_doc},
-    {"map_remove_by_index_range",
-     (PyCFunction)AerospikeClient_MapRemoveByIndexRange,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_index_range_doc},
-    {"map_remove_by_rank", (PyCFunction)AerospikeClient_MapRemoveByRank,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_rank_doc},
-    {"map_remove_by_rank_range",
-     (PyCFunction)AerospikeClient_MapRemoveByRankRange,
-     METH_VARARGS | METH_KEYWORDS, map_remove_by_rank_range_doc},
-    {"map_get_by_key", (PyCFunction)AerospikeClient_MapGetByKey,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_key_doc},
-    {"map_get_by_key_range", (PyCFunction)AerospikeClient_MapGetByKeyRange,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_key_range_doc},
-    {"map_get_by_key_list", (PyCFunction)AerospikeClient_MapGetByKeyList,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_key_list_doc},
-    {"map_get_by_value", (PyCFunction)AerospikeClient_MapGetByValue,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_value_doc},
-    {"map_get_by_value_range", (PyCFunction)AerospikeClient_MapGetByValueRange,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_value_range_doc},
-    {"map_get_by_value_list", (PyCFunction)AerospikeClient_MapGetByValueList,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_value_list_doc},
-    {"map_get_by_index", (PyCFunction)AerospikeClient_MapGetByIndex,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_index_doc},
-    {"map_get_by_index_range", (PyCFunction)AerospikeClient_MapGetByIndexRange,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_index_range_doc},
-    {"map_get_by_rank", (PyCFunction)AerospikeClient_MapGetByRank,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_rank_doc},
-    {"map_get_by_rank_range", (PyCFunction)AerospikeClient_MapGetByRankRange,
-     METH_VARARGS | METH_KEYWORDS, map_get_by_rank_range_doc},
-
     // QUERY OPERATIONS
 
     {"query", (PyCFunction)AerospikeClient_Query, METH_VARARGS | METH_KEYWORDS,
@@ -793,13 +430,8 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
     {"scan_apply", (PyCFunction)AerospikeClient_ScanApply,
      METH_VARARGS | METH_KEYWORDS, scan_apply_doc},
 
-    {"scan_info", (PyCFunction)AerospikeClient_ScanInfo,
-     METH_VARARGS | METH_KEYWORDS, scan_info_doc},
-
     // INFO OPERATIONS
 
-    {"info", (PyCFunction)AerospikeClient_Info, METH_VARARGS | METH_KEYWORDS,
-     info_doc},
     {"set_xdr_filter", (PyCFunction)AerospikeClient_SetXDRFilter,
      METH_VARARGS | METH_KEYWORDS, set_xdr_filter_doc},
     {"get_expression_base64", (PyCFunction)AerospikeClient_GetExpressionBase64,
@@ -810,9 +442,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, info_single_node_doc},
     {"info_random_node", (PyCFunction)AerospikeClient_InfoRandomNode,
      METH_VARARGS | METH_KEYWORDS, info_random_node_doc},
-    {"info_node", // DEPRECATED
-     (PyCFunction)AerospikeClient_InfoNode, METH_VARARGS | METH_KEYWORDS,
-     info_node_doc},
     {"get_nodes", (PyCFunction)AerospikeClient_GetNodes,
      METH_VARARGS | METH_KEYWORDS, get_nodes_doc},
     {"get_node_names", (PyCFunction)AerospikeClient_GetNodeNames,
@@ -834,8 +463,12 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, index_integer_create_doc},
     {"index_string_create", (PyCFunction)AerospikeClient_Index_String_Create,
      METH_VARARGS | METH_KEYWORDS, index_string_create_doc},
+    {"index_blob_create", (PyCFunction)AerospikeClient_Index_Blob_Create,
+     METH_VARARGS | METH_KEYWORDS, index_blob_create_doc},
     {"index_cdt_create", (PyCFunction)AerospikeClient_Index_Cdt_Create,
      METH_VARARGS | METH_KEYWORDS, index_cdt_create_doc},
+    {"index_expr_create", (PyCFunction)AerospikeClient_Index_Expr_Create,
+     METH_VARARGS | METH_KEYWORDS, ""},
     {"get_cdtctx_base64", (PyCFunction)AerospikeClient_GetCDTCTXBase64,
      METH_VARARGS | METH_KEYWORDS, get_cdtctx_base64_doc},
     {"index_remove", (PyCFunction)AerospikeClient_Index_Remove,
@@ -854,16 +487,6 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
 
     // BATCH OPERATIONS
 
-    {"get_many", (PyCFunction)AerospikeClient_Get_Many,
-     METH_VARARGS | METH_KEYWORDS, get_many_doc},
-    {"batch_get_ops", (PyCFunction)AerospikeClient_Batch_GetOps,
-     METH_VARARGS | METH_KEYWORDS, batch_get_ops_doc},
-    {"select_many", (PyCFunction)AerospikeClient_Select_Many,
-     METH_VARARGS | METH_KEYWORDS, select_many_doc},
-    {"exists_many", (PyCFunction)AerospikeClient_Exists_Many,
-     METH_VARARGS | METH_KEYWORDS, exists_many_doc},
-    {"get_key_digest", (PyCFunction)AerospikeClient_Get_Key_Digest,
-     METH_VARARGS | METH_KEYWORDS, get_key_digest_doc},
     {"batch_write", (PyCFunction)AerospikeClient_BatchWrite,
      METH_VARARGS | METH_KEYWORDS, batch_write_doc},
     {"batch_operate", (PyCFunction)AerospikeClient_Batch_Operate,
@@ -872,10 +495,17 @@ static PyMethodDef AerospikeClient_Type_Methods[] = {
      METH_VARARGS | METH_KEYWORDS, batch_remove_doc},
     {"batch_apply", (PyCFunction)AerospikeClient_Batch_Apply,
      METH_VARARGS | METH_KEYWORDS, batch_apply_doc},
+    {"batch_read", (PyCFunction)AerospikeClient_BatchRead,
+     METH_VARARGS | METH_KEYWORDS, "Read multiple keys."},
 
     // TRUNCATE OPERATIONS
     {"truncate", (PyCFunction)AerospikeClient_Truncate,
      METH_VARARGS | METH_KEYWORDS, truncate_doc},
+
+    // Multi record transactions
+    {"commit", (PyCFunction)AerospikeClient_Commit,
+     METH_VARARGS | METH_KEYWORDS},
+    {"abort", (PyCFunction)AerospikeClient_Abort, METH_VARARGS | METH_KEYWORDS},
 
     {NULL}};
 
@@ -905,7 +535,10 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->has_connected = false;
     self->use_shared_connection = false;
     self->as = NULL;
-    self->send_bool_as = SEND_BOOL_AS_PY_BYTES;
+    self->send_bool_as = SEND_BOOL_AS_AS_BOOL;
+
+    as_config config;
+    as_config_init(&config);
 
     if (PyArg_ParseTupleAndKeywords(args, kwds, "O:client", kwlist,
                                     &py_config) == false) {
@@ -918,8 +551,47 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         goto CONSTRUCTOR_ERROR;
     }
 
-    as_config config;
-    as_config_init(&config);
+    // We create a new class for as_config_provider
+    // because dictionaries are meant to have any kind of keys / values
+    // whereas classes follow a well defined spec
+    PyObject *py_config_provider_option_name =
+        PyUnicode_FromString("config_provider");
+    if (py_config_provider_option_name == NULL) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+    }
+    PyObject *py_obj_config_provider =
+        PyDict_GetItemWithError(py_config, py_config_provider_option_name);
+    Py_DECREF(py_config_provider_option_name);
+
+    PyTypeObject *py_expected_field_type = &AerospikeConfigProvider_Type;
+    if (py_obj_config_provider == NULL) {
+        if (PyErr_Occurred()) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        // User didn't provide config provider.
+        // It is optional so just move on
+    }
+    else if (Py_TYPE(py_obj_config_provider) != py_expected_field_type) {
+        as_error_update(&constructor_err, AEROSPIKE_ERR_PARAM,
+                        "config_provider must be an "
+                        "aerospike.ConfigProvider class instance. But "
+                        "a %s was received instead",
+                        py_obj_config_provider->ob_type->tp_name);
+        goto RAISE_EXCEPTION_WITH_AS_ERROR;
+    }
+    else {
+        // In Python, users can have their own instance of aerospike.ConfigProvider
+        // that lives independently from the client config dictionary.
+        // But here, we need to copy over its values into the C client config provider
+        // because the latter is embedded inside as_config
+        AerospikeConfigProvider *py_config_provider =
+            (AerospikeConfigProvider *)py_obj_config_provider;
+
+        config.config_provider.interval = py_config_provider->interval;
+        // This method creates a new copy of the string at py_config_provider->provider->path
+        // so that the as_config object doesn't depend on the lifetime of the aerospike.ConfigProvider object in Python
+        as_config_provider_set_path(&config, py_config_provider->path);
+    }
 
     bool lua_user_path = false;
 
@@ -927,14 +599,15 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     if (py_lua && PyDict_Check(py_lua)) {
 
         PyObject *py_lua_user_path = PyDict_GetItemString(py_lua, "user_path");
-        if (py_lua_user_path && PyString_Check(py_lua_user_path)) {
+        if (py_lua_user_path && PyUnicode_Check(py_lua_user_path)) {
             lua_user_path = true;
-            if (strnlen(PyString_AsString(py_lua_user_path),
+            if (strnlen((char *)PyUnicode_AsUTF8(py_lua_user_path),
                         AS_CONFIG_PATH_MAX_SIZE) > AS_CONFIG_PATH_MAX_LEN) {
                 error_code = INIT_LUA_USER_ERR;
                 goto CONSTRUCTOR_ERROR;
             }
-            strcpy(config.lua.user_path, PyString_AsString(py_lua_user_path));
+            strcpy(config.lua.user_path,
+                   (char *)PyUnicode_AsUTF8(py_lua_user_path));
         }
     }
 
@@ -972,16 +645,11 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 PyTuple_Size(py_host) <= 3) {
 
                 py_addr = PyTuple_GetItem(py_host, 0);
-                if (PyString_Check(py_addr)) {
-                    addr = strdup(PyString_AsString(py_addr));
-                }
-                else if (PyUnicode_Check(py_addr)) {
-                    PyObject *py_ustr = PyUnicode_AsUTF8String(py_addr);
-                    addr = strdup(PyBytes_AsString(py_ustr));
-                    Py_DECREF(py_ustr);
+                if (PyUnicode_Check(py_addr)) {
+                    addr = strdup((char *)PyUnicode_AsUTF8(py_addr));
                 }
                 py_port = PyTuple_GetItem(py_host, 1);
-                if (PyInt_Check(py_port) || PyLong_Check(py_port)) {
+                if (PyLong_Check(py_port)) {
                     port = (uint16_t)PyLong_AsLong(py_port);
                 }
                 else {
@@ -990,18 +658,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
                 // Set TLS Name if provided
                 if (PyTuple_Size(py_host) == 3) {
                     py_tls_name = PyTuple_GetItem(py_host, 2);
-                    if (PyString_Check(py_tls_name)) {
-                        tls_name = strdup(PyString_AsString(py_tls_name));
-                    }
-                    else if (PyUnicode_Check(py_tls_name)) {
-                        PyObject *py_ustr = PyUnicode_AsUTF8String(py_tls_name);
-                        tls_name = strdup(PyBytes_AsString(py_ustr));
-                        Py_DECREF(py_ustr);
+                    if (PyUnicode_Check(py_tls_name)) {
+                        tls_name =
+                            strdup((char *)PyUnicode_AsUTF8(py_tls_name));
                     }
                 }
             }
-            else if (PyString_Check(py_host)) {
-                addr = strdup(strtok(PyString_AsString(py_host), ":"));
+            else if (PyUnicode_Check(py_host)) {
+                addr = strdup(strtok((char *)PyUnicode_AsUTF8(py_host), ":"));
                 addr = strtok(addr, ":");
                 char *temp = strtok(NULL, ":");
                 if (NULL != temp) {
@@ -1038,24 +702,24 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         //  but leave it for now for customers who may be using it
         PyObject *py_shm_max_nodes =
             PyDict_GetItemString(py_shm, "shm_max_nodes");
-        if (py_shm_max_nodes && PyInt_Check(py_shm_max_nodes)) {
-            config.shm_max_nodes = PyInt_AsLong(py_shm_max_nodes);
+        if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
+            config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
         }
         py_shm_max_nodes = PyDict_GetItemString(py_shm, "max_nodes");
-        if (py_shm_max_nodes && PyInt_Check(py_shm_max_nodes)) {
-            config.shm_max_nodes = PyInt_AsLong(py_shm_max_nodes);
+        if (py_shm_max_nodes && PyLong_Check(py_shm_max_nodes)) {
+            config.shm_max_nodes = PyLong_AsLong(py_shm_max_nodes);
         }
 
         // This does not match documentation (wrong name and location in dict),
         //  but leave it for now for customers who may be using it
         PyObject *py_shm_max_namespaces =
             PyDict_GetItemString(py_shm, "shm_max_namespaces");
-        if (py_shm_max_namespaces && PyInt_Check(py_shm_max_namespaces)) {
-            config.shm_max_namespaces = PyInt_AsLong(py_shm_max_namespaces);
+        if (py_shm_max_namespaces && PyLong_Check(py_shm_max_namespaces)) {
+            config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
         }
         py_shm_max_namespaces = PyDict_GetItemString(py_shm, "max_namespaces");
-        if (py_shm_max_namespaces && PyInt_Check(py_shm_max_namespaces)) {
-            config.shm_max_namespaces = PyInt_AsLong(py_shm_max_namespaces);
+        if (py_shm_max_namespaces && PyLong_Check(py_shm_max_namespaces)) {
+            config.shm_max_namespaces = PyLong_AsLong(py_shm_max_namespaces);
         }
 
         // This does not match documentation (wrong name and location in dict),
@@ -1063,22 +727,22 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         PyObject *py_shm_takeover_threshold_sec =
             PyDict_GetItemString(py_shm, "shm_takeover_threshold_sec");
         if (py_shm_takeover_threshold_sec &&
-            PyInt_Check(py_shm_takeover_threshold_sec)) {
+            PyLong_Check(py_shm_takeover_threshold_sec)) {
             config.shm_takeover_threshold_sec =
-                PyInt_AsLong(py_shm_takeover_threshold_sec);
+                PyLong_AsLong(py_shm_takeover_threshold_sec);
         }
         py_shm_takeover_threshold_sec =
             PyDict_GetItemString(py_shm, "takeover_threshold_sec");
         if (py_shm_takeover_threshold_sec &&
-            PyInt_Check(py_shm_takeover_threshold_sec)) {
+            PyLong_Check(py_shm_takeover_threshold_sec)) {
             config.shm_takeover_threshold_sec =
-                PyInt_AsLong(py_shm_takeover_threshold_sec);
+                PyLong_AsLong(py_shm_takeover_threshold_sec);
         }
 
         PyObject *py_shm_cluster_key = PyDict_GetItemString(py_shm, "shm_key");
-        if (py_shm_cluster_key && PyInt_Check(py_shm_cluster_key)) {
+        if (py_shm_cluster_key && PyLong_Check(py_shm_cluster_key)) {
             user_shm_key = true;
-            config.shm_key = PyInt_AsLong(py_shm_cluster_key);
+            config.shm_key = PyLong_AsLong(py_shm_cluster_key);
         }
     }
 
@@ -1110,15 +774,14 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
     }
 
-    as_policies_init(&config.policies);
     //Set default value of use_batch_direct
 
     PyObject *py_policies = PyDict_GetItemString(py_config, "policies");
     if (py_policies && PyDict_Check(py_policies)) {
         //global defaults setting
         PyObject *py_key_policy = PyDict_GetItemString(py_policies, "key");
-        if (py_key_policy && PyInt_Check(py_key_policy)) {
-            long long_key_policy = PyInt_AsLong(py_key_policy);
+        if (py_key_policy && PyLong_Check(py_key_policy)) {
+            long long_key_policy = PyLong_AsLong(py_key_policy);
             config.policies.read.key = long_key_policy;
             config.policies.write.key = long_key_policy;
             config.policies.apply.key = long_key_policy;
@@ -1126,27 +789,10 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             config.policies.remove.key = long_key_policy;
         }
 
-        /* This was the name of the policy pre 3.0.0, keep for legacy reasons
-		 * It is the same as total_timeout
-		 */
-        PyObject *py_timeout = PyDict_GetItemString(py_policies, "timeout");
-        if (py_timeout && PyInt_Check(py_timeout)) {
-            long long_timeout = PyInt_AsLong(py_timeout);
-
-            config.policies.write.base.total_timeout = long_timeout;
-            config.policies.read.base.total_timeout = long_timeout;
-            config.policies.apply.base.total_timeout = long_timeout;
-            config.policies.operate.base.total_timeout = long_timeout;
-            config.policies.query.base.total_timeout = long_timeout;
-            config.policies.scan.base.total_timeout = long_timeout;
-            config.policies.remove.base.total_timeout = long_timeout;
-            config.policies.batch.base.total_timeout = long_timeout;
-        }
-
         PyObject *py_sock_timeout =
             PyDict_GetItemString(py_policies, "socket_timeout");
-        if (py_sock_timeout && PyInt_Check(py_sock_timeout)) {
-            long long_timeout = PyInt_AsLong(py_sock_timeout);
+        if (py_sock_timeout && PyLong_Check(py_sock_timeout)) {
+            long long_timeout = PyLong_AsLong(py_sock_timeout);
 
             config.policies.write.base.socket_timeout = long_timeout;
             config.policies.read.base.socket_timeout = long_timeout;
@@ -1160,8 +806,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
         PyObject *py_total_timeout =
             PyDict_GetItemString(py_policies, "total_timeout");
-        if (py_total_timeout && PyInt_Check(py_total_timeout)) {
-            long long_total_timeout = PyInt_AsLong(py_total_timeout);
+        if (py_total_timeout && PyLong_Check(py_total_timeout)) {
+            long long_total_timeout = PyLong_AsLong(py_total_timeout);
 
             config.policies.write.base.total_timeout = long_total_timeout;
             config.policies.read.base.total_timeout = long_total_timeout;
@@ -1175,8 +821,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
         PyObject *py_max_retry =
             PyDict_GetItemString(py_policies, "max_retries");
-        if (py_max_retry && PyInt_Check(py_max_retry)) {
-            long long_max_retries = PyInt_AsLong(py_max_retry);
+        if (py_max_retry && PyLong_Check(py_max_retry)) {
+            long long_max_retries = PyLong_AsLong(py_max_retry);
             config.policies.write.base.max_retries = long_max_retries;
             config.policies.read.base.max_retries = long_max_retries;
             config.policies.apply.base.max_retries = long_max_retries;
@@ -1188,26 +834,29 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         }
 
         PyObject *py_exists = PyDict_GetItemString(py_policies, "exists");
-        if (py_exists && PyInt_Check(py_exists)) {
-            long long_exists = PyInt_AsLong(py_exists);
+        if (py_exists && PyLong_Check(py_exists)) {
+            long long_exists = PyLong_AsLong(py_exists);
             config.policies.write.exists = long_exists;
         }
 
         PyObject *py_replica = PyDict_GetItemString(py_policies, "replica");
-        if (py_replica && PyInt_Check(py_replica)) {
-            long long_replica = PyInt_AsLong(py_replica);
+        if (py_replica && PyLong_Check(py_replica)) {
+            long long_replica = PyLong_AsLong(py_replica);
             config.policies.read.replica = long_replica;
             config.policies.write.replica = long_replica;
             config.policies.apply.replica = long_replica;
             config.policies.operate.replica = long_replica;
             config.policies.remove.replica = long_replica;
+            config.policies.batch.replica = long_replica;
+            config.policies.scan.replica = long_replica;
+            config.policies.query.replica = long_replica;
         }
 
         PyObject *py_ap_read_mode =
             PyDict_GetItemString(py_policies, "read_mode_ap");
-        if (py_ap_read_mode && PyInt_Check(py_ap_read_mode)) {
+        if (py_ap_read_mode && PyLong_Check(py_ap_read_mode)) {
             as_policy_read_mode_ap ap_read_mode =
-                (as_policy_read_mode_ap)PyInt_AsLong(py_ap_read_mode);
+                (as_policy_read_mode_ap)PyLong_AsLong(py_ap_read_mode);
             config.policies.read.read_mode_ap = ap_read_mode;
             config.policies.operate.read_mode_ap = ap_read_mode;
             config.policies.batch.read_mode_ap = ap_read_mode;
@@ -1215,9 +864,9 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
         PyObject *py_sc_read_mode =
             PyDict_GetItemString(py_policies, "read_mode_sc");
-        if (py_sc_read_mode && PyInt_Check(py_sc_read_mode)) {
+        if (py_sc_read_mode && PyLong_Check(py_sc_read_mode)) {
             as_policy_read_mode_sc sc_read_mode =
-                (as_policy_read_mode_sc)PyInt_AsLong(py_sc_read_mode);
+                (as_policy_read_mode_sc)PyLong_AsLong(py_sc_read_mode);
             config.policies.read.read_mode_sc = sc_read_mode;
             config.policies.operate.read_mode_sc = sc_read_mode;
             config.policies.batch.read_mode_sc = sc_read_mode;
@@ -1225,8 +874,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
         PyObject *py_commit_level =
             PyDict_GetItemString(py_policies, "commit_level");
-        if (py_commit_level && PyInt_Check(py_commit_level)) {
-            long long_commit_level = PyInt_AsLong(py_commit_level);
+        if (py_commit_level && PyLong_Check(py_commit_level)) {
+            long long_commit_level = PyLong_AsLong(py_commit_level);
             config.policies.write.commit_level = long_commit_level;
             config.policies.apply.commit_level = long_commit_level;
             config.policies.operate.commit_level = long_commit_level;
@@ -1237,18 +886,16 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
         //  but leave it for now for customers who may be using it
         PyObject *py_max_threads =
             PyDict_GetItemString(py_policies, "max_threads");
-        if (py_max_threads &&
-            (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
-            config.max_conns_per_node = PyInt_AsLong(py_max_threads);
+        if (py_max_threads && PyLong_Check(py_max_threads)) {
+            config.max_conns_per_node = PyLong_AsLong(py_max_threads);
         }
 
         // This does not match documentation (should not be in policies),
         //  but leave it for now for customers who may be using it
         PyObject *py_thread_pool_size =
             PyDict_GetItemString(py_policies, "thread_pool_size");
-        if (py_thread_pool_size && (PyInt_Check(py_thread_pool_size) ||
-                                    PyLong_Check(py_thread_pool_size))) {
-            config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
+        if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
+            config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
         }
 
         /*
@@ -1265,16 +912,55 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
             goto CONSTRUCTOR_ERROR;
         }
 
+        // See comment at end of set_subpolicies() for why we process metrics policy here
+        PyObject *py_metrics_policy_option_name =
+            PyUnicode_FromString("metrics");
+        if (py_metrics_policy_option_name == NULL) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        PyObject *py_obj_metrics_policy =
+            PyDict_GetItemWithError(py_policies, py_metrics_policy_option_name);
+        Py_DECREF(py_metrics_policy_option_name);
+
+        if (py_obj_metrics_policy == NULL) {
+            if (PyErr_Occurred()) {
+                goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+            }
+            // User didn't provide default metrics policy.
+            // It is optional so just move on
+        }
+        else if (is_pyobj_correct_as_helpers_type(py_obj_metrics_policy,
+                                                  "metrics", "MetricsPolicy",
+                                                  false) == false) {
+            // set_as_metrics_policy_using_pyobject also checks the type of the pyobject
+            // But we want to set a different error message here
+            as_error_update(
+                &constructor_err, AEROSPIKE_ERR_PARAM,
+                "metrics must be an "
+                "aerospike_helpers.metrics.MetricsPolicy class instance. But "
+                "a %s was received instead",
+                py_obj_metrics_policy->ob_type->tp_name);
+            goto RAISE_EXCEPTION_WITH_AS_ERROR;
+        }
+        else {
+            int retval = set_as_metrics_policy_using_pyobject(
+                &constructor_err, py_obj_metrics_policy,
+                &(config.policies.metrics));
+            if (retval != AEROSPIKE_OK) {
+                goto RAISE_EXCEPTION_WITH_AS_ERROR;
+            }
+        }
+
         PyObject *py_login_timeout =
             PyDict_GetItemString(py_policies, "login_timeout_ms");
-        if (py_login_timeout && PyInt_Check(py_login_timeout)) {
-            config.login_timeout_ms = PyInt_AsLong(py_login_timeout);
+        if (py_login_timeout && PyLong_Check(py_login_timeout)) {
+            config.login_timeout_ms = PyLong_AsLong(py_login_timeout);
         }
 
         PyObject *py_auth_mode = PyDict_GetItemString(py_policies, "auth_mode");
         if (py_auth_mode) {
-            if (PyInt_Check(py_auth_mode)) {
-                long auth_mode = PyInt_AsLong(py_auth_mode);
+            if (PyLong_Check(py_auth_mode)) {
+                long auth_mode = PyLong_AsLong(py_auth_mode);
                 if ((long)AS_AUTH_INTERNAL == auth_mode ||
                     (long)AS_AUTH_EXTERNAL == auth_mode ||
                     (long)AS_AUTH_EXTERNAL_INSECURE == auth_mode ||
@@ -1297,30 +983,52 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     // thread_pool_size
     PyObject *py_thread_pool_size =
         PyDict_GetItemString(py_config, "thread_pool_size");
-    if (py_thread_pool_size && PyInt_Check(py_thread_pool_size)) {
-        config.thread_pool_size = PyInt_AsLong(py_thread_pool_size);
+    if (py_thread_pool_size && PyLong_Check(py_thread_pool_size)) {
+        config.thread_pool_size = PyLong_AsLong(py_thread_pool_size);
     }
 
     // max_threads (backward compatibility)
     PyObject *py_max_threads = PyDict_GetItemString(py_config, "max_threads");
-    if (py_max_threads &&
-        (PyInt_Check(py_max_threads) || PyLong_Check(py_max_threads))) {
-        config.max_conns_per_node = PyInt_AsLong(py_max_threads);
+    if (py_max_threads && PyLong_Check(py_max_threads)) {
+        config.max_conns_per_node = PyLong_AsLong(py_max_threads);
+    }
+
+    PyObject *py_min_conns_per_node =
+        PyDict_GetItemString(py_config, "min_conns_per_node");
+    if (py_min_conns_per_node && PyLong_Check(py_min_conns_per_node)) {
+        config.min_conns_per_node = PyLong_AsLong(py_min_conns_per_node);
     }
 
     // max_conns_per_node
     PyObject *py_max_conns =
         PyDict_GetItemString(py_config, "max_conns_per_node");
-    if (py_max_conns &&
-        (PyInt_Check(py_max_conns) || PyLong_Check(py_max_conns))) {
-        config.max_conns_per_node = PyInt_AsLong(py_max_conns);
+    if (py_max_conns && PyLong_Check(py_max_conns)) {
+        config.max_conns_per_node = PyLong_AsLong(py_max_conns);
     }
+
+    // max_error_rate
+    PyObject *py_max_error_rate =
+        PyDict_GetItemString(py_config, "max_error_rate");
+    Py_XINCREF(py_max_error_rate);
+    if (py_max_error_rate && PyLong_Check(py_max_error_rate)) {
+        config.max_error_rate = PyLong_AsLong(py_max_error_rate);
+    }
+    Py_XDECREF(py_max_error_rate);
+
+    // error_rate_window
+    PyObject *py_error_rate_window =
+        PyDict_GetItemString(py_config, "error_rate_window");
+    Py_XINCREF(py_error_rate_window);
+    if (py_error_rate_window && PyLong_Check(py_error_rate_window)) {
+        config.error_rate_window = PyLong_AsLong(py_error_rate_window);
+    }
+    Py_XDECREF(py_error_rate_window);
 
     //conn_timeout_ms
     PyObject *py_connect_timeout =
         PyDict_GetItemString(py_config, "connect_timeout");
-    if (py_connect_timeout && PyInt_Check(py_connect_timeout)) {
-        config.conn_timeout_ms = PyInt_AsLong(py_connect_timeout);
+    if (py_connect_timeout && PyLong_Check(py_connect_timeout)) {
+        config.conn_timeout_ms = PyLong_AsLong(py_connect_timeout);
     }
 
     //Whether to utilize shared connection
@@ -1333,7 +1041,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     PyObject *py_send_bool_as = PyDict_GetItemString(py_config, "send_bool_as");
     if (py_send_bool_as != NULL && PyLong_Check(py_send_bool_as)) {
         int send_bool_as_temp = PyLong_AsLong(py_send_bool_as);
-        if (send_bool_as_temp >= SEND_BOOL_AS_PY_BYTES &&
+        if (send_bool_as_temp >= SEND_BOOL_AS_INTEGER &&
             send_bool_as_temp <= SEND_BOOL_AS_AS_BOOL) {
             self->send_bool_as = send_bool_as_temp;
         }
@@ -1342,8 +1050,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     //compression_threshold
     PyObject *py_compression_threshold =
         PyDict_GetItemString(py_config, "compression_threshold");
-    if (py_compression_threshold && PyInt_Check(py_compression_threshold)) {
-        int compression_value = PyInt_AsLong(py_compression_threshold);
+    if (py_compression_threshold && PyLong_Check(py_compression_threshold)) {
+        int compression_value = PyLong_AsLong(py_compression_threshold);
         if (compression_value >= 0) {
             config.policies.write.compression_threshold = compression_value;
         }
@@ -1355,14 +1063,32 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_tend_interval =
         PyDict_GetItemString(py_config, "tend_interval");
-    if (py_tend_interval && PyInt_Check(py_tend_interval)) {
-        config.tender_interval = PyInt_AsLong(py_tend_interval);
+    if (py_tend_interval && PyLong_Check(py_tend_interval)) {
+        config.tender_interval = PyLong_AsLong(py_tend_interval);
     }
 
     PyObject *py_cluster_name = PyDict_GetItemString(py_config, "cluster_name");
-    if (py_cluster_name && PyString_Check(py_cluster_name)) {
-        as_config_set_cluster_name(&config,
-                                   strdup(PyString_AsString(py_cluster_name)));
+    if (py_cluster_name && PyUnicode_Check(py_cluster_name)) {
+        const char *cluster_name = PyUnicode_AsUTF8(py_cluster_name);
+        if (!cluster_name) {
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        as_config_set_cluster_name(&config, cluster_name);
+    }
+
+    PyObject *py_app_id = NULL;
+    int retval = PyDict_GetItemStringRef(py_config, "app_id", &py_app_id);
+    if (retval == 1) {
+        const char *str = convert_pyobject_to_str(py_app_id);
+        if (!str) {
+            Py_DECREF(py_app_id);
+            goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
+        }
+        as_config_set_app_id(&config, str);
+        Py_DECREF(py_app_id);
+    }
+    else if (retval == -1) {
+        goto RAISE_EXCEPTION_WITHOUT_AS_ERROR;
     }
 
     //strict_types check
@@ -1385,8 +1111,8 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_max_socket_idle = NULL;
     py_max_socket_idle = PyDict_GetItemString(py_config, "max_socket_idle");
-    if (py_max_socket_idle && PyInt_Check(py_max_socket_idle)) {
-        long max_socket_idle = PyInt_AsLong(py_max_socket_idle);
+    if (py_max_socket_idle && PyLong_Check(py_max_socket_idle)) {
+        long max_socket_idle = PyLong_AsLong(py_max_socket_idle);
         if (max_socket_idle >= 0) {
             config.max_socket_idle = (uint32_t)max_socket_idle;
         }
@@ -1401,26 +1127,26 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
 
     PyObject *py_user_name = PyDict_GetItemString(py_config, "user");
     PyObject *py_user_pwd = PyDict_GetItemString(py_config, "password");
-    if (py_user_name && PyString_Check(py_user_name) && py_user_pwd &&
-        PyString_Check(py_user_pwd)) {
-        char *username = PyString_AsString(py_user_name);
-        char *password = PyString_AsString(py_user_pwd);
+    if (py_user_name && PyUnicode_Check(py_user_name) && py_user_pwd &&
+        PyUnicode_Check(py_user_pwd)) {
+        char *username = (char *)PyUnicode_AsUTF8(py_user_name);
+        char *password = (char *)PyUnicode_AsUTF8(py_user_pwd);
         as_config_set_user(&config, username, password);
     }
 
     self->as = aerospike_new(&config);
 
-    if (AerospikeClientConnect(self) == NULL) {
+    if (AerospikeClientConnect(self) == -1) {
         return -1;
     }
 
     return 0;
 
 CONSTRUCTOR_ERROR:
-
     switch (error_code) {
     // 0 Is success
     case 0: {
+        // TODO: this is dead code
         // Initialize connection flag
         return 0;
     }
@@ -1490,11 +1216,11 @@ CONSTRUCTOR_ERROR:
         break;
     }
 
-    PyObject *py_err = NULL;
-    error_to_pyobject(&constructor_err, &py_err);
-    PyObject *exception_type = raise_exception(&constructor_err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
+RAISE_EXCEPTION_WITH_AS_ERROR:
+    raise_exception(&constructor_err);
+
+RAISE_EXCEPTION_WITHOUT_AS_ERROR:
+    as_config_destroy(&config);
     return -1;
 }
 
@@ -1517,9 +1243,6 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         if (PyLong_Check(py_config_value)) {
             rack_id = PyLong_AsLong(py_config_value);
         }
-        else if (PyInt_Check(py_config_value)) {
-            rack_id = PyInt_AsLong(py_config_value);
-        }
         else {
             return INIT_POLICY_PARAM_ERR; // A non integer passed in.
         }
@@ -1532,7 +1255,51 @@ static int set_rack_aware_config(as_config *conf, PyObject *config_dict)
         }
         conf->rack_id = (int)rack_id;
     }
+
+    PyObject *rack_ids_pylist = PyDict_GetItemString(config_dict, "rack_ids");
+    if (rack_ids_pylist == NULL) {
+        return INIT_SUCCESS;
+    }
+    Py_INCREF(rack_ids_pylist);
+
+    if (!PyList_Check(rack_ids_pylist)) {
+        goto PARAM_ERROR;
+    }
+
+    size_t size = PyList_Size(rack_ids_pylist);
+
+    for (size_t i = 0; i < size; i++) {
+        PyObject *rack_id_pyobj = PyList_GetItem(rack_ids_pylist, i);
+        if (rack_id_pyobj == NULL) {
+            // This shouldn't happen, but just return an error if it does
+            goto PARAM_ERROR;
+        }
+
+        Py_INCREF(rack_id_pyobj);
+        if (PyLong_Check(rack_id_pyobj) == false) {
+            Py_DECREF(rack_id_pyobj);
+            goto PARAM_ERROR;
+        }
+
+        long rack_id = PyLong_AsLong(rack_id_pyobj);
+        if (rack_id == -1) {
+            // Error occurred
+            Py_DECREF(rack_id_pyobj);
+            goto PARAM_ERROR;
+        }
+
+        as_config_add_rack_id(conf, (int)rack_id);
+        Py_DECREF(rack_id_pyobj);
+    }
+
+    Py_DECREF(rack_ids_pylist);
     return INIT_SUCCESS;
+
+PARAM_ERROR:
+    // In any case param error is thrown
+    // rack ids is a PyObject that needs to be freed
+    Py_DECREF(rack_ids_pylist);
+    return INIT_POLICY_PARAM_ERR;
 }
 
 static int set_use_services_alternate(as_config *conf, PyObject *config_dict)
@@ -1604,24 +1371,25 @@ static void AerospikeClient_Type_Dealloc(PyObject *self)
  ******************************************************************************/
 
 static PyTypeObject AerospikeClient_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Client", // tp_name
-    sizeof(AerospikeClient),                           // tp_basicsize
-    0,                                                 // tp_itemsize
-    (destructor)AerospikeClient_Type_Dealloc,          // tp_dealloc
-    0,                                                 // tp_print
-    0,                                                 // tp_getattr
-    0,                                                 // tp_setattr
-    0,                                                 // tp_compare
-    0,                                                 // tp_repr
-    0,                                                 // tp_as_number
-    0,                                                 // tp_as_sequence
-    0,                                                 // tp_as_mapping
-    0,                                                 // tp_hash
-    0,                                                 // tp_call
-    0,                                                 // tp_str
-    0,                                                 // tp_getattro
-    0,                                                 // tp_setattro
-    0,                                                 // tp_as_buffer
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Client"),  // tp_name
+    sizeof(AerospikeClient),                  // tp_basicsize
+    0,                                        // tp_itemsize
+    (destructor)AerospikeClient_Type_Dealloc, // tp_dealloc
+    0,                                        // tp_print
+    0,                                        // tp_getattr
+    0,                                        // tp_setattr
+    0,                                        // tp_compare
+    0,                                        // tp_repr
+    0,                                        // tp_as_number
+    0,                                        // tp_as_sequence
+    0,                                        // tp_as_mapping
+    0,                                        // tp_hash
+    0,                                        // tp_call
+    0,                                        // tp_str
+    0,                                        // tp_getattro
+    0,                                        // tp_setattro
+    0,                                        // tp_as_buffer
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
     // tp_flags
     "The Client class manages the connections and trasactions against\n"
@@ -1665,35 +1433,22 @@ AerospikeClient *AerospikeClient_New(PyObject *parent, PyObject *args,
 {
     AerospikeClient *self = (AerospikeClient *)AerospikeClient_Type.tp_new(
         &AerospikeClient_Type, args, kwds);
-    as_error err;
-    as_error_init(&err);
-    int return_code = 0;
-    return_code = AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
 
-    switch (return_code) {
-    // 0 Is success
-    case 0: {
+    int return_code =
+        AerospikeClient_Type.tp_init((PyObject *)self, args, kwds);
+    if (return_code == 0) {
         return self;
     }
-    case -1: {
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
-        break;
-    }
-    default: {
-        if (PyErr_Occurred()) {
-            return NULL;
-        }
-        break;
-    }
+    if (PyErr_Occurred()) {
+        goto CLEANUP;
     }
 
-    PyObject *py_err = NULL;
+    as_error err;
+    as_error_init(&err);
     as_error_update(&err, AEROSPIKE_ERR_PARAM, "Failed to construct object");
-    error_to_pyobject(&err, &py_err);
-    PyObject *exception_type = raise_exception(&err);
-    PyErr_SetObject(exception_type, py_err);
-    Py_DECREF(py_err);
+    raise_exception(&err);
+
+CLEANUP:
+    AerospikeClient_Type.tp_dealloc((PyObject *)self);
     return NULL;
 }

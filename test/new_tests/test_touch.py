@@ -34,6 +34,13 @@ class TestTouch(object):
             self.as_connection.touch()
         assert "argument 'key' (pos 1)" in str(typeError.value)
 
+    def test_touch_with_no_value(self):
+        """
+        Invoke touch() which sets record's ttl to default server ttl value
+        """
+        key = ("test", "demo", 1)
+        self.as_connection.touch(key)
+
     def test_touch_with_correct_paramters(self):
         """
         Invoke touch() with correct parameters
@@ -48,7 +55,7 @@ class TestTouch(object):
         Invoke touch() with correct policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "retry": aerospike.POLICY_RETRY_ONCE}
+        policy = {"total_timeout": 180000, "retry": aerospike.POLICY_RETRY_ONCE}
         response = self.as_connection.touch(key, 120, {}, policy)
         assert response == AerospikeStatus.AEROSPIKE_OK
 
@@ -58,7 +65,6 @@ class TestTouch(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
@@ -78,7 +84,7 @@ class TestTouch(object):
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
         self.as_connection.touch(key, 120, {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -93,7 +99,6 @@ class TestTouch(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_IGNORE,
@@ -113,7 +118,6 @@ class TestTouch(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -135,7 +139,6 @@ class TestTouch(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -159,7 +162,6 @@ class TestTouch(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
@@ -185,7 +187,6 @@ class TestTouch(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
@@ -241,7 +242,7 @@ class TestTouch(object):
         Invoke touch() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.touch(key, 120, {}, policy, "")
 

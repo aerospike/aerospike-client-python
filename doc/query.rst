@@ -25,8 +25,8 @@ In this case, if the set is initialized to :py:obj:`None`, then the query will o
 
 .. note::
     The secondary index filters in :mod:`aerospike.predicates` are **not** the same as
-    the deprecated `predicate expressions <https://docs.aerospike.com/server/guide/predicate>`_.
-    For more details, read this `guide <https://docs.aerospike.com/server/guide/query>`_.
+    the deprecated `predicate expressions <https://aerospike.com/docs/server/guide/predicate>`_.
+    For more details, read this `guide <https://aerospike.com/docs/server/guide/query>`_.
 
 Writing Using Query
 -------------------
@@ -38,7 +38,7 @@ See available write operations at :mod:`aerospike_helpers.operations`.
 Query Aggregations
 ------------------
 
-A `stream UDF <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_ \
+A `stream UDF <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
@@ -54,8 +54,8 @@ Finally, the query is invoked using one of these methods:
 - :meth:`~aerospike.Query.execute_background`
 
 .. seealso::
-    `Queries <http://www.aerospike.com/docs/guide/query.html>`_ and \
-    `Managing Queries <http://www.aerospike.com/docs/operations/manage/queries/>`_.
+    `Queries <https://aerospike.com/docs/server/guide/query.html>`_ and \
+    `Managing Queries <https://aerospike.com/docs/server/operations/manage/queries/>`_.
 
 Fields
 ======
@@ -76,30 +76,20 @@ Fields
     records_per_second (:class:`int`)
         Limit the scan to process records at records_per_second.
         Requires server version >= 6.0.0
-        
+
         Default: ``0`` (no limit)
 
     ttl (:class:`int`)
-	    The time-to-live (expiration) of the record in seconds.
+        The time-to-live (expiration) of the record in seconds. If set to :data:`aerospike.TTL_CLIENT_DEFAULT`, use the
+        client's default write policy ttl.
 
-        There are also special values that can be set in the record TTL:
-
-            ``0`` (``TTL_NAMESPACE_DEFAULT``)
-                Which means that the record will adopt the default TTL value from the namespace.
-
-            ``0xFFFFFFFF`` (``TTL_NEVER_EXPIRE``)
-                (also, ``-1`` in a signed 32 bit int) Which means that the record will never expire.
-
-            ``0xFFFFFFFE`` (``TTL_DONT_UPDATE``)
-                (also, ``-2`` in a signed 32 bit int)
-                Which means that the record ttl will not change when the record is
-                updated.
+        See :ref:`TTL_CONSTANTS` for more possible special values.
 
         .. note::
-    	 	Note that the TTL value will be employed ONLY on background query writes.
+            Note that the TTL value will be employed ONLY on background query writes.
 
         Requires server version >= 6.0.0
-        
+
         Default: ``0`` (record will adopt the default TTL value from the namespace)
 
 Methods
@@ -117,18 +107,40 @@ Assume this boilerplate code is run before all examples below:
 
         Set a filter on the record bins resulting from :meth:`results` or \
         :meth:`foreach`.
-        
+
         If a selected bin does not exist in a record it will not appear in the *bins* portion of that record tuple.
 
     .. method:: where(predicate[, ctx])
 
         Set a where *predicate* for the query.
-        
+
         You can only assign at most one predicate to the query.
         If this function isn't called, the query will behave similar to :class:`aerospike.Scan`.
 
         :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
         :param list ctx: the :class:`list` produced by one of the :mod:`aerospike_helpers.cdt_ctx` methods.
+
+    .. method:: where_with_expr(expr, predicate)
+
+        Add an expression *predicate* to the query.
+
+        Predicate must have the bin name set to :py:obj:`None`.
+
+        You can only assign at most one predicate to the query.
+
+        :param expr: Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
+        :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
+
+    .. method:: where_with_index_name(index_name, predicate)
+
+        Add an index name *predicate* to the query.
+
+        Predicate must have the bin name set to :py:obj:`None`.
+
+        You can only assign at most one predicate to the query.
+
+        :param index_name str: The name of the index.
+        :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: results([,policy [, options]]) -> list of (key, meta, bins)
 
@@ -147,7 +159,7 @@ Assume this boilerplate code is run before all examples below:
             results will query. See the example below.
 
             .. code-block:: python
-            
+
                 # This is an example of querying partitions 1000 - 1003.
                 import aerospike
 
@@ -186,7 +198,7 @@ Assume this boilerplate code is run before all examples below:
 
             .. include:: examples/query/foreachfalse.py
                 :code: python
-        
+
         .. note:: As of client 7.0.0 and with server >= 6.0 foreach and the query policy
          "partition_filter" see :ref:`aerospike_partition_objects` can be used to specify which partitions/records
          foreach will query. See the example below.
@@ -225,17 +237,16 @@ Assume this boilerplate code is run before all examples below:
     .. method:: apply(module, function[, arguments])
 
         Aggregate the :meth:`results` using a stream \
-        `UDF <http://www.aerospike.com/docs/guide/udf.html>`_. If no \
+        `UDF <https://aerospike.com/docs/server/guide/udf.html>`_. If no \
         predicate is attached to the  :class:`~aerospike.Query` the stream UDF \
         will aggregate over all the records in the specified set.
 
         :param str module: the name of the Lua module.
         :param str function: the name of the Lua function within the *module*.
-        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <http://www.aerospike.com/docs/guide/data-types.html>`_.
-            If you need to use an unsupported type, (e.g. set or tuple) you can use a serializer like pickle first.
-        :return: one of the supported types, :class:`int`, :class:`str`, :class:`float` (double), :class:`list`, :class:`dict` (map), :class:`bytearray` (bytes), :class:`bool`.
+        :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+            If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
 
-        .. seealso:: `Developing Stream UDFs <http://www.aerospike.com/docs/udf/developing_stream_udfs.html>`_
+        .. seealso:: `Developing Stream UDFs <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_
 
         Example: find the first name distribution of users who are 21 or older using \
         a query aggregation:
@@ -266,7 +277,7 @@ Assume this boilerplate code is run before all examples below:
 
         :param ops: `list` A list of write operations generated by the aerospike_helpers e.g. list_operations, map_operations, etc.
 
-        .. note:: 
+        .. note::
             Requires server version >= 4.7.0.
 
     .. method:: execute_background([, policy])
@@ -276,7 +287,7 @@ Assume this boilerplate code is run before all examples below:
 
         :param dict policy: optional :ref:`aerospike_write_policies`.
 
-        :return: a job ID that can be used with :meth:`aerospike.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
+        :return: a job ID that can be used with :meth:`~aerospike.Client.job_info` to track the status of the ``aerospike.JOB_QUERY`` , as it runs in the background.
 
         .. code-block:: python
 
@@ -377,15 +388,13 @@ Assume this boilerplate code is run before all examples below:
     .. method:: get_partitions_status()
 
         Get this query instance's partition status. That is which partitions have been queried and which have not.
-        The returned value is a :class:`dict` with partition id, :class:`int`, as keys and :class:`tuple` as values.
         If the query instance is not tracking its partitions, the returned :class:`dict` will be empty.
 
         .. note::
             A query instance must have had .paginate() called on it, or been used with a partition filter, in order retrieve its
             partition status. If .paginate() was not called, or partition_filter was not used, the query instance will not save partition status.
 
-        :return: a :class:`tuple` of form (id: :class:`int`, init: class`bool`, done: class`bool`, digest: :class:`bytearray`).
-            See :ref:`aerospike_partition_objects` for more information.
+        :return: See :ref:`aerospike_partition_objects` for a description of the partition status return value.
 
         .. code-block:: python
 
@@ -441,7 +450,7 @@ Policies
         * **max_retries** :class:`int`
             | Maximum number of retries before aborting the current transaction. The initial attempt is not counted as a retry.
             |
-            | If max_retries is exceeded, the transaction will return error ``AEROSPIKE_ERR_TIMEOUT``.
+            | If max_retries is exceeded, the transaction will the last suberror that was received.
             |
             | Default: ``0``
 
@@ -450,7 +459,7 @@ Policies
               which sets max_retries = `0`;
 
         * **sleep_between_retries** :class:`int`
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep. 
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
             |
             | Default: ``0``
         * **socket_timeout** :class:`int`
@@ -480,25 +489,38 @@ Policies
             |
             | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
             |
+            | This compression feature requires the Enterprise Edition Server.
+            |
             | Default: ``False``
         * **deserialize** :class:`bool`
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
             |
             | Default: ``True``
-        * **fail_on_cluster_change** :class:`bool`
-            | Deprecated in 6.0.0. No longer has any effect..
-            | Terminate query if cluster is in migration state. 
+        * **expected_duration**
+            | Expected query duration. The server treats the query in different ways depending on the expected duration.
+            | This field is ignored for aggregation queries, background queries and server versions < 6.0.
             |
-            | Default ``False``
+            | See :ref:`query_duration_constants` for possible values.
+            |
+            | Default: :data:`aerospike.QUERY_DURATION_LONG`
         * **short_query** :class:`bool`
-            | Is query expected to return less than 100 records.
-            | If True, the server will optimize the query for a small record set.
-            | This field is ignored for aggregation queries, background queries
-            | and server versions less than 6.0.0.
-            |
-            | Mututally exclusive with records_per_second
-            | Default: ``False``
+            **Deprecated**: Use ``"expected_duration"`` instead.
+
+            For backwards compatibility: If ``"short_query"`` is true, the query is treated as a short query and
+            ``"expected_duration"`` is ignored. If ``"short_query"`` is false, ``"expected_duration"`` is used
+            and defaults to :data:`aerospike.QUERY_DURATION_LONG`.
+
+            Is query expected to return less than 100 records.
+
+            If True, the server will optimize the query for a small record set.
+
+            This field is ignored for aggregation queries, background queries
+            and server versions less than 6.0.0.
+
+            Mutually exclusive with records_per_second
+
+            Default: ``False``
         * **expressions** :class:`list`
             | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a transaction.
             |
@@ -517,6 +539,11 @@ Policies
 
             .. note:: Requires Aerospike server version >= 6.0
 
+        * **replica**
+            | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
+            |
+            | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
+
 .. _aerospike_query_options:
 
 Options
@@ -529,9 +556,9 @@ Options
     .. hlist::
         :columns: 1
 
-        * **nobins** :class:`bool` 
-            | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`. 
-            | 
+        * **nobins** :class:`bool`
+            | Whether to return the *bins* portion of the :ref:`aerospike_record_tuple`.
+            |
             | Default ``False``.
 
     .. versionadded:: 3.0.0

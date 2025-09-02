@@ -102,6 +102,10 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
      select_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
+    {"where_with_expr", (PyCFunction)AerospikeQuery_WhereWithExpr, METH_VARARGS,
+     where_doc},
+    {"where_with_index_name", (PyCFunction)AerospikeQuery_WhereWithIndexName,
+     METH_VARARGS, where_doc},
 
     {"execute_background", (PyCFunction)AerospikeQuery_ExecuteBackground,
      METH_VARARGS | METH_KEYWORDS, execute_background_doc},
@@ -170,7 +174,6 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
 {
     PyObject *py_namespace = NULL;
     PyObject *py_set = NULL;
-    PyObject *py_ustr_set = NULL;
 
     as_error err;
     as_error_init(&err);
@@ -188,8 +191,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
     char *namespace = NULL;
     char *set = NULL;
 
-    if (PyString_Check(py_namespace)) {
-        namespace = PyString_AsString(py_namespace);
+    if (PyUnicode_Check(py_namespace)) {
+        namespace = (char *)PyUnicode_AsUTF8(py_namespace);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -198,12 +201,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
     }
 
     if (py_set) {
-        if (PyString_Check(py_set)) {
-            set = PyString_AsString(py_set);
-        }
-        else if (PyUnicode_Check(py_set)) {
-            py_ustr_set = PyUnicode_AsUTF8String(py_set);
-            set = PyBytes_AsString(py_ustr_set);
+        if (PyUnicode_Check(py_set)) {
+            set = (char *)PyUnicode_AsUTF8(py_set);
         }
         else if (py_set != Py_None) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -217,16 +216,8 @@ static int AerospikeQuery_Type_Init(AerospikeQuery *self, PyObject *args,
     as_query_init(&self->query, namespace, set);
 
 CLEANUP:
-    if (py_ustr_set) {
-        Py_DECREF(py_ustr_set);
-    }
-
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_XDECREF(py_err);
+        raise_exception(&err);
         return -1;
     }
 
@@ -238,22 +229,6 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
     int i;
     for (i = 0; i < self->u_objs.size; i++) {
         Py_XDECREF(self->u_objs.ob[i]);
-    }
-
-    for (i = 0; i < self->query.where.size; i++) {
-        as_predicate *p = &self->query.where.entries[i];
-        if (p) {
-            if (p->dtype == AS_INDEX_STRING ||
-                p->dtype == AS_INDEX_GEO2DSPHERE) {
-                free(p->value.string);
-            }
-        }
-        if (i == 0) {
-            if (p->ctx) {
-                as_cdt_ctx_destroy(p->ctx);
-                cf_free(p->ctx);
-            }
-        }
     }
 
     as_query_destroy(&self->query);
@@ -274,9 +249,10 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 static PyTypeObject AerospikeQuery_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Query", // tp_name
-    sizeof(AerospikeQuery),                           // tp_basicsize
-    0,                                                // tp_itemsize
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Query"), // tp_name
+    sizeof(AerospikeQuery),                 // tp_basicsize
+    0,                                      // tp_itemsize
     (destructor)AerospikeQuery_Type_Dealloc,
     // tp_dealloc
     0, // tp_print
@@ -342,9 +318,9 @@ AerospikeQuery *AerospikeQuery_New(AerospikeClient *client, PyObject *args,
         Py_INCREF(client);
         return self;
     }
-    else {
-        return NULL;
-    }
+
+    AerospikeQuery_Type.tp_free(self);
+    return NULL;
 }
 
 PyObject *StoreUnicodePyObject(AerospikeQuery *self, PyObject *obj)

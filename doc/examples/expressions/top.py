@@ -1,5 +1,6 @@
 import aerospike
 from aerospike_helpers import expressions as exp
+import pprint
 
 # Connect to database
 config = {"hosts": [("127.0.0.1", 3000)]}
@@ -20,11 +21,12 @@ for key, record in zip(keys, records):
 
 kdGreaterThan1 = exp.GE(exp.FloatBin("kd"), 1.0).compile()
 policy = {"expressions": kdGreaterThan1}
-# For more details on get_many() usage, see the documentation
-records = client.get_many(keys, policy)
+brs = client.batch_read(keys, policy=policy)
 
-for record in records:
-    print(record[2])
+# Pretty print records' bins
+for br in brs.batch_records:
+    # error code for FILTERED_OUT = 27
+    pprint.pprint(br.record[2] if br.result != 27 else None)
 # {'user': 'Chief', 'scores': [6, 12, 4, 21], 'kd': 1.2}
 # {'user': 'Arbiter', 'scores': [5, 10, 5, 8], 'kd': 1.0}
 # None
@@ -44,10 +46,10 @@ getTopScore = exp.ListGetByRank(
 # ...then compare it
 scoreHigherThan20 = exp.GE(getTopScore, 20).compile()
 policy = {"expressions": scoreHigherThan20}
-records = client.get_many(keys, policy)
+brs = client.batch_read(keys, policy=policy)
 
-for record in records:
-    print(record[2])
+for br in brs.batch_records:
+    pprint.pprint(br.record[2] if br.result != 27 else None)
 # {'user': 'Chief', 'scores': [6, 12, 4, 21], 'kd': 1.2}
 # None
 # {'user': 'Johnson', 'scores': [8, 17, 20, 5], 'kd': 0.9}

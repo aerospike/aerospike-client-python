@@ -14,33 +14,33 @@ The client depends on:
 
 - The Python devel package
 - OpenSSL 1.1 >= 1.1.1
+- Libyaml
 - The Aerospike C client
 
-### RedHat 7+ and CentOS 7+
+### RedHat, Amazon Linux 2023
 
 The following are dependencies for:
 
-- RedHat Enterprise (RHEL) 7 or newer
-- CentOS 7 or newer
+- RedHat Enterprise (RHEL) 8 or newer
 - Related distributions which use the `yum` package manager
 
 ```sh
 sudo yum install openssl-devel
-sudo yum install python-devel # on CentOS 7
+sudo yum install libyaml-devel
 # Possibly needed
 sudo yum install python-setuptools
 ```
 
-### Debian 8+ and Ubuntu 18.04+
+### Debian and Ubuntu
 
 The following are dependencies for:
 
-- Debian 8 or newer
-- Ubuntu 18.04 or newer
+- Debian 11 or newer
+- Ubuntu 20.04 or newer
 - Related distributions which use the `apt` package manager
 
 ```sh
-sudo apt-get install libssl-dev
+sudo apt-get install libssl-dev libyaml-dev
 sudo apt-get install build-essential python-dev
 ```
 
@@ -58,6 +58,27 @@ Dependencies:
  sudo pacman -S binutils gcc
  ```
 
+### Alpine Linux
+
+Dependencies:
+
+```sh
+apk add py3-pip
+apk add python3-dev
+apk add zlib-dev
+apk add git
+# C client dependencies
+apk add automake
+apk add make
+apk add musl-dev
+apk add gcc
+apk add openssl-dev
+apk add lua-dev
+apk add libuv-dev  # (for node.js)
+apk add doxygen  # (for make docs)
+apk add graphviz # (for make docs)
+```
+
 ### macOS
 
 By default macOS will be missing command line tools.
@@ -66,8 +87,8 @@ By default macOS will be missing command line tools.
 
 The dependencies can be installed through the macOS package manager [Homebrew](http://brew.sh/).
 
-    brew install openssl@1
-    # brew uninstall openssl@3
+    brew install openssl@3
+    brew install libyaml
 
 ### All distros
 
@@ -78,13 +99,79 @@ sudo apt install clang-format
 
 ## Build
 
-    export STATIC_SSL=1
-    # substitute the paths to your OpenSSL 1.1 library
-    export SSL_LIB_PATH=/usr/local/Cellar/openssl@1.1/1.1.1l/lib/
-    export CPATH=/usr/local/Cellar/openssl@1.1/1.1.1l/include/
+Before building the wheel, it is recommended to manually clean the C client build:
+```
+python3 setup.py clean
+```
+Sometimes the C client will not rebuild if you switch branches and update the C client submodule, and you will end up
+using the wrong version of the C client. This can causes strange issues when building or testing the Python client.
 
-    pip install build
-    python3 -m build
+Also, for macOS or any other operating system that doesn't have OpenSSL installed by default, you must install it and
+specify its location when building the wheel. In macOS, you would run these commands:
+```
+export SSL_LIB_PATH="$(brew --prefix openssl@3)/lib/"
+export CPATH="$(brew --prefix openssl@3)/include/"
+export STATIC_SSL=1
+```
+
+Then build the source distribution and wheel.
+```
+python3 -m pip install -r requirements.txt
+python3 -m build
+```
+
+### Local version identifier
+
+If you are building on a non-tagged commit, or there are uncommitted changes to the repository, a local version
+identifier will be added to the version. The formatting of the local version identifier can be found [here](https://github.com/jwodder/versioningit/tree/v3.1.0?tab=readme-ov-file#example-configurations) under the versioneer
+section. 
+
+The local version identifier will appear in:
+- The package version in the wheel name
+- `python3 -m pip show aerospike` if you installed the wheel
+
+### Unoptimized builds (only Linux and macOS)
+
+By default, the Python client and the C client submodule are built with optimizations, which can make debugging
+difficult in gdb/lldb. You can build both the Python client and C client submodule without optimizations using an
+environment variable:
+```
+UNOPTIMIZED=1 python3 -m build
+```
+
+In Linux and macOS builds, the package version will be labelled with `+unoptimized`.
+
+### Including debug symbols in macOS
+
+macOS builds do not include source files and line number information for debugging by default. You can include this info
+by using this environment variable:
+```
+INCLUDE_DSYM=1 python3 -m build
+```
+
+This way, when you debug the Python client using lldb, the source files and line numbers will appear in backtraces,
+breakpoints will actually work, etc. macOS builds with this option enabled do not have a labelled version yet, but this
+will be added in the future.
+
+In macOS builds, the package version will be labelled with `+dsym`.
+
+### Building with sanitizer enabled
+
+You can build the Python client with sanitizer to find memory errors and memory leaks. To do this, pass in an environment variable:
+```bash
+SANITIZER=1 python3 -m build
+```
+
+Then once you install the build with sanitizer, you may run a Python script using the Python client with this environment variable:
+
+```bash
+# Replace this file path with your actual libasan shared library path
+# You can find the path using this command:
+# ldconfig -p | grep libasan.so
+LD_PRELOAD=/lib/x86_64-linux-gnu/libasan.so.6 python3 -c "import aerospike"
+```
+
+This is only supported for building with GCC.
 
 ### Troubleshooting macOS
 
@@ -134,22 +221,17 @@ Simply call `python` with the path to the example
 
 ## Contributing
 
-### Codestyle
+### Precommit Hooks
 
-All code in `aerospike_helpers` must pass a lint test using `flake8`:
+All commits must pass precommit hook tests. To install precommit hooks:
 ```
-pip install flake8
-```
-
-The command is:
-```
-python3 -m flake8
+pip install pre-commit
+pre-commit install
 ```
 
-All C source code must be formatted with `clang-format`:
-```
-clang-format -i <filename>
-```
+This will run the lint tests for the C and Python code in this project.
+
+See pre-commit's documentation for more usage explanations.
 
 ## License
 

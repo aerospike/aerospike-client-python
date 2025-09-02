@@ -4,12 +4,13 @@ import pytest
 import time
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
-
+from contextlib import nullcontext
 import aerospike
 
 
 @pytest.mark.usefixtures("connection_config")
 class TestCreateUser(object):
+    user = "user7"
 
     pytestmark = pytest.mark.skipif(
         not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
@@ -30,11 +31,9 @@ class TestCreateUser(object):
         Teardown method
         """
 
-        policy = {}
-
         for user in self.delete_users:
             try:
-                self.client.admin_drop_user(user, policy)
+                self.client.admin_drop_user(user)
             except Exception:
                 pass
         time.sleep(2)
@@ -49,7 +48,7 @@ class TestCreateUser(object):
 
     def test_create_user_with_proper_parameters(self):
 
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         user = "user1-test"
         password = "user1-test"
         roles = ["read", "read-write", "sys-admin"]
@@ -66,21 +65,20 @@ class TestCreateUser(object):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user, policy)
+        user = self.client.admin_query_user_info(user, policy)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user["roles"] == ["read", "read-write", "sys-admin"]
 
         self.delete_users.append("user1-test")
 
     def test_create_user_with_proper_parameters_without_policy(self):
 
-        policy = {"timeout": 1000}
         user = "user1-test"
         password = "user1-test"
         roles = ["read", "read-write", "sys-admin"]
 
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
             time.sleep(2)
         except Exception:
             pass
@@ -91,9 +89,9 @@ class TestCreateUser(object):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user, policy)
+        user = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user["roles"] == ["read", "read-write", "sys-admin"]
 
         self.delete_users.append("user1-test")
 
@@ -119,7 +117,7 @@ class TestCreateUser(object):
 
     def test_create_user_with_proper_timeout_policy_value(self):
 
-        policy = {"timeout": 20}
+        policy = {"timeout": 180000}
         user = "user2-test"
         password = "user2-test"
         roles = ["read-write", "sys-admin"]
@@ -136,21 +134,20 @@ class TestCreateUser(object):
 
         assert status == 0
 
-        user_details = self.client.admin_query_user(user)
+        user = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read-write", "sys-admin"]
+        assert user["roles"] == ["read-write", "sys-admin"]
 
         self.delete_users.append("user2-test")
 
     def test_create_user_with_none_username(self):
 
-        policy = {"timeout": 20}
         user = None
         password = "user3-test"
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -158,13 +155,12 @@ class TestCreateUser(object):
 
     def test_create_user_with_empty_username(self):
 
-        policy = {}
         user = ""
         password = "user3-test"
         roles = ["read-write"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -172,18 +168,17 @@ class TestCreateUser(object):
 
     def test_create_user_with_special_characters_in_username(self):
 
-        policy = {}
         user = "!#Q#AEQ@#$%&^*((^&*~~~````"
         password = "uesr4-test"
         roles = ["read-write"]
 
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
             time.sleep(2)
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = self.client.admin_create_user(user, password, roles)
 
         assert status == 0
 
@@ -191,13 +186,12 @@ class TestCreateUser(object):
 
     def test_create_user_with_none_password(self):
 
-        policy = {}
         user = "uesr4-test"
         password = None
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -205,18 +199,17 @@ class TestCreateUser(object):
 
     def test_create_user_with_empty_string_as_password(self):
 
-        policy = {}
         user = "user5-test"
         password = ""
         roles = ["read-write"]
 
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
             time.sleep(2)
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = self.client.admin_create_user(user, password, roles)
 
         assert status == 0
         time.sleep(2)
@@ -224,18 +217,17 @@ class TestCreateUser(object):
 
     def test_create_user_with_special_characters_in_password(self):
 
-        policy = {}
         user = "user6-test"
         password = "@#!$#$WERWE%&%$"
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
             time.sleep(2)
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = self.client.admin_create_user(user, password, roles)
 
         assert status == 0
 
@@ -243,19 +235,18 @@ class TestCreateUser(object):
 
     def test_create_user_with_too_long_username(self):
 
-        policy = {}
         user = "user$" * 1000
         password = "user10-test"
         roles = ["sys-admin"]
 
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
             time.sleep(2)
         except Exception:
             pass
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -266,35 +257,33 @@ class TestCreateUser(object):
 
     def test_create_user_with_too_long_password(self):
 
-        policy = {"timeout": 1000}
         user = "user10-test"
         password = "user#" * 1000
         roles = ["read-write"]
 
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
             time.sleep(2)
         except Exception:
             pass
 
         with pytest.raises(e.ClientError):
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
 
     def test_create_user_with_empty_roles_list(self):
 
-        policy = {}
         user = "user7"
         password = "user7"
         roles = []
 
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
             time.sleep(2)
         except Exception:
             pass
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(user, password, roles)
 
         except e.InvalidRole as exception:
             assert exception.code == 70
@@ -302,18 +291,17 @@ class TestCreateUser(object):
 
     def test_create_user_with_non_user_admin_user(self):
 
-        policy = {}
         user = "non_admin_test"
         password = "non_admin_test"
         roles = ["read-write"]
 
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
             time.sleep(2)
         except Exception:
             pass
 
-        status = self.client.admin_create_user(user, password, roles, policy)
+        status = self.client.admin_create_user(user, password, roles)
         time.sleep(2)
 
         assert status == 0
@@ -323,8 +311,11 @@ class TestCreateUser(object):
         non_admin_client = None
 
         try:
-            non_admin_client = aerospike.client(config).connect("non_admin_test", "non_admin_test")
-            status = non_admin_client.admin_create_user("user78", password, roles, policy)
+            # Close and reconnect with non_admin_test user
+            non_admin_client = aerospike.client(config)
+            non_admin_client.close()
+            non_admin_client.connect("non_admin_test", "non_admin_test")
+            status = non_admin_client.admin_create_user("user78", password, roles)
 
             if non_admin_client:
                 non_admin_client.close()
@@ -337,11 +328,10 @@ class TestCreateUser(object):
     @pytest.mark.parametrize("roles", [{}, (), 5, "read-write"])
     def test_create_user_with_non_list_roles(self, roles):
 
-        policy = {}
         user = "user7"
         password = "user7"
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
         except Exception:
             pass
 
@@ -351,12 +341,11 @@ class TestCreateUser(object):
     @pytest.mark.parametrize("list_item", [{}, (), 5, []])
     def test_create_user_with_invalid_roles_types(self, list_item):
 
-        policy = {}
         user = "user7"
         password = "user7"
         roles = ["read-write", list_item]
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(user)
         except Exception:
             pass
 
@@ -365,15 +354,47 @@ class TestCreateUser(object):
 
     def test_create_user_with_very_long_role_name(self):
 
-        policy = {}
-        user = "user7"
         password = "user7"
         roles = ["read-write", "abc" * 50]
         try:
-            self.client.admin_drop_user(user, policy)
+            self.client.admin_drop_user(self.user)
             time.sleep(2)
         except Exception:
             pass
 
         with pytest.raises(e.ClientError):
-            self.client.admin_create_user(user, password, roles)
+            self.client.admin_create_user(self.user, password, roles)
+
+    # Need as_connection to get server version
+    def test_create_pki_user(self, as_connection):
+        try:
+            self.client.admin_drop_user(self.user)
+            time.sleep(2)
+        except Exception:
+            pass
+
+        self.delete_users.append(self.user)
+
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (8, 1):
+            context = pytest.raises(e.AerospikeError)
+        else:
+            context = nullcontext()
+
+        # Make sure mutual TLS is enabled.
+        if not (
+            TestBaseClass.tls_in_use()
+            and "tls" in self.connection_config
+            and "certfile" in self.connection_config["tls"]
+        ):
+            pytest.skip("Mutual TLS is not enabled")
+
+        roles = ["read-write"]
+        admin_policy = {}
+        with context:
+            self.client.admin_create_pki_user(user=self.user, roles=roles, policy=admin_policy)
+
+        if type(context) == nullcontext:
+            print("Check that the PKI user was created.")
+            time.sleep(2)
+            userDict = self.client.admin_query_user_info(self.user)
+            assert userDict["roles"] == ["read-write"]

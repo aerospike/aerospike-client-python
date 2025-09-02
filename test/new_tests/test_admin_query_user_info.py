@@ -20,19 +20,18 @@ class TestQueryUserInfo(TestBaseClass):
         """
         config = TestBaseClass.get_connection_config()
         TestQueryUserInfo.Me = self
+        self.user = "example-test"
         self.client = aerospike.client(config).connect(config["user"], config["password"])
         try:
-            self.client.admin_drop_user("example-test")
+            self.client.admin_drop_user(self.user)
             time.sleep(1)
         except e.InvalidUser:
             pass
-        policy = {}
-        user = "example-test"
         password = "foo2"
         roles = ["read-write", "sys-admin", "read"]
 
         try:
-            self.client.admin_create_user(user, password, roles, policy)
+            self.client.admin_create_user(self.user, password, roles)
             time.sleep(1)
         except e.UserExistsError:
             pass
@@ -43,10 +42,8 @@ class TestQueryUserInfo(TestBaseClass):
         Teardown method
         """
 
-        policy = {}
-
         try:
-            self.client.admin_drop_user("example-test", policy)
+            self.client.admin_drop_user(self.user)
             time.sleep(1)
         except e.InvalidUser:
             pass
@@ -60,19 +57,25 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_proper_parameters(self):
 
-        user = "example-test"
-
         time.sleep(2)
-        user_details = self.client.admin_query_user_info(user)
-        assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
+        user_details = self.client.admin_query_user_info(self.user)
+        assert user_details.get("roles") == [
+            "read",
+            "read-write",
+            "sys-admin"
+        ]
+        # The user has not read or written anything, so all r/w stats should be 0
+        # NOTE: we don't test the scenario where read_info / write_info is not 0
+        # because it takes time and a lot of transactions for the server to actually record non-zero values
+        assert user_details.get("read_info") == 0
+        assert user_details.get("write_info") == 0
+        # No clients were logged in as this user
+        assert user_details.get("conns_in_use") == 0
 
     def test_query_user_info_with_invalid_timeout_policy_value(self):
-
         policy = {"timeout": 0.1}
-        user = "example-test"
-
         try:
-            self.client.admin_query_user_info(user, policy)
+            self.client.admin_query_user_info(self.user, policy)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -80,21 +83,18 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_proper_timeout_policy_value(self):
 
-        policy = {"timeout": 30}
-        user = "example-test"
-
+        policy = {"timeout": 180000}
         time.sleep(2)
-        user_details = self.client.admin_query_user_info(user, policy)
+        user_details = self.client.admin_query_user_info(self.user, policy)
 
         assert user_details.get("roles") == ["read", "read-write", "sys-admin"]
 
     def test_query_user_info_with_none_username(self):
 
-        policy = {"timeout": 30}
         user = None
 
         try:
-            self.client.admin_query_user_info(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.ParamError as exception:
             assert exception.code == -2
@@ -102,11 +102,10 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_empty_username(self):
 
-        policy = {}
         user = ""
 
         try:
-            self.client.admin_query_user_info(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -114,11 +113,10 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_nonexistent_username(self):
 
-        policy = {}
         user = "non-existent"
 
         try:
-            self.client.admin_query_user_info(user, policy)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -126,15 +124,13 @@ class TestQueryUserInfo(TestBaseClass):
 
     def test_query_user_info_with_no_roles(self):
 
-        policy = {}
-        user = "example-test"
         roles = ["sys-admin", "read", "read-write"]
 
-        status = self.client.admin_revoke_roles(user, roles, policy)
+        status = self.client.admin_revoke_roles(self.user, roles)
         assert status == 0
         time.sleep(2)
 
-        user_details = self.client.admin_query_user_info(user)
+        user_details = self.client.admin_query_user_info(self.user)
 
         assert user_details.get("roles") == []
 
@@ -142,9 +138,8 @@ class TestQueryUserInfo(TestBaseClass):
         """
         Invoke query_user() with extra argument.
         """
-        policy = {"timeout": 1000}
         with pytest.raises(TypeError) as typeError:
-            self.client.admin_query_user_info("foo", policy, "")
+            self.client.admin_query_user_info("foo", None, "")
 
         assert "admin_query_user_info() takes at most 2 arguments (3 given)" in str(typeError.value)
 

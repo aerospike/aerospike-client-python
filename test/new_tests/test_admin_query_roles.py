@@ -57,7 +57,7 @@ class TestQueryRoles(TestBaseClass):
         """
         Query roles positive policy
         """
-        roles = self.client.admin_query_roles({"timeout": 1000})
+        roles = self.client.admin_query_roles({"timeout": 180000})
 
         assert roles["usr-sys-admin-test"] == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 

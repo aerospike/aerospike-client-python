@@ -88,7 +88,7 @@ class TestTruncate(object):
         self._assert_truncation_status(self.un_truncated_keys, exists=False)
 
     def test_whole_set_truncation_with_policy(self):
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         self.as_connection.truncate("test", "truncate", 0, policy)
 
         self._assert_truncation_status(self.truncated_keys, exists=False)
@@ -203,3 +203,8 @@ class TestTruncate(object):
     def test_whole_set_truncation_with_invalid_policy_type(self, policy):
         with pytest.raises(e.ClientError):
             self.as_connection.truncate("test", "truncate", 0, policy)
+
+    def test_truncate_after_close(self):
+        self.as_connection.close()
+        with pytest.raises(e.ClusterError):
+            self.as_connection.truncate("test", None, 0)

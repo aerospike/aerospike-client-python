@@ -17,7 +17,7 @@ Bin Predicates
 
     Represent a *bin* **BETWEEN** *min* **AND** *max* predicate.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param int min: the minimum value to be matched with the between operator.
     :param int max: the maximum value to be matched with the between operator.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
@@ -28,7 +28,7 @@ Bin Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
         query = client.query('test', 'demo')
         query.where(p.between('age', 20, 30))
         res = query.results()
@@ -40,7 +40,7 @@ Bin Predicates
 
     Represent a *bin* **=** *val* predicate.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param val: the value to be matched with an equals operator.
     :type val: :py:class:`str` or :py:class:`int`
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
@@ -51,7 +51,7 @@ Bin Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
         query = client.query('test', 'demo')
         query.where(p.equals('name', 'that guy'))
         res = query.results()
@@ -68,9 +68,9 @@ GeoJSON Predicates
     (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param str shape: the shape formatted as a GeoJSON string.
-    :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
+    :param Optional[int] index_type: See :ref:`aerospike_index_types` for possible values.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
@@ -82,7 +82,7 @@ GeoJSON Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
         bins = {'pad_id': 1,
@@ -117,11 +117,11 @@ GeoJSON Predicates
     (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param float long: the longitude of the center point of the AeroCircle.
     :param float lat: the latitude of the center point of the AeroCircle.
     :param float radius_meters: the radius length in meters of the AeroCircle.
-    :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
+    :param Optional[int] index_type: See :ref:`aerospike_index_types` for possible values.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.8.1
@@ -133,7 +133,7 @@ GeoJSON Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
         bins = {'pad_id': 1,
@@ -156,9 +156,9 @@ GeoJSON Predicates
     (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param str point: the point formatted as a GeoJSON string.
-    :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
+    :param Optional[int] index_type: See :ref:`aerospike_index_types` for possible values.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
@@ -170,7 +170,7 @@ GeoJSON Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         client.index_geo2dsphere_create('test', 'launch_centers', 'area', 'launch_area_geo')
         rect = GeoJSON({ 'type': "Polygon",
@@ -202,10 +202,10 @@ GeoJSON Predicates
     (:meth:`~aerospike.index_geo2dsphere_create`) over a *bin*
     containing :class:`~aerospike.GeoJSON` point data.
 
-    :param str bin: the bin name.
+    :param Optional[str] bin: the bin name.
     :param float long: the longitude of the point.
     :param float lat: the latitude of the point.
-    :param index_type: Optional. Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
+    :param Optional[int] index_type: See :ref:`aerospike_index_types` for possible values.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
 
     .. note:: Requires server version >= 3.7.0
@@ -217,7 +217,7 @@ GeoJSON Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         client.index_geo2dsphere_create('test', 'launch_centers', 'area', 'launch_area_geo')
         rect = GeoJSON({ 'type': "Polygon",
@@ -247,8 +247,8 @@ Map and List Predicates
     Represent the predicate *bin* **CONTAINS** *val* for a bin with a complex \
     (list or map) type.
 
-    :param str bin: the bin name.
-    :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
+    :param Optional[str] bin: the bin name.
+    :param index_type: See :ref:`aerospike_index_types` for possible values.
     :param val: match records whose *bin* is an *index_type* (ex: list) containing *val*.
     :type val: :py:class:`str` or :py:class:`int`
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
@@ -261,7 +261,7 @@ Map and List Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         # assume the bin fav_movies in the set test.demo bin should contain
         # a dict { (str) _title_ : (int) _times_viewed_ }
@@ -284,8 +284,8 @@ Map and List Predicates
     Represent the predicate *bin* **CONTAINS** values **BETWEEN** *min* **AND** \
     *max* for a bin with a complex (list or map) type.
 
-    :param str bin: the bin name.
-    :param index_type: Possible ``aerospike.INDEX_TYPE_*`` values are detailed in :ref:`aerospike_misc_constants`.
+    :param Optional[str] bin: the bin name.
+    :param index_type: See :ref:`aerospike_index_types` for possible values.
     :param int min: the minimum value to be used for matching with the range operator.
     :param int max: the maximum value to be used for matching with the range operator.
     :return: `tuple` to be used in :meth:`aerospike.Query.where`.
@@ -298,7 +298,7 @@ Map and List Predicates
         from aerospike import predicates as p
 
         config = { 'hosts': [ ('127.0.0.1', 3000)]}
-        client = aerospike.client(config).connect()
+        client = aerospike.client(config)
 
         # create a secondary index for numeric values of test.demo records whose 'age' bin is a list
         client.index_list_create('test', 'demo', 'age', aerospike.INDEX_NUMERIC, 'demo_age_nidx')
@@ -309,4 +309,3 @@ Map and List Predicates
         res = query.results()
         print(res)
         client.close()
-

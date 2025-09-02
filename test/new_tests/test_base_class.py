@@ -181,7 +181,6 @@ class TestBaseClass(object):
             # major_ver = res[0]
             # minor_ver = res[1]
             # print("major_ver:", major_ver, "minor_ver:", minor_ver)
-
         return client
 
     @staticmethod
@@ -216,5 +215,24 @@ class TestBaseClass(object):
         config["policies"] = policies_conf
         config["user"] = TestBaseClass.user
         config["password"] = TestBaseClass.password
-        # print(config)
+
+        # Disable total_timeout and timeout
+        # config["timeout"] = 0
+        # config["total_timeout"] = 0
+        # Also have to set for every operation policy since
+        # total_timeout at the root level is deprecated
+        policy_names = ("read", "write", "apply", "operate", "remove", "query", "scan", "batch")
+        for policy_name in policy_names:
+            config["policies"][policy_name] = {}
+            # 3 minutes
+            # Override server's total (transaction) timeout
+            config["policies"][policy_name]["total_timeout"] = 180000
+            # Must hear back from server after a certain number of seconds
+            config["policies"][policy_name]["socket_timeout"] = 180000
+        # config["max_socket_idle"] = 60
+
+        config["policies"]["info"] = {}
+        config["policies"]["info"]["timeout"] = 180000
+        config["policies"]["admin"] = {}
+        config["policies"]["admin"]["timeout"] = 180000
         return config

@@ -70,7 +70,6 @@ class TestIncrement(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
@@ -95,7 +94,7 @@ class TestIncrement(object):
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"total_timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
         self.as_connection.increment(key, "age", 5, {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -109,7 +108,7 @@ class TestIncrement(object):
         Invoke increment() with correct policy
         """
         key = ("test", "demo", 1)
-        policy = {"total_timeout": 1000, "key": aerospike.POLICY_KEY_SEND}
+        policy = {"key": aerospike.POLICY_KEY_SEND}
         self.as_connection.increment(key, "age", 5, {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
@@ -122,7 +121,6 @@ class TestIncrement(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_IGNORE,
@@ -147,7 +145,6 @@ class TestIncrement(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -174,7 +171,6 @@ class TestIncrement(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
@@ -203,7 +199,6 @@ class TestIncrement(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
@@ -230,7 +225,6 @@ class TestIncrement(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "total_timeout": 1000,
             "key": aerospike.POLICY_KEY_SEND,
             "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
@@ -289,9 +283,8 @@ class TestIncrement(object):
         Invoke increment() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"total_timeout": 1000}
         with pytest.raises(TypeError) as typeError:
-            self.as_connection.increment(key, "age", 2, {}, policy, "")
+            self.as_connection.increment(key, "age", 2, {}, {}, "")
 
         assert "increment() takes at most 5 arguments (6 given)" in str(typeError.value)
 

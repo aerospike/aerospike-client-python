@@ -44,18 +44,17 @@ static PyObject *Aerospike_Calc_Digest_Invoke(PyObject *py_ns, PyObject *py_set,
     // Initialised flags
     bool key_initialised = false;
 
-    if (!PyString_Check(py_ns)) {
+    if (!PyUnicode_Check(py_ns)) {
         PyErr_SetString(PyExc_TypeError, "Namespace should be a string");
         return NULL;
     }
 
-    if (!PyString_Check(py_set) && !PyUnicode_Check(py_set)) {
+    if (!PyUnicode_Check(py_set)) {
         PyErr_SetString(PyExc_TypeError, "Set should be a string or unicode");
         return NULL;
     }
 
-    if (!PyString_Check(py_key) && !PyUnicode_Check(py_key) &&
-        !PyInt_Check(py_key) && !PyLong_Check(py_key) &&
+    if (!PyUnicode_Check(py_key) && !PyLong_Check(py_key) &&
         !PyByteArray_Check(py_key)) {
         PyErr_SetString(PyExc_TypeError, "Key is invalid");
         return NULL;
@@ -105,11 +104,7 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 
@@ -152,9 +147,4 @@ PyObject *Aerospike_Get_Partition_Id(PyObject *self, PyObject *args)
 
     // Invoke Operation
     return PyLong_FromLong(part_id);
-}
-
-PyObject *Aerospike_Is_AsyncSupported(PyObject *self)
-{
-    return PyLong_FromLong(async_support);
 }

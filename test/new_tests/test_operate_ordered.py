@@ -4,6 +4,7 @@ from .test_base_class import TestBaseClass
 
 import aerospike
 from aerospike import exception as e
+from aerospike_helpers.operations import operations
 
 
 class TestOperateOrdered(object):
@@ -75,17 +76,17 @@ class TestOperateOrdered(object):
             (
                 ("test", "demo", 1),
                 [
-                    {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
-                    {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
-                    {"op": aerospike.OPERATOR_READ, "bin": "name"},
+                    operations.prepend("name", "ram"),
+                    operations.increment("age", 3),
+                    operations.read("name")
                 ],
                 [("name", "ramname1")],
             ),
             (
                 ("test", "demo", 1),  # with_write_float_value
                 [
-                    {"op": aerospike.OPERATOR_WRITE, "bin": "write_bin", "val": {"no": 89.8}},
-                    {"op": aerospike.OPERATOR_READ, "bin": "write_bin"},
+                    operations.write("write_bin", {"no": 89.8}),
+                    operations.read("write_bin")
                 ],
                 [("write_bin", {"no": 89.8})],
             ),
@@ -96,14 +97,6 @@ class TestOperateOrdered(object):
                     {"op": aerospike.OPERATOR_READ, "bin": "write_bin"},
                 ],
                 [("write_bin", {"no": 89})],
-            ),
-            (
-                ("test", "demo", 1),  # write_tuple_positive
-                [
-                    {"op": aerospike.OPERATOR_WRITE, "bin": "write_bin", "val": tuple("abc")},
-                    {"op": aerospike.OPERATOR_READ, "bin": "write_bin"},
-                ],
-                [("write_bin", ("a", "b", "c"))],
             ),
             (
                 ("test", "demo", 1),  # with_bin_bytearray
@@ -170,7 +163,7 @@ class TestOperateOrdered(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "timeout": 1000,
+            "total_timeout": 180000,
             "key": aerospike.POLICY_KEY_SEND,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
@@ -191,7 +184,7 @@ class TestOperateOrdered(object):
         """
         key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
         rec = {"name": "name%s" % (str(1)), "age": 1}
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_DIGEST}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST}
         self.as_connection.put(key, rec)
 
         llist = [
@@ -212,7 +205,6 @@ class TestOperateOrdered(object):
             (
                 ("test", "demo", 1),
                 {
-                    "timeout": 1000,
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_IGNORE,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
@@ -239,7 +231,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with gen GT positive.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
         meta = {"gen": gen + 5, "ttl": 1200}
@@ -469,10 +461,10 @@ class TestOperateOrdered(object):
             ),
             (
                 [
-                    {"op": aerospike.OP_LIST_APPEND_ITEMS, "bin": "string_bin", "val": [["z", "x"], ("y", "w")]},
+                    {"op": aerospike.OP_LIST_APPEND_ITEMS, "bin": "string_bin", "val": [["z", "x"], ["y", "w"]]},
                     {"op": aerospike.OP_LIST_GET_RANGE, "bin": "string_bin", "index": 3, "val": 3},
                 ],
-                [("string_bin", 6), ("string_bin", ["d", ["z", "x"], ("y", "w")])],
+                [("string_bin", 6), ("string_bin", ["d", ["z", "x"], ["y", "w"]])],
             ),
             (
                 [
@@ -602,7 +594,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with gen not equal.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_EQ}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_EQ}
 
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
@@ -632,7 +624,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with gen GT lesser.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000, "key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
+        policy = {"key": aerospike.POLICY_KEY_SEND, "gen": aerospike.POLICY_GEN_GT}
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"]
         meta = {"gen": gen, "ttl": 1200}
@@ -734,6 +726,7 @@ class TestOperateOrdered(object):
 
         except e.BinNameError as exception:
             assert exception.code == 21
+            assert exception.msg == "A bin name should not exceed 15 characters limit"
 
     def test_neg_operate_ordered_empty_string_key(self):
         """
@@ -751,7 +744,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with extra parameter.
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 1000}
+        policy = {}
         llist = [{"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"}]
         with pytest.raises(TypeError) as typeError:
             self.as_connection.operate_ordered(key, llist, {}, policy, "")
@@ -786,7 +779,7 @@ class TestOperateOrdered(object):
         [
             (
                 ("test", "demo", 1),
-                {"timeout": 1000},
+                {},
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "name"},
                     {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},
@@ -795,7 +788,7 @@ class TestOperateOrdered(object):
             ),
             (
                 ("test", "demo", 1),
-                {"timeout": 1000},
+                {},
                 [
                     {"op": aerospike.OPERATOR_APPEND, "bin": "name", "val": 3, "aa": 89},
                 ],
@@ -804,7 +797,6 @@ class TestOperateOrdered(object):
             (
                 ("test", "demo", 1),  # with_incr_value_string
                 {
-                    "timeout": 1000,
                     "key": aerospike.POLICY_KEY_SEND,
                     "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                 },
@@ -848,7 +840,7 @@ class TestOperateOrdered(object):
         Invoke operate_ordered() with incorrect policy
         """
         key = ("test", "demo", 1)
-        policy = {"timeout": 0.5}
+        policy = {"total_timeout": 0.5}
         llist = [
             {"op": aerospike.OPERATOR_PREPEND, "bin": "name", "val": "ram"},
             {"op": aerospike.OPERATOR_INCR, "bin": "age", "val": 3},

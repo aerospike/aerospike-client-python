@@ -23,7 +23,7 @@ def remove_index(client):
     client.index_remove("test", "age_index")
 
 
-@pytest.mark.xfail(reason="file permissions can cause this to fail")
+# @pytest.mark.xfail(reason="file permissions can cause this to fail")
 class TestAggregate(object):
     def setup_class(cls):
         cls.connection_setup_functions = (add_required_index, add_stream_udf)
@@ -122,7 +122,7 @@ class TestAggregate(object):
         """
         Invoke aggregate() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"max_retries": 5}
         query = self.as_connection.query("test", "demo")
         query.select("name", "test_age")
         query.where(p.between("test_age", 1, 5))
@@ -290,9 +290,9 @@ class TestAggregate(object):
         """
         Invoke aggregate() with extra parameter
         """
-        policy = {"timeout": 1000}
+        policy = {"total_timeout": 1000}
 
-        with pytest.raises(TypeError) as typeError:
+        with pytest.raises(e.ParamError) as paramError:
             query = self.as_connection.query("test", "demo")
             query.select("name", "test_age")
             query.where(p.between("test_age", 1, 5))
@@ -303,7 +303,7 @@ class TestAggregate(object):
 
             query.foreach(user_callback, policy, "")
 
-        assert "foreach() takes at most 2 arguments (3 given)" in str(typeError.value)
+        assert "query options must be a dictionary" in str(paramError.value)
 
     def test_neg_aggregate_with_no_parameters(self):
         """
@@ -387,3 +387,10 @@ class TestAggregate(object):
 
         except e.ParamError as exception:
             assert exception.code == -2
+
+    # We can't use the inspect library to check the keyword args of a method defined using the C-API
+    # It doesn't work, so just check that passing in an invalid arg fails
+    def test_signature_invalid_arg(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        with pytest.raises(TypeError):
+            query.apply("stream_example", "count", policy=None)

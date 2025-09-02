@@ -14,8 +14,10 @@
 # limitations under the License.
 ##########################################################################
 """
-Helper functions to create bit operation dictionary arguments for
-the :meth:`aerospike.operate` and :meth:`aerospike.operate_ordered` methods of the aerospike client.
+Helper functions to create bit operation dictionary arguments for:
+
+* :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 
     .. note:: Bitwise operations require server version >= 4.6.0
 
@@ -36,7 +38,7 @@ Example::
     # Configure the client.
     config = {"hosts": [("127.0.0.1", 3000)]}
     # Create a client and connect it to the cluster.
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     key = ("test", "demo", "foo")
     five_ones_bin_name = "bitwise1"
@@ -82,7 +84,7 @@ Example::
     from aerospike_helpers.operations import bitwise_operations
 
     config = {'hosts': [('127.0.0.1', 3000)]}
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     key = ('test', 'demo', 'bit_example')
     five_one_blob = bytearray([1] * 5)
@@ -94,7 +96,7 @@ Example::
         client.remove(key)
 
     bit_policy = {
-        'map_write_mode': aerospike.BIT_WRITE_DEFAULT,
+        'bit_write_flags': aerospike.BIT_WRITE_DEFAULT,
     }
     client.put(key, {five_one_bin: five_one_blob})
 
@@ -133,7 +135,7 @@ Example::
 
     client.close()
 
-.. seealso:: `Bits (Data Types) <https://www.aerospike.com/docs/guide/bitwise.html>`_.
+.. seealso:: `Bits (Data Types) <https://aerospike.com/docs/develop/data-types/blob#bitwise-operations>`_.
 """
 import aerospike
 

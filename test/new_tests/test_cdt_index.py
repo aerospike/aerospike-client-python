@@ -52,16 +52,13 @@ ctx_map_rank.append(add_ctx_op(map_rank, -1))
 ctx_map_value = []
 ctx_map_value.append(add_ctx_op(map_value, 3))
 
-if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
-    if pytest.__version__ < "3.0.0":
-        pytest.skip("It only applies to >= 6.1 enterprise edition")
-    else:
-        pytestmark = pytest.mark.skip
-
 
 class TestCDTIndex(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):
+        if TestBaseClass.major_ver < 6 or (TestBaseClass.major_ver == 6 and TestBaseClass.minor_ver == 0):
+            pytest.skip("It only applies to >= 6.1 enterprise edition")
+
         keys = []
         for i in range(5):
             key = ("test", "demo", i)
@@ -121,7 +118,7 @@ class TestCDTIndex(object):
         """
         policy = {}
 
-        bs_b4_cdt = self.as_connection.get_cdtctx_base64({"ctx": ctx_list_index})
+        bs_b4_cdt = self.as_connection.get_cdtctx_base64(ctx_list_index)
 
         r = []
         r.append("sindex-create:ns=test;set=demo;indexname=test_string_list_cdt_index")
@@ -439,7 +436,7 @@ class TestCDTIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 10000}
         retobj = self.as_connection.index_cdt_create(
             "test",
             "demo",
@@ -459,7 +456,7 @@ class TestCDTIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 10000}
         retobj = self.as_connection.index_cdt_create(
             "test",
             "demo",

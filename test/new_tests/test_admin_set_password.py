@@ -28,7 +28,7 @@ class TestSetPassword(TestBaseClass):
             pass
 
         try:
-            self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"], {})
+            self.client.admin_create_user("testsetpassworduser", "aerospike", ["read"])
         except e.UserExistsError:
             pass
 
@@ -78,7 +78,7 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_proper_timeout_policy_value(self):
 
-        policy = {"timeout": 50}
+        policy = {"timeout": 180000}
         user = "testsetpassworduser"
         password = "newpassword"
 
@@ -112,12 +112,11 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_non_existent_user(self):
 
-        policy = {}
         user = "new_user"
         password = "newpassword"
 
         try:
-            self.client.admin_set_password(user, password, policy)
+            self.client.admin_set_password(user, password)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -125,9 +124,8 @@ class TestSetPassword(TestBaseClass):
 
     def test_set_password_with_too_long_password(self):
 
-        policy = {}
         user = "testsetpassworduser"
         password = "newpassword$" * 1000
 
         with pytest.raises(e.ClientError):
-            self.client.admin_set_password(user, password, policy)
+            self.client.admin_set_password(user, password)

@@ -25,7 +25,13 @@
 #include <aerospike/as_scan.h>
 #include <aerospike/as_bin.h>
 #include <aerospike/as_operations.h>
+#include <aerospike/as_txn.h>
+#include <aerospike/as_config.h>
+
 #include "pool.h"
+
+#define AEROSPIKE_MODULE_NAME "aerospike"
+#define FULLY_QUALIFIED_TYPE_NAME(name) AEROSPIKE_MODULE_NAME "." name
 
 // Bin names can be of type Unicode in Python
 // DB supports 32767 maximum number of bins
@@ -33,7 +39,6 @@
 extern int counter;
 extern PyObject *py_global_hosts;
 extern bool user_shm_key;
-extern uint32_t async_support;
 
 typedef struct {
     PyObject_HEAD
@@ -97,3 +102,18 @@ typedef struct {
 typedef struct {
     PyDictObject dict;
 } AerospikeKeyOrderedDict;
+
+typedef struct {
+    PyObject_HEAD
+        /* Type-specific fields go here. */
+        as_txn *txn;
+} AerospikeTransaction;
+
+extern PyTypeObject AerospikeTransaction_Type;
+
+typedef struct {
+    PyObject_HEAD char *path;
+    uint32_t interval;
+} AerospikeConfigProvider;
+
+extern PyTypeObject AerospikeConfigProvider_Type;

@@ -17,7 +17,7 @@ class TestInfoSingleNode(object):
     def setup(self, request, as_connection, connection_config):
         key = ("test", "demo", "list_key")
         rec = {"names": ["John", "Marlen", "Steve"]}
-        self.host_name = list(self.as_connection.info("node").keys())[0]
+        self.host_name = list(self.as_connection.info_all("node").keys())[0]
         self.as_connection.put(key, rec)
 
         yield
@@ -30,6 +30,9 @@ class TestInfoSingleNode(object):
         """
         if self.pytest_skip:
             pytest.xfail()
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 0):
+            pytest.skip("\"bins\" info command has been removed in server 7.0")
+
         response = self.as_connection.info_single_node("bins", self.host_name)
 
         # This should probably make sure that a bin is actually named 'names'
@@ -83,10 +86,10 @@ class TestInfoSingleNode(object):
         if self.pytest_skip:
             pytest.xfail()
         host = self.host_name
-        policy = {"timeout": 1000}
-        response = self.as_connection.info_single_node("bins", host, policy)
+        policy = {"timeout": 180000}
+        response = self.as_connection.info_single_node("namespaces", host, policy)
 
-        assert "names" in response
+        assert "test" in response
 
     def test_info_single_node_positive_with_host(self):
         """
@@ -95,9 +98,9 @@ class TestInfoSingleNode(object):
         if self.pytest_skip:
             pytest.xfail()
         host = self.host_name
-        response = self.as_connection.info_single_node("bins", host)
+        response = self.as_connection.info_single_node("namespaces", host)
 
-        assert "names" in response
+        assert "test" in response
 
     def test_info_single_node_positive_with_all_parameters(self):
         """
@@ -105,7 +108,7 @@ class TestInfoSingleNode(object):
         """
         if self.pytest_skip:
             pytest.xfail()
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         host = self.host_name
         response = self.as_connection.info_single_node("logs", host, policy)
 
@@ -152,7 +155,7 @@ class TestInfoSingleNodeIncorrectUsage(object):
         Test info with extra parameters.
         """
         host = self.connection_config["hosts"][0]
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         with pytest.raises(TypeError) as typeError:
             self.as_connection.info_single_node("bins", host, policy, "")
 

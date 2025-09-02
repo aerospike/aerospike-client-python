@@ -69,7 +69,6 @@ class TestBatchRemove(TestBaseClass):
                 "simple-write-policy-batch",
                 [("test", "demo", 0)],
                 {
-                    "total_timeout": 2000,
                     "max_retries": 2,
                     "allow_inline_ssd": True,
                     "respond_all_keys": False,
@@ -103,7 +102,6 @@ class TestBatchRemove(TestBaseClass):
                 "simple-write-policy-both",
                 [("test", "demo", 0)],
                 {
-                    "total_timeout": 2000,
                     "max_retries": 2,
                     "allow_inline_ssd": True,
                     "respond_all_keys": False,

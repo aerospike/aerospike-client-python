@@ -9,17 +9,17 @@ Overview
 --------
 
 Aerospike expressions are a small domain specific language that allow for filtering
-records in transactions by manipulating and comparing bins and record metadata.
+records in commands by manipulating and comparing bins and record metadata.
 Expressions can be used everywhere that predicate expressions have been used and
 allow for expanded functionality and customizability.
 
 .. note::
-  See `Aerospike Expressions <https://www.aerospike.com/docs/guide/expressions/>`_.
+  See `Aerospike Expressions <https://aerospike.com/docs/server/guide/expressions/>`_.
 
 In the Python client, Aerospike expressions are built using a series of classes that represent
 comparison and logical operators, bins, metadata operations, and bin operations.
 Expressions are constructed using a Lisp like syntax by instantiating an expression that yields a boolean,
-such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`, 
+such as :meth:`~aerospike_helpers.expressions.base.Eq` or :meth:`~aerospike_helpers.expressions.base.And`,
 while passing them other expressions and constants as arguments, and finally calling the :meth:`compile` method.
 
 Example::
@@ -28,8 +28,8 @@ Example::
     from aerospike_helpers import expressions as exp
     expr = exp.Eq(exp.IntBin("bin_name"), 10).compile()
 
-By passing these compiled expressions to transactions via the "expressions" policy field,
-these transactions will filter the results.
+By passing a compiled expression to a command via the "expressions" policy field,
+the command will filter the results.
 
 Example:
 
@@ -37,12 +37,11 @@ Example:
   :code: python
 
 Currently, Aerospike expressions are supported for:
-- Record operations
-- Batch operations
-- Transactions
-- UDF apply methods (apply, scan apply, and query apply)
-- Query invoke methods (foreach, results, execute background)
-- Scan invoke methods (same as query invoke methods)
+  * Record commands
+  * Batched commands
+  * UDF apply methods (apply, scan apply, and query apply)
+  * Query invoke methods (foreach, results, execute background)
+  * Scan invoke methods (same as query invoke methods)
 
 Filter Behavior
 ---------------
@@ -50,22 +49,14 @@ Filter Behavior
 This section describes the behavior of methods when a record is filtered out by an expression.
 
 For:
-  * Record operations
+  * Record commands
   * Numeric operations
   * String operations
-  * Single record transactions
 
 An exception :exc:`~aerospike.exception.FilteredOut` is thrown.
 
 For:
-  * :meth:`~aerospike.Client.get_many`
-  * :meth:`~aerospike.Client.exists_many`
-  * :meth:`~aerospike.Client.select_many`
 
-The filtered out record's ``meta`` and ``bins`` are both set to :py:obj:`None` .
-
-For:
-  
   * :meth:`~aerospike.Client.batch_write` (records filtered out by a batch or batch record policy)
   * :meth:`~aerospike.Client.batch_operate` (records filtered out by a batch or batch write policy)
   * :meth:`~aerospike.Client.batch_apply` (records filtered out by a batch or batch apply policy)
@@ -74,11 +65,6 @@ The filtered out record's:
 
     * ``BatchRecord.record`` is set to :py:obj:`None`
     * ``BatchRecord.result`` is set to ``27``
-
-For :meth:`~aerospike.Client.batch_get_ops`, the filtered out record's:
-
-  * ``meta`` is set to :py:exc:`~aerospike.exception.FilteredOut`.
-  * ``bins`` is set to :py:obj:`None`.
 
 Terminology
 -----------
@@ -90,7 +76,8 @@ When the following documentation says an expression returns a **list expression*
 it means that the expression returns a list during evaluation on the server side.
 
 Expressions used with :meth:`~aerospike_helpers.operations.expression_operations.expression_read`
-or :meth:`~aerospike_helpers.operations.expression_operations.expression_write` do send their return values to the client or write them to the server.
+or :meth:`~aerospike_helpers.operations.expression_operations.expression_write` do send their return values to the
+client or write them to the server.
 These expressions are called **operation expressions**.
 
 When these docs say that an expression parameter requires an integer or **integer expression**,
@@ -103,7 +90,7 @@ this means that the data type returned may vary (usually depending on the ``retu
 
     Currently, Aerospike expressions for the python client do not support comparing ``as_python_bytes`` blobs.
 
-    Comparisons between constant map values and map expressions are also unsupported.
+    Only comparisons between **key ordered** map values and map expressions are supported.
 
 Expression Type Aliases
 -----------------------

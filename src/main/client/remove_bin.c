@@ -90,9 +90,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
             py_ustr = PyUnicode_AsUTF8String(py_val);
             binName = PyBytes_AsString(py_ustr);
         }
-        else if (PyString_Check(py_val)) {
-            binName = PyString_AsString(py_val);
-        }
         else {
             as_error_update(err, AEROSPIKE_ERR_CLIENT,
                             "Invalid bin name, bin name should be a string or "
@@ -112,11 +109,8 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         PyObject *py_ttl = PyDict_GetItemString(py_meta, "ttl");
 
         if (py_ttl) {
-            if (PyInt_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyInt_AsLong(py_ttl);
-            }
-            else if (PyLong_Check(py_ttl)) {
-                rec.ttl = (uint32_t)PyLong_AsLongLong(py_ttl);
+            if (PyLong_Check(py_ttl)) {
+                rec.ttl = (uint32_t)PyLong_AsLong(py_ttl);
                 if ((uint32_t)-1 == rec.ttl && PyErr_Occurred()) {
                     as_error_update(
                         err, AEROSPIKE_ERR_PARAM,
@@ -132,10 +126,7 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
         }
 
         if (py_gen) {
-            if (PyInt_Check(py_gen)) {
-                rec.gen = (uint16_t)PyInt_AsLong(py_gen);
-            }
-            else if (PyLong_Check(py_gen)) {
+            if (PyLong_Check(py_gen)) {
                 rec.gen = (uint16_t)PyLong_AsLongLong(py_gen);
                 if ((uint16_t)-1 == rec.gen && PyErr_Occurred()) {
                     as_error_update(
@@ -155,10 +146,6 @@ AerospikeClient_RemoveBin_Invoke(AerospikeClient *self, PyObject *py_key,
     Py_BEGIN_ALLOW_THREADS
     aerospike_key_put(self->as, err, write_policy_p, &key, &rec);
     Py_END_ALLOW_THREADS
-    if (err->code != AEROSPIKE_OK) {
-        as_error_update(err, err->code, NULL);
-        goto CLEANUP;
-    }
 
 CLEANUP:
 
@@ -173,17 +160,7 @@ CLEANUP:
     }
 
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception(err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(err, py_key, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -209,7 +186,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
     PyObject *py_key = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_binList = NULL;
-    PyObject *py_result = NULL;
     PyObject *py_meta = NULL;
 
     as_error err;
@@ -248,19 +224,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
 
-    if (err.code != AEROSPIKE_OK || !py_result) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+    raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
     return NULL;
 }

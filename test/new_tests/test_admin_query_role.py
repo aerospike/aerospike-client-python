@@ -64,7 +64,7 @@ class TestQueryRole(TestBaseClass):
         """
         Query role positive policy
         """
-        roles = self.client.admin_query_role("usr-sys-admin-test", {"timeout": 1000})
+        roles = self.client.admin_query_role("usr-sys-admin-test", {"timeout": 180000})
         assert roles == [{"code": 0, "ns": "", "set": ""}, {"code": 1, "ns": "", "set": ""}]
 
     def test_admin_query_role_incorrect_role_name(self):
@@ -72,7 +72,7 @@ class TestQueryRole(TestBaseClass):
         Incorrect role name
         """
         try:
-            self.client.admin_query_role("usr-sys-admin-test-non-existent", {"timeout": 1000})
+            self.client.admin_query_role("usr-sys-admin-test-non-existent")
 
         except e.InvalidRole as exception:
             assert exception.code == 70
@@ -83,7 +83,7 @@ class TestQueryRole(TestBaseClass):
         Incorrect role type
         """
         try:
-            self.client.admin_query_role(None, {"timeout": 1000})
+            self.client.admin_query_role(None)
 
         except e.ParamError as exception:
             assert exception.code == -2

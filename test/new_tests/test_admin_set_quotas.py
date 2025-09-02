@@ -9,16 +9,14 @@ import aerospike
 
 
 class TestSetQuotas(TestBaseClass):
-
-    pytestmark = pytest.mark.skipif(
-        not TestBaseClass.auth_in_use(), reason="No user specified, may be not secured cluster."
-    )
-    client = TestBaseClass.get_new_connection()
-
     def setup_method(self, method):
         """
         Setup method
         """
+        self.client = TestBaseClass.get_new_connection()
+        if TestBaseClass.auth_in_use() is False:
+            pytest.skip("No user specified, may not be a secured cluster", allow_module_level=True)
+
         usr_sys_admin_privs = [{"code": aerospike.PRIV_USER_ADMIN}, {"code": aerospike.PRIV_SYS_ADMIN}]
         try:
             self.client.admin_drop_role("usr-sys-admin-test")
@@ -29,8 +27,7 @@ class TestSetQuotas(TestBaseClass):
         try:
             self.client.admin_create_role("usr-sys-admin-test", usr_sys_admin_privs, write_quota=4500)
         except e.QuotasNotEnabled:
-            pytest.mark.skip(reason="Got QuotasNotEnabled, skipping quota test.")
-            pytest.skip()
+            pytest.skip(reason="Got QuotasNotEnabled, skipping quota test.")
 
         time.sleep(1)
 
@@ -113,7 +110,7 @@ class TestSetQuotas(TestBaseClass):
         Set Quota positive policy
         """
         self.client.admin_set_quotas(
-            role="usr-sys-admin-test", read_quota=250, write_quota=300, policy={"timeout": 1000}
+            role="usr-sys-admin-test", read_quota=250, write_quota=300, policy={"timeout": 180000}
         )
         time.sleep(1)
         roles = self.client.admin_get_role("usr-sys-admin-test")
@@ -130,7 +127,7 @@ class TestSetQuotas(TestBaseClass):
         """
         try:
             self.client.admin_set_quotas(
-                role="bad-role-name", read_quota=250, write_quota=300, policy={"timeout": 1000}
+                role="bad-role-name", read_quota=250, write_quota=300
             )
 
         except e.InvalidRole as exception:
@@ -142,7 +139,7 @@ class TestSetQuotas(TestBaseClass):
         Incorrect role type
         """
         try:
-            self.client.admin_set_quotas(role=None, read_quota=250, write_quota=300, policy={"timeout": 1000})
+            self.client.admin_set_quotas(role=None, read_quota=250, write_quota=300)
         except e.ParamError as exception:
             assert exception.code == -2
             assert exception.msg == "Role name should be a string."
@@ -153,7 +150,7 @@ class TestSetQuotas(TestBaseClass):
         """
         try:
             self.client.admin_set_quotas(
-                role="usr-sys-admin-test", read_quota=-20, write_quota=300, policy={"timeout": 1000}
+                role="usr-sys-admin-test", read_quota=-20, write_quota=300
             )
 
         except e.InvalidRole as exception:
@@ -166,9 +163,9 @@ class TestSetQuotas(TestBaseClass):
         """
         try:
             self.client.admin_set_quotas(
-                role="usr-sys-admin-test", read_quota=None, write_quota=300, policy={"timeout": 1000}
+                role="usr-sys-admin-test", read_quota=None, write_quota=300
             )
 
         except e.ParamError as exception:
             assert exception.code == -2
-            assert exception.msg == "Read_quota must be an integer."
+            assert exception.msg == "py_read_quota must be an integer."

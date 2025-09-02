@@ -23,14 +23,14 @@ It also enables queries for regions that contain a given point using:
 
 On the client side, wrapping geospatial data in an instance of the
 :class:`aerospike.GeoJSON` class enables serialization of the data into the
-correct type during a write operation, such as :meth:`~aerospike.Client.put`.
+correct type during a write operation, such as in :meth:`~aerospike.Client.put`.
 
 When reading a record from the server, bins with geospatial data will be
 deserialized into a :class:`~aerospike.GeoJSON` instance.
 
 .. seealso::
     `Geospatial Index and Query
-    <https://docs.aerospike.com/server/guide/data-types/geospatial>`_.
+    <https://aerospike.com/docs/server/guide/data-types/geospatial>`_.
 
 .. _example:
 
@@ -43,17 +43,17 @@ Example
     from aerospike import GeoJSON
 
     config = { 'hosts': [ ('127.0.0.1', 3000)]}
-    client = aerospike.client(config).connect()
+    client = aerospike.client(config)
 
     client.index_geo2dsphere_create('test', 'pads', 'loc', 'pads_loc_geo')
-    
+
     # Create GeoJSON point using WGS84 coordinates.
     latitude = 28.608389
     longitude = -80.604333
     loc = GeoJSON({'type': "Point",
                     'coordinates': [longitude, latitude]})
     print(loc)
-    
+
     # Expected output:
     # {"type": "Point", "coordinates": [-80.604333, 28.608389]}
 
@@ -113,4 +113,3 @@ Methods
 
 
 .. versionadded:: 1.0.53
-

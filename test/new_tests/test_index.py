@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from aerospike_helpers.expressions.base import GeoBin
 
 
 class TestIndex(object):
@@ -14,7 +15,7 @@ class TestIndex(object):
     def setup(self, request, as_connection):
         for i in range(5):
             key = ("test", "demo", i)
-            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i}
+            rec = {"name": "name%s" % (str(i)), "addr": "name%s" % (str(i)), "age": i, "no": i, "bytes": b'123'}
             as_connection.put(key, rec)
 
         def teardown():
@@ -204,11 +205,19 @@ class TestIndex(object):
         """
         Invoke createindex() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         retobj = self.as_connection.index_integer_create("test", "demo", "age", "age_index", policy)
 
         ensure_dropped_index(self.as_connection, "test", "age_index")
         assert retobj == AerospikeStatus.AEROSPIKE_OK
+
+    def test_create_blob_index(self):
+        if self.server_version < [7, 0]:
+            pytest.skip("Blob secondary indexes are only supported in server 7.0+")
+
+        self.as_connection.index_blob_create(ns="test", set="demo", bin="bytes", name="bytes_index", policy={})
+
+        ensure_dropped_index(self.as_connection, "test", "bytes_index")
 
     def test_create_string_index_positive(self):
         """
@@ -237,11 +246,14 @@ class TestIndex(object):
         ns_name = "a" * 50
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises((e.InvalidRequest, e.NamespaceNotFound)) as err_info:
             self.as_connection.index_string_create(ns_name, "demo", "name", "name_index", policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver) >= (7, 2):
+            assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
+        else:
+            assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
 
     def test_create_string_index_with_incorrect_namespace(self):
         """
@@ -372,7 +384,7 @@ class TestIndex(object):
         """
         Invoke create string index() with policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         retobj = self.as_connection.index_string_create("test", "demo", "name", "name_index", policy)
 
         assert retobj == AerospikeStatus.AEROSPIKE_OK
@@ -403,7 +415,7 @@ class TestIndex(object):
         """
         Invoke drop valid index() policy
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
         self.as_connection.index_integer_create("test", "demo", "age", "age_index", policy)
         retobj = self.as_connection.index_remove("test", "age_index", policy)
         ensure_dropped_index(self.as_connection, "test", "age_index")
@@ -472,3 +484,14 @@ class TestIndex(object):
     def test_index_remove_wrong_arg_types(self, ns, idx_name, policy):
         with pytest.raises(e.ParamError):
             self.as_connection.index_remove(ns, idx_name, policy)
+
+    def test_index_expr_create_wrong_args(self):
+        with pytest.raises(TypeError):
+            # Missing a required argument
+            self.as_connection.index_expr_create(
+                ns="test",
+                set="demo",
+                index_type=aerospike.INDEX_TYPE_DEFAULT,
+                index_datatype=aerospike.INDEX_BLOB,
+                expressions=GeoBin("geo_point")
+            )

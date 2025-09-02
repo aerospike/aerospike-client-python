@@ -14,16 +14,22 @@
 # limitations under the License.
 ##########################################################################
 """
-This module provides helper functions to produce dictionaries to be used with the
-:meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered` methods of the aerospike module.
+This module provides helper functions to produce dictionaries to be used with:
+
+* :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 
 List operations support nested CDTs through an optional ctx context argument.
 The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.
+
+For list operations that take in an index parameter, you can use negative values for indexes.
+See this `page <https://aerospike.com/docs/develop/data-types/collections/list#list-terminology>`_.
 
 .. note:: Nested CDT (ctx) requires server version >= 4.6.0
 
 """
 import aerospike
+from typing import Optional
 
 
 OP_KEY = "op"
@@ -41,14 +47,47 @@ VALUE_LIST_KEY = "value_list"
 LIST_ORDER_KEY = "list_order"
 SORT_FLAGS_KEY = "sort_flags"
 CTX_KEY = "ctx"
+PAD_KEY = "pad"
+PERSIST_INDEX_KEY = "persist_index"
 
 
-def list_append(bin_name: str, value, policy: dict = None, ctx: list = None):
+def list_create(bin_name: str, list_order: int, pad: bool, persist_index: bool, ctx: Optional[list] = None):
+    """
+    Create list create operation.
+
+    Server creates list at given context level.
+
+    Args:
+        bin_name (str):	Bin name.
+        list_order (int): See :ref:`aerospike_list_order` for possible values.
+        persist_index (bool): If :py:obj:`True`, persist list index. A list index improves lookup performance,
+            but requires more storage. A list index can be created for a top-level
+            ordered list only. Nested and unordered list indexes are not supported.
+        ctx (Optional[dict]): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>`
+            specifying the path to nested list. If not defined, the top-level list is used.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_LIST_CREATE,
+        BIN_KEY: bin_name,
+        LIST_ORDER_KEY: list_order,
+        PAD_KEY: pad,
+        PERSIST_INDEX_KEY: persist_index
+    }
+
+    if ctx is not None:
+        op_dict[CTX_KEY] = ctx
+
+    return op_dict
+
+
+def list_append(bin_name: str, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list append operation.
 
     The list append operation instructs the aerospike server to append an item to the
     end of a list bin.
+
+    Returns a dictionary that maps the bin name to the list size after appending the item.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -71,7 +110,7 @@ def list_append(bin_name: str, value, policy: dict = None, ctx: list = None):
     return op_dict
 
 
-def list_append_items(bin_name: str, values, policy: dict = None, ctx: list = None):
+def list_append_items(bin_name: str, values, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list append items operation.
 
@@ -99,7 +138,7 @@ def list_append_items(bin_name: str, values, policy: dict = None, ctx: list = No
     return op_dict
 
 
-def list_insert(bin_name: str, index, value, policy: dict = None, ctx: list = None):
+def list_insert(bin_name: str, index, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list insert operation.
 
@@ -129,12 +168,12 @@ def list_insert(bin_name: str, index, value, policy: dict = None, ctx: list = No
     return op_dict
 
 
-def list_insert_items(bin_name: str, index, values, policy: dict = None, ctx: list = None):
+def list_insert_items(bin_name: str, index, values, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list insert items operation.
 
     The list insert items operation inserts items at index: `index` into the list contained
-    in the specified bin.
+    in the specified bin. Server returns list size.
 
     Args:
         bin_name (str): The name of the bin to be operated on.
@@ -159,7 +198,7 @@ def list_insert_items(bin_name: str, index, values, policy: dict = None, ctx: li
     return op_dict
 
 
-def list_increment(bin_name: str, index, value, policy: dict = None, ctx: list = None):
+def list_increment(bin_name: str, index, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """
     Creates a list increment operation.
 
@@ -188,7 +227,7 @@ def list_increment(bin_name: str, index, value, policy: dict = None, ctx: list =
     return op_dict
 
 
-def list_pop(bin_name: str, index, ctx: list = None):
+def list_pop(bin_name: str, index, ctx: Optional[list] = None):
     """
     Creates a list pop operation.
 
@@ -212,7 +251,7 @@ def list_pop(bin_name: str, index, ctx: list = None):
     return op_dict
 
 
-def list_pop_range(bin_name: str, index, count, ctx: list = None):
+def list_pop_range(bin_name: str, index, count, ctx: Optional[list] = None):
     """
     Creates a list pop range operation.
 
@@ -237,11 +276,12 @@ def list_pop_range(bin_name: str, index, count, ctx: list = None):
     return op_dict
 
 
-def list_remove(bin_name: str, index, ctx: list = None):
+def list_remove(bin_name: str, index, ctx: Optional[list] = None):
     """
     Creates a list remove operation.
 
-    The list remove operation removes an item located at `index` in the list specified by `bin_name`
+    The list remove operation removes an item located at `index` in the list specified by `bin_name`.
+    Server returns number of items removed.
 
     Args:
         bin_name (str): The name of the bin containing the item to be removed.
@@ -260,12 +300,12 @@ def list_remove(bin_name: str, index, ctx: list = None):
     return op_dict
 
 
-def list_remove_range(bin_name: str, index, count, ctx: list = None):
+def list_remove_range(bin_name: str, index, count, ctx: Optional[list] = None):
     """
     Creates a list remove range operation.
 
     The list remove range operation removes `count` items starting at `index`
-    in the list specified by `bin_name`
+    in the list specified by `bin_name`. Server returns number of items removed.
 
     Args:
         bin_name (str): The name of the bin containing the items to be removed.
@@ -285,7 +325,7 @@ def list_remove_range(bin_name: str, index, count, ctx: list = None):
     return op_dict
 
 
-def list_clear(bin_name: str, ctx: list = None):
+def list_clear(bin_name: str, ctx: Optional[list] = None):
     """Create list clear operation.
 
     The list clear operation removes all items from the list specified by `bin_name`
@@ -307,10 +347,11 @@ def list_clear(bin_name: str, ctx: list = None):
     return op_dict
 
 
-def list_set(bin_name: str, index, value, policy: dict = None, ctx: list = None):
+def list_set(bin_name: str, index, value, policy: Optional[dict] = None, ctx: Optional[list] = None):
     """Create a list set operation.
 
-    The list set operations sets the value of the item at `index` to `value`
+    The list set operations sets the value of the item at `index` to `value`.
+    Server does not return a result by default.
 
     Args:
         bin_name (str): The name of the bin containing the list to be operated on.
@@ -334,7 +375,7 @@ def list_set(bin_name: str, index, value, policy: dict = None, ctx: list = None)
     return op_dict
 
 
-def list_get(bin_name: str, index, ctx: list = None):
+def list_get(bin_name: str, index, ctx: Optional[list] = None):
     """Create a list get operation.
 
     The list get operation gets the value of the item at `index` and returns the value
@@ -357,7 +398,7 @@ def list_get(bin_name: str, index, ctx: list = None):
     return op_dict
 
 
-def list_get_range(bin_name: str, index, count, ctx: list = None):
+def list_get_range(bin_name: str, index, count, ctx: Optional[list] = None):
     """Create a list get range operation.
 
     The list get range operation gets `count` items starting `index` and returns the values.
@@ -381,7 +422,7 @@ def list_get_range(bin_name: str, index, count, ctx: list = None):
     return op_dict
 
 
-def list_trim(bin_name: str, index, count, ctx: list = None):
+def list_trim(bin_name: str, index, count, ctx: Optional[list] = None):
     """Create a list trim operation.
 
     Server removes items in list bin that do not fall into range specified by index and count range.
@@ -405,7 +446,7 @@ def list_trim(bin_name: str, index, count, ctx: list = None):
     return op_dict
 
 
-def list_size(bin_name: str, ctx: list = None):
+def list_size(bin_name: str, ctx: Optional[list] = None):
     """Create a list size operation.
 
     Server returns the size of the list in the specified bin.
@@ -430,7 +471,7 @@ def list_size(bin_name: str, ctx: list = None):
 # Post 3.4.0 Operations. Require Server >= 3.16.0.1
 
 
-def list_get_by_index(bin_name: str, index, return_type, ctx: list = None):
+def list_get_by_index(bin_name: str, index, return_type, ctx: Optional[list] = None):
     """Create a list get index operation.
 
     The list get operation gets the item at `index` and returns a value
@@ -461,7 +502,7 @@ def list_get_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def list_get_by_index_range(bin_name: str, index, return_type, count=None, inverted=False, ctx: list = None):
+def list_get_by_index_range(bin_name: str, index, return_type, count=None, inverted=False, ctx: Optional[list] = None):
     """Create a list get index range operation.
 
     The list get by index range operation gets `count` items starting at `index` and returns a value
@@ -470,9 +511,9 @@ def list_get_by_index_range(bin_name: str, index, return_type, count=None, inver
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
         index (int): The index of the first item to be returned.
-        count (int): The number of list items to be selected.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values.
+        count (int): The number of list items to be selected.
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items outside of the specified range will be returned.
             Default: `False`
@@ -500,7 +541,7 @@ def list_get_by_index_range(bin_name: str, index, return_type, count=None, inver
     return op_dict
 
 
-def list_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
+def list_get_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = None):
     """Create a list get by rank operation.
 
     Server selects list item identified by `rank` and returns selected data
@@ -526,7 +567,7 @@ def list_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: list = None):
+def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: Optional[list] = None):
     """Create a list get by rank range operation.
 
     Server selects `count` items starting at the specified `rank` and returns selected data
@@ -535,14 +576,14 @@ def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverte
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
         rank (int): The rank of the first items to be returned.
-        count (int): A positive number indicating number of items to be returned.
         return_type (int): Value specifying what should be returned from the operation.  This should be one of the
             :ref:`list_return_types` values
-        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
-            objects.
+        count (int): A positive number indicating number of items to be returned.
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items outside of the specified rank range will be returned.
             Default: `False`
+        ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
+            objects.
 
     Returns:
         A dictionary usable in :meth:`~aerospike.Client.operate` and :meth:`~aerospike.Client.operate_ordered`. The
@@ -565,7 +606,7 @@ def list_get_by_rank_range(bin_name: str, rank, return_type, count=None, inverte
     return op_dict
 
 
-def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: Optional[list] = None):
     """Create a list get by value operation.
 
     Server selects list items with a value equal to `value` and returns selected data specified by
@@ -598,7 +639,7 @@ def list_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: li
     return op_dict
 
 
-def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
+def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: Optional[list] = None):
     """Create a list get by value list operation.
 
     Server selects list items with a value contained in `value_list` and returns selected data
@@ -632,7 +673,14 @@ def list_get_by_value_list(bin_name: str, value_list, return_type, inverted=Fals
     return op_dict
 
 
-def list_get_by_value_range(bin_name: str, return_type, value_begin, value_end, inverted=False, ctx: list = None):
+def list_get_by_value_range(
+    bin_name: str,
+    return_type,
+    value_begin,
+    value_end,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Create a list get by value list operation.
 
     Server selects list items with a value greater than or equal to `value_begin`
@@ -642,10 +690,10 @@ def list_get_by_value_range(bin_name: str, return_type, value_begin, value_end, 
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        value_begin: The start of the value range.
-        value_end: The end of the value range.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
+        value_begin: The start of the value range.
+        value_end: The end of the value range.
         inverted (bool): Optional bool specifying whether to invert the return type.
             If set to `True`, all items not included in the specified range will be returned.
             Default: `False`
@@ -674,7 +722,7 @@ def list_get_by_value_range(bin_name: str, return_type, value_begin, value_end, 
     return op_dict
 
 
-def list_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
+def list_remove_by_index(bin_name: str, index, return_type, ctx: Optional[list] = None):
     """Create a list remove by index operation.
 
     The list_remove_by_index operation removes the value of the item at `index` and returns a value
@@ -705,7 +753,14 @@ def list_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def list_remove_by_index_range(bin_name: str, index, return_type, count=None, inverted=False, ctx: list = None):
+def list_remove_by_index_range(
+    bin_name: str,
+    index,
+    return_type,
+    count=None,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Create a list remove by index range operation.
 
     The list remove by index range operation removes `count` starting at `index` and returns a value
@@ -714,9 +769,9 @@ def list_remove_by_index_range(bin_name: str, index, return_type, count=None, in
     Args:
         bin_name (str): The name of the bin containing the list to remove items from.
         index (int): The index of the first item to be removed.
-        count (int): The number of items to be removed
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values.
+        count (int): The number of items to be removed
         inverted (bool): Optional bool specifying whether to invert the operation.
             If set to `True`, all items outside of the specified range will be removed.
             Default: `False`
@@ -744,7 +799,7 @@ def list_remove_by_index_range(bin_name: str, index, return_type, count=None, in
     return op_dict
 
 
-def list_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
+def list_remove_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = None):
     """Create a list remove by rank operation.
 
     Server removes a list item identified by `rank` and returns selected data
@@ -775,7 +830,7 @@ def list_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: list = None):
+def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inverted=False, ctx: Optional[list] = None):
     """Create a list remove by rank range operation.
 
     Server removes `count` items starting at the specified `rank` and returns selected data
@@ -784,9 +839,9 @@ def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inve
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
         rank (int): The rank of the first item to removed.
-        count (int): A positive number indicating number of items to be removed.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
+        count (int): A positive number indicating number of items to be removed.
         inverted (bool): Optional bool specifying whether to invert the operation.
             If set to `True`, all items outside of the specified rank range will be removed.
             Default: `False`
@@ -814,7 +869,7 @@ def list_remove_by_rank_range(bin_name: str, rank, return_type, count=None, inve
     return op_dict
 
 
-def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: Optional[list] = None):
     """Create a list remove by value operation.
 
     Server removes list items with a value equal to `value` and returns selected data specified by
@@ -848,7 +903,7 @@ def list_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx:
     return op_dict
 
 
-def list_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
+def list_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: Optional[list] = None):
     """Create a list remove by value list operation.
 
     Server removes list items with a value matching one contained in `value_list`
@@ -883,7 +938,7 @@ def list_remove_by_value_list(bin_name: str, value_list, return_type, inverted=F
 
 
 def list_remove_by_value_range(
-    bin_name: str, return_type, value_begin=None, value_end=None, inverted=False, ctx: list = None
+    bin_name: str, return_type, value_begin=None, value_end=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a list remove by value range operation.
 
@@ -895,10 +950,10 @@ def list_remove_by_value_range(
 
     Args:
         bin_name (str): The name of the bin containing the list to fetch items from.
-        value_begin: The start of the value range.
-        value_end: The end of the value range.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`list_return_types` values
+        value_begin: The start of the value range.
+        value_end: The end of the value range.
         inverted (bool): Optional bool specifying whether to invert the operation.
             If set to `True`, all items not included in the specified range will be removed.
             Default: `False`
@@ -927,7 +982,7 @@ def list_remove_by_value_range(
     return op_dict
 
 
-def list_set_order(bin_name: str, list_order, ctx: list = None):
+def list_set_order(bin_name: str, list_order, ctx: Optional[list] = None):
     """Create a list set order operation.
 
     The list_set_order operation sets an order on a specified list bin.
@@ -950,7 +1005,7 @@ def list_set_order(bin_name: str, list_order, ctx: list = None):
     return op_dict
 
 
-def list_sort(bin_name: str, sort_flags: int = 0, ctx: list = None):
+def list_sort(bin_name: str, sort_flags: int = 0, ctx: Optional[list] = None):
     """Create a list sort operation
 
     The list sort operation will sort the specified list bin.
@@ -974,7 +1029,7 @@ def list_sort(bin_name: str, sort_flags: int = 0, ctx: list = None):
 
 
 def list_get_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a list get by value rank range relative operation
 
@@ -1052,7 +1107,7 @@ def list_get_by_value_rank_range_relative(
 
 
 def list_remove_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a list get by value rank range relative operation
 
@@ -1064,6 +1119,8 @@ def list_remove_by_value_rank_range_relative(
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(found_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`list_return_types` values
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted, and items outside of the specified

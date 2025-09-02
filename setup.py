@@ -24,6 +24,7 @@ from setuptools import setup, Extension
 from distutils.command.build import build
 from distutils.command.clean import clean
 import io
+import xml.etree.ElementTree as ET
 import glob
 
 ################################################################################
@@ -39,10 +40,20 @@ AEROSPIKE_C_TARGET = None
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
+WINDOWS = 'Windows' in PLATFORM
+
 CWD = os.path.abspath(os.path.dirname(__file__))
 
 SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
-EVENT_LIB = os.getenv('EVENT_LIB')
+# COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
+# Not for developers to use, unless you know what the workflow is doing!
+COVERAGE = os.getenv('COVERAGE')
+
+# Applies no optimizations on both the C client and Python client
+UNOPTIMIZED = os.getenv('UNOPTIMIZED')
+
+# Include debug information on macOS (not included by default)
+INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 
 ################################################################################
 # GENERIC BUILD SETTINGS
@@ -64,25 +75,58 @@ extra_compile_args = [
     '-DDEBUG',
     '-fno-common',
     '-fno-strict-aliasing',
-    '-Wno-strict-prototypes',
     '-D_FILE_OFFSET_BITS=64',
     '-D_REENTRANT',
     '-DMARCH_' + machine,
-    '-Wno-implicit-function-declaration'
 ]
+
+if not WINDOWS:
+    # Windows does not have this flag
+    extra_compile_args.append("-Wno-strict-prototypes")
 
 if machine == 'x86_64':
     extra_compile_args.append('-march=nocona')
 extra_objects = []
+
 extra_link_args = []
-library_dirs = [
-    '/usr/local/lib'
-]
-libraries = [
-    'pthread',
-    'm',
-    'z'
-]
+
+SANITIZER = os.getenv('SANITIZER')
+if SANITIZER:
+    sanitizer_c_and_ld_flags = [
+        '-fsanitize=address',
+        '-fno-omit-frame-pointer'
+    ]
+    sanitizer_cflags = sanitizer_c_and_ld_flags.copy()
+    sanitizer_cflags.append('-fsanitize-recover=all')
+    extra_compile_args.extend(sanitizer_cflags)
+
+    sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
+    extra_link_args.extend(sanitizer_ldflags)
+
+library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
+if not WINDOWS:
+    libraries = [
+        'm',
+        'z',
+        'yaml',
+        'ssl',
+        'crypto',
+        'pthread'
+    ]
+else:
+    libraries = []
+
+##########################
+# GITHUB ACTIONS SETTINGS
+##########################
+
+if COVERAGE:
+    extra_compile_args.append('-fprofile-arcs')
+    extra_compile_args.append('-ftest-coverage')
+    extra_link_args.append('-lgcov')
+
+if UNOPTIMIZED:
+    extra_compile_args.append('-O0')
 
 ################################################################################
 # STATIC SSL LINKING BUILD SETTINGS
@@ -98,11 +142,19 @@ else:
     # Dynamically link openssl
     libraries.append('ssl')
     libraries.append('crypto')
-    library_dirs.append('/usr/local/opt/openssl/lib')
+    if os.path.exists("/usr/local/opt/openssl/lib"):
+        library_dirs.remove('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
 ################################################################################
+
+if WINDOWS:
+    AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME
+    tree = ET.parse(f"{AEROSPIKE_C_TARGET}/vs/aerospike/packages.config")
+    packages = tree.getroot()
+    package = packages[0]
+    c_client_dependencies_version = package.attrib["version"]
 
 if DARWIN:
     # ---------------------------------------------------------------------------
@@ -121,14 +173,26 @@ elif LINUX:
 
     libraries.append('rt')
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
+elif WINDOWS:
+    libraries.append("pthreadVC2")
+    extra_compile_args.append("-DAS_SHARED_IMPORT")
+    include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.\
+                        {c_client_dependencies_version}/build/native/include")
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
 include_dirs.append('/usr/local/opt/openssl/include')
-include_dirs.append(AEROSPIKE_C_TARGET + '/include')
 
-extra_objects.append(AEROSPIKE_C_TARGET + '/lib/libaerospike.a')
+if not WINDOWS:
+    include_dirs.append(AEROSPIKE_C_TARGET + '/include')
+    extra_objects.append(AEROSPIKE_C_TARGET + '/lib/libaerospike.a')
+else:
+    include_dirs.append(AEROSPIKE_C_TARGET + '/src/include')
+    library_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.\
+                        {c_client_dependencies_version}/build/native/lib/x64/Release")
+    # Needed for linking the Python client with the C client
+    extra_objects.append(AEROSPIKE_C_TARGET + "/vs/x64/Release/aerospike.lib")
 
 os.putenv('CPATH', ':'.join(include_dirs))
 os.environ['CPATH'] = ':'.join(include_dirs)
@@ -147,22 +211,6 @@ with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
 
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
-
-if EVENT_LIB == "libuv":
-    extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
-    library_dirs.append('/usr/local/lib/')
-    libraries.append('uv')
-elif EVENT_LIB == "libevent":
-    extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
-    library_dirs.append('/usr/local/lib/')
-    libraries.append('event_core')
-    libraries.append('event_pthreads')
-elif EVENT_LIB == "libev":
-    extra_compile_args.append('-DAS_EVENT_LIB_DEFINED')
-    library_dirs.append('/usr/local/lib/')
-    libraries.append('ev')
-else:
-    print("Building aerospike with no-async support\n")
 
 
 class CClientBuild(build):
@@ -187,12 +235,24 @@ class CClientBuild(build):
         os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
 
         # build core client
-        cmd = [
-            'make',
-            'V=' + str(self.verbose),
-        ]
-        if EVENT_LIB is not None:
-            cmd.append('EVENT_LIB=' + EVENT_LIB)
+        if WINDOWS:
+            cmd = [
+                'msbuild',
+                'vs/aerospike.sln',
+                '/property:Configuration=Release'
+            ]
+        else:
+            cmd = [
+                'make',
+                'V=' + str(self.verbose),
+            ]
+            if UNOPTIMIZED:
+                cmd.append('O=0')
+            if SANITIZER:
+                ext_cflags = " ".join(sanitizer_cflags)
+                cmd.append(f"EXT_CFLAGS={ext_cflags}")
+                ldflags = " ".join(sanitizer_ldflags)
+                cmd.append(f"LDFLAGS={ldflags}")
 
         def compile():
             print(cmd, library_dirs, libraries)
@@ -201,6 +261,25 @@ class CClientBuild(build):
         self.execute(compile, [], 'Compiling core aerospike-client-c')
         # run original c-extension build code
         build.run(self)
+
+        # For debugging in macOS, we need to generate and include the debug info for the CPython
+        # extension in the wheel, since this isn't done automatically
+        if DARWIN and INCLUDE_DSYM:
+            print("Generating debug information on macOS")
+            shared_library_paths = glob.glob(pathname="**/aerospike*.so", recursive=True)
+
+            # Sanity check
+            print(f"List of shared libraries: {shared_library_paths}")
+            if len(shared_library_paths) > 1:
+                print("error: only one shared library should be present.", file=sys.stderr)
+                exit(1)
+
+            shared_library_path = shared_library_paths[0]
+            subprocess.run(["dsymutil", shared_library_path], check=True)
+
+            dsym_path = f"{shared_library_path}.dSYM"
+            print("Including debug information with wheel")
+            extra_objects.append(dsym_path)
 
 
 class CClientClean(clean):
@@ -219,6 +298,8 @@ class CClientClean(clean):
         self.execute(clean, [], 'Clean core aerospike-client-c')
 
 
+source_files = glob.glob(pathname="src/main/**/*.c", recursive=True)
+
 # Get all C source files in src/main
 src_files = glob.glob("src/main/**/*.c", recursive=True)
 
@@ -228,9 +309,9 @@ setup(
     ext_modules=[
         Extension(
             name='aerospike',
-            sources=src_files,
 
             # Compile
+            sources=source_files,
             include_dirs=include_dirs,
             extra_compile_args=extra_compile_args,
 
@@ -241,12 +322,21 @@ setup(
             extra_link_args=extra_link_args,
         )
     ],
+    package_data={
+        "aerospike-stubs": [
+            "__init__.pyi",
+            "aerospike.pyi",
+            "exception.pyi",
+            "predicates.pyi",
+        ]
+    },
     packages=[
         'aerospike_helpers',
         'aerospike_helpers.operations',
         'aerospike_helpers.batch',
         'aerospike_helpers.expressions',
-        'aerospike_helpers.awaitable'
+        'aerospike_helpers.metrics',
+        'aerospike-stubs'
     ],
 
     cmdclass={

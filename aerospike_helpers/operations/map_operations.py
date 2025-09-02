@@ -14,17 +14,24 @@
 # limitations under the License.
 ##########################################################################
 """
-Helper functions to create map operation dictionaries arguments for.
-the :meth:`aerospike.Client.operate` and :meth:`aerospike.Client.operate_ordered` methods of the aerospike client.
+Helper functions to create map operation dictionaries arguments for:
+
+* :mod:`aerospike.Client.operate` and :mod:`aerospike.Client.operate_ordered`
+* Certain batched commands listed in :mod:`aerospike_helpers.batch.records`
 
 Map operations support nested CDTs through an optional ctx context argument.
 The ctx argument is a list of cdt_ctx context operation objects. See :class:`aerospike_helpers.cdt_ctx`.
+
+For the map operations that remove map items, such as :mod:`~aerospike_helpers.operations.map_operations.map_clear` and
+all the ``remove_*`` operations, if all map items are removed in a map, the map becomes empty (i.e it does not get
+deleted).
 
 .. note:: Nested CDT (ctx) requires server version >= 4.6.0
 
 """
 import aerospike
 import sys
+from typing import Optional
 
 OP_KEY = "op"
 BIN_KEY = "bin"
@@ -38,16 +45,19 @@ RANGE_KEY = "range"
 COUNT_KEY = "count"
 RANK_KEY = "rank"
 CTX_KEY = "ctx"
+MAP_ORDER_KEY = "map_order"
+PERSIST_INDEX_KEY = "persist_index"
 
 
-def map_set_policy(bin_name: str, policy, ctx: list = None):
+def map_set_policy(bin_name: str, policy, ctx: Optional[list] = None):
     """Creates a map_set_policy_operation.
 
-    The operation allows a user to set the policy for the map.
+    This operation sets map policy attributes server-side for the designated map. Server does not return a value.
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        policy (dict): The :ref:`map_policy dictionary <aerospike_map_policies>`.
+        policy (dict): The :ref:`map_policy dictionary <aerospike_map_policies>`. Note that the "map_write_flags" option
+            in the map policy will be ignored in this operation.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -62,7 +72,35 @@ def map_set_policy(bin_name: str, policy, ctx: list = None):
     return op_dict
 
 
-def map_put(bin_name: str, key, value, map_policy: dict = None, ctx: list = None):
+def map_create(bin_name: str, map_order: int, persist_index: bool, ctx: Optional[list] = None):
+    """
+    Create map create operation.
+
+    Server creates map at given context level.
+
+    Args:
+        bin_name (str):	Bin name.
+        map_order (int): See :ref:`aerospike_map_order` for possible values.
+        persist_index (bool): If :py:obj:`True`, persist map index. A map index improves lookup performance,
+            but requires more storage. A map index can be created for a top-level
+            ordered map only. Nested and unordered map indexes are not supported.
+        ctx (Optional[dict]): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>`
+            specifying the path to nested map. If not defined, the top-level map is used.
+    """
+    op_dict = {
+        OP_KEY: aerospike.OP_MAP_CREATE,
+        BIN_KEY: bin_name,
+        MAP_ORDER_KEY: map_order,
+        PERSIST_INDEX_KEY: persist_index
+    }
+
+    if ctx is not None:
+        op_dict[CTX_KEY] = ctx
+
+    return op_dict
+
+
+def map_put(bin_name: str, key, value, map_policy: Optional[dict] = None, ctx: Optional[list] = None):
     """Creates a map_put operation.
 
     The operation allows a user to set the value of an item in the map stored
@@ -73,7 +111,8 @@ def map_put(bin_name: str, key, value, map_policy: dict = None, ctx: list = None
         key: The key for the map.
         value: The item to store in the map with the corresponding key.
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -91,7 +130,7 @@ def map_put(bin_name: str, key, value, map_policy: dict = None, ctx: list = None
     return op_dict
 
 
-def map_put_items(bin_name: str, item_dict, map_policy: dict = None, ctx: list = None):
+def map_put_items(bin_name: str, item_dict, map_policy: Optional[dict] = None, ctx: Optional[list] = None):
     """Creates a map_put_items operation.
 
     The operation allows a user to add or update items in the map stored on the server.
@@ -100,7 +139,8 @@ def map_put_items(bin_name: str, item_dict, map_policy: dict = None, ctx: list =
         bin_name (str): The name of the bin containing the map.
         item_dict (dict): A dictionary of key value pairs to be added to the map on the server.
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -133,7 +173,7 @@ def map_put_items(bin_name: str, item_dict, map_policy: dict = None, ctx: list =
     return op_dict
 
 
-def map_increment(bin_name: str, key, amount, map_policy: dict = None, ctx: list = None):
+def map_increment(bin_name: str, key, amount, map_policy: Optional[dict] = None, ctx: Optional[list] = None):
     """Creates a map_increment operation.
 
     The operation allows a user to increment the value of a value stored in the map on the server.
@@ -143,7 +183,8 @@ def map_increment(bin_name: str, key, amount, map_policy: dict = None, ctx: list
         key: The key for the value to be incremented.
         amount: The amount by which to increment the value stored in map[key]
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -161,7 +202,7 @@ def map_increment(bin_name: str, key, amount, map_policy: dict = None, ctx: list
     return op_dict
 
 
-def map_decrement(bin_name: str, key, amount, map_policy: dict = None, ctx: list = None):
+def map_decrement(bin_name: str, key, amount, map_policy: Optional[dict] = None, ctx: Optional[list] = None):
     """Creates a map_decrement operation.
 
     The operation allows a user to decrement the value of a value stored in the map on the server.
@@ -171,7 +212,8 @@ def map_decrement(bin_name: str, key, amount, map_policy: dict = None, ctx: list
         key: The key for the value to be decremented.
         amount: The amount by which to decrement the value stored in map[key]
         map_policy (dict):  Optional :ref:`map_policy dictionary <aerospike_map_policies>` specifies the mode of writing
-            items to the Map, and dictates the map order if there is no Map at the *bin_name*
+            items to the Map, and dictates the map order if there is no Map at the *bin_name*. ``"persist_index"``
+            option is also applied.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
             objects.
     Returns:
@@ -189,7 +231,7 @@ def map_decrement(bin_name: str, key, amount, map_policy: dict = None, ctx: list
     return op_dict
 
 
-def map_size(bin_name: str, ctx: list = None):
+def map_size(bin_name: str, ctx: Optional[list] = None):
     """Creates a map_size operation.
 
     The operation returns the size of the map stored in the specified bin.
@@ -210,7 +252,7 @@ def map_size(bin_name: str, ctx: list = None):
     return op_dict
 
 
-def map_clear(bin_name: str, ctx: list = None):
+def map_clear(bin_name: str, ctx: Optional[list] = None):
     """Creates a map_clear operation.
 
     The operation removes all items from the map stored in the specified bin.
@@ -231,7 +273,7 @@ def map_clear(bin_name: str, ctx: list = None):
     return op_dict
 
 
-def map_remove_by_key(bin_name: str, key, return_type, ctx: list = None):
+def map_remove_by_key(bin_name: str, key, return_type, ctx: Optional[list] = None):
     """Creates a map_remove_by_key operation.
 
     The operation removes an item, specified by the key from the map stored in the specified bin.
@@ -255,7 +297,7 @@ def map_remove_by_key(bin_name: str, key, return_type, ctx: list = None):
     return op_dict
 
 
-def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
+def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: Optional[list] = None):
     """Creates a map_remove_by_key operation.
 
     The operation removes items, specified by the keys in key_list from the map stored in the specified bin.
@@ -288,7 +330,7 @@ def map_remove_by_key_list(bin_name: str, key_list, return_type, inverted=False,
 
 
 def map_remove_by_key_range(
-    bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: list = None
+    bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: Optional[list] = None
 ):
     """Creates a map_remove_by_key_range operation.
 
@@ -324,7 +366,7 @@ def map_remove_by_key_range(
     return op_dict
 
 
-def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: Optional[list] = None):
     """Creates a map_remove_by_value operation.
 
     The operation removes key value pairs whose value matches the specified value.
@@ -356,7 +398,7 @@ def map_remove_by_value(bin_name: str, value, return_type, inverted=False, ctx: 
     return op_dict
 
 
-def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: list = None):
+def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=False, ctx: Optional[list] = None):
     """Creates a map_remove_by_value_list operation.
 
     The operation removes key value pairs whose values are specified in the value_list.
@@ -388,7 +430,14 @@ def map_remove_by_value_list(bin_name: str, value_list, return_type, inverted=Fa
     return op_dict
 
 
-def map_remove_by_value_range(bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list = None):
+def map_remove_by_value_range(
+    bin_name: str,
+    value_start,
+    value_end,
+    return_type,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Creates a map_remove_by_value_range operation.
 
     The operation removes items, with values between value_start(inclusive) and
@@ -423,7 +472,7 @@ def map_remove_by_value_range(bin_name: str, value_start, value_end, return_type
     return op_dict
 
 
-def map_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
+def map_remove_by_index(bin_name: str, index, return_type, ctx: Optional[list] = None):
     """Creates a map_remove_by_index operation.
 
     The operation removes the entry at index from the map.
@@ -452,7 +501,14 @@ def map_remove_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def map_remove_by_index_range(bin_name: str, index_start, remove_amt, return_type, inverted=False, ctx: list = None):
+def map_remove_by_index_range(
+    bin_name: str,
+    index_start,
+    remove_amt,
+    return_type,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Creates a map_remove_by_index_range operation.
 
     The operation removes remove_amt entries starting at index_start from the map.
@@ -486,7 +542,7 @@ def map_remove_by_index_range(bin_name: str, index_start, remove_amt, return_typ
     return op_dict
 
 
-def map_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
+def map_remove_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = None):
     """Creates a map_remove_by_rank operation.
 
     The operation removes the item with the specified rank from the map.
@@ -515,7 +571,14 @@ def map_remove_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def map_remove_by_rank_range(bin_name: str, rank_start, remove_amt, return_type, inverted=False, ctx: list = None):
+def map_remove_by_rank_range(
+    bin_name: str,
+    rank_start,
+    remove_amt,
+    return_type,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Creates a map_remove_by_rank_range operation.
 
     The operation removes `remove_amt` items beginning with the item with the specified rank from the map.
@@ -549,7 +612,7 @@ def map_remove_by_rank_range(bin_name: str, rank_start, remove_amt, return_type,
     return op_dict
 
 
-def map_get_by_key(bin_name: str, key, return_type, ctx: list = None):
+def map_get_by_key(bin_name: str, key, return_type, ctx: Optional[list] = None):
     """Creates a map_get_by_key operation.
 
     The operation returns an item, specified by the key from the map stored in the specified bin.
@@ -573,7 +636,14 @@ def map_get_by_key(bin_name: str, key, return_type, ctx: list = None):
     return op_dict
 
 
-def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_type, inverted=False, ctx: list = None):
+def map_get_by_key_range(
+    bin_name: str,
+    key_range_start,
+    key_range_end,
+    return_type,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Creates a map_get_by_key_range operation.
 
     The operation returns items with keys between key_range_start(inclusive) and
@@ -608,7 +678,7 @@ def map_get_by_key_range(bin_name: str, key_range_start, key_range_end, return_t
     return op_dict
 
 
-def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
+def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ctx: Optional[list] = None):
     """Creates a map_get_by_key_list operation.
 
     The operation returns items, specified by the keys in key_list from the map stored in the specified bin.
@@ -640,7 +710,7 @@ def map_get_by_key_list(bin_name: str, key_list, return_type, inverted=False, ct
     return op_dict
 
 
-def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: list = None):
+def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: Optional[list] = None):
     """Creates a map_get_by_value operation.
 
     The operation returns entries whose value matches the specified value.
@@ -672,7 +742,14 @@ def map_get_by_value(bin_name: str, value, return_type, inverted=False, ctx: lis
     return op_dict
 
 
-def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, inverted=False, ctx: list = None):
+def map_get_by_value_range(
+    bin_name: str,
+    value_start,
+    value_end,
+    return_type,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Creates a map_get_by_value_range operation.
 
     The operation returns items, with values between value_start(inclusive) and
@@ -707,14 +784,14 @@ def map_get_by_value_range(bin_name: str, value_start, value_end, return_type, i
     return op_dict
 
 
-def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, ctx: list = None):
+def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, ctx: Optional[list] = None):
     """Creates a map_get_by_value_list operation.
 
     The operation returns entries whose values are specified in the value_list.
 
     Args:
         bin_name (str): The name of the bin containing the map.
-        value_list (list): Entries with a value contained in this list will be returned from the map.
+        key_list (list): Entries with a value contained in this list will be returned from the map.
         return_type (int): Value specifying what should be returned from the operation.
             This should be one of the :ref:`map_return_types` values.
         inverted (bool): If True, entries with a value contained in value_list will be ignored, and all others
@@ -739,7 +816,7 @@ def map_get_by_value_list(bin_name: str, key_list, return_type, inverted=False, 
     return op_dict
 
 
-def map_get_by_index(bin_name: str, index, return_type, ctx: list = None):
+def map_get_by_index(bin_name: str, index, return_type, ctx: Optional[list] = None):
     """Creates a map_get_by_index operation.
 
     The operation returns the entry at index from the map.
@@ -763,7 +840,14 @@ def map_get_by_index(bin_name: str, index, return_type, ctx: list = None):
     return op_dict
 
 
-def map_get_by_index_range(bin_name: str, index_start, get_amt, return_type, inverted=False, ctx: list = None):
+def map_get_by_index_range(
+    bin_name: str,
+    index_start,
+    get_amt,
+    return_type,
+    inverted=False,
+    ctx: Optional[list] = None
+):
     """Creates a map_get_by_index_range operation.
 
     The operation returns get_amt entries starting at index_start from the map.
@@ -797,7 +881,7 @@ def map_get_by_index_range(bin_name: str, index_start, get_amt, return_type, inv
     return op_dict
 
 
-def map_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
+def map_get_by_rank(bin_name: str, rank, return_type, ctx: Optional[list] = None):
     """Creates a map_get_by_rank operation.
 
     The operation returns the item with the specified rank from the map.
@@ -821,7 +905,7 @@ def map_get_by_rank(bin_name: str, rank, return_type, ctx: list = None):
     return op_dict
 
 
-def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inverted=False, ctx: list = None):
+def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inverted=False, ctx: Optional[list] = None):
     """Creates a map_get_by_rank_range operation.
 
     The operation returns item within the specified rank range from the map.
@@ -856,7 +940,7 @@ def map_get_by_rank_range(bin_name: str, rank_start, get_amt, return_type, inver
 
 
 def map_remove_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a map remove by value rank range relative operation
 
@@ -868,9 +952,10 @@ def map_remove_by_value_rank_range_relative(
         bin_name (str): The name of the bin containing the map.
         value: The value of the entry in the map for which to search
         offset (int): Begin removing and returning items with rank == rank(found_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items with rank greater than found_item are returned.
-        return_type: Specifies what to return from the operation.
         inverted (bool): If True, the operation is inverted
             and items outside of the specified range are returned.
         ctx (list): An optional list of nested CDT :class:`cdt_ctx <aerospike_helpers.cdt_ctx>` context operation
@@ -928,7 +1013,7 @@ def map_remove_by_value_rank_range_relative(
 
 
 def map_get_by_value_rank_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a map remove by value rank range relative operation
 
@@ -940,6 +1025,8 @@ def map_get_by_value_rank_range_relative(
         bin_name (str): The name of the bin containing the map.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
@@ -985,7 +1072,7 @@ def map_get_by_value_rank_range_relative(
 
 
 def map_remove_by_key_index_range_relative(
-    bin_name: str, key, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str, key, offset, return_type, count=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a map get by value rank range relative operation
 
@@ -1000,6 +1087,8 @@ def map_remove_by_key_index_range_relative(
         bin_name (str): The name of the bin containing the list.
         key (str): The key of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted
@@ -1057,7 +1146,7 @@ def map_remove_by_key_index_range_relative(
 
 
 def map_get_by_key_index_range_relative(
-    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: list = None
+    bin_name: str, value, offset, return_type, count=None, inverted=False, ctx: Optional[list] = None
 ):
     """Create a map get by value rank range relative operation
 
@@ -1069,6 +1158,8 @@ def map_get_by_key_index_range_relative(
         bin_name (str): The name of the bin containing the list.
         value (str): The value of the item in the list for which to search
         offset (int): Begin removing and returning items with rank == rank(fount_item) + offset
+        return_type (int): Value specifying what should be returned from the operation.
+            This should be one of the :ref:`map_return_types` values.
         count (int): If specified, the number of items to remove and return. If None,
             all items until end of list are returned.
         inverted (bool): If True, the operation is inverted

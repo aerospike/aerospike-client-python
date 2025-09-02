@@ -3,6 +3,7 @@
 import pytest
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
+import aerospike
 from .as_status_codes import AerospikeStatus
 
 
@@ -49,7 +50,7 @@ class TestQueryPagination(TestBaseClass):
                     "ns": self.test_ns,
                     "set": self.test_set,
                     "key": str(i),
-                    "digest": as_connection.get_key_digest(self.test_ns, self.test_set, str(i)),
+                    "digest": aerospike.calc_digest(self.test_ns, self.test_set, str(i)),
                 }
                 as_connection.put(key, rec)
 
@@ -236,10 +237,10 @@ class TestQueryPagination(TestBaseClass):
             _, _, record = input_tuple
             records.append(record)
 
-        with pytest.raises(e.ClientError) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
         err_code = err_info.value.code
-        assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT
+        assert err_code == AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_query_pagination_with_callback_contains_error(self):
         records = []
@@ -253,7 +254,7 @@ class TestQueryPagination(TestBaseClass):
         query_obj.paginate()
 
         with pytest.raises(e.ClientError) as err_info:
-            query_obj.foreach(callback, {"timeout": 1000, "partition_filter": {"begin": 1001, "count": 1}})
+            query_obj.foreach(callback, {"partition_filter": {"begin": 1001, "count": 1}})
 
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_CLIENT

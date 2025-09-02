@@ -29,11 +29,9 @@ class TestDropRole(object):
         Teardown method
         """
 
-        policy = {}
-
         for user in self.delete_users:
             try:
-                self.client.admin_drop_user(user, policy)
+                self.client.admin_drop_user(user)
                 time.sleep(2)
             except Exception:
                 pass
@@ -60,11 +58,11 @@ class TestDropRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_READ, "ns": "test", "set": "demo"}], {"timeout": 180000}
         )
         time.sleep(1)
 
-        status = self.client.admin_drop_role("usr-sys-admin-test", {"timeout": 1000})
+        status = self.client.admin_drop_role("usr-sys-admin-test", {"timeout": 180000})
 
         assert status == 0
         time.sleep(1)
@@ -85,11 +83,11 @@ class TestDropRole(object):
             pass  # we are good, no such role exists
 
         self.client.admin_create_role(
-            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}], {"timeout": 1000}
+            "usr-sys-admin-test", [{"code": aerospike.PRIV_WRITE, "ns": "test", "set": "demo"}]
         )
         time.sleep(1)
 
-        status = self.client.admin_drop_role("usr-sys-admin-test", {"timeout": 1000})
+        status = self.client.admin_drop_role("usr-sys-admin-test")
 
         assert status == 0
         time.sleep(1)

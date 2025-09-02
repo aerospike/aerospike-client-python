@@ -166,7 +166,7 @@ def test_hllop(aeros, namespace, setname):
     client = aeros.connect("generic_client", "generic_client")
     # assert client.put(('test', 'demo', 0), {'': 3}) == 0
     # assert client.remove(('test', 'demo', 0), {'': 3}) == 0
-    # bs_b4_cdt = client.get_cdtctx_base64({'ctx':ctx_list_index})
+    # bs_b4_cdt = client.get_cdtctx_base64(ctx_list_index)
     # print(bs_b4_cdt)
     list_items = list("item%s" % str(i) for i in range(4))
     ops = [
@@ -190,7 +190,7 @@ def test_cdtctx_info(aeros, namespace, setname):
     numbins = 1
     priority = 1
     # ctx = [cdt_ctx.cdt_ctx_list_index(1), cdt_ctx.cdt_ctx_list_index(2)]
-    bs_b4_cdt = client_a.get_cdtctx_base64({"ctx": ctx_list_index})
+    bs_b4_cdt = client_a.get_cdtctx_base64(ctx_list_index)
     r = []
     r.append("sindex-create:")
     r.append("ns=%s" % (namespace))

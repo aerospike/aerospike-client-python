@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 import pytest
 import random
-from datetime import datetime
 from aerospike import exception as e
 from aerospike_helpers.operations import operations as operation
 from .test_base_class import TestBaseClass
 
 import aerospike
 
-random.seed(datetime.now())
+random.seed(0)
 
 
 class TestBitwiseOperations(object):
@@ -36,11 +35,9 @@ class TestBitwiseOperations(object):
     @pytest.mark.parametrize(
         "send_bool_as, expected_true, expected_false",
         [
-            (aerospike.PY_BYTES, True, False),
             (aerospike.INTEGER, 1, 0),
             (aerospike.AS_BOOL, True, False),
             (100, True, False),
-            (0, True, False),
             (-1, True, False),
         ],
     )

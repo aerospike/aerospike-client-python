@@ -4,6 +4,7 @@ import pytest
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import cdt_ctx
+from aerospike_helpers.operations import expression_operations as expr_ops
 from aerospike_helpers.expressions import (
     And,
     Eq,
@@ -42,6 +43,8 @@ from aerospike_helpers.expressions import (
 )
 
 import aerospike
+from . import as_errors
+from contextlib import nullcontext
 
 # Constants
 _NUM_RECORDS = 9
@@ -86,10 +89,11 @@ def add_ctx_op(ctx_type, value):
 
 
 def verify_multiple_expression_result(client, test_ns, test_set, expr, op_bin, expected):
-    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS + 1)]
+    keys = [(test_ns, test_set, i) for i in range(_NUM_RECORDS)]
 
     # batch get
-    res = [rec for rec in client.get_many(keys, policy={"expressions": expr}) if rec[2]]
+    res = [br for br in client.batch_read(keys, policy={"expressions": expr}).batch_records
+           if br.result != as_errors.AEROSPIKE_FILTERED_OUT]
 
     assert len(res) == expected
 
@@ -107,12 +111,11 @@ LIST_BIN_EXAMPLE = [
     8,
     "string_test" + str(8),
     [26, 27, 28, 8],
-    {32: 32, 33: 33, 8: 8, 31: 31},
+    aerospike.KeyOrderedDict({32: 32, 33: 33, 8: 8, 31: 31}),
     bytearray("bytearray_test" + str(8), "utf8"),
     ("bytes_test" + str(8)).encode("utf8"),
     8 % 2 == 1,
-    aerospike.null,
-    TestUsrDefinedClass(8),
+    aerospike.null(),
     float(8),
     GEO_POLY,
 ]
@@ -138,12 +141,11 @@ class TestExpressions(TestBaseClass):
                     i,
                     "string_test" + str(i),
                     [26, 27, 28, i],
-                    {31: 31, 32: 32, 33: 33, i: i},
+                    aerospike.KeyOrderedDict({31: 31, 32: 32, 33: 33, i: i}),
                     bytearray("bytearray_test" + str(i), "utf8"),
                     ("bytes_test" + str(i)).encode("utf8"),
                     i % 2 == 1,
-                    aerospike.null,
-                    TestUsrDefinedClass(i),
+                    aerospike.null(),
                     float(i),
                     GEO_POLY,
                 ],
@@ -154,11 +156,14 @@ class TestExpressions(TestBaseClass):
                 ],
                 "slist_bin": ["b", "d", "f"],
                 "llist_bin": [[1, 2], [1, 3], [1, 4]],
-                "mlist_bin": [{1: 2}, {1: 3}, {1: 4}],
+                "mlist_bin": [
+                    aerospike.KeyOrderedDict({1: 2}),
+                    aerospike.KeyOrderedDict({1: 3}),
+                    aerospike.KeyOrderedDict({1: 4})
+                ],
                 "bylist_bin": ["b".encode("utf8"), "d".encode("utf8"), "f".encode("utf8")],
                 "bolist_bin": [False, False, True],
-                "nlist_bin": [None, aerospike.null, aerospike.null],
-                "bllist_bin": [TestUsrDefinedClass(1), TestUsrDefinedClass(3), TestUsrDefinedClass(4)],
+                "nlist_bin": [None, aerospike.null(), aerospike.null()],
                 "flist_bin": [1.0, 2.0, 6.0],
             }
             self.as_connection.put(key, rec)
@@ -214,20 +219,29 @@ class TestExpressions(TestBaseClass):
             ),
             # (None, None, True, aerospike.LIST_RETURN_VALUE, [True], 9)
             # NOTE: this won't work because booleans are not serialized by default in expressions.
-            (None, None, None, aerospike.LIST_RETURN_VALUE, [None], _NUM_RECORDS),
+            (None, None, None, aerospike.LIST_RETURN_VALUE, [None, None], _NUM_RECORDS),
             (None, None, [26, 27, 28, 6], aerospike.LIST_RETURN_VALUE, [[26, 27, 28, 6]], 1),
             ([list_index], [3], 6, aerospike.LIST_RETURN_VALUE, [6], 1),
             (
                 None,
                 None,
-                {31: 31, 32: 32, 33: 33, 8: 8},
+                aerospike.KeyOrderedDict({31: 31, 32: 32, 33: 33, 8: 8}),
                 aerospike.LIST_RETURN_VALUE,
-                [{31: 31, 32: 32, 33: 33, 8: 8}],
+                [aerospike.KeyOrderedDict({31: 31, 32: 32, 33: 33, 8: 8})],
                 1,
             ),
-            (None, None, aerospike.null, aerospike.LIST_RETURN_VALUE, [aerospike.null], _NUM_RECORDS),
+            (
+                None,
+                None,
+                aerospike.null(),
+                aerospike.LIST_RETURN_VALUE,
+                [
+                    aerospike.null(),
+                    aerospike.null()
+                ],
+                _NUM_RECORDS
+            ),
             (None, None, GEO_POLY, aerospike.LIST_RETURN_VALUE, [GEO_POLY], _NUM_RECORDS),
-            (None, None, TestUsrDefinedClass(4), aerospike.LIST_RETURN_VALUE, [TestUsrDefinedClass(4)], 1),
         ],
     )
     def test_list_get_by_value_pos(self, ctx_types, ctx_indexes, value, return_type, check, expected):
@@ -275,7 +289,7 @@ class TestExpressions(TestBaseClass):
                 bytearray("bytearray_test3", "utf8"),
                 bytearray("bytearray_test6", "utf8"),
                 aerospike.LIST_RETURN_REVERSE_INDEX,
-                [[6], [6], [6]],
+                [[5] for _ in range(3)],
                 3,
             ),
             (
@@ -297,15 +311,6 @@ class TestExpressions(TestBaseClass):
                 [[GEO_POLY], [GEO_POLY], [GEO_POLY]],
                 _NUM_RECORDS,
             ),
-            (
-                None,
-                None,
-                TestUsrDefinedClass(4),
-                TestUsrDefinedClass(7),
-                aerospike.LIST_RETURN_VALUE,
-                [[TestUsrDefinedClass(4)], [TestUsrDefinedClass(5)], [TestUsrDefinedClass(6)]],
-                3,
-            ),  # NOTE py_bytes cannot be compard directly server side
         ],
     )
     def test_list_get_by_value_range_pos(self, ctx_types, ctx_indexes, begin, end, return_type, check, expected):
@@ -331,13 +336,14 @@ class TestExpressions(TestBaseClass):
         )
 
     @pytest.mark.parametrize(
-        "ctx, begin, end, return_type, check, expected",
+        "ctx, begin, end, return_type, check, expected_context",
         [
-            ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], e.ParamError),
-            (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], e.InvalidRequest),
+            ("bad ctx", 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], [12]], pytest.raises(e.ParamError)),
+            # Invalid request error is expected, but the Python client returns it via BatchRecords.result
+            (None, 10, 13, aerospike.LIST_RETURN_VALUE, [[10], [11], 12], nullcontext()),
         ],
     )
-    def test_list_get_by_value_range_neg(self, ctx, begin, end, return_type, check, expected):
+    def test_list_get_by_value_range_neg(self, ctx, begin, end, return_type, check, expected_context):
         """
         Invoke ListGetByValue() with expected failures.
         """
@@ -348,10 +354,11 @@ class TestExpressions(TestBaseClass):
             Eq(ListGetByValueRange(ctx, return_type, begin, end, "list_bin"), check[2]),
         )
 
-        with pytest.raises(expected):
-            verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
-            )
+        keys = [(self.test_ns, self.test_set, i) for i in range(_NUM_RECORDS)]
+        with expected_context:
+            brs = self.as_connection.batch_read(keys, policy={"expressions": expr.compile()})
+            if type(expected_context) == nullcontext:
+                assert brs.result == as_errors.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, return_type, check, expected",
@@ -368,16 +375,16 @@ class TestExpressions(TestBaseClass):
                 1,
             ),
             (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_VALUE, LIST_BIN_EXAMPLE, 1),
-            (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], 1),
+            (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_INDEX, [i for i in range(len(LIST_BIN_EXAMPLE))], 1),
             (
                 None,
                 None,
                 LIST_BIN_EXAMPLE,
                 aerospike.LIST_RETURN_REVERSE_INDEX,
-                [11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0],
+                [i for i in range(len(LIST_BIN_EXAMPLE) - 1, -1, -1)],
                 1,
             ),
-            (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, 12, 1),
+            (None, None, LIST_BIN_EXAMPLE, aerospike.LIST_RETURN_COUNT, len(LIST_BIN_EXAMPLE), 1),
             # (None, None, [8], aerospike.LIST_RETURN_RANK, [1], 1), temporarily failing because of bool jump rank
             ([list_index], [3], [26, 6], aerospike.LIST_RETURN_INDEX, [0, 3], 1),
         ],
@@ -400,10 +407,11 @@ class TestExpressions(TestBaseClass):
         )
 
     @pytest.mark.parametrize(
-        "ctx_types, ctx_indexes, value, return_type, check, expected",
-        [(None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, (10, [26, 27, 28, 10]), e.InvalidRequest)],
+        "ctx_types, ctx_indexes, value, return_type, check",
+        # Compared values are not the same type
+        [(None, None, [10, [26, 27, 28, 10]], aerospike.LIST_RETURN_VALUE, "a")],
     )
-    def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check, expected):
+    def test_list_get_by_value_list_neg(self, ctx_types, ctx_indexes, value, return_type, check):
         """
         Invoke ListGetByValueList() with expected failures.
         """
@@ -416,10 +424,9 @@ class TestExpressions(TestBaseClass):
             ctx = None
 
         expr = Eq(ListGetByValueList(ctx, return_type, value, "list_bin"), check)
-        with pytest.raises(expected):
-            verify_multiple_expression_result(
-                self.as_connection, self.test_ns, self.test_set, expr.compile(), "list_bin", expected
-            )
+        keys = [(self.test_ns, self.test_set, i) for i in range(_NUM_RECORDS)]
+        brs = self.as_connection.batch_read(keys, policy={"expressions": expr.compile()})
+        assert brs.result == as_errors.AEROSPIKE_ERR_REQUEST_INVALID
 
     @pytest.mark.parametrize(
         "ctx_types, ctx_indexes, value, rank, return_type, check, expected",
@@ -638,19 +645,47 @@ class TestExpressions(TestBaseClass):
                 None,
                 {},
                 [
-                    {1: 20},
-                    [{1: 6}, {1: 9}],
-                    {1: 5},
-                    [{1: 24}, {1: 25}],  #
-                    {1: 10},
-                    {1: 2},  #
-                    [{1: 3}, {1: 4}],
-                    {1: 2},  #
-                    {1: 4},
-                    {1: 4},
-                    {1: 3},  #
+                    aerospike.KeyOrderedDict({1: 20}),
+                    [
+                        aerospike.KeyOrderedDict({1: 6}),
+                        aerospike.KeyOrderedDict({1: 9})
+                    ],
+                    aerospike.KeyOrderedDict({1: 5}),
+                    [
+                        aerospike.KeyOrderedDict({1: 24}),
+                        aerospike.KeyOrderedDict({1: 25})
+                    ],  #
+                    aerospike.KeyOrderedDict({1: 10}),
+                    aerospike.KeyOrderedDict({1: 2}),  #
+                    [
+                        aerospike.KeyOrderedDict({1: 3}),
+                        aerospike.KeyOrderedDict({1: 4})
+                    ],
+                    aerospike.KeyOrderedDict({1: 2}),  #
+                    aerospike.KeyOrderedDict({1: 4}),
+                    aerospike.KeyOrderedDict({1: 4}),
+                    aerospike.KeyOrderedDict({1: 3}),  #
                 ],
-                [[{1: 2}, {1: 3}, {1: 4}, {1: 5}, {1: 6}, {1: 9}, {1: 20}], [{1: 10}, {1: 24}, {1: 25}], [{1: 2}], []],
+                [
+                    [
+                        aerospike.KeyOrderedDict({1: 2}),
+                        aerospike.KeyOrderedDict({1: 3}),
+                        aerospike.KeyOrderedDict({1: 4}),
+                        aerospike.KeyOrderedDict({1: 5}),
+                        aerospike.KeyOrderedDict({1: 6}),
+                        aerospike.KeyOrderedDict({1: 9}),
+                        aerospike.KeyOrderedDict({1: 20})
+                    ],
+                    [
+                        aerospike.KeyOrderedDict({1: 10}),
+                        aerospike.KeyOrderedDict({1: 24}),
+                        aerospike.KeyOrderedDict({1: 25})
+                    ],
+                    [
+                        aerospike.KeyOrderedDict({1: 2})
+                    ],
+                    []
+                ],
             ),
             (
                 "bylist_bin",
@@ -723,3 +758,179 @@ class TestExpressions(TestBaseClass):
         verify_multiple_expression_result(
             self.as_connection, self.test_ns, self.test_set, expr.compile(), bin, _NUM_RECORDS
         )
+
+    @pytest.mark.parametrize(
+        "bin_name, expr, expected",
+        [
+            (
+                "ilist_bin",
+                ListRemoveByValue(ctx=None, value=1, bin="ilist_bin", inverted=True),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueList(ctx=None, values=[1, 2], bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRange(ctx=None, begin=1, end=3, bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRelRankToEnd(ctx=None, value=1, rank=1, bin="ilist_bin", inverted=True),
+                [2, 6]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByValueRelRankRange(ctx=None, value=1, rank=1, count=1, bin="ilist_bin", inverted=True),
+                [2]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByIndexRangeToEnd(ctx=None, index=1, bin="ilist_bin", inverted=True),
+                [2, 6]
+            ),
+            (
+                "ilist_bin",
+                ListRemoveByIndexRange(ctx=None, index=0, count=2, bin="ilist_bin", inverted=True),
+                [1, 2]
+            ),
+            (
+                "slist_bin",
+                ListRemoveByRankRangeToEnd(ctx=None, rank=1, bin="slist_bin", inverted=True),
+                ["d", "f"]
+            ),
+            (
+                "slist_bin",
+                ListRemoveByRankRange(ctx=None, rank=0, count=2, bin="slist_bin", inverted=True),
+                ["b", "d"]
+            ),
+            (
+                "ilist_bin",
+                ListGetByValue(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_INDEX,
+                    value=2,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [0, 2]
+            ),
+            (
+                "ilist_bin",
+                ListGetByValueRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_COUNT,
+                    value_begin=1,
+                    value_end=3,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                1
+            ),
+            (
+                "ilist_bin",
+                ListGetByValueList(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_COUNT,
+                    value=[1, 2, 6],
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                0
+            ),
+            # Without inversion, get all list values > 1
+            # With inversion, get all list values <= 1
+            # The rank of list value 1 is 0
+            (
+                "ilist_bin",
+                ListGetByValueRelRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_RANK,
+                    value=1,
+                    rank=1,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [0]
+            ),
+            # The list value with relative rank 1 compared to list value 1 is 2
+            # We only get that list value 2 since count is 1
+            # With inversion, we get the other list values 1 and 6
+            # The reverse indices of these values is 2 and 0, respectively
+            (
+                "ilist_bin",
+                ListGetByValueRelRankRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_REVERSE_INDEX,
+                    value=1,
+                    rank=1,
+                    count=1,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [2, 0]
+            ),
+            # Get list values 2 and 6
+            # The inverse result is list value 1
+            # The reverse rank of list value 1 is 2
+            (
+                "ilist_bin",
+                ListGetByIndexRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_REVERSE_RANK,
+                    index=1,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [2]
+            ),
+            (
+                "ilist_bin",
+                ListGetByIndexRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE,
+                    index=1,
+                    count=2,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                ListGetByRankRangeToEnd(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE,
+                    rank=1,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [1]
+            ),
+            (
+                "ilist_bin",
+                # This will select the last 2 list values: 2 and 6
+                # The inverse is list value 1
+                ListGetByRankRange(
+                    ctx=None,
+                    return_type=aerospike.LIST_RETURN_VALUE,
+                    rank=-2,
+                    count=2,
+                    bin="ilist_bin",
+                    inverted=True
+                ),
+                [1]
+            ),
+        ]
+    )
+    def test_list_expr_inverted(self, bin_name: str, expr, expected):
+        ops = [
+            expr_ops.expression_read(bin_name, expr.compile())
+        ]
+        key = (self.test_ns, self.test_set, 0)
+        _, _, bins = self.as_connection.operate(key, ops)
+
+        assert bins[bin_name] == expected

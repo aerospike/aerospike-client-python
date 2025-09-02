@@ -58,9 +58,9 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
             py_ubin = PyUnicode_AsUTF8String(py_bin);
             bin = PyBytes_AsString(py_ubin);
         }
-        else if (PyString_Check(py_bin)) {
+        else if (PyUnicode_Check(py_bin)) {
             // TRACE();
-            bin = PyString_AsString(py_bin);
+            bin = (char *)PyUnicode_AsUTF8(py_bin);
         }
         else if (PyByteArray_Check(py_bin)) {
             bin = PyByteArray_AsString(py_bin);
@@ -69,11 +69,7 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
             // TRACE();
             as_error_update(&err, AEROSPIKE_ERR_PARAM,
                             "Bin name should be of type string");
-            PyObject *py_err = NULL;
-            error_to_pyobject(&err, &py_err);
-            PyObject *exception_type = raise_exception(&err);
-            PyErr_SetObject(exception_type, py_err);
-            Py_DECREF(py_err);
+            raise_exception(&err);
             return NULL;
         }
 
@@ -87,11 +83,7 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
 
 CLEANUP:
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 

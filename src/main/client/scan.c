@@ -122,9 +122,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
         py_ustr1 = PyUnicode_AsUTF8String(py_set);
         set_p = PyBytes_AsString(py_ustr1);
     }
-    else if (PyString_Check(py_set)) {
-        set_p = PyString_AsString(py_set);
-    }
     else if (Py_None != py_set) {
         // Scan whole namespace if set is 'None' else error
         as_error_update(&err, AEROSPIKE_ERR_PARAM, "Set name should be string");
@@ -157,9 +154,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
         py_ustr2 = PyUnicode_AsUTF8String(py_module);
         module_p = PyBytes_AsString(py_ustr2);
     }
-    else if (PyString_Check(py_module)) {
-        module_p = PyString_AsString(py_module);
-    }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "Module name should be string");
@@ -170,9 +164,6 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (PyUnicode_Check(py_function)) {
         py_ustr3 = PyUnicode_AsUTF8String(py_function);
         function_p = PyBytes_AsString(py_ustr3);
-    }
-    else if (PyString_Check(py_function)) {
-        function_p = PyString_AsString(py_function);
     }
     else {
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
@@ -211,14 +202,9 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
             Py_BEGIN_ALLOW_THREADS
             aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
             Py_END_ALLOW_THREADS
-            if (err.code != AEROSPIKE_OK) {
-                as_error_update(&err, AEROSPIKE_ERR_PARAM,
-                                "Unable to perform scan_wait on the scan");
-            }
+            // We don't need to jump to the cleanup section to handle the code
+            // since it's already directly below this block
         }
-    }
-    else {
-        goto CLEANUP;
     }
 
 CLEANUP:
@@ -249,15 +235,12 @@ CLEANUP:
     }
 
     if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception(&err);
         return NULL;
     }
 
-    return PyLong_FromLong(scan_id);
+    // TODO: Doesn't match api
+    return PyLong_FromUnsignedLongLong(scan_id);
 }
 
 /**
@@ -300,96 +283,4 @@ PyObject *AerospikeClient_ScanApply(AerospikeClient *self, PyObject *args,
     return AerospikeClient_ScanApply_Invoke(self, namespace, py_set, py_module,
                                             py_function, py_args, py_policy,
                                             py_options, true);
-}
-
-/**
- *******************************************************************************************************
- * Gets the status of a background scan triggered by scanApply()
- *
- * @param self                  AerospikeClient object
- * @param args                  The args is a tuple object containing an argument
- *                              list passed from Python to a C function
- * @param kwds                  Dictionary of keywords
- *
- * Returns status of the background scan returned as a tuple containing
- * progress_pct, records_scanned, status.
- *******************************************************************************************************
- */
-PyObject *AerospikeClient_ScanInfo(AerospikeClient *self, PyObject *args,
-                                   PyObject *kwds)
-{
-    // Initialize error
-    as_error err;
-    as_error_init(&err);
-
-    // Python Function Arguments
-    PyObject *py_policy = NULL;
-    PyObject *retObj = PyDict_New();
-
-    long lscanId = 0;
-
-    as_policy_info info_policy;
-    as_policy_info *info_policy_p = NULL;
-    as_scan_info scan_info;
-
-    // Python Function Keyword Arguments
-    static char *kwlist[] = {"scanid", "policy", NULL};
-
-    // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "l|O:scan_info", kwlist,
-                                    &lscanId, &py_policy) == false) {
-        return NULL;
-    }
-
-    if (!self || !self->as) {
-        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
-        goto CLEANUP;
-    }
-
-    if (!self->is_conn_16) {
-        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
-                        "No connection to aerospike cluster");
-        goto CLEANUP;
-    }
-
-    // Convert python object to policy_info
-    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    Py_BEGIN_ALLOW_THREADS
-    aerospike_scan_info(self->as, &err, info_policy_p, lscanId, &scan_info);
-    Py_END_ALLOW_THREADS
-
-    if (err.code != AEROSPIKE_OK) {
-        goto CLEANUP;
-    }
-
-    if (retObj) {
-        PyObject *py_longobject = NULL;
-        py_longobject = PyLong_FromLong(scan_info.progress_pct);
-        PyDict_SetItemString(retObj, PROGRESS_PCT, py_longobject);
-        Py_DECREF(py_longobject);
-        py_longobject = PyLong_FromLong(scan_info.records_scanned);
-        PyDict_SetItemString(retObj, RECORDS_SCANNED, py_longobject);
-        Py_DECREF(py_longobject);
-        py_longobject = PyLong_FromLong(scan_info.status);
-        PyDict_SetItemString(retObj, STATUS, py_longobject);
-        Py_DECREF(py_longobject);
-    }
-
-CLEANUP:
-
-    if (err.code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception(&err);
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
-
-    return retObj;
 }

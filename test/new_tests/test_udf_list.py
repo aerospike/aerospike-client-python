@@ -38,7 +38,7 @@ class TestUdfList(object):
         """
         Test successful call to udf_list with a policy supplied
         """
-        policy = {"timeout": 0}
+        policy = {"timeout": 180000}
         udf_list = self.client.udf_list(policy)
 
         present = False
@@ -66,7 +66,7 @@ class TestUdfList(object):
         """
         Test successful call to udf_list with a timeout of 1s
         """
-        policy = {"timeout": 1000}
+        policy = {"timeout": 180000}
 
         udf_list = self.client.udf_list(policy)
 
@@ -91,7 +91,7 @@ class TestUdfList(object):
         assert param_error.value.msg == "timeout is invalid"
 
     def test_udf_list_with_extra_arg(self):
-        policy = {"timeout": 3000}
+        policy = {}
         with pytest.raises(TypeError):
             self.client.udf_list(policy, "extra_parameter")
 
@@ -114,7 +114,7 @@ class TestUdfList(object):
         client1 = aerospike.client(config)
         client1.close()
 
-        policy = {"timeout": 0}
+        policy = {"timeout": 180000}
 
         with pytest.raises(e.ClusterError) as cluster_error:
             client1.udf_list(policy)

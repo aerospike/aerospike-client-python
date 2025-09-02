@@ -16,7 +16,6 @@ def get_list_result_from_operation(client, key, operation, binname):
     return result_bins[binname]
 
 
-@pytest.mark.xfail(reason="This requires server 4.3.13")
 class TestNewRelativeCDTValues(object):
     @pytest.fixture(autouse=True)
     def setup(self, request, as_connection):

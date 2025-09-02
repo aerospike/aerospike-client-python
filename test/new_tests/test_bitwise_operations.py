@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 import pytest
 import random
-from datetime import datetime
 from aerospike import exception as e
 from aerospike_helpers.operations import bitwise_operations
 
 import aerospike
 
-random.seed(datetime.now())
+random.seed(0)
 
 
 class TestBitwiseOperations(object):

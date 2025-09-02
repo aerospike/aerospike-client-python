@@ -58,12 +58,13 @@ class TestBatchOperate(TestBaseClass):
         request.addfinalizer(teardown)
 
     @pytest.mark.parametrize(
-        "name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec",
+        "name, keys, ops, policy_batch, policy_batch_write, ttl, exp_res, exp_rec",
         [
             (
                 "simple-write",
                 [("test", "demo", 0)],
                 [op.write("count", 2), op.read("count")],
+                None,
                 None,
                 None,
                 [AerospikeStatus.AEROSPIKE_OK],
@@ -75,6 +76,7 @@ class TestBatchOperate(TestBaseClass):
                 [op.write("count", 3), op.read("count")],
                 {},
                 {},
+                None,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 3}],
             ),
@@ -83,7 +85,6 @@ class TestBatchOperate(TestBaseClass):
                 [("test", "demo", 0)],
                 [op.write("count", 7), op.read("count")],
                 {
-                    "total_timeout": 2000,
                     "max_retries": 2,
                     "allow_inline_ssd": True,
                     "respond_all_keys": False,
@@ -95,6 +96,7 @@ class TestBatchOperate(TestBaseClass):
                     ).compile(),
                 },
                 {},
+                None,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
@@ -111,6 +113,20 @@ class TestBatchOperate(TestBaseClass):
                     "durable_delete": False,
                     "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),
                 },
+                None,
+                [AerospikeStatus.AEROSPIKE_OK],
+                [{"count": 7}],
+            ),
+            (
+                "simple-write-policy-batch-write-with-ttl",
+                [("test", "demo", 0)],
+                [
+                    op.write("count", 7),
+                    op.read("count")
+                ],
+                {},
+                {},
+                9000,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
@@ -119,7 +135,6 @@ class TestBatchOperate(TestBaseClass):
                 [("test", "demo", 0)],
                 [op.write("count", 7), op.read("count")],
                 {
-                    "total_timeout": 2000,
                     "max_retries": 2,
                     "allow_inline_ssd": True,
                     "respond_all_keys": False,
@@ -138,23 +153,44 @@ class TestBatchOperate(TestBaseClass):
                     "durable_delete": False,
                     "expressions": exp.Eq(exp.IntBin("count"), 0).compile(),  # this expression takes precedence
                 },
+                None,
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"count": 7}],
             ),
+            (
+                "read-only-ops",
+                [("test", "demo", 0)],
+                [op.read("name"), op.read("count")],
+                None,
+                None,
+                None,
+                [AerospikeStatus.AEROSPIKE_OK],
+                [{"name": "name10", "count": 0}],
+            )
         ],
     )
-    def test_batch_operate_pos(self, name, keys, ops, policy_batch, policy_batch_write, exp_res, exp_rec):
+    def test_batch_operate_pos(self, name, keys, ops, policy_batch, policy_batch_write, ttl, exp_res, exp_rec):
         """
         Test batch_operate positive.
         """
 
-        res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write)
+        res = self.as_connection.batch_operate(keys, ops, policy_batch, policy_batch_write, ttl)
 
         for i, batch_rec in enumerate(res.batch_records):
             assert batch_rec.result == exp_res[i]
             assert batch_rec.record[2] == exp_rec[i]
             assert batch_rec.key[:3] == keys[i]  # checking key
             assert batch_rec.record[0][:3] == keys[i]  # checking key in record
+
+        if ttl is not None:
+            for key in keys:
+                _, meta = self.as_connection.exists(key)
+                assert meta["ttl"] in range(9000 - 50, 9000 + 50)
+
+    # Makes sure that we can check if a record is not found, similar to get_many() which is now removed
+    def test_record_not_found(self):
+        brs = self.as_connection.batch_operate(keys=[("test", "demo", 99)], ops=[op.read("name")])
+        assert brs.batch_records[0].result == AerospikeStatus.AEROSPIKE_ERR_RECORD_NOT_FOUND
 
     def test_batch_operate_many_pos(self):
         """
