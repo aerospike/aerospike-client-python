@@ -552,13 +552,13 @@ jobs:
 
     - if: ${{ startsWith(matrix.test-case, 'timeout_delay') }}
       run: |
+        import unittest
+        import aerospike
+        from aerospike import exception as e
+
         class TestTimeoutDelay(unittest.TestCase):
             def test_case(self):
               # Using unittest to check that exception was raised
-              import unittest
-              import aerospike
-              from aerospike import exception as e
-
               config = {
                 "hosts": [
                   ("127.0.0.1", 3000)
