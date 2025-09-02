@@ -181,6 +181,7 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         // Blobs are handled separately below, so we don't need to use the void* pointer
     }
 
+    // Query object should still be safe to use if this fails
     bool success = as_query_where_init(&self->query, 1);
     if (!success) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
