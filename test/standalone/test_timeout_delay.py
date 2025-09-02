@@ -37,7 +37,7 @@ class TestTimeoutDelay(unittest.TestCase):
             "--delay",
             "100ms"
         ]
-        subprocess.run(args=inject_latency_command, check=True)
+        subprocess.run(args=inject_latency_command, check=True, user="root")
 
         key = ("test", "demo", 1)
         policy = {
