@@ -403,9 +403,6 @@ jobs:
 
   run-standalone-tests:
     needs: build
-    defaults:
-      run:
-        shell: 'sudo bash -e {0}'
     strategy:
       matrix:
         suffix:
@@ -426,7 +423,12 @@ jobs:
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/standalone
-    - run: python3 test_${{ matrix.suffix }}.py
+    - run: |
+        if [[ ${{ matrix.suffix == 'timeout_delay' }} ]]; then
+          sudo python3 test_${{ matrix.suffix }}.py
+        else
+          python3 test_${{ matrix.suffix }}.py
+        fi
       working-directory: test/standalone
 
   test-misc:
