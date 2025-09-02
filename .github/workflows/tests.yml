@@ -401,13 +401,14 @@ jobs:
       run: sphinx-build -b ${{ matrix.builder-command }}
       working-directory: doc
 
-  test-metrics:
+  run-standalone-tests:
     needs: build
     strategy:
       matrix:
         suffix:
         - node_close_listener
         - cluster_name
+        - timeout_delay
       fail-fast: false
     runs-on: ubuntu-22.04
     steps:
@@ -421,7 +422,7 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
-      working-directory: test/metrics
+      working-directory: test/standalone
     - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/metrics
 
@@ -434,7 +435,6 @@ jobs:
           - "lowest_supported_server_version"
           - "user_agent_with_ce"
           - "user_agent_with_ee"
-          - "timeout_delay"
     env:
       CONTAINER_NAME: aerospike
     runs-on: ubuntu-22.04
@@ -457,12 +457,7 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ matrix.test-case != 'user_agent_with_ee' }}
-      run: |
-        docker run -d --name ${{ env.CONTAINER_NAME }} --cap-add=NET_ADMIN -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
-        if [[ "${{ matrix.test-case }}" -eq "timeout_delay" ]]; then
-          # TODO: double check
-          sudo tc qdisc add dev docker0 root netem delay 1000ms
-        fi
+      run: docker run -d --name aerospike -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
 
     - uses: ./.github/actions/wait-for-ce-server-to-start
       if: ${{ matrix.test-case != 'user_agent_with_ee' }}
@@ -549,35 +544,3 @@ jobs:
       shell: bash
       env:
         CONTAINER_NAME: aerospike
-
-    - if: ${{ startsWith(matrix.test-case, 'timeout_delay') }}
-      run: |
-        import unittest
-        import aerospike
-        from aerospike import exception as e
-
-        class TestTimeoutDelay(unittest.TestCase):
-            def test_case(self):
-              # Using unittest to check that exception was raised
-              config = {
-                "hosts": [
-                  ("127.0.0.1", 3000)
-                ]
-              }
-              client = aerospike.client(config)
-
-              key = ("test", "demo", 1)
-              policy = {
-                # Should cause first command to timeout
-                "total_timeout": 1,
-                # All subsequent commands should timeout because of timeout_delay
-                "timeout_delay": 2000
-              }
-              with self.assertRaises(e.ClientError):
-                client.get(key=key, policy=policy)
-
-              with self.assertRaises(e.ClientError):
-                client.get(key=key, policy=policy)
-
-        unittest.main()
-      shell: python
