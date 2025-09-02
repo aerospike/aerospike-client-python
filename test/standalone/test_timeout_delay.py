@@ -32,6 +32,7 @@ class TestTimeoutDelay(unittest.TestCase):
         client = aerospike.client(config)
 
         inject_latency_command = [
+            "sudo",
             "tcset",
             CONTAINER_NAME,
             "--docker",
