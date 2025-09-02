@@ -424,7 +424,7 @@ jobs:
     - run: python3 -m pip install -r requirements.txt
       working-directory: test/standalone
     - run: python3 test_${{ matrix.suffix }}.py
-      working-directory: test/metrics
+      working-directory: test/standalone
 
   test-misc:
     needs: build
