@@ -50,6 +50,7 @@ AerospikeQuery *AerospikeQuery_Select(AerospikeQuery *self, PyObject *args,
         goto CLEANUP;
     }
 
+    // Query object should still be safe to use if this fails
     bool success = as_query_select_init(&self->query, nbins);
     if (!success) {
         as_error_update(&err, AEROSPIKE_ERR_CLIENT,
