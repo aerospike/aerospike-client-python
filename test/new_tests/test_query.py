@@ -414,7 +414,6 @@ class TestQuery(TestBaseClass):
 
     def test_query_where_called_multiple_times(self):
         query = self.as_connection.query("test", "demo")
-        query.select("test_age")
         query.where(p.equals("test_age", 165))
         with pytest.raises(e.ClientError):
             query.where(p.equals("test_age", 150))
