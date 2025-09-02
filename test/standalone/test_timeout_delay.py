@@ -8,13 +8,14 @@ from aerospike import exception as e
 
 
 CONTAINER_NAME = "aerospike"
+PORT = 3000
 
 docker_client = docker.from_env()
 print("Running server container...")
 container = docker_client.containers.run(
     image="aerospike/aerospike-server",
     detach=True,
-    ports={"3000/tcp": 3000},
+    ports={f"{PORT}/tcp": PORT},
     name=CONTAINER_NAME
 )
 print("Waiting for server to initialize...")
@@ -25,7 +26,7 @@ class TestTimeoutDelay(unittest.TestCase):
         # Using unittest to check that exception was raised
         config = {
             "hosts": [
-                ("127.0.0.1", 3000)
+                ("127.0.0.1", PORT)
             ]
         }
         client = aerospike.client(config)
