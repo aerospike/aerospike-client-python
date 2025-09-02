@@ -434,6 +434,9 @@ jobs:
           - "lowest_supported_server_version"
           - "user_agent_with_ce"
           - "user_agent_with_ee"
+          - "timeout_delay"
+    env:
+      CONTAINER_NAME: aerospike
     runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v4
@@ -454,7 +457,11 @@ jobs:
 
     - name: Run Aerospike server
       if: ${{ matrix.test-case != 'user_agent_with_ee' }}
-      run: docker run -d --name aerospike -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
+      run: |
+        docker run -d --name ${{ env.CONTAINER_NAME }} --cap-add=NET_ADMIN -p 3000:3000 -e DEFAULT_TTL=2592000 ${{ env.REGISTRY_NAME }}/aerospike/aerospike-server:${{ env.SERVER_TAG }}
+        if [[ "${{ matrix.test-case }}" -eq "timeout_delay" ]]; then
+          docker exec ${{ env.CONTAINER_NAME }} tc qdisc add dev eth0 root netem delay 100ms
+        fi
 
     - uses: ./.github/actions/wait-for-ce-server-to-start
       if: ${{ matrix.test-case != 'user_agent_with_ee' }}
