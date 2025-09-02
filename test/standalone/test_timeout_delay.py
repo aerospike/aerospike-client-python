@@ -1,6 +1,7 @@
 import unittest
 import subprocess
 import time
+import os
 
 import docker
 import aerospike
@@ -16,7 +17,8 @@ container = docker_client.containers.run(
     image="aerospike/aerospike-server",
     detach=True,
     ports={f"{PORT}/tcp": PORT},
-    name=CONTAINER_NAME
+    name=CONTAINER_NAME,
+    remove=True
 )
 print("Waiting for server to initialize...")
 time.sleep(5)
@@ -33,13 +35,15 @@ class TestTimeoutDelay(unittest.TestCase):
 
         inject_latency_command = [
             "sudo",
+            "-E",
             "tcset",
             CONTAINER_NAME,
             "--docker",
             "--delay",
             "100ms"
         ]
-        subprocess.run(args=inject_latency_command, check=True)
+        env = os.environ.copy()
+        subprocess.run(args=inject_latency_command, check=True, env=env)
 
         key = ("test", "demo", 1)
         policy = {
