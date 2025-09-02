@@ -300,9 +300,6 @@ class CClientClean(clean):
 
 source_files = glob.glob(pathname="src/main/**/*.c", recursive=True)
 
-# Get all C source files in src/main
-src_files = glob.glob("src/main/**/*.c", recursive=True)
-
 setup(
     version=version.strip(),
     # Data files
