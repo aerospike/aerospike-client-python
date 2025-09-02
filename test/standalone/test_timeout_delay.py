@@ -32,9 +32,8 @@ class TestTimeoutDelay(unittest.TestCase):
 
         inject_latency_command = [
             "tcset",
-            "--docker",
-            "--container",
             CONTAINER_NAME,
+            "--docker",
             "--delay",
             "100ms"
         ]
