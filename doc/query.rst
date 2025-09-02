@@ -108,6 +108,8 @@ Assume this boilerplate code is run before all examples below:
         Set a filter on the record bins resulting from :meth:`results` or \
         :meth:`foreach`.
 
+        If this method is called more than once on the same query instance, a :py:exc:`~aerospike.exception.ClientError` exception will be raised.
+
         If a selected bin does not exist in a record it will not appear in the *bins* portion of that record tuple.
 
     .. method:: where(predicate[, ctx])

@@ -244,3 +244,10 @@ class TestSelect(object):
         # the select function
         _, _, rec = self.as_connection.select(self.test_key, bins_to_select)
         assert rec["a" * 14] == "long_bin_14"
+
+    def test_select_multiple_times(self):
+        bins_to_select = ["a"]
+        self.as_connection.select(self.test_key, bins_to_select)
+
+        with pytest.raises(e.ClientError):
+            self.as_connection.select(self.test_key, bins_to_select)
