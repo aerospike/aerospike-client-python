@@ -569,7 +569,7 @@ jobs:
               key = ("test", "demo", 1)
               policy = {
                 # Should cause first command to timeout
-                "total_timeout": 1
+                "total_timeout": 1,
                 # All subsequent commands should timeout because of timeout_delay
                 "timeout_delay": 2000
               }
