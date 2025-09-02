@@ -11,184 +11,184 @@ class AerospikeError(Exception):
 class TimeoutError(AerospikeError):
      pass
 
-class ClientError(AerospikeError):
-    pass
+# class ClientError(AerospikeError):
+#     pass
 
-class InvalidHostError(ClientError):
-    pass
+# class InvalidHostError(ClientError):
+#     pass
 
-class ParamError(ClientError):
-    pass
+# class ParamError(ClientError):
+#     pass
 
-class TransactionFailed(ClientError):
-    pass
+# class TransactionFailed(ClientError):
+#     pass
 
-class TransactionAlreadyAborted(ClientError):
-    pass
+# class TransactionAlreadyAborted(ClientError):
+#     pass
 
-class TransactionAlreadyCommitted(ClientError):
-    pass
+# class TransactionAlreadyCommitted(ClientError):
+#     pass
 
-class ServerError(AerospikeError):
-    pass
+# class ServerError(AerospikeError):
+#     pass
 
-class InvalidRequest(ServerError):
-    pass
+# class InvalidRequest(ServerError):
+#     pass
 
-class OpNotApplicable(ServerError):
-    pass
+# class OpNotApplicable(ServerError):
+#     pass
 
-class FilteredOut(ServerError):
-    pass
+# class FilteredOut(ServerError):
+#     pass
 
-class ServerFull(ServerError):
-    pass
+# class ServerFull(ServerError):
+#     pass
 
-class AlwaysForbidden(ServerError):
-    pass
+# class AlwaysForbidden(ServerError):
+#     pass
 
-class UnsupportedFeature(ServerError):
-    pass
+# class UnsupportedFeature(ServerError):
+#     pass
 
-class DeviceOverload(ServerError):
-    pass
+# class DeviceOverload(ServerError):
+#     pass
 
-class NamespaceNotFound(ServerError):
-    pass
+# class NamespaceNotFound(ServerError):
+#     pass
 
-class ForbiddenError(ServerError):
-    pass
+# class ForbiddenError(ServerError):
+#     pass
 
-class ElementExistsError(ServerError):
-    pass
+# class ElementExistsError(ServerError):
+#     pass
 
-class ElementNotFoundError(ServerError):
-    pass
+# class ElementNotFoundError(ServerError):
+#     pass
 
-class RecordError(ServerError):
-    key: Union[tuple, None]
-    bin: Union[str, None]
+# class RecordError(ServerError):
+#     key: Union[tuple, None]
+#     bin: Union[str, None]
 
-class RecordKeyMismatch(RecordError):
-    pass
+# class RecordKeyMismatch(RecordError):
+#     pass
 
-class RecordNotFound(RecordError):
-    pass
+# class RecordNotFound(RecordError):
+#     pass
 
-class RecordGenerationError(RecordError):
-    pass
+# class RecordGenerationError(RecordError):
+#     pass
 
-class RecordExistsError(RecordError):
-    pass
+# class RecordExistsError(RecordError):
+#     pass
 
-class RecordBusy(RecordError):
-    pass
+# class RecordBusy(RecordError):
+#     pass
 
-class RecordTooBig(RecordError):
-    pass
+# class RecordTooBig(RecordError):
+#     pass
 
-class BinNameError(RecordError):
-    pass
+# class BinNameError(RecordError):
+#     pass
 
-class BinIncompatibleType(RecordError):
-    pass
+# class BinIncompatibleType(RecordError):
+#     pass
 
-class IndexError(ServerError):
-    name: Union[str, None]
+# class IndexError(ServerError):
+#     name: Union[str, None]
 
-class IndexNotFound(IndexError):
-    pass
+# class IndexNotFound(IndexError):
+#     pass
 
-class IndexFoundError(IndexError):
-    pass
+# class IndexFoundError(IndexError):
+#     pass
 
-class IndexOOM(IndexError):
-    pass
+# class IndexOOM(IndexError):
+#     pass
 
-class IndexNotReadable(IndexError):
-    pass
+# class IndexNotReadable(IndexError):
+#     pass
 
-class IndexNameMaxLen(IndexError):
-    pass
+# class IndexNameMaxLen(IndexError):
+#     pass
 
-class IndexNameMaxCount(IndexError):
-    pass
+# class IndexNameMaxCount(IndexError):
+#     pass
 
-class QueryError(AerospikeError):
-    pass
+# class QueryError(AerospikeError):
+#     pass
 
-class QueryQueueFull(QueryError):
-    pass
+# class QueryQueueFull(QueryError):
+#     pass
 
-class QueryTimeout(QueryError):
-    pass
+# class QueryTimeout(QueryError):
+#     pass
 
-class ClusterError(AerospikeError):
-    pass
+# class ClusterError(AerospikeError):
+#     pass
 
-class ClusterChangeError(ClusterError):
-    pass
+# class ClusterChangeError(ClusterError):
+#     pass
 
-class AdminError(ServerError):
-    pass
+# class AdminError(ServerError):
+#     pass
 
-class ExpiredPassword(AdminError):
-	pass
+# class ExpiredPassword(AdminError):
+# 	pass
 
-class ForbiddenPassword(AdminError):
-	pass
+# class ForbiddenPassword(AdminError):
+# 	pass
 
-class IllegalState(AdminError):
-	pass
+# class IllegalState(AdminError):
+# 	pass
 
-class InvalidCommand(AdminError):
-	pass
+# class InvalidCommand(AdminError):
+# 	pass
 
-class InvalidCredential(AdminError):
-	pass
+# class InvalidCredential(AdminError):
+# 	pass
 
-class InvalidField(AdminError):
-	pass
+# class InvalidField(AdminError):
+# 	pass
 
-class InvalidPassword(AdminError):
-	pass
+# class InvalidPassword(AdminError):
+# 	pass
 
-class InvalidPrivilege(AdminError):
-	pass
+# class InvalidPrivilege(AdminError):
+# 	pass
 
-class InvalidRole(AdminError):
-	pass
+# class InvalidRole(AdminError):
+# 	pass
 
-class InvalidUser(AdminError):
-	pass
+# class InvalidUser(AdminError):
+# 	pass
 
-class NotAuthenticated(AdminError):
-	pass
+# class NotAuthenticated(AdminError):
+# 	pass
 
-class RoleExistsError(AdminError):
-	pass
+# class RoleExistsError(AdminError):
+# 	pass
 
-class RoleViolation(AdminError):
-	pass
+# class RoleViolation(AdminError):
+# 	pass
 
-class SecurityNotEnabled(AdminError):
-	pass
+# class SecurityNotEnabled(AdminError):
+# 	pass
 
-class SecurityNotSupported(AdminError):
-	pass
+# class SecurityNotSupported(AdminError):
+# 	pass
 
-class SecuritySchemeNotSupported(AdminError):
-	pass
+# class SecuritySchemeNotSupported(AdminError):
+# 	pass
 
-class UserExistsError(AdminError):
-	pass
+# class UserExistsError(AdminError):
+# 	pass
 
-class UDFError(ServerError):
-    module: Union[str, None]
-    func: Union[str, None]
+# class UDFError(ServerError):
+#     module: Union[str, None]
+#     func: Union[str, None]
 
-class UDFNotFound(UDFError):
-    pass
+# class UDFNotFound(UDFError):
+#     pass
 
-class LuaFileNotFound(UDFError):
-    pass
+# class LuaFileNotFound(UDFError):
+#     pass
