@@ -1,9 +1,24 @@
 import unittest
 import subprocess
+import time
 
+import docker
 import aerospike
 from aerospike import exception as e
 
+
+CONTAINER_NAME = "aerospike"
+
+docker_client = docker.from_env()
+print("Running server container...")
+container = docker_client.containers.run(
+    image="aerospike/aerospike-server",
+    detach=True,
+    ports={"3000/tcp": 3000},
+    name=CONTAINER_NAME
+)
+print("Waiting for server to initialize...")
+time.sleep(5)
 
 class TestTimeoutDelay(unittest.TestCase):
     def test_case(self):
@@ -19,7 +34,7 @@ class TestTimeoutDelay(unittest.TestCase):
             "tcset",
             "--docker",
             "--container",
-            "aerospike",
+            CONTAINER_NAME,
             "--delay",
             "100ms"
         ]
