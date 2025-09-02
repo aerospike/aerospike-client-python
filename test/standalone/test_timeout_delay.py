@@ -11,19 +11,26 @@ from aerospike import exception as e
 CONTAINER_NAME = "aerospike"
 PORT = 3000
 
-docker_client = docker.from_env()
-print("Running server container...")
-container = docker_client.containers.run(
-    image="aerospike/aerospike-server",
-    detach=True,
-    ports={f"{PORT}/tcp": PORT},
-    name=CONTAINER_NAME,
-    remove=True
-)
-print("Waiting for server to initialize...")
-time.sleep(5)
-
 class TestTimeoutDelay(unittest.TestCase):
+    def setUp(self):
+        self.docker_client = docker.from_env()
+        print("Running server container...")
+        self.container = self.docker_client.containers.run(
+            image="aerospike/aerospike-server",
+            detach=True,
+            ports={f"{PORT}/tcp": PORT},
+            name=CONTAINER_NAME,
+            remove=True
+        )
+        print("Waiting for server to initialize...")
+        time.sleep(5)
+
+    def tearDown(self):
+        """Clean up after test methods."""
+        self.container.stop()
+        self.container.remove()
+        self.docker_client.close()
+
     def test_case(self):
         # Using unittest to check that exception was raised
         config = {
