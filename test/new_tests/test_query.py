@@ -930,6 +930,12 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_query_select_multiple_times(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        query.select("a")
+        with pytest.raises(e.ClientError):
+            query.select("a")
+
     def test_query_with_argument_to_where_is_empty_string(self):
 
         query = self.as_connection.query("test", "demo")
