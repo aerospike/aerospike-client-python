@@ -75,6 +75,7 @@ jobs:
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
+        allow-prereleases: true
 
     - run: sudo apt update
     - name: Install build dependencies (apt packages)
@@ -302,6 +303,7 @@ jobs:
       with:
         python-version: ${{ matrix.py-version }}
         architecture: 'x64'
+        allow-prereleases: true
 
     - run: echo WHEEL_GH_ARTIFACT_NAME=wheel-${{ matrix.py-version }} >> $GITHUB_ENV
 
