@@ -406,8 +406,8 @@ jobs:
     strategy:
       matrix:
         suffix:
-        - node_close_listener
-        - cluster_name
+        - ext_metrics_node_close_listener
+        - ext_metrics_cluster_name
         - timeout_delay
       fail-fast: false
     runs-on: ubuntu-22.04
