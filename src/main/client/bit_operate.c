@@ -295,20 +295,20 @@ static as_status add_op_bit_set(AerospikeClient *self, as_error *err, char *bin,
             AEROSPIKE_OK) {
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                    "unable to parse value from add_op_bit_set");
+        }
 
-            if (!as_operations_bit_set(ops, bin, NULL, &bit_policy, bit_offset,
-                                       bit_size, value_byte_size, value)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                       "Failed to add bit set operation")
-            }
+        if (!as_operations_bit_set(ops, bin, NULL, &bit_policy, bit_offset,
+                                   bit_size, value_byte_size, value)) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                   "Failed to add bit set operation")
         }
     }
     else if (operation_code == OP_BIT_SET_INT) {
-        int64_t *value = NULL;
+        int64_t value = 0;
         if (get_int64_t(err, VALUE_KEY, op_dict, &value) != AEROSPIKE_OK) {
             return as_error_update(
                 err, AEROSPIKE_ERR_PARAM,
-                "unable to parse value from add_op_bit_set_int");
+                "unable to parse value while adding bit set int operation");
         }
 
         if (!as_operations_bit_set_int(ops, bin, NULL, &bit_policy, bit_offset,
