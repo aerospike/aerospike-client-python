@@ -136,7 +136,7 @@ as_status get_optional_int64_t(as_error *err, const char *key,
         return AEROSPIKE_OK;
     }
 
-    if (PyLong_Check(py_val)) {
+    if (!PyLong_Check(py_val)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s must be an integer", key);
     }
