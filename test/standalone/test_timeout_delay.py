@@ -65,8 +65,12 @@ class TestTimeoutDelay(unittest.TestCase):
         subprocess.run(args=inject_latency_command, check=True, env=env)
 
         test_cases = [
-            TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 0.5, expected_aborted_count=0, expected_recovered_count=1),
-            TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 2, expected_aborted_count=1, expected_recovered_count=0),
+            # The connection will receive a response before the timeout delay window ends
+            # So the connection will be returned to the pool.
+            TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 2, expected_aborted_count=0, expected_recovered_count=1),
+            # The connection will not receive a response during the timeout delay window
+            # So the connection will be destroyed.
+            TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 0.5, expected_aborted_count=1, expected_recovered_count=0),
         ]
 
         for timeout_delay_ms, expected_abort_count, expected_recovered_count in test_cases:
