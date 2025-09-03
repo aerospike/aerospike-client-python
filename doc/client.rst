@@ -1333,9 +1333,6 @@ The user dictionary has the following key-value pairs:
 
     * ``"roles"`` (:class:`list[str]`): list of assigned role names.
 
-.. index::
-    single: Other Methods
-
 Tuples
 ======
 
