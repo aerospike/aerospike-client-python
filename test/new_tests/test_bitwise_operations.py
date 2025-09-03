@@ -21,6 +21,7 @@ class TestBitwiseOperations(object):
         self.zero_one_blob = bytearray([0] * 5 + [1] * 5)
         self.count_blob = bytearray([1] * 1 + [86] * 2 + [255] * 1 + [3] * 1)
         self.five_255_blob = bytearray([255] * 5)
+        self.random_blob = bytearray([0x01, 0x42, 0x03, 0x04, 0x05])
 
         self.test_key = "test", "demo", "bitwise_op"
         self.test_bin_zeroes = "bitwise0"
@@ -28,6 +29,7 @@ class TestBitwiseOperations(object):
         self.zero_one_bin = "bitwise01"
         self.count_bin = "count"
         self.five_255_bin = "255"
+        self.random_blob_bin = "random_blob"
         self.as_connection.put(
             self.test_key,
             {
@@ -36,6 +38,7 @@ class TestBitwiseOperations(object):
                 self.zero_one_bin: self.zero_one_blob,
                 self.count_bin: self.count_blob,
                 self.five_255_bin: self.five_255_blob,
+                self.random_blob_bin: self.random_blob
             },
         )
         self.keys.append(self.test_key)
@@ -394,30 +397,31 @@ class TestBitwiseOperations(object):
         with pytest.raises(e.BinNotFound):
             self.as_connection.operate(self.test_key, ops)
 
+    # TODO: negative tests
     def test_bit_set_int(self):
         """
         Perform a bit_set_int op.
         """
         ops = [
             bitwise_operations.bit_set_int(
-                bin_name=self.zero_one_bin,
-                bit_offset=0,
+                bin_name=self.random_blob_bin,
+                bit_offset=1,
                 bit_size=8,
                 # 127 = 0111 1111
                 value=127,
                 policy=None
             )
         ]
-        # 00 0001 1111
-        # ^ offset 0
+        # 0000 0001 0100 0010 0000 0011 0000 0100 0000 0101
+        #  ^ offset 1
         # Setting 127 (8 bits):
-        # 01 1111 11
+        #  01 1111 11
         # Result:
-        # 01 1111 1111
+        # 0011 1111 1100 0010 0000 0011 0000 0100 0000 0101
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
-        expected_result = bytes([0] * 1 + [1] * 9)
+        expected_result = bytes([0x3F, 0xC2, 0x03, 0x04, 0x05])
         assert bins[self.zero_one_bin] == expected_result
 
     def test_bit_count_seven(self):
