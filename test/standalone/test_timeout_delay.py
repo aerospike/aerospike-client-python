@@ -2,12 +2,13 @@ import unittest
 import subprocess
 import time
 import os
+from collections import namedtuple
 
 import docker
 import aerospike
 from aerospike import exception as e
 
-
+TestCase = namedtuple("TestCase", ["timeout_delay_ms", "expected_aborted_count", "expected_recovered_count"])
 CONTAINER_NAME = "aerospike"
 PORT = 3000
 
@@ -64,15 +65,17 @@ class TestTimeoutDelay(unittest.TestCase):
         subprocess.run(args=inject_latency_command, check=True, env=env)
 
         test_cases = [
-            # timeout delay window, (expected number of aborted conns, expected number of recovered conns)
-            # Test case: connection should've been returned to pool (recovered)
-            (self.E2E_LATENCY_MS * 0.5, (0, 1)),
-            # Test case: connection should've been destroyed (aborted)
-            (self.E2E_LATENCY_MS * 2, (1, 0)),
+            TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 0.5, expected_aborted_count=0, expected_recovered_count=1),
+            TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 2, expected_aborted_count=1, expected_recovered_count=0),
         ]
 
-        for timeout_delay_ms, expected_results in test_cases:
-            with self.subTest(input=timeout_delay_ms, expected=expected_results):
+        for timeout_delay_ms, expected_abort_count, expected_recovered_count in test_cases:
+            with self.subTest(
+                input=timeout_delay_ms,
+                timeout_delay_ms=timeout_delay_ms,
+                expected_abort_count=expected_abort_count,
+                expected_recovered_count=expected_recovered_count
+            ):
                 # Should cause first command to timeout
                 policy = {
                     "total_timeout": 1,
@@ -84,10 +87,9 @@ class TestTimeoutDelay(unittest.TestCase):
                 time.sleep(timeout_delay_ms)
 
                 # By now, we have passed the timeout delay window
-                aborted_count, recovered_count = expected_results
                 cluster_stats = self.client.get_stats()
-                assert cluster_stats.nodes[0].conns.aborted == aborted_count
-                assert cluster_stats.nodes[0].conns.recovered == recovered_count
+                assert cluster_stats.nodes[0].conns.aborted == expected_abort_count
+                assert cluster_stats.nodes[0].conns.recovered == expected_recovered_count
 
 
 if __name__ == "__main__":
