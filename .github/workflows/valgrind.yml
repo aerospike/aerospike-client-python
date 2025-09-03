@@ -27,6 +27,10 @@ on:
         description: 'Use massif for testing memory usage'
         required: false
         default: false
+      python-tag:
+        type: string
+        required: false
+        default: cp38
 
 env:
   PYTHON_TAG: cp39
@@ -132,17 +136,31 @@ jobs:
         submodules: recursive
         fetch-depth: 0
 
+    # TODO: create helper func
     - name: Convert Python tag to Python version
-      run: echo PYTHON_VERSION=$(echo ${{ env.PYTHON_TAG }} | sed -e "s/cp3/cp3./" -e "s/cp//") >> $GITHUB_ENV
+      # Don't use sed because we want this command to work on both mac and windows
+      # The command used in GNU sed is different than in macOS sed
+      run: |
+        PYTHON_TAG=${{ inputs.python-tag }}
+        if [[ $PYTHON_TAG == pp* ]]; then
+          PREFIX_TO_REPLACE=pp
+          NEW_PREFIX=pypy
+        else
+          PREFIX_TO_REPLACE=cp
+          NEW_PREFIX=""
+        fi
+        PYTHON_VERSION="${PYTHON_TAG/$PREFIX_TO_REPLACE/$NEW_PREFIX}"
+        echo PYTHON_VERSION="${PYTHON_VERSION/3/3.}" >> $GITHUB_ENV
       shell: bash
 
-    - uses: actions/setup-python@v2
+    - uses: actions/setup-python@v5
       with:
-        python-version: '${{ env.PYTHON_VERSION }}'
+        python-version: ${{ env.PYTHON_VERSION }}
         architecture: 'x64'
 
     - uses: actions/download-artifact@v4
       with:
+        name: ${{ inputs.python-tag }}-manylinux_x86_64.build
         merge-multiple: true
 
     - name: Install client
