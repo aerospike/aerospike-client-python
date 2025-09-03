@@ -12,8 +12,9 @@ CONTAINER_NAME = "aerospike"
 PORT = 3000
 
 
+# Using unittest to check that exception was raised
 class TestTimeoutDelay(unittest.TestCase):
-    def setUp(self):
+    def setUpClass(self):
         self.docker_client = docker.from_env()
         print("Running server container...")
         self.container = self.docker_client.containers.run(
@@ -23,24 +24,31 @@ class TestTimeoutDelay(unittest.TestCase):
             name=CONTAINER_NAME,
             remove=True
         )
+        # TODO: reuse script from .github/workflows instead
         print("Waiting for server to initialize...")
         time.sleep(5)
 
-    def tearDown(self):
-        """Clean up after test methods."""
-        self.container.stop()
-        self.container.remove()
-        self.docker_client.close()
-
-    def test_case(self):
-        # Using unittest to check that exception was raised
         config = {
             "hosts": [
                 ("127.0.0.1", PORT)
             ]
         }
-        client = aerospike.client(config)
+        self.client = aerospike.client(config)
 
+        self.key = ("test", "demo", 1)
+        self.client.put(self.key, bins={"a": 1})
+
+    def tearDownClass(self):
+        self.client.close()
+
+        self.container.stop()
+        self.container.remove()
+        self.docker_client.close()
+
+    E2E_LATENCY_MS = 2000
+
+    def test_case(self):
+        env = os.environ.copy()
         inject_latency_command = [
             "sudo",
             "-E",
@@ -50,32 +58,35 @@ class TestTimeoutDelay(unittest.TestCase):
             "--delay",
             # e2e latency should be less than the client's timeout delay window
             # We want to test that the server does return a response after the timeout delay
-            "1000ms"
+            f"{self.E2E_LATENCY_MS}ms"
         ]
-        env = os.environ.copy()
         subprocess.run(args=inject_latency_command, check=True, env=env)
 
-        key = ("test", "demo", 1)
-        TIMEOUT_DELAY_MS = 2000
-        policy = {
-            # Should cause first command to timeout
-            "total_timeout": 1,
-            # All subsequent commands should timeout because of timeout_delay
-            "timeout_delay": TIMEOUT_DELAY_MS
-        }
-        with self.assertRaises(e.TimeoutError):
-            client.get(key=key, policy=policy)
+        test_cases = [
+            # timeout delay window, (expected number of aborted conns, expected number of recovered conns)
+            # Test case: connection should've been returned to pool (recovered)
+            (self.E2E_LATENCY_MS * 0.5, (0, 1)),
+            # Test case: connection should've been destroyed (aborted)
+            (self.E2E_LATENCY_MS * 2, (1, 0)),
+        ]
 
-        with self.assertRaises(e.TimeoutError):
-            client.get(key=key, policy=policy)
+        for timeout_delay_ms, expected_results in test_cases:
+            with self.subTest(input=timeout_delay_ms, expected=expected_results):
+                # Should cause first command to timeout
+                policy = {
+                    "total_timeout": 1,
+                    "timeout_delay": timeout_delay_ms
+                }
+                with self.assertRaises(e.TimeoutError):
+                    self.client.get(key=self.key, policy=policy)
 
-        time.sleep(TIMEOUT_DELAY_MS)
+                time.sleep(timeout_delay_ms)
 
-        # By now, we have passed the timeout delay window
-        # The server should've returned a response to the client connection
-        # and the client connection should not have been destroyed
-        # TODO: how to verify this?
-        client.get(key=key)
+                # By now, we have passed the timeout delay window
+                aborted_count, recovered_count = expected_results
+                cluster_stats = self.client.get_stats()
+                assert cluster_stats.nodes[0].conns.aborted == aborted_count
+                assert cluster_stats.nodes[0].conns.recovered == recovered_count
 
 
 if __name__ == "__main__":
