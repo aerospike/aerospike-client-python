@@ -203,8 +203,9 @@ as_status get_list_return_type(as_error *err, PyObject *op_dict,
     return AEROSPIKE_OK;
 }
 
-as_status get_list_policy(bool validate_keys, as_error *err, PyObject *op_dict,
-                          as_list_policy *policy, bool *found)
+as_status get_list_policy(as_error *err, PyObject *op_dict,
+                          as_list_policy *policy, bool *found,
+                          bool validate_keys)
 {
     *found = false;
 
