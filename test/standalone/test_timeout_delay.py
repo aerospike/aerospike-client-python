@@ -14,10 +14,11 @@ PORT = 3000
 
 # Using unittest to check that exception was raised
 class TestTimeoutDelay(unittest.TestCase):
-    def setUpClass(self):
-        self.docker_client = docker.from_env()
+    @classmethod
+    def setUpClass(cls):
+        cls.docker_client = docker.from_env()
         print("Running server container...")
-        self.container = self.docker_client.containers.run(
+        cls.container = cls.docker_client.containers.run(
             image="aerospike/aerospike-server",
             detach=True,
             ports={f"{PORT}/tcp": PORT},
@@ -33,17 +34,17 @@ class TestTimeoutDelay(unittest.TestCase):
                 ("127.0.0.1", PORT)
             ]
         }
-        self.client = aerospike.client(config)
+        cls.client = aerospike.client(config)
 
-        self.key = ("test", "demo", 1)
-        self.client.put(self.key, bins={"a": 1})
+        cls.key = ("test", "demo", 1)
+        cls.client.put(cls.key, bins={"a": 1})
 
-    def tearDownClass(self):
-        self.client.close()
+    def tearDownClass(cls):
+        cls.client.close()
 
-        self.container.stop()
-        self.container.remove()
-        self.docker_client.close()
+        cls.container.stop()
+        cls.container.remove()
+        cls.docker_client.close()
 
     E2E_LATENCY_MS = 2000
 
