@@ -113,9 +113,20 @@ class TestMetrics:
     def test_enable_metrics_with_valid_arg_types(self, policy):
         self.as_connection.enable_metrics(policy=policy)
 
-    def test_enable_metrics_with_invalid_arg(self):
+    @pytest.mark.parametrize(
+        "policy",
+        [
+            1,
+            # We're testing a negative code path in a helper function
+            # where the object's actual type belongs to aerospike_helpers but does not match the expected
+            # type from aerospike_helpers
+            # The actual type needs to be in the same submodule as the expected type (metrics in aerospike_helpers)
+            listeners
+        ]
+    )
+    def test_enable_metrics_with_invalid_arg(self, policy):
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.enable_metrics(1)
+            self.as_connection.enable_metrics(policy)
         assert excinfo.value.msg == "policy parameter must be an aerospike_helpers.MetricsPolicy type"
 
     def test_metrics_writer(self):
@@ -130,14 +141,7 @@ class TestMetrics:
         metrics_log_filenames = glob.glob("./metrics-*.log")
         assert len(metrics_log_filenames) > 0
 
-    @pytest.mark.parametrize(
-        "app_id",
-        [
-            "application",
-            None
-        ]
-    )
-    def test_setting_metrics_policy_custom_settings(self, app_id):
+    def test_setting_metrics_policy_custom_settings(self):
         self.metrics_log_folder = "./metrics-logs"
 
         # Save bucket count for testing later
@@ -150,7 +154,6 @@ class TestMetrics:
             latency_columns=bucket_count,
             latency_shift=2,
             labels={"a": "b"},
-            app_id=app_id
         )
 
         self.as_connection.enable_metrics(policy=policy)
@@ -298,11 +301,6 @@ class TestMetrics:
                 "labels",
                 "dict[str, str]"
             ),
-            (
-                MetricsPolicy(app_id=1),
-                "app_id",
-                "Optional[str]"
-            )
         ]
     )
     def test_metrics_policy_invalid_args(self, policy, field_name, expected_field_type):

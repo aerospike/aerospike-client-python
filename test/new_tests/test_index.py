@@ -7,6 +7,7 @@ from .test_base_class import TestBaseClass
 from aerospike import exception as e
 
 import aerospike
+from aerospike_helpers.expressions.base import GeoBin
 
 
 class TestIndex(object):
@@ -483,3 +484,26 @@ class TestIndex(object):
     def test_index_remove_wrong_arg_types(self, ns, idx_name, policy):
         with pytest.raises(e.ParamError):
             self.as_connection.index_remove(ns, idx_name, policy)
+
+    def test_index_expr_create_wrong_args(self):
+        with pytest.raises(TypeError):
+            # Missing a required argument
+            self.as_connection.index_expr_create(
+                ns="test",
+                set="demo",
+                index_type=aerospike.INDEX_TYPE_DEFAULT,
+                index_datatype=aerospike.INDEX_BLOB,
+                expressions=GeoBin("geo_point").compile()
+            )
+
+    def test_index_expr_create_invalid_expr(self):
+        with pytest.raises(e.ParamError):
+            self.as_connection.index_expr_create(
+                ns="test",
+                set="demo",
+                index_type=aerospike.INDEX_TYPE_DEFAULT,
+                index_datatype=aerospike.INDEX_BLOB,
+                # Common mistake: uncompiled expression
+                name="test",
+                expressions=GeoBin("geo_point")
+            )

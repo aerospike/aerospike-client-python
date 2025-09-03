@@ -19,6 +19,9 @@
 :class:`ConnectionStats`, :class:`NamespaceMetrics`, :class:`Node`, and :class:`Cluster` do not have a constructor
 because they are not meant to be created by the user. They are only meant to be returned from :class:`MetricsListeners`
 callbacks for reading data about the server and client.
+
+:class:`NodeStats` and :class:`ClusterStats` also do not have a constructor because they are meant to be returned using
+a Python client API method.
 """
 
 from typing import Optional, Callable
@@ -38,6 +41,13 @@ class ConnectionStats:
     pass
 
 
+_ERROR_COUNT_DOCSTRING = "Command error count since node was initialized. If the error is retryable, multiple errors \
+    per command may occur."
+_TIMEOUT_COUNT_DOCSTRING = "Command timeout count since node was initialized. If the timeout is retryable \
+    (i.e socket_timeout), multiple timeouts per command may occur."
+_KEY_BUSY_COUNT_DOCSTRING = "Command key busy error count since node was initialized."
+
+
 class NamespaceMetrics:
     """
     Namespace metrics.
@@ -49,11 +59,9 @@ class NamespaceMetrics:
         ns (str): namespace
         bytes_in (int): Bytes received from the server.
         bytes_out (int): Bytes sent to the server.
-        error_count (int): Command error count since node was initialized. If the error is retryable, multiple errors
-            per command may occur.
-        timeout_count (int): Command timeout count since node was initialized. If the timeout is retryable
-            (i.e socket_timeout), multiple timeouts per command may occur.
-        key_busy_count (int): Command key busy error count since node was initialized.
+        error_count (int): {}
+        timeout_count (int): {}
+        key_busy_count (int): {}
         conn_latency (list[int])
         write_latency (list[int])
         read_latency (list[int])
@@ -61,6 +69,14 @@ class NamespaceMetrics:
         query_latency (list[int])
     """
     pass
+
+
+if isinstance(NamespaceMetrics.__doc__, str):
+    NamespaceMetrics.__doc__ = NamespaceMetrics.__doc__.format(
+        _ERROR_COUNT_DOCSTRING,
+        _TIMEOUT_COUNT_DOCSTRING,
+        _KEY_BUSY_COUNT_DOCSTRING
+    )
 
 
 class Node:
@@ -88,6 +104,58 @@ class Cluster:
         nodes (list[:py:class:`Node`]): Active nodes in cluster.
     """
     pass
+
+
+# as_node_stats has a reference to the corresponding as_node object
+# Here, we are using specific as_node fields to identify that as_node instead of storing the full as_node.
+# Since as_node has a ton of fields, we don't want to return the whole as_node.
+#
+# We also don't want to have a reference to a Node class instance
+# because our Node class has fields we don't want to expose when returning ClusterStats to the user
+# i.e Node's namespace metrics when extended metrics is disabled.
+class NodeStats:
+    """Node statistics.
+
+    Attributes:
+        name: The name of the node.
+        address: The IP address / host name of the node (not including the port number).
+        port: Port number of the node's address.
+        conns: Synchronous connection stats on this node.
+        error_count: {}
+        timeout_count: {}
+        key_busy_count: {}
+    """
+    name: str
+    address: str
+    port: int
+    conns: ConnectionStats
+    error_count: int
+    timeout_count: int
+    key_busy_count: int
+
+
+if isinstance(NodeStats.__doc__, str):
+    NodeStats.__doc__ = NodeStats.__doc__.format(
+        _ERROR_COUNT_DOCSTRING,
+        _TIMEOUT_COUNT_DOCSTRING,
+        _KEY_BUSY_COUNT_DOCSTRING
+    )
+
+
+# - We don't need to expose as_cluster_stats.nodes_size since len(nodes) represents the number of nodes.
+class ClusterStats:
+    """
+    Cluster statistics.
+
+    Attributes:
+        nodes: Statistics for all nodes.
+        retry_count: Count of command retries since cluster was started.
+        thread_pool_queued_tasks: Count of sync batch/scan/query tasks awaiting execution.
+            If the count is greater than zero, then all threads in the thread pool are active.
+    """
+    nodes: list[NodeStats]
+    retry_count: int
+    thread_pool_queued_tasks: int
 
 
 class MetricsListeners:
@@ -135,6 +203,7 @@ class MetricsPolicy:
         latency_columns (int): Number of elapsed time range buckets in latency histograms.
         latency_shift (int): Power of 2 multiple between each range bucket in latency histograms starting at column 3.
             The bucket units are in milliseconds. The first 2 buckets are "<=1ms" and ">1ms".
+        labels (dict[str, str]): List of name/value labels that is applied when exporting metrics.
 
             Example::
 
@@ -153,7 +222,6 @@ class MetricsPolicy:
             latency_columns: int = 7,
             latency_shift: int = 1,
             labels: dict[str, str] = {},
-            app_id: Optional[str] = None
     ):
         self.metrics_listeners = metrics_listeners
         self.report_dir = report_dir
@@ -162,4 +230,3 @@ class MetricsPolicy:
         self.latency_columns = latency_columns
         self.latency_shift = latency_shift
         self.labels = labels
-        self.app_id = app_id
