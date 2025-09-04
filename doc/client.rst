@@ -1578,7 +1578,13 @@ Base Policies
 
             .. note:: Requires Aerospike server version >= 5.2.
 
-        * .. include:: ./txn.rst
+        **txn** (:class:`aerospike.Transaction`)
+
+            NOTE: this policy does not work for config level policies.
+
+            Transaction command identifier.
+
+            Default: :py:obj:`None`
 
 .. _aerospike_write_policies:
 
