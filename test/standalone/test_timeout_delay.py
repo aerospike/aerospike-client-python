@@ -104,7 +104,7 @@ class TestTimeoutDelay(unittest.TestCase):
                 with self.assertRaises(e.TimeoutError):
                     self.client.get(key=self.key, policy=policy)
 
-                time.sleep(timeout_delay_ms)
+                time.sleep(timeout_delay_ms / 1000)
 
                 # By now, we have passed the timeout delay window
                 cluster_stats = self.client.get_stats()
