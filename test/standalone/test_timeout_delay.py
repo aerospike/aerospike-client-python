@@ -40,16 +40,8 @@ class TestTimeoutDelay(unittest.TestCase):
         cls.key = ("test", "demo", 1)
         cls.client.put(cls.key, bins={"a": 1})
 
-    def tearDownClass(cls):
-        cls.client.close()
-
-        cls.container.stop()
-        cls.container.remove()
-        cls.docker_client.close()
-
-    E2E_LATENCY_MS = 2000
-
-    def test_case(self):
+    @staticmethod
+    def inject_e2e_latency(latency_ms: int):
         env = os.environ.copy()
         inject_latency_command = [
             "sudo",
@@ -60,10 +52,24 @@ class TestTimeoutDelay(unittest.TestCase):
             "--delay",
             # e2e latency should be less than the client's timeout delay window
             # We want to test that the server does return a response after the timeout delay
-            f"{self.E2E_LATENCY_MS}ms"
+            f"{latency_ms}ms"
         ]
         subprocess.run(args=inject_latency_command, check=True, env=env)
 
+    @classmethod
+    def tearDownClass(cls):
+        # Remove e2e latency
+        cls.inject_e2e_latency(0)
+
+        cls.client.close()
+
+        cls.container.stop()
+        cls.container.remove()
+        cls.docker_client.close()
+
+    E2E_LATENCY_MS = 2000
+
+    def test_case(self):
         test_cases = [
             # The connection will receive a response before the timeout delay window ends
             # So the connection will be returned to the pool.
@@ -72,6 +78,8 @@ class TestTimeoutDelay(unittest.TestCase):
             # So the connection will be destroyed.
             TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 0.5, expected_aborted_count=1, expected_recovered_count=0),
         ]
+
+        self.inject_e2e_latency(self.E2E_LATENCY_MS)
 
         for timeout_delay_ms, expected_abort_count, expected_recovered_count in test_cases:
             with self.subTest(
