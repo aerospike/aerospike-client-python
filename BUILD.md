@@ -199,6 +199,8 @@ Once the client is built:
 
 ## Examples
 
+**Note** These examples are outdated and unmaintained, and will be removed in the near future.
+
 **Note** If you did not install the library, then you will need to setup your `PYTHONPATH` environment variable. The `PYTHONPATH` should contain an entry for the directory where the Python module is stored. This is usually in `build/lib.*`.
 
 Examples are in the `examples` directory. The following examples are available:
