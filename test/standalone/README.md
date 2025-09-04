@@ -13,5 +13,4 @@ Reason for test: `new_tests` does not manipulate the server.
 Reason for test: The client in `new_tests` does not expect a cluster name. Also, the cluster name can change depending
 on the server configuration.
 
-- `test_timeout_delay.py`: latency must be introduced between the client and server, and `tcconfig` needs
-the Docker container name of the server.
+- `test_timeout_delay.py` requires `tcconfig` to introduce latency between the client and server. It also requires Docker.

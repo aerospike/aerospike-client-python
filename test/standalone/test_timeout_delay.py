@@ -40,14 +40,6 @@ class TestTimeoutDelay(unittest.TestCase):
         cls.docker_client.close()
 
     def setUp(self):
-        remove_latency_command = [
-            "sudo",
-            "tcdel",
-            CONTAINER_NAME,
-            "--docker"
-        ]
-        subprocess.run(args=remove_latency_command, check=True)
-
         config = {
             "hosts": [
                 ("127.0.0.1", PORT)
@@ -59,6 +51,16 @@ class TestTimeoutDelay(unittest.TestCase):
         self.client.put(self.key, bins={"a": 1})
 
     def tearDown(self):
+        inject_latency_command = [
+            "sudo",
+            "tcdel",
+            CONTAINER_NAME,
+            "--docker",
+            "--all"
+        ]
+        print("Injecting latency")
+        subprocess.run(args=inject_latency_command, check=True)
+
         self.client.close()
 
     @staticmethod
@@ -73,6 +75,7 @@ class TestTimeoutDelay(unittest.TestCase):
             # We want to test that the server does return a response after the timeout delay
             f"{latency_ms}ms"
         ]
+        print("Injecting latency")
         subprocess.run(args=inject_latency_command, check=True)
 
     E2E_LATENCY_MS = 2000
