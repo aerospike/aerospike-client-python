@@ -108,8 +108,8 @@ class TestTimeoutDelay(unittest.TestCase):
 
                 # By now, we have passed the timeout delay window
                 cluster_stats = self.client.get_stats()
-                assert cluster_stats.nodes[0].conns.aborted == expected_abort_count
-                assert cluster_stats.nodes[0].conns.recovered == expected_recovered_count
+                self.assertEqual(cluster_stats.nodes[0].conns.aborted, expected_abort_count)
+                self.assertEqual(cluster_stats.nodes[0].conns.recovered, expected_recovered_count)
 
 
 if __name__ == "__main__":
