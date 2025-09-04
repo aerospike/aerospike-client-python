@@ -32,9 +32,6 @@ class TestTimeoutDelay(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        # Remove e2e latency
-        cls.client.close()
-
         cls.container.stop()
         cls.container.remove()
         cls.docker_client.close()
@@ -51,15 +48,14 @@ class TestTimeoutDelay(unittest.TestCase):
         self.client.put(self.key, bins={"a": 1})
 
     def tearDown(self):
-        inject_latency_command = [
+        del_latency_command = [
             "sudo",
             "tcdel",
             CONTAINER_NAME,
             "--docker",
             "--all"
         ]
-        print("Injecting latency")
-        subprocess.run(args=inject_latency_command, check=True)
+        subprocess.run(args=del_latency_command, check=True)
 
         self.client.close()
 
@@ -78,7 +74,8 @@ class TestTimeoutDelay(unittest.TestCase):
         print("Injecting latency")
         subprocess.run(args=inject_latency_command, check=True)
 
-    E2E_LATENCY_MS = 2000
+    # latency is this high because timeout_delay must be >= 3000ms
+    E2E_LATENCY_MS = 6000
 
     def test_case(self):
         test_cases = [
@@ -87,14 +84,13 @@ class TestTimeoutDelay(unittest.TestCase):
             TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 2, expected_aborted_count=0, expected_recovered_count=1),
             # The connection will not receive a response during the timeout delay window
             # So the connection will be destroyed.
-            TestCase(timeout_delay_ms=self.E2E_LATENCY_MS * 0.5, expected_aborted_count=1, expected_recovered_count=0),
+            TestCase(timeout_delay_ms=self.E2E_LATENCY_MS // 2, expected_aborted_count=1, expected_recovered_count=0),
         ]
 
         self.inject_e2e_latency(self.E2E_LATENCY_MS)
 
         for timeout_delay_ms, expected_abort_count, expected_recovered_count in test_cases:
             with self.subTest(
-                input=timeout_delay_ms,
                 timeout_delay_ms=timeout_delay_ms,
                 expected_abort_count=expected_abort_count,
                 expected_recovered_count=expected_recovered_count
