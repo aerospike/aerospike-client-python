@@ -11,6 +11,8 @@ TestCase = namedtuple("TestCase", ["timeout_delay_ms", "expected_aborted_count",
 CONTAINER_NAME = "aerospike"
 PORT = 3000
 
+aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
+
 
 # Using unittest to check that exception was raised
 class TestTimeoutDelay(unittest.TestCase):
@@ -40,7 +42,8 @@ class TestTimeoutDelay(unittest.TestCase):
         config = {
             "hosts": [
                 ("127.0.0.1", PORT)
-            ]
+            ],
+            "tend_interval": 30000
         }
         self.client = aerospike.client(config)
 
