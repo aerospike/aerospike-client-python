@@ -1,7 +1,6 @@
 import unittest
 import subprocess
 import time
-import os
 from collections import namedtuple
 
 import docker
@@ -26,26 +25,46 @@ class TestTimeoutDelay(unittest.TestCase):
             name=CONTAINER_NAME,
             remove=True
         )
+
         # TODO: reuse script from .github/workflows instead
         print("Waiting for server to initialize...")
         time.sleep(5)
+
+    @classmethod
+    def tearDownClass(cls):
+        # Remove e2e latency
+        cls.client.close()
+
+        cls.container.stop()
+        cls.container.remove()
+        cls.docker_client.close()
+
+    def setUp(self):
+        remove_latency_command = [
+            "sudo",
+            "tcdel",
+            CONTAINER_NAME,
+            "--docker"
+        ]
+        subprocess.run(args=remove_latency_command, check=True)
 
         config = {
             "hosts": [
                 ("127.0.0.1", PORT)
             ]
         }
-        cls.client = aerospike.client(config)
+        self.client = aerospike.client(config)
 
-        cls.key = ("test", "demo", 1)
-        cls.client.put(cls.key, bins={"a": 1})
+        self.key = ("test", "demo", 1)
+        self.client.put(self.key, bins={"a": 1})
+
+    def tearDown(self):
+        self.client.close()
 
     @staticmethod
     def inject_e2e_latency(latency_ms: int):
-        env = os.environ.copy()
         inject_latency_command = [
             "sudo",
-            "-E",
             "tcset",
             CONTAINER_NAME,
             "--docker",
@@ -54,18 +73,7 @@ class TestTimeoutDelay(unittest.TestCase):
             # We want to test that the server does return a response after the timeout delay
             f"{latency_ms}ms"
         ]
-        subprocess.run(args=inject_latency_command, check=True, env=env)
-
-    @classmethod
-    def tearDownClass(cls):
-        # Remove e2e latency
-        cls.inject_e2e_latency(0)
-
-        cls.client.close()
-
-        cls.container.stop()
-        cls.container.remove()
-        cls.docker_client.close()
+        subprocess.run(args=inject_latency_command, check=True)
 
     E2E_LATENCY_MS = 2000
 
@@ -88,8 +96,8 @@ class TestTimeoutDelay(unittest.TestCase):
                 expected_abort_count=expected_abort_count,
                 expected_recovered_count=expected_recovered_count
             ):
-                # Should cause first command to timeout
                 policy = {
+                    # total_timeout should cause get() to timeout and trigger timeout delay window
                     "total_timeout": 1,
                     "timeout_delay": timeout_delay_ms
                 }
