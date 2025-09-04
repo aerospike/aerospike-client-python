@@ -73,6 +73,7 @@ class TestTimeoutDelay(unittest.TestCase):
         ]
         print("Injecting latency")
         subprocess.run(args=inject_latency_command, check=True)
+        print("Done")
 
     # latency is this high because timeout_delay must be >= 3000ms
     E2E_LATENCY_MS = 6000
