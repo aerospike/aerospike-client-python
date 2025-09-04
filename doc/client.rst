@@ -1583,7 +1583,7 @@ Base Policies
 
             .. note:: Requires Aerospike server version >= 5.2.
 
-        **txn** (:class:`aerospike.Transaction`)
+        * **txn** (:class:`aerospike.Transaction`)
 
             NOTE: this policy does not work for config level policies.
 
