@@ -95,8 +95,8 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
         base64_filter = (char *)DELETE_CURRENT_XDR_FILTER;
     }
     else {
-        if (convert_exp_list(self, py_expression_filter, &exp_list_p, &err) !=
-            AEROSPIKE_OK) {
+        if (as_exp_new_from_pyobject(self, py_expression_filter, &exp_list_p,
+                                     &err, false) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
 
