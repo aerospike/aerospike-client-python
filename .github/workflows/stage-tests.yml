@@ -69,8 +69,6 @@ jobs:
           ["python:3.12-bookworm", 2, "linux/arm64", "3.12"],
           ["python:3.13-bookworm", 2, "linux/amd64", "3.13"],
           ["python:3.13-bookworm", 2, "linux/arm64", "3.13"],
-          ["python:3.14-bookworm", 2, "linux/amd64", "3.14"],
-          ["python:3.14-bookworm", 2, "linux/arm64", "3.14"],
           ["redhat/ubi8", 2, "linux/amd64", "3.11"],
           ["redhat/ubi8", 2, "linux/arm64", "3.11"],
           ["redhat/ubi9", 2, "linux/amd64", "3.9"],
