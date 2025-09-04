@@ -1546,7 +1546,7 @@ Base Policies
             | Default for the other policies: ``1000``
         * **timeout_delay** (:class:`int`)
             Number of milliseconds to wait after a socket read times out before closing the socket for
-            good.  If set to zero, this feature will be disabled.
+            good. If set to zero, this feature will be disabled.
 
             If, upon performing a database operation, the host finds the socket it was using timing out
             while reading, the client will receive a timeout error.  However, we don't always want to
