@@ -1505,12 +1505,16 @@ Base Policies
         :columns: 1
 
         * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current command. The initial attempt is not counted as a
-            | retry.
-            |
-            | If max_retries is exceeded, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
+            Maximum number of retries before aborting the current command. The initial attempt is not counted as a
+            retry.
+
+            If max_retries is exceeded:
+
+            - For query policies, the command will the last suberror that was received.
+            - For the other policies, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
+
+            Default for :ref:`aerospike_read_policies` and :ref:`aerospike_batch_policies`: ``2``
+            Default for the other policies: ``0``
 
             .. warning:: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
                 if the client timed out previous command attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
@@ -1538,7 +1542,8 @@ Base Policies
             | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will
             | return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
-            | Default: ``1000``
+            | Default for :ref:`aerospike_query_policies`: ``0``
+            | Default for the other policies: ``1000``
         * **timeout_delay** (:class:`int`)
             Number of milliseconds to wait after a socket read times out before closing the socket for
             good.  If set to zero, this feature will be disabled.
