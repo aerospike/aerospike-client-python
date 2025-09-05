@@ -1,3 +1,4 @@
+import aerospike
 import unittest
 import subprocess
 import time
@@ -5,7 +6,6 @@ from collections import namedtuple
 import os
 
 import docker
-import aerospike
 from aerospike import exception as e
 
 TestCase = namedtuple(
@@ -139,6 +139,8 @@ class TestTimeoutDelay(unittest.TestCase):
 
                 print(cluster_stats.nodes[0].conns.aborted)
                 print(cluster_stats.nodes[0].conns.recovered)
+                # DEBUG: check if server reaped a client connection
+                self.container.exec_run(cmd="asinfo -v 'statistics' -l")
 
                 self.assertEqual(
                     cluster_stats.nodes[0].conns.aborted, expected_abort_count
@@ -147,8 +149,6 @@ class TestTimeoutDelay(unittest.TestCase):
                     cluster_stats.nodes[0].conns.recovered, expected_recovered_count
                 )
 
-                # DEBUG: check if server reaped a client connection
-                self.container.exec_run(cmd="asinfo -v 'statistics' -l | grep 'reaped_fds'")
 
 
 if __name__ == "__main__":
