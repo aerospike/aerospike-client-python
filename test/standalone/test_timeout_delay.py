@@ -32,7 +32,7 @@ class TestTimeoutDelay(unittest.TestCase):
             },
             remove=True,
             name=CONTAINER_NAME,
-            command=["--config-file", CUSTOM_AEROSPIKE_CONF_FOLDER]
+            command=["--config-file", f"{CUSTOM_AEROSPIKE_CONF_FOLDER}/aerospike.conf"]
         )
 
         # TODO: reuse script from .github/workflows instead
