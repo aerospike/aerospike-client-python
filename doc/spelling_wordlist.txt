@@ -89,3 +89,4 @@ func
 bcrypt
 namespaces
 yaml
+suberror
