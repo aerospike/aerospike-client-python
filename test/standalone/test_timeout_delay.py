@@ -19,13 +19,20 @@ class TestTimeoutDelay(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.docker_client = docker.from_env()
+        CUSTOM_AEROSPIKE_CONF_FOLDER="/opt/aerospike/etc"
         print("Running server container...")
         cls.container = cls.docker_client.containers.run(
             image="aerospike/aerospike-server",
             detach=True,
             ports={f"{PORT}/tcp": PORT},
+            volumes={
+                "./server-config/": {
+                    "bind": CUSTOM_AEROSPIKE_CONF_FOLDER
+                }
+            },
+            remove=True,
             name=CONTAINER_NAME,
-            remove=True
+            command=["--config-file", CUSTOM_AEROSPIKE_CONF_FOLDER]
         )
 
         # TODO: reuse script from .github/workflows instead
