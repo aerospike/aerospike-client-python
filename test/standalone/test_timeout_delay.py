@@ -2,12 +2,16 @@ import unittest
 import subprocess
 import time
 from collections import namedtuple
+import os
 
 import docker
 import aerospike
 from aerospike import exception as e
 
-TestCase = namedtuple("TestCase", ["timeout_delay_ms", "expected_aborted_count", "expected_recovered_count"])
+TestCase = namedtuple(
+    "TestCase",
+    ["timeout_delay_ms", "expected_aborted_count", "expected_recovered_count"],
+)
 CONTAINER_NAME = "aerospike"
 PORT = 3000
 
@@ -19,20 +23,24 @@ class TestTimeoutDelay(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.docker_client = docker.from_env()
-        CUSTOM_AEROSPIKE_CONF_FOLDER="/opt/aerospike/etc"
+        CUSTOM_AEROSPIKE_CONF_FOLDER = "/opt/aerospike/etc/"
         print("Running server container...")
+
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+
         cls.container = cls.docker_client.containers.run(
             image="aerospike/aerospike-server",
             detach=True,
             ports={f"{PORT}/tcp": PORT},
             volumes={
-                "./server-config/": {
-                    "bind": CUSTOM_AEROSPIKE_CONF_FOLDER
+                f"{script_dir}/server-config/": {
+                    "bind": CUSTOM_AEROSPIKE_CONF_FOLDER,
+                    "mode": "ro",
                 }
             },
             remove=True,
             name=CONTAINER_NAME,
-            command=["--config-file", f"{CUSTOM_AEROSPIKE_CONF_FOLDER}/aerospike.conf"]
+            command=["--config-file", f"{CUSTOM_AEROSPIKE_CONF_FOLDER}/aerospike.conf"],
         )
 
         # TODO: reuse script from .github/workflows instead
@@ -41,6 +49,7 @@ class TestTimeoutDelay(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
+        subprocess.run(args=["docker", "logs", CONTAINER_NAME])
         cls.container.stop()
         cls.docker_client.close()
 
@@ -57,7 +66,7 @@ class TestTimeoutDelay(unittest.TestCase):
             #
             # We want connect_timeout > injected latency so the node refresh doesn't fail
             # Otherwise the node will be dropped after 5 tend iterations
-            "connect_timeout": self.INJECTED_LATENCY_MS * 2
+            "connect_timeout": self.INJECTED_LATENCY_MS * 2,
         }
         self.client = aerospike.client(config)
 
@@ -65,13 +74,7 @@ class TestTimeoutDelay(unittest.TestCase):
         self.client.put(self.key, bins={"a": 1})
 
     def tearDown(self):
-        DELETE_LATENCY_COMMAND = [
-            "sudo",
-            "tcdel",
-            CONTAINER_NAME,
-            "--docker",
-            "--all"
-        ]
+        DELETE_LATENCY_COMMAND = ["sudo", "tcdel", CONTAINER_NAME, "--docker", "--all"]
         subprocess.run(args=DELETE_LATENCY_COMMAND, check=True)
 
         self.client.close()
@@ -86,7 +89,7 @@ class TestTimeoutDelay(unittest.TestCase):
             "--delay",
             # e2e latency should be less than the client's timeout delay window
             # We want to test that the server does return a response after the timeout delay
-            f"{latency_ms}ms"
+            f"{latency_ms}ms",
         ]
         print("Injecting latency")
         subprocess.run(args=inject_latency_command, check=True)
@@ -97,25 +100,37 @@ class TestTimeoutDelay(unittest.TestCase):
             # latency window < timeout delay window
             # The connection will receive a response before the timeout delay window ends
             # So the connection will be returned to the pool.
-            TestCase(timeout_delay_ms=self.INJECTED_LATENCY_MS * 2, expected_aborted_count=0, expected_recovered_count=1),
+            TestCase(
+                timeout_delay_ms=self.INJECTED_LATENCY_MS * 2,
+                expected_aborted_count=0,
+                expected_recovered_count=1,
+            ),
             # latency window > timeout delay window
             # The connection will not receive a response during the timeout delay window
             # So the connection will be destroyed.
-            TestCase(timeout_delay_ms=self.INJECTED_LATENCY_MS // 2, expected_aborted_count=1, expected_recovered_count=0),
+            TestCase(
+                timeout_delay_ms=self.INJECTED_LATENCY_MS // 2,
+                expected_aborted_count=1,
+                expected_recovered_count=0,
+            ),
         ]
 
         self.inject_e2e_latency(self.INJECTED_LATENCY_MS)
 
-        for timeout_delay_ms, expected_abort_count, expected_recovered_count in test_cases:
+        for (
+            timeout_delay_ms,
+            expected_abort_count,
+            expected_recovered_count,
+        ) in test_cases:
             with self.subTest(
                 timeout_delay_ms=timeout_delay_ms,
                 expected_abort_count=expected_abort_count,
-                expected_recovered_count=expected_recovered_count
+                expected_recovered_count=expected_recovered_count,
             ):
                 policy = {
                     # total_timeout should cause get() to timeout and trigger timeout delay window
                     "total_timeout": 1,
-                    "timeout_delay": timeout_delay_ms
+                    "timeout_delay": timeout_delay_ms,
                 }
                 with self.assertRaises(e.TimeoutError):
                     self.client.get(key=self.key, policy=policy)
@@ -125,8 +140,12 @@ class TestTimeoutDelay(unittest.TestCase):
                 # By now, we have passed the timeout delay window
                 # And we assume the tend thread has reaped or drained the connection
                 cluster_stats = self.client.get_stats()
-                self.assertEqual(cluster_stats.nodes[0].conns.aborted, expected_abort_count)
-                self.assertEqual(cluster_stats.nodes[0].conns.recovered, expected_recovered_count)
+                self.assertEqual(
+                    cluster_stats.nodes[0].conns.aborted, expected_abort_count
+                )
+                self.assertEqual(
+                    cluster_stats.nodes[0].conns.recovered, expected_recovered_count
+                )
 
 
 if __name__ == "__main__":
