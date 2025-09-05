@@ -62,6 +62,8 @@ class TestUserSerializer(object):
                     if int(versionlist[0]) >= 3 and int(versionlist[1]) >= 6:
                         TestUserSerializer.skip_old_server = False
 
+        print(TestUserSerializer.skip_old_server)
+
     def teardown_class(cls):
         TestUserSerializer.client.close()
         aerospike.unset_serializers()
