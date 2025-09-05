@@ -37,12 +37,15 @@ class TestTimeoutDelay(unittest.TestCase):
         cls.container.stop()
         cls.docker_client.close()
 
+    # latency is this high because timeout_delay must be >= 3000ms
+    E2E_LATENCY_MS = 6000
+
     def setUp(self):
         config = {
             "hosts": [
                 ("127.0.0.1", PORT)
             ],
-            "tend_interval": 30000
+            "tend_interval": self.E2E_LATENCY_MS // 2
         }
         self.client = aerospike.client(config)
 
@@ -76,9 +79,6 @@ class TestTimeoutDelay(unittest.TestCase):
         print("Injecting latency")
         subprocess.run(args=inject_latency_command, check=True)
         print("Done")
-
-    # latency is this high because timeout_delay must be >= 3000ms
-    E2E_LATENCY_MS = 6000
 
     def test_case(self):
         test_cases = [
