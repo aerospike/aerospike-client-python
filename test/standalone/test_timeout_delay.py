@@ -117,11 +117,7 @@ class TestTimeoutDelay(unittest.TestCase):
 
         self.inject_e2e_latency(self.INJECTED_LATENCY_MS)
 
-        for (
-            timeout_delay_ms,
-            expected_abort_count,
-            expected_recovered_count,
-        ) in test_cases:
+        for timeout_delay_ms, expected_abort_count, expected_recovered_count in test_cases:
             with self.subTest(
                 timeout_delay_ms=timeout_delay_ms,
                 expected_abort_count=expected_abort_count,
