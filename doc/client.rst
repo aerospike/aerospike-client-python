@@ -1515,7 +1515,7 @@ Write Policies
             and it's acceptable to allow extra time to create a new connection compared to using an
             existing connection from the pool.
 
-            Default: 0
+            Default: ``0``
 
         * **max_retries** (:class:`int`)
             | Maximum number of retries before aborting the current command. The initial attempt is not counted as a retry.
