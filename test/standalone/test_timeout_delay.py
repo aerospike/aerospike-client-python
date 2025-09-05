@@ -35,7 +35,6 @@ class TestTimeoutDelay(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.container.stop()
-        cls.container.remove()
         cls.docker_client.close()
 
     def setUp(self):
