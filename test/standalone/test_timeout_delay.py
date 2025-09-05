@@ -116,6 +116,7 @@ class TestTimeoutDelay(unittest.TestCase):
                 time.sleep(timeout_delay_ms / 1000)
 
                 # By now, we have passed the timeout delay window
+                # And we assume the tend thread has reaped or drained the connection
                 cluster_stats = self.client.get_stats()
                 self.assertEqual(cluster_stats.nodes[0].conns.aborted, expected_abort_count)
                 self.assertEqual(cluster_stats.nodes[0].conns.recovered, expected_recovered_count)
