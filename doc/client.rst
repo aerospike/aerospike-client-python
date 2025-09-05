@@ -1503,6 +1503,19 @@ Write Policies
 
     .. hlist::
         :columns: 1
+        * **connect_timeout** (:class:`int`)
+            Socket connect timeout in milliseconds. If ``connect_timeout`` greater than zero, it will
+            be applied to creating a connection plus optional user authentication. Otherwise,
+            ``socket_timeout`` or ``total_timeout`` will be used depending on their values.
+
+            If connect, socket and total timeouts are zero, the actual socket connect timeout
+            is hard-coded to ``2000ms``.
+
+            ``connect_timeout`` is useful when new connection creation is expensive (ie TLS connections)
+            and it's acceptable to allow extra time to create a new connection compared to using an
+            existing connection from the pool.
+
+            Default: 0
 
         * **max_retries** (:class:`int`)
             | Maximum number of retries before aborting the current command. The initial attempt is not counted as a retry.
