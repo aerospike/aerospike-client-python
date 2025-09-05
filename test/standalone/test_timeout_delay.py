@@ -124,8 +124,10 @@ class TestTimeoutDelay(unittest.TestCase):
                 expected_recovered_count=expected_recovered_count,
             ):
                 policy = {
-                    # total_timeout should cause get() to timeout and trigger timeout delay window
-                    "total_timeout": 1,
+                    # socket_timeout should cause get() to timeout and trigger timeout delay window
+                    "socket_timeout": 1,
+                    "max_retries": 0,
+                    "total_timeout": 99999,
                     "timeout_delay": timeout_delay_ms,
                 }
                 with self.assertRaises(e.TimeoutError):
@@ -140,7 +142,8 @@ class TestTimeoutDelay(unittest.TestCase):
                 print(cluster_stats.nodes[0].conns.aborted)
                 print(cluster_stats.nodes[0].conns.recovered)
                 # DEBUG: check if server reaped a client connection
-                self.container.exec_run(cmd="asinfo -v 'statistics' -l")
+                _, stdout = self.container.exec_run(cmd="asinfo -v 'statistics' -l")
+                print(stdout)
 
                 self.assertEqual(
                     cluster_stats.nodes[0].conns.aborted, expected_abort_count
