@@ -143,6 +143,9 @@ class TestTimeoutDelay(unittest.TestCase):
                     cluster_stats.nodes[0].conns.recovered, expected_recovered_count
                 )
 
+                # DEBUG: check if server reaped a client connection
+                self.container.exec_run(cmd="asinfo -v 'statistics' -l | grep 'reaped_fds'")
+
 
 if __name__ == "__main__":
     unittest.main()
