@@ -15,6 +15,7 @@ class SomeClass(object):
 
 
 def serialize_function_old_server(val):
+    print("Old deserialize")
     return marshal.dumps(val)
 
 
@@ -32,10 +33,12 @@ def client_serialize_function(val):
 
 
 def deserialize_function(val):
+    print("New deserialize")
     return json.loads(val)
 
 
 def deserialize_function_old_server(val):
+    print("Old deserialize")
     return marshal.loads(val)
 
 
