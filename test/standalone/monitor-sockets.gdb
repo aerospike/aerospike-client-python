@@ -15,6 +15,20 @@ p socket
 c
 end
 
+# Track when booleans are set that cause connection to be aborted while draining
+b as_conn_recover.c:222
+commands
+watch -l must_abort
+commands
+c
+end
+watch -l timeout_exception
+commands
+c
+end
+c
+end
+
 b as_socket_close
 command $bpnum
 bt 10 
