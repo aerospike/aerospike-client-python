@@ -94,7 +94,6 @@ class TestTimeoutDelay(unittest.TestCase):
         ]
         print("Injecting latency")
         subprocess.run(args=inject_latency_command, check=True)
-        print("Done")
 
     def test_case(self):
         test_cases = [
@@ -131,10 +130,13 @@ class TestTimeoutDelay(unittest.TestCase):
                     "total_timeout": 99999,
                     "timeout_delay": timeout_delay_ms,
                 }
+                print("Trigger socket timeout and start timeout delay window...")
                 with self.assertRaises(e.TimeoutError):
                     self.client.get(key=self.key, policy=policy)
 
                 time.sleep(timeout_delay_ms / 1000)
+
+                print("Timeout delay window has ended.")
 
                 # By now, we have passed the timeout delay window
                 # And we assume the tend thread has attempted to drain the connection
