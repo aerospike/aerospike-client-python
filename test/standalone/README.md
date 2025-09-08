@@ -14,3 +14,7 @@ Reason for test: The client in `new_tests` does not expect a cluster name. Also,
 on the server configuration.
 
 - `test_timeout_delay.py` requires `tcconfig` to introduce latency between the client and server. It also requires Docker.
+
+Reason for test: we need a specific server config where `keepalive-enabled` is `false`, so that the server doesn't
+close the client connection. `proto-fd-idle-ms` seems to be the right server option, but it was deprecated in favor of
+`keep-alive`: https://aerospike.com/docs/database/reference/config/#service__proto-fd-idle-ms

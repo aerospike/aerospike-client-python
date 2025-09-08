@@ -15,6 +15,8 @@ TestCase = namedtuple(
 CONTAINER_NAME = "aerospike"
 PORT = 3000
 
+# We want to see if the client closes connections on it's end
+# This is useful for debugging the client when the test cases fail
 aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 
 
@@ -64,8 +66,9 @@ class TestTimeoutDelay(unittest.TestCase):
             ],
             # The default 1000ms tend interval runs frequently enough for this test
             #
-            # We want connect_timeout > injected latency so the node refresh doesn't fail
-            # Otherwise the node will be dropped after 5 tend iterations
+            # We want connect_timeout > tend interval so the node refresh doesn't fail
+            # Otherwise the node will eventually be dropped after 5 tend iterations
+            # because x node refresh attempt fails (x = 5 tend iterations)
             "connect_timeout": self.INJECTED_LATENCY_MS * 2,
         }
         self.client = aerospike.client(config)
@@ -87,8 +90,6 @@ class TestTimeoutDelay(unittest.TestCase):
             CONTAINER_NAME,
             "--docker",
             "--delay",
-            # e2e latency should be less than the client's timeout delay window
-            # We want to test that the server does return a response after the timeout delay
             f"{latency_ms}ms",
         ]
         print("Injecting latency")
@@ -136,14 +137,15 @@ class TestTimeoutDelay(unittest.TestCase):
                 time.sleep(timeout_delay_ms / 1000)
 
                 # By now, we have passed the timeout delay window
-                # And we assume the tend thread has reaped or drained the connection
+                # And we assume the tend thread has attempted to drain the connection
                 cluster_stats = self.client.get_stats()
 
-                print(cluster_stats.nodes[0].conns.aborted)
-                print(cluster_stats.nodes[0].conns.recovered)
+                print("Num aborted:", cluster_stats.nodes[0].conns.aborted)
+                print("Num recovered:", cluster_stats.nodes[0].conns.recovered)
+
                 # DEBUG: check if server reaped a client connection
-                _, stdout = self.container.exec_run(cmd="asinfo -v 'statistics' -l")
-                print(stdout)
+                _, stdout = self.container.exec_run(cmd='sh -c "asinfo -v \'statistics\' -l | grep reaped_fds"')
+                print("Number of client connections reaped by server:", stdout)
 
                 self.assertEqual(
                     cluster_stats.nodes[0].conns.aborted, expected_abort_count
@@ -151,7 +153,6 @@ class TestTimeoutDelay(unittest.TestCase):
                 self.assertEqual(
                     cluster_stats.nodes[0].conns.recovered, expected_recovered_count
                 )
-
 
 
 if __name__ == "__main__":
