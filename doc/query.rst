@@ -38,7 +38,7 @@ See available write operations at :mod:`aerospike_helpers.operations`.
 Query Aggregations
 ------------------
 
-A `stream UDF <https://aerospike.com/developer/udf/developing_stream_udfs>`_ \
+A `stream UDF <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_ \
 may be applied with :meth:`~aerospike.Query.apply`. It will aggregate results out of the \
 records streaming back from the query.
 
@@ -108,6 +108,8 @@ Assume this boilerplate code is run before all examples below:
         Set a filter on the record bins resulting from :meth:`results` or \
         :meth:`foreach`.
 
+        If this method is called more than once on the same query instance, a :py:exc:`~aerospike.exception.ClientError` exception will be raised.
+
         If a selected bin does not exist in a record it will not appear in the *bins* portion of that record tuple.
 
     .. method:: where(predicate[, ctx])
@@ -115,6 +117,8 @@ Assume this boilerplate code is run before all examples below:
         Set a where *predicate* for the query.
 
         You can only assign at most one predicate to the query.
+        If this method is called more than once on the same query instance, a :py:exc:`~aerospike.exception.ClientError` exception will be raised.
+
         If this function isn't called, the query will behave similar to :class:`aerospike.Scan`.
 
         :param tuple predicate: the :class:`tuple` produced by either :meth:`~aerospike.predicates.equals` or :meth:`~aerospike.predicates.between`.
@@ -122,16 +126,23 @@ Assume this boilerplate code is run before all examples below:
 
     .. method:: where_with_expr(expr, predicate)
 
-        Add an expression *predicate* to the query. Predicate must not have a bin name set.
+        Add an expression *predicate* to the query.
+
+        Predicate must have the bin name set to :py:obj:`None`.
 
         You can only assign at most one predicate to the query.
 
-        :param expr: Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
+        :param aerospike_helpers.expressions.resources.TypeExpression | str expr:
+            Compiled aerospike expressions produced from :ref:`aerospike_operation_helpers.expressions`.
+            Alternatively, you can pass in a base64 encoded string of an expression returned from asinfo when printing
+            a list of secondary indexes based on expressions in the server.
         :param tuple predicate: the :class:`tuple` produced from :mod:`aerospike.predicates`
 
     .. method:: where_with_index_name(index_name, predicate)
 
-        Add an index name *predicate* to the query. Predicate must not have a bin name set.
+        Add an index name *predicate* to the query.
+
+        Predicate must have the bin name set to :py:obj:`None`.
 
         You can only assign at most one predicate to the query.
 
@@ -242,7 +253,7 @@ Assume this boilerplate code is run before all examples below:
         :param list arguments: optional arguments to pass to the *function*. NOTE: these arguments must be types supported by Aerospike See: `supported data types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
             If you need to use an unsupported type, (e.g. set or tuple) you must use your own serializer.
 
-        .. seealso:: `Developing Stream UDFs <https://aerospike.com/developer/udf/developing_stream_udfs>`_
+        .. seealso:: `Developing Stream UDFs <https://aerospike.com/docs/database/advanced/udf/modules/stream/develop>`_
 
         Example: find the first name distribution of users who are 21 or older using \
         a query aggregation:

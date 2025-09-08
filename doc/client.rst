@@ -622,7 +622,7 @@ User Defined Functions
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <https://aerospike.com/docs/server/guide/record_udf>`_ \
-          and `Developing Record UDFs <https://aerospike.com/developer/udf/developing_record_udfs>`_.
+          and `Developing Record UDFs <https://aerospike.com/docs/database/advanced/udf/modules/record/develop>`_.
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
@@ -876,7 +876,7 @@ Index Operations
 
         :param str ns: The namespace to be indexed.
         :param str set: The set to be indexed.
-        :param str index_type: The type of index, default or complex type.
+        :param index_type: See :ref:`aerospike_index_types` for possible values.
         :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
         :param list expressions: The compiled expression to be indexed. Produced from :ref:`aerospike_operation_helpers.expressions`.
         :param str name: the name of the index.
@@ -1244,6 +1244,13 @@ Metrics
 .. class:: Client
     :noindex:
 
+    .. method:: get_stats()
+
+        Retrieve aerospike client instance statistics.
+
+        :return: an instance of :py:class:`~aerospike_helpers.metrics.ClusterStats`
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
     .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
 
         Enable extended periodic cluster and node latency metrics.
@@ -1257,6 +1264,37 @@ Metrics
         Disable extended periodic cluster and node latency metrics.
 
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+Scan and Query Constructors
+---------------------------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: scan(namespace[, set]) -> Scan
+
+        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
+
+        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
+
+        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name, otherwise the entire \
+            *namespace* will be scanned.
+
+        :return: an :py:class:`aerospike.Scan` class.
+
+    .. method:: query(namespace[, set]) -> Query
+
+        Return a :class:`aerospike.Query` object to be used for executing queries
+        over a specified set in a namespace.
+
+        See :ref:`aerospike.Query` for more details.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name. Otherwise, all records in the specified namespace will be queried.
+        :return: an :py:class:`aerospike.Query` class.
 
 .. _admin_user_dict:
 
@@ -1294,42 +1332,6 @@ The user dictionary has the following key-value pairs:
     * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
 
     * ``"roles"`` (:class:`list[str]`): list of assigned role names.
-
-Scan and Query Constructors
----------------------------
-
-.. class:: Client
-    :noindex:
-
-    .. method:: scan(namespace[, set]) -> Scan
-
-        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
-
-        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
-
-        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
-
-        :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the entire \
-            *namespace* will be scanned.
-
-        :return: an :py:class:`aerospike.Scan` class.
-
-    .. method:: query(namespace[, set]) -> Query
-
-        Return a :class:`aerospike.Query` object to be used for executing queries
-        over a specified set in a namespace.
-
-        See :ref:`aerospike.Query` for more details.
-
-        :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the records \
-            which are not part of any *set* will be queried (**Note**: this is \
-            different from not providing the *set* in :meth:`scan`).
-        :return: an :py:class:`aerospike.Query` class.
-
-.. index::
-    single: Other Methods
 
 Tuples
 ======
