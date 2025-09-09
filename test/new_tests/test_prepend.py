@@ -169,7 +169,7 @@ class TestPrepend:
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"key": aerospike.POLICY_KEY_DIGEST, "retry": aerospike.POLICY_RETRY_NONE}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST}
         self.as_connection.prepend(key, "name", "str", {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
