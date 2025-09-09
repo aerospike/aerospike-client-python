@@ -259,46 +259,42 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         raise_exception(&err);
         goto CLEANUP_VALUES_ON_ERROR;
     }
-}
 
-if (ctx_in_use) {
-    self->query.where.entries[0].ctx_free = true;
-}
-if (exp_list) {
-    self->query.where.entries[0].exp_free = true;
-}
+    if (ctx_in_use) {
+        self->query.where.entries[0].ctx_free = true;
+    }
+    if (exp_list) {
+        self->query.where.entries[0].exp_free = true;
+    }
 
-return 0;
+    return 0;
 
-CLEANUP_VALUES_ON_ERROR :
+CLEANUP_VALUES_ON_ERROR:
 
     // The values end up not being used by as_query
-    if (val1_str)
-{
-    free(val1_str);
-}
-if (val1_bytes) {
-    free(val1_bytes);
-}
+    if (val1_str) {
+        free(val1_str);
+    }
+    if (val1_bytes) {
+        free(val1_bytes);
+    }
 
-CLEANUP_EXP_ON_ERROR :
+CLEANUP_EXP_ON_ERROR:
 
-    if (exp_list)
-{
-    as_exp_destroy(exp_list);
-}
+    if (exp_list) {
+        as_exp_destroy(exp_list);
+    }
 
-CLEANUP_CTX_ON_ERROR :
+CLEANUP_CTX_ON_ERROR:
     // The ctx ends up not being used by as_query
-    if (ctx_in_use)
-{
-    as_cdt_ctx_destroy(pctx);
-}
-if (pctx) {
-    cf_free(pctx);
-}
+    if (ctx_in_use) {
+        as_cdt_ctx_destroy(pctx);
+    }
+    if (pctx) {
+        cf_free(pctx);
+    }
 
-return 1;
+    return 1;
 }
 
 #define PREDICATE_INVALID_ERROR_MSG1 "predicate is invalid."
