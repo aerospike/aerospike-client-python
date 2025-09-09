@@ -1516,6 +1516,8 @@ Write Policies
             and it's acceptable to allow extra time to create a new connection compared to using an
             existing connection from the pool.
 
+            This value is limited to a 32-bit unsigned integer.
+
             Default: ``0``
 
         * **max_retries** (:class:`int`)
