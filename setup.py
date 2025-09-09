@@ -34,8 +34,8 @@ os.putenv('ARCHFLAGS', '-arch ' + machine)
 os.environ['ARCHFLAGS'] = '-arch ' + machine
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
 AEROSPIKE_C_HOME = os.path.join(BASEPATH, 'aerospike-client-c')
-
 AEROSPIKE_C_TARGET = None
+
 PLATFORM = platform.platform(1)
 LINUX = 'Linux' in PLATFORM
 DARWIN = 'Darwin' in PLATFORM or 'macOS' in PLATFORM
@@ -43,7 +43,6 @@ WINDOWS = 'Windows' in PLATFORM
 
 CWD = os.path.abspath(os.path.dirname(__file__))
 
-SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
 # COVERAGE environment variable only meant for CI/CD workflow to generate C coverage data
 # Not for developers to use, unless you know what the workflow is doing!
 COVERAGE = os.getenv('COVERAGE')
@@ -65,28 +64,27 @@ include_dirs = [
 ]
 include_dirs.extend([x for x in os.getenv('CPATH', '').split(':') if len(x) > 0])
 
-extra_compile_args = [
-    '-std=gnu99',
-    '-g',
-    '-Wall',
-    '-fPIC',
-    '-O1',
-    '-DDEBUG',
-    '-fno-common',
-    '-fno-strict-aliasing',
-    '-D_FILE_OFFSET_BITS=64',
-    '-D_REENTRANT',
-    '-DMARCH_' + machine,
-]
+if WINDOWS:
+    extra_compile_args = []
+else:
+    extra_compile_args = [
+        '-std=gnu99',
+        '-g',
+        '-Wall',
+        '-fPIC',
+        '-O1',
+        '-DDEBUG',
+        '-fno-common',
+        '-fno-strict-aliasing',
+        '-D_FILE_OFFSET_BITS=64',
+        '-D_REENTRANT',
+        '-DMARCH_' + machine,
+        '-Wno-strict-prototypes'
+    ]
+    if machine == 'x86_64':
+        extra_compile_args.append('-march=nocona')
 
-if not WINDOWS:
-    # Windows does not have this flag
-    extra_compile_args.append("-Wno-strict-prototypes")
-
-if machine == 'x86_64':
-    extra_compile_args.append('-march=nocona')
 extra_objects = []
-
 extra_link_args = []
 
 SANITIZER = os.getenv('SANITIZER')
@@ -135,6 +133,7 @@ STATIC_SSL = os.getenv('STATIC_SSL')
 
 if STATIC_SSL:
     # Statically link openssl
+    SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
     extra_objects.append(SSL_LIB_PATH + 'libssl.a')
     extra_objects.append(SSL_LIB_PATH + 'libcrypto.a')
 else:
