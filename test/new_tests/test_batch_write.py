@@ -179,6 +179,7 @@ class TestBatchWrite(TestBaseClass):
                 ],
             ),
             (
+                # TODO: need a separate Read()?
                 "read-with-policy",
                 br.BatchRecords(
                     [
@@ -187,7 +188,7 @@ class TestBatchWrite(TestBaseClass):
                             [op.write("new", 10), op.read("new")],
                             meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE},
                             policy={
-                                "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
+                                # "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
                                 "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
                             },
                         )

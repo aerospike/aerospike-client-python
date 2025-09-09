@@ -172,7 +172,7 @@ class TestRemovebin(object):
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
                     "key": aerospike.POLICY_KEY_SEND,
-                    "commit": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
                 },
                 "age",
             ),
@@ -181,7 +181,7 @@ class TestRemovebin(object):
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
                     "key": aerospike.POLICY_KEY_SEND,
-                    "commit": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                 },
                 "age",
             ),
