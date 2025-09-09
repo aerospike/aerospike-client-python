@@ -71,11 +71,11 @@ class TestIndex(object):
         Invoke createindex() with non existent namespace
         """
         policy = {}
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             self.as_connection.index_integer_create("fake_namespace", "demo", "age", "age_index", policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_create_integer_index_with_incorrect_set(self):
         """
@@ -261,11 +261,11 @@ class TestIndex(object):
         """
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as err_info:
+        with pytest.raises(e.NamespaceNotFound) as err_info:
             self.as_connection.index_string_create("fake_namespace", "demo", "name", "name_index", policy)
 
         err_code = err_info.value.code
-        assert err_code is AerospikeStatus.AEROSPIKE_ERR_REQUEST_INVALID
+        assert err_code is AerospikeStatus.AEROSPIKE_ERR_NAMESPACE_NOT_FOUND
 
     def test_create_string_index_with_incorrect_set(self):
         """
