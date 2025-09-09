@@ -34,8 +34,9 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
     as_policy_info *info_policy_p = NULL;
     as_status status = AEROSPIKE_OK;
 
-    pyobject_to_policy_info(self, err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+                            &self->as->config.policies.info,
+                            self->validate_keys);
 
     if (err->code != AEROSPIKE_OK) {
         as_error_update(err, AEROSPIKE_ERR_CLIENT, "Incorrect Policy");

@@ -196,10 +196,11 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
                                    as_policy_apply *config_apply_policy,
                                    as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_info(AerospikeClient *self, as_error *err,
-                                  PyObject *py_policy, as_policy_info *policy,
+as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
+                                  as_policy_info *policy,
                                   as_policy_info **policy_p,
-                                  as_policy_info *config_info_policy);
+                                  as_policy_info *config_info_policy,
+                                  bool validate_keys);
 
 as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_query *policy,

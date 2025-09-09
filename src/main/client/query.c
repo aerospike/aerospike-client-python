@@ -571,8 +571,9 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
     }
 
     // Convert python object to policy_info
-    pyobject_to_policy_info(self, &err, py_policy, &info_policy, &info_policy_p,
-                            &self->as->config.policies.info);
+    pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
+                            &self->as->config.policies.info,
+                            self->validate_keys);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
