@@ -55,7 +55,7 @@ class TestTouch(object):
         Invoke touch() with correct policy
         """
         key = ("test", "demo", 1)
-        policy = {"total_timeout": 180000, "retry": aerospike.POLICY_RETRY_ONCE}
+        policy = {"total_timeout": 180000}
         response = self.as_connection.touch(key, 120, {}, policy)
         assert response == AerospikeStatus.AEROSPIKE_OK
 
@@ -66,7 +66,6 @@ class TestTouch(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
         self.as_connection.touch(key, 120, {}, policy)
@@ -100,7 +99,6 @@ class TestTouch(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
 
@@ -119,7 +117,6 @@ class TestTouch(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -140,7 +137,6 @@ class TestTouch(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         meta = {"gen": 10, "ttl": 1200}
@@ -163,7 +159,6 @@ class TestTouch(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -188,7 +183,6 @@ class TestTouch(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)

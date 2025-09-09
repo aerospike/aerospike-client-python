@@ -272,7 +272,6 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_CREATE_OR_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -292,7 +291,6 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -313,7 +311,6 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -328,7 +325,6 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_IGNORE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -347,7 +343,6 @@ class TestGetPut:
         meta = {"gen": 2, "ttl": 25000}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -376,7 +371,6 @@ class TestGetPut:
         meta = {"gen": 2, "ttl": 25000}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -623,7 +617,6 @@ class TestGetPut:
         meta = {"gen": 2, "ttl": 25000}
         policy = {
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         assert 0 == self.as_connection.put(key, rec, meta, policy)
@@ -655,7 +648,6 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_REPLACE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         with pytest.raises(e.RecordNotFound):
@@ -685,7 +677,6 @@ class TestGetPut:
         policy = {
             "exists": aerospike.POLICY_EXISTS_UPDATE,
             "gen": aerospike.POLICY_GEN_IGNORE,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
         }
         try:

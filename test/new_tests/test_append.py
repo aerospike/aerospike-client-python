@@ -419,7 +419,6 @@ class TestAppend(object):
         policy = {
             "gen": 5,
             "total_timeout": 1,
-            # 'retry': aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
         try:

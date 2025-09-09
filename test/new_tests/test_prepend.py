@@ -74,7 +74,6 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
         self.as_connection.prepend(key, "name", "str", {}, policy)
@@ -96,7 +95,6 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
 
@@ -120,7 +118,6 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -146,7 +143,6 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -295,7 +291,6 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -326,7 +321,6 @@ class TestPrepend:
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)
