@@ -1023,7 +1023,7 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
 
     if (validate_keys) {
         as_status retval = does_py_dict_contain_valid_keys(
-            err, py_policy, py_bit_policy_valid_keys, true);
+            err, py_policy, py_map_policy_valid_keys, true);
         if (retval == -1) {
             return as_error_update(err, AEROSPIKE_ERR,
                                    ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
