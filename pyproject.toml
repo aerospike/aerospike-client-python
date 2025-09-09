@@ -14,10 +14,10 @@ authors = [
     {name = "Aerospike, Inc.", email = "info@aerospike.com"}
 ]
 readme = "README.rst"
+license = "Apache-2.0"
 license-files = ["LICENSE"]
 keywords = ["aerospike", "nosql", "database"]
 classifiers = [
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows",
