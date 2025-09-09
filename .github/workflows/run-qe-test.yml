@@ -92,7 +92,8 @@ jobs:
         fi
       working-directory: aerospike-client-python/test/
 
-    - run: sshpass -p ${{ secrets.PERF_PASSWORD }} ssh ${{ secrets.PERF_USERNAME }}@${{ secrets.PERF_HOST }} docker logs -f test_0
+    - name: Print test logs in real time
+      run: sshpass -p ${{ secrets.PERF_PASSWORD }} ssh ${{ secrets.PERF_USERNAME }}@${{ secrets.PERF_HOST }} docker logs -f test_0
 
     # - name: Wait for test run to finish
     #   id: poll-run-id
