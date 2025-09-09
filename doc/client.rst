@@ -622,7 +622,7 @@ User Defined Functions
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <https://aerospike.com/docs/server/guide/record_udf>`_ \
-          and `Developing Record UDFs <https://aerospike.com/developer/udf/developing_record_udfs>`_.
+          and `Developing Record UDFs <https://aerospike.com/docs/database/advanced/udf/modules/record/develop>`_.
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
@@ -870,6 +870,19 @@ Index Operations
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
+    .. method:: index_expr_create(ns, set, index_type, index_datatype, expressions, name[, policy: dict])
+
+        Create secondary index on an expression.
+
+        :param str ns: The namespace to be indexed.
+        :param str set: The set to be indexed.
+        :param index_type: See :ref:`aerospike_index_types` for possible values.
+        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
+        :param list expressions: The compiled expression to be indexed. Produced from :ref:`aerospike_operation_helpers.expressions`.
+        :param str name: the name of the index.
+        :param dict policy: optional :ref:`aerospike_info_policies`.
+        :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
+
     .. method:: index_list_create(ns, set, bin, index_datatype, name[, policy: dict])
 
         Create an index named *name* for numeric, string or GeoJSON values \
@@ -879,7 +892,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -895,7 +908,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -911,7 +924,7 @@ Index Operations
         :param str ns: the namespace in the aerospike cluster.
         :param str set: the set name.
         :param str bin: the name of bin the secondary index is built on.
-        :param index_datatype: Possible values are ``aerospike.INDEX_STRING``, ``aerospike.INDEX_NUMERIC``, ``aerospike.INDEX_BLOB``, and ``aerospike.INDEX_GEO2DSPHERE``.
+        :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
         :param str name: the name of the index.
         :param dict policy: optional :ref:`aerospike_info_policies`.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
@@ -1132,64 +1145,77 @@ user\'s roles. Users are assigned roles, which are collections of \
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_create_user(username, password, roles[, policy: dict])
+    .. method:: admin_create_pki_user(user: str, roles: list[, policy: dict])
+
+        Create a user and grant it roles. PKI users are authenticated via TLS and a certificate instead of a password.
+
+        .. warning:: This function should only be called for server versions 8.1+. If this function is called for older server versions,
+            an error will be returned.
+
+        :param str user: the username to be added to the Aerospike cluster.
+        :param list roles: the list of role names assigned to the user.
+        :param dict policy: optional :ref:`aerospike_admin_policies`.
+
+        :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
+
+    .. method:: admin_create_user(user, password, roles[, policy: dict])
 
         Create a user and grant it roles.
 
-        :param str username: the username to be added to the Aerospike cluster.
+        :param str user: the username to be added to the Aerospike cluster.
         :param str password: the password associated with the given username.
         :param list roles: the list of role names assigned to the user.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_drop_user(username[, policy: dict])
+    .. method:: admin_drop_user(user[, policy: dict])
 
         Drop the user with a specified username from the cluster.
 
-        :param str username: the username to be dropped from the aerospike cluster.
+        :param str user: the username to be dropped from the aerospike cluster.
 
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_change_password(username, password[, policy: dict])
+    .. method:: admin_change_password(user, password[, policy: dict])
 
         Change the password of a user.
 
         This operation can only be performed by that same user.
 
-        :param str username: the username of the user.
+        :param str user: the username of the user.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_set_password(username, password[, policy: dict])
+    .. method:: admin_set_password(user, password[, policy: dict])
 
         Set the password of a user by a user administrator.
 
-        :param str username: the username to be added to the aerospike cluster.
+        :param str user: the username to be added to the aerospike cluster.
         :param str password: the password associated with the given username.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_grant_roles(username, roles[, policy: dict])
+    .. method:: admin_grant_roles(user, roles[, policy: dict])
 
         Add roles to a user.
 
-        :param str username: the username of the user.
+        :param str user: the username of the user.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
         :raises: one of the :exc:`~aerospike.exception.AdminError` subclasses.
 
-    .. method:: admin_revoke_roles(username, roles[, policy: dict])
+    .. method:: admin_revoke_roles(user, roles[, policy: dict])
 
         Remove roles from a user.
 
-        :param str username: the username to have the roles revoked.
+        :param str user: the username to have the roles revoked.
         :param list roles: a list of role names.
         :param dict policy: optional :ref:`aerospike_admin_policies`.
 
@@ -1218,6 +1244,13 @@ Metrics
 .. class:: Client
     :noindex:
 
+    .. method:: get_stats()
+
+        Retrieve aerospike client instance statistics.
+
+        :return: an instance of :py:class:`~aerospike_helpers.metrics.ClusterStats`
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
     .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
 
         Enable extended periodic cluster and node latency metrics.
@@ -1231,6 +1264,37 @@ Metrics
         Disable extended periodic cluster and node latency metrics.
 
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+Scan and Query Constructors
+---------------------------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: scan(namespace[, set]) -> Scan
+
+        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
+
+        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
+
+        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name, otherwise the entire \
+            *namespace* will be scanned.
+
+        :return: an :py:class:`aerospike.Scan` class.
+
+    .. method:: query(namespace[, set]) -> Query
+
+        Return a :class:`aerospike.Query` object to be used for executing queries
+        over a specified set in a namespace.
+
+        See :ref:`aerospike.Query` for more details.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name. Otherwise, all records in the specified namespace will be queried.
+        :return: an :py:class:`aerospike.Query` class.
 
 .. _admin_user_dict:
 
@@ -1268,42 +1332,6 @@ The user dictionary has the following key-value pairs:
     * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
 
     * ``"roles"`` (:class:`list[str]`): list of assigned role names.
-
-Scan and Query Constructors
----------------------------
-
-.. class:: Client
-    :noindex:
-
-    .. method:: scan(namespace[, set]) -> Scan
-
-        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
-
-        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
-
-        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
-
-        :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the entire \
-            *namespace* will be scanned.
-
-        :return: an :py:class:`aerospike.Scan` class.
-
-    .. method:: query(namespace[, set]) -> Query
-
-        Return a :class:`aerospike.Query` object to be used for executing queries
-        over a specified set in a namespace.
-
-        See :ref:`aerospike.Query` for more details.
-
-        :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the records \
-            which are not part of any *set* will be queried (**Note**: this is \
-            different from not providing the *set* in :meth:`scan`).
-        :return: an :py:class:`aerospike.Query` class.
-
-.. index::
-    single: Other Methods
 
 Tuples
 ======
@@ -1447,7 +1475,7 @@ Record Tuple
             client.remove(keyTuple)
             client.close()
 
-    .. seealso:: `Data Model: Record <https://aerospike.com/docs/server/architecture/data-model.html#records>`_.
+    .. seealso:: `Data Model: Record <https://aerospike.com/docs/database/learn/architecture/data-storage/data-model/#records>`_.
 
 .. _metadata_dict:
 

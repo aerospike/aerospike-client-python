@@ -552,6 +552,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         if (py_exc_extra_attr) {
             PyObject_SetAttrString(py_exc_class, extra_attrs[i],
                                    py_extra_attrs[i]);
+            Py_DECREF(py_exc_extra_attr);
         }
         else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
             // We are sure that we want to ignore this

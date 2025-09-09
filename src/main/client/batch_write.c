@@ -27,6 +27,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "operate.h"
 #include "serializer.h"
 #include "exceptions.h"
 #include "policy.h"
