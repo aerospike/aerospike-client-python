@@ -1126,7 +1126,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
 }
 
 as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
-                                 as_hll_policy *hll_policy)
+                                 as_hll_policy *hll_policy, bool validate_keys)
 {
     int64_t flags = 0;
     as_hll_policy_init(hll_policy);
@@ -1139,6 +1139,18 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     if (!PyDict_Check(py_policy)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Hll policy must be a dictionary.");
+    }
+
+    if (validate_keys) {
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_policy, py_hll_policy_valid_keys, true);
+        if (retval == -1) {
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
     }
 
     py_val = PyDict_GetItemString(py_policy, "flags");

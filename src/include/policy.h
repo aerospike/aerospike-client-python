@@ -261,7 +261,7 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
                                  as_bit_policy *policy, bool validate_keys);
 
 as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
-                                 as_hll_policy *hll_policy);
+                                 as_hll_policy *hll_policy, bool validate_keys);
 
 as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,
