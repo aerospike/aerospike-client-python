@@ -130,7 +130,6 @@ if UNOPTIMIZED:
 ################################################################################
 
 STATIC_SSL = os.getenv('STATIC_SSL')
-
 if STATIC_SSL:
     # Statically link openssl
     SSL_LIB_PATH = os.getenv('SSL_LIB_PATH')
@@ -141,7 +140,7 @@ else:
     libraries.append('ssl')
     libraries.append('crypto')
     if os.path.exists("/usr/local/opt/openssl/lib"):
-        library_dirs.remove('/usr/local/opt/openssl/lib')
+        library_dirs.append('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
