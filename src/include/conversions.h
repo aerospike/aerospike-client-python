@@ -28,6 +28,7 @@
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_partition_filter.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "types.h"
 
@@ -203,8 +204,11 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
                       as_static_pool *static_pool, int serializer_type);
 
-as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
-                           as_exp **exp_list, as_error *err);
+// allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
+// if false, the Python object should only be a compiled Python expression object from aerospike_helpers
+as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
+                                   as_exp **exp_list, as_error *err,
+                                   bool allow_base64_encoded_exprs);
 
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
@@ -232,6 +236,7 @@ PyObject *create_py_cluster_from_as_cluster(as_error *error_p,
 PyObject *create_py_node_from_as_node(as_error *error_p,
                                       struct as_node_s *node);
 
+// obj must be non-NULL
 // Checks if pyobject is an instance of a class type defined in aerospike_helpers or one of its submodules
 // If expected_submodule_name is NULL, the type is expected to be defined directly in the aerospike_helpers package
 // If is_subclass_instance is true, we expect the instance's type to directly inherit from aerospike_helpers.<expected_submodule_name>.<expected_type_name>
@@ -245,3 +250,26 @@ PyObject *create_class_instance_from_module(as_error *error_p,
                                             const char *module_name,
                                             const char *class_name,
                                             PyObject *py_arg);
+
+// Convert a Python integer into a fixed-width integer and verify it is within that range
+// We return an unsigned long long because it should be able to fit all fixed-width int types up to uint64_t
+// Returns -1 on error. Error indicator can be checked to verify if error occurred
+// TODO: replace this with new API calls in Python 3.14
+unsigned long long
+convert_pyobject_to_fixed_width_integer_type(PyObject *pyobject,
+                                             unsigned long long max_bound);
+uint8_t convert_pyobject_to_uint8_t(PyObject *pyobject);
+
+uint16_t convert_pyobject_to_uint16_t(PyObject *pyobject);
+
+uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject);
+
+uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
+
+// Returns NULL on error.
+const char *convert_pyobject_to_str(PyObject *py_obj);
+
+// Returns NULL on error.
+PyObject *
+create_py_cluster_stats_from_as_cluster_stats(as_error *err,
+                                              as_cluster_stats *stats);

@@ -1,6 +1,7 @@
 #include <Python.h>
 
 #include "types.h"
+#include "conversions.h"
 
 static void AerospikeTransaction_dealloc(AerospikeTransaction *self)
 {
@@ -20,35 +21,6 @@ static PyObject *AerospikeTransaction_new(PyTypeObject *type, PyObject *args,
         return NULL;
     }
     return (PyObject *)self;
-}
-
-// Error indicator must always be checked after this call
-// Constructor parameter name needed for constructing error message
-static uint32_t convert_pyobject_to_uint32_t(PyObject *pyobject,
-                                             const char *param_name_of_pyobj)
-{
-    if (!PyLong_Check(pyobject)) {
-        PyErr_Format(PyExc_TypeError, "%s must be an integer",
-                     param_name_of_pyobj);
-        goto error;
-    }
-    unsigned long long_value = PyLong_AsUnsignedLong(pyobject);
-    if (PyErr_Occurred()) {
-        goto error;
-    }
-
-    if (long_value > UINT32_MAX) {
-        PyErr_Format(PyExc_ValueError,
-                     "%s is too large for an unsigned 32-bit integer",
-                     param_name_of_pyobj);
-        goto error;
-    }
-
-    uint32_t value = (uint32_t)long_value;
-    return value;
-
-error:
-    return 0;
 }
 
 // We don't initialize in __new__ because it's not documented how to raise
@@ -73,8 +45,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     as_txn *txn;
     uint32_t reads_capacity, writes_capacity;
     if (py_reads_capacity) {
-        reads_capacity =
-            convert_pyobject_to_uint32_t(py_reads_capacity, kwlist[0]);
+        reads_capacity = convert_pyobject_to_uint32_t(py_reads_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }
@@ -84,8 +55,7 @@ static int AerospikeTransaction_init(AerospikeTransaction *self, PyObject *args,
     }
 
     if (py_writes_capacity) {
-        writes_capacity =
-            convert_pyobject_to_uint32_t(py_writes_capacity, kwlist[1]);
+        writes_capacity = convert_pyobject_to_uint32_t(py_writes_capacity);
         if (PyErr_Occurred()) {
             goto error;
         }
@@ -141,7 +111,8 @@ static PyObject *AerospikeTransaction_get_timeout(AerospikeTransaction *self,
 static int AerospikeTransaction_set_timeout(AerospikeTransaction *self,
                                             PyObject *py_value, void *closure)
 {
-    uint32_t timeout = convert_pyobject_to_uint32_t(py_value, "timeout");
+    uint32_t timeout = (uint32_t)convert_pyobject_to_fixed_width_integer_type(
+        py_value, UINT32_MAX);
     if (PyErr_Occurred()) {
         return -1;
     }

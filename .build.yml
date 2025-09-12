@@ -2,14 +2,14 @@ name: aerospike-client-python
 
 container:
   - base:
-      - docker.qe.aerospike.com/build/aerospike-client-python:manylinux2014
-      - docker.qe.aerospike.com/build/aerospike-client-python:arm-manylinux2014
+      - docker.qe.aerospike.com/build/aerospike-client-python:manylinux_2_28
+      - docker.qe.aerospike.com/build/aerospike-client-python:arm-manylinux_2_28
 
 build:
   - name: build
     environment:
-      PYTHONS: /opt/python/cp38-cp38/bin,/opt/python/cp39-cp39/bin,/opt/python/cp310-cp310/bin,/opt/python/cp311-cp311/bin,/opt/python/cp312-cp312/bin,/opt/python/cp313-cp313/bin
+      PYTHONS: /opt/python/cp39-cp39/bin,/opt/python/cp310-cp310/bin,/opt/python/cp311-cp311/bin,/opt/python/cp312-cp312/bin,/opt/python/cp313-cp313/bin,/opt/python/cp314-cp314/bin
     script:
-      - scripts/manylinux2014build.sh
+      - scripts/manylinux2_28_build.sh
     artifact:
       - /work/wheels/*.whl
