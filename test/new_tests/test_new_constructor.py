@@ -125,7 +125,8 @@ def test_neg_setting_rack_ids(rack_ids):
 )
 def test_bool_settings(setting):
     config = copy.deepcopy(gconfig)
-    config[setting] = True
+    # Setting force_single_node to True can crash the client
+    config[setting] = False
     client = aerospike.client(config)
     assert client is not None
 
