@@ -20,7 +20,7 @@ import platform
 import sys
 import subprocess
 from setuptools import setup, Extension
-from distutils.command.build import build
+from setuptools.command.build import build
 from distutils.command.clean import clean
 import io
 import xml.etree.ElementTree as ET
