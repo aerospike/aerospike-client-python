@@ -173,8 +173,8 @@ elif LINUX:
 elif WINDOWS:
     libraries.append("pthreadVC2")
     extra_compile_args.append("-DAS_SHARED_IMPORT")
-    include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies.\
-                        {c_client_dependencies_version}/build/native/include")
+    include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies."
+                        "{c_client_dependencies_version}/build/native/include")
 else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
