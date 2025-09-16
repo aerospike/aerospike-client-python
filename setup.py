@@ -86,16 +86,16 @@ extra_link_args = []
 
 SANITIZER = os.getenv('SANITIZER')
 if SANITIZER:
-    sanitizer_c_and_ld_flags = [
+    SANITIZER_C_AND_LD_FLAGS = [
         '-fsanitize=address',
         '-fno-omit-frame-pointer'
     ]
-    sanitizer_cflags = sanitizer_c_and_ld_flags.copy()
-    sanitizer_cflags.append('-fsanitize-recover=all')
-    extra_compile_args.extend(sanitizer_cflags)
+    SANITIZER_CFLAGS = SANITIZER_C_AND_LD_FLAGS.copy()
+    SANITIZER_CFLAGS.append('-fsanitize-recover=all')
+    extra_compile_args.extend(SANITIZER_CFLAGS)
 
-    sanitizer_ldflags = sanitizer_c_and_ld_flags.copy()
-    extra_link_args.extend(sanitizer_ldflags)
+    SANITIZER_LDFLAGS = SANITIZER_C_AND_LD_FLAGS.copy()
+    extra_link_args.extend(SANITIZER_LDFLAGS)
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 if not WINDOWS:
@@ -245,9 +245,9 @@ class BuildAerospikeModule(build_ext):
             if UNOPTIMIZED:
                 cmd.append('O=0')
             if SANITIZER:
-                ext_cflags = " ".join(sanitizer_cflags)
+                ext_cflags = " ".join(SANITIZER_CFLAGS)
                 cmd.append(f"EXT_CFLAGS={ext_cflags}")
-                ldflags = " ".join(sanitizer_ldflags)
+                ldflags = " ".join(SANITIZER_LDFLAGS)
                 cmd.append(f"LDFLAGS={ldflags}")
 
         print(cmd, library_dirs, c_client_libraries)
