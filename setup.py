@@ -187,8 +187,6 @@ else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
-include_dirs.append('/usr/local/opt/openssl/include')
-
 if not WINDOWS:
     include_dirs.append(AEROSPIKE_C_TARGET + '/include')
     extra_objects.append(AEROSPIKE_C_TARGET + '/lib/libaerospike.a')
