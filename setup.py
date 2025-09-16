@@ -227,6 +227,7 @@ class CClientBuild(build):
 
             self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
+        # TODO: not sure if we need?
         if LINUX:
             os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
             os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
@@ -239,7 +240,8 @@ class CClientBuild(build):
             cmd = [
                 'msbuild',
                 'vs/aerospike.sln',
-                '/property:Configuration=Release'
+                '/property:Configuration=Release',
+                '/t:aerospike'
             ]
         else:
             cmd = [
