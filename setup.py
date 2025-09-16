@@ -76,7 +76,6 @@ else:
         '-fno-strict-aliasing',
         '-D_FILE_OFFSET_BITS=64',
         '-D_REENTRANT',
-        '-DMARCH_' + machine,
         '-Wno-strict-prototypes'
     ]
     if machine == 'x86_64':
