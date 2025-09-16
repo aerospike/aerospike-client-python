@@ -326,9 +326,9 @@ jobs:
         CIBW_TEST_COMMAND: ${{ env.TEST_COMMAND }}
         CIBW_DEBUG_KEEP_CONTAINER: 1
 
-    - name: Setup tmate session
-      if: ${{ !cancelled() }}
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   if: ${{ !cancelled() }}
+    #   uses: mxschmitt/action-tmate@v3
 
     # For debugging
     - run: |
