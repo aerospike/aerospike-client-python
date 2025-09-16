@@ -72,7 +72,6 @@ else:
         '-Wall',
         '-fPIC',
         '-O1',
-        '-DDEBUG',
         '-fno-common',
         '-fno-strict-aliasing',
         '-D_FILE_OFFSET_BITS=64',
