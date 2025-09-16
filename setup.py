@@ -22,7 +22,6 @@ import subprocess
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 from distutils.command.clean import clean
-import io
 import xml.etree.ElementTree as ET
 import glob
 
@@ -207,10 +206,6 @@ os.environ['CPATH'] = ':'.join(include_dirs)
 # SETUP
 ################################################################################
 
-# Get the version from the relevant file
-with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
-    version = f.read()
-
 
 class BuildAerospikeModule(build_ext):
 
@@ -304,7 +299,6 @@ class CleanAerospikeModule(clean):
 source_files = glob.glob(pathname="src/main/**/*.c", recursive=True)
 
 setup(
-    version=version.strip(),
     # Data files
     ext_modules=[
         Extension(

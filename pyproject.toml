@@ -38,6 +38,9 @@ dynamic = ["version"]
 [tool.setuptools]
 include-package-data = true
 
+[tool.setuptools.dynamic]
+version = {file = ["VERSION"]}
+
 [tool.versioningit]
 
 [tool.versioningit.vcs]
