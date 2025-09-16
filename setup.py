@@ -227,10 +227,12 @@ class CClientBuild(build):
 
             self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
-        os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
-        os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
-        os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
-        os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
+        if LINUX:
+            os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+            os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
+        if DARWIN:
+            os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+            os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
 
         # build core client
         if WINDOWS:
