@@ -102,7 +102,16 @@ if SANITIZER:
 
 library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 if not WINDOWS:
-    libraries = [
+    # The Python client's C code doesn't rely on these libraries.
+    # But the C client does rely on them, and we need to bundle these libraries
+    # with the Python client wheel so users don't need to install the libraries locally.
+    #
+    # When repairing the wheel, we will copy these libraries into the wheel
+    # and change the Python client shared library's RPATH to point to these bundled libraries.
+    #
+    # The repair step only copies the libraries that the Python client are linked against
+    # TODO: only change rpath of c client, not python client?
+    c_client_libraries = [
         'm',
         'z',
         'yaml',
@@ -111,7 +120,7 @@ if not WINDOWS:
         'pthread'
     ]
 else:
-    libraries = []
+    c_client_libraries = []
 
 ##########################
 # GITHUB ACTIONS SETTINGS
@@ -137,8 +146,8 @@ if STATIC_SSL:
     extra_objects.append(SSL_LIB_PATH + 'libcrypto.a')
 else:
     # Dynamically link openssl
-    libraries.append('ssl')
-    libraries.append('crypto')
+    c_client_libraries.append('ssl')
+    c_client_libraries.append('crypto')
     if os.path.exists("/usr/local/opt/openssl/lib"):
         library_dirs.append('/usr/local/opt/openssl/lib')
 
@@ -168,10 +177,10 @@ elif LINUX:
     extra_compile_args.append('-rdynamic')
     extra_compile_args.append('-finline-functions')
 
-    libraries.append('rt')
+    c_client_libraries.append('rt')
     AEROSPIKE_C_TARGET = AEROSPIKE_C_HOME + '/target/Linux-' + machine
 elif WINDOWS:
-    libraries.append("pthreadVC2")
+    c_client_libraries.append("pthreadVC2")
     extra_compile_args.append("-DAS_SHARED_IMPORT")
     include_dirs.append(f"{AEROSPIKE_C_TARGET}/vs/packages/aerospike-client-c-dependencies."
                         "{c_client_dependencies_version}/build/native/include")
@@ -207,7 +216,7 @@ with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
     version = f.read()
 
 BASEPATH = os.path.dirname(os.path.abspath(__file__))
-CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
+C_CLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 
 class BuildAerospikeModule(build_ext):
@@ -223,7 +232,7 @@ class BuildAerospikeModule(build_ext):
             ]
 
             def clean():
-                subprocess.run(cmd, cwd=CCLIENT_PATH)
+                subprocess.run(cmd, cwd=C_CLIENT_PATH)
 
             self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
@@ -241,6 +250,7 @@ class BuildAerospikeModule(build_ext):
                 'msbuild',
                 'vs/aerospike.sln',
                 '/property:Configuration=Release',
+                # Don't build the examples
                 '/t:aerospike'
             ]
         else:
@@ -256,8 +266,8 @@ class BuildAerospikeModule(build_ext):
                 ldflags = " ".join(sanitizer_ldflags)
                 cmd.append(f"LDFLAGS={ldflags}")
 
-        print(cmd, library_dirs, libraries)
-        subprocess.run(cmd, cwd=CCLIENT_PATH, check=True)
+        print(cmd, library_dirs, c_client_libraries)
+        subprocess.run(cmd, cwd=C_CLIENT_PATH, check=True)
 
         # run original c-extension build code
         build_ext.run(self)
@@ -282,7 +292,7 @@ class BuildAerospikeModule(build_ext):
             extra_objects.append(dsym_path)
 
 
-class CClientClean(clean):
+class CleanAerospikeModule(clean):
 
     def run(self):
         # run original c-extension clean task
@@ -293,7 +303,7 @@ class CClientClean(clean):
         ]
 
         def clean():
-            subprocess.run(cmd, cwd=CCLIENT_PATH)
+            subprocess.run(cmd, cwd=C_CLIENT_PATH)
 
         self.execute(clean, [], 'Clean core aerospike-client-c')
 
@@ -314,7 +324,7 @@ setup(
 
             # Link
             library_dirs=library_dirs,
-            libraries=libraries,
+            libraries=c_client_libraries,
             extra_objects=extra_objects,
             extra_link_args=extra_link_args,
         )
@@ -338,6 +348,6 @@ setup(
 
     cmdclass={
         'build_ext': BuildAerospikeModule,
-        'clean': CClientClean
+        'clean': CleanAerospikeModule
     }
 )
