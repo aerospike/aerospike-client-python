@@ -213,6 +213,7 @@ CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 class CClientBuild(build):
 
     def run(self):
+        # TODO: not sure if force needed if building in isolated temp venv?
         if self.force == 1:
             # run original c-extension clean task
             # clean.run(self)
