@@ -20,7 +20,7 @@ import platform
 import sys
 import subprocess
 from setuptools import setup, Extension
-from setuptools.command.build import build
+from setuptools.command.build_ext import build_ext
 from distutils.command.clean import clean
 import io
 import xml.etree.ElementTree as ET
@@ -210,7 +210,7 @@ BASEPATH = os.path.dirname(os.path.abspath(__file__))
 CCLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
 
 
-class CClientBuild(build):
+class BuildAerospikeModule(build_ext):
 
     def run(self):
         # TODO: not sure if force needed if building in isolated temp venv?
@@ -260,7 +260,7 @@ class CClientBuild(build):
         subprocess.run(cmd, cwd=CCLIENT_PATH, check=True)
 
         # run original c-extension build code
-        build.run(self)
+        build_ext.run(self)
 
         # For debugging in macOS, we need to generate and include the debug info for the CPython
         # extension in the wheel, since this isn't done automatically
@@ -337,7 +337,7 @@ setup(
     ],
 
     cmdclass={
-        'build': CClientBuild,
+        'build_ext': BuildAerospikeModule,
         'clean': CClientClean
     }
 )
