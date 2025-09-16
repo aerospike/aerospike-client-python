@@ -32,8 +32,8 @@ import glob
 machine = platform.machine()
 os.putenv('ARCHFLAGS', '-arch ' + machine)
 os.environ['ARCHFLAGS'] = '-arch ' + machine
-BASEPATH = os.path.dirname(os.path.abspath(__file__))
-AEROSPIKE_C_HOME = os.path.join(BASEPATH, 'aerospike-client-c')
+BASE_PATH = os.path.dirname(os.path.abspath(__file__))
+AEROSPIKE_C_HOME = os.path.join(BASE_PATH, 'aerospike-client-c')
 AEROSPIKE_C_TARGET = None
 
 PLATFORM = platform.platform(1)
@@ -215,9 +215,6 @@ with io.open(os.path.join(CWD, 'README.rst'), "r", encoding='utf-8') as f:
 with io.open(os.path.join(CWD, 'VERSION'), "r", encoding='utf-8') as f:
     version = f.read()
 
-BASEPATH = os.path.dirname(os.path.abspath(__file__))
-C_CLIENT_PATH = os.path.join(BASEPATH, 'aerospike-client-c')
-
 
 class BuildAerospikeModule(build_ext):
 
@@ -232,7 +229,7 @@ class BuildAerospikeModule(build_ext):
             ]
 
             def clean():
-                subprocess.run(cmd, cwd=C_CLIENT_PATH)
+                subprocess.run(cmd, cwd=AEROSPIKE_C_HOME)
 
             self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
@@ -267,7 +264,7 @@ class BuildAerospikeModule(build_ext):
                 cmd.append(f"LDFLAGS={ldflags}")
 
         print(cmd, library_dirs, c_client_libraries)
-        subprocess.run(cmd, cwd=C_CLIENT_PATH, check=True)
+        subprocess.run(cmd, cwd=AEROSPIKE_C_HOME, check=True)
 
         # run original c-extension build code
         build_ext.run(self)
@@ -303,7 +300,7 @@ class CleanAerospikeModule(clean):
         ]
 
         def clean():
-            subprocess.run(cmd, cwd=C_CLIENT_PATH)
+            subprocess.run(cmd, cwd=AEROSPIKE_C_HOME)
 
         self.execute(clean, [], 'Clean core aerospike-client-c')
 
