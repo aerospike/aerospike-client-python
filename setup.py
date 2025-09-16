@@ -256,11 +256,9 @@ class CClientBuild(build):
                 ldflags = " ".join(sanitizer_ldflags)
                 cmd.append(f"LDFLAGS={ldflags}")
 
-        def compile():
-            print(cmd, library_dirs, libraries)
-            subprocess.run(cmd, cwd=CCLIENT_PATH)
+        print(cmd, library_dirs, libraries)
+        subprocess.run(cmd, cwd=CCLIENT_PATH, check=True)
 
-        self.execute(compile, [], 'Compiling core aerospike-client-c')
         # run original c-extension build code
         build.run(self)
 
