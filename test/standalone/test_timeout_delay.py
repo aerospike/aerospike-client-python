@@ -92,7 +92,7 @@ class TestTimeoutDelay(unittest.TestCase):
             "--delay",
             f"{latency_ms}ms",
         ]
-        print("Injecting latency")
+        print(f"Injecting latency of {latency_ms} ms between the client and server")
         subprocess.run(args=inject_latency_command, check=True)
 
     def test_case(self):
@@ -130,7 +130,7 @@ class TestTimeoutDelay(unittest.TestCase):
                     "total_timeout": 99999,
                     "timeout_delay": timeout_delay_ms,
                 }
-                print("Trigger socket timeout and start timeout delay window...")
+                print(f"Trigger socket timeout and start timeout delay window of {timeout_delay_ms} ms...")
                 with self.assertRaises(e.TimeoutError):
                     self.client.get(key=self.key, policy=policy)
 
@@ -141,9 +141,9 @@ class TestTimeoutDelay(unittest.TestCase):
                 # By now, we have passed the timeout delay window
                 # And we assume the tend thread has attempted to drain the connection
                 cluster_stats = self.client.get_stats()
-
-                print("Num aborted:", cluster_stats.nodes[0].conns.aborted)
-                print("Num recovered:", cluster_stats.nodes[0].conns.recovered)
+                print("Using standard metrics to get synchronous connection statistics...")
+                # print("Num of aborted connections:", cluster_stats.nodes[0].conns.aborted)
+                # print("Num of recovered connections:", cluster_stats.nodes[0].conns.recovered)
 
                 # DEBUG: check if server reaped a client connection
                 _, stdout = self.container.exec_run(cmd='sh -c "asinfo -v \'statistics\' -l | grep reaped_fds"')
@@ -151,11 +151,11 @@ class TestTimeoutDelay(unittest.TestCase):
 
                 self.assertEqual(
                     cluster_stats.nodes[0].conns.aborted, expected_abort_count,
-                    msg="Actual abort count doesn't match expected abort count"
+                    msg=f"Actual abort count = {cluster_stats.nodes[0].conns.aborted} doesn't match expected abort count = {expected_abort_count}"
                 )
                 self.assertEqual(
                     cluster_stats.nodes[0].conns.recovered, expected_recovered_count,
-                    msg="Actual recovered count doesn't match expected recovered count"
+                    msg=f"Actual recovered count = {cluster_stats.nodes[0].conns.recovered} doesn't match expected recovered count = {expected_recovered_count}"
                 )
 
 
