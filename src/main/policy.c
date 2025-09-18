@@ -1238,7 +1238,6 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
     const char *report_dir = convert_pyobject_to_str(py_report_dir);
-    Py_DECREF(py_report_dir);
     if (!report_dir) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         "report_dir", "str");
@@ -1250,6 +1249,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
     strcpy(metrics_policy->report_dir, report_dir);
+    Py_DECREF(py_report_dir);
 
     const char *report_size_limit_attr_name = "report_size_limit";
     PyObject *py_report_size_limit =
