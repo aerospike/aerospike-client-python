@@ -231,7 +231,8 @@ jobs:
     - name: Install client
       run: pip install *.whl
 
-    - run: pip install mypy
+    - run: pip install mypy -c requirements.txt
+      working-directory: .github/workflows
 
     - run: stubtest aerospike --allowlist stubtest-allowlist
 
