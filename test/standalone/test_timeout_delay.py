@@ -133,9 +133,12 @@ class TestTimeoutDelay:
         # So we wait a few seconds after the timeout delay window.
         #
         # This is also ok for the other test case (where the connection gets recovered)
-        time.sleep(timeout_delay_ms / 1000 + 2)
+        time.sleep(timeout_delay_ms / 1000)
 
         print("Timeout delay window has ended.")
+        WAIT_FOR_TEND_INTERVAL_SECS = 5
+        print(f"Sleeping another {WAIT_FOR_TEND_INTERVAL_SECS} seconds to wait for tend thread to update cluster stats")
+        time.sleep(WAIT_FOR_TEND_INTERVAL_SECS)
 
         # By now, we have passed the timeout delay window
         # And we assume the tend thread has attempted to drain the connection
