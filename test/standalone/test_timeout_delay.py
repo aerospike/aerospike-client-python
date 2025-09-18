@@ -52,7 +52,7 @@ class TestTimeoutDelay:
         cls.docker_client.close()
 
     # latency is this high because timeout_delay must be >= 3000ms
-    INJECTED_LATENCY_MS = 6000
+    INJECTED_LATENCY_MS = 12000
 
     @pytest.fixture(autouse=True)
     def as_client(self):
