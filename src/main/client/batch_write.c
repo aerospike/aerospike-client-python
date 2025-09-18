@@ -246,7 +246,7 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                             FIELD_NAME_BATCH_TYPE);
             goto CLEANUP1;
         }
-        
+
         py_ops_list =
             PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_OPS);
         if (py_ops_list == NULL || !PyList_Check(py_ops_list) ||
@@ -259,8 +259,6 @@ static PyObject *AerospikeClient_BatchWriteInvoke(AerospikeClient *self,
                                 "py_ops_list is NULL or not a list, %s must be "
                                 "a list of aerospike operation dicts",
                                 FIELD_NAME_BATCH_OPS);
-                // TODO: mem leak if ops is not a list?
-                // Fix later
                 goto CLEANUP0;
             }
 
