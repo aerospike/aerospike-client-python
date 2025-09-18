@@ -134,7 +134,12 @@ class TestTimeoutDelay(unittest.TestCase):
                 with self.assertRaises(e.TimeoutError):
                     self.client.get(key=self.key, policy=policy)
 
-                time.sleep(timeout_delay_ms / 1000)
+                # When a connection is aborted, it will not be updated precisely when the timeout delay window
+                # ends. We need to wait for the tend thread to update the cluster's stats properly.
+                # So we wait a few seconds after the timeout delay window.
+                #
+                # This is also ok for the other test case (where the connection gets recovered)
+                time.sleep(timeout_delay_ms / 1000 + 2)
 
                 print("Timeout delay window has ended.")
 
@@ -142,8 +147,9 @@ class TestTimeoutDelay(unittest.TestCase):
                 # And we assume the tend thread has attempted to drain the connection
                 cluster_stats = self.client.get_stats()
                 print("Using standard metrics to get synchronous connection statistics...")
-                # print("Num of aborted connections:", cluster_stats.nodes[0].conns.aborted)
-                # print("Num of recovered connections:", cluster_stats.nodes[0].conns.recovered)
+                # If the first assert fails, we won't know the number of recovered connections
+                print("Num of aborted connections:", cluster_stats.nodes[0].conns.aborted)
+                print("Num of recovered connections:", cluster_stats.nodes[0].conns.recovered)
 
                 # DEBUG: check if server reaped a client connection
                 _, stdout = self.container.exec_run(cmd='sh -c "asinfo -v \'statistics\' -l | grep reaped_fds"')

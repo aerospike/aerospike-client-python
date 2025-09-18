@@ -436,9 +436,9 @@ jobs:
     - run: python3 test_${{ matrix.suffix }}.py
       working-directory: test/standalone
 
-    - if: ${{ always() }}
-      name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - if: ${{ always() }}
+    #   name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
 
   test-misc:
     needs: build
