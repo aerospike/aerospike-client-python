@@ -54,7 +54,7 @@ class TestTimeoutDelay:
     # latency is this high because timeout_delay must be >= 3000ms
     INJECTED_LATENCY_MS = 6000
 
-    @pytest.fixture
+    @pytest.fixture(autouse=True)
     def as_client(self):
         config = {
             "hosts": [
@@ -68,10 +68,10 @@ class TestTimeoutDelay:
             # because x node refresh attempt fails (x = 5 tend iterations)
             "connect_timeout": self.INJECTED_LATENCY_MS * 2,
         }
-        self.client = aerospike.client(config)
+        client = aerospike.client(config)
 
         self.key = ("test", "demo", 1)
-        self.client.put(self.key, bins={"a": 1})
+        client.put(self.key, bins={"a": 1})
 
         inject_latency_command = [
             "sudo",
@@ -84,12 +84,12 @@ class TestTimeoutDelay:
         print(f"Injecting latency of {self.INJECTED_LATENCY_MS} ms for outgoing packets from client to server")
         subprocess.run(args=inject_latency_command, check=True)
 
-        yield
+        yield client
 
         DELETE_LATENCY_COMMAND = ["sudo", "tcdel", CONTAINER_NAME, "--docker", "--all"]
         subprocess.run(args=DELETE_LATENCY_COMMAND, check=True)
 
-        self.client.close()
+        client.close()
 
     TestCase = namedtuple(
         "TestCase",
@@ -114,7 +114,7 @@ class TestTimeoutDelay:
             expected_recovered_count=0,
         ),
     ])
-    def test_timeout_delay(self, timeout_delay_ms, expected_aborted_count, expected_recovered_count):
+    def test_timeout_delay(self, as_client, timeout_delay_ms, expected_aborted_count, expected_recovered_count):
         policy = {
             # This socket_timeout and max_retries should cause get() to timeout immediately
             # and trigger the timeout delay window
@@ -126,7 +126,7 @@ class TestTimeoutDelay:
         }
         print(f"Trigger socket timeout and start timeout delay window of {timeout_delay_ms} ms...")
         with pytest.raises(e.TimeoutError):
-            self.client.get(key=self.key, policy=policy)
+            as_client.get(key=self.key, policy=policy)
 
         # When a connection is aborted, it will not be updated precisely when the timeout delay window
         # ends. We need to wait for the tend thread to update the cluster's stats properly.
@@ -139,7 +139,7 @@ class TestTimeoutDelay:
 
         # By now, we have passed the timeout delay window
         # And we assume the tend thread has attempted to drain the connection
-        cluster_stats = self.client.get_stats()
+        cluster_stats = as_client.get_stats()
         print("Using standard metrics to get synchronous connection statistics...")
         # If the first assert fails, we won't know the number of recovered connections
         print("Num of aborted connections:", cluster_stats.nodes[0].conns.aborted)
