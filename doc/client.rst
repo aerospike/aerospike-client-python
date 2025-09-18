@@ -1244,6 +1244,13 @@ Metrics
 .. class:: Client
     :noindex:
 
+    .. method:: get_stats()
+
+        Retrieve aerospike client instance statistics.
+
+        :return: an instance of :py:class:`~aerospike_helpers.metrics.ClusterStats`
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
     .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
 
         Enable extended periodic cluster and node latency metrics.
@@ -1286,9 +1293,7 @@ Scan and Query Constructors
         See :ref:`aerospike.Query` for more details.
 
         :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the records \
-            which are not part of any *set* will be queried (**Note**: this is \
-            different from not providing the *set* in :meth:`scan`).
+        :param str set: optional specified set name. Otherwise, all records in the specified namespace will be queried.
         :return: an :py:class:`aerospike.Query` class.
 
 .. _admin_user_dict:
