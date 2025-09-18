@@ -150,10 +150,12 @@ class TestTimeoutDelay(unittest.TestCase):
                 print("Number of client connections reaped by server:", stdout)
 
                 self.assertEqual(
-                    cluster_stats.nodes[0].conns.aborted, expected_abort_count
+                    cluster_stats.nodes[0].conns.aborted, expected_abort_count,
+                    msg="Actual abort count doesn't match expected abort count"
                 )
                 self.assertEqual(
-                    cluster_stats.nodes[0].conns.recovered, expected_recovered_count
+                    cluster_stats.nodes[0].conns.recovered, expected_recovered_count,
+                    msg="Actual recovered count doesn't match expected recovered count"
                 )
 
 
