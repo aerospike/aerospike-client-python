@@ -92,7 +92,7 @@ class TestTimeoutDelay(unittest.TestCase):
             "--delay",
             f"{latency_ms}ms",
         ]
-        print(f"Injecting latency of {latency_ms} ms between the client and server")
+        print(f"Injecting latency of {latency_ms} ms for outgoing packets from client to server")
         subprocess.run(args=inject_latency_command, check=True)
 
     def test_case(self):
