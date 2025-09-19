@@ -42,7 +42,7 @@ extensions = [
     "sphinxcontrib.spelling"
 ]
 napoleon_google_docstring = True
-intersphinx_mapping = {"python": ("https://docs.python.org/3.8", None)}
+intersphinx_mapping = {"python": ("https://docs.python.org/3", None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = []
@@ -255,7 +255,7 @@ todo_include_todos = True
 
 # Spelling check
 
-spelling_ignore_pypi_package_names = True
+spelling_ignore_pypi_package_names = False
 
 linkcheck_anchors_ignore = [
     'truncate',
@@ -268,3 +268,5 @@ linkcheck_anchors_ignore = [
 linkcheck_ignore = [
     "https://docs.aerospike.com/server/guide/security/index.html"
 ]
+
+linkcheck_timeout = 120

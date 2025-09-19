@@ -306,11 +306,11 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as excinfo:
+        with pytest.raises(e.NamespaceNotFound) as excinfo:
             self.as_connection.index_list_create(
                 "test1", "demo", "numeric_list", aerospike.INDEX_NUMERIC, "test_numeric_list_index", policy
             )
-        assert excinfo.value.code == 4
+        assert excinfo.code == 20
 
     def test_neg_listindex_with_incorrect_set(self):
         """

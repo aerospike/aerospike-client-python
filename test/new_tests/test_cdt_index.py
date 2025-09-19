@@ -649,7 +649,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
         """
         policy = {}
 
-        with pytest.raises(e.InvalidRequest) as excinfo:
+        with pytest.raises(e.NamespaceNotFound) as excinfo:
             self.as_connection.index_cdt_create(
                 "test1",
                 "demo",
@@ -661,7 +661,7 @@ cfasdcalskdcbacfq34915rwcfasdcascnabscbaskjdbcalsjkbcdasc');
                 policy,
             )
 
-        assert excinfo.value.code == 4
+        assert excinfo.value.code == 20
 
     def test_neg_cdtindex_with_incorrect_set(self):
         """

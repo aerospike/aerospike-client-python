@@ -376,23 +376,40 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
         }
 
         PyObject *py_op = PyTuple_GetItem(py_predicate, 0);
-        PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
-
-        if (!py_op || !py_op_data) {
+        if (!py_op) {
             as_error_update(&err, AEROSPIKE_ERR_CLIENT,
                             "Failed to get predicate elements");
             goto CLEANUP;
         }
-        if (!PyLong_Check(py_op_data)) {
+
+        PyObject *py_op_data = PyTuple_GetItem(py_predicate, 1);
+        if (!py_op_data) {
+            as_error_update(&err, AEROSPIKE_ERR_CLIENT,
+                            "Failed to get predicate elements");
+            goto CLEANUP;
+        }
+        else if (!PyLong_Check(py_op_data)) {
             as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid Predicate");
             goto CLEANUP;
         }
 
-        as_predicate_type op = (as_predicate_type)PyLong_AsLong(py_op);
+        long op = PyLong_AsLong(py_op);
+        if (op == -1 && PyErr_Occurred()) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "unknown predicate type");
+            goto CLEANUP;
+        }
+
         as_index_datatype op_data =
             (as_index_datatype)PyLong_AsLong(py_op_data);
+        if (op == -1 && PyErr_Occurred()) {
+            as_error_update(&err, AEROSPIKE_ERR_PARAM,
+                            "unknown index data type");
+            goto CLEANUP;
+        }
+
         rc = query_where_add(
-            &query_ptr, op, op_data,
+            &query_ptr, (as_predicate_type)op, op_data,
             size > 2 ? PyTuple_GetItem(py_predicate, 2) : Py_None,
             size > 3 ? PyTuple_GetItem(py_predicate, 3) : Py_None,
             size > 4 ? PyTuple_GetItem(py_predicate, 4) : Py_None,
@@ -469,7 +486,7 @@ CLEANUP:
         return NULL;
     }
 
-    return PyLong_FromLong(query_id);
+    return PyLong_FromUnsignedLongLong(query_id);
 }
 
 /**

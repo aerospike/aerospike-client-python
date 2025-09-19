@@ -57,16 +57,16 @@ class TestDropUser(object):
         time.sleep(2)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user, policy)
+        user_info = self.client.admin_query_user_info(user, policy)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
 
         status = self.client.admin_drop_user(user, policy)
 
         assert status == 0
 
         try:
-            user_details = self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -94,16 +94,16 @@ class TestDropUser(object):
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user)
+        user_info = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = self.client.admin_drop_user(user)
         assert status == 0
 
         time.sleep(2)
 
         try:
-            user_details = self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -122,16 +122,16 @@ class TestDropUser(object):
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user)
+        user_info = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_info["roles"] == ["read", "read-write", "sys-admin"]
         status = self.client.admin_drop_user(user)
         assert status == 0
 
         time.sleep(1)
 
         try:
-            user_details = self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -143,7 +143,7 @@ class TestDropUser(object):
         """
         user = "foo-test"
         try:
-            self.client.admin_query_user(user)
+            self.client.admin_query_user_info(user)
 
         except e.InvalidUser as exception:
             assert exception.code == 60
@@ -167,9 +167,9 @@ class TestDropUser(object):
         time.sleep(1)
 
         assert status == 0
-        user_details = self.client.admin_query_user(user)
+        user_details = self.client.admin_query_user_info(user)
 
-        assert user_details == ["read", "read-write", "sys-admin"]
+        assert user_details["roles"] == ["read", "read-write", "sys-admin"]
         policy = {"timeout": 0.2}
         with pytest.raises(e.ParamError) as excinfo:
             status = self.client.admin_drop_user(user, policy)
