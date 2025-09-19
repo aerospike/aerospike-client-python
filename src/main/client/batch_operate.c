@@ -30,6 +30,7 @@
 
 #include "client.h"
 #include "conversions.h"
+#include "operate.h"
 #include "exceptions.h"
 #include "policy.h"
 
@@ -371,6 +372,11 @@ PyObject *AerospikeClient_Batch_Operate(AerospikeClient *self, PyObject *args,
         as_error_update(&err, AEROSPIKE_ERR_PARAM,
                         "keys should be a list of aerospike key tuples");
         goto error;
+    }
+
+    if (py_policy_batch == Py_None) {
+        // Let C client choose the client config policy to use
+        py_policy_batch = NULL;
     }
 
     if (py_ttl && py_ttl != Py_None && !PyLong_Check(py_ttl)) {

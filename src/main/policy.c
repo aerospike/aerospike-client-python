@@ -117,8 +117,8 @@
             }                                                                  \
             Py_DECREF(py_field_name);                                          \
             if (py_exp_list) {                                                 \
-                if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
-                    AEROSPIKE_OK) {                                            \
+                if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list,     \
+                                             err, false) == AEROSPIKE_OK) {    \
                     policy->filter_exp = exp_list;                             \
                     *exp_list_p = exp_list;                                    \
                 }                                                              \
@@ -129,12 +129,12 @@
         }                                                                      \
     }
 
-#define MAP_POLICY_SET_FIELD(__field)                                          \
+#define MAP_POLICY_SET_FIELD(__field, method)                                  \
     {                                                                          \
         PyObject *py_field = PyDict_GetItemString(py_policy, #__field);        \
         if (py_field) {                                                        \
             if (PyLong_Check(py_field)) {                                      \
-                __field = PyLong_AsLong(py_field);                             \
+                __field = method(py_field);                                    \
             }                                                                  \
             else {                                                             \
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,               \
@@ -834,8 +834,8 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
     uint32_t map_write_flags = AS_MAP_WRITE_DEFAULT;
     bool persist_index = false;
 
-    MAP_POLICY_SET_FIELD(map_order);
-    MAP_POLICY_SET_FIELD(map_write_flags);
+    MAP_POLICY_SET_FIELD(map_order, PyLong_AsLong);
+    MAP_POLICY_SET_FIELD(map_write_flags, PyLong_AsUnsignedLong);
 
     PyObject *py_persist_index =
         PyDict_GetItemString(py_policy, "persist_index");
@@ -875,7 +875,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     py_val = PyDict_GetItemString(py_policy, "list_order");
     if (py_val && py_val != Py_None) {
         if (PyLong_Check(py_val)) {
-            list_order = (int64_t)PyLong_AsLong(py_val);
+            list_order = PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert list_order");
@@ -890,7 +890,7 @@ as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
     py_val = PyDict_GetItemString(py_policy, "write_flags");
     if (py_val && py_val != Py_None) {
         if (PyLong_Check(py_val)) {
-            flags = (int64_t)PyLong_AsLong(py_val);
+            flags = PyLong_AsLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert write_flags");
@@ -927,7 +927,7 @@ as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
     py_val = PyDict_GetItemString(py_policy, "flags");
     if (py_val && py_val != Py_None) {
         if (PyLong_Check(py_val)) {
-            flags = (int64_t)PyLong_AsLong(py_val);
+            flags = (int64_t)PyLong_AsLongLong(py_val);
             if (PyErr_Occurred()) {
                 return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                        "Failed to convert flags.");
@@ -1138,7 +1138,7 @@ set_as_metrics_listeners_using_pyobject(as_error *err,
     }
 
     if (!is_pyobj_correct_as_helpers_type(py_metricslisteners, "metrics",
-                                          "MetricsListeners")) {
+                                          "MetricsListeners", false)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         "metrics_listeners",
                         "aerospike_helpers.metrics.MetricsListeners");
@@ -1204,21 +1204,12 @@ error:
 
 #define GET_ATTR_ERROR_MSG "Unable to fetch %s attribute"
 
-// metrics_policy must be declared already
-as_status
-init_and_set_as_metrics_policy_using_pyobject(as_error *err,
-                                              PyObject *py_metrics_policy,
-                                              as_metrics_policy *metrics_policy)
+int set_as_metrics_policy_using_pyobject(as_error *err,
+                                         PyObject *py_metrics_policy,
+                                         as_metrics_policy *metrics_policy)
 {
-    as_metrics_policy_init(metrics_policy);
-
-    if (!py_metrics_policy || py_metrics_policy == Py_None) {
-        // Use default metrics policy
-        return AEROSPIKE_OK;
-    }
-
     if (!is_pyobj_correct_as_helpers_type(py_metrics_policy, "metrics",
-                                          "MetricsPolicy")) {
+                                          "MetricsPolicy", false)) {
         return as_error_update(
             err, AEROSPIKE_ERR_PARAM,
             "policy parameter must be an aerospike_helpers.MetricsPolicy type");
@@ -1246,12 +1237,12 @@ init_and_set_as_metrics_policy_using_pyobject(as_error *err,
         // Need to deallocate metrics listeners' udata
         goto error;
     }
-    if (!PyUnicode_Check(py_report_dir)) {
+    const char *report_dir = convert_pyobject_to_str(py_report_dir);
+    if (!report_dir) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         "report_dir", "str");
         goto error;
     }
-    const char *report_dir = PyUnicode_AsUTF8(py_report_dir);
     if (strlen(report_dir) >= sizeof(metrics_policy->report_dir)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM,
                         "MetricsPolicy.report_dir must be less than 256 chars");
@@ -1259,83 +1250,108 @@ init_and_set_as_metrics_policy_using_pyobject(as_error *err,
     }
     strcpy(metrics_policy->report_dir, report_dir);
 
+    const char *report_size_limit_attr_name = "report_size_limit";
     PyObject *py_report_size_limit =
-        PyObject_GetAttrString(py_metrics_policy, "report_size_limit");
+        PyObject_GetAttrString(py_metrics_policy, report_size_limit_attr_name);
     if (!py_report_size_limit) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                        "report_size_limit");
-        goto error;
-    }
-    if (!PyLong_CheckExact(py_report_size_limit)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
-        goto error;
-    }
-    unsigned long long report_size_limit =
-        PyLong_AsUnsignedLongLong(py_report_size_limit);
-    if (report_size_limit == (unsigned long long)-1 && PyErr_Occurred()) {
-        PyErr_Clear();
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
-        goto error;
-    }
-    if (report_size_limit > UINT64_MAX) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
-                        "report_size_limit", "unsigned 64-bit integer");
+                        report_size_limit_attr_name);
         goto error;
     }
 
-    metrics_policy->report_size_limit = (uint64_t)report_size_limit;
+    uint64_t report_size_limit =
+        convert_pyobject_to_uint64_t(py_report_size_limit);
+    if (PyErr_Occurred()) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        report_size_limit_attr_name, "unsigned 64-bit integer");
+        goto error;
+    }
+    metrics_policy->report_size_limit = report_size_limit;
 
-    const char *uint32_fields[] = {"interval", "latency_columns",
-                                   "latency_shift"};
-    uint32_t *uint32_ptrs[] = {&metrics_policy->interval,
-                               &metrics_policy->latency_columns,
-                               &metrics_policy->latency_shift};
+    const char *interval_field_name = "interval";
+    PyObject *py_interval =
+        PyObject_GetAttrString(py_metrics_policy, interval_field_name);
+    if (!py_interval) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        interval_field_name);
+        goto error;
+    }
+
+    uint32_t interval = convert_pyobject_to_uint32_t(py_interval);
+    if (PyErr_Occurred()) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        interval_field_name, "unsigned 32-bit integer");
+        goto error;
+    }
+    metrics_policy->interval = interval;
+
+    const char *uint8_field_names[] = {"latency_columns", "latency_shift"};
+    uint8_t *field_refs[] = {&metrics_policy->latency_columns,
+                             &metrics_policy->latency_shift};
     for (unsigned long i = 0;
-         i < sizeof(uint32_fields) / sizeof(uint32_fields[0]); i++) {
-        PyObject *py_field_value =
-            PyObject_GetAttrString(py_metrics_policy, uint32_fields[i]);
-        if (!py_field_value) {
+         i < sizeof(uint8_field_names) / sizeof(uint8_field_names[0]); i++) {
+        PyObject *py_attr_value =
+            PyObject_GetAttrString(py_metrics_policy, uint8_field_names[i]);
+        if (!py_attr_value) {
             as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
-                            uint32_fields[i]);
+                            uint8_field_names[i]);
             goto error;
         }
 
-        // There's a helper function in the Python client wrapper code called
-        // get_uint32_value
-        // But we don't use it because it doesn't set which exact line
-        // an error occurs. It only returns an error code when it happens
-        if (!PyLong_CheckExact(py_field_value)) {
+        uint8_t attr_value = convert_pyobject_to_uint8_t(py_attr_value);
+        if (PyErr_Occurred()) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
+                            INVALID_ATTR_TYPE_ERROR_MSG, uint8_field_names[i],
+                            "unsigned 8-bit integer");
             goto error;
         }
-
-        unsigned long field_value = PyLong_AsUnsignedLong(py_field_value);
-        if (field_value == (unsigned long)-1 && PyErr_Occurred()) {
-            PyErr_Clear();
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
-            goto error;
-        }
-
-        if (field_value > UINT32_MAX) {
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            INVALID_ATTR_TYPE_ERROR_MSG, uint32_fields[i],
-                            "unsigned 32-bit integer");
-            Py_DECREF(py_field_value);
-            goto error;
-        }
-
-        *uint32_ptrs[i] = (uint32_t)field_value;
+        *field_refs[i] = attr_value;
     }
 
-    return AEROSPIKE_OK;
+    const char *labels_attr_name = "labels";
+    PyObject *py_labels =
+        PyObject_GetAttrString(py_metrics_policy, labels_attr_name);
+    if (!py_labels) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, GET_ATTR_ERROR_MSG,
+                        labels_attr_name);
+        goto error;
+    }
+    else if (PyDict_Check(py_labels)) {
+        PyObject *py_label_name, *py_label_value;
+        Py_ssize_t pos = 0;
+        while (PyDict_Next(py_labels, &pos, &py_label_name, &py_label_value)) {
+            const char *label_name = convert_pyobject_to_str(py_label_name);
+            if (label_name == NULL) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_ATTR_TYPE_ERROR_MSG, labels_attr_name,
+                                "dict[str, str]");
+                goto while_error;
+            }
+            const char *label_value = convert_pyobject_to_str(py_label_value);
+            if (label_value == NULL) {
+                as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                INVALID_ATTR_TYPE_ERROR_MSG, labels_attr_name,
+                                "dict[str, str]");
+                goto while_error;
+            }
+
+            as_metrics_policy_add_label(metrics_policy, label_name,
+                                        label_value);
+            continue;
+
+        while_error:
+            Py_DECREF(py_labels);
+            goto error;
+        }
+        Py_DECREF(py_labels);
+    }
+    else {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
+                        labels_attr_name, "dict[str, str]");
+        goto error;
+    }
+
+    return 0;
 
 error:
     // udata would've been allocated if MetricsListener was successfully converted to C code
@@ -1343,5 +1359,5 @@ error:
         free_py_listener_data(
             (PyListenerData *)metrics_policy->metrics_listeners.udata);
     }
-    return err->code;
+    return -1;
 }

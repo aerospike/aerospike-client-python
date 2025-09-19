@@ -33,6 +33,7 @@
 #include "nullobject.h"
 #include "cdt_types.h"
 #include "transaction.h"
+#include "config_provider.h"
 
 #include <aerospike/as_operations.h>
 #include <aerospike/as_log_macros.h>
@@ -41,6 +42,7 @@
 #include <aerospike/as_record.h>
 #include <aerospike/as_exp_operations.h>
 #include <aerospike/aerospike_txn.h>
+#include <aerospike/version.h>
 
 PyObject *py_global_hosts;
 int counter = 0xA8000000;
@@ -144,6 +146,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"POLICY_REPLICA_SEQUENCE", .value.integer = AS_POLICY_REPLICA_SEQUENCE},
     {"POLICY_REPLICA_PREFER_RACK",
      .value.integer = AS_POLICY_REPLICA_PREFER_RACK},
+    {"POLICY_REPLICA_RANDOM", .value.integer = AS_POLICY_REPLICA_RANDOM},
 
     {"POLICY_COMMIT_LEVEL_ALL", .value.integer = AS_POLICY_COMMIT_LEVEL_ALL},
     {"POLICY_COMMIT_LEVEL_MASTER",
@@ -503,17 +506,12 @@ static struct module_constant_name_to_value module_constants[] = {
 
     {"COMMIT_OK", .value.integer = AS_COMMIT_OK},
     {"COMMIT_ALREADY_COMMITTED", .value.integer = AS_COMMIT_ALREADY_COMMITTED},
-    {"COMMIT_ALREADY_ABORTED", .value.integer = AS_COMMIT_ALREADY_ABORTED},
-    {"COMMIT_VERIFY_FAILED", .value.integer = AS_COMMIT_VERIFY_FAILED},
-    {"COMMIT_MARK_ROLL_FORWARD_ABANDONED",
-     .value.integer = AS_COMMIT_MARK_ROLL_FORWARD_ABANDONED},
     {"COMMIT_ROLL_FORWARD_ABANDONED",
      .value.integer = AS_COMMIT_ROLL_FORWARD_ABANDONED},
     {"COMMIT_CLOSE_ABANDONED", .value.integer = AS_COMMIT_CLOSE_ABANDONED},
 
     {"ABORT_OK", .value.integer = AS_ABORT_OK},
     {"ABORT_ALREADY_ABORTED", .value.integer = AS_ABORT_ALREADY_ABORTED},
-    {"ABORT_ALREADY_COMMITTED", .value.integer = AS_ABORT_ALREADY_COMMITTED},
     {"ABORT_ROLL_BACK_ABANDONED",
      .value.integer = AS_ABORT_ROLL_BACK_ABANDONED},
     {"ABORT_CLOSE_ABANDONED", .value.integer = AS_ABORT_CLOSE_ABANDONED},
@@ -528,14 +526,17 @@ static struct module_constant_name_to_value module_constants[] = {
 
 struct submodule_name_to_creation_method {
     const char *name;
+    const char *fully_qualified_name;
     PyObject *(*pyobject_creation_method)(void);
 };
+
+#define SHORT_AND_FULLY_QUALIFIED_NAME(s) #s, "aerospike." #s
 
 static struct submodule_name_to_creation_method py_submodules[] = {
     // We don't use module's __name__ attribute
     // because the modules' __name__ is the fully qualified name which includes the package name
-    {"exception", AerospikeException_New},
-    {"predicates", AerospikePredicates_New},
+    {SHORT_AND_FULLY_QUALIFIED_NAME(exception), AerospikeException_New},
+    {SHORT_AND_FULLY_QUALIFIED_NAME(predicates), AerospikePredicates_New},
 };
 
 struct type_name_to_creation_method {
@@ -558,17 +559,34 @@ static struct type_name_to_creation_method py_module_types[] = {
     {"CDTWildcard", AerospikeWildcardObject_Ready},
     {"CDTInfinite", AerospikeInfiniteObject_Ready},
     {"Transaction", AerospikeTransaction_Ready},
+    {"ConfigProvider", AerospikeConfigProvider_Ready},
 };
+
+AS_EXTERN extern char *aerospike_client_language;
+
+bool is_python_client_version_set_for_user_agent = false;
+
+void aerospike_free(void *self)
+{
+    // The aerospike module may be created, but initializing the module may fail.
+    // In that case, our module will be cleaned up by the garbage collector and this m_free callback will be called.
+    // We don't want to deallocate aerospike_client_version pointing to a string in data section of memory
+    // That is the default value for the C client
+    if (is_python_client_version_set_for_user_agent) {
+        cf_free(aerospike_client_version);
+        is_python_client_version_set_for_user_agent = false;
+    }
+}
 
 PyMODINIT_FUNC PyInit_aerospike(void)
 {
-    static struct PyModuleDef moduledef = {
-        PyModuleDef_HEAD_INIT,
-        .m_name = AEROSPIKE_MODULE_NAME,
-        .m_doc = "Aerospike Python Client",
-        .m_methods = aerospike_methods,
-        .m_size = -1,
-    };
+    aerospike_client_language = "python";
+    static struct PyModuleDef moduledef = {PyModuleDef_HEAD_INIT,
+                                           .m_name = AEROSPIKE_MODULE_NAME,
+                                           .m_doc = "Aerospike Python Client",
+                                           .m_methods = aerospike_methods,
+                                           .m_size = -1,
+                                           .m_free = aerospike_free};
 
     PyObject *py_aerospike_module = PyModule_Create(&moduledef);
     if (py_aerospike_module == NULL) {
@@ -579,27 +597,11 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 
     py_global_hosts = PyDict_New();
     if (py_global_hosts == NULL) {
-        goto MODULE_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     unsigned long i = 0;
     int retval;
-    for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
-        PyObject *(*create_py_submodule)(void) =
-            py_submodules[i].pyobject_creation_method;
-        PyObject *py_submodule = create_py_submodule();
-        if (py_submodule == NULL) {
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
-        }
-
-        retval = PyModule_AddObject(py_aerospike_module, py_submodules[i].name,
-                                    py_submodule);
-        if (retval == -1) {
-            Py_DECREF(py_submodule);
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
-        }
-    }
-
     for (i = 0; i < sizeof(py_module_types) / sizeof(py_module_types[0]); i++) {
         PyTypeObject *(*py_type_ready_func)(void) =
             py_module_types[i].pytype_ready_method;
@@ -638,11 +640,93 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
     }
 
+    // Allows submodules to be imported using "import aerospike.<submodule-name>"
+    // https://github.com/python/cpython/issues/87533#issuecomment-2373119452
+    PyObject *py_sys = PyImport_ImportModule("sys");
+    if (py_sys == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+
+    PyObject *py_sys_dot_modules_dict =
+        PyObject_GetAttrString(py_sys, "modules");
+    Py_DECREF(py_sys);
+    if (py_sys_dot_modules_dict == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+
+    for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
+        PyObject *(*create_py_submodule)(void) =
+            py_submodules[i].pyobject_creation_method;
+        PyObject *py_submodule = create_py_submodule();
+        if (py_submodule == NULL) {
+            goto SYS_DOT_MODULES_DICT_CLEANUP_ON_ERROR;
+        }
+
+        int retval = PyDict_SetItemString(py_sys_dot_modules_dict,
+                                          py_submodules[i].fully_qualified_name,
+                                          py_submodule);
+        if (retval == -1) {
+            goto SUBMODULE_CLEANUP_ON_ERROR;
+        }
+
+        retval = PyModule_AddObject(py_aerospike_module, py_submodules[i].name,
+                                    py_submodule);
+        if (retval == -1) {
+            goto SUBMODULE_CLEANUP_ON_ERROR;
+        }
+        continue;
+
+    SUBMODULE_CLEANUP_ON_ERROR:
+        Py_DECREF(py_submodule);
+        goto SYS_DOT_MODULES_DICT_CLEANUP_ON_ERROR;
+    }
+
+    Py_DECREF(py_sys_dot_modules_dict);
+
+    PyObject *py_metadata_subpackage =
+        PyImport_ImportModule("importlib.metadata");
+    if (py_metadata_subpackage == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+
+    PyObject *py_version_callback =
+        PyObject_GetAttrString(py_metadata_subpackage, "version");
+    Py_DECREF(py_metadata_subpackage);
+    if (py_version_callback == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+
+    PyObject *py_aerospike_module_version_str =
+        PyObject_CallFunction(py_version_callback, "s", AEROSPIKE_MODULE_NAME);
+    Py_DECREF(py_version_callback);
+    if (py_aerospike_module_version_str == NULL) {
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+
+    const char *aerospike_module_version =
+        PyUnicode_AsUTF8(py_aerospike_module_version_str);
+    if (aerospike_module_version == NULL) {
+        Py_DECREF(py_aerospike_module_version_str);
+        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+    }
+
+    // Here we assume that the original value of aerospike_client_version was not heap allocated
+    aerospike_client_version = cf_strdup(aerospike_module_version);
+    is_python_client_version_set_for_user_agent = true;
+    Py_DECREF(py_aerospike_module_version_str);
+
     return py_aerospike_module;
+
+SYS_DOT_MODULES_DICT_CLEANUP_ON_ERROR:
+    Py_DECREF(py_sys_dot_modules_dict);
 
 GLOBAL_HOSTS_CLEANUP_ON_ERROR:
     Py_DECREF(py_global_hosts);
-MODULE_CLEANUP_ON_ERROR:
+
+AEROSPIKE_MODULE_CLEANUP_ON_ERROR:
     Py_DECREF(py_aerospike_module);
+
+    // TODO: Clean up any submodules that were manually added to sys.modules
+    // This isn't a big deal though, so just leave off for now
     return NULL;
 }

@@ -7,7 +7,9 @@
 
 # This stanza must come first.
 service {
+	{% if sc is true %}
 	node-id a1
+	{% endif %}
 	feature-key-file /etc/aerospike/features.conf
 	cluster-name docker
 }
@@ -20,14 +22,19 @@ logging {
 }
 
 network {
+	{% if tls is true %}
 	tls docker {
 		key-file /etc/ssl/private/server.pem
 		cert-file /etc/ssl/certs/server.cer
+		ca-file /etc/ssl/certs/ca.cer
 	}
+	{% endif %}
 	service {
+		{% if tls is true %}
 		tls-port 4333
-		tls-authenticate-client false
+		tls-authenticate-client any
 		tls-name docker
+		{% endif %}
 		address any
 		port 3000
 
@@ -57,8 +64,10 @@ network {
 }
 
 namespace test {
+	{% if sc is true %}
 	strong-consistency-allow-expunge true
 	strong-consistency true
+	{% endif %}
 	replication-factor 1
 	default-ttl 2592000
 	nsup-period 120
@@ -72,6 +81,12 @@ namespace test {
 		read-page-cache true
 	}
 }
+
+{% if security is true %}
 security {
 	enable-quotas true
+	log {
+		report-violation true
+	}
 }
+{% endif %}

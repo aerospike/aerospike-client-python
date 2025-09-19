@@ -1,3 +1,18 @@
+## About
+
+This Docker image deploys an Aerospike server with these features enabled by default:
+- Strong consistency
+- Security
+- TLS mutual authentication
+
+To disable any of the above features, start up the Docker container with any combination of these environment variables set:
+```sh
+# The value of the environment variable doesn't actually matter
+NO_SC=1
+NO_SECURITY=1
+NO_TLS=1
+```
+
 ## Note
 
 The CA certificate in this folder is a fake certificate used both by the client and server for connecting via TLS.
