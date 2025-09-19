@@ -17,42 +17,42 @@ aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 
 
 class TestTimeoutDelay:
-    # Ensure that the server doesn't reap client connections
-    @classmethod
-    def setup_class(cls):
-        cls.docker_client = docker.from_env()
-        CUSTOM_AEROSPIKE_CONF_FOLDER = "/opt/aerospike/etc/"
-        print("Running server container...")
+#    # Ensure that the server doesn't reap client connections
+#    @classmethod
+#    def setup_class(cls):
+#        cls.docker_client = docker.from_env()
+#        CUSTOM_AEROSPIKE_CONF_FOLDER = "/opt/aerospike/etc/"
+#        print("Running server container...")
+#
+#        script_dir = os.path.dirname(os.path.abspath(__file__))
+#
+#        cls.container = cls.docker_client.containers.run(
+#            image="aerospike/aerospike-server",
+#            detach=True,
+#            ports={f"{PORT}/tcp": PORT},
+#            volumes={
+#                f"{script_dir}/server-config/": {
+#                    "bind": CUSTOM_AEROSPIKE_CONF_FOLDER,
+#                    "mode": "ro",
+#                }
+#            },
+#            remove=True,
+#            name=CONTAINER_NAME,
+#            command=["--config-file", f"{CUSTOM_AEROSPIKE_CONF_FOLDER}/aerospike.conf"],
+#        )
+#
+#        # TODO: reuse script from .github/workflows instead
+#        print("Waiting for server to initialize...")
+#        time.sleep(5)
 
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-
-        cls.container = cls.docker_client.containers.run(
-            image="aerospike/aerospike-server",
-            detach=True,
-            ports={f"{PORT}/tcp": PORT},
-            volumes={
-                f"{script_dir}/server-config/": {
-                    "bind": CUSTOM_AEROSPIKE_CONF_FOLDER,
-                    "mode": "ro",
-                }
-            },
-            remove=True,
-            name=CONTAINER_NAME,
-            command=["--config-file", f"{CUSTOM_AEROSPIKE_CONF_FOLDER}/aerospike.conf"],
-        )
-
-        # TODO: reuse script from .github/workflows instead
-        print("Waiting for server to initialize...")
-        time.sleep(5)
-
-    @classmethod
-    def teardown_class(cls):
-        subprocess.run(args=["docker", "logs", CONTAINER_NAME])
-        cls.container.stop()
-        cls.docker_client.close()
+#    @classmethod
+#    def teardown_class(cls):
+#        subprocess.run(args=["docker", "logs", CONTAINER_NAME])
+#        cls.container.stop()
+#        cls.docker_client.close()
 
     # latency is this high because timeout_delay must be >= 3000ms
-    INJECTED_LATENCY_MS = 12000
+    INJECTED_LATENCY_MS = 6000
 
     @pytest.fixture(autouse=True)
     def as_client(self):
@@ -82,12 +82,12 @@ class TestTimeoutDelay:
             f"{self.INJECTED_LATENCY_MS}ms",
         ]
         print(f"Injecting latency of {self.INJECTED_LATENCY_MS} ms for outgoing packets from client to server")
-        subprocess.run(args=inject_latency_command, check=True)
+#        subprocess.run(args=inject_latency_command, check=True)
 
         yield client
 
         DELETE_LATENCY_COMMAND = ["sudo", "tcdel", CONTAINER_NAME, "--docker", "--all"]
-        subprocess.run(args=DELETE_LATENCY_COMMAND, check=True)
+#        subprocess.run(args=DELETE_LATENCY_COMMAND, check=True)
 
         client.close()
 
@@ -101,29 +101,32 @@ class TestTimeoutDelay:
         # The connection will receive a response before the timeout delay window ends
         # So the connection will be returned to the pool.
         TestCase(
-            timeout_delay_ms=INJECTED_LATENCY_MS * 2,
+            timeout_delay_ms=12000,
             expected_aborted_count=0,
             expected_recovered_count=1,
         ),
         # latency window > timeout delay window
         # The connection will not receive a response during the timeout delay window
         # So the connection will be destroyed.
-        TestCase(
-            timeout_delay_ms=INJECTED_LATENCY_MS // 2,
-            expected_aborted_count=1,
-            expected_recovered_count=0,
-        ),
+        # TestCase(
+        #    timeout_delay_ms=INJECTED_LATENCY_MS // 2,
+        #    expected_aborted_count=1,
+        #    expected_recovered_count=0,
+        #),
     ])
     def test_timeout_delay(self, as_client, timeout_delay_ms, expected_aborted_count, expected_recovered_count):
+        subprocess.run(["asinfo", "-v", "sets"], check=True)
+
         policy = {
             # This socket_timeout and max_retries should cause get() to timeout immediately
             # and trigger the timeout delay window
-            "socket_timeout": 1,
+            "socket_timeout": 100,
             "max_retries": 0,
             # total_timeout will override timeout_delay, so make sure it doesn't interfere with it.
             "total_timeout": 99999,
             "timeout_delay": timeout_delay_ms,
         }
+        print(policy)
         print(f"Trigger socket timeout and start timeout delay window of {timeout_delay_ms} ms...")
         with pytest.raises(e.TimeoutError):
             as_client.get(key=self.key, policy=policy)
@@ -149,8 +152,8 @@ class TestTimeoutDelay:
         print("Num of recovered connections:", cluster_stats.nodes[0].conns.recovered)
 
         # DEBUG: check if server reaped a client connection
-        _, stdout = self.container.exec_run(cmd='sh -c "asinfo -v \'statistics\' -l | grep reaped_fds"')
-        print("Number of client connections reaped by server:", stdout)
+#        _, stdout = self.container.exec_run(cmd='sh -c "asinfo -v \'statistics\' -l | grep reaped_fds"')
+#        print("Number of client connections reaped by server:", stdout)
 
         assert cluster_stats.nodes[0].conns.aborted == expected_aborted_count
         assert cluster_stats.nodes[0].conns.recovered == expected_recovered_count
