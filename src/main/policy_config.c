@@ -611,11 +611,11 @@ as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy)
         return status;
     }
 
-    status = set_optional_uint32_property(
-        (uint32_t *)&info_policy->timeout_delay, py_policy, "timeout_delay");
-    if (status != AEROSPIKE_OK) {
-        return status;
-    }
+    // status = set_optional_uint32_property(
+    //     (uint32_t *)&info_policy->timeout_delay, py_policy, "timeout_delay");
+    // if (status != AEROSPIKE_OK) {
+    //     return status;
+    // }
 
     return AEROSPIKE_OK;
 }
