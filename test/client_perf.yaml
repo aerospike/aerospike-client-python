@@ -12,4 +12,11 @@ scenarios:
     - perfasd
 definitions:
   std:
-    - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_read
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_insert
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_update
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_delete
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_batch_read
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_batch_write
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_scan
+     - CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs_query
