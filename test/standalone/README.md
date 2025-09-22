@@ -21,6 +21,8 @@ on the server configuration.
 
 Requires a server configured to add latency to the `get()` command. We don't have time to automate this, for now.
 
+Also requires pytest so we can parametrize the test cases more easily.
+
 #### Alternate methods to test (that failed to work)
 
 We tried using `tcconfig` to introduce latency in the network between the client and server, but this causes the tend thread to hang because it needs to refresh the server's nodes on each tend. The connection recovery and abort process for timeout delay
