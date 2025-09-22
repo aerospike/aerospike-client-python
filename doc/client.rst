@@ -2151,13 +2151,7 @@ Info Policies
         * **timeout** (:class:`int`)
             | Read timeout in milliseconds
 
-        * **timeout_delay** (:class:`int`)
-            Number of milliseconds to wait after a socket read times out before closing the socket for
-            good. If set to zero, this feature will be disabled.
-
-            The value must be an unsigned 32-bit integer.
-
-            Default: ``3000``
+        .. Omitting timeout_delay until async info commands are supported for the python client
 
 .. _aerospike_admin_policies:
 
