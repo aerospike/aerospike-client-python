@@ -2151,7 +2151,6 @@ Info Policies
         * **timeout** (:class:`int`)
             | Read timeout in milliseconds
 
-        .. Omitting timeout_delay until async info commands are supported for the python client
 
 .. _aerospike_admin_policies:
 
