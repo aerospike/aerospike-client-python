@@ -3,9 +3,9 @@ import pytest
 import subprocess
 import time
 from collections import namedtuple
-import os
+# import os
 
-import docker
+# import docker
 from aerospike import exception as e
 
 CONTAINER_NAME = "aerospike"
@@ -17,39 +17,41 @@ aerospike.set_log_level(aerospike.LOG_LEVEL_DEBUG)
 
 
 class TestTimeoutDelay:
-#    # Ensure that the server doesn't reap client connections
-#    @classmethod
-#    def setup_class(cls):
-#        cls.docker_client = docker.from_env()
-#        CUSTOM_AEROSPIKE_CONF_FOLDER = "/opt/aerospike/etc/"
-#        print("Running server container...")
-#
-#        script_dir = os.path.dirname(os.path.abspath(__file__))
-#
-#        cls.container = cls.docker_client.containers.run(
-#            image="aerospike/aerospike-server",
-#            detach=True,
-#            ports={f"{PORT}/tcp": PORT},
-#            volumes={
-#                f"{script_dir}/server-config/": {
-#                    "bind": CUSTOM_AEROSPIKE_CONF_FOLDER,
-#                    "mode": "ro",
-#                }
-#            },
-#            remove=True,
-#            name=CONTAINER_NAME,
-#            command=["--config-file", f"{CUSTOM_AEROSPIKE_CONF_FOLDER}/aerospike.conf"],
-#        )
-#
-#        # TODO: reuse script from .github/workflows instead
-#        print("Waiting for server to initialize...")
-#        time.sleep(5)
+    # Ensure that the server doesn't reap client connections
+    '''
+        @classmethod
+        def setup_class(cls):
+            cls.docker_client = docker.from_env()
+            CUSTOM_AEROSPIKE_CONF_FOLDER = "/opt/aerospike/etc/"
+            print("Running server container...")
 
-#    @classmethod
-#    def teardown_class(cls):
-#        subprocess.run(args=["docker", "logs", CONTAINER_NAME])
-#        cls.container.stop()
-#        cls.docker_client.close()
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+
+            cls.container = cls.docker_client.containers.run(
+                image="aerospike/aerospike-server",
+                detach=True,
+                ports={f"{PORT}/tcp": PORT},
+                volumes={
+                    f"{script_dir}/server-config/": {
+                        "bind": CUSTOM_AEROSPIKE_CONF_FOLDER,
+                        "mode": "ro",
+                    }
+                },
+                remove=True,
+                name=CONTAINER_NAME,
+                command=["--config-file", f"{CUSTOM_AEROSPIKE_CONF_FOLDER}/aerospike.conf"],
+            )
+
+            # TODO: reuse script from .github/workflows instead
+            print("Waiting for server to initialize...")
+            time.sleep(5)
+
+        @classmethod
+        def teardown_class(cls):
+            subprocess.run(args=["docker", "logs", CONTAINER_NAME])
+            cls.container.stop()
+            cls.docker_client.close()
+        '''
 
     # latency is this high because timeout_delay must be >= 3000ms
     INJECTED_LATENCY_MS = 6000
@@ -58,7 +60,6 @@ class TestTimeoutDelay:
     def as_client(self):
         config = {
             "hosts": [
-                # TODO: get ip addr from docker client
                 ("127.0.0.1", PORT)
             ],
             # The default 1000ms tend interval runs frequently enough for this test
@@ -66,27 +67,27 @@ class TestTimeoutDelay:
             # We want connect_timeout > tend interval so the node refresh doesn't fail
             # Otherwise the node will eventually be dropped after 5 tend iterations
             # because x node refresh attempt fails (x = 5 tend iterations)
-            "connect_timeout": self.INJECTED_LATENCY_MS * 2,
+            # "connect_timeout": self.INJECTED_LATENCY_MS * 2,
         }
         client = aerospike.client(config)
 
         self.key = ("test", "demo", 1)
         client.put(self.key, bins={"a": 1})
 
-        inject_latency_command = [
-            "sudo",
-            "tcset",
-            CONTAINER_NAME,
-            "--docker",
-            "--delay",
-            f"{self.INJECTED_LATENCY_MS}ms",
-        ]
-        print(f"Injecting latency of {self.INJECTED_LATENCY_MS} ms for outgoing packets from client to server")
+        # inject_latency_command = [
+        #     "sudo",
+        #     "tcset",
+        #     CONTAINER_NAME,
+        #     "--docker",
+        #     "--delay",
+        #     f"{self.INJECTED_LATENCY_MS}ms",
+        # ]
+        # print(f"Injecting latency of {self.INJECTED_LATENCY_MS} ms for outgoing packets from client to server")
 #        subprocess.run(args=inject_latency_command, check=True)
 
         yield client
 
-        DELETE_LATENCY_COMMAND = ["sudo", "tcdel", CONTAINER_NAME, "--docker", "--all"]
+        # DELETE_LATENCY_COMMAND = ["sudo", "tcdel", CONTAINER_NAME, "--docker", "--all"]
 #        subprocess.run(args=DELETE_LATENCY_COMMAND, check=True)
 
         client.close()
@@ -108,13 +109,14 @@ class TestTimeoutDelay:
         # latency window > timeout delay window
         # The connection will not receive a response during the timeout delay window
         # So the connection will be destroyed.
-        # TestCase(
-        #    timeout_delay_ms=INJECTED_LATENCY_MS // 2,
-        #    expected_aborted_count=1,
-        #    expected_recovered_count=0,
-        #),
+        TestCase(
+           timeout_delay_ms=INJECTED_LATENCY_MS // 2,
+           expected_aborted_count=1,
+           expected_recovered_count=0,
+        ),
     ])
     def test_timeout_delay(self, as_client, timeout_delay_ms, expected_aborted_count, expected_recovered_count):
+        # Inject latency in server
         subprocess.run(["asinfo", "-v", "sets"], check=True)
 
         policy = {
