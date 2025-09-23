@@ -1568,12 +1568,14 @@ Base Policies
             be applied to creating a connection plus optional user authentication. Otherwise,
             ``socket_timeout`` or ``total_timeout`` will be used depending on their values.
 
-            If connect, socket and total timeouts are zero, the actual socket connect timeout
-            is hardcoded to ``2000ms``.
+            If base policy's ``connect_timeout`` (not the config-level ``connect_timeout``), socket and total timeouts
+            are zero, the actual socket connect timeout is hardcoded to ``2000ms``.
 
             ``connect_timeout`` is useful when new connection creation is expensive (i.e TLS connections)
             and it's acceptable to allow extra time to create a new connection compared to using an
             existing connection from the pool.
+
+            This only applies to regular commands, not info commands.
 
             This value is limited to a 32-bit unsigned integer.
 
