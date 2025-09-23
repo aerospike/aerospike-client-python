@@ -8,6 +8,9 @@ class AerospikeError(Exception):
     line: Union[int, None]
     in_doubt: Union[bool, None]
 
+class TimeoutError(AerospikeError):
+     pass
+
 class ClientError(AerospikeError):
     pass
 

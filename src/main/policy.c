@@ -306,6 +306,7 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
+    POLICY_SET_FIELD(timeout_delay, uint32_t);
     POLICY_SET_FIELD(max_retries, uint32_t);
     POLICY_SET_FIELD(sleep_between_retries, uint32_t);
     POLICY_SET_FIELD(compress, bool);
@@ -385,6 +386,7 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
+        // POLICY_SET_FIELD(timeout_delay, uint32_t);
         POLICY_SET_FIELD(send_as_is, bool);
         POLICY_SET_FIELD(check_bounds, bool);
     }
