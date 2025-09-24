@@ -410,8 +410,8 @@ jobs:
     strategy:
       matrix:
         suffix:
-        - node_close_listener
-        - cluster_name
+        - ext_metrics_node_close_listener
+        - ext_metrics_cluster_name
       fail-fast: false
     runs-on: ubuntu-22.04
     steps:
@@ -425,9 +425,9 @@ jobs:
         name: wheel-${{ env.LOWEST_SUPPORTED_PY_VERSION }}
     - run: python3 -m pip install *.whl
     - run: python3 -m pip install -r requirements.txt
-      working-directory: test/metrics
+      working-directory: test/standalone
     - run: python3 test_${{ matrix.suffix }}.py
-      working-directory: test/metrics
+      working-directory: test/standalone
 
   test-misc:
     needs: build
