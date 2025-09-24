@@ -745,9 +745,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
-            Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
-
-            This only applies to cluster tend info commands.
+            Cluster tend info command timeout in milliseconds.
 
             Default: ``1000``.
         * **fail_if_not_connected** (:class:`bool`)
