@@ -58,7 +58,6 @@ INCLUDE_DSYM = os.getenv('INCLUDE_DSYM')
 
 include_dirs = [
     'src/include',
-    '/usr/local/opt/openssl/include',
     'aerospike-client-c/modules/common/src/include'
 ]
 include_dirs.extend([x for x in os.getenv('CPATH', '').split(':') if len(x) > 0])
@@ -81,7 +80,6 @@ else:
     if machine == 'x86_64':
         extra_compile_args.append('-march=nocona')
 
-extra_objects = []
 extra_link_args = []
 
 SANITIZER = os.getenv('SANITIZER')
@@ -97,7 +95,6 @@ if SANITIZER:
     SANITIZER_LDFLAGS = SANITIZER_C_AND_LD_FLAGS.copy()
     extra_link_args.extend(SANITIZER_LDFLAGS)
 
-library_dirs = ['/usr/local/opt/openssl/lib', '/usr/local/lib']
 if not WINDOWS:
     # The Python client's C code doesn't rely on these libraries.
     # But the C client does rely on them, and we need to bundle these libraries
@@ -135,6 +132,8 @@ if UNOPTIMIZED:
 # STATIC SSL LINKING BUILD SETTINGS
 ################################################################################
 
+extra_objects = []
+
 STATIC_SSL = os.getenv('STATIC_SSL')
 if STATIC_SSL:
     # Statically link openssl
@@ -145,8 +144,6 @@ else:
     # Dynamically link openssl
     c_client_libraries.append('ssl')
     c_client_libraries.append('crypto')
-    if os.path.exists("/usr/local/opt/openssl/lib"):
-        library_dirs.append('/usr/local/opt/openssl/lib')
 
 ################################################################################
 # PLATFORM SPECIFIC BUILD SETTINGS
@@ -185,6 +182,12 @@ else:
     print("error: OS not supported:", PLATFORM, file=sys.stderr)
     sys.exit(8)
 
+# We don't specify common places where users may install their own build of OpenSSL (that doesn't come with the distro);
+# there would be too many places to check,
+# and those places may not even exist for other users on different platforms.
+# Users who build the sdist should specify the OpenSSL location using env vars
+library_dirs = []
+
 if not WINDOWS:
     include_dirs.append(AEROSPIKE_C_TARGET + '/include')
     extra_objects.append(AEROSPIKE_C_TARGET + '/lib/libaerospike.a')
@@ -221,12 +224,12 @@ class BuildAerospikeModule(build_ext):
             self.execute(clean, [], 'Clean core aerospike-client-c previous builds')
 
         # TODO: not sure if we need?
-        if LINUX:
-            os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
-            os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
-        if DARWIN:
-            os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
-            os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
+        # if LINUX:
+        #     os.putenv('LD_LIBRARY_PATH', ':'.join(library_dirs))
+        #     os.environ['LD_LIBRARY_PATH'] = ':'.join(library_dirs)
+        # elif DARWIN:
+        #     os.putenv('DYLD_LIBRARY_PATH', ':'.join(library_dirs))
+        #     os.environ['DYLD_LIBRARY_PATH'] = ':'.join(library_dirs)
 
         # build core client
         if WINDOWS:
