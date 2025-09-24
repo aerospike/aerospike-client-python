@@ -1542,7 +1542,14 @@ Base Policies
             | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will
             | return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
             |
-            | Default for :ref:`aerospike_query_policies`: ``0``
+            | If ``total_timeout`` is zero, there will be no total time limit on the client side.
+            | However, the server converts zero timeouts to the server configuration field
+            | ``transaction-max-ms`` (default ``1000ms``) for all commands except queries. For short
+            | queries (``expected_duration`` == :data:`aerospike.QUERY_DURATION_SHORT`), the server
+            | converts zero timeouts to a hard-coded ``1000ms``. For long queries, there is no
+            | timeout conversion on the server.
+            |
+            | Default for :ref:`aerospike_query_policies` and :ref:`aerospike_scan_policies`: ``0``
             | Default for the other policies: ``1000``
         * **timeout_delay** (:class:`int`)
             Number of milliseconds to wait after a socket read times out before closing the socket for
@@ -1563,6 +1570,23 @@ Base Policies
             The value must be an unsigned 32-bit integer.
 
             Default: ``3000``
+        * **connect_timeout** (:class:`int`)
+            Socket connect timeout in milliseconds. If ``connect_timeout`` greater than zero, it will
+            be applied to creating a connection plus optional user authentication. Otherwise,
+            ``socket_timeout`` or ``total_timeout`` will be used depending on their values.
+
+            If base policy's ``connect_timeout`` (not the config-level ``connect_timeout``), socket and total timeouts
+            are zero, the actual socket connect timeout is hardcoded to ``2000ms``.
+
+            ``connect_timeout`` is useful when new connection creation is expensive (i.e TLS connections)
+            and it's acceptable to allow extra time to create a new connection compared to using an
+            existing connection from the pool.
+
+            This only applies to regular commands, not info commands.
+
+            This value is limited to a 32-bit unsigned integer.
+
+            Default: ``0``
         * **compress** (:class:`bool`)
             | Compress client requests and server responses.
             |

@@ -310,6 +310,7 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
     POLICY_SET_FIELD(max_retries, uint32_t);
     POLICY_SET_FIELD(sleep_between_retries, uint32_t);
     POLICY_SET_FIELD(compress, bool);
+    POLICY_SET_FIELD(connect_timeout, uint32_t);
 
     // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
     // so this is safe to call for a scan/query policy's base policy
