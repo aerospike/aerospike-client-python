@@ -33,14 +33,13 @@
 
 // Struct for Python User-Data for the Callback
 typedef struct {
-    PyObject *callback;
+    PyObject *py_obj;
     AerospikeClient *client;
     int partition_query;
     as_vector thread_errors;
     pthread_mutex_t thread_errors_mutex;
-    // TODO: perf overhead from adding this?
-    // Used by default if no Python callback is provided
-    PyObject *py_results;
+    // If false, it is a python list
+    bool is_pyobj_callback;
 } LocalData;
 
 static bool each_result(const as_val *val, void *udata)
@@ -53,8 +52,7 @@ static bool each_result(const as_val *val, void *udata)
 
     // Extract callback user-data
     LocalData *data = (LocalData *)udata;
-    PyObject *py_callback = data->callback;
-    PyObject *py_results = data->py_results;
+    PyObject *py_callback_or_list_of_results = data->py_obj;
 
     // Python Function Arguments and Result Value
     PyObject *py_arglist = NULL;
@@ -76,11 +74,11 @@ static bool each_result(const as_val *val, void *udata)
         goto EXIT_CALLBACK;
     }
 
-    if (!py_callback) {
+    if (data->is_pyobj_callback == false) {
         // query.results()
-        // TODO: negative path. py_result is an invalid type and set to NULL.
         if (py_result) {
-            int retval = PyList_Append(py_results, py_result);
+            int retval =
+                PyList_Append(py_callback_or_list_of_results, py_result);
             Py_DECREF(py_result);
             if (retval == -1) {
                 // TODO: should fail, not return true
@@ -112,7 +110,8 @@ static bool each_result(const as_val *val, void *udata)
         }
 
         // Invoke Python Callback
-        py_return = PyObject_Call(py_callback, py_arglist, NULL);
+        py_return =
+            PyObject_Call(py_callback_or_list_of_results, py_arglist, NULL);
 
         // Release Python Function Arguments
         Py_DECREF(py_arglist);
@@ -154,7 +153,6 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
 {
     // Initialize callback user data
     LocalData data = {0};
-    data.callback = py_callback;
     data.client = self->client;
     data.partition_query = 0;
 
@@ -191,12 +189,15 @@ PyObject *AerospikeQuery_Foreach_Invoke(AerospikeQuery *self,
     }
 
     if (!py_callback) {
-        // TODO: can be optimized by predicting the number of records from server?
-        data.py_results = PyList_New(0);
-        if (data.py_results == NULL) {
+        data.py_obj = PyList_New(0);
+        if (data.py_obj == NULL) {
             goto CLEANUP;
         }
     }
+    else {
+        data.py_obj = py_callback;
+    }
+    data.is_pyobj_callback = py_callback != NULL;
 
     // Convert python policy object to as_policy_exists
     pyobject_to_policy_query(
@@ -275,16 +276,16 @@ CLEANUP:
 
     if (err.code != AEROSPIKE_OK) {
         // TODO: results() used raise_exception();
-        Py_XDECREF(data.py_results);
+        Py_XDECREF(data.py_obj);
         raise_exception_base(&err, Py_None, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
 
-    if (data.py_results) {
+    if (data.is_pyobj_callback) {
         Py_RETURN_NONE;
     }
     else {
-        return data.py_results;
+        return data.py_obj;
     }
 }
 
