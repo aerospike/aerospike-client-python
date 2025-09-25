@@ -288,8 +288,9 @@ jobs:
         echo LIBRARY_PATH=$LIBRARY_PATH >> $GITHUB_ENV
       shell: bash
 
-    - if: ${{ inputs.platform-tag == 'macosx_x86_64' && matrix.python-tag == 'cp313' }}
+    - if: ${{ inputs.platform-tag == 'macosx_x86_64' }}
       # This fixes an issue where there is not enough room in the wheel's shared library to replace the rpath
+      # Just do it for all Python versions (even those that don't require more room) for futureproofing
       run: echo CIBW_ENVIRONMENT_MACOS="LDFLAGS='-headerpad_max_install_names'" >> $GITHUB_ENV
 
     - name: Build wheel
