@@ -1,3 +1,4 @@
+asinfo
 Lua
 lua
 namespace
@@ -88,3 +89,5 @@ func
 bcrypt
 namespaces
 yaml
+suberror
+hardcoded

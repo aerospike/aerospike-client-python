@@ -117,8 +117,8 @@
             }                                                                  \
             Py_DECREF(py_field_name);                                          \
             if (py_exp_list) {                                                 \
-                if (convert_exp_list(self, py_exp_list, &exp_list, err) ==     \
-                    AEROSPIKE_OK) {                                            \
+                if (as_exp_new_from_pyobject(self, py_exp_list, &exp_list,     \
+                                             err, false) == AEROSPIKE_OK) {    \
                     policy->filter_exp = exp_list;                             \
                     *exp_list_p = exp_list;                                    \
                 }                                                              \
@@ -306,9 +306,11 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
+    POLICY_SET_FIELD(timeout_delay, uint32_t);
     POLICY_SET_FIELD(max_retries, uint32_t);
     POLICY_SET_FIELD(sleep_between_retries, uint32_t);
     POLICY_SET_FIELD(compress, bool);
+    POLICY_SET_FIELD(connect_timeout, uint32_t);
 
     // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
     // so this is safe to call for a scan/query policy's base policy
@@ -384,6 +386,7 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
     if (py_policy && py_policy != Py_None) {
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
+        // POLICY_SET_FIELD(timeout_delay, uint32_t);
         POLICY_SET_FIELD(send_as_is, bool);
         POLICY_SET_FIELD(check_bounds, bool);
     }

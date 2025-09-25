@@ -745,13 +745,21 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
-            Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
+            Cluster tend info command timeout in milliseconds.
 
             Default: ``1000``.
         * **fail_if_not_connected** (:class:`bool`)
             Flag to signify fail on cluster init if seed node and all peers are not reachable.
 
             Default: ``True``
+        * **force_single_node** (:class:`bool`)
+            For testing purposes only.  Do not modify.
+
+            Should the client communicate with the first seed node only
+            instead of using the data partition map to determine which node to send the
+            database command.
+
+            Default: ``False``
 
 Constants
 =========

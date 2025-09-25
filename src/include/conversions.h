@@ -28,6 +28,7 @@
 #include <aerospike/aerospike_batch.h>
 #include <aerospike/as_exp.h>
 #include <aerospike/as_partition_filter.h>
+#include <aerospike/aerospike_stats.h>
 
 #include "types.h"
 
@@ -203,8 +204,11 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
                       as_static_pool *static_pool, int serializer_type);
 
-as_status convert_exp_list(AerospikeClient *self, PyObject *py_exp_list,
-                           as_exp **exp_list, as_error *err);
+// allow_base64_encoded_exprs: can the Python object also be a Python unicode object (base64 encoded)?
+// if false, the Python object should only be a compiled Python expression object from aerospike_helpers
+as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
+                                   as_exp **exp_list, as_error *err,
+                                   bool allow_base64_encoded_exprs);
 
 as_status convert_partition_filter(AerospikeClient *self,
                                    PyObject *py_partition_filter,
@@ -264,3 +268,8 @@ uint64_t convert_pyobject_to_uint64_t(PyObject *pyobject);
 
 // Returns NULL on error.
 const char *convert_pyobject_to_str(PyObject *py_obj);
+
+// Returns NULL on error.
+PyObject *
+create_py_cluster_stats_from_as_cluster_stats(as_error *err,
+                                              as_cluster_stats *stats);
