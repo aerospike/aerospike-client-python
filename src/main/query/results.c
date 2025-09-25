@@ -36,7 +36,6 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
                                  PyObject *kwds)
 {
     PyObject *py_policy = NULL;
-    PyObject *py_results = NULL;
     PyObject *py_options = NULL;
 
     static char *kwlist[] = {"policy", "options", NULL};
