@@ -31,7 +31,7 @@
 // Struct for Python User-Data for the Callback
 typedef struct {
     as_error error;
-    PyObject *py_obj;
+    PyObject *callback;
     AerospikeClient *client;
     int partition_scan;
 } LocalData;
