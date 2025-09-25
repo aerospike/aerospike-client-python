@@ -41,9 +41,6 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
 
     static char *kwlist[] = {"policy", "options", NULL};
 
-    LocalData data;
-    data.client = self->client;
-
     if (PyArg_ParseTupleAndKeywords(args, kwds, "|OO:results", kwlist,
                                     &py_policy, &py_options) == false) {
         return NULL;
