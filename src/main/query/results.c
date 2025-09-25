@@ -46,3 +46,4 @@ PyObject *AerospikeQuery_Results(AerospikeQuery *self, PyObject *args,
     }
 
     return AerospikeQuery_Foreach_Invoke(self, NULL, py_policy, py_options);
+}
