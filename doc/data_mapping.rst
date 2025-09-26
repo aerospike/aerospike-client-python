@@ -69,7 +69,7 @@ For server 7.1 and higher, map keys can only be of type string, bytes, and integ
     :ref:`KeyOrderedDict <aerospike.KeyOrderedDict>` is a special case. Like :class:`dict`, :class:`~aerospike.KeyOrderedDict` maps to the Aerospike map data type. \
     However, the map will be sorted in key order before being sent to the server (see :ref:`aerospike_map_order`).
 
-It is possible to nest these datatypes. For example a list may contain a dictionary, or a dictionary may contain a list
+It is possible to nest these data types. For example a list may contain a dictionary, or a dictionary may contain a list
 as a value.
 
 .. _integer: https://aerospike.com/docs/server/guide/data-types/scalar-data-types#integer
@@ -80,4 +80,4 @@ as a value.
 .. _list: https://aerospike.com/docs/server/guide/data-types/cdt-list
 .. _blob: https://aerospike.com/docs/server/guide/data-types/blob
 .. _GeoJSON: https://aerospike.com/docs/server/guide/data-types/geospatial
-.. _HyperLogLog: https://aerospike.com/docs/server/guide/data-types/hll
+.. _HyperLogLog: https://aerospike.com/docs/develop/data-types/hll#operations

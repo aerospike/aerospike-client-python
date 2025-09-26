@@ -1,4 +1,6 @@
 import pytest
+# Explicitly test that we can import submodule this way
+import aerospike.exception  # noqa: F401
 from aerospike import exception as e
 from .as_errors import (
     AEROSPIKE_ERR_ASYNC_CONNECTION,
@@ -23,9 +25,7 @@ base_class_to_attrs = {
         "msg",
         "file",
         "line",
-        # in_doubt is only added when an AerospikeError or subclass of it is raised by the client
-        # This attribute is not set when initializing the exception classes in `aerospike.exception`
-        # "in_doubt"
+        "in_doubt"
     ],
     e.RecordError: [
         "key",

@@ -181,7 +181,6 @@ class TestBaseClass(object):
             # major_ver = res[0]
             # minor_ver = res[1]
             # print("major_ver:", major_ver, "minor_ver:", minor_ver)
-
         return client
 
     @staticmethod
@@ -234,5 +233,6 @@ class TestBaseClass(object):
 
         config["policies"]["info"] = {}
         config["policies"]["info"]["timeout"] = 180000
-
+        config["policies"]["admin"] = {}
+        config["policies"]["admin"]["timeout"] = 180000
         return config

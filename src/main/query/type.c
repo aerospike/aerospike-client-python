@@ -102,6 +102,10 @@ static PyMethodDef AerospikeQuery_Type_Methods[] = {
      select_doc},
 
     {"where", (PyCFunction)AerospikeQuery_Where, METH_VARARGS, where_doc},
+    {"where_with_expr", (PyCFunction)AerospikeQuery_WhereWithExpr, METH_VARARGS,
+     where_doc},
+    {"where_with_index_name", (PyCFunction)AerospikeQuery_WhereWithIndexName,
+     METH_VARARGS, where_doc},
 
     {"execute_background", (PyCFunction)AerospikeQuery_ExecuteBackground,
      METH_VARARGS | METH_KEYWORDS, execute_background_doc},
@@ -245,9 +249,10 @@ static void AerospikeQuery_Type_Dealloc(AerospikeQuery *self)
  * PYTHON TYPE DESCRIPTOR
  ******************************************************************************/
 static PyTypeObject AerospikeQuery_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0) "aerospike.Query", // tp_name
-    sizeof(AerospikeQuery),                           // tp_basicsize
-    0,                                                // tp_itemsize
+    PyVarObject_HEAD_INIT(NULL, 0)
+        FULLY_QUALIFIED_TYPE_NAME("Query"), // tp_name
+    sizeof(AerospikeQuery),                 // tp_basicsize
+    0,                                      // tp_itemsize
     (destructor)AerospikeQuery_Type_Dealloc,
     // tp_dealloc
     0, // tp_print

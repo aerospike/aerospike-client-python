@@ -81,6 +81,16 @@ PyObject *AerospikeClient_Truncate(AerospikeClient *self, PyObject *args,
         return NULL;
     }
 
+    if (!self || !self->as) {
+        as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid aerospike object");
+        goto CLEANUP;
+    }
+    if (!self->is_conn_16) {
+        as_error_update(&err, AEROSPIKE_ERR_CLUSTER,
+                        "No connection to aerospike cluster");
+        goto CLEANUP;
+    }
+
     // Start conversion of the namespace parameter
     if (PyUnicode_Check(py_ns)) {
         namespace = strdup((char *)PyUnicode_AsUTF8(py_ns));

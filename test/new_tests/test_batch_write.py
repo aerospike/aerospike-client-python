@@ -401,6 +401,29 @@ class TestBatchWrite(TestBaseClass):
                 e.ParamError,
             ),
             (
+                # We're testing a specific helper function that checks if an object's base class
+                # is an aerospike_helpers class. BatchRecord is the expected base class,
+                # but the object's actual base class is "object"
+                # The object needs to be in the same submodule as the expected class
+                # (batch.records submodule in aerospike_helpers)
+                "bad-batch-record-but-is-aerospike-helpers-class-instance",
+                br.BatchRecords(
+                    [
+                        br.BatchRecords(),
+                    ]
+                ),
+                {},
+                e.ParamError,
+            ),
+            (
+                "bad-batch-record-batch_records-field",
+                br.BatchRecords(
+                    1
+                ),
+                {},
+                e.ParamError,
+            ),
+            (
                 "bad-batch-record-key",
                 br.BatchRecords(
                     [

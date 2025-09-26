@@ -160,17 +160,7 @@ CLEANUP:
     }
 
     if (err->code != AEROSPIKE_OK) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(err, &py_err);
-        PyObject *exception_type = raise_exception_old(err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
+        raise_exception_base(err, py_key, Py_None, Py_None, Py_None, Py_None);
         return NULL;
     }
     return PyLong_FromLong(0);
@@ -196,7 +186,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
     PyObject *py_key = NULL;
     PyObject *py_policy = NULL;
     PyObject *py_binList = NULL;
-    PyObject *py_result = NULL;
     PyObject *py_meta = NULL;
 
     as_error err;
@@ -235,19 +224,6 @@ PyObject *AerospikeClient_RemoveBin(AerospikeClient *self, PyObject *args,
 
 CLEANUP:
 
-    if (err.code != AEROSPIKE_OK || !py_result) {
-        PyObject *py_err = NULL;
-        error_to_pyobject(&err, &py_err);
-        PyObject *exception_type = raise_exception_old(&err);
-        if (PyObject_HasAttrString(exception_type, "key")) {
-            PyObject_SetAttrString(exception_type, "key", py_key);
-        }
-        if (PyObject_HasAttrString(exception_type, "bin")) {
-            PyObject_SetAttrString(exception_type, "bin", Py_None);
-        }
-        PyErr_SetObject(exception_type, py_err);
-        Py_DECREF(py_err);
-        return NULL;
-    }
+    raise_exception_base(&err, py_key, Py_None, Py_None, Py_None, Py_None);
     return NULL;
 }

@@ -319,6 +319,8 @@ class TestQueryApply(object):
             ("age"),
             ("age", 1),
             ("age", 1, 5),
+            (None, 1, "bin"),  # Invalid predicate type
+            (1, None, "bin"),  # Invalid index data type
             (1, 1, "bin"),  # start of a valid predicate
         ),
     )
