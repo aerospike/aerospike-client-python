@@ -45,7 +45,6 @@ static PyObject *AerospikeClient_TruncateInvoke(AerospikeClient *self,
     status =
         aerospike_truncate(self->as, err, info_policy_p, namespace, set, nanos);
     if (status != AEROSPIKE_OK) {
-        // The truncate operation failed. Update the err->code and return
         return NULL;
     }
 
