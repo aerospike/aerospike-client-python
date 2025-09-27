@@ -93,34 +93,28 @@ class TestQueryUserInfo(TestBaseClass):
 
         user = None
 
-        try:
+        with pytest.raises(e.ParamError) as excinfo:
             self.client.admin_query_user_info(user)
-
-        except e.ParamError as exception:
-            assert exception.code == -2
-            assert exception.msg == "Username should be a string"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "Username should be a string"
 
     def test_query_user_info_with_empty_username(self):
 
         user = ""
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_query_user_info(user)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_query_user_info_with_nonexistent_username(self):
 
         user = "non-existent"
 
-        try:
+        with pytest.raises(e.InvalidUser) as excinfo:
             self.client.admin_query_user_info(user)
-
-        except e.InvalidUser as exception:
-            assert exception.code == 60
-            assert exception.msg == "AEROSPIKE_INVALID_USER"
+        assert excinfo.value.code == 60
+        assert excinfo.value.msg == "AEROSPIKE_INVALID_USER"
 
     def test_query_user_info_with_no_roles(self):
 
@@ -148,9 +142,7 @@ class TestQueryUserInfo(TestBaseClass):
         Invoke query_user() with policy as string
         """
         policy = ""
-        try:
+        with pytest.raises(e.AerospikeError) as excinfo:
             self.client.admin_query_user_info("foo", policy)
-
-        except e.AerospikeError as exception:
-            assert exception.code == -2
-            assert exception.msg == "policy must be a dict"
+        assert excinfo.value.code == -2
+        assert excinfo.value.msg == "policy must be a dict"

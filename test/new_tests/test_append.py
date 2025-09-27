@@ -300,11 +300,10 @@ class TestAppend(object):
         gen = meta["gen"]
 
         meta = {"gen": gen, "ttl": 1200}
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.append(key, "name", "str", meta, policy)
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
-            assert exception.bin == "name"
+        assert excinfo.value.code == 3
+        assert excinfo.value.bin == "name"
         (key, meta, bins) = self.as_connection.get(key)
         assert bins == {"age": 1, "name": "name1"}
         assert key == (
@@ -326,12 +325,10 @@ class TestAppend(object):
         gen = meta["gen"]
 
         meta = {"gen": gen + 5, "ttl": 1200}
-        try:
+        with pytest.raises(e.RecordGenerationError) as excinfo:
             self.as_connection.append(key, "name", "str", meta, policy)
-
-        except e.RecordGenerationError as exception:
-            assert exception.code == 3
-            assert exception.bin == "name"
+        assert excinfo.value.code == 3
+        assert excinfo.value.bin == "name"
 
         (key, meta, bins) = self.as_connection.get(key)
 
@@ -407,11 +404,9 @@ class TestAppend(object):
         client1.close()
         key = ("test", "demo", 1)
 
-        try:
+        with pytest.raises(e.ClusterError) as excinfo:
             client1.append(key, "name", "str")
-
-        except e.ClusterError as exception:
-            assert exception.code == 11
+        assert excinfo.value.code == 11
 
     def test_neg_append_with_low_timeout(self):
         """
@@ -426,8 +421,8 @@ class TestAppend(object):
         }
         try:
             self.as_connection.append(key, "name", "str", {}, policy)
-        except e.TimeoutError as exception:
-            assert exception.code == 9
+        except e.TimeoutError as ex:
+            assert ex.code == 9
 
     def test_neg_append_with_non_existent_ns(self):
         """
