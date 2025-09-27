@@ -210,16 +210,17 @@ static PyObject *AerospikeClient_Batch_Operate_Invoke(
     if (py_policy_batch) {
         if (pyobject_to_policy_batch(
                 self, err, py_policy_batch, &policy_batch, &policy_batch_p,
-                &self->as->config.policies.batch, &batch_exp_list,
+                &self->as->config.policies.batch_parent_write, &batch_exp_list,
                 &batch_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
 
     if (py_policy_batch_write) {
-        if (pyobject_to_batch_write_policy(
+        if (pyobject_to_policy_batch_write(
                 self, err, py_policy_batch_write, &policy_batch_write,
-                &policy_batch_write_p, &batch_write_exp_list,
+                &policy_batch_write_p, &self->as->config.policies.batch_write,
+                &batch_write_exp_list,
                 &batch_write_exp_list_p) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
