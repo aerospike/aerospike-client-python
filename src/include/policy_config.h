@@ -39,22 +39,36 @@ as_status set_optional_gen(as_policy_gen *target_ptr, PyObject *py_policy,
 as_status set_optional_exists(as_policy_exists *target_ptr, PyObject *py_policy,
                               const char *name);
 
-as_status set_subpolicies(as_config *config, PyObject *py_policies);
-as_status set_read_policy(as_policy_read *read_policy, PyObject *py_policy);
-as_status set_write_policy(as_policy_write *write_policy, PyObject *py_policy);
-as_status set_apply_policy(as_policy_apply *apply_policy, PyObject *py_policy);
-as_status set_remove_policy(as_policy_remove *remove_policy,
-                            PyObject *py_policy);
-as_status set_query_policy(as_policy_query *query_policy, PyObject *py_policy);
-as_status set_scan_policy(as_policy_scan *scan_policy, PyObject *py_policy);
-as_status set_operate_policy(as_policy_operate *operate_policy,
-                             PyObject *py_policy);
-as_status set_batch_policy(as_policy_batch *batch_policy, PyObject *py_policy);
-as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy);
-as_status set_admin_policy(as_policy_admin *admin_policy, PyObject *py_policy);
-as_status set_batch_apply_policy(as_policy_batch_apply *batch_apply_policy,
-                                 PyObject *py_policy);
-as_status set_batch_write_policy(as_policy_batch_write *batch_write_policy,
-                                 PyObject *py_policy);
-as_status set_batch_remove_policy(as_policy_batch_remove *batch_remove_policy,
-                                  PyObject *py_policy);
+// This only sets the err object if an invalid dictionary key is passed
+// On error, return an error code
+as_status set_subpolicies(as_error *err, as_config *config,
+                          PyObject *py_policies, int validate_keys);
+as_status set_read_policy(as_error *err, as_policy_read *read_policy,
+                          PyObject *py_policy, int validate_keys);
+as_status set_write_policy(as_error *err, as_policy_write *write_policy,
+                           PyObject *py_policy, int validate_keys);
+as_status set_apply_policy(as_error *err, as_policy_apply *apply_policy,
+                           PyObject *py_policy, int validate_keys);
+as_status set_remove_policy(as_error *err, as_policy_remove *remove_policy,
+                            PyObject *py_policy, int validate_keys);
+as_status set_query_policy(as_error *err, as_policy_query *query_policy,
+                           PyObject *py_policy, int validate_keys);
+as_status set_scan_policy(as_error *err, as_policy_scan *scan_policy,
+                          PyObject *py_policy, int validate_keys);
+as_status set_operate_policy(as_error *err, as_policy_operate *operate_policy,
+                             PyObject *py_policy, int validate_keys);
+as_status set_batch_policy(as_error *err, as_policy_batch *batch_policy,
+                           PyObject *py_policy, int validate_keys);
+as_status set_info_policy(as_error *err, as_policy_info *info_policy,
+                          PyObject *py_policy, int validate_keys);
+as_status set_admin_policy(as_error *err, as_policy_admin *admin_policy,
+                           PyObject *py_policy, int validate_keys);
+as_status set_batch_apply_policy(as_error *err,
+                                 as_policy_batch_apply *batch_apply_policy,
+                                 PyObject *py_policy, int validate_keys);
+as_status set_batch_write_policy(as_error *err,
+                                 as_policy_batch_write *batch_write_policy,
+                                 PyObject *py_policy, int validate_keys);
+as_status set_batch_remove_policy(as_error *err,
+                                  as_policy_batch_remove *batch_remove_policy,
+                                  PyObject *py_policy, int validate_keys);

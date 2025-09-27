@@ -35,8 +35,8 @@
 #define AS_PY_HLL_MH_BIT_COUNT_KEY "mh_bit_count"
 
 static as_status get_hll_policy(as_error *err, PyObject *op_dict,
-                                as_hll_policy *policy,
-                                as_hll_policy **policy_p);
+                                as_hll_policy *policy, as_hll_policy **policy_p,
+                                bool validate_keys);
 
 static as_status add_op_hll_add(AerospikeClient *self, as_error *err, char *bin,
                                 PyObject *op_dict, as_operations *ops,
@@ -187,8 +187,8 @@ static as_status add_op_hll_add(AerospikeClient *self, as_error *err, char *bin,
         goto cleanup;
     }
 
-    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p) !=
-        AEROSPIKE_OK) {
+    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p,
+                       self->validate_keys) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -251,8 +251,8 @@ static as_status add_op_hll_init(AerospikeClient *self, as_error *err,
         goto cleanup;
     }
 
-    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p) !=
-        AEROSPIKE_OK) {
+    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p,
+                       self->validate_keys) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -464,8 +464,8 @@ static as_status add_op_hll_set_union(AerospikeClient *self, as_error *err,
     as_hll_policy hll_policy;
     as_hll_policy *hll_policy_p = &hll_policy;
 
-    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p) !=
-        AEROSPIKE_OK) {
+    if (get_hll_policy(err, op_dict, &hll_policy, &hll_policy_p,
+                       self->validate_keys) != AEROSPIKE_OK) {
         goto cleanup;
     }
 
@@ -490,12 +490,14 @@ cleanup:
 }
 
 static as_status get_hll_policy(as_error *err, PyObject *op_dict,
-                                as_hll_policy *policy, as_hll_policy **policy_p)
+                                as_hll_policy *policy, as_hll_policy **policy_p,
+                                bool validate_keys)
 {
     PyObject *hll_policy = PyDict_GetItemString(op_dict, AS_PY_HLL_POLICY);
 
     if (hll_policy) {
-        if (pyobject_to_hll_policy(err, hll_policy, policy) != AEROSPIKE_OK) {
+        if (pyobject_to_hll_policy(err, hll_policy, policy, validate_keys) !=
+            AEROSPIKE_OK) {
             *policy_p = NULL;
             return err->code;
         }

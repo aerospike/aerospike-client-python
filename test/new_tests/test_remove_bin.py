@@ -50,7 +50,6 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
 
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
@@ -70,7 +69,6 @@ class TestRemovebin(object):
         record = {"Company": "Apple", "years": 30, "address": "202, sillicon Vally"}
         put_data(self.as_connection, key, record)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
         }
@@ -173,9 +171,8 @@ class TestRemovebin(object):
                 ("test", "demo", "p_commit_level_all"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
                     "key": aerospike.POLICY_KEY_SEND,
-                    "commit": aerospike.POLICY_COMMIT_LEVEL_ALL,
+                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_ALL,
                 },
                 "age",
             ),
@@ -183,9 +180,8 @@ class TestRemovebin(object):
                 ("test", "demo", "p_commit_level_master"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
                     "key": aerospike.POLICY_KEY_SEND,
-                    "commit": aerospike.POLICY_COMMIT_LEVEL_MASTER,
+                    "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
                 },
                 "age",
             ),
@@ -193,7 +189,6 @@ class TestRemovebin(object):
                 ("test", "demo", "p_gen_GT"),
                 {"Name": "John", "age": 30, "address": "202, washingtoon"},
                 {
-                    "retry": aerospike.POLICY_RETRY_ONCE,
                     "key": aerospike.POLICY_KEY_SEND,
                     "gen": aerospike.POLICY_GEN_GT,
                 },
@@ -264,7 +259,6 @@ class TestRemovebin(object):
         """
         key = ("test", "demo", 1)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
@@ -304,7 +298,6 @@ class TestRemovebin(object):
         put_data(self.as_connection, key, record)
 
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
         }
@@ -336,7 +329,6 @@ class TestRemovebin(object):
         record = {"Name": "John", "age": 30, "address": "202, washingtoon"}
         put_data(self.as_connection, key, record)
         policy = {
-            "retry": aerospike.POLICY_RETRY_ONCE,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
         }
