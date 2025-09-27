@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 import pytest
 from .test_base_class import TestBaseClass
 from .as_status_codes import AerospikeStatus
@@ -8,6 +7,7 @@ from aerospike import exception as e
 from aerospike import predicates as p
 from aerospike_helpers import expressions as exp
 from aerospike_helpers import cdt_ctx
+from aerospike_helpers.operations import operations
 from threading import Lock
 import time
 
@@ -820,6 +820,43 @@ class TestQuery(TestBaseClass):
         records = query.results()
         assert len(records) == 1
         assert records[0][2] == {"test_age": 7, "name": "name7", "addr": "name7"}
+
+    def test_query_with_results_fail_with_operations(self):
+        """
+        Invoke query.results() after adding operations
+        """
+        ops = [
+            operations.increment("testBinName", 1)
+        ]
+        query = self.as_connection.query("test", "demo")
+        query.select("name", "test_age", "addr")
+        query.where(p.equals("test_age", 7))
+        query.add_ops(ops)
+
+        with pytest.raises(e.ParamError) as excinfo:
+            query.results()
+        assert excinfo.value.msg == "No operations can be used with query.results"
+
+    def test_query_with_foreach_fail_with_operations(self):
+        """
+        Invoke query.foreach() after adding operations
+        """
+        ops = [
+            operations.increment("testBinName", 1)
+        ]
+        query = self.as_connection.query("test", "demo")
+        query.select("name", "test_age", "addr")
+        query.where(p.equals("test_age", 7))
+        query.add_ops(ops)
+        records = []
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        with pytest.raises(e.ParamError) as excinfo:
+            query.foreach(callback)
+        assert excinfo.value.msg == "No operations can be used with query.foreach"
 
     def test_query_with_policy_on_none_set_index(self):
         """

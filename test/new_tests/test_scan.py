@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-
 import pytest
 from .test_base_class import TestBaseClass
 from aerospike import exception as e
 from aerospike_helpers import expressions as exp
 from .as_status_codes import AerospikeStatus
-
+from aerospike_helpers.operations import operations
 import aerospike
 
 
@@ -467,3 +466,38 @@ class TestScan(TestBaseClass):
 
         with pytest.raises(e.InvalidRequest):
             scan_obj.foreach(callback, {"expressions": expr.compile()})
+
+    def test_scan_with_results_fail_with_operations(self):
+        """
+        Invoke scan.results() after adding operations
+        """
+        ops = [
+            operations.increment("testBinName", 1)
+        ]
+        scan = self.as_connection.scan("test", "demo")
+        scan.select("name", "test_age", "addr")
+        scan.add_ops(ops)
+
+        with pytest.raises(e.ParamError) as excinfo:
+            scan.results()
+        assert excinfo.value.msg == "No operations can be used with scan.results"
+
+    def test_scan_with_foreach_fail_with_operations(self):
+        """
+        Invoke scan.foreach() after adding operations
+        """
+        ops = [
+            operations.increment("testBinName", 1)
+        ]
+        scan = self.as_connection.scan("test", "demo")
+        scan.select("name", "test_age", "addr")
+        scan.add_ops(ops)
+        records = []
+
+        def callback(input_tuple):
+            _, _, record = input_tuple
+            records.append(record)
+
+        with pytest.raises(e.ParamError) as excinfo:
+            scan.foreach(callback)
+        assert excinfo.value.msg == "No operations can be used with scan.foreach"
