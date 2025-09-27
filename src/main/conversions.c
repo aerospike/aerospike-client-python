@@ -2013,17 +2013,17 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
         return err->code;
     }
 
-    if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
-        Py_CLEAR(py_rec_key);
-        return err->code;
-    }
+    // if (metadata_to_pyobject(err, rec, &py_rec_meta) != AEROSPIKE_OK) {
+    //     Py_CLEAR(py_rec_key);
+    //     return err->code;
+    // }
 
-    if (bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map) !=
-        AEROSPIKE_OK) {
-        Py_CLEAR(py_rec_key);
-        Py_CLEAR(py_rec_meta);
-        return err->code;
-    }
+    // if (bins_to_pyobject(self, err, rec, &py_rec_bins, cnvt_list_to_map) !=
+    //     AEROSPIKE_OK) {
+    //     Py_CLEAR(py_rec_key);
+    //     Py_CLEAR(py_rec_meta);
+    //     return err->code;
+    // }
 
     if (!py_rec_key) {
         Py_INCREF(Py_None);
@@ -2041,14 +2041,21 @@ as_status do_record_to_pyobject(AerospikeClient *self, as_error *err,
     }
 
     py_rec = PyTuple_New(3);
-    PyTuple_SetItem(py_rec, 0, py_rec_key);
-    PyTuple_SetItem(py_rec, 1, py_rec_meta);
-    PyTuple_SetItem(py_rec, 2, py_rec_bins);
+    PyObject *py_tuple_objs[] = {py_rec_key, py_rec_meta, py_rec_bins};
+    for (int i = 0; i < PyTuple_Size(py_rec); i++) {
+        int retval = PyTuple_SetItem(py_rec, i, py_tuple_objs[i]);
+        if (retval == -1) {
+            // TODO: yes there is a mem leak
+            PyErr_Clear();
+            return as_error_update(err, AEROSPIKE_ERR_CLIENT, "tuple err");
+        }
+    }
 
     *obj = py_rec;
     return err->code;
 }
 
+// TODO: dead code
 as_status record_to_resultpyobject(AerospikeClient *self, as_error *err,
                                    const as_record *rec, PyObject **obj)
 {
@@ -2230,9 +2237,11 @@ static bool do_bins_to_pyobject_each(const char *name, const as_val *val,
         return false;
     }
 
-    PyDict_SetItemString(py_bins, name, py_val);
-
+    int retval = PyDict_SetItemString(py_bins, name, py_val);
     Py_DECREF(py_val);
+    if (retval == -1) {
+        return false;
+    }
 
     convd->count++;
     return true;
