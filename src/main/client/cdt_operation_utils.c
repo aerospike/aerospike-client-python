@@ -118,6 +118,7 @@ as_status get_int64_t(as_error *err, const char *key, PyObject *op_dict,
         AEROSPIKE_OK) {
         return err->code;
     }
+
     if (!found) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "Operation missing required entry %s", key);
@@ -135,21 +136,19 @@ as_status get_optional_int64_t(as_error *err, const char *key,
         return AEROSPIKE_OK;
     }
 
-    if (PyLong_Check(py_val)) {
-        *i64_valptr = (int64_t)PyLong_AsLongLong(py_val);
-        if (PyErr_Occurred()) {
-            if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
-                return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
-                                       key);
-            }
-
-            return as_error_update(err, AEROSPIKE_ERR_PARAM,
-                                   "Failed to convert %s", key);
-        }
-    }
-    else {
+    if (!PyLong_Check(py_val)) {
         return as_error_update(err, AEROSPIKE_ERR_PARAM,
                                "%s must be an integer", key);
+    }
+
+    *i64_valptr = (int64_t)PyLong_AsLongLong(py_val);
+    if (PyErr_Occurred()) {
+        if (PyErr_ExceptionMatches(PyExc_OverflowError)) {
+            return as_error_update(err, AEROSPIKE_ERR_PARAM, "%s too large",
+                                   key);
+        }
+        return as_error_update(err, AEROSPIKE_ERR_PARAM, "Failed to convert %s",
+                               key);
     }
 
     *found = true;
