@@ -44,7 +44,6 @@ jobs:
     - uses: jfrog/setup-jfrog-cli@v4
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
 
     - name: Get shortened commit hash of this workflow run
       # versioningit commit sha is always 8 chars long it seems
