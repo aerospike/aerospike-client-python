@@ -622,7 +622,7 @@ User Defined Functions
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
 
         .. seealso:: `Record UDF <https://aerospike.com/docs/server/guide/record_udf>`_ \
-          and `Developing Record UDFs <https://aerospike.com/developer/udf/developing_record_udfs>`_.
+          and `Developing Record UDFs <https://aerospike.com/docs/database/advanced/udf/modules/record/develop>`_.
 
     .. method:: scan_apply(ns, set, module, function[, args[, policy: dict[, options]]]) -> int
 
@@ -876,7 +876,7 @@ Index Operations
 
         :param str ns: The namespace to be indexed.
         :param str set: The set to be indexed.
-        :param str index_type: The type of index, default or complex type.
+        :param index_type: See :ref:`aerospike_index_types` for possible values.
         :param index_datatype: See :ref:`aerospike_index_datatypes` for possible values.
         :param list expressions: The compiled expression to be indexed. Produced from :ref:`aerospike_operation_helpers.expressions`.
         :param str name: the name of the index.
@@ -1244,6 +1244,13 @@ Metrics
 .. class:: Client
     :noindex:
 
+    .. method:: get_stats()
+
+        Retrieve aerospike client instance statistics.
+
+        :return: an instance of :py:class:`~aerospike_helpers.metrics.ClusterStats`
+        :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
     .. method:: enable_metrics(policy: Optional[aerospike_helpers.metrics.MetricsPolicy] = None)
 
         Enable extended periodic cluster and node latency metrics.
@@ -1257,6 +1264,37 @@ Metrics
         Disable extended periodic cluster and node latency metrics.
 
         :raises: :exc:`~aerospike.exception.AerospikeError` or one of its subclasses.
+
+Scan and Query Constructors
+---------------------------
+
+.. class:: Client
+    :noindex:
+
+    .. method:: scan(namespace[, set]) -> Scan
+
+        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
+
+        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
+
+        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name, otherwise the entire \
+            *namespace* will be scanned.
+
+        :return: an :py:class:`aerospike.Scan` class.
+
+    .. method:: query(namespace[, set]) -> Query
+
+        Return a :class:`aerospike.Query` object to be used for executing queries
+        over a specified set in a namespace.
+
+        See :ref:`aerospike.Query` for more details.
+
+        :param str namespace: the namespace in the aerospike cluster.
+        :param str set: optional specified set name. Otherwise, all records in the specified namespace will be queried.
+        :return: an :py:class:`aerospike.Query` class.
 
 .. _admin_user_dict:
 
@@ -1294,42 +1332,6 @@ The user dictionary has the following key-value pairs:
     * ``"conns_in_use"`` (:class:`int`): number of currently open connections.
 
     * ``"roles"`` (:class:`list[str]`): list of assigned role names.
-
-Scan and Query Constructors
----------------------------
-
-.. class:: Client
-    :noindex:
-
-    .. method:: scan(namespace[, set]) -> Scan
-
-        .. deprecated:: 7.0.0 :class:`aerospike.Query` should be used instead.
-
-        Returns a :class:`aerospike.Scan` object to scan all records in a namespace / set.
-
-        If set is omitted or set to :py:obj:`None`, the object returns all records in the namespace.
-
-        :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the entire \
-            *namespace* will be scanned.
-
-        :return: an :py:class:`aerospike.Scan` class.
-
-    .. method:: query(namespace[, set]) -> Query
-
-        Return a :class:`aerospike.Query` object to be used for executing queries
-        over a specified set in a namespace.
-
-        See :ref:`aerospike.Query` for more details.
-
-        :param str namespace: the namespace in the aerospike cluster.
-        :param str set: optional specified set name, otherwise the records \
-            which are not part of any *set* will be queried (**Note**: this is \
-            different from not providing the *set* in :meth:`scan`).
-        :return: an :py:class:`aerospike.Query` class.
-
-.. index::
-    single: Other Methods
 
 Tuples
 ======
@@ -1490,6 +1492,129 @@ The metadata dictionary has the following key-value pairs:
 Policies
 ========
 
+.. _aerospike_base_policies:
+
+Base Policies
+-------------
+
+.. object:: policy
+
+    Base policies that apply to some other policies.
+
+    .. hlist::
+        :columns: 1
+
+        * **max_retries** (:class:`int`)
+            Maximum number of retries before aborting the current command. The initial attempt is not counted as a
+            retry.
+
+            If max_retries is exceeded:
+
+            - For query policies, the command will the last suberror that was received.
+            - For the other policies, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
+
+            Default for :ref:`aerospike_read_policies` and :ref:`aerospike_batch_policies`: ``2``
+            Default for the other policies: ``0``
+
+            .. warning:: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
+                if the client timed out previous command attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
+
+        * **sleep_between_retries** (:class:`int`)
+            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
+            |
+            | Default: ``0``
+        * **socket_timeout** (:class:`int`)
+            | Socket idle timeout in milliseconds when processing a database command.
+            |
+            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and
+            | total_timeout are checked. If max_retries and total_timeout are not exceeded, the command is retried.
+            |
+            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. \
+                If ``socket_timeout`` is ``0``, there will be no socket idle limit.
+            |
+            | Default: ``30000``
+        * **total_timeout** (:class:`int`)
+            | Total command timeout in milliseconds.
+            |
+            | The total_timeout is tracked on the client and sent to the server along with the command in the wire protocol.
+            | The client will most likely timeout first, but the server also has the capability to timeout the command.
+            |
+            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will
+            | return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
+            |
+            | If ``total_timeout`` is zero, there will be no total time limit on the client side.
+            | However, the server converts zero timeouts to the server configuration field
+            | ``transaction-max-ms`` (default ``1000ms``) for all commands except queries. For short
+            | queries (``expected_duration`` == :data:`aerospike.QUERY_DURATION_SHORT`), the server
+            | converts zero timeouts to a hard-coded ``1000ms``. For long queries, there is no
+            | timeout conversion on the server.
+            |
+            | Default for :ref:`aerospike_query_policies` and :ref:`aerospike_scan_policies`: ``0``
+            | Default for the other policies: ``1000``
+        * **timeout_delay** (:class:`int`)
+            Number of milliseconds to wait after a socket read times out before closing the socket for
+            good. If set to zero, this feature will be disabled.
+
+            If, upon performing a database operation, the host finds the socket it was using timing out
+            while reading, the client will receive a timeout error.  However, we don't always want to
+            close that socket right away; doing so introduces unwanted latencies.  It might be possible
+            to recover the socket, thus saving the socket for future re-use.
+
+            The socket will be closed only if it could not be successfully recovered within `timeout_delay`
+            milliseconds of the original timeout.  If this is set to zero, the socket may be closed right
+            away, effectively disabling this feature.
+
+            Please note that this feature only applies to sockets being read; write timeouts are not
+            affected by this setting.
+
+            The value must be an unsigned 32-bit integer.
+
+            Default: ``3000``
+        * **connect_timeout** (:class:`int`)
+            Socket connect timeout in milliseconds. If ``connect_timeout`` greater than zero, it will
+            be applied to creating a connection plus optional user authentication. Otherwise,
+            ``socket_timeout`` or ``total_timeout`` will be used depending on their values.
+
+            If base policy's ``connect_timeout`` (not the config-level ``connect_timeout``), socket and total timeouts
+            are zero, the actual socket connect timeout is hardcoded to ``2000ms``.
+
+            ``connect_timeout`` is useful when new connection creation is expensive (i.e TLS connections)
+            and it's acceptable to allow extra time to create a new connection compared to using an
+            existing connection from the pool.
+
+            This only applies to regular commands, not info commands.
+
+            This value is limited to a 32-bit unsigned integer.
+
+            Default: ``0``
+        * **compress** (:class:`bool`)
+            | Compress client requests and server responses.
+            |
+            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In
+            | addition, tell the server to compress it's response on read commands. The server response compression threshold is
+            | also 128 bytes.
+            |
+            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent
+            | over the network.
+            |
+            | This compression feature requires the Enterprise Edition Server.
+            |
+            | Default: ``False``
+        * **expressions** :class:`list`
+            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
+            |
+            | Default: None
+
+            .. note:: Requires Aerospike server version >= 5.2.
+
+        * **txn** (:class:`aerospike.Transaction`)
+
+            NOTE: this policy does not work for config level policies.
+
+            Transaction command identifier.
+
+            Default: :py:obj:`None`
+
 .. _aerospike_write_policies:
 
 Write Policies
@@ -1499,50 +1624,11 @@ Write Policies
 
     A :class:`dict` of optional write policies, which are applicable to :meth:`~Client.put`, :meth:`~Client.query_apply`. :meth:`~Client.remove_bin`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current command. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning:: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous command attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the command is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. \
-              If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total command timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the command in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the command.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | This compression feature requires the Enterprise Edition Server.
-            |
-            | Default: ``False``
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
@@ -1571,12 +1657,6 @@ Write Policies
             | Perform durable delete
             |
             | Default: ``False``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
         * **compression_threshold** (:class:`int`)
             Compress data for transmission if the object size is greater than a given number of bytes.
 
@@ -1586,8 +1666,6 @@ Write Policies
             Algorithm used to determine target node. One of the :ref:`POLICY_REPLICA` values.
 
             Default: :data:`aerospike.POLICY_REPLICA_SEQUENCE`
-
-        * .. include:: ./txn.rst
 
         * .. include:: ./on_locking_only.rst
 
@@ -1600,45 +1678,11 @@ Read Policies
 
     A :class:`dict` of optional read policies, which are applicable to :meth:`~Client.get`, :meth:`~Client.exists`, :meth:`~Client.select`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current command. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``2``
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the command is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total command timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the command in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the command.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | This compression feature requires the Enterprise Edition Server.
-            |
-            | Default: ``False``
         * **deserialize** (:class:`bool`)
             | Should raw bytes representing a list or map be deserialized to a list or dictionary.
             | Set to `False` for backup programs that just need access to raw bytes.
@@ -1685,14 +1729,6 @@ Read Policies
             | One of the :ref:`POLICY_REPLICA` values such as :data:`aerospike.POLICY_REPLICA_MASTER`
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
-
-        * .. include:: ./txn.rst
 
 .. _aerospike_operate_policies:
 
@@ -1703,49 +1739,11 @@ Operate Policies
 
     A :class:`dict` of optional operate policies, which are applicable to :meth:`~Client.append`, :meth:`~Client.prepend`, :meth:`~Client.increment`, :meth:`~Client.operate`, and atomic list and map operations.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current command. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous command attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the command is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total command timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the command in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the command.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | This compression feature requires the Enterprise Edition Server.
-            |
-            | Default: ``False``
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
@@ -1817,14 +1815,6 @@ Operate Policies
             | Should raw bytes representing a list or map be deserialized to a Python list or map. Set to false for backup programs that just need access to raw bytes.
             |
             | Default: :py:obj:`True`
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
-        * .. include:: ./txn.rst
-
         * .. include:: ./on_locking_only.rst
 
 .. _aerospike_apply_policies:
@@ -1836,49 +1826,11 @@ Apply Policies
 
     A :class:`dict` of optional apply policies, which are applicable to :meth:`~Client.apply`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current command. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous command attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the command is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total command timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the command in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the command.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | This compression feature requires the Enterprise Edition Server.
-            |
-            | Default: ``False``
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
@@ -1900,15 +1852,6 @@ Apply Policies
             | Perform durable delete
             |
             | Default: ``False``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
-
-        * .. include:: ./txn.rst
-
         * .. include:: ./on_locking_only.rst
 
 .. _aerospike_remove_policies:
@@ -1920,48 +1863,11 @@ Remove Policies
 
     A :class:`dict` of optional remove policies, which are applicable to :meth:`~Client.remove`.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current command. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``0``
-
-            .. warning::  Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times \
-               if the client timed out previous command attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the command is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total command timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the command in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the command.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | This compression feature requires the Enterprise Edition Server.
-            |
-            | Default: ``False``
         * **key**
             | One of the :ref:`POLICY_KEY` values such as :data:`aerospike.POLICY_KEY_DIGEST`
             |
@@ -1988,15 +1894,6 @@ Remove Policies
             |
             | Default: ``aerospike.POLICY_REPLICA_SEQUENCE``
 
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
-
-        * .. include:: ./txn.rst
-
 .. _aerospike_batch_policies:
 
 Batch Policies
@@ -2006,48 +1903,11 @@ Batch Policies
 
     A :class:`dict` of optional batch policies.
 
+    See :ref:`aerospike_base_policies` as well.
+
     .. hlist::
         :columns: 1
 
-        * **max_retries** (:class:`int`)
-            | Maximum number of retries before aborting the current command. The initial attempt is not counted as a retry.
-            |
-            | If max_retries is exceeded, the command will return error ``AEROSPIKE_ERR_TIMEOUT``.
-            |
-            | Default: ``2``
-
-            .. warning: Database writes that are not idempotent (such as "add") should not be retried because the write operation may be performed multiple times if the client timed out previous  transaction attempts. It's important to use a distinct write policy for non-idempotent writes, which sets max_retries = `0`;
-
-        * **sleep_between_retries** (:class:`int`)
-            | Milliseconds to sleep between retries. Enter ``0`` to skip sleep.
-            |
-            | Default: ``0``
-        * **socket_timeout** (:class:`int`)
-            | Socket idle timeout in milliseconds when processing a database command.
-            |
-            | If socket_timeout is not ``0`` and the socket has been idle for at least socket_timeout, both max_retries and total_timeout are checked. If max_retries and total_timeout are not exceeded, the command is retried.
-            |
-            | If both ``socket_timeout`` and ``total_timeout`` are non-zero and ``socket_timeout`` > ``total_timeout``, then ``socket_timeout`` will be set to ``total_timeout``. If ``socket_timeout`` is ``0``, there will be no socket idle limit.
-            |
-            | Default: ``30000``
-        * **total_timeout** (:class:`int`)
-            | Total command timeout in milliseconds.
-            |
-            | The total_timeout is tracked on the client and sent to the server along with the command in the wire protocol. The client will most likely timeout first, but the server also has the capability to timeout the command.
-            |
-            | If ``total_timeout`` is not ``0`` and ``total_timeout`` is reached before the command completes, the command will return error ``AEROSPIKE_ERR_TIMEOUT``. If ``total_timeout`` is ``0``, there will be no total time limit.
-            |
-            | Default: ``1000``
-        * **compress** (:class:`bool`)
-            | Compress client requests and server responses.
-            |
-            | Use zlib compression on write or batch read commands when the command buffer size is greater than 128 bytes. In addition, tell the server to compress it's response on read commands. The server response compression threshold is also 128 bytes.
-            |
-            | This option will increase cpu and memory usage (for extra compressed buffers), but decrease the size of data sent over the network.
-            |
-            | This compression feature requires the Enterprise Edition Server.
-            |
-            | Default: ``False``
         * **read_mode_ap**
             | One of the :ref:`POLICY_READ_MODE_AP` values such as :data:`aerospike.AS_POLICY_READ_MODE_AP_ONE`
             |
@@ -2107,12 +1967,6 @@ Batch Policies
             | Should raw bytes be deserialized to as_list or as_map. Set to `False` for backup programs that just need access to raw bytes.
             |
             | Default: ``True``
-        * **expressions** :class:`list`
-            | Compiled aerospike expressions :mod:`aerospike_helpers` used for filtering records within a command.
-            |
-            | Default: None
-
-            .. note:: Requires Aerospike server version >= 5.2.
         * **respond_all_keys** :class:`bool`
             Should all batch keys be attempted regardless of errors. This field is used on both the client and server.
             The client handles node specific errors and the server handles key specific errors.
@@ -2130,8 +1984,6 @@ Batch Policies
             Server versions < 6.0 do not support this field and treat this value as false for key specific errors.
 
             Default: ``True``
-
-        * .. include:: ./txn.rst
 
 .. _aerospike_batch_write_policies:
 
