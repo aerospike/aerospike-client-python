@@ -101,7 +101,7 @@ jobs:
     # TODO: the checkout code is also duplicated in the macOS stage tests
     # But it's only a few lines of code so I didn't bother to create a composite action for it.
     - name: Get tests and Github action scripts
-      uses: actions/checkout@v4
+      uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
         sparse-checkout: |
@@ -204,7 +204,7 @@ jobs:
     runs-on: ${{ matrix.runner-os }}
     steps:
     - name: Get tests and Github action scripts
-      uses: actions/checkout@v4
+      uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
       with:
         ref: ${{ inputs.use_jfrog_builds && inputs.jfrog-build-version-to-test || github.sha }}
         sparse-checkout: |
@@ -224,7 +224,7 @@ jobs:
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
-    - uses: actions/setup-python@v4
+    - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v2
       with:
         python-version: ${{ matrix.python-version }}
 
