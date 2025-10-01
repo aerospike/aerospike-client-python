@@ -269,4 +269,5 @@ linkcheck_ignore = [
     "https://docs.aerospike.com/server/guide/security/index.html"
 ]
 
-linkcheck_timeout = 120
+linkcheck_retries = 4
+linkcheck_timeout = 30
