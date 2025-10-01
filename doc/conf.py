@@ -271,3 +271,4 @@ linkcheck_ignore = [
 
 linkcheck_retries = 4
 linkcheck_timeout = 30
+linkcheck_workers = 2
