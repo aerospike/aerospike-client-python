@@ -5,3 +5,4 @@ extend-ignore = E203
 filename =
     ./aerospike_helpers/**/*.py,
     ./test/**/*.py
+    ./setup.py
