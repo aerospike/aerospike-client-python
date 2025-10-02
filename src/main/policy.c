@@ -41,9 +41,7 @@
 
 #define POLICY_UPDATE() *policy_p = policy;
 
-// For transaction level policies, before calling this, we convert policy = None to NULL and this never gets called.
-// But for config-level policies, we do not check whether py_policy is NULL or None.
-// Either way, we want as_policy_*_set_from_pyobject to be a no-op.
+// TODO: replace and remove
 #define VALIDATE_POLICY()                                                      \
     if (py_policy == NULL || py_policy == Py_None) {                           \
         return AEROSPIKE_OK;                                                   \
@@ -52,6 +50,22 @@
         return as_error_update(err, AEROSPIKE_ERR_PARAM,                       \
                                "policy must be a dict");                       \
     }
+
+// For transaction level policies, before calling this, we convert policy = None to NULL and this never gets called.
+// But for config-level policies, we do not check whether py_policy is NULL or None.
+// Either way, we want as_policy_*_set_from_pyobject to be a no-op.
+static inline bool is_pyobject_valid_policy_type(as_error *err,
+                                                 PyObject *py_object)
+{
+    if (py_object == NULL || py_object == Py_None) {
+        return true;
+    }
+    else if (!PyDict_Check(py_object)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
+        return false;
+    }
+    return true;
+}
 
 // TODO: Python exceptions should be propagated up instead of being cleared
 // but the policy helper functions don't handle this case and they only populate
@@ -560,15 +574,9 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             as_policy_write *policy,
                                             bool is_policy_txn_level)
 {
-    if (py_policy == NULL || py_policy == Py_None) {
+    if (is_pyobject_valid_policy_type(err, py_policy) == false) {
         goto exit;
     }
-    else if (!PyDict_Check(py_policy)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
-        goto exit;
-    }
-
-    // VALIDATE_POLICY();
 
     as_status retval = as_policy_base_set_from_pyobject(
         self, err, py_policy, &policy->base, is_policy_txn_level);
