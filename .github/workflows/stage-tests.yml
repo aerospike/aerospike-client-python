@@ -39,6 +39,11 @@ on:
         type: boolean
         default: false
         description: 'Test macOS x86 wheels (unstable)'
+      test-file:
+        required: false
+        type: string
+        default: ''
+        description: 'Allows you to choose specific test files to run.'
 
 env:
   REGISTRY_USERNAME: ${{ inputs.registry-name == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
@@ -182,7 +187,7 @@ jobs:
       run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m ${{ env.PIP_INSTALL_COMMAND }} pytest -c requirements.txt
 
     - name: Run tests
-      run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pytest new_tests/
+      run: docker exec --workdir /aerospike-client-python/test ${{ env.LINUX_DISTRO_CONTAINER_NAME }} python${{ env.PYTHON_VERSION }} -m pytest new_tests/${{ inputs.test-file }}
 
   macOS:
     if: ${{ inputs.test-macos-x86 }}
