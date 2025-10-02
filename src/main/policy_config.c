@@ -456,6 +456,12 @@ as_status set_info_policy(as_policy_info *info_policy, PyObject *py_policy)
         return status;
     }
 
+    // status = set_optional_uint32_property(
+    //     (uint32_t *)&info_policy->timeout_delay, py_policy, "timeout_delay");
+    // if (status != AEROSPIKE_OK) {
+    //     return status;
+    // }
+
     return AEROSPIKE_OK;
 }
 
@@ -632,8 +638,20 @@ as_status set_base_policy(as_policy_base *base_policy, PyObject *py_policy)
         return status;
     }
 
+    status = set_optional_uint32_property(&base_policy->connect_timeout,
+                                          py_policy, "connect_timeout");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
     status = set_optional_uint32_property(
         (uint32_t *)&base_policy->socket_timeout, py_policy, "socket_timeout");
+    if (status != AEROSPIKE_OK) {
+        return status;
+    }
+
+    status = set_optional_uint32_property(
+        (uint32_t *)&base_policy->timeout_delay, py_policy, "timeout_delay");
     if (status != AEROSPIKE_OK) {
         return status;
     }
