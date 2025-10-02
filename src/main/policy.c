@@ -545,19 +545,20 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
     return err->code;
 }
 
-as_policy_write *as_policy_write_copy_and_set_from_pyobject(
-    AerospikeClient *self, as_error *err, PyObject *py_policy,
-    as_policy_write *dst, as_policy_write *src)
+as_status as_policy_write_copy_and_set_from_pyobject(AerospikeClient *self,
+                                                     as_error *err,
+                                                     PyObject *py_policy,
+                                                     as_policy_write *dst,
+                                                     as_policy_write *src)
 {
     as_policy_write_copy(src, dst);
     return as_policy_write_set_from_pyobject(self, err, py_policy, dst, true);
 }
 
-as_policy_write *as_policy_write_set_from_pyobject(AerospikeClient *self,
-                                                   as_error *err,
-                                                   PyObject *py_policy,
-                                                   as_policy_write *policy,
-                                                   bool is_policy_txn_level)
+as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
+                                            as_error *err, PyObject *py_policy,
+                                            as_policy_write *policy,
+                                            bool is_policy_txn_level)
 {
     if (py_policy == NULL || py_policy == Py_None) {
         return NULL;
