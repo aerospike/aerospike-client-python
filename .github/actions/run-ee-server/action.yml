@@ -40,7 +40,7 @@ runs:
 
   - name: Log into registry to get non-public server RCs
     # We can still pull public images while logged in, so just do this all the time to make things simple
-    uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef
+    uses: docker/login-action@5e57cd118135c172c3672efd75eb46360885c0ef # v3
     with:
       registry: ${{ inputs.registry-name }}
       username: ${{ inputs.registry-username }}
@@ -58,7 +58,7 @@ runs:
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
   - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
-    uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+    uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
 
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
     shell: bash
