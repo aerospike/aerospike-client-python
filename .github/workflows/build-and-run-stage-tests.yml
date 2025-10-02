@@ -24,6 +24,11 @@ on:
         type: boolean
         default: true
         description: 'Test macOS x86 wheels (unstable)'
+      test-file:
+        required: false
+        type: string
+        default: ''
+        description: Allows you to choose specific test files to run.
 
 jobs:
   build-select-wheels:
@@ -59,3 +64,4 @@ jobs:
       image-name: ${{ inputs.image-name }}
       server-tag: ${{ inputs.server-tag }}
       test-macos-x86: ${{ inputs.test-macos-x86 }}
+      test-file: ${{ inputs.test-file }}
