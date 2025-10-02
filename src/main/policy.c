@@ -561,11 +561,11 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             bool is_policy_txn_level)
 {
     if (py_policy == NULL || py_policy == Py_None) {
-        return NULL;
+        goto exit;
     }
     else if (!PyDict_Check(py_policy)) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
-        return NULL;
+        goto exit;
     }
 
     // VALIDATE_POLICY();
@@ -573,7 +573,7 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
     as_status retval = as_policy_base_set_from_pyobject(
         self, err, py_policy, &policy->base, is_policy_txn_level);
     if (retval != AEROSPIKE_OK) {
-        return NULL;
+        goto exit;
     }
 
     POLICY_SET_FIELD(key, as_policy_key);
@@ -590,7 +590,8 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
         POLICY_SET_FIELD(ttl, uint32_t);
     }
 
-    return policy;
+exit:
+    return err->code;
 }
 
 /**
