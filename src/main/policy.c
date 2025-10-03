@@ -42,7 +42,7 @@
 #define POLICY_UPDATE() *policy_p = policy;
 
 // TODO: replace and remove
-#define VALIDATE_POLICY()                                                      \
+#define RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()                               \
     if (py_policy == NULL || py_policy == Py_None) {                           \
         return AEROSPIKE_OK;                                                   \
     }                                                                          \
@@ -54,17 +54,13 @@
 // For transaction level policies, before calling this, we convert policy = None to NULL and this never gets called.
 // But for config-level policies, we do not check whether py_policy is NULL or None.
 // Either way, we want as_policy_*_set_from_pyobject to be a no-op.
-static inline bool is_pyobject_valid_policy_type(as_error *err,
-                                                 PyObject *py_object)
+static inline as_status is_pyobject_valid_policy_type(as_error *err,
+                                                      PyObject *py_object)
 {
-    if (py_object == NULL || py_object == Py_None) {
-        return true;
+    if (py_object == NULL || py_object == Py_None || PyDict_Check(py_object)) {
+        return AEROSPIKE_OK;
     }
-    else if (!PyDict_Check(py_object)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
-        return false;
-    }
-    return true;
+    return as_error_update(err, AEROSPIKE_ERR_PARAM, "policy must be a dict");
 }
 
 // TODO: Python exceptions should be propagated up instead of being cleared
@@ -257,7 +253,7 @@ as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
                                    as_policy_admin *config_admin_policy)
 {
 
-    VALIDATE_POLICY();
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     //Initialize policy with global defaults
     as_policy_admin_copy(config_admin_policy, policy);
@@ -314,7 +310,7 @@ as_policy_base_set_from_pyobject(AerospikeClient *self, as_error *err,
                                  PyObject *py_policy, as_policy_base *policy,
                                  bool is_this_txn_policy)
 {
-    VALIDATE_POLICY()
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
 
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
@@ -348,7 +344,7 @@ as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
                                             as_policy_apply *policy,
                                             bool is_this_txn_policy)
 {
-    VALIDATE_POLICY();
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     // Set policy fields
     as_status retval = as_policy_base_set_from_pyobject(
@@ -379,7 +375,7 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
                                   as_policy_info **policy_p,
                                   as_policy_info *config_info_policy)
 {
-    VALIDATE_POLICY();
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     //Initialize policy with global defaults
     as_policy_info_copy(config_info_policy, policy);
@@ -410,7 +406,7 @@ as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    as_policy_query *config_query_policy,
                                    as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY();
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     //Initialize policy with global defaults
     as_policy_query_copy(config_query_policy, policy);
@@ -461,7 +457,7 @@ as_status as_policy_read_set_from_pyobject(AerospikeClient *self, as_error *err,
                                            as_policy_read *policy,
                                            bool is_policy_txn_level)
 {
-    VALIDATE_POLICY();
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     // Set policy fields
     as_status retval = as_policy_base_set_from_pyobject(
@@ -495,7 +491,7 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
                                     as_policy_remove *config_remove_policy,
                                     as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY();
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
     //Initialize policy with global defaults
     as_policy_remove_copy(config_remove_policy, policy);
 
@@ -534,7 +530,7 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
                                   as_policy_scan *config_scan_policy,
                                   as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY();
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     //Initialize policy with global defaults
     as_policy_scan_copy(config_scan_policy, policy);
@@ -574,9 +570,7 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             as_policy_write *policy,
                                             bool is_policy_txn_level)
 {
-    if (is_pyobject_valid_policy_type(err, py_policy) == false) {
-        goto exit;
-    }
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
 
     as_status retval = as_policy_base_set_from_pyobject(
         self, err, py_policy, &policy->base, is_policy_txn_level);
@@ -615,7 +609,7 @@ as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
                                      as_policy_operate *config_operate_policy,
                                      as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY();
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE();
 
     //Initialize policy with global defaults
     as_policy_operate_copy(config_operate_policy, policy);
@@ -661,7 +655,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
                                    as_policy_batch *config_batch_policy,
                                    as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY()
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
 
     //Initialize policy with global defaults
     as_policy_batch_copy(config_batch_policy, policy);
@@ -702,7 +696,7 @@ as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          as_policy_batch_write **policy_p,
                                          as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY()
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
     as_policy_batch_write_init(policy);
 
     // Set policy fields
@@ -729,7 +723,7 @@ as_status pyobject_to_batch_read_policy(AerospikeClient *self, as_error *err,
                                         as_policy_batch_read **policy_p,
                                         as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY()
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
     as_policy_batch_read_init(policy);
 
     // Set policy fields
@@ -753,7 +747,7 @@ as_status pyobject_to_batch_apply_policy(AerospikeClient *self, as_error *err,
                                          as_policy_batch_apply **policy_p,
                                          as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY()
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
     as_policy_batch_apply_init(policy);
 
     // Set policy fields
@@ -779,7 +773,7 @@ as_status pyobject_to_batch_remove_policy(AerospikeClient *self, as_error *err,
                                           as_policy_batch_remove **policy_p,
                                           as_exp *exp_list, as_exp **exp_list_p)
 {
-    VALIDATE_POLICY()
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
     as_policy_batch_remove_init(policy);
 
     // Set policy fields
@@ -802,7 +796,7 @@ as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
                                  as_bit_policy *policy)
 {
     as_bit_policy_init(policy);
-    VALIDATE_POLICY()
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
 
     PyObject *py_bit_flags =
         PyDict_GetItemString(py_policy, BIT_WRITE_FLAGS_KEY);
@@ -826,7 +820,7 @@ as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
                                  as_map_policy *policy)
 {
     // Initialize Policy
-    VALIDATE_POLICY()
+    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
     as_map_policy_init(policy);
 
     // Defaults
