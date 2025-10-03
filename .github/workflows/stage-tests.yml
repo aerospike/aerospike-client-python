@@ -263,4 +263,4 @@ jobs:
 
   trigger-performance-regression-tests-in-bob:
     needs: add-latest-dev-build-to-qe-test-image-for-performance-regression-tests
-    uses: .github/workflows/run-qe-test.yml
+    uses: ./.github/workflows/run-qe-test.yml
