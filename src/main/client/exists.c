@@ -140,6 +140,25 @@ CLEANUP:
     return py_result;
 }
 
+// TODO: retval type
+static int py_policy_converter(PyObject *py_policy, void *converted_ref)
+{
+    if (py_policy == Py_None) {
+        py_policy = NULL;
+    }
+
+    if (!py_policy || PyDict_Check(py_policy)) {
+        return 1;
+    }
+
+    // Invalid py_policy type
+    as_error err;
+    // TODO: get the exact err description
+    as_error_update(&err, AEROSPIKE_ERR_PARAM, "Invalid policy type");
+    raise_exception(&err);
+    return 0;
+}
+
 /**
  *******************************************************************************************************
  * Checks if a record exists in the Aerospike DB.
@@ -164,13 +183,9 @@ PyObject *AerospikeClient_Exists(AerospikeClient *self, PyObject *args,
     static char *kwlist[] = {"key", "policy", NULL};
 
     // Python Function Argument Parsing
-    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O:exists", kwlist, &py_key,
+    if (PyArg_ParseTupleAndKeywords(args, kwds, "O|O&:exists", kwlist, &py_key,
                                     &py_policy) == false) {
         return NULL;
-    }
-
-    if (py_policy == Py_None) {
-        py_policy = NULL;
     }
 
     // Invoke Operation
