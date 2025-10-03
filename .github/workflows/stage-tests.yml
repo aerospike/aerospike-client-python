@@ -250,3 +250,14 @@ jobs:
       run: python3 -m pytest new_tests/
       id: test
       working-directory: test
+
+  add-latest-dev-build-to-qe-test-image-for-performance-regression-tests:
+    # We do not always have JFrog builds for arbitrary branches
+    if: ${{ inputs.use_jfrog_builds }}
+    uses: citrusleaf/qe-docker/.github/workflows/build-deploy-python-3.11.yml@jkim/pipeline
+    with:
+      jfrog_artifact_version: ${{ inputs.jfrog-build-version-to-test }}
+
+  trigger-performance-regression-tests-in-bob:
+    needs: build-qe-test-image-for-performance-regression-tests
+    uses: .github/workflows/run-qe-test.yml

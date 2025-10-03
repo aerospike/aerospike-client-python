@@ -5,6 +5,13 @@ on:
         required: true
         default: CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs
         description: Test scenario
+  workflow_call:
+    inputs:
+      test-scenario:
+        type: string
+        required: true
+        default: CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs
+        description: Test scenario
 
 jobs:
   foo:
