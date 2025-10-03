@@ -308,13 +308,12 @@ static inline void check_and_set_txn_field(as_error *err,
     policy_base->txn = py_txn->txn;
 }
 
+// py_policy must be a Python dictionary
 static inline as_status
 as_policy_base_set_from_pyobject(AerospikeClient *self, as_error *err,
                                  PyObject *py_policy, as_policy_base *policy,
                                  bool is_this_txn_policy)
 {
-    RETURN_IF_PY_POLICY_IS_INVALID_OR_NONE()
-
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
     POLICY_SET_FIELD(timeout_delay, uint32_t);
