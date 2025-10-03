@@ -451,7 +451,6 @@ as_status as_policy_read_copy_and_set_from_pyobject(AerospikeClient *self,
                                                     as_policy_read *dst,
                                                     as_policy_read *src)
 {
-    // TODO: unnecessary copy if py_policy is NULL/Py_None
     as_policy_read_copy(src, dst);
     return as_policy_read_set_from_pyobject(self, err, py_policy, dst, true);
 }
