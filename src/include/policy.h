@@ -299,6 +299,11 @@ as_status as_policy_write_set_from_pyobject(AerospikeClient *self,
                                             as_policy_write *policy,
                                             bool is_policy_txn_level);
 
+as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
+                                            as_error *err, PyObject *py_policy,
+                                            as_policy_apply *policy,
+                                            bool is_policy_txn_level);
+
 // These methods are used for setting transaction level policies
 // 1. Copies an config-level as_policy_* *src* to a txn-level *dst* policy
 // 2. Sets an as_policy_* *dst* from a Python object *py_policy*. to override the defaults from *src*
@@ -322,11 +327,6 @@ as_status as_policy_apply_copy_and_set_from_pyobject(AerospikeClient *self,
                                                      PyObject *py_policy,
                                                      as_policy_apply *dst,
                                                      as_policy_apply *src);
-
-as_status as_policy_apply_set_from_pyobject(AerospikeClient *self,
-                                            as_error *err, PyObject *py_policy,
-                                            as_policy_apply *policy,
-                                            bool is_policy_txn_level);
 
 // TODO: make consistent
 // metrics_policy must be declared already
