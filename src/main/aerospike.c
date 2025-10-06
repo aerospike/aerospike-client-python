@@ -646,7 +646,7 @@ DEFINE_SET_OF_VALID_KEYS(remove_policy, BASE_POLICY_KEYS, "generation", "key",
 
 DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, SCAN_POLICY_KEYS, NULL)
 
-DEFINE_SET_OF_VALID_KEYS(info_and_scan_policy_valid_keys, BASE_POLICY_KEYS,
+DEFINE_SET_OF_VALID_KEYS(info_and_scan_policy, BASE_POLICY_KEYS,
                          SCAN_POLICY_KEYS, INFO_POLICY_KEYS, NULL)
 
 #define WRITE_POLICY_KEYS                                                      \
@@ -713,10 +713,11 @@ DEFINE_SET_OF_VALID_KEYS(hll_policy, "flags", NULL)
 
 DEFINE_SET_OF_VALID_KEYS(admin_policy, "timeout", NULL)
 
-// Take the pyobjects and string lists above and connect them using a struct
+// Use a struct to create pairs of pyobjects and list of strings defined above
 // When we initialize the module, we create sets for the valid keys that the client can use later
 
 struct py_set_name_to_str_list {
+    // We are setting the global PyObject *variables above, which can be accessed externally
     PyObject **py_set_of_keys;
     const char **valid_keys;
 };
@@ -750,7 +751,8 @@ static struct py_set_name_to_str_list py_set_name_to_str_lists[] = {
     PY_SET_NAME_TO_STR_LIST(map_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(list_policy_valid_keys),
     PY_SET_NAME_TO_STR_LIST(hll_policy_valid_keys),
-};
+    PY_SET_NAME_TO_STR_LIST(info_and_write_policy_valid_keys),
+    PY_SET_NAME_TO_STR_LIST(info_and_scan_policy_valid_keys)};
 
 // Return NULL if an exception is raised
 // Returns strong reference to new Python dictionary
