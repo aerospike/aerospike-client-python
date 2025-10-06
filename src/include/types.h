@@ -145,6 +145,8 @@ extern PyObject *py_list_policy_valid_keys;
 extern PyObject *py_hll_policy_valid_keys;
 // query.apply() takes in one policy parameter that accepts both write and info policy options
 extern PyObject *py_info_and_write_policy_valid_keys;
+// scan.apply() takes in one policy parameter that accepts both write and info policy options
+extern PyObject *py_info_and_scan_policy_valid_keys;
 
 // py_set contains the valid keys
 // Return -1 if we failed to validate dictionary

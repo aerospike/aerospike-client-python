@@ -442,7 +442,8 @@ static PyObject *AerospikeClient_QueryApply_Invoke(
             if (py_policy) {
                 pyobject_to_policy_info(
                     &err, py_policy, &info_policy, &info_policy_p,
-                    &self->as->config.policies.info, self->validate_keys, true);
+                    &self->as->config.policies.info, self->validate_keys,
+                    SECOND_AS_POLICY_WRITE);
                 if (err.code != AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
@@ -586,7 +587,7 @@ PyObject *AerospikeClient_JobInfo(AerospikeClient *self, PyObject *args,
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info,
-                            self->validate_keys, false);
+                            self->validate_keys, SECOND_AS_POLICY_NONE);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

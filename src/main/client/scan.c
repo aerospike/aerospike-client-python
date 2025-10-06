@@ -132,7 +132,7 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     if (py_policy) {
         pyobject_to_policy_scan(self, &err, py_policy, &scan_policy,
                                 &scan_policy_p, &self->as->config.policies.scan,
-                                &exp_list, &exp_list_p);
+                                &exp_list, &exp_list_p, true);
 
         if (err.code != AEROSPIKE_OK) {
             goto CLEANUP;
@@ -189,8 +189,20 @@ static PyObject *AerospikeClient_ScanApply_Invoke(
     arglist = NULL;
     if (err.code == AEROSPIKE_OK) {
         if (block) {
+            as_policy_info info_policy;
+            as_policy_info *info_policy_p = NULL;
+            if (py_policy) {
+                pyobject_to_policy_info(
+                    &err, py_policy, &info_policy, &info_policy_p,
+                    &self->as->config.policies.info, self->validate_keys,
+                    SECOND_AS_POLICY_SCAN);
+                if (err.code != AEROSPIKE_OK) {
+                    goto CLEANUP;
+                }
+            }
+
             Py_BEGIN_ALLOW_THREADS
-            aerospike_scan_wait(self->as, &err, NULL, scan_id, 0);
+            aerospike_scan_wait(self->as, &err, info_policy_p, scan_id, 0);
             Py_END_ALLOW_THREADS
             // We don't need to jump to the cleanup section to handle the code
             // since it's already directly below this block

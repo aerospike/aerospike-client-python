@@ -640,11 +640,14 @@ DEFINE_SET_OF_VALID_KEYS(remove_policy, BASE_POLICY_KEYS, "generation", "key",
 
 )
 
-DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, "durable_delete",
-                         "records_per_second", "max_records", "replica", "ttl",
-                         "partition_filter", NULL
+#define SCAN_POLICY_KEYS                                                       \
+    "durable_delete", "records_per_second", "max_records", "replica", "ttl",   \
+        "partition_filter"
 
-)
+DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, SCAN_POLICY_KEYS, NULL)
+
+DEFINE_SET_OF_VALID_KEYS(info_and_scan_policy_valid_keys, BASE_POLICY_KEYS,
+                         SCAN_POLICY_KEYS, INFO_POLICY_KEYS, NULL)
 
 #define WRITE_POLICY_KEYS                                                      \
     "key", "gen", "exists", "commit_level", "durable_delete", "replica",       \
