@@ -4,11 +4,10 @@ from aerospike import exception as e
 import aerospike
 from .test_base_class import TestBaseClass
 
-# These are for test_validate_keys
+# This is for test_validate_keys
 # INVALID_OPTION_KEY cannot be read for the client-config policies test case as a class variable,
 # so these were made global
 INVALID_OPTION_KEY = "a"
-EXPECTED_INVALID_KEY_ERR_MSG = '\"{}\" is an invalid {} dictionary key'
 
 class TestInvalidClientConfig(object):
     def test_no_config(self):
@@ -218,5 +217,7 @@ class TestInvalidClientConfig(object):
 
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
+
         adjective = "policy" if is_policy else "client config"
+        EXPECTED_INVALID_KEY_ERR_MSG = '\"{}\" is an invalid {} dictionary key'
         assert excinfo.value.msg == EXPECTED_INVALID_KEY_ERR_MSG.format(INVALID_OPTION_KEY, adjective)
