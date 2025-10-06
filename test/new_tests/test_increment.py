@@ -71,6 +71,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
+            "max_retries": 1,
             "commit_level": aerospike.POLICY_COMMIT_LEVEL_MASTER,
         }
         self.as_connection.increment(key, "age", 5, {}, policy)
@@ -121,6 +122,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
 
@@ -144,6 +146,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -169,6 +172,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_EQ,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -196,6 +200,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)
@@ -221,6 +226,7 @@ class TestIncrement(object):
         key = ("test", "demo", 1)
         policy = {
             "key": aerospike.POLICY_KEY_SEND,
+            "max_retries": 1,
             "gen": aerospike.POLICY_GEN_GT,
         }
         (key, meta) = self.as_connection.exists(key)

@@ -60,6 +60,7 @@ class TestRemove:
         meta = {"gen": 0}
         policy = {
             "total_timeout": 180000,
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
@@ -86,7 +87,7 @@ class TestRemove:
 
         key = ("test", "demo", None, bytearray("asd;as[d'as;djk;uyfl", "utf-8"))
         meta = {"gen": 0}
-        policy = {"key": aerospike.POLICY_KEY_DIGEST}
+        policy = {"max_retries": 1, "key": aerospike.POLICY_KEY_DIGEST}
         retobj = self.as_connection.put(key, policy)
 
         assert retobj == 0
@@ -110,6 +111,7 @@ class TestRemove:
         key = ("test", "demo", 1)
         meta = {"gen": 0}
         policy = {
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
@@ -136,6 +138,7 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
         policy = {
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
         }
@@ -164,6 +167,7 @@ class TestRemove:
         """
         key = ("test", "demo", 1)
         policy = {
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
         }
@@ -198,6 +202,7 @@ class TestRemove:
         (key, meta) = self.as_connection.exists(key)
         gen = meta["gen"] + 5
         policy = {
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_EQ,
         }
@@ -219,6 +224,7 @@ class TestRemove:
         record = {"Company": "Microsoft", "Place": "US"}
         put_data(self.as_connection, key, record)
         policy = {
+            "max_retries": 1,
             "key": aerospike.POLICY_KEY_SEND,
             "gen": aerospike.POLICY_GEN_GT,
         }
