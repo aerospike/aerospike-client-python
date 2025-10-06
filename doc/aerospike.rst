@@ -609,7 +609,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/server/guide/security/tls.html>`_.
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/database/learn/security/tls/>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not.
@@ -800,13 +800,21 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
-            Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
+            Cluster tend info command timeout in milliseconds.
 
             Default: ``1000``.
         * **fail_if_not_connected** (:class:`bool`)
             Flag to signify fail on cluster init if seed node and all peers are not reachable.
 
             Default: ``True``
+        * **force_single_node** (:class:`bool`)
+            For testing purposes only.  Do not modify.
+
+            Should the client communicate with the first seed node only
+            instead of using the data partition map to determine which node to send the
+            database command.
+
+            Default: ``False``
 
 Constants
 =========
@@ -1191,7 +1199,7 @@ Flags used by list order.
     Ordered list.
 
 .. note::
-    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
+    See `this page <https://aerospike.com/docs/develop/data-types/collections/ordering/>`_ to learn more about list ordering.
 
 .. _aerospike_list_sort_flag:
 
@@ -1570,7 +1578,7 @@ Index data types
 
     An index whose values are of the aerospike GeoJSON data type.
 
-.. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+.. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
 
 .. _aerospike_index_types:
 

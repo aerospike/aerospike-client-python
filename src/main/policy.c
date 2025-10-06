@@ -322,9 +322,11 @@ pyobject_to_policy_base(AerospikeClient *self, as_error *err,
 {
     POLICY_SET_FIELD(total_timeout, uint32_t);
     POLICY_SET_FIELD(socket_timeout, uint32_t);
+    POLICY_SET_FIELD(timeout_delay, uint32_t);
     POLICY_SET_FIELD(max_retries, uint32_t);
     POLICY_SET_FIELD(sleep_between_retries, uint32_t);
     POLICY_SET_FIELD(compress, bool);
+    POLICY_SET_FIELD(connect_timeout, uint32_t);
 
     // Setting txn field to a non-NULL value in a query or scan policy is a no-op,
     // so this is safe to call for a scan/query policy's base policy
@@ -427,6 +429,7 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
 
         // Set policy fields
         POLICY_SET_FIELD(timeout, uint32_t);
+        // POLICY_SET_FIELD(timeout_delay, uint32_t);
         POLICY_SET_FIELD(send_as_is, bool);
         POLICY_SET_FIELD(check_bounds, bool);
     }
@@ -1478,6 +1481,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
     strcpy(metrics_policy->report_dir, report_dir);
+    Py_DECREF(py_report_dir);
 
     const char *report_size_limit_attr_name = "report_size_limit";
     PyObject *py_report_size_limit =
@@ -1490,6 +1494,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
 
     uint64_t report_size_limit =
         convert_pyobject_to_uint64_t(py_report_size_limit);
+    Py_DECREF(py_report_size_limit);
     if (PyErr_Occurred()) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         report_size_limit_attr_name, "unsigned 64-bit integer");
@@ -1507,6 +1512,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     }
 
     uint32_t interval = convert_pyobject_to_uint32_t(py_interval);
+    Py_DECREF(py_interval);
     if (PyErr_Occurred()) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         interval_field_name, "unsigned 32-bit integer");
@@ -1528,6 +1534,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         }
 
         uint8_t attr_value = convert_pyobject_to_uint8_t(py_attr_value);
+        Py_DECREF(py_attr_value);
         if (PyErr_Occurred()) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             INVALID_ATTR_TYPE_ERROR_MSG, uint8_field_names[i],
