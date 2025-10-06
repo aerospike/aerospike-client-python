@@ -543,9 +543,8 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
             const char *adjective =
                 is_py_dict_a_policy ? "policy" : "client config";
             // py_key may not be a string
-            PyObject *py_error_msg =
-                PyUnicode_FromFormat("\"%S\" is an invalid %s dictionary key",
-                                     py_key, is_py_dict_a_policy);
+            PyObject *py_error_msg = PyUnicode_FromFormat(
+                "\"%S\" is an invalid %s dictionary key", py_key, adjective);
             if (!py_error_msg) {
                 goto internal_error;
             }
