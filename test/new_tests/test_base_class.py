@@ -218,8 +218,12 @@ class TestBaseClass(object):
 
         config_parser = configparser.ConfigParser()
         config_parser.read("config.conf")
-        if config_parser.has_option(None, "validate_keys"):
-            config["validate_keys"] = True
+        VALIDATE_KEYS_SECTION = "input-validation"
+        VALIDATE_KEYS_OPTION = "validate_keys"
+        if config_parser.has_section(VALIDATE_KEYS_SECTION) and config_parser.has_option(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION):
+            config["validate_keys"] = config_parser.getboolean(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION)
+        else:
+            config["validate_keys"] = False
 
         # Disable total_timeout and timeout
         # config["timeout"] = 0
@@ -238,10 +242,6 @@ class TestBaseClass(object):
 
         config["policies"]["info"] = {}
         config["policies"]["info"]["timeout"] = 180000
-
-        
-        config["validate_keys"] = True
-
         config["policies"]["admin"] = {}
         config["policies"]["admin"]["timeout"] = 180000
         return config

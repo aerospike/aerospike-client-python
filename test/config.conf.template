@@ -1,5 +1,5 @@
-[DEFAULT]
-validate_keys: true
+[input-validation]
+validate_keys: false
 
 [community-edition]
 hosts: 127.0.0.1:3000
