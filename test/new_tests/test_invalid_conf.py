@@ -2,7 +2,13 @@ import pytest
 from aerospike import exception as e
 
 import aerospike
+from .test_base_class import TestBaseClass
 
+# These are for test_validate_keys
+# INVALID_CONFIG_KEY cannot be read for the client-config policies test case, so these were made global instead of
+# class members
+INVALID_CONFIG_KEY = "a"
+EXPECTED_INVALID_KEY_ERR_MSG = '\"{}\" is an invalid {} dictionary key'
 
 class TestInvalidClientConfig(object):
     def test_no_config(self):
@@ -173,19 +179,17 @@ class TestInvalidClientConfig(object):
             aerospike.client(config)
         assert excinfo.value.msg == 'config[\"validate_keys\"] must be a boolean'
 
-    EXPECTED_INVALID_KEY_ERR_MSG = '\"a\" is an invalid {} dictionary key'
-
     @pytest.mark.parametrize(
         "config, is_policy",
         [
-            ({"a": 1}, False),
-            ({"lua": {"a": 1}}, False),
-            ({"tls": {"a": 1}}, False),
-            ({"shm": {"a": 1}}, False),
-            ({"policies": {"a": 1}}, False),
+            ({INVALID_CONFIG_KEY: 1}, False),
+            ({"lua": {INVALID_CONFIG_KEY: 1}}, False),
+            ({"tls": {INVALID_CONFIG_KEY: 1}}, False),
+            ({"shm": {INVALID_CONFIG_KEY: 1}}, False),
+            ({"policies": {INVALID_CONFIG_KEY: 1}}, False),
             # Generate client configs for all types of policies
             *[
-                ({"policies": {policy_name: {"a": 1}}}, True)
+                ({"policies": {policy_name: {INVALID_CONFIG_KEY: 1}}}, True)
                 for policy_name in
                 [
                     "read",
@@ -209,9 +213,8 @@ class TestInvalidClientConfig(object):
         ]
     )
     def test_validate_keys(self, config, is_policy):
+        config = TestBaseClass.get_connection_config()
         config["validate_keys"] = True
-        # Host doesn't matter since client should fail before we connect
-        config["hosts"] = [("127.0.0.1", 3000)]
 
         with pytest.raises(e.ParamError) as excinfo:
             aerospike.client(config)
