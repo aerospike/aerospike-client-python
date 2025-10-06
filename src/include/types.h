@@ -148,11 +148,11 @@ extern PyObject *py_info_and_write_policy_valid_keys;
 // scan.apply() takes in one policy parameter that accepts both write and info policy options
 extern PyObject *py_info_and_scan_policy_valid_keys;
 
-// py_set contains the valid keys
+// py_set_of_valid_keys contains the valid keys
 // Return -1 if we failed to validate dictionary
 // Return 0 and set err if dictionary has invalid keys
 // Return 1 if dictionary's keys are all valid
 // If is_py_dict_a_policy is false, we are validating a client config dictionary
 extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
-                                           PyObject *py_set,
+                                           PyObject *py_set_of_valid_keys,
                                            bool is_py_dict_a_policy);
