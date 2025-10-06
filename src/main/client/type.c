@@ -534,8 +534,12 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
         if (res == -1) {
             goto internal_error;
         }
+        else if (res == 1) {
+            // Key is valid
+            continue;
+        }
         else if (res == 0) {
-            // Key not found in set
+            // Key is invalid
             const char *adjective =
                 is_py_dict_a_policy ? "policy" : "client config";
             // py_key may not be a string
@@ -557,7 +561,6 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
 
             return 0;
         }
-        // Config key is valid
     }
     return 1;
 
