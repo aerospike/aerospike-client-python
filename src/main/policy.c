@@ -400,12 +400,11 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
-                                  as_policy_info *policy,
-                                  as_policy_info **policy_p,
-                                  as_policy_info *config_info_policy,
-                                  bool validate_keys,
-                                  second_as_policy_supported other_policy)
+as_status
+pyobject_to_policy_info(as_error *err, PyObject *py_policy,
+                        as_policy_info *policy, as_policy_info **policy_p,
+                        as_policy_info *config_info_policy, bool validate_keys,
+                        as_policy_with_extra_keys_allowed other_policy)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy

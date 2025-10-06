@@ -200,15 +200,14 @@ typedef enum {
     SECOND_AS_POLICY_WRITE,
     SECOND_AS_POLICY_SCAN,
     SECOND_AS_POLICY_NONE
-} second_as_policy_supported;
+} as_policy_with_extra_keys_allowed;
 
-// second_as_policy_supported only applies if validate_keys is true
-as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
-                                  as_policy_info *policy,
-                                  as_policy_info **policy_p,
-                                  as_policy_info *config_info_policy,
-                                  bool validate_keys,
-                                  second_as_policy_supported other_policy);
+// as_policy_with_extra_keys_allowed only applies if validate_keys is true
+as_status
+pyobject_to_policy_info(as_error *err, PyObject *py_policy,
+                        as_policy_info *policy, as_policy_info **policy_p,
+                        as_policy_info *config_info_policy, bool validate_keys,
+                        as_policy_with_extra_keys_allowed other_policy);
 
 as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_query *policy,
