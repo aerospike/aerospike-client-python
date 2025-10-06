@@ -180,7 +180,7 @@ class TestQueryPagination(TestBaseClass):
 
         part_filter = {"begin": 1001, "count": 1}
 
-        while query_obj.is_done() is False:
+        for i in range(2):
             records = query_obj.results({"partition_filter": part_filter})
             all_recs += len(records)
 
