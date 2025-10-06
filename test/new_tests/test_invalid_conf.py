@@ -5,8 +5,8 @@ import aerospike
 from .test_base_class import TestBaseClass
 
 # These are for test_validate_keys
-# INVALID_OPTION_KEY cannot be read for the client-config policies test case, so these were made global instead of
-# class members
+# INVALID_OPTION_KEY cannot be read for the client-config policies test case as a class variable,
+# so these were made global
 INVALID_OPTION_KEY = "a"
 EXPECTED_INVALID_KEY_ERR_MSG = '\"{}\" is an invalid {} dictionary key'
 
