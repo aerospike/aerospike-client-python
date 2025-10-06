@@ -657,8 +657,8 @@ DEFINE_SET_OF_VALID_KEYS(write_policy, BASE_POLICY_KEYS, WRITE_POLICY_KEYS, NULL
 
 )
 
-DEFINE_SET_OF_VALID_KEYS(info_and_write_policy, WRITE_POLICY_KEYS,
-                         INFO_POLICY_KEYS, NULL)
+DEFINE_SET_OF_VALID_KEYS(info_and_write_policy, BASE_POLICY_KEYS,
+                         WRITE_POLICY_KEYS, INFO_POLICY_KEYS, NULL)
 
 DEFINE_SET_OF_VALID_KEYS(operate_policy, BASE_POLICY_KEYS, "key", "gen",
                          "commit_level", "replica", "durable_delete",
