@@ -327,7 +327,7 @@ PyObject *AerospikeClient_Index_Remove(AerospikeClient *self, PyObject *args,
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info,
-                            self->validate_keys);
+                            self->validate_keys, false);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -591,7 +591,7 @@ static PyObject *createIndexWithDataAndCollectionType(
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info,
-                            self->validate_keys);
+                            self->validate_keys, false);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }

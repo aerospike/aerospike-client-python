@@ -400,11 +400,11 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
-                                  as_policy_info *policy,
-                                  as_policy_info **policy_p,
-                                  as_policy_info *config_info_policy,
-                                  bool validate_keys)
+as_status
+pyobject_to_policy_info(as_error *err, PyObject *py_policy,
+                        as_policy_info *policy, as_policy_info **policy_p,
+                        as_policy_info *config_info_policy, bool validate_keys,
+                        bool py_policy_also_supports_write_policy_fields)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -415,8 +415,16 @@ as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
 
     if (py_policy && py_policy != Py_None) {
         if (validate_keys) {
+            PyObject *py_policy_valid_keys = NULL;
+            if (py_policy_also_supports_write_policy_fields) {
+                py_policy_valid_keys = py_info_and_write_policy_valid_keys;
+            }
+            else {
+                py_policy_valid_keys = py_info_policy_valid_keys;
+            }
+
             as_status retval = does_py_dict_contain_valid_keys(
-                err, py_policy, py_info_policy_valid_keys, true);
+                err, py_policy, py_policy_valid_keys, true);
             if (retval == -1) {
                 // This shouldn't happen, but if it did...
                 return as_error_update(err, AEROSPIKE_ERR,
@@ -664,11 +672,11 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
  * We assume that the error object and the policy object are already allocated
  * and initialized (although, we do reset the error object here).
  */
-as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_write *policy,
-                                   as_policy_write **policy_p,
-                                   as_policy_write *config_write_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p)
+as_status pyobject_to_policy_write(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_write *policy, as_policy_write **policy_p,
+    as_policy_write *config_write_policy, as_exp *exp_list, as_exp **exp_list_p,
+    bool py_policy_also_supports_info_policy_fields)
 {
     if (py_policy && py_policy != Py_None) {
         // Initialize Policy
@@ -679,8 +687,16 @@ as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
 
     if (py_policy && py_policy != Py_None) {
         if (self->validate_keys) {
+            PyObject *py_policy_valid_keys = NULL;
+            if (py_policy_also_supports_info_policy_fields) {
+                py_policy_valid_keys = py_info_and_write_policy_valid_keys;
+            }
+            else {
+                py_policy_valid_keys = py_write_policy_valid_keys;
+            }
+
             as_status retval = does_py_dict_contain_valid_keys(
-                err, py_policy, py_write_policy_valid_keys, true);
+                err, py_policy, py_policy_valid_keys, true);
             if (retval == -1) {
                 return as_error_update(err, AEROSPIKE_ERR,
                                        ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);

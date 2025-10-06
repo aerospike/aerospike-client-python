@@ -614,8 +614,8 @@ DEFINE_SET_OF_VALID_KEYS(apply_policy, BASE_POLICY_KEYS, "key", "replica",
 // send_as_is and check_bounds should not be used by the user
 // That's why they are not documented.
 // But they were already exposed in the API for a long time, so we allow them to be used
-DEFINE_SET_OF_VALID_KEYS(info_policy, "timeout", "send_as_is", "check_bounds",
-                         NULL
+#define INFO_POLICY_KEYS "timeout", "send_as_is", "check_bounds"
+DEFINE_SET_OF_VALID_KEYS(info_policy, INFO_POLICY_KEYS, NULL
 
 )
 
@@ -643,11 +643,16 @@ DEFINE_SET_OF_VALID_KEYS(scan_policy, BASE_POLICY_KEYS, "durable_delete",
 
 )
 
-DEFINE_SET_OF_VALID_KEYS(write_policy, BASE_POLICY_KEYS, "key", "gen", "exists",
-                         "commit_level", "durable_delete", "replica",
-                         "compression_threshold", "on_locking_only", "ttl", NULL
+#define WRITE_POLICY_KEYS                                                      \
+    "key", "gen", "exists", "commit_level", "durable_delete", "replica",       \
+        "compression_threshold", "on_locking_only", "ttl"
+
+DEFINE_SET_OF_VALID_KEYS(write_policy, BASE_POLICY_KEYS, WRITE_POLICY_KEYS, NULL
 
 )
+
+DEFINE_SET_OF_VALID_KEYS(info_and_write_policy, WRITE_POLICY_KEYS,
+                         INFO_POLICY_KEYS, NULL)
 
 DEFINE_SET_OF_VALID_KEYS(operate_policy, BASE_POLICY_KEYS, "key", "gen",
                          "commit_level", "replica", "durable_delete",

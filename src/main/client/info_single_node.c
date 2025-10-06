@@ -62,10 +62,10 @@ static PyObject *AerospikeClient_InfoSingleNode_Invoke(as_error *err,
     as_policy_info info_policy;
     as_policy_info *info_policy_p = NULL;
     if (py_policy) {
-        if (pyobject_to_policy_info(err, py_policy, &info_policy,
-                                    &info_policy_p,
-                                    &self->as->config.policies.info,
-                                    self->validate_keys) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_info(
+                err, py_policy, &info_policy, &info_policy_p,
+                &self->as->config.policies.info, self->validate_keys,
+                false) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

@@ -116,7 +116,7 @@ PyObject *AerospikeClient_UDF_Put(AerospikeClient *self, PyObject *args,
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info,
-                            self->validate_keys);
+                            self->validate_keys, false);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -348,7 +348,7 @@ PyObject *AerospikeClient_UDF_Remove(AerospikeClient *self, PyObject *args,
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info,
-                            self->validate_keys);
+                            self->validate_keys, false);
 
     // Invoke operation
     Py_BEGIN_ALLOW_THREADS
@@ -417,7 +417,7 @@ PyObject *AerospikeClient_UDF_List(AerospikeClient *self, PyObject *args,
     // Convert python object to policy_info
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info,
-                            self->validate_keys);
+                            self->validate_keys, false);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
@@ -523,7 +523,7 @@ PyObject *AerospikeClient_UDF_Get_UDF(AerospikeClient *self, PyObject *args,
 
     pyobject_to_policy_info(&err, py_policy, &info_policy, &info_policy_p,
                             &self->as->config.policies.info,
-                            self->validate_keys);
+                            self->validate_keys, false);
     if (err.code != AEROSPIKE_OK) {
         goto CLEANUP;
     }
