@@ -1069,3 +1069,17 @@ class Var(_BaseExpr):
                         exp.LT(exp.Var("x"), 10))).compile()
         """
         self._fixed = {_Keys.VALUE_KEY: var_name}
+
+class VarBuiltInMap(_BaseExpr):
+    """
+    Retrieve expression value from a built-in variable.
+    """
+    _op = _ExprOp._AS_EXP_CODE_VAR_BUILTIN
+
+    def __init__(self, var_id: int):
+        """Args:
+            `var_id` (int): Variable id.
+
+        :return: (value stored in variable)
+        """
+        self._fixed = {_Keys.VALUE_KEY: var_id}

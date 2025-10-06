@@ -102,6 +102,7 @@ Example::
     client.close()
 """
 import aerospike
+from aerospike_helpers.expressions.resources import TypeExpression
 
 
 def index_type_string(index_type):
@@ -300,3 +301,27 @@ def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY_CREATE, value=key, extra_args={CDT_CTX_ORDER_KEY: order})
+
+def cdt_ctx_all() -> _cdt_ctx:
+    # TODO: vague docstring
+    """
+    The cdt_ctx object selects all.
+
+    Returns:
+        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
+    """
+    # TODO missing id in c client
+    return _cdt_ctx()
+
+def cdt_ctx_exp(expression: TypeExpression) -> _cdt_ctx:
+    # TODO: expr needs to be compiled?
+    """
+    The cdt_ctx applies an expression to select ctx.
+
+    Args:
+        expression: compiled aerospike expression
+
+    Returns:
+        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
+    """
+    return _cdt_ctx(id=aerospike.CDT_CTX_EXP)
