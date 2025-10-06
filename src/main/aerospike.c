@@ -565,7 +565,7 @@ static struct type_name_to_creation_method py_module_types[] = {
 // We use a macro to avoid repetition
 #define DEFINE_SET_OF_VALID_KEYS(array_name_prefix, ...)                       \
     const char *array_name_prefix##_valid_keys[] = {__VA_ARGS__};              \
-    PyObject *py_##array_name_prefix##_valid_keys;
+    PyObject *py_##array_name_prefix##_valid_keys = NULL;
 
 DEFINE_SET_OF_VALID_KEYS(
     client_config, "lua", "config_provider", "tls", "hosts", "shm",
@@ -964,6 +964,12 @@ GLOBAL_HOSTS_CLEANUP_ON_ERROR:
     Py_DECREF(py_global_hosts);
 
 AEROSPIKE_MODULE_CLEANUP_ON_ERROR:
+    for (unsigned long i = 0; i < sizeof(py_set_name_to_str_lists) /
+                                      sizeof(py_set_name_to_str_lists[0]);
+         i++) {
+        Py_XDECREF(py_set_name_to_str_lists[i].py_set_of_keys);
+    }
+
     Py_DECREF(py_aerospike_module);
 
     // TODO: Clean up any submodules that were manually added to sys.modules
