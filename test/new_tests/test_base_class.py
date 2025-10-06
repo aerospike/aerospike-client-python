@@ -221,9 +221,9 @@ class TestBaseClass(object):
         VALIDATE_KEYS_SECTION = "input-validation"
         VALIDATE_KEYS_OPTION = "validate_keys"
         if config_parser.has_section(VALIDATE_KEYS_SECTION) and config_parser.has_option(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION):
-            config["validate_keys"] = config_parser.getboolean(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION)
+            config[VALIDATE_KEYS_OPTION] = config_parser.getboolean(VALIDATE_KEYS_SECTION, VALIDATE_KEYS_OPTION)
         else:
-            config["validate_keys"] = False
+            config[VALIDATE_KEYS_OPTION] = False
 
         # Disable total_timeout and timeout
         # config["timeout"] = 0
