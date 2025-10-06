@@ -84,7 +84,7 @@ class TestTouch(object):
         rec = {"name": "name%s" % (str(1)), "age": 1, "nolist": [1, 2, 3]}
         self.as_connection.put(key, rec)
 
-        policy = {"key": aerospike.POLICY_KEY_DIGEST}
+        policy = {"key": aerospike.POLICY_KEY_DIGEST, "max_retries": 0}
         self.as_connection.touch(key, 120, {}, policy)
 
         (key, _, bins) = self.as_connection.get(key)
