@@ -196,6 +196,7 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
                                    as_policy_apply *config_apply_policy,
                                    as_exp *exp_list, as_exp **exp_list_p);
 
+// py_policy_also_supports_write_policy_fields only applies if validate_keys is true
 as_status
 pyobject_to_policy_info(as_error *err, PyObject *py_policy,
                         as_policy_info *policy, as_policy_info **policy_p,
@@ -227,6 +228,7 @@ as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
                                   as_policy_scan *config_scan_policy,
                                   as_exp *exp_list, as_exp **exp_list_p);
 
+// py_policy_also_supports_info_policy_fields only applies if self->validate_keys is true
 as_status pyobject_to_policy_write(
     AerospikeClient *self, as_error *err, PyObject *py_policy,
     as_policy_write *policy, as_policy_write **policy_p,
