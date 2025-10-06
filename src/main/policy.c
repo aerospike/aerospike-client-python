@@ -532,9 +532,8 @@ as_status pyobject_to_policy_read(AerospikeClient *self, as_error *err,
                 err, py_policy, py_read_policy_valid_keys, true);
             if (retval == -1) {
                 // This shouldn't happen, but if it did...
-                return as_error_update(
-                    err, AEROSPIKE_ERR,
-                    "Failed to validate keys for read policy dictionary.");
+                return as_error_update(err, AEROSPIKE_ERR,
+                                       ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
             }
             else if (retval == 0) {
                 return err->code;
