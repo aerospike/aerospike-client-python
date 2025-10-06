@@ -581,6 +581,7 @@ static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
     self->use_shared_connection = false;
     self->as = NULL;
     self->send_bool_as = SEND_BOOL_AS_AS_BOOL;
+    self->validate_keys = false;
 
     as_config config;
     as_config_init(&config);
