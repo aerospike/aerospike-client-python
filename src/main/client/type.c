@@ -531,23 +531,37 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
     while (PyDict_Next(py_dict, &pos, &py_key, NULL)) {
         int res = PySet_Contains(py_set, py_key);
         if (res == -1) {
-            return -1;
+            goto internal_error;
         }
-        if (res == 0) {
-            const char *key = PyUnicode_AsUTF8(py_key);
-            if (key == NULL) {
-                return -1;
-            }
+        else if (res == 0) {
+            // Key not found in set
             const char *adjective =
                 is_py_dict_a_policy ? "policy" : "client config";
-            as_error_update(err, AEROSPIKE_ERR_PARAM,
-                            "\"%s\" is an invalid %s dictionary key", key,
-                            adjective);
+            // py_key may not be a string
+            PyObject *py_error_msg =
+                PyUnicode_FromFormat("\"%S\" is an invalid %s dictionary key",
+                                     py_key, is_py_dict_a_policy);
+            if (!py_error_msg) {
+                goto internal_error;
+            }
+
+            const char *error_msg = PyUnicode_AsUTF8(py_error_msg);
+            if (!error_msg) {
+                Py_DECREF(py_error_msg);
+                goto internal_error;
+            }
+
+            as_error_update(err, AEROSPIKE_ERR_PARAM, error_msg);
+            Py_DECREF(py_error_msg);
+
             return 0;
         }
         // Config key is valid
     }
     return 1;
+
+internal_error:
+    return -1;
 }
 
 static int AerospikeClient_Type_Init(AerospikeClient *self, PyObject *args,
