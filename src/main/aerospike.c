@@ -44,7 +44,7 @@
 #include <aerospike/aerospike_txn.h>
 #include <aerospike/version.h>
 
-PyObject *py_global_hosts;
+PyObject *py_global_hosts = NULL;
 int counter = 0xA8000000;
 bool user_shm_key = false;
 
@@ -800,6 +800,14 @@ void aerospike_free(void *self)
         cf_free(aerospike_client_version);
         is_python_client_version_set_for_user_agent = false;
     }
+
+    for (unsigned long i = 0; i < sizeof(py_set_name_to_str_lists) /
+                                      sizeof(py_set_name_to_str_lists[0]);
+         i++) {
+        Py_XDECREF(py_set_name_to_str_lists[i].py_set_of_keys);
+    }
+
+    Py_XDECREF(py_global_hosts);
 }
 
 PyMODINIT_FUNC PyInit_aerospike(void)
@@ -847,7 +855,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             py_module_types[i].pytype_ready_method;
         PyTypeObject *py_type = py_type_ready_func();
         if (py_type == NULL) {
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
 
         Py_INCREF(py_type);
@@ -855,7 +863,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
             py_aerospike_module, py_module_types[i].name, (PyObject *)py_type);
         if (retval == -1) {
             Py_DECREF(py_type);
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
     }
 
@@ -876,7 +884,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
         }
 
         if (retval == -1) {
-            goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+            goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
         }
     }
 
@@ -884,14 +892,14 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     // https://github.com/python/cpython/issues/87533#issuecomment-2373119452
     PyObject *py_sys = PyImport_ImportModule("sys");
     if (py_sys == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     PyObject *py_sys_dot_modules_dict =
         PyObject_GetAttrString(py_sys, "modules");
     Py_DECREF(py_sys);
     if (py_sys_dot_modules_dict == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     for (i = 0; i < sizeof(py_submodules) / sizeof(py_submodules[0]); i++) {
@@ -926,28 +934,28 @@ PyMODINIT_FUNC PyInit_aerospike(void)
     PyObject *py_metadata_subpackage =
         PyImport_ImportModule("importlib.metadata");
     if (py_metadata_subpackage == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     PyObject *py_version_callback =
         PyObject_GetAttrString(py_metadata_subpackage, "version");
     Py_DECREF(py_metadata_subpackage);
     if (py_version_callback == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     PyObject *py_aerospike_module_version_str =
         PyObject_CallFunction(py_version_callback, "s", AEROSPIKE_MODULE_NAME);
     Py_DECREF(py_version_callback);
     if (py_aerospike_module_version_str == NULL) {
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     const char *aerospike_module_version =
         PyUnicode_AsUTF8(py_aerospike_module_version_str);
     if (aerospike_module_version == NULL) {
         Py_DECREF(py_aerospike_module_version_str);
-        goto GLOBAL_HOSTS_CLEANUP_ON_ERROR;
+        goto AEROSPIKE_MODULE_CLEANUP_ON_ERROR;
     }
 
     // Here we assume that the original value of aerospike_client_version was not heap allocated
@@ -960,16 +968,7 @@ PyMODINIT_FUNC PyInit_aerospike(void)
 SYS_DOT_MODULES_DICT_CLEANUP_ON_ERROR:
     Py_DECREF(py_sys_dot_modules_dict);
 
-GLOBAL_HOSTS_CLEANUP_ON_ERROR:
-    Py_DECREF(py_global_hosts);
-
 AEROSPIKE_MODULE_CLEANUP_ON_ERROR:
-    for (unsigned long i = 0; i < sizeof(py_set_name_to_str_lists) /
-                                      sizeof(py_set_name_to_str_lists[0]);
-         i++) {
-        Py_XDECREF(py_set_name_to_str_lists[i].py_set_of_keys);
-    }
-
     Py_DECREF(py_aerospike_module);
 
     // TODO: Clean up any submodules that were manually added to sys.modules
