@@ -655,7 +655,7 @@ User Defined Functions
         :param str module: the name of the UDF module.
         :param str function: the name of the UDF to apply to the records matched by the query.
         :param list args: the arguments to the UDF.
-        :param dict policy: optional :ref:`aerospike_write_policies`.
+        :param dict policy: optional dictionary that takes in both :ref:`aerospike_write_policies` and :ref:`aerospike_info_policies`.
         :rtype: :class:`int`
         :return: a job ID that can be used with :meth:`job_info` to check the status of the ``aerospike.JOB_QUERY``.
         :raises: a subclass of :exc:`~aerospike.exception.AerospikeError`.
