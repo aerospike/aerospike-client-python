@@ -148,7 +148,7 @@ extern PyObject *py_hll_policy_valid_keys;
 // Return -1 if we failed to validate dictionary
 // Return 0 and set err if dictionary has invalid keys
 // Return 1 if dictionary's keys are all valid
-// If validating_policy is false, we are validating a client config dictionary
+// If is_py_dict_a_policy is false, we are validating a client config dictionary
 extern int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                                            PyObject *py_set,
-                                           bool validating_policy);
+                                           bool is_py_dict_a_policy);

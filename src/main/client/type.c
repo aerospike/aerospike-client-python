@@ -524,7 +524,7 @@ static PyObject *AerospikeClient_Type_New(PyTypeObject *type, PyObject *args,
 }
 
 int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
-                                    PyObject *py_set, bool validating_policy)
+                                    PyObject *py_set, bool is_py_dict_a_policy)
 {
     Py_ssize_t pos = 0;
     PyObject *py_key = NULL;
@@ -539,7 +539,7 @@ int does_py_dict_contain_valid_keys(as_error *err, PyObject *py_dict,
                 return -1;
             }
             const char *adjective =
-                validating_policy ? "policy" : "client config";
+                is_py_dict_a_policy ? "policy" : "client config";
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             "\"%s\" is an invalid %s dictionary key", key,
                             adjective);
