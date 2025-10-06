@@ -119,6 +119,9 @@ static struct module_constant_name_to_value module_constants[] = {
     {"AUTH_EXTERNAL_INSECURE", .value.integer = AS_AUTH_EXTERNAL_INSECURE},
     {"AUTH_PKI", .value.integer = AS_AUTH_PKI},
 
+    {"POLICY_RETRY_NONE", .value.integer = AS_POLICY_RETRY_NONE},
+    {"POLICY_RETRY_ONCE", .value.integer = AS_POLICY_RETRY_ONCE},
+
     {"POLICY_EXISTS_IGNORE", .value.integer = AS_POLICY_EXISTS_IGNORE},
     {"POLICY_EXISTS_CREATE", .value.integer = AS_POLICY_EXISTS_CREATE},
     {"POLICY_EXISTS_UPDATE", .value.integer = AS_POLICY_EXISTS_UPDATE},
