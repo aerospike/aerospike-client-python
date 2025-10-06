@@ -431,6 +431,13 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_KEY", .value.integer = AS_CDT_CTX_MAP_KEY},
     {"CDT_CTX_MAP_VALUE", .value.integer = AS_CDT_CTX_MAP_VALUE},
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
+    {"CDT_CTX_EXP", .value.integer = AS_CDT_CTX_EXP},
+
+    /* Expression variable built-in type */
+    // TODO: missing docs
+    {"EXP_BUILTIN_KEY", .value.integer = AS_EXP_BUILTIN_KEY},
+    {"EXP_BUILTIN_VALUE", .value.integer = AS_EXP_BUILTIN_VALUE},
+    {"EXP_BUILTIN_INDEX", .value.integer = AS_EXP_BUILTIN_INDEX},
 
     /* HLL constants 3.11.0 */
     {"OP_HLL_ADD", .value.integer = OP_HLL_ADD},
