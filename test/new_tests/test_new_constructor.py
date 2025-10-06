@@ -316,6 +316,7 @@ def test_config_level_misc_options():
     config["tls"]["keyfile"] = "aes_256"
     config["tls"]["certfile"] = "aes_256"
     config["tls"]["keyfile_pw"] = "aes_256"
+    config["validate_keys"] = True
 
     # We don't care if the client connects or not
     # We just make sure that the above options are allowed as dict keys
