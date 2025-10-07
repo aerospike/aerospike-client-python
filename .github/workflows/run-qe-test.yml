@@ -61,6 +61,13 @@ jobs:
     - name: Add wheel to staging folder for building Docker image
       run: mv *linux*aarch64*.whl qe-docker/test/python/_files/
 
+    - name: Log in to QE's Docker registry to download base image and publish new image
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ secrets.QE_DOCKER_REGISTRY_URL }}
+        username: ${{ secrets.QE_DOCKER_REGISTRY_USERNAME }}
+        password: ${{ secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+
     - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
       working-directory: qe-docker
 
