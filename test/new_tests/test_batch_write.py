@@ -194,7 +194,7 @@ class TestBatchWrite(TestBaseClass):
                 ),
                 {
                     "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE
-                }
+                },
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"new": 10}],
             ),
