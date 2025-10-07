@@ -30,8 +30,23 @@ jobs:
     steps:
     - name: Get Github action to download wheel from JFrog
       uses: actions/checkout@v4
+      with:
+        path: aerospike-client-python
 
-    - uses: ./.github/actions/get-artifact-for-stage-tests
+    - name: Get Github actions workflow to build Docker image
+      uses: actions/checkout@v4
+      with:
+        repository: citrusleaf/qe-docker
+        path: qe-docker
+        ref: cicd-client-performance-regression-tests-requirements-txt
+        token: ${{ secrets.CLIENT_BOT_PAT }}
+
+    - uses: jfrog/setup-jfrog-cli@v4
+      env:
+        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+
+    - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
       with:
         get_from_jfrog: true
         jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
@@ -43,21 +58,12 @@ jobs:
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
+    - name: Add wheel to staging folder for building Docker image
+      run: cp *linux*aarch64*.whl test/python/_files/
+      working-directory: qe-docker
 
-    - name: Get Github actions workflow to build Docker image
-      uses: actions/checkout@v4
-      with:
-        repository: citrusleaf/qe-docker
-        ref: cicd-client-performance-regression-tests-requirements-txt
-        token: ${{ secrets.CLIENT_BOT_PAT }}
-
-    - uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
-    - run: cp *linux*aarch64*.whl test/python/_files/
     - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
+      working-directory: qe-docker
 
   run-qe-test:
     env:
