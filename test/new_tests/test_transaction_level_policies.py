@@ -122,7 +122,7 @@ class TestReadTouchTTLPercent:
 
         # Info policy
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.truncate("test", "demo", 0, policy={"a": "key"})
+            self.as_connection.info_all(command="status", policy={"a": "key"})
         assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
 
         # Apply policy
