@@ -40,7 +40,7 @@ jobs:
           https://__token__:${{ secrets.JFROG_PLATFORM_URL }}@aerospike.jfrog.io/artifactory/clients-pypi-dev-local/aerospike \
           --only-binary=:all: \
           --python-version "3.10" \
-          --platform linux_aarch64' \
+          --platform linux_aarch64 \
           aerospike==${{ inputs.python-client-version-in-jfrog-to-test }}
     - run: cp *.whl test/python/_files/
     - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
