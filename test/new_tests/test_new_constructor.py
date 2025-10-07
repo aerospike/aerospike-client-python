@@ -6,9 +6,14 @@ import aerospike
 from aerospike import exception as e
 from aerospike_helpers.operations import operations
 from aerospike_helpers.batch.records import Write, BatchRecords
+from aerospike_helpers.metrics import MetricsPolicy
 from .test_scan_execute_background import wait_for_job_completion
 import copy
 from contextlib import nullcontext
+import time
+import glob
+import re
+import os
 
 gconfig = {}
 gconfig = TestBaseClass.get_connection_config()
@@ -110,9 +115,17 @@ def test_neg_setting_rack_ids(rack_ids):
         aerospike.client(config)
 
 
-def test_setting_use_services_alternate():
+@pytest.mark.parametrize(
+    "setting",
+    [
+        "use_services_alternate",
+        "force_single_node",
+        "fail_if_not_connected"
+     ]
+)
+def test_bool_settings(setting):
     config = copy.deepcopy(gconfig)
-    config["use_services_alternate"] = True
+    config[setting] = True
     client = aerospike.client(config)
     assert client is not None
 
@@ -205,6 +218,55 @@ def test_setting_batch_policies():
     for policy in policies:
         config["policies"][policy] = {}
     aerospike.client(config)
+
+
+def test_setting_metrics_policy():
+    config = copy.deepcopy(gconfig)
+    BUCKET_COUNT = 3
+    METRICS_LOG_FILES = "./metrics-*.log"
+
+    config["policies"]["metrics"] = MetricsPolicy(latency_columns=BUCKET_COUNT)
+    client = aerospike.client(config)
+    try:
+        client.enable_metrics()
+        time.sleep(2)
+        client.disable_metrics()
+
+        metrics_log_filenames = glob.glob(METRICS_LOG_FILES)
+        try:
+            with open(metrics_log_filenames[0]) as f:
+                # Second line has data
+                f.readline()
+                data = f.readline()
+            regex = re.search(pattern=r"conn\[([0-9]|,)+\]", string=data)
+            buckets = regex.group(0)
+            # <bucket>,<bucket>,...
+            bucket_count = len(buckets.split(','))
+            assert bucket_count == BUCKET_COUNT
+        finally:
+            for item in metrics_log_filenames:
+                os.remove(item)
+    finally:
+        client.close()
+
+
+@pytest.mark.parametrize(
+    "policy, expected_exc_class",
+    [
+        # Common error is to leave a comma at the end
+        # MetricsPolicy(),
+        (tuple([MetricsPolicy()]), e.ParamError),
+        (MetricsPolicy(report_size_limit=2**64), e.ClientError)
+    ]
+)
+def test_setting_invalid_metrics_policy(policy, expected_exc_class):
+    config = copy.deepcopy(gconfig)
+    config["policies"]["metrics"] = policy
+    with pytest.raises(expected_exc_class) as excinfo:
+        aerospike.client(config)
+    if expected_exc_class == e.ParamError:
+        assert excinfo.value.msg == "metrics must be an aerospike_helpers.metrics.MetricsPolicy class instance. But "\
+            "a tuple was received instead"
 
 
 def test_query_invalid_expected_duration():
