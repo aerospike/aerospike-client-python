@@ -31,7 +31,8 @@ jobs:
     - name: Get Github actions workflow to build Docker image
       uses: actions/checkout@v4
       with:
-        repository: citrusleaf/qe-docker@cicd-client-performance-regression-tests-requirements-txt
+        repository: citrusleaf/qe-docker
+        ref: cicd-client-performance-regression-tests-requirements-txt
         token: ${{ secrets.CLIENT_BOT_PAT }}
 
     - run: pip download --index-url https://__token__:${{ secrets.JFROG_PLATFORM_URL }}@aerospike.jfrog.io/artifactory/clients-pypi-dev-local/aerospike --python-version "3.10" --platform linux_aarch64
