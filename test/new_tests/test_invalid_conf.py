@@ -213,11 +213,11 @@ class TestInvalidClientConfig(object):
     )
     def test_validate_keys(self, invalid_config: dict, is_policy: bool):
         config = TestBaseClass.get_connection_config()
-        invalid_config.update(config)
-        invalid_config["validate_keys"] = True
+        config.update(invalid_config)
+        config["validate_keys"] = True
 
         with pytest.raises(e.ParamError) as excinfo:
-            aerospike.client(invalid_config)
+            aerospike.client(config)
 
         adjective = "policy" if is_policy else "client config"
         EXPECTED_INVALID_KEY_ERR_MSG = '\"{}\" is an invalid {} dictionary key'
