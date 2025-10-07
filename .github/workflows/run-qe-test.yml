@@ -87,7 +87,6 @@ jobs:
       TEST_CONFIG_FILE_NAME: client_perf.yaml
       TESTCTL_BINARY_NAME: testctl
     runs-on: ubuntu-24.04
-    if: ${{ false }}
     needs: add-python-client-to-qe-test-image-for-performance-regression-tests
     steps:
     # - name: Setup Rclone
