@@ -78,7 +78,7 @@ jobs:
         # TODO: set branch in tag
         file: test/python/${{ env.TEST_IMAGE_TAG }}.Dockerfile
         tags: ${{ secrets.QE_DOCKER_REGISTRY_URL }}/test/python:${{ env.TEST_IMAGE_TAG }}
-        context: qe-docker/test/python/_files
+        context: ./qe-docker/test/python/_files
       env:
         TEST_IMAGE_TAG: 3.11-mavenAnsible-client
 
