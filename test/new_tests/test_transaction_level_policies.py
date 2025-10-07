@@ -187,7 +187,7 @@ class TestReadTouchTTLPercent:
 
         # Bit policy
         ops = [
-            bitwise_operations.bit_not("bin", bit_offset=0, bit_size=0, bit_size=0, policy={"a": "key"})
+            bitwise_operations.bit_not("bin", bit_offset=0, bit_size=0, policy={"a": "key"})
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.operate(self.key, ops=ops)
