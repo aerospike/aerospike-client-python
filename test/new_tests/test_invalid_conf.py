@@ -179,7 +179,7 @@ class TestInvalidClientConfig(object):
         assert excinfo.value.msg == 'config[\"validate_keys\"] must be a boolean'
 
     @pytest.mark.parametrize(
-        "config, is_policy",
+        "invalid_config, is_policy",
         [
             ({INVALID_OPTION_KEY: 1}, False),
             ({"lua": {INVALID_OPTION_KEY: 1}}, False),
@@ -211,12 +211,13 @@ class TestInvalidClientConfig(object):
             ]
         ]
     )
-    def test_validate_keys(self, config, is_policy):
+    def test_validate_keys(self, invalid_config: dict, is_policy: bool):
         config = TestBaseClass.get_connection_config()
-        config["validate_keys"] = True
+        invalid_config.update(config)
+        invalid_config["validate_keys"] = True
 
         with pytest.raises(e.ParamError) as excinfo:
-            aerospike.client(config)
+            aerospike.client(invalid_config)
 
         adjective = "policy" if is_policy else "client config"
         EXPECTED_INVALID_KEY_ERR_MSG = '\"{}\" is an invalid {} dictionary key'
