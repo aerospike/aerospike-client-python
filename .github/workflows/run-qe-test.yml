@@ -68,8 +68,21 @@ jobs:
         username: ${{ secrets.QE_DOCKER_REGISTRY_USERNAME }}
         password: ${{ secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
-    - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
-      working-directory: qe-docker
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+
+    - uses: docker/setup-buildx-action@v3
+      with:
+        platforms: linux/arm64
+
+    # ./bin/build doesn't support building for a specific platform different from the native one
+    - name: Build and push
+      uses: docker/build-push-action@v6
+      with:
+        push: true
+        # TODO: set branch in tag
+        tags: test/python/3.11-mavenAnsible-client.Dockerfile
+        context: qe-docker/test/python/_files
 
   run-qe-test:
     env:
