@@ -185,6 +185,10 @@ class TestQueryPagination(TestBaseClass):
             all_recs += len(records)
 
         assert all_recs == self.partition_1001_count
+
+        # Even though the client has queried all the records,
+        # it doesn't know for sure it has read all the records until it queries one more time.
+        query_obj.results({"partition_filter": part_filter})
         assert query_obj.is_done()
 
     def test_query_pagination_with_multiple_foreach_on_same_query_object(self):
