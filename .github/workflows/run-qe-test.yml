@@ -76,7 +76,7 @@ jobs:
       with:
         push: true
         # TODO: set branch in tag
-        file: test/python/${{ env.TEST_IMAGE_TAG }}.Dockerfile
+        file: ./qe-docker/test/python/${{ env.TEST_IMAGE_TAG }}.Dockerfile
         tags: ${{ secrets.QE_DOCKER_REGISTRY_URL }}/test/python:${{ env.TEST_IMAGE_TAG }}
         context: ./qe-docker/test/python/_files
       env:
