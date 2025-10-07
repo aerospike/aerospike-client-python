@@ -8,21 +8,19 @@ on:
         type: string
         required: true
         description: Python client version
-      test-scenario:
+      test-definition:
         required: true
-        default: CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs
-        description: Test scenario
+        description: Test definition
   workflow_call:
     inputs:
       python-client-version-in-jfrog-to-test:
         type: string
         required: true
         description: Python client version
-      test-scenario:
+      test-definition:
         type: string
         required: true
-        default: CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs
-        description: Test scenario
+        description: Test definition
 
 jobs:
   add-python-client-to-qe-test-image-for-performance-regression-tests:
