@@ -415,14 +415,14 @@ class TestBitwiseOperations(object):
         # 0000 0001 0100 0010 0000 0011 0000 0100 0000 0101
         #  ^ offset 1
         # Setting 127 (8 bits):
-        #  01 1111 11
+        #  011 1111 1
         # Result:
         # 0011 1111 1100 0010 0000 0011 0000 0100 0000 0101
         self.as_connection.operate(self.test_key, ops)
 
         _, _, bins = self.as_connection.get(self.test_key)
         expected_result = bytes([0x3F, 0xC2, 0x03, 0x04, 0x05])
-        assert bins[self.zero_one_bin] == expected_result
+        assert bins[self.random_blob_bin] == expected_result
 
     def test_bit_count_seven(self):
         """
