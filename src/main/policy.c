@@ -1252,6 +1252,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         goto error;
     }
     strcpy(metrics_policy->report_dir, report_dir);
+    Py_DECREF(py_report_dir);
 
     const char *report_size_limit_attr_name = "report_size_limit";
     PyObject *py_report_size_limit =
@@ -1264,6 +1265,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
 
     uint64_t report_size_limit =
         convert_pyobject_to_uint64_t(py_report_size_limit);
+    Py_DECREF(py_report_size_limit);
     if (PyErr_Occurred()) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         report_size_limit_attr_name, "unsigned 64-bit integer");
@@ -1281,6 +1283,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
     }
 
     uint32_t interval = convert_pyobject_to_uint32_t(py_interval);
+    Py_DECREF(py_interval);
     if (PyErr_Occurred()) {
         as_error_update(err, AEROSPIKE_ERR_PARAM, INVALID_ATTR_TYPE_ERROR_MSG,
                         interval_field_name, "unsigned 32-bit integer");
@@ -1302,6 +1305,7 @@ int set_as_metrics_policy_using_pyobject(as_error *err,
         }
 
         uint8_t attr_value = convert_pyobject_to_uint8_t(py_attr_value);
+        Py_DECREF(py_attr_value);
         if (PyErr_Occurred()) {
             as_error_update(err, AEROSPIKE_ERR_PARAM,
                             INVALID_ATTR_TYPE_ERROR_MSG, uint8_field_names[i],
