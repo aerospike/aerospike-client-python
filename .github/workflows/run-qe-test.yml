@@ -35,7 +35,7 @@ jobs:
         repository: citrusleaf/qe-docker
         token: ${{ secrets.CLIENT_BOT_PAT }}
 
-    - uses: ./.github/workflows/build-deploy-python-3.11.yml@master
+    - uses: ./.github/workflows/build-deploy-python-3.11.yml
       with:
         jfrog_artifact_url: https://aerospike.jfrog.io/artifactory/clients-pypi-dev-local/aerospike
         jfrog_artifact_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
