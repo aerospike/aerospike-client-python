@@ -28,6 +28,22 @@ jobs:
   add-python-client-to-qe-test-image-for-performance-regression-tests:
     runs-on: ubuntu-24.04
     steps:
+    - name: Get Github action to download wheel from JFrog
+      uses: actions/checkout@v4
+
+    - uses: ./.github/actions/get-artifact-for-stage-tests
+      with:
+        get_from_jfrog: true
+        jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
+        dist_type_to_get: 'wheel'
+        wheel_python_version: '3.10'
+        wheel_os: manylinux
+        wheel_cpu_arch: aarch64
+        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
+        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
+        JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
+
+
     - name: Get Github actions workflow to build Docker image
       uses: actions/checkout@v4
       with:
@@ -39,19 +55,6 @@ jobs:
       env:
         JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
-    - uses: ./.github/actions/get-artifact-for-stage-tests
-      with:
-        # See comments in linux stage tests for how this works
-        get_from_jfrog: true
-        jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
-        dist_type_to_get: 'wheel'
-        wheel_python_version: '3.10'
-        wheel_os: manylinux
-        wheel_cpu_arch: aarch64
-        JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-        JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
     - run: cp *linux*aarch64*.whl test/python/_files/
     - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
