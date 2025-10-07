@@ -4,42 +4,57 @@ description: 'Run EE server. Returns once server is ready. Only tested on Linux 
 # since it's using the default admin / admin credentials
 inputs:
   # All inputs in composite actions are strings
-  use-server-rc:
-    required: true
-    description: Deploy server release candidate?
-    default: 'false'
+  registry-name:
+    description: Registry name
+    required: false
+    default: docker.io
+  registry-username:
+    description: Required for using release candidates
+    required: false
+  # Github Composite Actions can't access secrets
+  # so we need to pass them in as inputs
+  registry-password:
+    description: Required for using release candidates
+    required: false
+  image-name:
+    required: false
+    description: aerospike/aerospike-server-enterprise
+    default: 'aerospike/aerospike-server-enterprise'
   server-tag:
     required: true
     description: Specify Docker tag
     default: 'latest'
-  # Github Composite Actions can't access secrets
-  # so we need to pass them in as inputs
-  docker-hub-username:
-    description: Required for using release candidates
-    required: false
-  docker-hub-password:
-    description: Required for using release candidates
-    required: false
   where-is-client-connecting-from:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
     default: 'docker-host'
+  docker-run-extra-flags:
+    required: false
+    description: Used to disable server features
+    default: ''
 
 runs:
   using: "composite"
   steps:
   # Start up server
 
-  - name: Log into Docker Hub to get server RC
-    if: ${{ inputs.use-server-rc == 'true' }}
-    run: docker login --username ${{ inputs.docker-hub-username }} --password ${{ inputs.docker-hub-password }}
+  - name: Log into registry to get non-public server RCs
+    # We can still pull public images while logged in, so just do this all the time to make things simple
+    uses: docker/login-action@v3
+    with:
+      registry: ${{ inputs.registry-name }}
+      username: ${{ inputs.registry-username }}
+      password: ${{ inputs.registry-password }}
+
+  - run: echo IMAGE_FULL_NAME=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - run: echo IMAGE_NAME=aerospike/aerospike-server-enterprise${{ inputs.use-server-rc == 'true' && '-rc' || '' }}:${{ inputs.server-tag }} >> $GITHUB_ENV
+  - run: echo NEW_IMAGE_FULL_NAME=${{ env.IMAGE_FULL_NAME }}-python-client-testing >> $GITHUB_ENV
     shell: bash
 
-  - run: echo NEW_IMAGE_NAME=${{ env.IMAGE_NAME }}-python-client-testing >> $GITHUB_ENV
-    shell: bash
+  # QE images are not multi-platform and only support a single platform.
+  - name: Allow building images from different platforms other than the native one
+    uses: docker/setup-qemu-action@v3
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
   - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
@@ -59,9 +74,9 @@ runs:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
       context: .github/workflows/docker-build-context
       build-args: |
-        SERVER_IMAGE=${{ env.IMAGE_NAME }}
+        SERVER_IMAGE=${{ env.IMAGE_FULL_NAME }}
         TLS_PORT=${{ env.TLS_PORT }}
-      tags: ${{ env.NEW_IMAGE_NAME }}
+      tags: ${{ env.NEW_IMAGE_FULL_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
@@ -70,7 +85,8 @@ runs:
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
 
-  - run: docker run -d --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_NAME }}
+  # Confirmed via logs that input string will not be quoted in bash
+  - run: docker run -d ${{ inputs.docker-run-extra-flags }} --name ${{ env.SERVER_CONTAINER_NAME }} -p 3000:3000 -p ${{ env.TLS_PORT }}:${{ env.TLS_PORT }} ${{ env.NEW_IMAGE_FULL_NAME }}
     shell: bash
 
   - name: 'macOS: install timeout command'
@@ -114,6 +130,9 @@ runs:
       crudini --set config.conf tls enable true
       # Cannot use abs path because config.conf is copied into Docker container during cibuildwheel tests
       crudini --set config.conf tls cafile ../.github/workflows/docker-build-context/${{ env.CA_CERT_FILE_NAME }}
+      crudini --set config.conf tls keyfile ../.github/workflows/docker-build-context/client.pem
+      crudini --set config.conf tls certfile ../.github/workflows/docker-build-context/client.cer
+
     working-directory: test
     shell: bash
 

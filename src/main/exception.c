@@ -422,12 +422,15 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         if (PyObject_HasAttrString(py_exc_class, "code")) {
             PyObject *py_code = PyObject_GetAttrString(py_exc_class, "code");
             if (py_code == Py_None) {
+                Py_DECREF(py_code);
                 continue;
             }
             if (err->code == PyLong_AsLong(py_code)) {
                 found = true;
+                Py_DECREF(py_code);
                 break;
             }
+            Py_DECREF(py_code);
         }
     }
     // We haven't found the right exception, just use AerospikeError
@@ -449,6 +452,7 @@ void raise_exception_base(as_error *err, PyObject *py_as_key, PyObject *py_bin,
         if (py_exc_extra_attr) {
             PyObject_SetAttrString(py_exc_class, extra_attrs[i],
                                    py_extra_attrs[i]);
+            Py_DECREF(py_exc_extra_attr);
         }
         else if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
             // We are sure that we want to ignore this
