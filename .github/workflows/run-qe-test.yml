@@ -1,12 +1,20 @@
 on:
   workflow_dispatch:
     inputs:
+      python-client-version-in-jfrog-to-test:
+        type: string
+        required: true
+        description: Python client version
       test-scenario:
         required: true
         default: CLIENT-3541-add-client-centered-performance-regression-tests@perf_regression/client_centered_kvs
         description: Test scenario
   workflow_call:
     inputs:
+      python-client-version-in-jfrog-to-test:
+        type: string
+        required: true
+        description: Python client version
       test-scenario:
         type: string
         required: true
@@ -14,11 +22,19 @@ on:
         description: Test scenario
 
 jobs:
-  foo:
+  add-python-client-to-qe-test-image-for-performance-regression-tests:
+    # We do not always have JFrog builds for arbitrary branches
+    uses: citrusleaf/qe-docker/.github/workflows/build-deploy-python-3.11.yml@master
+    with:
+      jfrog_artifact_url: https://aerospike.jfrog.io/artifactory/clients-pypi-dev-local/aerospike
+      jfrog_artifact_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
+
+  run-qe-test:
     env:
       TEST_CONFIG_FILE_NAME: client_perf.yaml
       TESTCTL_BINARY_NAME: testctl
     runs-on: ubuntu-24.04
+    needs: add-python-client-to-qe-test-image-for-performance-regression-tests
     steps:
     # - name: Setup Rclone
     #   uses: AnimMouse/setup-rclone@0d99fa3878a334d3e307c1a8372ad55550fdaea7
@@ -99,36 +115,36 @@ jobs:
         fi
       working-directory: aerospike-client-python/test/
 
-    - name: Print test logs in real time
-      run: sshpass -p ${{ secrets.PERF_PASSWORD }} ssh ${{ secrets.PERF_USERNAME }}@${{ secrets.PERF_HOST }} docker logs -f test_0
+    # - name: Print test logs in real time
+    #   run: sshpass -p ${{ secrets.PERF_PASSWORD }} ssh ${{ secrets.PERF_USERNAME }}@${{ secrets.PERF_HOST }} docker logs -f test_0
 
-    # - name: Wait for test run to finish
-    #   id: poll-run-id
-    #   run: |
-    #     while true; do
-    #       # Color messes up the run_id's string
-    #       # Use xargs to trim whitespace from testctl's output
-    #       run_id=$(${{ env.TESTCTL_BINARY_NAME }} --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
-    #       if [[ -z "$run_id" ]]; then
-    #         echo "Test run has not finished yet..."
-    #         sleep 2
-    #       else
-    #         echo "Test run $run_id has finished."
-    #         break
-    #       fi
-    #     done
-    #     echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+    - name: Wait for test run to finish
+      id: poll-run-id
+      run: |
+        while true; do
+          # Color messes up the run_id's string
+          # Use xargs to trim whitespace from testctl's output
+          run_id=$(${{ env.TESTCTL_BINARY_NAME }} --config staging ps --no-color --user ${{ env.TESTCTL_USER }} -n 1 -status completed --columns RUN_ID | sed '1d' | xargs)
+          if [[ -z "$run_id" ]]; then
+            echo "Test run has not finished yet..."
+            sleep 2
+          else
+            echo "Test run $run_id has finished."
+            break
+          fi
+        done
+        echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
 
     # Downloading builds doesn't work here, so we disable it
-    # - run: ${{ env.TESTCTL_BINARY_NAME }} --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
+    - run: ${{ env.TESTCTL_BINARY_NAME }} --config staging download --skip-build-download ${{ steps.poll-run-id.outputs.run_id }}
 
-    # - name: Print test run logs
-    #   run: |
-    #     cd ${{ steps.poll-run-id.outputs.run_id }}*/work/test_0
-    #     echo "stdout:"
-    #     cat stdout
-    #     echo "stderr:"
-    #     cat stderr
+    - name: Print test run logs
+      run: |
+        cd ${{ steps.poll-run-id.outputs.run_id }}*/work/test_0
+        echo "stdout:"
+        cat stdout
+        echo "stderr:"
+        cat stderr
 
     - name: Set Github job status
       run: |
