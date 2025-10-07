@@ -59,8 +59,7 @@ jobs:
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
     - name: Add wheel to staging folder for building Docker image
-      run: cp *linux*aarch64*.whl test/python/_files/
-      working-directory: qe-docker
+      run: mv *linux*aarch64*.whl qe-docker/test/python/_files/
 
     - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
       working-directory: qe-docker
