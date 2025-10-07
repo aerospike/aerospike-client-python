@@ -26,7 +26,7 @@ on:
 
 jobs:
   add-python-client-to-qe-test-image-for-performance-regression-tests:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-24.04-arm
     steps:
     - name: Get Github action to download wheel from JFrog
       uses: actions/checkout@v4
@@ -68,14 +68,9 @@ jobs:
         username: ${{ secrets.QE_DOCKER_REGISTRY_USERNAME }}
         password: ${{ secrets.QE_DOCKER_REGISTRY_PASSWORD }}
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
+    # No way to set our own tag
+    # - run: ./bin/build -b -p -m test/python/3.11-mavenAnsible-client.Dockerfile
 
-    - uses: docker/setup-buildx-action@v3
-      with:
-        platforms: linux/arm64
-
-    # ./bin/build doesn't support building for a specific platform different from the native one
     - name: Build and push
       uses: docker/build-push-action@v6
       with:
