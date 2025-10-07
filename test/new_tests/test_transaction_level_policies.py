@@ -113,7 +113,7 @@ class TestReadTouchTTLPercent:
             operations.read(bin_name="a")
         ]
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, ops=ops, policy={"a": "key"})
+            self.as_connection.operate(self.key, list=ops, policy={"a": "key"})
         assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
 
         with pytest.raises(e.ParamError) as excinfo:
@@ -190,7 +190,7 @@ class TestReadTouchTTLPercent:
             bitwise_operations.bit_not("bin", bit_offset=0, bit_size=0, policy={"a": "key"})
         ]
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, ops=ops)
+            self.as_connection.operate(self.key, list=ops)
         assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
 
         # Map policy
@@ -198,7 +198,7 @@ class TestReadTouchTTLPercent:
             map_operations.map_put("bin", "map_key", "map_value", map_policy={"a": "key"})
         ]
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, ops=ops)
+            self.as_connection.operate(self.key, list=ops)
         assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
 
         # List policy
@@ -206,7 +206,7 @@ class TestReadTouchTTLPercent:
             list_operations.list_append("bin_name", "list_item_value", policy={"a": "key"})
         ]
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, ops=ops)
+            self.as_connection.operate(self.key, list=ops)
         assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
 
         # HLL policy
@@ -214,5 +214,5 @@ class TestReadTouchTTLPercent:
             hll_operations.hll_add("bin_name", values=[1, 2, 3], policy={"a": "key"})
         ]
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, ops=ops)
+            self.as_connection.operate(self.key, list=ops)
         assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
