@@ -81,7 +81,7 @@ jobs:
       with:
         push: true
         # TODO: set branch in tag
-        tags: test/python/3.11-mavenAnsible-client.Dockerfile
+        tags: 3.11-mavenAnsible-client.Dockerfile
         context: qe-docker/test/python/_files
 
   run-qe-test:
