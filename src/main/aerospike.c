@@ -605,8 +605,7 @@ DEFINE_SET_OF_VALID_KEYS(client_config_tls, "enable", "cafile", "capath",
 
 #define BASE_POLICY_KEYS                                                       \
     "total_timeout", "socket_timeout", "max_retries", "sleep_between_retries", \
-        "compress", "txn", "expressions", "connect_timeout", "timeout_delay",  \
-        NULL
+        "compress", "txn", "expressions", "connect_timeout", "timeout_delay"
 
 DEFINE_SET_OF_VALID_KEYS(apply_policy, BASE_POLICY_KEYS, "key", "replica",
                          "commit_level", "durable_delete", "ttl",
