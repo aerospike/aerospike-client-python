@@ -89,3 +89,5 @@ func
 bcrypt
 namespaces
 yaml
+suberror
+hardcoded
