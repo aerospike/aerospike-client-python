@@ -19,6 +19,7 @@ jobs:
     secrets: inherit
 
   run-qe-test:
+    needs: build-wheel-for-feature-branch
     uses: ./.github/workflows/run-qe-test.yml
     with:
       test-definition: ${{ inputs.test-definition }}
