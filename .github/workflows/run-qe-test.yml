@@ -13,9 +13,15 @@ on:
         description: Test definition
   workflow_call:
     inputs:
+      # workflow_call hack
+      is_workflow_call:
+        type: boolean
+        default: true
+        required: false
+      # Optional since calling workflow can also pass in their own wheel built from a feature branch
       python-client-version-in-jfrog-to-test:
         type: string
-        required: true
+        required: false
         description: Python client version
       test-definition:
         type: string
@@ -48,7 +54,8 @@ jobs:
 
     - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
       with:
-        get_from_jfrog: true
+        # Calling workflow only builds wheel from source
+        get_from_jfrog: ${{ inputs.is_workflow_call == false }}
         jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
         dist_type_to_get: 'wheel'
         wheel_python_version: '3.10'
@@ -77,7 +84,8 @@ jobs:
         push: true
         # TODO: set branch in tag
         file: ./qe-docker/test/python/${{ env.TEST_IMAGE_TAG }}.Dockerfile
-        # Our test definitions explicitly use the images with tags beginning with arm- prefix
+        # Although our client perf test definitions state the test images where the tag doesn't have the arm- prefix
+        # Bob seems to look for the same tag from the test definition, but prefixed with arm-
         tags: ${{ secrets.QE_DOCKER_REGISTRY_URL }}/test/python:arm-${{ env.TEST_IMAGE_TAG }}
         context: ./qe-docker/test/python/_files
       env:
