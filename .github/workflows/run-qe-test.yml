@@ -51,7 +51,7 @@ jobs:
         dist_type_to_get: 'wheel'
         wheel_python_version: '3.10'
         wheel_os: manylinux
-        wheel_cpu_arch: aarch64
+        wheel_cpu_arch: x86_64
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
