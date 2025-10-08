@@ -1,5 +1,5 @@
 permissions:
-  contents: read
+  statuses: write
 
 on:
   workflow_dispatch:
