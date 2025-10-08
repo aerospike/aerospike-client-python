@@ -1,6 +1,7 @@
 permissions:
   statuses: write
   contents: read
+  packages: read
 
 on:
   workflow_dispatch:
