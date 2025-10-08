@@ -24,6 +24,8 @@ on:
 
 jobs:
   add-python-client-to-qe-test-image-for-performance-regression-tests:
+    env:
+      WHEEL_ARCH: x86_64
     runs-on: ubuntu-24.04-arm
     steps:
     - name: Get Github action to download wheel from JFrog
@@ -51,13 +53,13 @@ jobs:
         dist_type_to_get: 'wheel'
         wheel_python_version: '3.10'
         wheel_os: manylinux
-        wheel_cpu_arch: x86_64
+        wheel_cpu_arch: ${{ env.WHEEL_ARCH }}
         JFROG_PLATFORM_URL: ${{ secrets.JFROG_PLATFORM_URL }}
         JFROG_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
         JFROG_REPO_NAME: ${{ vars.JFROG_REPO_NAME }}
 
     - name: Add wheel to staging folder for building Docker image
-      run: mv *linux*aarch64*.whl qe-docker/test/python/_files/
+      run: mv *linux*${{ env.WHEEL_ARCH }}*.whl qe-docker/test/python/_files/
 
     - name: Log in to QE's Docker registry to download base image and publish new image
       uses: docker/login-action@v3
