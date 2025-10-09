@@ -5,16 +5,46 @@ import time
 from aerospike_helpers.operations import operations, bitwise_operations, map_operations, list_operations, hll_operations
 from aerospike_helpers.batch import records as br
 from .test_base_class import TestBaseClass
+from contextlib import nullcontext
+import aerospike
+from typing import Callable
 
 SKIP_MSG = "read_touch_ttl_percent only supported on server 7.1 or higher"
+KEY = ("test", "demo", 1)
+OPS_LIST = [
+    operations.read(bin_name="a")
+]
+INVALID_POLICY = {"a": "key"}
+BATCHRECORDS_WITH_INVALID_BATCH_READ_POLICY = br.BatchRecords(
+    [
+        br.Read(
+            key=("test", "demo", 1),
+            ops=[
+                operations.read("count"),
+            ],
+            policy=INVALID_POLICY
+        )
+    ]
+)
+OPS_LIST_WITH_INVALID_BIT_POLICY = [
+    bitwise_operations.bit_not("bin", bit_offset=0, bit_size=0, policy={"a": "key"})
+]
+OPS_LIST_WITH_INVALID_MAP_POLICY = [
+    map_operations.map_put("bin", "map_key", "map_value", map_policy={"a": "key"})
+]
+OPS_LIST_WITH_INVALID_LIST_POLICY = [
+    list_operations.list_append("bin_name", "list_item_value", policy={"a": "key"})
+]
+OPS_LIST_WITH_INVALID_HLL_POLICY = [
+    hll_operations.hll_add("bin_name", values=[1, 2, 3], policy={"a": "key"})
+]
 
 
 class TestReadTouchTTLPercent:
     @pytest.fixture(autouse=True)
     def setup(self, as_connection):
-        self.key = ("test", "demo", 1)
         ttl = 2
-        self.as_connection.put(self.key, bins={"a": 1}, meta={"ttl": ttl})
+        self.as_connection.put(KEY, bins={"a": 1}, meta={"ttl": ttl})
         self.policy = {
             "read_touch_ttl_percent": 50
         }
@@ -25,11 +55,11 @@ class TestReadTouchTTLPercent:
 
         yield
 
-        self.as_connection.remove(self.key)
+        self.as_connection.remove(KEY)
 
     def test_read_invalid(self):
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.get(self.key, self.invalid_policy)
+            self.as_connection.get(KEY, self.invalid_policy)
         assert excinfo.value.msg == "read_touch_ttl_percent is invalid"
 
     def test_operate_invalid(self):
@@ -37,12 +67,12 @@ class TestReadTouchTTLPercent:
             operations.read("a")
         ]
         with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, ops, policy=self.invalid_policy)
+            self.as_connection.operate(KEY, ops, policy=self.invalid_policy)
         assert excinfo.value.msg == "read_touch_ttl_percent is invalid"
 
     def test_batch_invalid(self):
         keys = [
-            self.key
+            KEY
         ]
         with pytest.raises(e.ParamError) as excinfo:
             self.as_connection.batch_read(keys, policy=self.invalid_policy)
@@ -54,10 +84,10 @@ class TestReadTouchTTLPercent:
         time.sleep(self.delay)
         # By this time, the record's ttl should be less than 1 second left
         # Reset record TTL
-        self.as_connection.get(self.key, policy=self.policy)
+        self.as_connection.get(KEY, policy=self.policy)
         time.sleep(self.delay)
         # Record should not have expired
-        self.as_connection.get(self.key)
+        self.as_connection.get(KEY)
 
     def test_operate(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
@@ -66,20 +96,20 @@ class TestReadTouchTTLPercent:
         ops = [
             operations.read("a")
         ]
-        self.as_connection.operate(self.key, ops, policy=self.policy)
+        self.as_connection.operate(KEY, ops, policy=self.policy)
         time.sleep(self.delay)
-        self.as_connection.get(self.key)
+        self.as_connection.get(KEY)
 
     def test_batch(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
             pytest.skip(SKIP_MSG)
         time.sleep(self.delay)
         keys = [
-            self.key
+            KEY
         ]
         self.as_connection.batch_read(keys, policy=self.policy)
         time.sleep(self.delay)
-        self.as_connection.get(self.key)
+        self.as_connection.get(KEY)
 
     def test_batch_write(self):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver) < (7, 1):
@@ -87,7 +117,7 @@ class TestReadTouchTTLPercent:
         batch_records = br.BatchRecords(
             [
                 br.Read(
-                    key=self.key,
+                    key=KEY,
                     ops=[
                         operations.read("a"),
                     ],
@@ -98,122 +128,60 @@ class TestReadTouchTTLPercent:
         time.sleep(self.delay)
         self.as_connection.batch_write(batch_records)
         time.sleep(self.delay)
-        self.as_connection.get(self.key)
+        self.as_connection.get(KEY)
 
     # Test all policy code paths for invalid policy keys
     # This codepath is only for command (e.g transaction)-level policies. Config level policies
     # have a separate codepath.
     # Read and write command policies with invalid keys already covered by other test cases, so
     # we don't include test cases for them here.
-    def test_invalid_policy_keys(self):
-        EXPECTED_ERROR_MESSAGE = '\"a\" is an invalid policy dictionary key'
-
-        # Operate policy
-        ops = [
-            operations.read(bin_name="a")
+    @pytest.mark.parametrize(
+        "api_method, kwargs",
+        [
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST, "policy": INVALID_POLICY}),
+            (aerospike.Client.admin_query_user_info, {"user": "asdf", "policy": INVALID_POLICY}),
+            (aerospike.Client.info_all, {"command": "status", "policy": INVALID_POLICY}),
+            (aerospike.Client.apply, {"key": KEY, "module": "module", "function": "function", "arguments": [], "policy": INVALID_POLICY}),
+            (aerospike.Scan.results, {"policy": INVALID_POLICY}),
+            (aerospike.Query.results, {"policy": INVALID_POLICY}),
+            (aerospike.Client.remove, {"key": KEY, "policy": INVALID_POLICY}),
+            # Batch policy
+            (aerospike.Client.batch_read, {"keys": [KEY], "policy": INVALID_POLICY}),
+            # Batch write policy
+            (aerospike.Client.batch_operate, {"keys": [KEY], "ops": OPS_LIST, "policy_batch": INVALID_POLICY}),
+            # Batch read policy
+            (aerospike.Client.batch_write, {"batch_records": BATCHRECORDS_WITH_INVALID_BATCH_READ_POLICY}),
+            # Batch apply policy
+            (aerospike.Client.batch_apply, {"keys": [KEY], "module": "module", "function": "function", "arguments": [], "policy_batch_apply": INVALID_POLICY}),
+            # Batch remove policy
+            (aerospike.Client.batch_remove, {"keys": [KEY], "policy_batch_remove": INVALID_POLICY}),
+            # Bit policy
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_BIT_POLICY}),
+            # Map policy
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_MAP_POLICY}),
+            # List policy
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_LIST_POLICY}),
+            # HLL policy
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_HLL_POLICY}),
         ]
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, list=ops, policy={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
+    )
+    def test_invalid_policy_keys(self, api_method: Callable, kwargs: dict):
+        if self.config["validate_keys"]:
+            # client.batch_write() overrides the expected error message with a different one
+            context = pytest.raises(e.ParamError)
+            EXPECTED_ERROR_MESSAGE = '\"a\" is an invalid policy dictionary key'
+        else:
+            context = nullcontext()
 
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.admin_query_user_info(user="asdf", policy={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
+        if api_method.__class__ == aerospike.Scan:
+            invoker = self.as_connection.scan("test", "demo")
+        elif api_method.__class__ == aerospike.Query:
+            invoker = self.as_connection.query("test", "demo")
+        else:
+            invoker = self.as_connection
 
-        # Info policy
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.info_all(command="status", policy={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
+        with context as excinfo:
+            api_method(invoker, **kwargs)
 
-        # Apply policy
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.apply(self.key, "module", "function", args=[], policy={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Scan policy
-        scan = self.as_connection.scan("test", "demo")
-        with pytest.raises(e.ParamError) as excinfo:
-            scan.results(policy={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Query policy
-        query = self.as_connection.query("test", "demo")
-        with pytest.raises(e.ParamError) as excinfo:
-            query.results(policy={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Remove policy
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.remove(self.key, policy={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Batch policy
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.batch_read(keys=[self.key], policy={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Batch write policy
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.batch_operate(keys=[self.key], ops=ops, policy_batch_write={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Batch read policy
-        batch_records = br.BatchRecords(
-            [
-                br.Read(
-                    key=("test", "demo", 1),
-                    ops=[
-                        operations.read("count"),
-                    ],
-                    policy={
-                        "a": "key"
-                    }
-                )
-            ]
-        )
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.batch_write(batch_records)
-        # client.batch_write() overrides the expected error message with a differet one
-        # assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Batch apply policy
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.batch_apply(keys=[self.key], module="module", function="func", args=[], policy_batch_apply={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Batch remove policy
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.batch_remove(keys=[self.key], policy_batch_remove={"a": "key"})
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Bit policy
-        ops = [
-            bitwise_operations.bit_not("bin", bit_offset=0, bit_size=0, policy={"a": "key"})
-        ]
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, list=ops)
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # Map policy
-        ops = [
-            map_operations.map_put("bin", "map_key", "map_value", map_policy={"a": "key"})
-        ]
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, list=ops)
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # List policy
-        ops = [
-            list_operations.list_append("bin_name", "list_item_value", policy={"a": "key"})
-        ]
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, list=ops)
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
-
-        # HLL policy
-        ops = [
-            hll_operations.hll_add("bin_name", values=[1, 2, 3], policy={"a": "key"})
-        ]
-        with pytest.raises(e.ParamError) as excinfo:
-            self.as_connection.operate(self.key, list=ops)
-        assert excinfo.value.msg == EXPECTED_ERROR_MESSAGE
+        if context != nullcontext():
+            assert EXPECTED_ERROR_MESSAGE in excinfo.value.msg
