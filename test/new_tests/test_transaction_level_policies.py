@@ -141,7 +141,7 @@ class TestReadTouchTTLPercent:
             (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST, "policy": INVALID_POLICY}),
             (aerospike.Client.admin_query_user_info, {"user": "asdf", "policy": INVALID_POLICY}),
             (aerospike.Client.info_all, {"command": "status", "policy": INVALID_POLICY}),
-            (aerospike.Client.apply, {"key": KEY, "module": "module", "function": "function", "arguments": [], "policy": INVALID_POLICY}),
+            (aerospike.Client.apply, {"key": KEY, "module": "module", "function": "function", "args": [], "policy": INVALID_POLICY}),
             (aerospike.Scan.results, {"policy": INVALID_POLICY}),
             (aerospike.Query.results, {"policy": INVALID_POLICY}),
             (aerospike.Client.remove, {"key": KEY, "policy": INVALID_POLICY}),
@@ -152,7 +152,7 @@ class TestReadTouchTTLPercent:
             # Batch read policy
             (aerospike.Client.batch_write, {"batch_records": BATCHRECORDS_WITH_INVALID_BATCH_READ_POLICY}),
             # Batch apply policy
-            (aerospike.Client.batch_apply, {"keys": [KEY], "module": "module", "function": "function", "arguments": [], "policy_batch_apply": INVALID_POLICY}),
+            (aerospike.Client.batch_apply, {"keys": [KEY], "module": "module", "function": "function", "args": [], "policy_batch_apply": INVALID_POLICY}),
             # Batch remove policy
             (aerospike.Client.batch_remove, {"keys": [KEY], "policy_batch_remove": INVALID_POLICY}),
             # Bit policy
@@ -173,9 +173,9 @@ class TestReadTouchTTLPercent:
         else:
             context = nullcontext()
 
-        if api_method.__class__ == aerospike.Scan:
+        if api_method.__objclass__ == aerospike.Scan:
             invoker = self.as_connection.scan("test", "demo")
-        elif api_method.__class__ == aerospike.Query:
+        elif api_method.__objclass__ == aerospike.Query:
             invoker = self.as_connection.query("test", "demo")
         else:
             invoker = self.as_connection
