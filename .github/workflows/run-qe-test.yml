@@ -47,11 +47,6 @@ jobs:
         ref: cicd-client-performance-regression-tests-requirements-txt
         token: ${{ secrets.CLIENT_BOT_PAT }}
 
-    - uses: jfrog/setup-jfrog-cli@v4
-      env:
-        JF_URL: ${{ secrets.JFROG_PLATFORM_URL }}
-        JF_ACCESS_TOKEN: ${{ secrets.JFROG_ACCESS_TOKEN }}
-
     - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
       with:
         # Calling workflow only builds wheel from source
