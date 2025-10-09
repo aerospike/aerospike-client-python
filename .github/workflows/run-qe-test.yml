@@ -14,7 +14,7 @@ on:
   workflow_call:
     inputs:
       # workflow_call hack
-      is_workflow_call:
+      get-wheel-from-jfrog:
         type: boolean
         default: true
         required: false
@@ -49,8 +49,7 @@ jobs:
 
     - uses: ./aerospike-client-python/.github/actions/get-artifact-for-stage-tests
       with:
-        # Calling workflow only builds wheel from source
-        get_from_jfrog: ${{ inputs.is_workflow_call == false }}
+        get_from_jfrog: ${{ inputs.get-wheel-from-jfrog }}
         jfrog_build_version: ${{ inputs.python-client-version-in-jfrog-to-test }}
         dist_type_to_get: 'wheel'
         wheel_python_version: '3.10'

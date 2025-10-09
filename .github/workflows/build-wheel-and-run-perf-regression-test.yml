@@ -24,5 +24,6 @@ jobs:
     needs: build-wheel-for-feature-branch
     uses: ./.github/workflows/run-qe-test.yml
     with:
+      get-wheel-from-jfrog: false
       test-definition: ${{ inputs.test-definition }}
     secrets: inherit
