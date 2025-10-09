@@ -5,6 +5,9 @@ name: Stage tests
 # The purpose is to test that our artifacts work on the Linux distros / OS versions that the client supports
 # and QE doesn't have enough disk space for more Linux distros, so we have some tests here in Github Actions
 
+permissions:
+  contents: read
+
 on:
   workflow_call:
     inputs:
