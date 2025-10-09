@@ -183,5 +183,5 @@ class TestReadTouchTTLPercent:
         with context as excinfo:
             api_method(invoker, **kwargs)
 
-        if context != nullcontext():
+        if type(context) != nullcontext:
             assert EXPECTED_ERROR_MESSAGE in excinfo.value.msg
