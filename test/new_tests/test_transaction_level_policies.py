@@ -136,41 +136,45 @@ class TestReadTouchTTLPercent:
     # Read and write command policies with invalid keys already covered by other test cases, so
     # we don't include test cases for them here.
     @pytest.mark.parametrize(
-        "api_method, kwargs",
+        "api_method, kwargs, context_if_validate_keys_is_false",
         [
-            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST, "policy": INVALID_POLICY}),
-            (aerospike.Client.admin_query_user_info, {"user": "asdf", "policy": INVALID_POLICY}),
-            (aerospike.Client.info_all, {"command": "status", "policy": INVALID_POLICY}),
-            (aerospike.Client.apply, {"key": KEY, "module": "module", "function": "function", "args": [], "policy": INVALID_POLICY}),
-            (aerospike.Scan.results, {"policy": INVALID_POLICY}),
-            (aerospike.Query.results, {"policy": INVALID_POLICY}),
-            (aerospike.Client.remove, {"key": KEY, "policy": INVALID_POLICY}),
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST, "policy": INVALID_POLICY}, nullcontext()),
+            # User doesn't exist
+            (aerospike.Client.admin_query_user_info, {"user": "asdf", "policy": INVALID_POLICY}, pytest.raises(e.InvalidUserError)),
+            (aerospike.Client.info_all, {"command": "status", "policy": INVALID_POLICY}, nullcontext()),
+            # UDF doesn't exist on server
+            (aerospike.Client.apply, {"key": KEY, "module": "module", "function": "function", "args": [], "policy": INVALID_POLICY}, pytest.raises(e.UDFError)),
+            (aerospike.Scan.results, {"policy": INVALID_POLICY}, nullcontext()),
+            (aerospike.Query.results, {"policy": INVALID_POLICY}, nullcontext()),
+            (aerospike.Client.remove, {"key": KEY, "policy": INVALID_POLICY}, nullcontext()),
             # Batch policy
-            (aerospike.Client.batch_read, {"keys": [KEY], "policy": INVALID_POLICY}),
+            (aerospike.Client.batch_read, {"keys": [KEY], "policy": INVALID_POLICY}, nullcontext()),
             # Batch write policy
-            (aerospike.Client.batch_operate, {"keys": [KEY], "ops": OPS_LIST, "policy_batch": INVALID_POLICY}),
+            (aerospike.Client.batch_operate, {"keys": [KEY], "ops": OPS_LIST, "policy_batch": INVALID_POLICY}, nullcontext()),
             # Batch read policy
-            (aerospike.Client.batch_write, {"batch_records": BATCHRECORDS_WITH_INVALID_BATCH_READ_POLICY}),
+            (aerospike.Client.batch_write, {"batch_records": BATCHRECORDS_WITH_INVALID_BATCH_READ_POLICY}, nullcontext()),
             # Batch apply policy
-            (aerospike.Client.batch_apply, {"keys": [KEY], "module": "module", "function": "function", "args": [], "policy_batch_apply": INVALID_POLICY}),
+            (aerospike.Client.batch_apply, {"keys": [KEY], "module": "module", "function": "function", "args": [], "policy_batch_apply": INVALID_POLICY}, nullcontext()),
             # Batch remove policy
-            (aerospike.Client.batch_remove, {"keys": [KEY], "policy_batch_remove": INVALID_POLICY}),
+            (aerospike.Client.batch_remove, {"keys": [KEY], "policy_batch_remove": INVALID_POLICY}, nullcontext()),
+            # If not validating keys, we don't really care what server error is reported
+            # We only care that we are not validating keys if the feature flag is disabled
             # Bit policy
-            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_BIT_POLICY}),
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_BIT_POLICY}, pytest.raises(e.ServerError)),
             # Map policy
-            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_MAP_POLICY}),
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_MAP_POLICY}, pytest.raises(e.ServerError)),
             # List policy
-            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_LIST_POLICY}),
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_LIST_POLICY}, pytest.raises(e.ServerError)),
             # HLL policy
-            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_HLL_POLICY}),
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_HLL_POLICY}, pytest.raises(e.ServerError)),
         ]
     )
-    def test_invalid_policy_keys(self, api_method: Callable, kwargs: dict):
+    def test_invalid_policy_keys(self, api_method: Callable, kwargs: dict, context_if_validate_keys_is_false):
         if self.config["validate_keys"]:
             context = pytest.raises(e.ParamError)
             EXPECTED_ERROR_MESSAGE = '\"a\" is an invalid policy dictionary key'
         else:
-            context = nullcontext()
+            context = context_if_validate_keys_is_false
 
         if api_method.__objclass__ == aerospike.Scan:
             invoker = self.as_connection.scan("test", "demo")
@@ -182,5 +186,5 @@ class TestReadTouchTTLPercent:
         with context as excinfo:
             api_method(invoker, **kwargs)
 
-        if type(context) != nullcontext:
+        if self.config["validate_keys"]:
             assert EXPECTED_ERROR_MESSAGE in excinfo.value.msg

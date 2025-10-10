@@ -89,6 +89,9 @@ def as_connection(request) -> aerospike.Client:
     else:
         as_client = aerospike.client(config).connect(config["user"], config["password"])
 
+    # Some tests need to get the client config
+    request.cls.config = config
+
     request.cls.skip_old_server = True
     request.cls.server_version = []
     versioninfo = as_client.info_all("build")
