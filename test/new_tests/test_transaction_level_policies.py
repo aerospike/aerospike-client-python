@@ -165,10 +165,11 @@ class TestReadTouchTTLPercent:
             # We only care that we are not validating keys if the feature flag is disabled
             # Bit policy
             (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_BIT_POLICY}, pytest.raises(e.ServerError)),
+            # The map and list operations create a new bin with a new list/map if it doesn't exist
             # Map policy
-            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_MAP_POLICY}, pytest.raises(e.ServerError)),
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_MAP_POLICY}, nullcontext()),
             # List policy
-            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_LIST_POLICY}, pytest.raises(e.ServerError)),
+            (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_LIST_POLICY}, nullcontext()),
             # HLL policy
             (aerospike.Client.operate, {"key": KEY, "list": OPS_LIST_WITH_INVALID_HLL_POLICY}, pytest.raises(e.ServerError)),
         ]
