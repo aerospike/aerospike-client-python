@@ -53,11 +53,8 @@
                 if (__conversion_func(self, err, py___policy, __policy,        \
                                       &__policy, expr,                         \
                                       &expr_p) != AEROSPIKE_OK) {              \
-                    if (strstr(err->message,                                   \
-                               ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS)) {      \
-                        as_error_append(err, CONCATENATED_ERROR);              \
-                    }                                                          \
-                    else {                                                     \
+                    if (!strstr(err->message,                                  \
+                                ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS)) {     \
                         as_error_update(err, AEROSPIKE_ERR_PARAM,              \
                                         FAILED_TO_CONVERT_POLICY_ERROR,        \
                                         __batch_type);                         \
