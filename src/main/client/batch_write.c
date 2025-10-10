@@ -35,6 +35,10 @@
 #include "geo.h"
 #include "cdt_types.h"
 
+#define FAILED_TO_CONVERT_POLICY_ERROR                                         \
+    "batch_type: %s, failed to convert policy"
+#define CONCATENATED_ERROR " <- " FAILED_TO_CONVERT_POLICY_ERROR
+
 #define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type,                \
                                        __conversion_func, __batch_type)        \
     {                                                                          \
@@ -49,10 +53,15 @@
                 if (__conversion_func(self, err, py___policy, __policy,        \
                                       &__policy, expr,                         \
                                       &expr_p) != AEROSPIKE_OK) {              \
-                    as_error_update(                                           \
-                        err, AEROSPIKE_ERR_PARAM,                              \
-                        "batch_type: %s, failed to convert policy",            \
-                        __batch_type);                                         \
+                    if (strstr(err->message,                                   \
+                               ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS)) {      \
+                        as_error_append(err, CONCATENATED_ERROR);              \
+                    }                                                          \
+                    else {                                                     \
+                        as_error_update(err, AEROSPIKE_ERR_PARAM,              \
+                                        FAILED_TO_CONVERT_POLICY_ERROR,        \
+                                        __batch_type);                         \
+                    }                                                          \
                     Py_DECREF(py___policy);                                    \
                     goto CLEANUP_ON_ERROR;                                     \
                 }                                                              \

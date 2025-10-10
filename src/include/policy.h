@@ -185,6 +185,9 @@ enum aerospike_cdt_ctx_identifiers {
     CDT_CTX_MAP_KEY_CREATE = 0x24
 };
 
+#define ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS                                 \
+    "Failed to validate keys for policy dictionary"
+
 as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_admin *policy,
                                    as_policy_admin **policy_p,

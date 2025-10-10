@@ -233,9 +233,6 @@ as_status set_query_options(as_error *err, PyObject *query_options,
     return AEROSPIKE_OK;
 }
 
-#define ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS                                 \
-    "Failed to validate keys for policy dictionary"
-
 /**
  * Converts a PyObject into an as_policy_admin object.
  * Returns AEROSPIKE_OK on success. On error, the err argument is populated.
