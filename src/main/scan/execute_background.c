@@ -61,10 +61,10 @@ PyObject *AerospikeScan_ExecuteBackground(AerospikeScan *self, PyObject *args,
     }
 
     if (py_policy) {
-        if (pyobject_to_policy_scan(self->client, &err, py_policy, &scan_policy,
-                                    &scan_policy_p,
-                                    &self->client->as->config.policies.scan,
-                                    &exp_list, &exp_list_p) != AEROSPIKE_OK) {
+        if (pyobject_to_policy_scan(
+                self->client, &err, py_policy, &scan_policy, &scan_policy_p,
+                &self->client->as->config.policies.scan, &exp_list, &exp_list_p,
+                false) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

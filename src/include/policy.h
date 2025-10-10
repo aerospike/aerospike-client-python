@@ -185,6 +185,9 @@ enum aerospike_cdt_ctx_identifiers {
     CDT_CTX_MAP_KEY_CREATE = 0x24
 };
 
+#define ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS                                 \
+    "Failed to validate keys for policy dictionary"
+
 as_status pyobject_to_policy_admin(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_admin *policy,
                                    as_policy_admin **policy_p,
@@ -196,10 +199,18 @@ as_status pyobject_to_policy_apply(AerospikeClient *self, as_error *err,
                                    as_policy_apply *config_apply_policy,
                                    as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_info(as_error *err, PyObject *py_policy,
-                                  as_policy_info *policy,
-                                  as_policy_info **policy_p,
-                                  as_policy_info *config_info_policy);
+typedef enum {
+    SECOND_AS_POLICY_WRITE,
+    SECOND_AS_POLICY_SCAN,
+    SECOND_AS_POLICY_NONE
+} as_policy_with_extra_keys_allowed;
+
+// as_policy_with_extra_keys_allowed only applies if validate_keys is true
+as_status
+pyobject_to_policy_info(as_error *err, PyObject *py_policy,
+                        as_policy_info *policy, as_policy_info **policy_p,
+                        as_policy_info *config_info_policy, bool validate_keys,
+                        as_policy_with_extra_keys_allowed other_policy);
 
 as_status pyobject_to_policy_query(AerospikeClient *self, as_error *err,
                                    PyObject *py_policy, as_policy_query *policy,
@@ -220,17 +231,19 @@ as_status pyobject_to_policy_remove(AerospikeClient *self, as_error *err,
                                     as_policy_remove *config_remove_policy,
                                     as_exp *exp_list, as_exp **exp_list_p);
 
-as_status pyobject_to_policy_scan(AerospikeClient *self, as_error *err,
-                                  PyObject *py_policy, as_policy_scan *policy,
-                                  as_policy_scan **policy_p,
-                                  as_policy_scan *config_scan_policy,
-                                  as_exp *exp_list, as_exp **exp_list_p);
+// py_policy_also_supports_info_policy_fields only applies if self->validate_keys is true
+as_status pyobject_to_policy_scan(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_scan *policy, as_policy_scan **policy_p,
+    as_policy_scan *config_scan_policy, as_exp *exp_list, as_exp **exp_list_p,
+    bool py_policy_also_supports_info_policy_fields);
 
-as_status pyobject_to_policy_write(AerospikeClient *self, as_error *err,
-                                   PyObject *py_policy, as_policy_write *policy,
-                                   as_policy_write **policy_p,
-                                   as_policy_write *config_write_policy,
-                                   as_exp *exp_list, as_exp **exp_list_p);
+// py_policy_also_supports_info_policy_fields only applies if self->validate_keys is true
+as_status pyobject_to_policy_write(
+    AerospikeClient *self, as_error *err, PyObject *py_policy,
+    as_policy_write *policy, as_policy_write **policy_p,
+    as_policy_write *config_write_policy, as_exp *exp_list, as_exp **exp_list_p,
+    bool py_policy_also_supports_info_policy_fields);
 
 as_status pyobject_to_policy_operate(AerospikeClient *self, as_error *err,
                                      PyObject *py_policy,
@@ -246,7 +259,7 @@ as_status pyobject_to_policy_batch(AerospikeClient *self, as_error *err,
                                    as_exp *exp_list, as_exp **exp_list_p);
 
 as_status pyobject_to_map_policy(as_error *err, PyObject *py_policy,
-                                 as_map_policy *policy);
+                                 as_map_policy *policy, bool validate_keys);
 
 void set_scan_options(as_error *err, as_scan *scan_p, PyObject *py_options);
 
@@ -254,13 +267,13 @@ as_status set_query_options(as_error *err, PyObject *query_options,
                             as_query *query);
 
 as_status pyobject_to_list_policy(as_error *err, PyObject *py_policy,
-                                  as_list_policy *policy);
+                                  as_list_policy *policy, bool validate_keys);
 
 as_status pyobject_to_bit_policy(as_error *err, PyObject *py_policy,
-                                 as_bit_policy *policy);
+                                 as_bit_policy *policy, bool validate_keys);
 
 as_status pyobject_to_hll_policy(as_error *err, PyObject *py_policy,
-                                 as_hll_policy *hll_policy);
+                                 as_hll_policy *hll_policy, bool validate_keys);
 
 as_status pyobject_to_batch_write_policy(AerospikeClient *self, as_error *err,
                                          PyObject *py_policy,

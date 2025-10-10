@@ -187,13 +187,14 @@ class TestBatchWrite(TestBaseClass):
                             [op.write("new", 10), op.read("new")],
                             meta={"gen": 1, "ttl": aerospike.TTL_NEVER_EXPIRE},
                             policy={
-                                "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE,
                                 "expressions": exp.Eq(exp.IntBin("count"), 1).compile(),
                             },
                         )
                     ]
                 ),
-                {},
+                {
+                    "read_mode_ap": aerospike.POLICY_READ_MODE_AP_ONE
+                },
                 [AerospikeStatus.AEROSPIKE_OK],
                 [{"new": 10}],
             ),
