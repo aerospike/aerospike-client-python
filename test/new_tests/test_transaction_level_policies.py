@@ -55,7 +55,11 @@ class TestReadTouchTTLPercent:
 
         yield
 
-        self.as_connection.remove(KEY)
+        # Some tests call the client remove API
+        try:
+            self.as_connection.remove(KEY)
+        except e.RecordNotFound:
+            pass
 
     def test_read_invalid(self):
         with pytest.raises(e.ParamError) as excinfo:
