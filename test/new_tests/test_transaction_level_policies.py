@@ -167,7 +167,6 @@ class TestReadTouchTTLPercent:
     )
     def test_invalid_policy_keys(self, api_method: Callable, kwargs: dict):
         if self.config["validate_keys"]:
-            # client.batch_write() overrides the expected error message with a different one
             context = pytest.raises(e.ParamError)
             EXPECTED_ERROR_MESSAGE = '\"a\" is an invalid policy dictionary key'
         else:
