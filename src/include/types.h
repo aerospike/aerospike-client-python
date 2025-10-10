@@ -148,6 +148,12 @@ extern PyObject *py_info_and_write_policy_valid_keys;
 // scan.apply() takes in one policy parameter that accepts both write and info policy options
 extern PyObject *py_info_and_scan_policy_valid_keys;
 
+#define INVALID_DICTIONARY_KEY_ERROR_PART1 "is an invalid"
+#define INVALID_DICTIONARY_KEY_ERROR_PART2 "dictionary key"
+#define INVALID_DICTIONARY_KEY_ERROR                                           \
+    "\"%S\" " INVALID_DICTIONARY_KEY_ERROR_PART1                               \
+    " %s " INVALID_DICTIONARY_KEY_ERROR_PART2
+
 // py_set_of_valid_keys contains the valid keys
 // Return -1 if we failed to validate dictionary
 // Return 0 and set err if dictionary has invalid keys

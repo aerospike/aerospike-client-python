@@ -37,41 +37,44 @@
 
 #define FAILED_TO_CONVERT_POLICY_ERROR                                         \
     "batch_type: %s, failed to convert policy"
-#define CONCATENATED_ERROR " <- " FAILED_TO_CONVERT_POLICY_ERROR
 
-#define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type,                \
-                                       __conversion_func, __batch_type)        \
-    {                                                                          \
-        PyObject *py___policy =                                                \
-            PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);  \
-        if (py___policy != Py_None) {                                          \
-            as_exp *expr = NULL;                                               \
-            as_exp *expr_p = expr;                                             \
-            if (py___policy != NULL) {                                         \
-                __policy = (__policy_type *)malloc(sizeof(__policy_type));     \
-                garb->policy_to_free = __policy;                               \
-                if (__conversion_func(self, err, py___policy, __policy,        \
-                                      &__policy, expr,                         \
-                                      &expr_p) != AEROSPIKE_OK) {              \
-                    if (!strstr(err->message,                                  \
-                                ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS)) {     \
-                        as_error_update(err, AEROSPIKE_ERR_PARAM,              \
-                                        FAILED_TO_CONVERT_POLICY_ERROR,        \
-                                        __batch_type);                         \
-                    }                                                          \
-                    Py_DECREF(py___policy);                                    \
-                    goto CLEANUP_ON_ERROR;                                     \
-                }                                                              \
-                garb->expressions_to_free = expr_p;                            \
-            }                                                                  \
-            else {                                                             \
-                as_error_update(err, AEROSPIKE_ERR_PARAM,                      \
-                                "batch_type: %s, policy must be a dict",       \
-                                __batch_type);                                 \
-                goto CLEANUP_ON_ERROR;                                         \
-            }                                                                  \
-        }                                                                      \
-        Py_XDECREF(py___policy);                                               \
+#define GET_BATCH_POLICY_FROM_PYOBJECT(__policy, __policy_type,                              \
+                                       __conversion_func, __batch_type)                      \
+    {                                                                                        \
+        PyObject *py___policy =                                                              \
+            PyObject_GetAttrString(py_batch_record, FIELD_NAME_BATCH_POLICY);                \
+        if (py___policy != Py_None) {                                                        \
+            as_exp *expr = NULL;                                                             \
+            as_exp *expr_p = expr;                                                           \
+            if (py___policy != NULL) {                                                       \
+                __policy = (__policy_type *)malloc(sizeof(__policy_type));                   \
+                garb->policy_to_free = __policy;                                             \
+                if (__conversion_func(self, err, py___policy, __policy,                      \
+                                      &__policy, expr,                                       \
+                                      &expr_p) != AEROSPIKE_OK) {                            \
+                    /* Don't call strstr unless we have to. It is a linear time operation */ \
+                    if (!(self->validate_keys &&                                             \
+                          strstr(err->message,                                               \
+                                 INVALID_DICTIONARY_KEY_ERROR_PART1) &&                      \
+                          strstr(err->message,                                               \
+                                 INVALID_DICTIONARY_KEY_ERROR_PART2))) {                     \
+                        as_error_update(err, AEROSPIKE_ERR_PARAM,                            \
+                                        FAILED_TO_CONVERT_POLICY_ERROR,                      \
+                                        __batch_type);                                       \
+                    }                                                                        \
+                    Py_DECREF(py___policy);                                                  \
+                    goto CLEANUP_ON_ERROR;                                                   \
+                }                                                                            \
+                garb->expressions_to_free = expr_p;                                          \
+            }                                                                                \
+            else {                                                                           \
+                as_error_update(err, AEROSPIKE_ERR_PARAM,                                    \
+                                "batch_type: %s, policy must be a dict",                     \
+                                __batch_type);                                               \
+                goto CLEANUP_ON_ERROR;                                                       \
+            }                                                                                \
+        }                                                                                    \
+        Py_XDECREF(py___policy);                                                             \
     }
 
 // TODO replace this with type checking the batch_records
