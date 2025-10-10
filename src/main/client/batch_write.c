@@ -53,6 +53,7 @@
                                       &__policy, expr,                                       \
                                       &expr_p) != AEROSPIKE_OK) {                            \
                     /* Don't call strstr unless we have to. It is a linear time operation */ \
+                    /* Also, not bothering to use POSIX regex library in this case  */       \
                     if (!(self->validate_keys &&                                             \
                           strstr(err->message,                                               \
                                  INVALID_DICTIONARY_KEY_ERROR_PART1) &&                      \
