@@ -73,6 +73,7 @@ def wait_for_port(address, port, interval=0.1, timeout=60):
 @pytest.fixture(scope="class")
 def as_connection(request) -> aerospike.Client:
     config = TestBaseClass.get_connection_config()
+    # TODO: remove. this is a duplicate.
     request.cls.config = config
     lua_user_path = os.path.join(sys.exec_prefix, "aerospike", "usr-lua")
     lua_info = {"user_path": lua_user_path}
