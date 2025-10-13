@@ -31,5 +31,5 @@ repos:
     rev: v1.1.1
     hooks:
     -   id: doc8
-        args: ["doc/"]
+        args: ["doc/", "--extension", ".rst"]
         pass_filenames: false
