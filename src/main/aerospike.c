@@ -113,6 +113,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"OPERATOR_PREPEND", .value.integer = AS_OPERATOR_PREPEND},
     {"OPERATOR_TOUCH", .value.integer = AS_OPERATOR_TOUCH},
     {"OPERATOR_DELETE", .value.integer = AS_OPERATOR_DELETE},
+    {"OPERATOR_CDT_READ", .value.integer = AS_OPERATOR_CDT_READ},
 
     {"AUTH_INTERNAL", .value.integer = AS_AUTH_INTERNAL},
     {"AUTH_EXTERNAL", .value.integer = AS_AUTH_EXTERNAL},

@@ -542,7 +542,13 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         goto CLEANUP;
     }
 
+    bool operation_succeeded = true;
     switch (operation) {
+    case AS_OPERATOR_CDT_READ:
+        // TODO: flags
+        operation_succeeded =
+            as_operations_cdt_select(ops, bin, ctx_ref, AS_CDT_SELECT_TREE);
+        break;
     case AS_OPERATOR_APPEND:
         if (PyUnicode_Check(py_value)) {
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
@@ -804,6 +810,11 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                             "Invalid operation given");
             goto CLEANUP;
         }
+    }
+
+    if (operation_succeeded == false) {
+        as_error_update(err, AEROSPIKE_ERR_CLIENT,
+                        "Unable to add an operation");
     }
 
 CLEANUP:

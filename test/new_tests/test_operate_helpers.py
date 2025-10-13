@@ -207,7 +207,7 @@ class TestOperate(object):
                 ("test", "demo", "existing_key"),
                 [
                     operations.cdt_select(
-                        "dict",
+                        name="dict",
                         ctx=[
                             # TODO: rename?
                             cdt_ctx.cdt_ctx_all(),

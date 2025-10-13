@@ -131,3 +131,15 @@ def touch(ttl: Optional[int] = None):
         warnings.warn("TTL should be specified in the meta dictionary for operate", DeprecationWarning)
         op_dict["val"] = ttl
     return op_dict
+
+
+# TODO: default flags. flags not implemented
+def cdt_select(name: str, ctx: list, flags: int):
+    """
+    Create CDT select operation.
+
+    Returns:
+        A dictionary to be passed to operate or operate_ordered.
+    """
+    op_dict = {"op": aerospike.OPERATOR_CDT_SELECT, "bin": name, "ctx": ctx, "flags": flags}
+    return op_dict
