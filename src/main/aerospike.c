@@ -802,7 +802,7 @@ void aerospike_free(void *self)
     for (unsigned long i = 0; i < sizeof(py_set_name_to_str_lists) /
                                       sizeof(py_set_name_to_str_lists[0]);
          i++) {
-        Py_XDECREF(py_set_name_to_str_lists[i].py_set_of_keys);
+        Py_XDECREF(*(py_set_name_to_str_lists[i].py_set_of_keys));
     }
 
     Py_XDECREF(py_global_hosts);
