@@ -2,6 +2,7 @@
 import pytest
 from .test_base_class import TestBaseClass
 from aerospike_helpers.operations import list_operations, operations
+from aerospike_helpers import cdt_ctx
 
 import aerospike
 from aerospike import exception as e
@@ -202,7 +203,20 @@ class TestOperate(object):
                 [operations.write("write_bin", False), operations.read("write_bin")],
                 {"write_bin": 0},
             ),
-        ],
+            (
+                ("test", "demo", "existing_key"),
+                [
+                    operations.cdt_select(
+                        "dict",
+                        ctx=[
+                            # TODO: rename?
+                            cdt_ctx.cdt_ctx_all(),
+                        ]
+                    ),
+                ],
+                {"dict": [1]}
+            )
+        ]
     )
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
         """

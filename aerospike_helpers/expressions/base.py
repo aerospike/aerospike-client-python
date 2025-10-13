@@ -1070,6 +1070,7 @@ class Var(_BaseExpr):
         """
         self._fixed = {_Keys.VALUE_KEY: var_name}
 
+
 class VarBuiltInMap(_BaseExpr):
     """
     Retrieve expression value from a built-in variable.
