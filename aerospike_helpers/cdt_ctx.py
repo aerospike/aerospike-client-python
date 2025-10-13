@@ -313,7 +313,7 @@ def cdt_ctx_all() -> _cdt_ctx:
     # TODO missing id in c client
     return _cdt_ctx()
 
-def cdt_ctx_exp(expression: TypeExpression) -> _cdt_ctx:
+def cdt_ctx_exp(expression: "TypeExpression") -> _cdt_ctx:
     # TODO: expr needs to be compiled?
     """
     The cdt_ctx applies an expression to select ctx.
