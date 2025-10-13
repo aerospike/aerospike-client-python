@@ -102,7 +102,6 @@ Example::
     client.close()
 """
 import aerospike
-from aerospike_helpers.expressions.resources import TypeExpression
 
 
 def index_type_string(index_type):
