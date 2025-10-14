@@ -332,7 +332,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     as_map_policy map_policy;
     as_map_policy_init(&map_policy);
 
-    PyObject *key_op = NULL, *py_value = NULL;
+    PyObject *key_op = NULL;
     PyObject *py_value = NULL;
     PyObject *py_key = NULL;
     PyObject *py_index = NULL;
