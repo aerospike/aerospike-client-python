@@ -147,6 +147,7 @@ extern PyObject *py_hll_policy_valid_keys;
 extern PyObject *py_info_and_write_policy_valid_keys;
 // scan.apply() takes in one policy parameter that accepts both write and info policy options
 extern PyObject *py_info_and_scan_policy_valid_keys;
+extern PyObject *py_record_metadata_valid_keys;
 
 #define INVALID_DICTIONARY_KEY_ERROR_PART1 "is an invalid"
 #define INVALID_DICTIONARY_KEY_ERROR_PART2 "dictionary key"

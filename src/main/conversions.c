@@ -1440,7 +1440,8 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
             }
         }
 
-        check_and_set_meta(py_meta, &rec->ttl, &rec->gen, err);
+        check_and_set_meta(py_meta, &rec->ttl, &rec->gen, err,
+                           self->validate_keys);
         if (err->code != AEROSPIKE_OK) {
             as_record_destroy(rec);
         }
@@ -2476,12 +2477,24 @@ CLEANUP:
  *******************************************************************************************************
  */
 as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
-                             uint16_t *gen_ref, as_error *err)
+                             uint16_t *gen_ref, as_error *err,
+                             bool validate_keys)
 {
-    // if ()
-    // {
-
-    // }
+    if (validate_keys) {
+        // TODO: assuming pyobject is a py_dict
+        // TODO: function signature needs to take in string instead of bool for last param
+        as_status retval = does_py_dict_contain_valid_keys(
+            err, py_meta, py_record_metadata_valid_keys, false);
+        if (retval == -1) {
+            // This shouldn't happen, but if it did...
+            // TODO: wrong error message
+            return as_error_update(err, AEROSPIKE_ERR,
+                                   ERR_MSG_FAILED_TO_VALIDATE_POLICY_KEYS);
+        }
+        else if (retval == 0) {
+            return err->code;
+        }
+    }
 
     as_error_reset(err);
     if (py_meta && PyDict_Check(py_meta)) {
