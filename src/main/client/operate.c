@@ -332,7 +332,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     as_map_policy map_policy;
     as_map_policy_init(&map_policy);
 
-    PyObject *key_op = NULL, *value = NULL;
+    PyObject *key_op = NULL, *py_value = NULL;
     PyObject *py_value = NULL;
     PyObject *py_key = NULL;
     PyObject *py_index = NULL;
@@ -377,7 +377,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                                operation, SERIALIZER_PYTHON);
     }
 
-    while (PyDict_Next(py_val, &pos, &key_op, &value)) {
+    while (PyDict_Next(py_val, &pos, &key_op, &py_value)) {
         if (!PyUnicode_Check(key_op)) {
             return as_error_update(err, AEROSPIKE_ERR_CLIENT,
                                    "An operation key must be a string.");
@@ -388,25 +388,25 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                 continue;
             }
             else if (!strcmp(name, "bin")) {
-                py_bin = value;
+                py_bin = py_value;
             }
             else if (!strcmp(name, "index")) {
-                py_index = value;
+                py_index = py_value;
             }
             else if (!strcmp(name, "val")) {
-                py_value = value;
+                py_value = py_value;
             }
             else if (!strcmp(name, "key")) {
-                py_key = value;
+                py_key = py_value;
             }
             else if (!strcmp(name, "range")) {
-                py_range = value;
+                py_range = py_value;
             }
             else if (!strcmp(name, "map_policy")) {
-                py_map_policy = value;
+                py_map_policy = py_value;
             }
             else if (!strcmp(name, "return_type")) {
-                py_return_type = value;
+                py_return_type = py_value;
             }
             else if (strcmp(name, "inverted") == 0) {
                 continue;
@@ -416,17 +416,17 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
                 ctx_ref = (ctx_in_use ? &ctx : NULL);
             }
             else if (!strcmp(name, "expr")) {
-                as_status status =
-                    as_exp_new_from_pyobject(self, value, &mod_exp, err, false);
+                as_status status = as_exp_new_from_pyobject(
+                    self, py_value, &mod_exp, err, false);
                 if (status != AEROSPIKE_OK) {
                     goto CLEANUP;
                 }
             }
             else if (strcmp(name, "map_order") == 0) {
-                py_map_order = value;
+                py_map_order = py_value;
             }
             else if (strcmp(name, "persist_index") == 0) {
-                py_persist_index = value;
+                py_persist_index = py_value;
             }
             else {
                 as_error_update(
