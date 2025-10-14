@@ -269,7 +269,7 @@ class TestRemovebin(object):
             "gen": aerospike.POLICY_GEN_IGNORE,
         }
         try:
-            self.as_connection.remove_bin(key, ["age"], policy)
+            self.as_connection.remove_bin(key, ["age"], policy=policy)
 
         except (e.ClusterError, e.RecordNotFound):
             pass
