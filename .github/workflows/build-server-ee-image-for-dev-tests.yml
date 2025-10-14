@@ -1,0 +1,58 @@
+on:
+  workflow_dispatch:
+    inputs:
+      base-image-name:
+        type: string
+        description: "Server base image name"
+        required: true
+        default: 'aerospike/aerospike-server-enterprise'
+      base-image-tag:
+        type: string
+        description: "Server base image tag"
+        required: true
+        default: 'latest'
+      new-image-tag:
+        type: string
+        description: "New image tag"
+        required: true
+        default: 'latest'
+
+env:
+  TLS_PORT: 4333
+  REGISTRY: ghcr.io
+
+jobs:
+  build-image:
+    runs-on: ubuntu-24.04
+    steps:
+    - name: Log into Github's Docker registry to upload our custom server Docker image
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Set new Docker image name and tag
+      uses: docker/metadata-action@v5
+      id: meta
+      with:
+        images: ${{ env.REGISTRY }}/aerospike/aerospike-server-enterprise
+        flavor: |
+          latest=false
+          type=raw,value=${{ inputs.new-image-tag }}
+
+    - name: Build Aerospike server EE Docker image for testing
+      uses: docker/build-push-action@v6
+      with:
+        # Don't want to use default Git context or else it will clone the whole Python client repo again
+        context: .github/workflows/docker-build-context
+        build-args: |
+          SERVER_IMAGE=${{ inputs.base-image-name }}:${{ inputs.base-image-tag }}
+          TLS_PORT=${{ env.TLS_PORT }}
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        # setup-buildx-action configures Docker to use the docker-container build driver
+        # This driver doesn't publish an image locally by default
+        # so we have to manually enable it
+        load: true
+        push: true
