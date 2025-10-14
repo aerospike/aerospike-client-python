@@ -412,6 +412,12 @@ class TestQuery(TestBaseClass):
             assert exception.code == -2
             assert exception.msg == "predicate is invalid."
 
+    def test_query_where_called_multiple_times(self):
+        query = self.as_connection.query("test", "demo")
+        query.where(p.equals("test_age", 165))
+        with pytest.raises(e.ClientError):
+            query.where(p.equals("test_age", 150))
+
     def test_query_with_policy(self):
         """
         Invoke query() with policy
@@ -924,6 +930,12 @@ class TestQuery(TestBaseClass):
         err_code = err_info.value.code
         assert err_code == AerospikeStatus.AEROSPIKE_ERR_PARAM
 
+    def test_query_select_multiple_times(self):
+        query: aerospike.Query = self.as_connection.query("test", "demo")
+        query.select("a")
+        with pytest.raises(e.ClientError):
+            query.select("a")
+
     def test_query_with_argument_to_where_is_empty_string(self):
 
         query = self.as_connection.query("test", "demo")
@@ -1313,3 +1325,11 @@ class TestQuery(TestBaseClass):
 
         recs = query.results()
         assert len(recs) == expected_rec_count
+
+        # We should also be able to query using the base64 encoded string for an expression
+        query2: aerospike.Query = self.as_connection.query("test", "demo")
+        if use_index_name is False:
+            expr_base64_encoded = self.as_connection.get_expression_base64(expr)
+            query2 = query2.where_with_expr(expr_base64_encoded, predicate)
+            recs = query2.results()
+            assert len(recs) == expected_rec_count

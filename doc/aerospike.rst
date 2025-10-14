@@ -343,6 +343,61 @@ Only the `hosts` key is required; the rest of the keys are optional.
     .. hlist::
         :columns: 1
 
+        * **validate_keys** (:class:`bool`)
+            (Optional) Validate keys passed into this config dictionary as well as any policy dictionaries.
+
+            If a key that is undefined in this documentation gets passed to a config or policy dictionary:
+
+            * If this option is set to :py:obj:`True`, :py:class:`~aerospike.exception.ParamError` will be raised.
+            * If this option is set to :py:obj:`False`, the key will be ignored and the client does not raise an
+              exception in response to the invalid key.
+
+            Default: :py:obj:`False`
+
+            Invalid client config example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                    # The correct key is "user", but "username" may be used by accident
+                    "username": "user",
+                    "password": "password"
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "username" is an invalid client config dictionary key
+                client = aerospike.client(config)
+
+            Invalid policy example:
+
+            .. code-block:: python
+
+                import aerospike
+
+                config = {
+                    "validate_keys": True,
+                    "hosts": [
+                        ("127.0.0.1", 3000)
+                    ],
+                }
+                client = aerospike.client(config)
+
+                key = ("test", "demo", 1)
+                # "key_policy" is used instead of the correct key named "key"
+                policy = {
+                    "key_policy": aerospike.POLICY_KEY_SEND
+                }
+                # This call will raise a ParamError from aerospike.exception
+                # Exception message should be:
+                # "key_policy" is an invalid policy dictionary key
+                client.get(key, policy=policy)
+
         * **hosts** (:class:`list`)
             A list of tuples identifying a node (or multiple nodes) in the cluster.
 
@@ -554,7 +609,7 @@ Only the `hosts` key is required; the rest of the keys are optional.
         * **tls** (:class:`dict`)
             Contains optional TLS configuration parameters.
 
-            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/server/guide/security/tls.html>`_.
+            .. note:: TLS usage requires Aerospike Enterprise Edition. See `TLS <https://aerospike.com/docs/database/learn/security/tls/>`_.
 
             * **enable** (:class:`bool`)
                 Indicating whether tls should be enabled or not.
@@ -745,13 +800,21 @@ Only the `hosts` key is required; the rest of the keys are optional.
 
             Default: ``False``
         * **connect_timeout** (:class:`int`)
-            Initial host connection timeout in milliseconds. The timeout when opening a connection to the server host for the first time.
+            Cluster tend info command timeout in milliseconds.
 
             Default: ``1000``.
         * **fail_if_not_connected** (:class:`bool`)
             Flag to signify fail on cluster init if seed node and all peers are not reachable.
 
             Default: ``True``
+        * **force_single_node** (:class:`bool`)
+            For testing purposes only.  Do not modify.
+
+            Should the client communicate with the first seed node only
+            instead of using the data partition map to determine which node to send the
+            database command.
+
+            Default: ``False``
 
 Constants
 =========
@@ -1136,7 +1199,7 @@ Flags used by list order.
     Ordered list.
 
 .. note::
-    See `this page <https://aerospike.com/docs/server/guide/data-types/cdt-list#unordered-lists>`_ to learn more about list ordering.
+    See `this page <https://aerospike.com/docs/develop/data-types/collections/ordering/>`_ to learn more about list ordering.
 
 .. _aerospike_list_sort_flag:
 
@@ -1515,7 +1578,7 @@ Index data types
 
     An index whose values are of the aerospike GeoJSON data type.
 
-.. seealso:: `Data Types <https://aerospike.com/docs/server/guide/data-types/overview>`_.
+.. seealso:: `Data Types <https://aerospike.com/docs/develop/data-types/scalar/>`_.
 
 .. _aerospike_index_types:
 
