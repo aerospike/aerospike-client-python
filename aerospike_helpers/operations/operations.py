@@ -24,6 +24,8 @@ import warnings
 import aerospike
 from typing import Optional
 
+from aerospike_helpers.expressions.resources import TypeExpression
+
 
 def read(bin_name):
     """Create a read operation dictionary.
@@ -134,6 +136,7 @@ def touch(ttl: Optional[int] = None):
 
 
 # TODO: default flags. flags not implemented
+# TODO: use constant for return value
 def cdt_select(name: str, ctx: list, flags: int):
     """
     Create CDT select operation.
@@ -141,5 +144,16 @@ def cdt_select(name: str, ctx: list, flags: int):
     Returns:
         A dictionary to be passed to operate or operate_ordered.
     """
-    op_dict = {"op": aerospike.OPERATOR_CDT_SELECT, "bin": name, "ctx": ctx, "flags": flags}
+    op_dict = {"op": aerospike.OPERATOR_CDT_READ, "bin": name, "ctx": ctx, "flags": flags}
+    return op_dict
+
+
+def cdt_apply(name: str, ctx: list, expr: TypeExpression, flags: int):
+    """
+    Create CDT apply operation.
+
+    Returns:
+        A dictionary to be passed to operate or operate_ordered.
+    """
+    op_dict = {"op": aerospike.OPERATOR_CDT_MODIFY, "bin": name, "ctx": ctx, "expr": expr, "flags": flags}
     return op_dict

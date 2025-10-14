@@ -327,6 +327,7 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     PyObject *py_ustr = NULL;
     PyObject *py_ustr1 = NULL;
     PyObject *py_bin = NULL;
+    as_exp *mod_exp = NULL;
 
     as_map_policy map_policy;
     as_map_policy_init(&map_policy);
@@ -413,6 +414,13 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
             else if (strcmp(name, "ctx") == 0) {
                 CONVERT_PY_CTX_TO_AS_CTX();
                 ctx_ref = (ctx_in_use ? &ctx : NULL);
+            }
+            else if (!strcmp(name, "expr")) {
+                as_status status =
+                    as_exp_new_from_pyobject(self, value, &mod_exp, err, false);
+                if (status != AEROSPIKE_OK) {
+                    goto CLEANUP;
+                }
             }
             else if (strcmp(name, "map_order") == 0) {
                 py_map_order = value;
@@ -549,6 +557,12 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
         operation_succeeded =
             as_operations_cdt_select(ops, bin, ctx_ref, AS_CDT_SELECT_TREE);
         break;
+    case AS_OPERATOR_CDT_MODIFY:
+        // TODO: flags
+        operation_succeeded = as_operations_cdt_apply(
+            ops, bin, ctx_ref, mod_exp, AS_CDT_SELECT_TREE);
+        break;
+
     case AS_OPERATOR_APPEND:
         if (PyUnicode_Check(py_value)) {
             py_ustr1 = PyUnicode_AsUTF8String(py_value);
@@ -818,6 +832,9 @@ as_status add_op(AerospikeClient *self, as_error *err, PyObject *py_val,
     }
 
 CLEANUP:
+    if (mod_exp) {
+        as_exp_destroy(mod_exp);
+    }
     if (ctx_in_use) {
         as_cdt_ctx_destroy(&ctx);
     }
