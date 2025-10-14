@@ -110,7 +110,8 @@ PyObject *AerospikeClient_SetXDRFilter(AerospikeClient *self, PyObject *args,
     if (py_policy) {
         if (pyobject_to_policy_info(
                 &err, py_policy, &info_policy, &info_policy_p,
-                &self->as->config.policies.info) != AEROSPIKE_OK) {
+                &self->as->config.policies.info, self->validate_keys,
+                SECOND_AS_POLICY_NONE) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }

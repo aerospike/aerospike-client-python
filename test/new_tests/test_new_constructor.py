@@ -276,6 +276,54 @@ def test_query_invalid_expected_duration():
         aerospike.client(config)
     assert excinfo.value.msg == "Invalid Policy setting value"
 
+# We want to make sure that these options are allowed when config["validate_keys"] is True
+# Some of these options may not be documented, but they are allowed in the code and customers may be using them
+def test_config_level_misc_options():
+    config = copy.deepcopy(gconfig)
+    config["policies"]["socket_timeout"] = 1
+    config["policies"]["total_timeout"] = 1
+    config["policies"]["max_retries"] = 1
+    config["policies"]["exists"] = aerospike.POLICY_EXISTS_CREATE
+    config["policies"]["replica"] = aerospike.POLICY_REPLICA_MASTER
+    config["policies"]["read_mode_ap"] = aerospike.POLICY_READ_MODE_AP_ALL
+    config["policies"]["commit_level"] = aerospike.POLICY_COMMIT_LEVEL_ALL
+    config["policies"]["max_threads"] = 16
+    config["policies"]["thread_pool_size"] = 16
+    config["thread_pool_size"] = 16
+    config["max_threads"] = 16
+    config["max_conns_per_node"] = 16
+    config["connect_timeout"] = 16
+    config["use_shared_connection"] = False
+    config["compression_threshold"] = 50
+    config["cluster_name"] = "test"
+    config["max_socket_idle"] = 20
+    config["fail_if_not_connected"] = True
+    if "shm" not in config:
+        config["shm"] = {}
+    config["shm"] = {}
+    config["shm"]["max_namespaces"] = 8
+    config["shm"]["max_nodes"] = 3
+    config["shm"]["takeover_threshold_sec"] = 30
+    config["tls"]["crl_check"] = True
+    config["tls"]["crl_check_all"] = True
+    config["tls"]["log_session_info"] = True
+    config["tls"]["for_login_only"] = True
+    config["tls"]["cafile"] = "./dummy"
+    config["tls"]["capath"] = "./dummy"
+    config["tls"]["protocols"] = "blaah"
+    config["tls"]["cipher_suite"] = "aes_256"
+    config["tls"]["cert_blacklist"] = "aes_256"
+    config["tls"]["keyfile"] = "aes_256"
+    config["tls"]["certfile"] = "aes_256"
+    config["tls"]["keyfile_pw"] = "aes_256"
+    config["validate_keys"] = True
+
+    # We don't care if the client connects or not
+    # We just make sure that the above options are allowed as dict keys
+    try:
+        aerospike.client(config)
+    except:
+        pass
 
 class TestConfigTTL:
     NEW_TTL = 9000
