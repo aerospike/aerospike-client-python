@@ -195,19 +195,19 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
     if (predicate == AS_PREDICATE_EQUAL && in_datatype == AS_INDEX_BLOB) {
         // We don't call as_blob_contains() directly because we can't pass in index_type as a parameter
         if (py_expr) {
-            as_query_where_with_exp(&self->query, exp_list, predicate,
-                                    index_type, AS_INDEX_BLOB, val1_bytes,
-                                    bytes_size, true);
+            success = as_query_where_with_exp(&self->query, exp_list, predicate,
+                                              index_type, AS_INDEX_BLOB,
+                                              val1_bytes, bytes_size, true);
         }
         else if (index_name) {
-            as_query_where_with_index_name(&self->query, index_name, predicate,
-                                           index_type, AS_INDEX_BLOB,
-                                           val1_bytes, bytes_size, true);
+            success = as_query_where_with_index_name(
+                &self->query, index_name, predicate, index_type, AS_INDEX_BLOB,
+                val1_bytes, bytes_size, true);
         }
         else {
-            as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                    index_type, AS_INDEX_BLOB, val1_bytes,
-                                    bytes_size, true);
+            success = as_query_where_with_ctx(
+                &self->query, bin, pctx, predicate, index_type, AS_INDEX_BLOB,
+                val1_bytes, bytes_size, true);
         }
     }
     else if (in_datatype == AS_INDEX_NUMERIC ||
@@ -216,34 +216,36 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         if (predicate == AS_PREDICATE_RANGE &&
             in_datatype == AS_INDEX_NUMERIC) {
             if (py_expr) {
-                as_query_where_with_exp(&self->query, exp_list, predicate,
-                                        index_type, in_datatype, val1_int,
-                                        val2_int);
+                success = as_query_where_with_exp(
+                    &self->query, exp_list, predicate, index_type, in_datatype,
+                    val1_int, val2_int);
             }
             else if (index_name) {
-                as_query_where_with_index_name(&self->query, index_name,
-                                               predicate, index_type,
-                                               in_datatype, val1_int, val2_int);
+                success = as_query_where_with_index_name(
+                    &self->query, index_name, predicate, index_type,
+                    in_datatype, val1_int, val2_int);
             }
             else {
-                as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                        index_type, in_datatype, val1_int,
-                                        val2_int);
+                success = as_query_where_with_ctx(
+                    &self->query, bin, pctx, predicate, index_type, in_datatype,
+                    val1_int, val2_int);
             }
         }
         else {
             if (py_expr) {
-                as_query_where_with_exp(&self->query, exp_list, predicate,
-                                        index_type, in_datatype, val1);
+                success =
+                    as_query_where_with_exp(&self->query, exp_list, predicate,
+                                            index_type, in_datatype, val1);
             }
             else if (index_name) {
-                as_query_where_with_index_name(&self->query, index_name,
-                                               predicate, index_type,
-                                               in_datatype, val1);
+                success = as_query_where_with_index_name(
+                    &self->query, index_name, predicate, index_type,
+                    in_datatype, val1);
             }
             else {
-                as_query_where_with_ctx(&self->query, bin, pctx, predicate,
-                                        index_type, in_datatype, val1);
+                success =
+                    as_query_where_with_ctx(&self->query, bin, pctx, predicate,
+                                            index_type, in_datatype, val1);
             }
         }
 
@@ -258,6 +260,13 @@ static int AerospikeQuery_Where_Add(AerospikeQuery *self, PyObject *py_ctx,
         PyObject *py_err = NULL;
         error_to_pyobject(&err, &py_err);
         PyErr_SetObject(PyExc_Exception, py_err);
+        goto CLEANUP_VALUES_ON_ERROR;
+    }
+
+    if (!success) {
+        as_error_update(
+            &err, AEROSPIKE_ERR_PARAM,
+            "Error occurred while adding predicate to query object");
         goto CLEANUP_VALUES_ON_ERROR;
     }
 
