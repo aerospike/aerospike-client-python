@@ -183,8 +183,8 @@ void initialize_bin_for_strictypes(AerospikeClient *self, as_error *err,
 as_status bin_strict_type_checking(AerospikeClient *self, as_error *err,
                                    PyObject *py_bin, char **bin);
 
-as_status check_and_set_meta(PyObject *py_meta, as_operations *ops,
-                             as_error *err);
+as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
+                             uint16_t *gen_ref, as_error *err);
 
 as_status as_batch_read_results_to_pyobject(as_error *err,
                                             AerospikeClient *client,
