@@ -344,7 +344,10 @@ Only the `hosts` key is required; the rest of the keys are optional.
         :columns: 1
 
         * **validate_keys** (:class:`bool`)
-            (Optional) Validate keys passed into this config dictionary as well as any policy dictionaries.
+            (Optional) Validate keys passed into this config dictionary as well as any:
+
+                - :ref:`aerospike_policies`
+                - :ref:`metadata_dict`
 
             If a key that is undefined in this documentation gets passed to a config or policy dictionary:
 
