@@ -107,8 +107,8 @@ static inline bool isExprOp(int op);
     }
 
 #define CONVERT_PY_CTX_TO_AS_CTX()                                             \
-    if (get_cdt_ctx(self, err, &ctx, py_val, &ctx_in_use, static_pool,         \
-                    SERIALIZER_PYTHON) != AEROSPIKE_OK) {                      \
+    if (get_cdt_ctx(self, err, &ctx, py_operation_dict, &ctx_in_use,           \
+                    static_pool, SERIALIZER_PYTHON) != AEROSPIKE_OK) {         \
         return err->code;                                                      \
     }
 
