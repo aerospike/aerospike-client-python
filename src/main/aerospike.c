@@ -433,7 +433,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_KEY", .value.integer = AS_CDT_CTX_MAP_KEY},
     {"CDT_CTX_MAP_VALUE", .value.integer = AS_CDT_CTX_MAP_VALUE},
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
-    {"CDT_CTX_EXP", .value.integer = AS_CDT_CTX_EXP},
+    {"_CDT_CTX_EXP", .value.integer = AS_CDT_CTX_EXP},
 
     /* Expression variable built-in type */
     // TODO: missing docs

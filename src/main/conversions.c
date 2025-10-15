@@ -2767,6 +2767,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     }
 
     Py_ssize_t py_list_size = PyList_Size(py_ctx);
+    // TODO: refactor *_destroy() method...
     as_cdt_ctx_init(cdt_ctx, (int)py_list_size);
 
     for (int i = 0; i < py_list_size; i++) {
@@ -2845,6 +2846,10 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                 goto CLEANUP1;
             }
         }
+        else if (item_type == AS_CDT_CTX_EXP) {
+            // TODO: needs other api with exp
+            as_cdt_ctx_add_all(cdt_ctx);
+        }
         else {
             if (as_val_new_from_pyobject(self, err, py_value, &val, static_pool,
                                          serializer_type) != AEROSPIKE_OK) {
@@ -2854,6 +2859,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                     "Failed to convert %s, value to as_val", CTX_KEY);
                 goto CLEANUP1;
             }
+
             switch (item_type) {
             case AS_CDT_CTX_LIST_VALUE:
                 as_cdt_ctx_add_list_value(cdt_ctx, val);

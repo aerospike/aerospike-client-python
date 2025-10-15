@@ -309,8 +309,7 @@ def cdt_ctx_all() -> _cdt_ctx:
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
-    # TODO missing id in c client
-    return _cdt_ctx()
+    return _cdt_ctx(id=aerospike._CDT_CTX_EXP)
 
 def cdt_ctx_exp(expression: "TypeExpression") -> _cdt_ctx:
     # TODO: expr needs to be compiled?
@@ -323,4 +322,4 @@ def cdt_ctx_exp(expression: "TypeExpression") -> _cdt_ctx:
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
-    return _cdt_ctx(id=aerospike.CDT_CTX_EXP)
+    return _cdt_ctx(id=aerospike._CDT_CTX_EXP)
