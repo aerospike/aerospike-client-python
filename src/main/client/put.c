@@ -118,11 +118,9 @@ CLEANUP:
     }
 
     if (key_initialised == true) {
-        // Destroy the key if it is initialised.
         as_key_destroy(&key);
     }
     if (record_initialised == true) {
-        // Destroy the record if it is initialised.
         as_record_destroy(&rec);
     }
 
