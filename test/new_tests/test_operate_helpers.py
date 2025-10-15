@@ -203,9 +203,6 @@ class TestOperate(object):
                 [operations.write("write_bin", False), operations.read("write_bin")],
                 {"write_bin": 0},
             ),
-            (
-                {"dict": [1]}
-            )
         ]
     )
     def test_pos_operate_with_correct_paramters(self, key, llist, expected):
@@ -233,18 +230,18 @@ class TestOperate(object):
         }
         self.as_connection.put(self.key, bins=bins)
         yield
-        self.as_connection.remove()
+        self.as_connection.remove(self.key)
 
     def test_cdt_select(self, insert_record):
         ops = [
             operations.cdt_select(
-                name="bin",
+                name=self.map_bin_name,
                 ctx=[
                     cdt_ctx.cdt_ctx_all(),
                 ]
             )
         ]
-        _, _, bins = self.as_connection.operate(ops)
+        _, _, bins = self.as_connection.operate(self.key, ops)
         # TODO: list order
         assert bins[self.map_bin_name] == list(bins[self.map_bin_name].values())
 

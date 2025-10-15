@@ -264,6 +264,7 @@ bool opRequiresIndex(int op)
             op == OP_MAP_REMOVE_BY_INDEX_RANGE || op == OP_LIST_INCREMENT);
 }
 
+// TODO: Can be optimized with bitwise operations?
 bool opRequiresValue(int op)
 {
     return (op != AS_OPERATOR_READ && op != AS_OPERATOR_TOUCH &&
@@ -275,7 +276,8 @@ bool opRequiresValue(int op)
             op != OP_MAP_REMOVE_BY_RANK && op != OP_MAP_GET_BY_KEY &&
             op != OP_MAP_GET_BY_INDEX && op != OP_MAP_GET_BY_KEY_RANGE &&
             op != OP_MAP_GET_BY_RANK && op != AS_OPERATOR_DELETE &&
-            op != OP_MAP_CREATE && op != OP_LIST_CREATE);
+            op != OP_MAP_CREATE && op != OP_LIST_CREATE &&
+            op != AS_OPERATOR_CDT_READ && op != AS_OPERATOR_CDT_MODIFY);
 }
 
 bool opRequiresRange(int op)
@@ -425,6 +427,13 @@ as_status add_op(AerospikeClient *self, as_error *err,
             }
             else if (strcmp(name, "persist_index") == 0) {
                 py_persist_index = value;
+            }
+            // Use set instead of this?
+            else if (strcmp(name, "expr") == 0) {
+                continue;
+            }
+            else if (strcmp(name, "flags") == 0) {
+                continue;
             }
             else {
                 as_error_update(
