@@ -66,7 +66,16 @@ runs:
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
+  - name: Check if a Docker image was already built for this base image
+    id: check-if-image-already-built
+    # We assume a non zero error code means the image does not exist (or at least it cannot be reached).
+    run: |
+      skopeo inspect --override-os linux $NEW_IMAGE_FULL_NAME
+    shell: bash
+    continue-on-error: true
+
   - name: Build Aerospike server Docker image for testing
+    if: ${{ steps.check-if-image-already-built.outcome == 'failure' }}
     # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
     # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
     uses: docker/build-push-action@v6
