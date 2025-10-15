@@ -203,14 +203,16 @@ as_status get_list_return_type(as_error *err, PyObject *op_dict,
 }
 
 as_status get_list_policy(as_error *err, PyObject *op_dict,
-                          as_list_policy *policy, bool *found)
+                          as_list_policy *policy, bool *found,
+                          bool validate_keys)
 {
     *found = false;
 
     PyObject *list_policy = PyDict_GetItemString(op_dict, AS_PY_LIST_POLICY);
 
     if (list_policy) {
-        if (pyobject_to_list_policy(err, list_policy, policy) != AEROSPIKE_OK) {
+        if (pyobject_to_list_policy(err, list_policy, policy, validate_keys) !=
+            AEROSPIKE_OK) {
             return err->code;
         }
         /* We succesfully converted the policy*/
