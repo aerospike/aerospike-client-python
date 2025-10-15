@@ -304,12 +304,33 @@ class TestOperate(object):
             )
         ]
     )
-    def test_cdt_select(self, insert_record, op, expected_bins):
+    def test_cdt_select_basic_functionality(self, insert_record, op, expected_bins):
         ops = [
             op
         ]
         _, _, bins = self.as_connection.operate(self.key, ops)
         assert bins == expected_bins
+
+    @pytest.mark.parametrize(
+        "flags", [
+            aerospike.CDT_SELECT_TREE,
+            # TODO: combine?
+            aerospike.CDT_SELECT_LEAF_LIST_VALUE,
+            aerospike.CDT_SELECT_LEAF_MAP_VALUE,
+            aerospike.CDT_SELECT_LEAF_MAP_KEY,
+            aerospike.CDT_SELECT_NO_FAIL
+        ]
+    )
+    def test_cdt_select_flags(self, insert_record, flags, expected_bins):
+        ops = [
+            operations.cdt_select(
+                # TODO: not done
+                flags=flags
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        assert bins == expected_bins
+
 
     @pytest.mark.parametrize(
         "op, context",
