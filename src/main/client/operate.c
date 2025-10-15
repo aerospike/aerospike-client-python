@@ -549,6 +549,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
         goto CLEANUP;
     }
 
+    // For backwards compatibility, we set this to true
     bool operation_succeeded = true;
     switch (operation) {
     case AS_OPERATOR_CDT_READ:
