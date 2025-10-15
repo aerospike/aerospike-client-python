@@ -444,7 +444,7 @@ class TestHLL(object):
         ops = [hll_operations.hll_add(bin, ["key1", "key2", "key3"], policy=policy)]
 
         with pytest.raises(expected_result):
-            self.as_connection.operate(self.test_keys[0], ops, policy=policy)
+            self.as_connection.operate(self.test_keys[0], ops)
 
     def test_pos_hll_update(self):
         """
