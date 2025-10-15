@@ -309,6 +309,13 @@ TXN_STATE_VERIFIED: Literal[1]
 TXN_STATE_COMMITTED: Literal[2]
 TXN_STATE_ABORTED: Literal[3]
 
+CDT_SELECT_TREE: Literal[0]
+CDT_SELECT_LEAF_LIST_VALUE: Literal[1]
+CDT_SELECT_LEAF_MAP_VALUE: Literal[1]
+CDT_SELECT_LEAF_MAP_KEY: Literal[2]
+CDT_SELECT_NO_FAIL: Literal[16]
+
+
 @final
 class CDTInfinite:
     def __init__(self, *args, **kwargs) -> None: ...

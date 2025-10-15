@@ -209,7 +209,6 @@ class TestOperate(object):
                     operations.cdt_select(
                         name="dict",
                         ctx=[
-                            # TODO: rename?
                             cdt_ctx.cdt_ctx_all(),
                         ]
                     ),
