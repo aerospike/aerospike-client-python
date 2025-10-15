@@ -650,7 +650,7 @@ class TestOperate(object):
                         "int_bin",
                         7,
                         99,
-                        {"list_write": aerospike.LIST_WRITE_DEFAULT}
+                        {"write_flags": aerospike.LIST_WRITE_DEFAULT}
                     ),
                 ],
                 {"int_bin": 8},

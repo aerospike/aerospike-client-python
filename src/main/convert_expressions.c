@@ -1768,8 +1768,8 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
                 bool policy_in_use = false;
                 if (get_list_policy(err, temp_expr.pydict,
-                                    temp_expr.list_policy,
-                                    &policy_in_use) != AEROSPIKE_OK) {
+                                    temp_expr.list_policy, &policy_in_use,
+                                    self->validate_keys) != AEROSPIKE_OK) {
                     temp_expr.list_policy = NULL;
                     goto CLEANUP;
                 }
@@ -1789,9 +1789,9 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                     goto CLEANUP;
                 }
 
-                if (pyobject_to_map_policy(err, py_map_policy_p,
-                                           temp_expr.map_policy) !=
-                    AEROSPIKE_OK) {
+                if (pyobject_to_map_policy(
+                        err, py_map_policy_p, temp_expr.map_policy,
+                        self->validate_keys) != AEROSPIKE_OK) {
                     temp_expr.map_policy = NULL;
                     goto CLEANUP;
                 }
