@@ -1435,7 +1435,7 @@ as_status as_record_init_from_pyobject(AerospikeClient *self, as_error *err,
         as_val_new_from_pyobject(self, err, py_bin_value, &val, static_pool,
                                  serializer_type);
         if (err->code != AEROSPIKE_OK) {
-            break;
+            goto CLEANUP;
         }
         bool success = as_record_set(rec, name, (as_bin_value *)val);
         if (success == false) {
