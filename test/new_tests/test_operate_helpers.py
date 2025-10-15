@@ -279,7 +279,7 @@ class TestOperate(object):
             ),
             (
                 operations.cdt_select(
-                    name=MAP_BIN_NAME,
+                    name=LIST_BIN_NAME,
                     ctx=[
                         cdt_ctx.cdt_ctx_all(),
                         cdt_ctx.cdt_ctx_all()
