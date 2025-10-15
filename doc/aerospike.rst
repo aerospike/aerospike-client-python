@@ -1802,11 +1802,15 @@ CDT Select Flags
 
     Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes
 
+.. |CDT_SELECT_VALUE_DOCSTRING| replace:: Return the list of the values of the nodes finally selected by the context
+
 .. data:: CDT_SELECT_LEAF_LIST_VALUE
+
+    |CDT_SELECT_VALUE_DOCSTRING|
+
 .. data:: CDT_SELECT_LEAF_MAP_VALUE
 
-    Return the list of the values of the nodes finally selected by the context
-
+    |CDT_SELECT_VALUE_DOCSTRING|
 
 .. data:: CDT_SELECT_LEAF_MAP_KEY
 
