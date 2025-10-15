@@ -215,35 +215,101 @@ class TestOperate(object):
         assert bins == expected
         self.as_connection.remove(key)
 
+    MAP_BIN_NAME = "map_bin"
+    LIST_BIN_NAME = "list_bin"
+    BINS_FOR_CDT_SELECT_TEST = {
+        MAP_BIN_NAME: {
+            "a": 1,
+            "ab": {
+            "bb": 12
+            },
+            "b": 2
+        },
+        LIST_BIN_NAME: [
+            {
+                "a": 1,
+                "ab": {
+                    "aa": 11,
+                    "ab": 13,
+                    "bb": 12
+                },
+                "b": 2
+            },
+            {
+                "c": 3,
+                "cd": {
+                    "cc": 9
+                },
+                "d": 4
+            }
+        ]
+    }
     @pytest.fixture
     def insert_record(self):
         self.key = ("test", "demo", 1)
-        self.map_bin_name = "map_bin"
-        bins = {
-            self.map_bin_name: {
-                "a": 1,
-                "ab": {
-                "bb": 12
-                },
-                "b": 2
-            }
-        }
-        self.as_connection.put(self.key, bins=bins)
+        self.as_connection.put(self.key, bins=self.BINS_FOR_CDT_SELECT_TEST)
         yield
         self.as_connection.remove(self.key)
 
-    def test_cdt_select(self, insert_record):
-        ops = [
-            operations.cdt_select(
-                name=self.map_bin_name,
-                ctx=[
-                    cdt_ctx.cdt_ctx_all(),
-                ]
+    @pytest.mark.parametrize(
+        # TODO: ids
+        "op, expected_bins",
+        [
+            (
+                operations.cdt_select(
+                    name=LIST_BIN_NAME,
+                    ctx=[
+                        cdt_ctx.cdt_ctx_all(),
+                    ]
+                ),
+                {
+                    LIST_BIN_NAME: BINS_FOR_CDT_SELECT_TEST[LIST_BIN_NAME]
+                }
+            ),
+            (
+                operations.cdt_select(
+                    name=MAP_BIN_NAME,
+                    ctx=[
+                        cdt_ctx.cdt_ctx_all(),
+                    ]
+                ),
+                {
+                    MAP_BIN_NAME: BINS_FOR_CDT_SELECT_TEST[MAP_BIN_NAME]
+                }
+            ),
+            (
+                operations.cdt_select(
+                    name=MAP_BIN_NAME,
+                    ctx=[
+                        cdt_ctx.cdt_ctx_all(),
+                        cdt_ctx.cdt_ctx_all()
+                    ]
+                ),
+                {
+                    LIST_BIN_NAME: [
+                        1,
+                        {
+                            "aa": 11,
+                            "ab": 13,
+                            "bb": 12
+                        },
+                        2,
+                        3,
+                        {
+                            "cc": 9
+                        },
+                        4
+                    ]
+                }
             )
         ]
+    )
+    def test_cdt_select(self, insert_record, op, expected_bins):
+        ops = [
+            op
+        ]
         _, _, bins = self.as_connection.operate(self.key, ops)
-        # TODO: list order
-        assert bins[self.map_bin_name] == list(bins[self.map_bin_name].values())
+        assert bins == expected_bins
 
     @pytest.mark.parametrize(
         "key, llist, expected",
