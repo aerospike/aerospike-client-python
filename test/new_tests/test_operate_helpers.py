@@ -204,15 +204,6 @@ class TestOperate(object):
                 {"write_bin": 0},
             ),
             (
-                ("test", "demo", "existing_key"),
-                [
-                    operations.cdt_select(
-                        name="dict",
-                        ctx=[
-                            cdt_ctx.cdt_ctx_all(),
-                        ]
-                    ),
-                ],
                 {"dict": [1]}
             )
         ]
@@ -226,6 +217,36 @@ class TestOperate(object):
 
         assert bins == expected
         self.as_connection.remove(key)
+
+    @pytest.fixture
+    def insert_record(self):
+        self.key = ("test", "demo", 1)
+        self.map_bin_name = "map_bin"
+        bins = {
+            self.map_bin_name: {
+                "a": 1,
+                "ab": {
+                "bb": 12
+                },
+                "b": 2
+            }
+        }
+        self.as_connection.put(self.key, bins=bins)
+        yield
+        self.as_connection.remove()
+
+    def test_cdt_select(self, insert_record):
+        ops = [
+            operations.cdt_select(
+                name="bin",
+                ctx=[
+                    cdt_ctx.cdt_ctx_all(),
+                ]
+            )
+        ]
+        _, _, bins = self.as_connection.operate(ops)
+        # TODO: list order
+        assert bins[self.map_bin_name] == list(bins[self.map_bin_name].values())
 
     @pytest.mark.parametrize(
         "key, llist, expected",
