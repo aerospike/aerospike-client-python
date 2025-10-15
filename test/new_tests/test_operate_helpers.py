@@ -312,6 +312,26 @@ class TestOperate(object):
         assert bins == expected_bins
 
     @pytest.mark.parametrize(
+        "op, context",
+        [
+            (
+                operations.cdt_select(
+                    name=MAP_BIN_NAME,
+                    ctx=[],
+                ),
+                # TODO: vague
+                pytest.raises(e.AerospikeError)
+            ),
+        ]
+    )
+    def test_cdt_select_negative_cases(self, insert_record, op, context):
+        ops = [
+            op
+        ]
+        with context:
+            self.as_connection.operate(self.key, ops)
+
+    @pytest.mark.parametrize(
         "key, llist, expected",
         [
             (
