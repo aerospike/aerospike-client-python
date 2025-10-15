@@ -1792,3 +1792,26 @@ Transaction State
 .. data:: TXN_STATE_COMMITTED
 
 .. data:: TXN_STATE_ABORTED
+
+.. _cdt_select_flags:
+
+CDT Select Flags
+----------------
+
+.. data:: CDT_SELECT_TREE
+
+    Return a tree from the root (bin) level to the bottom of the tree, with only non-filtered out nodes
+
+.. data:: CDT_SELECT_LEAF_LIST_VALUE
+.. data:: CDT_SELECT_LEAF_MAP_VALUE
+
+    Return the list of the values of the nodes finally selected by the context
+
+
+.. data:: CDT_SELECT_LEAF_MAP_KEY
+
+    For final selected nodes which are elements of maps, return the appropiate map key
+
+.. data:: CDT_SELECT_NO_FAIL
+
+    If the expression in the context hits an invalid type (eg selects as an integer when the value is a string), do not fail the operation, just ignore those elements.
