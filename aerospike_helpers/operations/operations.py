@@ -135,9 +135,7 @@ def touch(ttl: Optional[int] = None):
     return op_dict
 
 
-# TODO: default flags. flags not implemented
-# TODO: use constant for return value
-def cdt_select(name: str, ctx: list, flags: int):
+def cdt_select(name: str, ctx: list, flags: int = aerospike.CDT_SELECT_TREE):
     """
     Create CDT select operation.
 

@@ -531,7 +531,16 @@ static struct module_constant_name_to_value module_constants[] = {
     {"TXN_STATE_ABORTED", .value.integer = AS_TXN_STATE_ABORTED},
 
     {"JOB_SCAN", .is_str_value = true, .value.string = "scan"},
-    {"JOB_QUERY", .is_str_value = true, .value.string = "query"}};
+    {"JOB_QUERY", .is_str_value = true, .value.string = "query"},
+
+    {"CDT_SELECT_TREE", .value.integer = AS_CDT_SELECT_TREE},
+    {"CDT_SELECT_LEAF_LIST_VALUE",
+     .value.integer = AS_CDT_SELECT_LEAF_LIST_VALUE},
+    {"CDT_SELECT_LEAF_MAP_VALUE",
+     .value.integer = AS_CDT_SELECT_LEAF_MAP_VALUE},
+    {"CDT_SELECT_LEAF_MAP_KEY", .value.integer = AS_CDT_SELECT_LEAF_MAP_KEY},
+    {"CDT_SELECT_NO_FAIL", .value.integer = AS_CDT_SELECT_NO_FAIL},
+};
 
 struct submodule_name_to_creation_method {
     const char *name;
