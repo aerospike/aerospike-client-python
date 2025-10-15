@@ -315,3 +315,5 @@ typedef struct {
 } PyListenerData;
 
 void free_py_listener_data(PyListenerData *py_listener_data);
+
+#define POLICY_DICTIONARY_ADJECTIVE_FOR_ERROR_MESSAGE "policy"

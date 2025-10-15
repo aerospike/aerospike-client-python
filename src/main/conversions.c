@@ -2488,7 +2488,7 @@ as_status check_and_set_meta(PyObject *py_meta, uint32_t *ttl_ref,
             // TODO: assuming pyobject is a py_dict
             // TODO: function signature needs to take in string instead of bool for last param
             as_status retval = does_py_dict_contain_valid_keys(
-                err, py_meta, py_record_metadata_valid_keys, false);
+                err, py_meta, py_record_metadata_valid_keys, "record metadata");
             if (retval == -1) {
                 // This shouldn't happen, but if it did...
                 // TODO: wrong error message
