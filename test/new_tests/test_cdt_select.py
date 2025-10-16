@@ -4,6 +4,7 @@ import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.base import GE, VarBuiltIn
+from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
 
@@ -130,25 +131,42 @@ class TestCDTSelectOperations:
             20
         ).compile()
         ops = [
+            operations.cdt_select(
+                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all(),
+                    cdt_ctx.cdt_ctx_exp(expression=expr)
+                ]
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+
+        assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
+            self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
+        ]
+
+    def test_cdt_modify(self):
+        mod_expr = Sub(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.INTEGER), 5).compile()
+        ops = [
             operations.cdt_apply(
                 name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all(),
                     cdt_ctx.cdt_ctx_all()
                 ],
-                expr=expr
-            )
+                expr=mod_expr
+            ),
+            operations.cdt_select(
+                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all(),
+                    cdt_ctx.cdt_ctx_all()
+                ]
+            ),
         ]
         _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
-            self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
-        ]
+        assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]
 
-    def test_ctx_exp(self):
-        expr = 
-        ctx=[
-            cdt_ctx.cdt_ctx_exp(expression=expr)
-        ]
 
     @pytest.mark.parametrize(
         "flags", [
@@ -191,6 +209,3 @@ class TestCDTSelectOperations:
         ]
         with context:
             self.as_connection.operate(self.key, ops)
-
-    def test_cdt_apply_basic_functionality(self):
-        pass
