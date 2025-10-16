@@ -302,25 +302,17 @@ def cdt_ctx_map_key_create(key: any, order: int = 0) -> _cdt_ctx:
     return _cdt_ctx(id=aerospike.CDT_CTX_MAP_KEY_CREATE, value=key, extra_args={CDT_CTX_ORDER_KEY: order})
 
 def cdt_ctx_all() -> _cdt_ctx:
-    # TODO: vague docstring
     """
     The cdt_ctx object selects all.
-
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     return _cdt_ctx(id=aerospike._CDT_CTX_EXP)
 
 def cdt_ctx_exp(expression: "TypeExpression") -> _cdt_ctx:
-    # TODO: expr needs to be compiled?
     """
-    The cdt_ctx applies an expression to select ctx.
+    Select and filter using an expression.
 
     Args:
         expression: compiled aerospike expression
-
-    Returns:
-        :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
     # TODO: make the same as helper that takes in expr value from dict
     return _cdt_ctx(id=aerospike._CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_EXP_EXPR_KEY: expression})

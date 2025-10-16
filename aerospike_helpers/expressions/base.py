@@ -32,7 +32,7 @@ from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
-from aerospike_helpers.expressions.list import TypeCTX
+from aerospike_helpers.cdt_ctx import _cdt_ctx
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -1099,7 +1099,7 @@ class CDTSelect(_BaseExpr):
     # TODO: document to be certain constants?
     # TODO: result_type not needed?
     # TODO: why return type needed?
-    def __init__(self, ctx: TypeCTX, return_type: ResultType, flags: int, bin: str):
+    def __init__(self, ctx: _cdt_ctx, return_type: ResultType, flags: int, bin: str):
         """Args:
             `ctx`: TODO
 
@@ -1118,7 +1118,7 @@ class CDTApply(_BaseExpr):
 
     # TODO: document to be certain constants?
     # TODO: why return type needed? this returns the whole bin after being modified?
-    def __init__(self, ctx: TypeCTX, return_type: ResultType, flags: int, bin: str):
+    def __init__(self, ctx: _cdt_ctx, return_type: ResultType, flags: int, bin: str):
         """Args:
             `ctx`: TODO
 
