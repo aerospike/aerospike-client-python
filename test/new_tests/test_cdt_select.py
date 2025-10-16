@@ -6,6 +6,8 @@ from aerospike_helpers.expressions.base import GE, VarBuiltInMap
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
 
+
+@pytest.mark.usefixtures("as_connection")
 class TestCDTSelectOperations:
     MAP_BIN_NAME = "map_bin"
     LIST_BIN_NAME = "list_bin"
