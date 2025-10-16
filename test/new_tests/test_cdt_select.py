@@ -2,7 +2,8 @@ import pytest
 
 import aerospike
 from aerospike_helpers.operations import operations
-from aerospike_helpers.expressions.base import GE, VarBuiltInMap
+from aerospike_helpers.expressions.resources import ResultType
+from aerospike_helpers.expressions.base import GE, VarBuiltIn
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
 
@@ -125,7 +126,7 @@ class TestCDTSelectOperations:
 
     def test_cdt_select_with_filter(self):
         expr = GE(
-            VarBuiltInMap(aerospike.EXP_BUILTIN_VALUE),
+            VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.FLOAT),
             20
         ).compile()
         ops = [

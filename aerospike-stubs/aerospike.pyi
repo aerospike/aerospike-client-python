@@ -315,6 +315,9 @@ CDT_SELECT_LEAF_MAP_VALUE: Literal[1]
 CDT_SELECT_LEAF_MAP_KEY: Literal[2]
 CDT_SELECT_NO_FAIL: Literal[16]
 
+EXP_BUILTIN_KEY: Literal[0]
+EXP_BUILTIN_VALUE: Literal[1]
+EXP_BUILTIN_INDEX: Literal[2]
 
 @final
 class CDTInfinite:

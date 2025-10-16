@@ -1819,3 +1819,12 @@ CDT Select Flags
 .. data:: CDT_SELECT_NO_FAIL
 
     If the expression in the context hits an invalid type (eg selects as an integer when the value is a string), do not fail the operation, just ignore those elements.
+
+Expression Variable Built-in Types
+----------------------------------
+
+.. data:: EXP_BUILTIN_KEY
+
+.. data:: EXP_BUILTIN_VALUE
+
+.. data:: EXP_BUILTIN_INDEX

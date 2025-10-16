@@ -1071,14 +1071,15 @@ class Var(_BaseExpr):
         self._fixed = {_Keys.VALUE_KEY: var_name}
 
 
-class VarBuiltInMap(_BaseExpr):
+# TODO: forbid unsupported types
+class VarBuiltIn(_BaseExpr):
     """
     Retrieve expression value from a built-in variable.
     """
     _op = _ExprOp._AS_EXP_CODE_VAR_BUILTIN
 
     # TODO: document to be certain constants?
-    def __init__(self, var_id: int):
+    def __init__(self, var_id: int, var_type: ResultType):
         """Args:
             `var_id` (int): Variable id.
 
@@ -1086,4 +1087,4 @@ class VarBuiltInMap(_BaseExpr):
         """
         self._fixed = {_Keys.VALUE_KEY: var_id}
         # TODO: needs to be an expr?
-        self._children = (ResultType.MAP, var_id)
+        self._children = (var_id, var_type)
