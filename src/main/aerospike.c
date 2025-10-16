@@ -435,8 +435,11 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_CTX_MAP_KEY_CREATE", .value.integer = CDT_CTX_MAP_KEY_CREATE},
     {"_CDT_CTX_EXP", .value.integer = AS_CDT_CTX_EXP},
 
-    /* Expression variable built-in type */
-    // TODO: missing docs
+    /*
+        When doing a cdt select/apply operation, and applying an expression on each
+        iterated object, this lets us choose a specific value over each iterated
+        object.
+    */
     {"EXP_BUILTIN_KEY", .value.integer = AS_EXP_BUILTIN_KEY},
     {"EXP_BUILTIN_VALUE", .value.integer = AS_EXP_BUILTIN_VALUE},
     {"EXP_BUILTIN_INDEX", .value.integer = AS_EXP_BUILTIN_INDEX},

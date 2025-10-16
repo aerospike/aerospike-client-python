@@ -9,6 +9,7 @@ from aerospike import exception as e
 class TestCDTSelectOperations:
     MAP_BIN_NAME = "map_bin"
     LIST_BIN_NAME = "list_bin"
+    MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
     BINS_FOR_CDT_SELECT_TEST = {
         MAP_BIN_NAME: {
             "a": 1,
@@ -34,7 +35,21 @@ class TestCDTSelectOperations:
                 },
                 "d": 4
             }
-        ]
+        ],
+        MAP_OF_NESTED_MAPS_BIN_NAME: {
+            "Day1": {
+                "book": 14.990000,
+                "ferry": 5.000000,
+            },
+            "Day2": {
+                "food": 34.000000,
+                "game": 12.990000,
+            },
+            "Day3": {
+                "plants": 19.990000,
+                "stickers": 2.000000
+            }
+        }
     }
     @pytest.fixture(autouse=True)
     def insert_record(self):
@@ -47,7 +62,7 @@ class TestCDTSelectOperations:
         # TODO: ids
         "op, expected_bins",
         [
-            (
+            pytest.param(
                 operations.cdt_select(
                     name=LIST_BIN_NAME,
                     ctx=[
@@ -56,9 +71,10 @@ class TestCDTSelectOperations:
                 ),
                 {
                     LIST_BIN_NAME: BINS_FOR_CDT_SELECT_TEST[LIST_BIN_NAME]
-                }
+                },
+                id="select_all_children_once_in_list"
             ),
-            (
+            pytest.param(
                 operations.cdt_select(
                     name=MAP_BIN_NAME,
                     ctx=[
@@ -67,9 +83,10 @@ class TestCDTSelectOperations:
                 ),
                 {
                     MAP_BIN_NAME: BINS_FOR_CDT_SELECT_TEST[MAP_BIN_NAME]
-                }
+                },
+                id="select_all_children_once_in_map"
             ),
-            (
+            pytest.param(
                 operations.cdt_select(
                     name=LIST_BIN_NAME,
                     ctx=[
@@ -92,7 +109,8 @@ class TestCDTSelectOperations:
                         },
                         4
                     ]
-                }
+                },
+                id="select_all_children_twice_in_list"
             )
         ]
     )
@@ -144,18 +162,22 @@ class TestCDTSelectOperations:
         with context:
             self.as_connection.operate(self.key, ops)
 
-    def test_cdt_apply(self):
+    def test_cdt_apply_basic_functionality(self):
         expr = GE(
             VarBuiltInMap(aerospike.EXP_BUILTIN_VALUE),
-            15
+            20
         ).compile()
         ops = [
             operations.cdt_apply(
-                name=self.LIST_BIN_NAME,
+                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
                 ctx=[
                     cdt_ctx.cdt_ctx_all(),
+                    cdt_ctx.cdt_ctx_all()
                 ],
                 expr=expr
             )
         ]
-        self.as_connection.operate(self.key, ops)
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
+            self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
+        ]
