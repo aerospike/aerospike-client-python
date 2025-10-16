@@ -1077,6 +1077,7 @@ class VarBuiltInMap(_BaseExpr):
     """
     _op = _ExprOp._AS_EXP_CODE_VAR_BUILTIN
 
+    # TODO: document to be certain constants?
     def __init__(self, var_id: int):
         """Args:
             `var_id` (int): Variable id.
@@ -1084,3 +1085,5 @@ class VarBuiltInMap(_BaseExpr):
         :return: (value stored in variable)
         """
         self._fixed = {_Keys.VALUE_KEY: var_id}
+        # TODO: needs to be an expr?
+        self._children = (ResultType.MAP, var_id)

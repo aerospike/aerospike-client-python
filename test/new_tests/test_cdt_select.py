@@ -162,6 +162,7 @@ class TestCDTSelectOperations:
         _, _, bins = self.as_connection.operate(self.key, ops)
         assert bins == expected_bins
 
+    # TODO: negative case where cdt_select gets a var type not expected
     @pytest.mark.parametrize(
         "op, context",
         [

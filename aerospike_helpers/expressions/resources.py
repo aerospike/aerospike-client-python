@@ -114,6 +114,7 @@ class ReturnType:
     MAP_RETURN_INVERTED = 0x10000
 
 
+# These enum constants must match the values for C client's as_exp_type
 class ResultType:
     """
     Flags used to indicate expression value_type.
