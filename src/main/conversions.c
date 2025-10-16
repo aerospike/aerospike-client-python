@@ -39,6 +39,7 @@
 #include <aerospike/as_msgpack_ext.h>
 #include <aerospike/as_cluster.h>
 
+#include "pythoncapi_compat.h"
 #include "conversions.h"
 #include "geo.h"
 #include "policy.h"
@@ -2746,9 +2747,9 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
                       PyObject *op_dict, bool *ctx_in_use,
                       as_static_pool *static_pool, int serializer_type)
 {
-    PyObject *py_ctx = PyDict_GetItemString(op_dict, CTX_KEY);
+    PyObject *py_ctx_list = PyDict_GetItemString(op_dict, CTX_KEY);
 
-    if (!py_ctx) {
+    if (!py_ctx_list) {
         return AEROSPIKE_OK;
     }
 
@@ -2760,20 +2761,20 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
     PyObject *py_value = NULL;
     PyObject *py_extra_args = NULL;
 
-    if (!PyList_Check(py_ctx)) {
+    if (!PyList_Check(py_ctx_list)) {
         status = as_error_update(err, AEROSPIKE_ERR_PARAM,
                                  "Failed to convert %s", CTX_KEY);
         goto CLEANUP4;
     }
 
-    Py_ssize_t py_list_size = PyList_Size(py_ctx);
+    Py_ssize_t py_list_size = PyList_Size(py_ctx_list);
     // TODO: refactor *_destroy() method...
     as_cdt_ctx_init(cdt_ctx, (int)py_list_size);
 
     for (int i = 0; i < py_list_size; i++) {
-        PyObject *py_val = PyList_GetItem(py_ctx, (Py_ssize_t)i);
+        PyObject *py_cdt_ctx = PyList_GetItem(py_ctx_list, (Py_ssize_t)i);
 
-        py_id = PyObject_GetAttrString(py_val, "id");
+        py_id = PyObject_GetAttrString(py_cdt_ctx, "id");
         if (PyErr_Occurred()) {
             as_cdt_ctx_destroy(cdt_ctx);
             status = as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2781,7 +2782,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             goto CLEANUP4;
         }
 
-        py_value = PyObject_GetAttrString(py_val, "value");
+        py_value = PyObject_GetAttrString(py_cdt_ctx, "value");
         if (PyErr_Occurred()) {
             as_cdt_ctx_destroy(cdt_ctx);
             status = as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2789,7 +2790,7 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             goto CLEANUP3;
         }
 
-        py_extra_args = PyObject_GetAttrString(py_val, "extra_args");
+        py_extra_args = PyObject_GetAttrString(py_cdt_ctx, "extra_args");
         if (PyErr_Occurred()) {
             as_cdt_ctx_destroy(cdt_ctx);
             status = as_error_update(err, AEROSPIKE_ERR_PARAM,
@@ -2847,8 +2848,30 @@ as_status get_cdt_ctx(AerospikeClient *self, as_error *err, as_cdt_ctx *cdt_ctx,
             }
         }
         else if (item_type == AS_CDT_CTX_EXP) {
-            // TODO: needs other api with exp
-            as_cdt_ctx_add_all(cdt_ctx);
+            if (Py_IsNone(py_extra_args)) {
+                as_cdt_ctx_add_all(cdt_ctx);
+            }
+            else {
+                // TODO: replace with aerospike._CDT_CTX_EXP_EXPR_KEY
+                PyObject *py_expr =
+                    PyObject_GetAttrString(py_extra_args, AS_EXPR_KEY);
+                if (!py_expr) {
+                    status = as_error_update(err, AEROSPIKE_ERR_PARAM,
+                                             "Invalid cdt_ctx_exp");
+                    goto CLEANUP1;
+                }
+
+                as_exp *expr = NULL;
+                as_exp_new_from_pyobject(self, py_expr, &expr, err, false);
+                Py_DECREF(py_expr);
+                if (err->code != AEROSPIKE_OK) {
+                    goto CLEANUP1;
+                }
+
+                // This C client call memcpy's the expr's contents
+                as_cdt_ctx_add_exp(cdt_ctx, expr);
+                as_exp_destroy(expr);
+            }
         }
         else {
             if (as_val_new_from_pyobject(self, err, py_value, &val, static_pool,

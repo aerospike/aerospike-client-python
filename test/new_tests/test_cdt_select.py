@@ -121,6 +121,26 @@ class TestCDTSelectOperations:
         _, _, bins = self.as_connection.operate(self.key, ops)
         assert bins == expected_bins
 
+    def test_cdt_select_with_filter(self):
+        expr = GE(
+            VarBuiltInMap(aerospike.EXP_BUILTIN_VALUE),
+            20
+        ).compile()
+        ops = [
+            operations.cdt_apply(
+                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all(),
+                    cdt_ctx.cdt_ctx_all()
+                ],
+                expr=expr
+            )
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+        assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
+            self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
+        ]
+
     @pytest.mark.parametrize(
         "flags", [
             aerospike.CDT_SELECT_TREE,
@@ -163,21 +183,4 @@ class TestCDTSelectOperations:
             self.as_connection.operate(self.key, ops)
 
     def test_cdt_apply_basic_functionality(self):
-        expr = GE(
-            VarBuiltInMap(aerospike.EXP_BUILTIN_VALUE),
-            20
-        ).compile()
-        ops = [
-            operations.cdt_apply(
-                name=self.MAP_OF_NESTED_MAPS_BIN_NAME,
-                ctx=[
-                    cdt_ctx.cdt_ctx_all(),
-                    cdt_ctx.cdt_ctx_all()
-                ],
-                expr=expr
-            )
-        ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
-            self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
-        ]
+        pass

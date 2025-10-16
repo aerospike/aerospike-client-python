@@ -322,4 +322,5 @@ def cdt_ctx_exp(expression: "TypeExpression") -> _cdt_ctx:
     Returns:
         :class:`~aerospike_helpers.cdt_ctx._cdt_ctx`
     """
-    return _cdt_ctx(id=aerospike._CDT_CTX_EXP)
+    # TODO: make the same as helper that takes in expr value from dict
+    return _cdt_ctx(id=aerospike._CDT_CTX_EXP, extra_args={aerospike._CDT_CTX_EXP_EXPR_KEY: expression})

@@ -589,7 +589,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
             operation_succeeded =
                 as_operations_cdt_select(ops, bin, ctx_ref, flags);
         }
-        else {
+        else if (operation == AS_OPERATOR_CDT_MODIFY) {
             PyObject *py_expr = NULL;
             int retval =
                 PyDict_GetItemStringRef(py_operation_dict, "expr", &py_expr);
