@@ -144,6 +144,12 @@ class TestCDTSelectOperations:
             self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
         ]
 
+    def test_ctx_exp(self):
+        expr = 
+        ctx=[
+            cdt_ctx.cdt_ctx_exp(expression=expr)
+        ]
+
     @pytest.mark.parametrize(
         "flags", [
             aerospike.CDT_SELECT_TREE,

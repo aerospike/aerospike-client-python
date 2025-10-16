@@ -454,6 +454,7 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
     return AEROSPIKE_OK;
 }
 
+// TODO: reuse helper from conversions.c
 /*
 * get_exp_val_from_pyval
 * Converts a python value into an expression value.
@@ -640,8 +641,11 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
 
             APPEND_ARRAY(0, BIN_EXPR());
             break;
-        case VAL:
         case _AS_EXP_CODE_VAR_BUILTIN:
+            // TODO: Not done
+            APPEND_ARRAY(0, as_exp_var_builtin_float(0));
+            break;
+        case VAL:
         case _AS_EXP_CODE_AS_VAL:;
             as_exp_entry tmp_expr;
             if (get_exp_val_from_pyval(

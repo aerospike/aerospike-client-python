@@ -32,6 +32,7 @@ from aerospike_helpers.expressions.resources import _BaseExpr
 from aerospike_helpers.expressions.resources import _ExprOp
 from aerospike_helpers.expressions.resources import ResultType
 from aerospike_helpers.expressions.resources import _Keys
+from aerospike_helpers.expressions.list import TypeCTX
 
 TypeComparisonArg = Union[_BaseExpr, Any]
 TypeGeo = Union[_BaseExpr, aerospike.GeoJSON]
@@ -1088,3 +1089,41 @@ class VarBuiltIn(_BaseExpr):
         self._fixed = {_Keys.VALUE_KEY: var_id}
         # TODO: needs to be an expr?
         self._children = (var_id, var_type)
+
+
+class CDTSelect(_BaseExpr):
+    """
+    """
+    _op = _ExprOp._AS_EXP_CODE_CALL
+
+    # TODO: document to be certain constants?
+    # TODO: result_type not needed?
+    # TODO: why return type needed?
+    def __init__(self, ctx: TypeCTX, return_type: ResultType, flags: int, bin: str):
+        """Args:
+            `ctx`: TODO
+
+        :return: TODO
+        """
+        self._fixed = {_Keys.BIN_KEY: bin}
+        # TODO: needs to be an expr?
+        self._children = (flags)
+
+
+class CDTApply(_BaseExpr):
+    """
+    asdf
+    """
+    _op = _ExprOp._AS_EXP_CODE_CALL
+
+    # TODO: document to be certain constants?
+    # TODO: why return type needed? this returns the whole bin after being modified?
+    def __init__(self, ctx: TypeCTX, return_type: ResultType, flags: int, bin: str):
+        """Args:
+            `ctx`: TODO
+
+        :return: TODO
+        """
+        self._fixed = {_Keys.BIN_KEY: bin}
+        # TODO: needs to be an expr?
+        self._children = (flags)
