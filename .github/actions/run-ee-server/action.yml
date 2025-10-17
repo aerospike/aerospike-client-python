@@ -59,6 +59,7 @@ runs:
   - name: Check if we already have a custom image built for this base image
     id: check-for-custom-image
     run: |
+      set -x
       docker pull $BASE_IMAGE_FULL_NAME
       # If this fails, build the custom image. We don't have a custom image to begin with for this base image tag
       docker pull $CUSTOM_IMAGE_FULL_NAME
