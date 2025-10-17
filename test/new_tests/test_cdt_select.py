@@ -13,6 +13,16 @@ from .test_base_class import TestBaseClass
 
 @pytest.mark.usefixtures("as_connection")
 class TestCDTSelectOperations:
+
+    @pytest.fixture(scope="class")
+    def setup_class(cls, as_connection):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
+            cls.expected_context_for_pos_tests = nullcontext()
+        else:
+            # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+            cls.expected_context_for_pos_tests = pytest.raises(e.ServerError)
+
+
     MAP_BIN_NAME = "map_bin"
     LIST_BIN_NAME = "list_bin"
     MAP_OF_NESTED_MAPS_BIN_NAME = "map_of_maps_bin"
@@ -150,16 +160,10 @@ class TestCDTSelectOperations:
         ]
     )
     def test_cdt_select_basic_functionality(self, op, expected_bins):
-        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
-            expected_context = nullcontext()
-        else:
-            # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
-            expected_context = pytest.raises(e.ServerError)
-
         ops = [
             op
         ]
-        with expected_context:
+        with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
             assert bins == expected_bins
 
@@ -177,11 +181,12 @@ class TestCDTSelectOperations:
                 ]
             )
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
 
-        assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
-            self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
-        ]
+            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [
+                self.BINS_FOR_CDT_SELECT_TEST[self.MAP_OF_NESTED_MAPS_BIN_NAME]["Day2"]["food"]
+            ]
 
     def test_cdt_modify(self):
         mod_expr = Sub(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.INTEGER), 5).compile()
@@ -202,8 +207,10 @@ class TestCDTSelectOperations:
                 ]
             ),
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+
+            assert bins[self.MAP_OF_NESTED_MAPS_BIN_NAME] == [14.990000, 5.0000, 34.000000, 12.990000, 19.990000, 2.000000]
 
 
     @pytest.mark.parametrize(
@@ -224,8 +231,9 @@ class TestCDTSelectOperations:
                 flags=flags
             )
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins == expected_bins
+        with self.expected_context_for_pos_tests:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins == expected_bins
 
     # TODO: set default for BUILTIN
 
