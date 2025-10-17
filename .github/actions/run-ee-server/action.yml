@@ -24,6 +24,10 @@ inputs:
     required: true
     description: Specify Docker tag
     default: 'latest'
+  GITHUB_TOKEN:
+    required: true
+    description: GITHUB_TOKEN
+  # Test config setup
   where-is-client-connecting-from:
     required: false
     description: 'docker-host, separate-docker-container, "remote-connection" via DOCKER_HOST'
@@ -76,7 +80,7 @@ runs:
     with:
       registry: ghcr.io
       username: ${{ github.actor }}
-      password: ${{ secrets.GITHUB_TOKEN }}
+      password: ${{ inputs.GITHUB_TOKEN }}
 
   # QE images are not multi-platform and only support a single platform.
   - name: Allow building images from different platforms other than the native one

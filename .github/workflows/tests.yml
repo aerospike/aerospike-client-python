@@ -284,6 +284,7 @@ jobs:
         server-tag: ${{ env.SERVER_TAG }}
         registry-username: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_USERNAME || secrets.QE_DOCKER_REGISTRY_USERNAME }}
         registry-password: ${{ env.REGISTRY_NAME == 'docker.io' && secrets.DOCKER_HUB_BOT_PW || secrets.QE_DOCKER_REGISTRY_PASSWORD }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - if: ${{ matrix.type == 'dont_validate_keys' }}
       run: crudini --existing=param --set config.conf input-validation validate_keys false
