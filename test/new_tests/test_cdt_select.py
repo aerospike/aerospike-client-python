@@ -14,7 +14,7 @@ from .test_base_class import TestBaseClass
 @pytest.mark.usefixtures("as_connection")
 class TestCDTSelectOperations:
 
-    @pytest.fixture(scope="class")
+    @pytest.fixture(scope="class", autouse=True)
     def setup_class(cls, as_connection):
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
             cls.expected_context_for_pos_tests = nullcontext()
