@@ -545,7 +545,7 @@ static struct module_constant_name_to_value module_constants[] = {
     {"CDT_SELECT_NO_FAIL", .value.integer = AS_CDT_SELECT_NO_FAIL},
 
     // TODO: move all internal constants used by aerospike_helpers to this loc
-    {"_CDT_CTX_EXP_EXPR_KEY", .value.string = "expr"}};
+    {"_CDT_CTX_EXP_EXPR_KEY", .is_str_value = true, .value.string = "expr"}};
 
 struct submodule_name_to_creation_method {
     const char *name;
