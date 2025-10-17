@@ -64,6 +64,8 @@ class TestCDTSelectOperations:
         yield
         self.as_connection.remove(self.key)
 
+    EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.STRING), "a").compile()
+
     @pytest.mark.parametrize(
         # TODO: ids
         "op, expected_bins",
@@ -117,6 +119,33 @@ class TestCDTSelectOperations:
                     ]
                 },
                 id="select_all_children_twice_in_list"
+            ),
+            pytest.param(
+                operations.cdt_select(
+                    name=MAP_BIN_NAME,
+                    ctx=[
+                        cdt_ctx.cdt_ctx_all(),
+                        cdt_ctx.cdt_ctx_exp(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
+                    ],
+                    flags=aerospike.CDT_SELECT_NO_FAIL
+                ),
+                {
+                    LIST_BIN_NAME: [
+                        1,
+                        {
+                            "aa": 11,
+                            "ab": 13,
+                            "bb": 12
+                        },
+                        2,
+                        3,
+                        {
+                            "cc": 9
+                        },
+                        4
+                    ]
+                },
+                id="cdt_select_no_fail"
             )
         ]
     )
@@ -124,8 +153,8 @@ class TestCDTSelectOperations:
         if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
             expected_context = nullcontext()
         else:
-            # TODO: expected behavior?
-            expected_context = pytest.raises(e.InvalidRequest)
+            # InvalidRequest, BinIncompatibleTypes are exceptions that have been raised
+            expected_context = pytest.raises(e.ServerError)
 
         ops = [
             op
@@ -199,7 +228,6 @@ class TestCDTSelectOperations:
         assert bins == expected_bins
 
     # TODO: set default for BUILTIN
-    EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.STRING), "a").compile()
 
     # TODO: negative case where cdt_select gets a var type not expected
     @pytest.mark.parametrize(
@@ -233,18 +261,3 @@ class TestCDTSelectOperations:
         ]
         with context:
             self.as_connection.operate(self.key, ops)
-
-    def test_cdt_select_no_fail(self):
-        ops = [
-            operations.cdt_select(
-                name=self.MAP_BIN_NAME,
-                ctx=[
-                    cdt_ctx.cdt_ctx_all(),
-                    cdt_ctx.cdt_ctx_exp(expression=self.EXPR_ON_DIFFERENT_ITERATED_TYPE)
-                ],
-                flags=aerospike.CDT_SELECT_NO_FAIL
-            ),
-        ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-
-        assert bins[self.MAP_BIN_NAME] == []
