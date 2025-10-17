@@ -4,23 +4,23 @@ description: 'Run EE server. Returns once server is ready. Only tested on Linux 
 # since it's using the default admin / admin credentials
 inputs:
   # All inputs in composite actions are strings
-  registry-name:
+  base-registry-name:
     description: Registry name
     required: false
     default: docker.io
-  registry-username:
+  base-image-registry-username:
     description: Required for using release candidates
     required: false
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
-  registry-password:
+  base-image-registry-password:
     description: Required for using release candidates
     required: false
-  image-name:
+  base-image-name:
     required: false
     description: aerospike/aerospike-server-enterprise
     default: 'aerospike/aerospike-server-enterprise'
-  server-tag:
+  base-server-tag:
     required: true
     description: Specify Docker tag
     default: 'latest'
@@ -42,22 +42,40 @@ runs:
     # We can still pull public images while logged in, so just do this all the time to make things simple
     uses: docker/login-action@v3
     with:
-      registry: ${{ inputs.registry-name }}
-      username: ${{ inputs.registry-username }}
-      password: ${{ inputs.registry-password }}
+      registry: ${{ inputs.base-registry-name }}
+      username: ${{ inputs.base-image-registry-username }}
+      password: ${{ inputs.base-image-registry-password }}
 
-  - run: echo IMAGE_FULL_NAME=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
+  - run: echo BASE_IMAGE_FULL_NAME=${{ inputs.base-registry-name }}/${{ inputs.base-image-name }}:${{ inputs.base-server-tag }} >> $GITHUB_ENV
     shell: bash
 
-  - run: echo NEW_IMAGE_FULL_NAME=${{ env.IMAGE_FULL_NAME }}-python-client-testing >> $GITHUB_ENV
+  - run: echo CUSTOM_IMAGE_FULL_NAME=ghcr.io/${{ env.BASE_IMAGE_FULL_NAME }} >> $GITHUB_ENV
+    shell: bash
+
+  - name: Check if we already have a custom image built for this base image
+    id: check-for-custom-image
+    run: |
+      docker pull $BASE_IMAGE_FULL_NAME
+      # If this fails, build the custom image. We don't have a custom image to begin with for this base image tag
+      docker pull $CUSTOM_IMAGE_FULL_NAME
+
+      # TODO: make sure base image layers dont get squeezed together in the custom image
+      get_last_layer_digest_for_this_arch () {
+        # Assuming `docker image inspect` returns the image for this runner's specific CPU arch
+        echo $(docker image inspect -f json $1 | jq '.[0].RootFS.Layers[-1]' -r | sed 's/.*sha256://')
+      }
+      BASE_IMAGE_DIGEST=$(get_last_layer_digest_for_this_arch $BASE_IMAGE_FULL_NAME)
+      CUSTOM_IMAGE_LAYER_DIGESTS=$(docker image inspect -f json $1 | jq '.[0].RootFS.Layers -r)
+      test "$(grep --count <(echo $CUSTOM_IMAGE_LAYER_DIGESTS))" == "1"
     shell: bash
 
   # QE images are not multi-platform and only support a single platform.
   - name: Allow building images from different platforms other than the native one
+    if: ${{ steps.check-for-custom-image.outcome == 'failure' }}
     uses: docker/setup-qemu-action@v3
 
   # macOS Github runners and Windows self-hosted runners don't have buildx installed by default
-  - if: ${{ runner.os == 'Windows' || runner.os == 'macOS' }}
+  - if: ${{ steps.check-for-custom-image.outcome == 'failure' && (runner.os == 'Windows' || runner.os == 'macOS') }}
     uses: docker/setup-buildx-action@v3
 
   - run: echo CA_CERT_FILE_NAME="ca.cer" >> $GITHUB_ENV
@@ -66,16 +84,16 @@ runs:
   - run: echo TLS_PORT="4333" >> $GITHUB_ENV
     shell: bash
 
-  - name: Check if a Docker image was already built for this base image
-    id: check-if-image-already-built
-    # We assume a non zero error code means the image does not exist (or at least it cannot be reached).
-    run: |
-      skopeo inspect --override-os linux $NEW_IMAGE_FULL_NAME
-    shell: bash
-    continue-on-error: true
+  # - name: Check if a Docker image was already built for this base image
+  #   id: check-if-image-already-built
+  #   # We assume a non zero error code means the image does not exist (or at least it cannot be reached).
+  #   run: |
+  #     skopeo inspect --override-os linux $NEW_IMAGE_FULL_NAME
+  #   shell: bash
+  #   continue-on-error: true
 
   - name: Build Aerospike server Docker image for testing
-    if: ${{ steps.check-if-image-already-built.outcome == 'failure' }}
+    if: ${{ steps.check-for-custom-image.outcome == 'failure' }}
     # We enable TLS standard authentication to verify that the OpenSSL library bundled with the wheel works
     # You can manually verify this by enabling debug logging in the client and checking that the server certificate was verified
     uses: docker/build-push-action@v6
@@ -83,13 +101,14 @@ runs:
       # Don't want to use default Git context or else it will clone the whole Python client repo again
       context: .github/workflows/docker-build-context
       build-args: |
-        SERVER_IMAGE=${{ env.IMAGE_FULL_NAME }}
+        SERVER_IMAGE=${{ env.BASE_IMAGE_FULL_NAME }}
         TLS_PORT=${{ env.TLS_PORT }}
-      tags: ${{ env.NEW_IMAGE_FULL_NAME }}
+      tags: ${{ env.CUSTOM_IMAGE_FULL_NAME }}
       # setup-buildx-action configures Docker to use the docker-container build driver
       # This driver doesn't publish an image locally by default
       # so we have to manually enable it
       load: true
+      push: true
 
   - run: echo SERVER_CONTAINER_NAME="aerospike" >> $GITHUB_ENV
     shell: bash
