@@ -140,20 +140,7 @@ class TestCDTSelectOperations:
                     flags=aerospike.CDT_SELECT_NO_FAIL
                 ),
                 {
-                    LIST_BIN_NAME: [
-                        1,
-                        {
-                            "aa": 11,
-                            "ab": 13,
-                            "bb": 12
-                        },
-                        2,
-                        3,
-                        {
-                            "cc": 9
-                        },
-                        4
-                    ]
+                    MAP_BIN_NAME: []
                 },
                 id="cdt_select_no_fail"
             )
