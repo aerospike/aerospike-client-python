@@ -7,6 +7,8 @@ from aerospike_helpers.expressions.base import GE, VarBuiltIn
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
+from contextlib import nullcontext
+from .test_base_class import TestBaseClass
 
 
 @pytest.mark.usefixtures("as_connection")
@@ -119,11 +121,18 @@ class TestCDTSelectOperations:
         ]
     )
     def test_cdt_select_basic_functionality(self, op, expected_bins):
+        if (TestBaseClass.major_ver, TestBaseClass.minor_ver, TestBaseClass.patch_ver) >= (8, 1, 1):
+            expected_context = nullcontext()
+        else:
+            # TODO: expected behavior?
+            expected_context = pytest.raises(e.InvalidRequest)
+
         ops = [
             op
         ]
-        _, _, bins = self.as_connection.operate(self.key, ops)
-        assert bins == expected_bins
+        with expected_context:
+            _, _, bins = self.as_connection.operate(self.key, ops)
+            assert bins == expected_bins
 
     def test_cdt_select_with_filter(self):
         expr = GE(
