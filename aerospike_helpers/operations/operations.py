@@ -146,7 +146,7 @@ def cdt_select(name: str, ctx: list, flags: int = aerospike.CDT_SELECT_TREE):
     return op_dict
 
 
-def cdt_apply(name: str, ctx: list, expr: TypeExpression, flags: int):
+def cdt_apply(name: str, ctx: list, expr: TypeExpression, flags: int = aerospike.CDT_SELECT_TREE):
     """
     Create CDT apply operation.
 
