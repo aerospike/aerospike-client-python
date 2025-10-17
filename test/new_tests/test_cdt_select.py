@@ -3,7 +3,7 @@ import pytest
 import aerospike
 from aerospike_helpers.operations import operations
 from aerospike_helpers.expressions.resources import ResultType
-from aerospike_helpers.expressions.base import GE, VarBuiltIn
+from aerospike_helpers.expressions.base import GE, VarBuiltIn, Eq
 from aerospike_helpers.expressions.arithmetic import Sub
 from aerospike_helpers import cdt_ctx
 from aerospike import exception as e
@@ -198,18 +198,33 @@ class TestCDTSelectOperations:
         _, _, bins = self.as_connection.operate(self.key, ops)
         assert bins == expected_bins
 
+    # TODO: set default for BUILTIN
+    EXPR_ON_DIFFERENT_ITERATED_TYPE = Eq(VarBuiltIn(aerospike.EXP_BUILTIN_VALUE, ResultType.STRING), "a").compile()
+
     # TODO: negative case where cdt_select gets a var type not expected
     @pytest.mark.parametrize(
         "op, context",
         [
-            (
+            pytest.param(
                 operations.cdt_select(
                     name=MAP_BIN_NAME,
                     ctx=[],
                 ),
                 # TODO: vague
-                pytest.raises(e.AerospikeError)
+                pytest.raises(e.AerospikeError),
+                id="empty_ctx"
             ),
+            pytest.param(
+                operations.cdt_select(
+                    name=MAP_BIN_NAME,
+                    ctx=[
+                        cdt_ctx.cdt_ctx_all(),
+                        cdt_ctx.cdt_ctx_exp(expression=EXPR_ON_DIFFERENT_ITERATED_TYPE)
+                    ]
+                ),
+                pytest.raises(e.AerospikeError),
+                id="iterate_on_unexpected_type"
+            )
         ]
     )
     def test_cdt_select_negative_cases(self, op, context):
@@ -218,3 +233,6 @@ class TestCDTSelectOperations:
         ]
         with context:
             self.as_connection.operate(self.key, ops)
+
+    def test_cdt_select_no_fail(self):
+        pass
