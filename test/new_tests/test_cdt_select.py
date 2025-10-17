@@ -235,4 +235,16 @@ class TestCDTSelectOperations:
             self.as_connection.operate(self.key, ops)
 
     def test_cdt_select_no_fail(self):
-        pass
+        ops = [
+            operations.cdt_select(
+                name=self.MAP_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all(),
+                    cdt_ctx.cdt_ctx_exp(expression=self.EXPR_ON_DIFFERENT_ITERATED_TYPE)
+                ],
+                flags=aerospike.CDT_SELECT_NO_FAIL
+            ),
+        ]
+        _, _, bins = self.as_connection.operate(self.key, ops)
+
+        assert bins[self.MAP_BIN_NAME] == []
