@@ -67,7 +67,16 @@ runs:
       BASE_IMAGE_DIGEST=$(get_last_layer_digest_for_this_arch $BASE_IMAGE_FULL_NAME)
       CUSTOM_IMAGE_LAYER_DIGESTS=$(docker image inspect -f json $1 | jq '.[0].RootFS.Layers -r)
       test "$(grep --count <(echo $CUSTOM_IMAGE_LAYER_DIGESTS))" == "1"
+    continue-on-error: true
     shell: bash
+
+  - name: We need to rebuild image
+    if: ${{ steps.check-for-custom-image.outcome == 'failure' }}
+    uses: docker/login-action@v3
+    with:
+      registry: ghcr.io
+      username: ${{ github.actor }}
+      password: ${{ secrets.GITHUB_TOKEN }}
 
   # QE images are not multi-platform and only support a single platform.
   - name: Allow building images from different platforms other than the native one
