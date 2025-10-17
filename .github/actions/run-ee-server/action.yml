@@ -46,11 +46,11 @@ runs:
     # We can still pull public images while logged in, so just do this all the time to make things simple
     uses: docker/login-action@v3
     with:
-      registry: ${{ inputs.base-registry-name }}
-      username: ${{ inputs.base-image-registry-username }}
-      password: ${{ inputs.base-image-registry-password }}
+      registry: ${{ inputs.registry-name }}
+      username: ${{ inputs.image-registry-username }}
+      password: ${{ inputs.image-registry-password }}
 
-  - run: echo BASE_IMAGE_FULL_NAME=${{ inputs.base-registry-name }}/${{ inputs.base-image-name }}:${{ inputs.base-server-tag }} >> $GITHUB_ENV
+  - run: echo BASE_IMAGE_FULL_NAME=${{ inputs.registry-name }}/${{ inputs.image-name }}:${{ inputs.server-tag }} >> $GITHUB_ENV
     shell: bash
 
   - run: echo CUSTOM_IMAGE_FULL_NAME=ghcr.io/${{ env.BASE_IMAGE_FULL_NAME }} >> $GITHUB_ENV
