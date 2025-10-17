@@ -4,23 +4,23 @@ description: 'Run EE server. Returns once server is ready. Only tested on Linux 
 # since it's using the default admin / admin credentials
 inputs:
   # All inputs in composite actions are strings
-  base-registry-name:
+  registry-name:
     description: Registry name
     required: false
     default: docker.io
-  base-image-registry-username:
+  registry-username:
     description: Required for using release candidates
     required: false
   # Github Composite Actions can't access secrets
   # so we need to pass them in as inputs
-  base-image-registry-password:
+  registry-password:
     description: Required for using release candidates
     required: false
-  base-image-name:
+  image-name:
     required: false
     description: aerospike/aerospike-server-enterprise
     default: 'aerospike/aerospike-server-enterprise'
-  base-server-tag:
+  server-tag:
     required: true
     description: Specify Docker tag
     default: 'latest'
