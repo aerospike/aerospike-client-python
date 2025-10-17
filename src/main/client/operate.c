@@ -602,8 +602,9 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 as_error_update(err, AEROSPIKE_ERR_CLIENT, "Internal error");
                 goto CLEANUP;
             }
+
             as_status status =
-                as_exp_new_from_pyobject(self, value, &mod_exp, err, false);
+                as_exp_new_from_pyobject(self, py_expr, &mod_exp, err, false);
             if (status != AEROSPIKE_OK) {
                 goto CLEANUP;
             }
