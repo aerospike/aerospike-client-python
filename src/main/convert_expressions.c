@@ -35,76 +35,77 @@
 #include "key_ordered_dict.h"
 
 // EXPR OPS
-enum expr_ops {
-    UNKNOWN = 0,
-    EQ = 1,
-    NE = 2,
-    GT = 3,
-    GE = 4,
-    LT = 5,
-    LE = 6,
-    CMP_REGEX = 7,
-    CMP_GEO = 8,
+// enum expr_ops {
+//     UNKNOWN = 0,
+//     EQ = 1,
+//     NE = 2,
+//     GT = 3,
+//     GE = 4,
+//     LT = 5,
+//     LE = 6,
+//     CMP_REGEX = 7,
+//     CMP_GEO = 8,
 
-    AND = 16,
-    OR = 17,
-    NOT = 18,
-    EXCLUSIVE = 19,
+//     AND = 16,
+//     OR = 17,
+//     NOT = 18,
+//     EXCLUSIVE = 19,
 
-    ADD = 20,
-    SUB = 21,
-    MUL = 22,
-    DIV = 23,
-    POW = 24,
-    LOG = 25,
-    MOD = 26,
-    ABS = 27,
-    FLOOR = 28,
-    CEIL = 29,
+//     ADD = 20,
+//     SUB = 21,
+//     MUL = 22,
+//     DIV = 23,
+//     POW = 24,
+//     LOG = 25,
+//     MOD = 26,
+//     ABS = 27,
+//     FLOOR = 28,
+//     CEIL = 29,
 
-    TO_INT = 30,
-    TO_FLOAT = 31,
+//     TO_INT = 30,
+//     TO_FLOAT = 31,
 
-    INT_AND = 32,
-    INT_OR = 33,
-    INT_XOR = 34,
-    INT_NOT = 35,
-    INT_LSHIFT = 36,
-    INT_RSHIFT = 37,
-    INT_ARSHIFT = 38,
-    INT_COUNT = 39,
-    INT_LSCAN = 40,
-    INT_RSCAN = 41,
+//     INT_AND = 32,
+//     INT_OR = 33,
+//     INT_XOR = 34,
+//     INT_NOT = 35,
+//     INT_LSHIFT = 36,
+//     INT_RSHIFT = 37,
+//     INT_ARSHIFT = 38,
+//     INT_COUNT = 39,
+//     INT_LSCAN = 40,
+//     INT_RSCAN = 41,
 
-    MIN = 50,
-    MAX = 51,
+//     MIN = 50,
+//     MAX = 51,
 
-    META_DIGEST_MOD = 64,
-    META_DEVICE_SIZE = 65,
-    META_LAST_UPDATE_TIME = 66,
-    META_VOID_TIME = 67,
-    META_TTL = 68,
-    META_SET_NAME = 69,
-    META_KEY_EXISTS = 70,
-    META_SINCE_UPDATE_TIME = 71,
-    META_IS_TOMBSTONE = 72,
-    META_MEMORY_SIZE = 73,
-    META_RECORD_SIZE = 74,
+//     META_DIGEST_MOD = 64,
+//     META_DEVICE_SIZE = 65,
+//     META_LAST_UPDATE_TIME = 66,
+//     META_VOID_TIME = 67,
+//     META_TTL = 68,
+//     META_SET_NAME = 69,
+//     META_KEY_EXISTS = 70,
+//     META_SINCE_UPDATE_TIME = 71,
+//     META_IS_TOMBSTONE = 72,
+//     META_MEMORY_SIZE = 73,
+//     META_RECORD_SIZE = 74,
 
-    REC_KEY = 80,
-    BIN = 81,
-    BIN_TYPE = 82,
-    BIN_EXISTS = 83,
+//     REC_KEY = 80,
+//     BIN = 81,
+//     BIN_TYPE = 82,
+//     BIN_EXISTS = 83,
 
-    COND = 123,
-    VAR = 124,
-    LET = 125,
-    DEF = 126,
+//     COND = 123,
+//     VAR = 124,
+//     LET = 125,
+//     DEF = 126,
 
-    CALL = 127,
-    LIST_MOD = 139,
-    VAL = 200
-};
+//     CALL = 127,
+//     LIST_MOD = 139,
+//     VAL = 200
+}
+;
 
 // VIRTUAL OPS
 enum virtual_ops {
@@ -173,8 +174,8 @@ enum utiity_constants {
 // } as_exp_entry;
 
 // FUNCTION DEFINITIONS
-static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
-                               as_vector *intermediate_exprs, as_error *err);
+// static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
+//                                as_vector *intermediate_exprs, as_error *err);
 
 static as_status
 get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
@@ -188,8 +189,8 @@ static as_status set_as_exp_entry(AerospikeClient *self,
                                   as_exp_entry *as_exp_entries, int size,
                                   PyObject *pydict, as_error *err);
 
-static bool free_temp_expr(as_exp_entry *entry, as_error *err,
-                           bool is_ctx_initialized);
+// static bool free_temp_expr(as_exp_entry *entry, as_error *err,
+//                            bool is_ctx_initialized);
 
 // This is to improve readability when many as_exp_nils() are used
 #define NIL as_exp_nil()
@@ -639,13 +640,14 @@ set_as_exp_entry(AerospikeClient *self, as_static_pool *static_pool,
         }
 
         switch (as_exp_entries[i].op) {
-        case BIN:
+        case _AS_EXP_CODE_BIN:
             if (get_bin(err, pydict, unicodeStrVector, &bin_name) !=
                 AEROSPIKE_OK) {
                 return err->code;
             }
+            SET_AS_EXP_ENTRY(0, BIN_EXPR());
             break;
-        case VAL:
+        // case VAL:
         case _AS_EXP_CODE_AS_VAL:;
             as_exp_entry tmp_expr;
             if (get_exp_val_from_pyval(
@@ -657,25 +659,25 @@ set_as_exp_entry(AerospikeClient *self, as_static_pool *static_pool,
 
             SET_AS_EXP_ENTRY(0, tmp_expr);
             break;
-        case EQ:
+        case _AS_EXP_CODE_CMP_EQ:
             SET_AS_EXP_ENTRY(2, as_exp_cmp_eq(NIL, NIL));
             break;
-        case NE:
+        case _AS_EXP_CODE_CMP_NE:
             SET_AS_EXP_ENTRY(2, as_exp_cmp_ne(NIL, NIL));
             break;
-        case GT:
+        case _AS_EXP_CODE_CMP_GT:
             SET_AS_EXP_ENTRY(2, as_exp_cmp_gt(NIL, NIL));
             break;
-        case GE:
+        case _AS_EXP_CODE_CMP_GE:
             SET_AS_EXP_ENTRY(2, as_exp_cmp_ge(NIL, NIL));
             break;
-        case LT:
+        case _AS_EXP_CODE_CMP_LT:
             SET_AS_EXP_ENTRY(2, as_exp_cmp_lt(NIL, NIL));
             break;
-        case LE:
+        case _AS_EXP_CODE_CMP_LE:
             SET_AS_EXP_ENTRY(2, as_exp_cmp_le(NIL, NIL));
             break;
-        case CMP_REGEX:
+        case _AS_EXP_CODE_CMP_REGEX:
             if (get_int64_t(err, REGEX_OPTIONS_KEY, pydict, &lval1) !=
                 AEROSPIKE_OK) {
                 return err->code;
@@ -695,10 +697,10 @@ set_as_exp_entry(AerospikeClient *self, as_static_pool *static_pool,
 
             SET_AS_EXP_ENTRY(1, as_exp_cmp_regex(lval1, regex_str, NIL));
             break;
-        case CMP_GEO:
+        case _AS_EXP_CODE_CMP_GEO:
             SET_AS_EXP_ENTRY(2, as_exp_cmp_geo(NIL, NIL));
             break;
-        case AND:
+        case _AS_EXP_CODE_AND:
             SET_AS_EXP_ENTRY(2, as_exp_and(NIL));
             break;
         case OR:
@@ -1654,7 +1656,7 @@ set_as_exp_entry(AerospikeClient *self, as_static_pool *static_pool,
     "also be a base64 string."
 
 as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
-                                   as_exp **exp_list, as_error *err,
+                                   as_exp **exp_list_ref, as_error *err,
                                    bool allow_base64_encoded_exprs)
 {
     if (py_expr == NULL) {
@@ -1672,7 +1674,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         }
 
         as_exp *exp = as_exp_from_base64(expr_str);
-        *exp_list = exp;
+        *exp_list_ref = exp;
         goto FINISH_WITHOUT_CLEANUP;
     }
     else if (!PyList_Check(py_expr)) {
@@ -1686,7 +1688,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         goto FINISH_WITHOUT_CLEANUP;
     }
 
-    int size_to_alloc = 0;
     bool ctx_in_use = false;
     PyObject *py_expr_tuple = NULL;
     PyObject *py_list_policy_p = NULL;
@@ -1707,12 +1708,12 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
     memset(&static_pool, 0, sizeof(static_pool));
 
     // Flags in case we need to deallocate temp expr while it is being built
-    bool is_ctx_initialized = false;
+    // bool is_ctx_initialized = false;
 
     for (int i = 0; i < exp_count; ++i) {
         ctx_in_use = false;
         // Reset flag for next temp expr being built
-        is_ctx_initialized = false;
+        // is_ctx_initialized = false;
 
         py_expr_tuple = PyList_GetItem(py_expr, (Py_ssize_t)i);
         if (!PyTuple_Check(py_expr_tuple) || PyTuple_Size(py_expr_tuple) != 4) {
@@ -1759,7 +1760,7 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                 goto CLEANUP;
             }
         }
-        is_ctx_initialized = true;
+        // is_ctx_initialized = true;
 
         py_list_policy_p = PyDict_GetItemString(pydict, AS_PY_LIST_POLICY);
         if (py_list_policy_p != NULL) {
@@ -1805,16 +1806,16 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         }
 
         if (set_as_exp_entry(self, &static_pool, SERIALIZER_PYTHON,
-                             unicodeStrVector, &as_exp_entries,
-                             (int *)&exp_count, err) != AEROSPIKE_OK) {
+                             unicodeStrVector, &as_exp_entries, exp_count,
+                             pydict, err) != AEROSPIKE_OK) {
             goto CLEANUP;
         }
     }
 
     as_exp_build(as_exp_list, as_exp_entries);
+    *exp_list_ref = as_exp_list;
 
 CLEANUP:
-    cf_free(&as_exp_entries);
 
     POOL_DESTROY(&static_pool);
     as_vector_destroy(unicodeStrVector);
@@ -1825,14 +1826,14 @@ FINISH_WITHOUT_CLEANUP:
 
 // TODO: change to as_exp_entry
 // Returns true if successful, false if not
-static bool free_temp_expr(as_exp_entry *entry, as_error *err,
-                           bool is_ctx_initialized)
-{
-    if (entry == NULL) {
-        return true;
-    }
+// static bool free_temp_expr(as_exp_entry *entry, as_error *err,
+//                            bool is_ctx_initialized)
+// {
+//     if (entry == NULL) {
+//         return true;
+//     }
 
-    // TODO: make sure the right callback for each type is called
-    as_val_destroy(entry->v.val);
-    return true;
-}
+//     // TODO: make sure the right callback for each type is called
+//     as_val_destroy(entry->v.val);
+//     return true;
+// }

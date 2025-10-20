@@ -154,10 +154,10 @@ class _BaseExpr(_AtomExpr):
     _fixed: TypeFixed = None
     _children: TypeChildren = ()
 
-    def _get_op(self) -> TypeCompiledOp:
+    def _get_four_tuple_from_expr(self) -> TypeCompiledOp:
         return (self._op, self._rt, self._fixed, len(self._children))
 
-    def _vop(self, v) -> TypeCompiledOp:
+    def _get_four_tuple_from_raw_val(self, v) -> TypeCompiledOp:
         return (
             _ExprOp.VAL,
             None,
@@ -166,7 +166,7 @@ class _BaseExpr(_AtomExpr):
         )
 
     def compile(self) -> TypeExpression:
-        expression = [self._get_op()]
+        expression = [self._get_four_tuple_from_expr()]
         work = chain(self._children)
 
         while True:
@@ -176,11 +176,11 @@ class _BaseExpr(_AtomExpr):
                 break
 
             if isinstance(item, _BaseExpr):
-                expression.append(item._get_op())
+                expression.append(item._get_four_tuple_from_expr())
                 work = chain(item._children, work)
             else:
                 # Should be a str, bin, int, float, etc.
-                expression.append(self._vop(item))
+                expression.append(self._get_four_tuple_from_raw_val(item))
 
         return expression
 

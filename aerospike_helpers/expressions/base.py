@@ -657,7 +657,7 @@ class DigestMod(_BaseExpr):
 class Eq(_BaseExpr):
     """Create an equals, (==) expression."""
 
-    _op = _ExprOp.EQ
+    _op = aerospike.EQ
 
     def __init__(self, expr0: "TypeComparisonArg", expr1: "TypeComparisonArg"):
         """Args:
