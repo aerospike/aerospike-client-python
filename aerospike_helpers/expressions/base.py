@@ -1105,9 +1105,18 @@ class CDTSelect(_BaseExpr):
 
         :return: TODO
         """
-        self._fixed = {_Keys.BIN_KEY: bin}
-        # TODO: needs to be an expr?
-        self._children = (flags)
+        '''
+        '''
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: return_type,
+            _Keys.CTX_KEY: ctx,
+            _Keys.CDT_SELECT_FLAGS_KEY: flags,
+            _Keys.BIN_KEY: bin
+        }
+
+        # TODO
+        # if ctx is not None:
+        #     self._fixed[_Keys.CTX_KEY] = ctx
 
 
 class CDTApply(_BaseExpr):
@@ -1118,12 +1127,20 @@ class CDTApply(_BaseExpr):
 
     # TODO: document to be certain constants?
     # TODO: why return type needed? this returns the whole bin after being modified?
-    def __init__(self, ctx: _cdt_ctx, return_type: ResultType, flags: int, bin: str):
+    def __init__(self, ctx: _cdt_ctx, return_type: ResultType, mod_exp, flags: int, bin: str):
         """Args:
             `ctx`: TODO
 
         :return: TODO
         """
-        self._fixed = {_Keys.BIN_KEY: bin}
-        # TODO: needs to be an expr?
-        self._children = (flags)
+        self._fixed = {
+            _Keys.RETURN_TYPE_KEY: return_type,
+            _Keys.CTX_KEY: ctx,
+            _Keys.CDT_SELECT_FLAGS_KEY: flags,
+            _Keys.BIN_KEY: bin,
+            _Keys.CDT_SELECT_MOD_EXP_KEY: mod_exp
+        }
+
+        # TODO
+        # if ctx is not None:
+        #     self._fixed[_Keys.CTX_KEY] = ctx

@@ -17,6 +17,8 @@ class _Keys:
     MAP_POLICY_KEY = "map_policy"
     LIST_ORDER_KEY = "list_order"
     REGEX_OPTIONS_KEY = "regex_options"
+    CDT_SELECT_FLAGS_KEY = "flags"
+    CDT_SELECT_MOD_EXP_KEY = "mod_exp"
 
 
 class _ExprOp:  # TODO replace this with an enum

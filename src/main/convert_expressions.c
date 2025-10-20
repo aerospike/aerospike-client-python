@@ -207,6 +207,8 @@ static as_status get_expr_size(int *size_to_alloc, int *intermediate_exprs_size,
 {
 
     static const int EXPR_SIZES[] = {
+        // TODO: can also be cdt_apply()
+        [_AS_EXP_CODE_CALL] = EXP_SZ(as_exp_cdt_select(NULL, 0, 0, NIL)),
         [BIN] = EXP_SZ(as_exp_bin_int(0)),
         [_AS_EXP_CODE_AS_VAL] = EXP_SZ(as_exp_val(NULL)),
         // TODO: have generic var_builtin?
@@ -1616,6 +1618,8 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
             break;
         case UNKNOWN:
             APPEND_ARRAY(0, as_exp_unknown());
+            break;
+        case _AS_EXP_CODE_CALL:
             break;
         default:
             return as_error_update(err, AEROSPIKE_ERR_PARAM,
