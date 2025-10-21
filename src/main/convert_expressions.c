@@ -652,8 +652,12 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                 AEROSPIKE_OK) {
                 return err->code;
             }
+            if (get_int64_t(err, "value_type", temp_expr->pydict, &lval2) !=
+                AEROSPIKE_OK) {
+                return err->code;
+            }
 
-            switch (lval1) {
+            switch (lval2) {
             case AS_EXP_TYPE_MAP:
                 APPEND_ARRAY(0, as_exp_var_builtin_map(lval1));
                 break;
