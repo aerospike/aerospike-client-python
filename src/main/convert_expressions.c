@@ -24,6 +24,7 @@
 #include <aerospike/as_geojson.h>
 #include <aerospike/as_msgpack_ext.h>
 
+#include "pythoncapi_compat.h"
 #include "client.h"
 #include "conversions.h"
 #include "serializer.h"
@@ -179,7 +180,7 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
                        int serializer_type, as_exp_entry *new_entry,
                        PyObject *py_obj, as_exp_entry *tmp_expr, as_error *err);
 
-static as_status set_as_exp_entry_using_py_expr_class_instance(
+static as_status convert_tree_of_py_expr_to_as_exp_entries(
     AerospikeClient *self, as_static_pool *static_pool, int serializer_type,
     as_vector *unicodeStrVector, as_exp_entry *as_exp_entries, PyObject *pydict,
     as_error *err);
@@ -589,12 +590,12 @@ get_exp_val_from_pyval(AerospikeClient *self, as_static_pool *static_pool,
 * empty arguments used. Each expression child/value has a as_exp_entry struct in intermediate_expr_vector so the missing values will be copied later.
 * These counts need to be updated if the C client macro changes.
 */
-static as_status set_as_exp_entry_using_py_expr_class_instance(
+// TODO: one to one mapping of Python expr classes to as_exp_entry
+static as_status convert_tree_of_py_expr_to_as_exp_entries(
     AerospikeClient *self, as_static_pool *static_pool, int serializer_type,
     as_vector *unicodeStrVector, as_exp_entry *entry, PyObject *py_expr,
-    as_error *err)
+    as_error *err, int position)
 {
-
     int64_t lval1 = 0;
     int64_t lval2 = 0;
     char *bin_name = NULL;
@@ -1595,6 +1596,45 @@ static as_status set_as_exp_entry_using_py_expr_class_instance(
     return err->code;
 }
 
+// Return -1 on error
+Py_ssize_t get_num_of_py_exprs_in_tree(as_error *err, PyObject *py_expr)
+{
+    // Including root of this tree
+    Py_ssize_t count_in_this_tree = 1;
+    PyObject *py_children = PyObject_GetAttrString(py_expr, "_children");
+    if (!py_children) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "_children is not available as an attribute");
+        return -1;
+    }
+
+    if (!PyIter_Check(py_children)) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "_children is not an iterable");
+        return -1;
+    }
+
+    PyObject *py_child_expr = NULL;
+    int retval = PyIter_NextItem(py_children, &py_child_expr);
+    while (retval == 1) {
+        count_in_this_tree += 1;
+        Py_ssize_t subtree_count =
+            get_num_of_py_exprs_in_tree(err, py_child_expr);
+        Py_DECREF(py_child_expr);
+        count_in_this_tree += subtree_count;
+
+        retval = PyIter_NextItem(py_children, &py_child_expr);
+    }
+
+    if (retval == -1) {
+        as_error_update(err, AEROSPIKE_ERR_PARAM,
+                        "Internal error while iterating through _children");
+        return -1;
+    }
+
+    return count_in_this_tree;
+}
+
 /*
 * Converts expressions from python into as_exp_entry structs.
 * Initiates the conversion from as_exp_entry structs to expressions.
@@ -1627,16 +1667,16 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
         *exp_list_ref = exp;
         goto FINISH_WITHOUT_CLEANUP;
     }
-    else if (!PyList_Check(py_expr)) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
-        goto FINISH_WITHOUT_CLEANUP;
-    }
+    // else if (!PyList_Check(py_expr)) {
+    //     as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
+    //     goto FINISH_WITHOUT_CLEANUP;
+    // }
 
-    Py_ssize_t exp_count = PyList_Size(py_expr);
-    if (exp_count <= 0) {
-        as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
-        goto FINISH_WITHOUT_CLEANUP;
-    }
+    // Py_ssize_t exp_count = PyList_Size(py_expr);
+    // if (exp_count <= 0) {
+    //     as_error_update(err, AEROSPIKE_ERR_PARAM, EXPR_INVALID_TYPE_MSG);
+    //     goto FINISH_WITHOUT_CLEANUP;
+    // }
 
     bool ctx_in_use = false;
     PyObject *py_expr_tuple = NULL;
@@ -1644,7 +1684,13 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
     PyObject *py_map_policy_p = NULL;
     PyObject *py_ctx_list_p = NULL;
 
-    as_exp_entry *as_exp_entries = cf_calloc(exp_count, sizeof(as_exp_entry));
+    Py_ssize_t py_expr_count = get_num_of_py_exprs_in_tree(err, py_expr);
+    if (PyErr_Occurred()) {
+        goto CLEANUP;
+    }
+
+    as_exp_entry *as_exp_entries =
+        cf_calloc(py_expr_count, sizeof(as_exp_entry));
     if (as_exp_entries == NULL) {
         as_error_update(err, AEROSPIKE_ERR,
                         "Could not malloc mem for c_expr_entries.");
@@ -1659,6 +1705,12 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
 
     // Flags in case we need to deallocate temp expr while it is being built
     // bool is_ctx_initialized = false;
+
+    if (convert_tree_of_py_expr_to_as_exp_entries(
+            self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector,
+            &as_exp_entries, py_expr, err, 0) != AEROSPIKE_OK) {
+        goto CLEANUP;
+    }
 
     for (int i = 0; i < exp_count; i++) {
         ctx_in_use = false;
@@ -1752,12 +1804,6 @@ as_status as_exp_new_from_pyobject(AerospikeClient *self, PyObject *py_expr,
                     goto CLEANUP;
                 }
             }
-        }
-
-        if (set_as_exp_entry_using_py_expr_class_instance(
-                self, &static_pool, SERIALIZER_PYTHON, unicodeStrVector,
-                py_fixed_dict, &as_exp_entries, err) != AEROSPIKE_OK) {
-            goto CLEANUP;
         }
     }
 
