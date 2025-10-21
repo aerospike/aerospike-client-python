@@ -429,7 +429,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
                 py_persist_index = value;
             }
             // Use set instead of this?
-            else if (strcmp(name, "expr") == 0) {
+            else if (strcmp(name, "mod_exp") == 0) {
                 continue;
             }
             else if (strcmp(name, "flags") == 0) {
@@ -592,7 +592,7 @@ as_status add_op(AerospikeClient *self, as_error *err,
         else if (operation == AS_OPERATOR_CDT_MODIFY) {
             PyObject *py_expr = NULL;
             int retval =
-                PyDict_GetItemStringRef(py_operation_dict, "expr", &py_expr);
+                PyDict_GetItemStringRef(py_operation_dict, "mod_exp", &py_expr);
             if (retval == 0) {
                 as_error_update(err, AEROSPIKE_ERR_PARAM,
                                 "CDT operation is missing a flags argument");
