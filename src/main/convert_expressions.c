@@ -1673,11 +1673,11 @@ add_expr_macros(AerospikeClient *self, as_static_pool *static_pool,
                     return err->code;
                 }
                 APPEND_ARRAY(0, as_exp_cdt_apply(temp_expr->ctx, lval1, mod_exp,
-                                                 lval2, bin_name));
+                                                 lval2, BIN_EXPR()));
             }
             else {
                 APPEND_ARRAY(0, as_exp_cdt_select(temp_expr->ctx, lval1, lval2,
-                                                  bin_name));
+                                                  BIN_EXPR()));
             }
             break;
         default:
