@@ -1092,7 +1092,7 @@ class VarBuiltIn(_BaseExpr):
 class CDTSelect(_BaseExpr):
     """
     """
-    _op = _ExprOp._AS_EXP_CODE_CALL
+    _op = _ExprOp._AS_EXP_CODE_CALL_SELECT
 
     # TODO: document to be certain constants?
     # TODO: result_type not needed?
@@ -1121,7 +1121,7 @@ class CDTApply(_BaseExpr):
     """
     asdf
     """
-    _op = _ExprOp._AS_EXP_CODE_CALL
+    _op = _ExprOp._AS_EXP_CODE_CALL_APPLY
 
     # TODO: document to be certain constants?
     # TODO: why return type needed? this returns the whole bin after being modified?

@@ -90,8 +90,10 @@ class _ExprOp:  # TODO replace this with an enum
     LET = 125
     DEF = 126
 
-    _AS_EXP_CODE_CALL = 127
+    _AS_EXP_CODE_CALL_SELECT = 127
     _AS_EXP_CODE_AS_VAL = 128
+    _AS_EXP_CODE_CALL_APPLY = 129
+
     # virtual ops
     _AS_EXP_CODE_CALL_VOP_START = 139
     _AS_EXP_CODE_CDT_LIST_CRMOD = 140
