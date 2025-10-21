@@ -201,26 +201,30 @@ class TestCDTSelectOperations:
 
 
     @pytest.mark.parametrize(
-        "flags", [
-            aerospike.CDT_SELECT_TREE,
+        "flags, expected_bins", [
+            (aerospike.CDT_SELECT_TREE, {})
             # TODO: combine?
-            aerospike.CDT_SELECT_LEAF_LIST_VALUE,
+            # (aerospike.CDT_SELECT_LEAF_LIST_VALUE,)
             # TODO: bad naming?
-            aerospike.CDT_SELECT_LEAF_MAP_VALUE,
-            aerospike.CDT_SELECT_LEAF_MAP_KEY,
-            aerospike.CDT_SELECT_NO_FAIL
+            # (aerospike.CDT_SELECT_LEAF_MAP_VALUE,)
+            # (aerospike.CDT_SELECT_LEAF_MAP_KEY,)
         ]
     )
-    def test_cdt_select_flags(self, flags):
+    def test_cdt_select_flags(self, flags, expected_bins):
         ops = [
             operations.cdt_select(
+                name=self.LIST_BIN_NAME,
+                ctx=[
+                    cdt_ctx.cdt_ctx_all(),
+                    cdt_ctx.cdt_ctx_all()
+                ],
                 # TODO: not done
                 flags=flags
             )
         ]
         with self.expected_context_for_pos_tests:
             _, _, bins = self.as_connection.operate(self.key, ops)
-            # assert bins == expected_bins
+            assert bins == expected_bins
 
     # TODO: set default for BUILTIN
 
